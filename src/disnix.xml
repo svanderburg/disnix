@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-Bus Object Introspection 1.0//EN" "http://standards.freedesktop.org/dbus/1.0/introspect.dtd">
+
+<node name="/org/nixos/disnix/Disnix">
+	<interface name="org.nixos.disnix.Disnix">
+		<method name="install">
+			<arg type="s" name="file" direction="in" />			
+			<arg type="s" name="args" direction="in" />
+			<arg type="b" name="isAttr" direction="in" />
+			<arg type="s" name="pid" direction="out" />
+		</method>
+		
+		<method name="upgrade">
+			<arg type="s" name="derivation" direction="in" />
+			<arg type="s" name="pid" direction="out" />
+		</method>
+		
+		<method name="uninstall">
+			<arg type="s" name="derivation" direction="in" />
+			<arg type="s" name="pid" direction="out" />
+		</method>
+				
+		<method name="instantiate">
+			<arg type="s" name="files" direction="in" />
+			<arg type="s" name="attrPath" direction="in" />
+			<arg type="s" name="pid" direction="out" />
+		</method>
+		
+		<method name="realise">
+			<arg type="s" name="derivation" direction="in" />
+			<arg type="s" name="pid" direction="out" />
+		</method>
+
+		<method name="import">
+			<arg type="s" name="path" direction="in" />
+			<arg type="s" name="pid" direction="out" />
+		</method>
+		
+		<method name="print_invalid_paths">
+			<arg type="s" name="path" direction="in" />
+			<arg type="s" name="pid" direction="out" />
+		</method>
+		
+		<method name="collect_garbage">
+			<arg type="b" name="delete_old" direction="in" />
+			<arg type="s" name="pid" direction="out" />
+		</method>
+		
+		<signal name="finish">
+			<arg type="s" name="pid" direction="out" />
+		</signal>
+		
+		<signal name="success">
+			<arg type="s" name="pid" direction="out" />
+			<arg type="s" name="path" direction="out" />
+		</signal>
+		
+		<signal name="failure">
+			<arg type="s" name="pid" direction="out" />
+		</signal>
+	</interface>
+</node>

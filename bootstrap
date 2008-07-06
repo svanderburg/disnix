@@ -1,0 +1,7 @@
+#!/bin/sh
+
+rm -f config.cache config.log acconfig.h aclocal.m4
+
+aclocal -I .
+autoconf -f
+automake -a
