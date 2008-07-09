@@ -628,7 +628,7 @@ static void disnix_import_thread_func(gpointer data)
     g_print("Importing: %s\n", path);
     
     /* Execute command */
-    cmd = g_strconcat("nix-store --import ", path, NULL);
+    cmd = g_strconcat("cat ", path, " | nix-store --import ", NULL);
     
     fp = popen(cmd, "r");
     if(fp == NULL)
