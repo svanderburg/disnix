@@ -45,6 +45,16 @@
 			<arg type="b" name="delete_old" direction="in" />
 			<arg type="s" name="pid" direction="out" />
 		</method>
+
+		<method name="activate">
+			<arg type="s" name="path" direction="in" />
+			<arg type="s" name="pid" direction="out" />
+		</method>
+
+		<method name="deactivate">
+			<arg type="s" name="path" direction="in" />
+			<arg type="s" name="pid" direction="out" />
+		</method>
 		
 		<signal name="finish">
 			<arg type="s" name="pid" direction="out" />

@@ -35,7 +35,9 @@ typedef enum
     OP_REALISE,
     OP_IMPORT,
     OP_PRINT_INVALID_PATHS,
-    OP_COLLECT_GARBAGE
+    OP_COLLECT_GARBAGE,
+    OP_ACTIVATE,
+    OP_DEACTIVATE
 }
 Operation;
 
@@ -50,6 +52,8 @@ static void print_usage()
     g_print("disnix-client --import filename\n");
     g_print("disnix-client --print-invalid-paths paths\n");
     g_print("disnix-client --collect-garbage [-d | --delete-old]\n");
+    g_print("disnix-client --activate path\n");
+    g_print("disnix-client --deactivate path\n");
     g_print("disnix-client {-h | --help}\n");
 }
 
@@ -94,6 +98,8 @@ int main(int argc, char **argv)
 	{"import", required_argument, 0, 'M'},
 	{"print-invalid-paths", no_argument, 0, 'P'},
 	{"collect-garbage", no_argument, 0, 'C'},
+	{"activate", required_argument, 0, 'Q'},
+	{"deactivate", required_argument, 0, 'W'},
 	{"attr", required_argument, 0, 'A'},
 	{"delete-old", no_argument, 0, 'd'},
 	{"help", no_argument, 0, 'h'},
@@ -201,6 +207,16 @@ int main(int argc, char **argv)
 		operation = OP_COLLECT_GARBAGE;
 		break;
 	
+	    case 'Q':
+	        operation = OP_ACTIVATE;
+		pathname = optarg;
+		break;
+
+	    case 'W':
+	        operation = OP_DEACTIVATE;
+		pathname = optarg;
+		break;
+		
 	    case 'f':
 		file = optarg;
 		break;
@@ -295,7 +311,15 @@ int main(int argc, char **argv)
 	case OP_COLLECT_GARBAGE:
 	    org_nixos_disnix_Disnix_collect_garbage(remote_object, delete_old, &pid, &error);
 	    break;
-	   
+	  
+	case OP_ACTIVATE:
+	    org_nixos_disnix_Disnix_activate(remote_object, pathname, &pid, &error);
+	    break;
+
+	case OP_DEACTIVATE:
+	    org_nixos_disnix_Disnix_deactivate(remote_object, pathname, &pid, &error);
+	    break;
+	    
 	default:
 	    g_print("You need to specify an operation!\n");
 	    print_usage();
