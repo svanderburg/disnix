@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Get absolute paths to Disnix models
+
+servicesFile=`readlink -f $1`
+infrastructureFile=`readlink -f $2`
+distributionFile=`readlink -f $3`
+
+if [ "$4" = "" ]
+then
+    mapFunFile=`readlink -f $DISNIX_HOME/share/disnix/mapFun.nix`
+else
+    mapFunFile=`readlink -f $4`
+fi
+
+exportExpr=`readlink -f $DISNIX_HOME/share/disnix/export.nix`
+
+# Generate Nix expression
+tmpfilename=`mktemp -p /tmp`
+
+cat > $tmpfilename <<EOF
+rec {
+  servicesFile = $servicesFile;
+  infrastructureFile = $infrastructureFile;
+  distributionFile = $distributionFile;
+  mapFunFile = $mapFunFile;
+  pkgs = import (builtins.getEnv "NIXPKGS_ALL") {};
+  
+  export = import $exportExpr {
+    inherit servicesFile infrastructureFile distributionFile mapFunFile;
+    inherit (pkgs) stdenv;
+  };
+}
+EOF
+
+# Instantiate the expression
+nix-instantiate $tmpfilename

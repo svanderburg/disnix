@@ -32,5 +32,7 @@ AC_CHECK_LIB([crypto], [SHA256_Init])
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
+scripts/Makefile
+data/Makefile
 ])
 AC_OUTPUT

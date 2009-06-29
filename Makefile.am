@@ -1,4 +1,4 @@
-SUBDIRS = src
+SUBDIRS = src scripts data
 
 dbusdir = $(DBUS_SYS_DIR)
 dist_dbus_DATA = disnix.conf
