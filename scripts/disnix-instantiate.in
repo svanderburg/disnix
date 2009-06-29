@@ -1,0 +1,105 @@
+#!/bin/bash -e
+
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    echo "Usage: $0 -s services_expr -i infrastructure_expr -d distribution_expr [options]"
+    echo "Options:"
+    echo
+    echo "-s,--services       Services Nix expression which describe all components of the distributed system"
+    echo "-i,--infrastructure Infrastructure Nix expression which captures properties of machines in the network"
+    echo "-d,--distribution   Distribution Nix expression which maps services to machines in the network"
+    echo "-m,--mapfun         Mapping Nix expression which translates distribution items to appropiate protocol properties (optional)"
+    echo "-h,--help           Shows the usage of this command"
+}
+
+# Autoconf settings
+
+export prefix=@prefix@
+
+# Parse valid argument options
+
+PARAMS=`getopt -n $0 -o s:i:d:m:h -l services:,infrastructure:,distribution:,mapfun:,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+eval set -- "$PARAMS"
+
+# Evaluate valid options
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -s|--services)	    
+	    servicesFile=`readlink -f $2`
+	    ;;
+	-i|--infrastructure)
+	    infrastructureFile=`readlink -f $2`
+	    ;;
+	-d|--distribution)
+	    distributionFile=`readlink -f $2`
+	    ;;
+	-m|--mapfun)
+	    mapFunFile=`readlink -f $2`
+	    ;;
+	-h|--help)
+	    showUsage
+	    exit 0
+	    ;;
+    esac
+    
+    shift
+done
+
+# Validate the given options
+
+if [ "$servicesFile" = "" ]
+then
+    echo "ERROR: A services expression must be specified!" >&2
+    exit 1
+fi
+
+if [ "$infrastructureFile" = "" ]
+then
+    echo "ERROR: A infrastructure expression must be specified!" >&2
+    exit 1
+fi
+
+if [ "$distributionFile" = "" ]
+then
+    echo "ERROR: A distribution expression must be specified!" >&2
+    exit 1
+fi
+
+if [ "$mapFunFile" = "" ]
+then
+    mapFunFile=`readlink -f @datadir@/@PACKAGE@/mapFun.nix`
+fi
+
+# Generate Nix expression
+
+exportExpr=`readlink -f @datadir@/@PACKAGE@/export.nix`
+tmpfilename=`mktemp -p /tmp`
+
+cat > $tmpfilename <<EOF
+rec {
+  servicesFile = $servicesFile;
+  infrastructureFile = $infrastructureFile;
+  distributionFile = $distributionFile;
+  mapFunFile = $mapFunFile;
+  pkgs = import (builtins.getEnv "NIXPKGS_ALL") {};
+  
+  export = import $exportExpr {
+    inherit servicesFile infrastructureFile distributionFile mapFunFile;
+    inherit (pkgs) stdenv;
+  };
+}
+EOF
+
+# Instantiate the expression
+nix-instantiate $tmpfilename

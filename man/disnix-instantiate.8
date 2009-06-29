@@ -1,0 +1,40 @@
+.TH "disnix-instantiate" "8" "June 2009" "Disnix" "System administration tools"
+.SH NAME
+disnix\-instantiate \- Instantiate store derivations from Disnix models
+.SH SYNOPSIS
+.B disnix\-instantiate
+\-s services_expr \-i infrastructure_expr \-d distribution_expr
+[
+.B options
+]
+.PP
+.SH DESCRIPTION
+The command \fBdisnix\-instantiate\fR generates store derivations from the three Disnix models that capture
+concerns of the deployment of a distributed system, which are the services, infrastructure and distribution
+expressions.
+.PP
+The services expression captures all the components of the distributed system. The infrastructure model captures
+properties of the machines in the network. The distribution model maps the services from the services to the machines
+in the infrastructure model.
+.PP
+Most users and developers don't need to use this command directly. The commands \fBdisnix\-build\fR and \fBdisnix\-env\fR
+perform store derivation instantiation automatically. It is mostly used for debugging purposes or to perform certain
+tasks manually.
+.SH OPTIONS
+.TP
+\fB\-s\fR, \fB\-\-services\fR
+Provide a services model, which captures the components of a distributed system
+.TP
+\fB\-i\fR, \fB\-\-infrastructure\fR
+Provide a infrastructure model, which captures properties of the machines in the network
+.TP
+\fB\-d\fR, \fB\-\-distribution\fR
+Provide a distribution model, which maps services to machines
+.TP
+\fB\-m\fR, \fB\-\-mapfun\fR
+Provide a function which maps each element in the distribution model to a protocol specific element. Optional argument.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Shows the usage of this command to the user
+.SH AUTHOR
+Sander van der Burg <s.vanderburg@tudelft.nl>

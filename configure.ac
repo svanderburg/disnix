@@ -34,6 +34,7 @@ Makefile
 src/Makefile
 scripts/Makefile
 data/Makefile
+man/Makefile
 scripts/disnix-instantiate
 ])
 AC_OUTPUT
