@@ -48,4 +48,36 @@ rec {
         }
      ) (attrNames services))
   ;
+
+  /* Checks whether the given service exists in the distribution model */
+  checkServiceInDistribution = service: distribution:
+    if distribution == [] then abort ("Service: "+service.name+" not found in distribution model!")
+    else
+      if service.name == (head distribution).service.name then service
+      else checkServiceInDistribution service (tail distribution)
+  ;
+  
+  /* Checks whether the given attribute set of inter-dependencies exist in the distribution model */
+  checkInterDependenciesInDistribution = dependencies: distribution:
+    listToAttrs (map (dependencyName:
+      let dependency = getAttr dependencyName dependencies;
+      in
+        { name = dependencyName;
+          value = checkServiceInDistribution dependency distribution;
+	}
+    ) (attrNames dependencies))
+  ;
+
+  /* Checks the distribution model whether all inter-dependencies are present for each service */  
+  checkDistribution = distribution:
+    if distribution == [] then []
+    else
+      let distributionItem = head distribution;
+      in
+        [ (distributionItem //
+	    { service = distributionItem.service // 
+	      { dependsOn = checkInterDependenciesInDistribution distributionItem.service.dependsOn distribution; };
+	    })
+	] ++ checkDistribution (tail distribution)
+  ;
 }
