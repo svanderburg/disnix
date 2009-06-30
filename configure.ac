@@ -36,5 +36,6 @@ scripts/Makefile
 data/Makefile
 man/Makefile
 scripts/disnix-instantiate
+scripts/disnix-build
 ])
 AC_OUTPUT

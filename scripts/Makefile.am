@@ -1,1 +1,1 @@
-bin_SCRIPTS = disnix-instantiate
+bin_SCRIPTS = disnix-instantiate disnix-build
