@@ -7,10 +7,12 @@ showUsage()
     echo "Usage: $0 -s services_expr -i infrastructure_expr -d distribution_expr [options]"
     echo "Options:"
     echo
-    echo "-s,--services       Services Nix expression which describe all components of the distributed system"
+    echo "-s,--services       Services Nix expression which describes all components of the distributed system"
     echo "-i,--infrastructure Infrastructure Nix expression which captures properties of machines in the network"
     echo "-d,--distribution   Distribution Nix expression which maps services to machines in the network"
-    echo "-m,--mapfun         Mapping Nix expression which translates distribution items to appropiate protocol properties (optional)"
+    echo "-m,--method         Sets the transition method of the deployment. \"distribution\""
+    echo "                    builds services on the coordinator machine, \"compilation\" builds services on the target machines."
+    echo "                    Defauls to \"distribution\""
     echo "-h,--help           Shows the usage of this command"
 }
 
@@ -20,7 +22,7 @@ export prefix=@prefix@
 
 # Parse valid argument options
 
-PARAMS=`getopt -n $0 -o s:i:d:m:h -l services:,infrastructure:,distribution:,mapfun:,help -- "$@"`
+PARAMS=`getopt -n $0 -o s:i:d:m:h -l services:,infrastructure:,distribution:,method:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -44,8 +46,8 @@ do
 	-d|--distribution)
 	    distributionFile=`readlink -f $2`
 	    ;;
-	-m|--mapfun)
-	    mapFunFile=`readlink -f $2`
+	-m|--method)
+	    method=$2
 	    ;;
 	-h|--help)
 	    showUsage
@@ -76,10 +78,18 @@ then
     exit 1
 fi
 
-if [ "$mapFunFile" = "" ]
-then
-    mapFunFile=`readlink -f @datadir@/@PACKAGE@/mapFun.nix`
-fi
+case "$method" in
+    distribution|"")
+        serviceProperty="outPath";
+        ;;
+    compilation)
+        serviceProperty="drvPath";
+        ;;
+    *)
+        echo "ERROR: Transition method should be either \"distribution\" or \"compilation\""
+        exit 1
+        ;;
+esac
 
 # Generate Nix expression
 
@@ -91,11 +101,15 @@ rec {
   servicesFile = $servicesFile;
   infrastructureFile = $infrastructureFile;
   distributionFile = $distributionFile;
-  mapFunFile = $mapFunFile;
+  
+  serviceProperty = "$serviceProperty";
+  
   pkgs = import (builtins.getEnv "NIXPKGS_ALL") {};
   
   export = import $exportExpr {
-    inherit servicesFile infrastructureFile distributionFile mapFunFile;
+    inherit servicesFile infrastructureFile distributionFile;
+    inherit serviceProperty;
+    targetProperty = "hostname";
     inherit (pkgs) stdenv;
   };
 }

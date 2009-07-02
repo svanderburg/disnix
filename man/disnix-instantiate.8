@@ -31,8 +31,10 @@ Provide a infrastructure model, which captures properties of the machines in the
 \fB\-d\fR, \fB\-\-distribution\fR
 Provide a distribution model, which maps services to machines
 .TP
-\fB\-m\fR, \fB\-\-mapfun\fR
-Provide a function which maps each element in the distribution model to a protocol specific element. Optional argument.
+\fB\-m\fR, \fB\-\-method\fR
+Specify the transition method which can be either "distribution" or "compilation". The "distribution" option will build
+all the services on the coordinator machine. The "distribution" option will build all the services on the target machines.
+The default transition method is "compilation".
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 Shows the usage of this command to the user
