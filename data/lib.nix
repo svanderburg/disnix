@@ -59,6 +59,7 @@ rec {
 	    target = getAttr targetProperty distributionItem.target;
             dependsOn = map (dependencyName: getAttr serviceProperty (getAttr dependencyName services).pkg)
 	      (attrNames distributionItem.service.dependsOn);
+	    type = distributionItem.service.type;
           }
         ) distribution
   ;
