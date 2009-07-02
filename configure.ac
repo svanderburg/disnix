@@ -33,6 +33,7 @@ AC_CONFIG_FILES([
 Makefile
 conf/Makefile
 src/Makefile
+src/dbus-service/Makefile
 scripts/Makefile
 data/Makefile
 man/Makefile
