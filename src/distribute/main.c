@@ -95,12 +95,10 @@ static int checkInterDependencies(xmlDocPtr doc)
     return ret;
 }
 
-static xmlDocPtr create_distribution_export_doc()
+static xmlDocPtr create_distribution_export_doc(char *filename)
 {
     xmlDocPtr doc;
     xmlNodePtr node_root;
-    
-    char *filename = "test.xml";
     
     if((doc = xmlParseFile(filename)) == NULL)
     {
@@ -121,16 +119,18 @@ static xmlDocPtr create_distribution_export_doc()
 }
 
 int main(int argc, char *argv[])
-{    
-    xmlDocPtr doc = create_distribution_export_doc();
-    
+{
     if(argc < 2)
     {
-	fprintf("No distribution export file specified!\n");
+	fprintf(stderr, "No distribution export file specified!\n");
 	return 1;
     }
     else
     {
+	xmlDocPtr doc;
+	
+	doc = create_distribution_export_doc(argv[1]);
+	
 	if(!checkInterDependencies(doc))
 	{
 	    fprintf(stderr, "Distribution export file has an inter-dependency error!\n");
