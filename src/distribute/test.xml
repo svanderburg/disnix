@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='utf-8'?>
+<expr>
+  <list>
+    <attrs>
+      <attr name="dependsOn">
+        <list>
+        </list>
+      </attr>
+      <attr name="service">
+        <string value="/nix/store/7f2p86xvyfji3arkfp0q0pwrff45jqx6-HelloService" />
+      </attr>
+      <attr name="target">
+        <string value="test1.localhost" />
+      </attr>
+      <attr name="type">
+        <string value="webservice" />
+      </attr>
+    </attrs>
+    <attrs>
+      <attr name="dependsOn">
+        <list>
+          <string value="/nix/store/7f2p86xvyfji3arkfp0q0pwrff45jqx6-HelloService" />
+        </list>
+      </attr>
+      <attr name="service">
+        <string value="/nix/store/s9p46j5zvd4hp39r2n0bvbzyl9asc1vv-HelloWorldService" />
+      </attr>
+      <attr name="target">
+        <string value="test2.localhost" />
+      </attr>
+      <attr name="type">
+        <string value="webservice" />
+      </attr>
+    </attrs>
+    <attrs>
+      <attr name="dependsOn">
+        <list>
+          <string value="/nix/store/7f2p86xvyfji3arkfp0q0pwrff45jqx6-HelloService" />
+          <string value="/nix/store/nim918r4qlg6v4z2fm12ps5j97s4w7sq-LookupService" />
+        </list>
+      </attr>
+      <attr name="service">
+        <string value="/nix/store/pm4f53hz5v5ahh67cywhra1b9134p49m-HelloWorldService2" />
+      </attr>
+      <attr name="target">
+        <string value="test1.localhost" />
+      </attr>
+      <attr name="type">
+        <string value="webservice" />
+      </attr>
+    </attrs>
+    <attrs>
+      <attr name="dependsOn">
+        <list>
+          <string value="/nix/store/7f2p86xvyfji3arkfp0q0pwrff45jqx6-HelloService" />
+          <string value="/nix/store/nim918r4qlg6v4z2fm12ps5j97s4w7sq-LookupService" />
+        </list>
+      </attr>
+      <attr name="service">
+        <string value="/nix/store/pm4f53hz5v5ahh67cywhra1b9134p49m-HelloWorldService2" />
+      </attr>
+      <attr name="target">
+        <string value="test2.localhost" />
+      </attr>
+      <attr name="type">
+        <string value="webservice" />
+      </attr>
+    </attrs>
+    <attrs>
+      <attr name="dependsOn">
+        <list>
+        </list>
+      </attr>
+      <attr name="service">
+        <string value="/nix/store/nim918r4qlg6v4z2fm12ps5j97s4w7sq-LookupService" />
+      </attr>
+      <attr name="target">
+        <string value="test2.localhost" />
+      </attr>
+      <attr name="type">
+        <string value="webservice" />
+      </attr>
+    </attrs>
+    <attrs>
+      <attr name="dependsOn">
+        <list>
+        </list>
+      </attr>
+      <attr name="service">
+        <string value="/nix/store/n91j8ddfd82m5nzlsqfqzq3wirhyqfhr-mysql-5.0.77" />
+      </attr>
+      <attr name="target">
+        <string value="test1.localhost" />
+      </attr>
+      <attr name="type">
+        <string value="mysql" />
+      </attr>
+    </attrs>
+    <attrs>
+      <attr name="dependsOn">
+        <list>
+          <string value="/nix/store/n91j8ddfd82m5nzlsqfqzq3wirhyqfhr-mysql-5.0.77" />
+        </list>
+      </attr>
+      <attr name="service">
+        <string value="/nix/store/k6sbn0hmfnmpsyykpbhn1pzqynfsvqiy-HelloDBService" />
+      </attr>
+      <attr name="target">
+        <string value="test1.localhost" />
+      </attr>
+      <attr name="type">
+        <string value="webservice" />
+      </attr>
+    </attrs>
+  </list>
+</expr>
+

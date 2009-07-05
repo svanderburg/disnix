@@ -1,0 +1,1 @@
+SUBDIRS = dbus-service distribute
