@@ -1,1 +1,1 @@
-bin_SCRIPTS = disnix-instantiate disnix-build
+bin_SCRIPTS = disnix-instantiate disnix-build disnix-gendist-roundrobin

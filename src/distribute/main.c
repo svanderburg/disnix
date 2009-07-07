@@ -2,6 +2,7 @@
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <glib.h>
+#include "distributionlist.h"
 
 static xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, char *xpath)
 {
@@ -41,6 +42,11 @@ static xmlXPathObjectPtr select_inter_dependencies(xmlDocPtr doc, gchar *service
     return result;
 }
 
+static xmlXPathObjectPtr select_all_distribution_items(xmlDocPtr doc)
+{
+    return executeXPathQuery(doc, "/expr/list");
+}
+
 static int checkInterDependencies(xmlDocPtr doc)
 {
     int i, j, ret = TRUE;
@@ -74,7 +80,7 @@ static int checkInterDependencies(xmlDocPtr doc)
 			    {
 				fprintf(stderr, "Inter-dependency: %s not found for service: %s\n", interdep_node->content, service_node->content);
 				ret = FALSE;
-			    }
+			    }			    
 			    
 			    xmlXPathFreeObject(query_result);
 			    			    
@@ -118,6 +124,84 @@ static xmlDocPtr create_distribution_export_doc(char *filename)
     return doc;
 }
 
+static DistributionList *generate_distribution_list(xmlDocPtr doc)
+{
+    int i;
+    DistributionList *list = new_distribution_list();
+    xmlXPathObjectPtr result = select_all_distribution_items(doc);
+
+    if(result)
+    {
+        xmlNodeSetPtr nodeset = result->nodesetval;
+	    
+        for(i = 0; i < nodeset->nodeNr; i++)
+        {
+	    xmlNodePtr attrs_node = nodeset->nodeTab[i]->children;
+		
+	    while(attrs_node != NULL)
+	    {
+	        if(xmlStrcmp(attrs_node->name, (const xmlChar*) "attrs") == 0)
+	        {
+	    	    xmlNodePtr attr_node = attrs_node->children;
+			
+		    xmlChar *service = NULL;
+		    xmlChar *target = NULL;
+
+		    while(attr_node != NULL)
+		    {
+		        if(xmlStrcmp(attr_node->name, (const xmlChar*) "attr") == 0)
+		        {
+		    	    xmlAttrPtr attr_props = attr_node->properties;
+				
+			    while(attr_props != NULL)
+			    {
+			        xmlChar *attr_type = attr_props->children->content;
+				    
+			        if(xmlStrcmp(attr_type, (const xmlChar*) "service") == 0)
+			        {
+			   	    xmlNodePtr string_node = attr_node->children;
+					
+				    while(string_node != NULL)
+				    {
+				        if(xmlStrcmp(string_node->name, "string") == 0)
+				    	    service = string_node->properties->children->content;
+					
+					string_node = string_node->next;
+				    }
+				}
+				else if(xmlStrcmp(attr_type, (const xmlChar*) "target") == 0)
+				{
+				    xmlNodePtr string_node = attr_node->children;
+					
+				    while(string_node != NULL)
+				    {
+				        if(xmlStrcmp(string_node->name, "string") == 0)
+				    	    target = string_node->properties->children->content;
+					
+					string_node = string_node->next;
+				    }
+				}
+				    				    
+				attr_props = attr_props->next;
+			    }	
+			}
+			        		
+			attr_node = attr_node->next;
+		    }
+			
+		    add_distribution_item(list, service, target);
+		}
+			
+		attrs_node = attrs_node->next;
+	    }
+	}
+	
+	xmlXPathFreeObject(result);
+    }
+    
+    return list;
+}
+
 int main(int argc, char *argv[])
 {
     if(argc < 2)
@@ -127,17 +211,33 @@ int main(int argc, char *argv[])
     }
     else
     {
-	xmlDocPtr doc;
+	xmlDocPtr doc;	
+	DistributionList *list;
+	unsigned int i;
 	
+	/* Open the XML document */
 	doc = create_distribution_export_doc(argv[1]);
 	
+	/* Check inter-dependencies */
 	if(!checkInterDependencies(doc))
 	{
 	    fprintf(stderr, "Distribution export file has an inter-dependency error!\n");
 	    fprintf(stderr, "Check if all inter-dependencies are present in the distribution!\n");
+	    
+	    xmlFreeDoc(doc);
+	    xmlCleanupParser();
 	    return 1;
 	}
-    
+	
+	/* Generate a distribution list */
+	list = generate_distribution_list(doc);
+	
+	/* Distribute services in the distribution list */
+	for(i = 0; i < list->size; i++)
+	    printf("service: %s, target: %s\n", list->service[i], list->target[i]);
+	
+	/* Clean up */
+	delete_distribution_list(list);    
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
     

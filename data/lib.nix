@@ -63,4 +63,16 @@ rec {
           }
         ) distribution
   ;
+  
+  /*
+   * Generates the body of a distribution Nix expression, which iterates over all services
+   * and devides the over the machines in the infrastructure model in equal proportions and order
+   */
+  generateDistributionModelBody = serviceNames: targets: allTargets:
+    if targets == [] then generateDistributionModelBody serviceNames allTargets allTargets
+    else
+      if serviceNames == [] then ""
+      else "  { service = services."+(head serviceNames)+"; target = infrastructure."+(head targets)+"; }\n" +
+        generateDistributionModelBody (tail serviceNames) (tail targets) allTargets
+  ;
 }
