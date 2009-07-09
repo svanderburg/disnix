@@ -1,0 +1,26 @@
+#!/bin/bash -e
+
+# Temp !!!!!!!!
+component=$1
+disnixclient=disnix-client
+
+# Resolve the store path of the given file
+storePath=`nix-store --query --resolve $component`
+
+# Query the requisites of the given component
+requisites=`nix-store --query --requisites $storePath`
+
+# Invoke a remote Disnix interface to fetch all the paths that 
+# are not already at the remote machine
+invalidPaths=`$disnixclient --print-invalid-paths $requisites`
+
+if [ "$invalidPaths" != "" ]
+then
+    # Serialise all the missing parts of the closure
+    tmpfile=`mktemp -p /tmp`    
+    nix-store --export $invalidPaths > $tmpfile
+    
+    # Import the serialisation of the target by using the Disnix interface
+    # on the remote machine
+    $disnixclient --import $tmpfile
+fi
