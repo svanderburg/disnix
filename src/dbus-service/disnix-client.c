@@ -61,19 +61,20 @@ static void print_usage()
 
 static void disnix_finish_signal_handler(DBusGProxy *proxy, const gchar *pid, gpointer user_data)
 {
-    g_print("Received finish signal from pid: %s\n", pid);
+    g_printerr("Received finish signal from pid: %s\n", pid);
     _exit(0);
 }
 
 static void disnix_success_signal_handler(DBusGProxy *proxy, const gchar *pid, const gchar *path, gpointer user_data)
 {
-    g_print("Received success signal from pid: %s, results path: %s\n", pid, path);
+    g_printerr("Received success signal from pid: %s, results path: %s\n", pid, path);
+    g_print(path);
     _exit(0);
 }
 
 static void disnix_failure_signal_handler(DBusGProxy *proxy, const gchar *pid, gpointer user_data)
 {
-    g_print("Received failure signal from pid: %s\n", pid);
+    g_printerr("Received failure signal from pid: %s\n", pid);
     _exit(0);
 }
 
@@ -114,24 +115,24 @@ int main(int argc, char **argv)
     mainloop = g_main_loop_new (NULL, FALSE);
     if(mainloop == NULL)
     {
-	g_print ("Cannot create main loop.\n");
+	g_printerr ("Cannot create main loop.\n");
 	return 1;
     }
 
     /*g_print (" : Connecting to Session D-Bus.\n");
     bus = dbus_g_bus_get (DBUS_BUS_SESSION, &error);*/
     
-    g_print (" : Connecting to System D-Bus.\n");
+    g_printerr (" : Connecting to System D-Bus.\n");
     bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
     
     if (!bus) {
         /* Print error and terminate. */
-        g_print (" : Couldn't connect to session bus, %s\n", error->message);
+        g_printerr (" : Couldn't connect to session bus, %s\n", error->message);
         return 1;
     }
 
     /* Create the proxy object that will be used to access the object */
-    g_print (" : Creating a Glib proxy object.\n");
+    g_printerr (" : Creating a Glib proxy object.\n");
     remote_object = dbus_g_proxy_new_for_name (bus,
 					       "org.nixos.disnix.Disnix",           /* name */
 					       "/org/nixos/disnix/Disnix",          /* obj path */
@@ -139,25 +140,25 @@ int main(int argc, char **argv)
 
     if(remote_object == NULL) {
         /* Print error and terminate. */
-        g_print (" : Couldn't create the proxy object, %s\n", error->message);
+        g_printerr (" : Couldn't create the proxy object, %s\n", error->message);
         return 1;
     }
     
     /* Register the signatures for the signal handlers */
 
     dbus_g_object_register_marshaller(marshal_VOID__STRING_STRING, G_TYPE_NONE, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INVALID);    
-    g_print (" : Add the argument signatures for the signal handler\n");
+    g_printerr (" : Add the argument signatures for the signal handler\n");
     dbus_g_proxy_add_signal(remote_object, "finish", G_TYPE_STRING, G_TYPE_INVALID);
     dbus_g_proxy_add_signal(remote_object, "success", G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INVALID);
     dbus_g_proxy_add_signal(remote_object, "failure", G_TYPE_STRING, G_TYPE_INVALID);
-    g_print (" : Register D-Bus signal handlers\n");
+    g_printerr (" : Register D-Bus signal handlers\n");
     dbus_g_proxy_connect_signal(remote_object, "finish", G_CALLBACK(disnix_finish_signal_handler), NULL, NULL);
     dbus_g_proxy_connect_signal(remote_object, "success", G_CALLBACK(disnix_success_signal_handler), NULL, NULL);
     dbus_g_proxy_connect_signal(remote_object, "failure", G_CALLBACK(disnix_failure_signal_handler), NULL, NULL);
 
     /* Do a call */
     
-    g_print (" : Call instantiate\n");
+    g_printerr (" : Call instantiate\n");
     gchar *pid = NULL, *args, *derivation, *attr = NULL, *filename, *pathname, *file = NULL, *type;
     gchar *paths, *oldPaths;
     gboolean isAttr, delete_old = FALSE;
@@ -286,7 +287,7 @@ int main(int argc, char **argv)
 	    }
 	    else
 	    {
-		g_print("You must specify a filename!\n");
+		g_printerr("You must specify a filename!\n");
 		_exit(1);
 	    }
 	    break;
@@ -326,15 +327,13 @@ int main(int argc, char **argv)
 	    break;
 	    
 	default:
-	    g_print("You need to specify an operation!\n");
+	    g_printerr("You need to specify an operation!\n");
 	    print_usage();
 	    _exit(1);
     }
     
-    printf("pid is: %s\n", pid);
-    
     if (error  != NULL) 
-        g_print (" : fail, %s.\n", error->message);
+        g_printerr (" : fail, %s.\n", error->message);
     /*else 
         g_print (" : success, got reply %d.\n", reply);*/
 
