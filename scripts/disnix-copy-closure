@@ -1,8 +1,61 @@
 #!/bin/bash -e
 
-# Temp !!!!!!!!
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    echo "Usage: $0 [options] path"
+    echo "Options:"
+    echo
+    echo "--interface Path to executable that communicates with a Disnix interface. Defaults to disnix-client"
+    echo "-h,--help   Shows the usage of this command"
+}
+
+# Parse valid argument options
+
+PARAMS=`getopt -n $0 -o h -l interface:,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+eval set -- "$PARAMS"
+
+# Evaluate valid options
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -i|--interface)
+	    interface=$2
+	    ;;
+	-h|--help)
+	    showUsage
+	    exit 0
+	    ;;
+    esac
+    
+    shift
+done
+
+# Get component name
+shift
 component=$1
-disnixclient=disnix-client
+
+# Validate the given options
+
+if [ "$interface" = "" ]
+then
+    interface="disnix-client"
+fi
+
+if [ "$component" = "" ]
+then
+    echo "ERROR: A Nix component must be specified!" >&2
+    exit 1
+fi
 
 # Resolve the store path of the given file
 storePath=`nix-store --query --resolve $component`
@@ -12,7 +65,7 @@ requisites=`nix-store --query --requisites $storePath`
 
 # Invoke a remote Disnix interface to fetch all the paths that 
 # are not already at the remote machine
-invalidPaths=`$disnixclient --print-invalid-paths $requisites`
+invalidPaths=`$interface --print-invalid-paths $requisites`
 
 if [ "$invalidPaths" != "" ]
 then
@@ -22,5 +75,5 @@ then
     
     # Import the serialisation of the target by using the Disnix interface
     # on the remote machine
-    $disnixclient --import $tmpfile
+    $interface --import $tmpfile
 fi
