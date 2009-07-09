@@ -48,11 +48,13 @@
 
 		<method name="activate">
 			<arg type="s" name="path" direction="in" />
+			<arg type="s" name="type" direction="in" />
 			<arg type="s" name="pid" direction="out" />
 		</method>
 
 		<method name="deactivate">
 			<arg type="s" name="path" direction="in" />
+			<arg type="s" name="type" direction="in" />
 			<arg type="s" name="pid" direction="out" />
 		</method>
 		

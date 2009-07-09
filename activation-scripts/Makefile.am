@@ -1,0 +1,1 @@
+libexec_SCRIPTS = echo

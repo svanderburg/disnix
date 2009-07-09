@@ -30,20 +30,23 @@ typedef enum
     E_SUCCESS_SIGNAL,
     E_FAILURE_SIGNAL,
     E_LAST_SIGNAL
-} DisnixSignalNumber;
+}
+DisnixSignalNumber;
 
 typedef struct
 {
     GObject parent;
     gchar *pid;
-} DisnixObject;
+}
+DisnixObject;
 
 typedef struct 
 {
     GObjectClass parent;
     /* Signals created for this class */
     guint signals[E_LAST_SIGNAL];
-} DisnixObjectClass;
+}
+DisnixObjectClass;
 
 /* Forward declaration of the function that will return the GType of
    the Value implementation. Not used in this program. */
@@ -81,9 +84,9 @@ gboolean disnix_print_invalid_paths(DisnixObject *obj, const gchar *path, gchar 
 
 gboolean disnix_collect_garbage(DisnixObject *obj, const gboolean delete_old, gchar **pid, GError **error);
 
-gboolean disnix_activate(DisnixObject *obj, const gchar *path, gchar **pid, GError **error);
+gboolean disnix_activate(DisnixObject *obj, const gchar *path, const gchar *type, gchar **pid, GError **error);
 
-gboolean disnix_deactivate(DisnixObject *obj, const gchar *path, gchar **pid, GError **error);
+gboolean disnix_deactivate(DisnixObject *obj, const gchar *path, const gchar *type, gchar **pid, GError **error);
 
 #include "disnix-service.h"
 
@@ -870,6 +873,7 @@ gboolean disnix_collect_garbage(DisnixObject *obj, const gboolean delete_old, gc
 typedef struct
 {
     gchar *path;
+    gchar *type;
     gchar *pid;
     DisnixObject *obj;
 }
@@ -878,7 +882,7 @@ DisnixActivateParams;
 static void disnix_activate_thread_func(gpointer data)
 {
     /* Declarations */
-    gchar *path, *cmd, *pid, *hook;
+    gchar *path, *type, *cmd, *pid;
     FILE *fp;
     char line[BUFFER_SIZE];
     DisnixActivateParams *params;
@@ -886,6 +890,7 @@ static void disnix_activate_thread_func(gpointer data)
     /* Import variables */
     params = (DisnixActivateParams*)data;
     path = params->path;
+    type = params->type;
     pid = params->pid;
     
     /* Print log entry */
@@ -893,41 +898,35 @@ static void disnix_activate_thread_func(gpointer data)
     
     /* Execute command */
 
-    hook = getenv("DISNIX_ACTIVATE_HOOK");
+    cmd = g_strconcat(ACTIVATION_SCRIPTS_DIR, "/", type, " activate ", path, NULL);
     
-    if(hook != NULL)
-    {
-        cmd = g_strconcat(hook, " ", path, NULL);
-    
-	fp = popen(cmd, "r");
-        if(fp == NULL)
-    	    disnix_emit_failure_signal(params->obj, pid); /* Something went wrong with forking the process */
-	else
-	{
-	    /* Read the output */
-	    while(fgets(line, sizeof(line), fp) != NULL)
-		puts(line);
-	
-	    if(pclose(fp) == 0)
-	    {
-		/* Emit success signal */
-		disnix_emit_finish_signal(params->obj, pid);
-	    }
-	    else
-		disnix_emit_failure_signal(params->obj, pid);
-	}
-    }
+    fp = popen(cmd, "r");
+    if(fp == NULL)
+        disnix_emit_failure_signal(params->obj, pid); /* Something went wrong with forking the process */
     else
-	disnix_emit_finish_signal(params->obj, pid); /* Emit success signal */
+    {
+        /* Read the output */
+        while(fgets(line, sizeof(line), fp) != NULL)
+    	    puts(line);
+	
+	if(pclose(fp) == 0)
+	{
+	    /* Emit success signal */
+	    disnix_emit_finish_signal(params->obj, pid);
+	}
+	else
+	    disnix_emit_failure_signal(params->obj, pid);
+    }
 
     /* Free variables */
     g_free(path);
+    g_free(type);
     g_free(pid);
     g_free(params);
     g_free(cmd);    
 }
 
-gboolean disnix_activate(DisnixObject *obj, const gchar *path, gchar **pid, GError **error)
+gboolean disnix_activate(DisnixObject *obj, const gchar *path, const gchar *type, gchar **pid, GError **error)
 {
     /* Declarations */
     gchar *pidstring;
@@ -937,7 +936,7 @@ gboolean disnix_activate(DisnixObject *obj, const gchar *path, gchar **pid, GErr
     g_assert(obj != NULL);
 
     /* Generate process id */
-    pidstring = g_strconcat("activate:", path, NULL);
+    pidstring = g_strconcat("activate:", path, ":", type, NULL);
     obj->pid = string_to_hash(pidstring);
     *pid = obj->pid;
     g_free(pidstring);
@@ -945,6 +944,7 @@ gboolean disnix_activate(DisnixObject *obj, const gchar *path, gchar **pid, GErr
     /* Create parameter struct */
     params = (DisnixActivateParams*)g_malloc(sizeof(DisnixActivateParams));
     params->path = g_strdup(path);
+    params->type = g_strdup(type);
     params->pid = g_strdup(obj->pid);
     params->obj = obj;
 
@@ -959,6 +959,7 @@ gboolean disnix_activate(DisnixObject *obj, const gchar *path, gchar **pid, GErr
 typedef struct
 {
     gchar *path;
+    gchar *type;
     gchar *pid;
     DisnixObject *obj;
 }
@@ -967,7 +968,7 @@ DisnixDeactivateParams;
 static void disnix_deactivate_thread_func(gpointer data)
 {
     /* Declarations */
-    gchar *path, *cmd, *pid, *hook;
+    gchar *path, *type, *cmd, *pid;
     FILE *fp;
     char line[BUFFER_SIZE];
     DisnixDeactivateParams *params;
@@ -975,6 +976,7 @@ static void disnix_deactivate_thread_func(gpointer data)
     /* Import variables */
     params = (DisnixDeactivateParams*)data;
     path = params->path;
+    type = params->type;
     pid = params->pid;
     
     /* Print log entry */
@@ -982,41 +984,35 @@ static void disnix_deactivate_thread_func(gpointer data)
     
     /* Execute command */
 
-    hook = getenv("DISNIX_DEACTIVATE_HOOK");
+    cmd = g_strconcat(ACTIVATION_SCRIPTS_DIR, "/", type, " deactivate ", path, NULL);
     
-    if(hook != NULL)
-    {
-        cmd = g_strconcat(hook, " ", path, NULL);
-    
-	fp = popen(cmd, "r");
-        if(fp == NULL)
-    	    disnix_emit_failure_signal(params->obj, pid); /* Something went wrong with forking the process */
-	else
-	{
-	    /* Read the output */
-	    while(fgets(line, sizeof(line), fp) != NULL)
-		puts(line);
-	
-	    if(pclose(fp) == 0)
-	    {
-		/* Emit success signal */
-		disnix_emit_finish_signal(params->obj, pid);
-	    }
-	    else
-		disnix_emit_failure_signal(params->obj, pid);
-	}
-    }
+    fp = popen(cmd, "r");
+    if(fp == NULL)
+        disnix_emit_failure_signal(params->obj, pid); /* Something went wrong with forking the process */
     else
-	disnix_emit_finish_signal(params->obj, pid); /* Emit success signal */
+    {
+        /* Read the output */
+        while(fgets(line, sizeof(line), fp) != NULL)
+  	    puts(line);
+	
+	if(pclose(fp) == 0)
+	{
+	    /* Emit success signal */
+	    disnix_emit_finish_signal(params->obj, pid);
+	}
+	else
+	    disnix_emit_failure_signal(params->obj, pid);
+    }
 
     /* Free variables */
     g_free(path);
+    g_free(type);
     g_free(pid);
     g_free(params);
     g_free(cmd);    
 }
 
-gboolean disnix_deactivate(DisnixObject *obj, const gchar *path, gchar **pid, GError **error)
+gboolean disnix_deactivate(DisnixObject *obj, const gchar *path, const gchar *type, gchar **pid, GError **error)
 {
     /* Declarations */
     gchar *pidstring;
@@ -1026,7 +1022,7 @@ gboolean disnix_deactivate(DisnixObject *obj, const gchar *path, gchar **pid, GE
     g_assert(obj != NULL);
 
     /* Generate process id */
-    pidstring = g_strconcat("deactivate:", path, NULL);
+    pidstring = g_strconcat("deactivate:", path, ":", type, NULL);
     obj->pid = string_to_hash(pidstring);
     *pid = obj->pid;
     g_free(pidstring);
@@ -1034,6 +1030,7 @@ gboolean disnix_deactivate(DisnixObject *obj, const gchar *path, gchar **pid, GE
     /* Create parameter struct */
     params = (DisnixDeactivateParams*)g_malloc(sizeof(DisnixDeactivateParams));
     params->path = g_strdup(path);
+    params->type = g_strdup(type);
     params->pid = g_strdup(obj->pid);
     params->obj = obj;
 

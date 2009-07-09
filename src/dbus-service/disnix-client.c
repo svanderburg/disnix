@@ -52,8 +52,8 @@ static void print_usage()
     g_print("disnix-client --import filename\n");
     g_print("disnix-client --print-invalid-paths paths\n");
     g_print("disnix-client --collect-garbage [-d | --delete-old]\n");
-    g_print("disnix-client --activate path\n");
-    g_print("disnix-client --deactivate path\n");
+    g_print("disnix-client --type type --activate path\n");
+    g_print("disnix-client --type type --deactivate path\n");
     g_print("disnix-client {-h | --help}\n");
 }
 
@@ -102,6 +102,7 @@ int main(int argc, char **argv)
 	{"deactivate", required_argument, 0, 'W'},
 	{"attr", required_argument, 0, 'A'},
 	{"delete-old", no_argument, 0, 'd'},
+	{"type", required_argument, 0, 't'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
@@ -157,13 +158,13 @@ int main(int argc, char **argv)
     /* Do a call */
     
     g_print (" : Call instantiate\n");
-    gchar *pid = NULL, *args, *derivation, *attr = NULL, *filename, *pathname, *file = NULL;
+    gchar *pid = NULL, *args, *derivation, *attr = NULL, *filename, *pathname, *file = NULL, *type;
     gchar *paths, *oldPaths;
     gboolean isAttr, delete_old = FALSE;
     
     Operation operation = OP_NONE;
         
-    while((c = getopt_long(argc, argv, "iu:e:A:r:f:dh", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "iu:e:A:r:f:t:dh", long_options, &option_index)) != -1)
     {
 	switch(c)
 	{
@@ -225,6 +226,10 @@ int main(int argc, char **argv)
 		delete_old = TRUE;
 		break;
 	
+	    case 't':
+		type = optarg;
+		break;
+		
 	    case 'h':
 		print_usage();
 		_exit(0);    
@@ -313,11 +318,11 @@ int main(int argc, char **argv)
 	    break;
 	  
 	case OP_ACTIVATE:
-	    org_nixos_disnix_Disnix_activate(remote_object, pathname, &pid, &error);
+	    org_nixos_disnix_Disnix_activate(remote_object, pathname, type, &pid, &error);
 	    break;
 
 	case OP_DEACTIVATE:
-	    org_nixos_disnix_Disnix_deactivate(remote_object, pathname, &pid, &error);
+	    org_nixos_disnix_Disnix_deactivate(remote_object, pathname, type, &pid, &error);
 	    break;
 	    
 	default:

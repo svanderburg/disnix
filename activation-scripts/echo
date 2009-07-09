@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Activation script that simply echos the service thats being activated or deactivated
+
+case "$1" in
+    activate)
+        echo "Echo activation script: Activate service: $2"
+        ;;
+    deactivate)
+        echo "Echo activation script: Deactivate service: $2"
+	;;
+esac
