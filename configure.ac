@@ -10,6 +10,7 @@ AC_SUBST(libexecdir)
 # Checks for programs
 AC_PROG_CC
 AC_PROG_INSTALL
+AC_PROG_LIBTOOL
 AM_PROG_CC_C_O
 PKG_PROG_PKG_CONFIG
 
@@ -45,6 +46,7 @@ Makefile
 conf/Makefile
 src/Makefile
 src/dbus-service/Makefile
+src/libdistexport/Makefile
 src/distribute/Makefile
 scripts/Makefile
 data/Makefile
