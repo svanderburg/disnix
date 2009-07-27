@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #define CAPACITY_INCREMENT 10
+#define TRUE 1
+#define FALSE 0
 
 static void increase_capacity(DistributionList *list)
 {
@@ -48,4 +50,46 @@ void add_distribution_item(DistributionList *list, char *service, char *target)
     strcpy(list->target[list->size], target);
 
     list->size++;
+}
+
+static int contains(DistributionList *list, char *service, char *target)
+{
+    unsigned int i;
+    
+    for(i = 0; i < list->size; i++)
+    {
+	if(strcmp(service, list->service[i]) == 0 &&
+	   strcmp(target, list->target[i]) == 0)
+	    return TRUE;
+    }
+    
+    return FALSE;
+}
+
+DistributionList *intersection(DistributionList *list1, DistributionList *list2)
+{
+    unsigned int i;
+    DistributionList *ret = new_distribution_list();
+    
+    for(i = 0; i < list1->size; i++)
+    {
+	if(contains(list2, list1->service[i], list1->target[i]))
+	    add_distribution_item(ret, list1->service[i], list1->target[i]);
+    }
+    
+    return ret;
+}
+
+DistributionList *substract(DistributionList *list1, DistributionList *list2)
+{
+    unsigned int i;
+    DistributionList *ret = new_distribution_list();
+    
+    for(i = 0; i < list1->size; i++)
+    {
+	if(!contains(list2, list1->service[i], list1->target[i]))
+	    add_distribution_item(ret, list1->service[i], list1->target[i]);
+    }
+    
+    return ret;
 }

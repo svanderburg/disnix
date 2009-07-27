@@ -42,6 +42,14 @@ static xmlXPathObjectPtr select_inter_dependencies(xmlDocPtr doc, gchar *service
     return result;
 }
 
+static xmlXPathObjectPtr select_inter_dependend_services_from(xmlDocPtr doc, gchar *service)
+{
+    gchar *query = g_strconcat("/expr/list/attrs/attr[@name='dependsOn']/list/string[@value='", service, "']/../../../attr[@name='service']/string/@value", NULL);
+    xmlXPathObjectPtr result = executeXPathQuery(doc, query);    
+    g_free(query);
+    return result;
+}
+
 static xmlXPathObjectPtr select_all_distribution_items(xmlDocPtr doc)
 {
     return executeXPathQuery(doc, "/expr/list");
