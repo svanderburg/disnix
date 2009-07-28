@@ -1,1 +1,1 @@
-SUBDIRS = dbus-service libdistexport distribute
+SUBDIRS = dbus-service libdistexport distribute activate

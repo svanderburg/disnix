@@ -48,6 +48,7 @@ src/Makefile
 src/dbus-service/Makefile
 src/libdistexport/Makefile
 src/distribute/Makefile
+src/activate/Makefile
 scripts/Makefile
 data/Makefile
 man/Makefile

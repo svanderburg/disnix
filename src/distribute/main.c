@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-	xmlDocPtr doc;	
+	xmlDocPtr doc;
 	DistributionList *list;
 	unsigned int i;
 	

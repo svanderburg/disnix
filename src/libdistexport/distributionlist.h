@@ -7,6 +7,7 @@ typedef struct
     unsigned int capacity;
     char **service;
     char **target;
+    int *visited;
 }
 DistributionList;
 
@@ -19,5 +20,9 @@ void add_distribution_item(DistributionList *list, char *service, char *target);
 DistributionList *intersection(DistributionList *list1, DistributionList *list2);
 
 DistributionList *substract(DistributionList *list1, DistributionList *list2);
+
+int distribution_item_index(DistributionList *list, char *service, char *target);
+
+DistributionList *select_distribution_items(DistributionList *list, char *service);
 
 #endif
