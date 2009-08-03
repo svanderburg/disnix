@@ -49,7 +49,7 @@ static void print_usage()
     g_print("disnix-client {-e | --uninstall} derivation\n");
     g_print("disnix-client --instantiate [-A attributepath | --attr attributepath] filename\n");
     g_print("disnix-client {-r | --realise} pathname\n");
-    g_print("disnix-client --import filename\n");
+    g_print("disnix-client --import {--remotefile filename | --localfile filename}\n");
     g_print("disnix-client --print-invalid-paths paths\n");
     g_print("disnix-client --collect-garbage [-d | --delete-old]\n");
     g_print("disnix-client --type type --activate path\n");
@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 	{"uninstall", required_argument, 0, 'e'},
 	{"instantiate", no_argument, 0, 'I'},
 	{"realise", required_argument, 0, 'r'},
-	{"import", required_argument, 0, 'M'},
+	{"import", no_argument, 0, 'M'},
 	{"print-invalid-paths", no_argument, 0, 'P'},
 	{"collect-garbage", no_argument, 0, 'C'},
 	{"activate", required_argument, 0, 'Q'},
@@ -104,6 +104,8 @@ int main(int argc, char **argv)
 	{"attr", required_argument, 0, 'A'},
 	{"delete-old", no_argument, 0, 'd'},
 	{"type", required_argument, 0, 't'},
+	{"localfile", required_argument, 0, 'L'},
+	{"remotefile", required_argument, 0, 'R'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
@@ -161,6 +163,7 @@ int main(int argc, char **argv)
     g_printerr (" : Call instantiate\n");
     gchar *pid = NULL, *args, *derivation, *attr = NULL, *filename, *pathname, *file = NULL, *type;
     gchar *paths, *oldPaths;
+    gchar *localfile = NULL, *remotefile = NULL;
     gboolean isAttr, delete_old = FALSE;
     
     Operation operation = OP_NONE;
@@ -198,7 +201,6 @@ int main(int argc, char **argv)
 	    
 	    case 'M':
 		operation = OP_IMPORT;
-		filename = optarg;
 		break;
 	
 	    case 'P':
@@ -230,7 +232,15 @@ int main(int argc, char **argv)
 	    case 't':
 		type = optarg;
 		break;
-		
+	
+	    case 'L':
+		localfile = optarg;
+		break;
+	
+	    case 'R':
+		remotefile = optarg;
+		break;
+	
 	    case 'h':
 		print_usage();
 		_exit(0);    
@@ -297,6 +307,16 @@ int main(int argc, char **argv)
 	    break;
 	
 	case OP_IMPORT:
+	    if(localfile != NULL)
+		filename = localfile;
+	    else if(remotefile != NULL)
+		filename = remotefile;
+	    else
+	    {
+		fprintf(stderr, "The import option requires either a local or a remote file!\n");
+		_exit(1);
+	    }
+	    
 	    org_nixos_disnix_Disnix_realise(remote_object, filename, &pid, &error);
 	    break;
 	

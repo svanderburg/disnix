@@ -1,5 +1,14 @@
 #include <distributionexport.h>
 #include <stdio.h>
+#include <getopt.h>
+#include <glib.h>
+
+static void print_usage()
+{
+    fprintf(stderr, "Usage:\n");
+    fprintf(stderr, "disnix-activate [{-i | --interface} interface] [{-o|--old-export} distribution_export_file] distribution_export_file\n");
+    fprintf(stderr, "disnix-activate {-h | --help}\n");
+}
 
 static void deactivate(xmlDocPtr doc, DistributionList *list, char *service, char *target)
 {
@@ -77,34 +86,57 @@ static void activate(xmlDocPtr doc, DistributionList *list, char *service, char 
     }
 }
 
-static void print_list(DistributionList *list)
-{
-    unsigned int i;
-    
-    for(i = 0; i < list->size; i++)
-	printf("service: %s target: %s\n", list->service[i], list->target[i]);
-}
-
 int main(int argc, char *argv[])
 {
-    if(argc < 2)
+    /* Declarations */
+    int c, option_index = 0;
+    struct option long_options[] =
+    {
+	{"interface", required_argument, 0, 'i'},
+	{"old-export", required_argument, 0, 'o'},
+	{"help", no_argument, 0, 'h'},
+	{0, 0, 0, 0}
+    };
+    gchar *interface_arg = g_strdup("");
+    char *old_export_file = NULL;
+    
+    /* Parse command-line options */
+    while((c = getopt_long(argc, argv, "i:o:h", long_options, &option_index)) != -1)
+    {
+	switch(c)
+	{
+	    case 'i':
+		interface_arg = g_strconcat(" --interface ", optarg, NULL);
+		break;
+	    case 'o':
+	        old_export_file = optarg;
+	        break;
+	    case 'h':
+		print_usage();
+		return 0;
+	}
+    }
+
+    if(optind >= argc)
     {
 	fprintf(stderr, "A distribution export file has to be specified!\n");
+	g_free(interface_arg);
 	return 1;
     }
     else
     {
-	xmlDocPtr doc_old = NULL, doc_new;	
+	xmlDocPtr doc_old = NULL, doc_new;
 	DistributionList *list_old, *list_new;
 	DistributionList *list_intersection, *list_activate, *list_deactivate;
 	unsigned int i;
+	char *new_export_file = argv[optind];
 	
 	/* Open the XML document */
-	doc_new = create_distribution_export_doc(argv[1]);
+	doc_new = create_distribution_export_doc(new_export_file);
 
-	if(argc >= 3)
+	if(old_export_file != NULL)
 	{
-	    doc_old = create_distribution_export_doc(argv[2]);
+	    doc_old = create_distribution_export_doc(old_export_file);
     
 	    /* Check inter-dependencies */
 	    if(!checkInterDependencies(doc_old))
@@ -138,18 +170,18 @@ int main(int argc, char *argv[])
 	list_new = generate_distribution_list(doc_new);
 
 	printf("old:\n");
-	print_list(list_old);
+	print_distribution_list(list_old);
 	printf("\nnew:\n");
-	print_list(list_new);
+	print_distribution_list(list_new);
 	printf("\nintersect:\n");
 	list_intersection = intersection(list_old, list_new);
-	print_list(list_intersection);
+	print_distribution_list(list_intersection);
 	printf("\nto deactivate:\n");
 	list_deactivate = substract(list_old, list_intersection);
-	print_list(list_deactivate);
+	print_distribution_list(list_deactivate);
 	printf("\nto activate:\n");
 	list_activate = substract(list_new, list_intersection);
-	print_list(list_activate);
+	print_distribution_list(list_activate);
 
 	/* Deactivate old services interdependency closures */
 	printf("Deactivating obsolete services from old configuration:\n");
@@ -170,8 +202,9 @@ int main(int argc, char *argv[])
 	}
 	
 	/* Clean up */
+	g_free(interface_arg);
 	delete_distribution_list(list_old);
-	delete_distribution_list(list_new); /* Gaat mis??? */
+	delete_distribution_list(list_new);
 	delete_distribution_list(list_intersection);
 	delete_distribution_list(list_deactivate);
 	delete_distribution_list(list_activate);

@@ -13,6 +13,7 @@ showUsage()
     echo "-m,--method         Sets the transition method of the deployment. \"distribution\""
     echo "                    builds services on the coordinator machine, \"compilation\" builds services on the target machines."
     echo "                    Defauls to \"distribution\""
+    echo "--show-trace        Shows a trace of the output"
     echo "-h,--help           Shows the usage of this command"
 }
 
@@ -22,7 +23,7 @@ export prefix=@prefix@
 
 # Parse valid argument options
 
-PARAMS=`getopt -n $0 -o s:i:d:m:h -l services:,infrastructure:,distribution:,method:,help -- "$@"`
+PARAMS=`getopt -n $0 -o s:i:d:m:h -l services:,infrastructure:,distribution:,method:,show-trace,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -48,6 +49,9 @@ do
 	    ;;
 	-m|--method)
 	    method=$2
+	    ;;
+	--show-trace)
+	    showTrace=1
 	    ;;
 	-h|--help)
 	    showUsage
@@ -91,6 +95,11 @@ case "$method" in
         ;;
 esac
 
+if [ "$showTrace" = "1" ]
+then
+    showTraceArg="--show-trace"
+fi
+
 # Generate Nix expression
 
 exportExpr=`readlink -f @datadir@/@PACKAGE@/export.nix`
@@ -116,4 +125,7 @@ rec {
 EOF
 
 # Instantiate the expression
-nix-instantiate $tmpfilename
+nix-instantiate $showTraceArg $tmpfilename
+
+# Remove the generated Nix expression
+rm -f $tmpfilename

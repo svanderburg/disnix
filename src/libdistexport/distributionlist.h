@@ -25,4 +25,6 @@ int distribution_item_index(DistributionList *list, char *service, char *target)
 
 DistributionList *select_distribution_items(DistributionList *list, char *service);
 
+void print_distribution_list(DistributionList *list);
+
 #endif

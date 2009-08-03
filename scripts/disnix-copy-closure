@@ -4,16 +4,17 @@
 
 showUsage()
 {
-    echo "Usage: $0 [options] path"
+    echo "Usage: $0 [options] --target target path"
     echo "Options:"
     echo
+    echo "-t,--target URL of the Disnix interface where the closure should be distributed to"
     echo "--interface Path to executable that communicates with a Disnix interface. Defaults to disnix-client"
     echo "-h,--help   Shows the usage of this command"
 }
 
 # Parse valid argument options
 
-PARAMS=`getopt -n $0 -o h -l interface:,help -- "$@"`
+PARAMS=`getopt -n $0 -o t:h -l target:,interface:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -28,7 +29,10 @@ eval set -- "$PARAMS"
 while [ "$1" != "--" ]
 do
     case "$1" in
-        -i|--interface)
+        -t|--target)
+	    target=$2
+	    ;;
+        --interface)
 	    interface=$2
 	    ;;
 	-h|--help)
@@ -45,6 +49,12 @@ shift
 component=$1
 
 # Validate the given options
+
+if [ "$target" = "" ]
+then
+    echo "ERROR: A target address must be specified!" >&2
+    exit 1
+fi
 
 if [ "$interface" = "" ]
 then
@@ -70,10 +80,13 @@ invalidPaths=`$interface --print-invalid-paths $requisites`
 if [ "$invalidPaths" != "" ]
 then
     # Serialise all the missing parts of the closure
-    tmpfile=`mktemp -p /tmp`    
-    nix-store --export $invalidPaths > $tmpfile
+    tmpfilename=`mktemp -p /tmp`    
+    nix-store --export $invalidPaths > $tmpfilename
     
     # Import the serialisation of the target by using the Disnix interface
     # on the remote machine
-    $interface --import $tmpfile
+    $interface --import --localfile $tmpfilename $target
+    
+    # Remove the serialisation
+    rm -f $tmpfilename
 fi

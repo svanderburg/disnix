@@ -83,3 +83,6 @@ EOF
 
 # Build the distribution model
 nix-build $tmpfilename
+
+# Remove the generated Nix expression
+rm -f $tmpfilename

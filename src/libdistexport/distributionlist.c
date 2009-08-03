@@ -1,6 +1,7 @@
 #include "distributionlist.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #define CAPACITY_INCREMENT 10
 #define TRUE 1
 #define FALSE 0
@@ -34,7 +35,6 @@ void delete_distribution_list(DistributionList *list)
     {
 	free(list->service[i]);
 	free(list->target[i]);
-	free(list->visited[i]);
     }
     
     free(list->service);
@@ -111,4 +111,12 @@ DistributionList *select_distribution_items(DistributionList *list, char *servic
     }
     
     return ret;
+}
+
+void print_distribution_list(DistributionList *list)
+{
+    unsigned int i;
+    
+    for(i = 0; i < list->size; i++)
+	printf("Service: %s, Target: %s\n", list->service[i], list->target[i]);
 }

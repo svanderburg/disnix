@@ -10,12 +10,13 @@ showUsage()
     echo "-s,--services       Services Nix expression which describes all components of the distributed system"
     echo "-i,--infrastructure Infrastructure Nix expression which captures properties of machines in the network"
     echo "-d,--distribution   Distribution Nix expression which maps services to machines in the network"
+    echo "--show-trace        Shows a trace of the output"
     echo "-h,--help           Shows the usage of this command"
 }
 
 # Parse valid argument options
 
-PARAMS=`getopt -n $0 -o s:i:d:h -l services:,infrastructure:,distribution:,help -- "$@"`
+PARAMS=`getopt -n $0 -o s:i:d:h -l services:,infrastructure:,distribution:,show-trace,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -38,6 +39,9 @@ do
 	    ;;
 	-d|--distribution)
 	    distributionFile=`readlink -f $2`
+	    ;;
+	--show-trace)
+	    showTrace=1
 	    ;;
 	-h|--help)
 	    showUsage
@@ -68,7 +72,12 @@ then
     exit 1
 fi
 
+if [ "$showTrace" = "1" ]
+then
+    showTraceArg="--show-trace"
+fi
+
 # Execute instantiation and realisation
 
-drvPath=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile`
+drvPath=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile $showTraceArg`
 nix-store --realise $drvPath --add-root result --indirect
