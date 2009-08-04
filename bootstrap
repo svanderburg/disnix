@@ -7,4 +7,3 @@ libtoolize --copy
 aclocal -I .
 autoconf -f
 automake -a
-libtoolize -f
