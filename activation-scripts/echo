@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 # Activation script that simply echos the service thats being activated or deactivated
 
