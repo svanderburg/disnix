@@ -11,6 +11,7 @@ static void increase_capacity(DistributionList *list)
     list->capacity += CAPACITY_INCREMENT;
     list->service = (char**)realloc(list->service, list->capacity * sizeof(char*));
     list->target = (char**)realloc(list->target, list->capacity * sizeof(char*));
+    list->type = (char**)realloc(list->type, list->capacity * sizeof(char*));
     list->visited = (int*)realloc(list->visited, list->capacity * sizeof(int));
 }
 
@@ -21,6 +22,7 @@ DistributionList *new_distribution_list()
     list->size = 0;
     list->service = NULL;
     list->target = NULL;
+    list->type = NULL;
     list->visited = NULL;
     increase_capacity(list);
         
@@ -35,15 +37,17 @@ void delete_distribution_list(DistributionList *list)
     {
 	free(list->service[i]);
 	free(list->target[i]);
+	free(list->type[i]);
     }
     
     free(list->service);
     free(list->target);
+    free(list->type);
     free(list->visited);
     free(list);
 }
 
-void add_distribution_item(DistributionList *list, char *service, char *target)
+void add_distribution_item(DistributionList *list, char *service, char *target, char *type)
 {
     if(list->size == list->capacity)
 	increase_capacity(list);
@@ -52,6 +56,8 @@ void add_distribution_item(DistributionList *list, char *service, char *target)
     strcpy(list->service[list->size], service);
     list->target[list->size] = (char*)malloc((strlen(target) + 1) * sizeof(char));
     strcpy(list->target[list->size], target);
+    list->type[list->size] = (char*)malloc((strlen(type) + 1) * sizeof(char));
+    strcpy(list->type[list->size], type);
     list->visited[list->size] = FALSE;
     
     list->size++;
@@ -65,7 +71,7 @@ DistributionList *intersection(DistributionList *list1, DistributionList *list2)
     for(i = 0; i < list1->size; i++)
     {
 	if(distribution_item_index(list2, list1->service[i], list1->target[i]) != -1)
-	    add_distribution_item(ret, list1->service[i], list1->target[i]);
+	    add_distribution_item(ret, list1->service[i], list1->target[i], list1->type[i]);
     }
     
     return ret;
@@ -79,7 +85,7 @@ DistributionList *substract(DistributionList *list1, DistributionList *list2)
     for(i = 0; i < list1->size; i++)
     {
 	if(distribution_item_index(list2, list1->service[i], list1->target[i]) == -1)
-	    add_distribution_item(ret, list1->service[i], list1->target[i]);
+	    add_distribution_item(ret, list1->service[i], list1->target[i], list1->type[i]);
     }
     
     return ret;
@@ -107,7 +113,7 @@ DistributionList *select_distribution_items(DistributionList *list, char *servic
     for(i = 0; i < list->size; i++)
     {
 	if(strcmp(service, list->service[i]) == 0)
-	    add_distribution_item(ret, list->service[i], list->target[i]);
+	    add_distribution_item(ret, list->service[i], list->target[i], list->type[i]);
     }
     
     return ret;
@@ -118,5 +124,5 @@ void print_distribution_list(DistributionList *list)
     unsigned int i;
     
     for(i = 0; i < list->size; i++)
-	printf("Service: %s, Target: %s\n", list->service[i], list->target[i]);
+	printf("Service: %s, Target: %s, Type: %s\n", list->service[i], list->target[i], list->type[i]);
 }

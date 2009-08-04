@@ -151,6 +151,7 @@ DistributionList *generate_distribution_list(xmlDocPtr doc)
 			
 		    xmlChar *service = NULL;
 		    xmlChar *target = NULL;
+		    xmlChar *type = NULL;
 
 		    while(attr_node != NULL)
 		    {
@@ -186,6 +187,18 @@ DistributionList *generate_distribution_list(xmlDocPtr doc)
 					string_node = string_node->next;
 				    }
 				}
+				else if(xmlStrcmp(attr_type, (const xmlChar*) "type") == 0)
+				{
+				    xmlNodePtr string_node = attr_node->children;
+					
+				    while(string_node != NULL)
+				    {
+				        if(xmlStrcmp(string_node->name, "string") == 0)
+				    	    type = string_node->properties->children->content;
+					
+					string_node = string_node->next;
+				    }
+				}				
 				    				    
 				attr_props = attr_props->next;
 			    }	
@@ -194,7 +207,7 @@ DistributionList *generate_distribution_list(xmlDocPtr doc)
 			attr_node = attr_node->next;
 		    }
 			
-		    add_distribution_item(list, service, target);
+		    add_distribution_item(list, service, target, type);
 		}
 			
 		attrs_node = attrs_node->next;

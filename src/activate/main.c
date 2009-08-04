@@ -1,5 +1,8 @@
 #include <distributionexport.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <getopt.h>
 #include <glib.h>
 
@@ -10,16 +13,21 @@ static void print_usage()
     fprintf(stderr, "disnix-activate {-h | --help}\n");
 }
 
-static void deactivate(xmlDocPtr doc, DistributionList *list, char *service, char *target)
+static int deactivate(char *interface, xmlDocPtr doc, DistributionList *list, char *service, char *target, char *type)
 {
     int index = distribution_item_index(list, service, target);
     
     if(index == -1)
-	fprintf(stderr, "Mapping of service: %s to target: %s does not exists in distribution export file!\n", service, target);
-    else
     {
+	fprintf(stderr, "Mapping of service: %s to target: %s does not exists in distribution export file!\n", service, target);
+	return -1;
+    }
+    else
+    {	
 	if(!list->visited[index])
 	{
+	    int status;
+	    gchar *command;
 	    xmlXPathObjectPtr result = select_inter_dependend_services_from(doc, service);
 	    
 	    if(result)
@@ -34,7 +42,7 @@ static void deactivate(xmlDocPtr doc, DistributionList *list, char *service, cha
 		    DistributionList *mappings = select_distribution_items(list, inter_dependency);
 		    
 		    for(j = 0; j < mappings->size; j++)
-			deactivate(doc, list, mappings->service[j], mappings->target[j]);
+			deactivate(interface, doc, list, mappings->service[j], mappings->target[j], mappings->type[j]);
 		    
 		    delete_distribution_list(mappings);
 		}
@@ -42,13 +50,25 @@ static void deactivate(xmlDocPtr doc, DistributionList *list, char *service, cha
 	    
 	    xmlXPathFreeObject(result);
 	
-	    printf("Deactivate: %s on: %s\n", service, target);
+	    printf("Deactivate: %s on: %s of type: %s\n", service, target, type);
+	    
+	    command = g_strconcat(interface, " --deactivate ", service, " --type ", type, " ", target, NULL);
+	    status = system(command);
+	    g_free(command);
+	    
+	    if(status == -1)
+		return -1;
+	    else if(WEXITSTATUS(status) != 0)
+		return WEXITSTATUS(status);
+			    
 	    list->visited[index] = TRUE;
 	}
+	
+	return 0;
     }
 }
 
-static void activate(xmlDocPtr doc, DistributionList *list, char *service, char *target)
+static int activate(char *interface, xmlDocPtr doc, DistributionList *list, char *service, char *target, char *type)
 {
     int index = distribution_item_index(list, service, target);
     
@@ -58,6 +78,8 @@ static void activate(xmlDocPtr doc, DistributionList *list, char *service, char 
     {
 	if(!list->visited[index])
 	{
+	    int status;
+	    gchar *command;
 	    xmlXPathObjectPtr result = select_inter_dependencies(doc, service);
 	    
 	    if(result)
@@ -72,7 +94,7 @@ static void activate(xmlDocPtr doc, DistributionList *list, char *service, char 
 		    DistributionList *mappings = select_distribution_items(list, inter_dependency);
 		    
 		    for(j = 0; j < mappings->size; j++)
-			activate(doc, list, mappings->service[j], mappings->target[j]);
+			activate(interface, doc, list, mappings->service[j], mappings->target[j], mappings->type[j]);
 		    
 		    delete_distribution_list(mappings);
 		}
@@ -80,7 +102,17 @@ static void activate(xmlDocPtr doc, DistributionList *list, char *service, char 
 	    
 	    xmlXPathFreeObject(result);
 	
-	    printf("Activate: %s on: %s\n", service, target);
+	    printf("Activate: %s on: %s of type: %s\n", service, target, type);
+	    
+	    command = g_strconcat(interface, " --activate ", service, " --type ", type, " ", target, NULL);
+	    status = system(command);
+	    g_free(command);
+	    
+	    if(status == -1)
+		return -1;
+	    else if(WEXITSTATUS(status) != 0)
+		return WEXITSTATUS(status);
+
 	    list->visited[index] = TRUE;
 	}
     }
@@ -97,7 +129,7 @@ int main(int argc, char *argv[])
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
-    gchar *interface_arg = g_strdup("");
+    gchar *interface = "disnix-client";
     char *old_export_file = NULL;
     
     /* Parse command-line options */
@@ -106,7 +138,7 @@ int main(int argc, char *argv[])
 	switch(c)
 	{
 	    case 'i':
-		interface_arg = g_strconcat(" --interface ", optarg, NULL);
+		interface = optarg;
 		break;
 	    case 'o':
 	        old_export_file = optarg;
@@ -120,7 +152,6 @@ int main(int argc, char *argv[])
     if(optind >= argc)
     {
 	fprintf(stderr, "A distribution export file has to be specified!\n");
-	g_free(interface_arg);
 	return 1;
     }
     else
@@ -189,7 +220,7 @@ int main(int argc, char *argv[])
 	for(i = 0; i < list_deactivate->size; i++)
 	{
 	    printf("\n");
-	    deactivate(doc_old, list_deactivate, list_deactivate->service[i], list_deactivate->target[i]);
+	    deactivate(interface, doc_old, list_deactivate, list_deactivate->service[i], list_deactivate->target[i], list_deactivate->type[i]);
 	}
     
 	/* Activate new services interdependency closures */
@@ -198,11 +229,10 @@ int main(int argc, char *argv[])
 	for(i = 0; i < list_activate->size; i++)
 	{
 	    printf("\n");
-	    activate(doc_new, list_activate, list_activate->service[i], list_activate->target[i]);
+	    activate(interface, doc_new, list_activate, list_activate->service[i], list_activate->target[i], list_activate->type[i]);
 	}
 	
 	/* Clean up */
-	g_free(interface_arg);
 	delete_distribution_list(list_old);
 	delete_distribution_list(list_new);
 	delete_distribution_list(list_intersection);
