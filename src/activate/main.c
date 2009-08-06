@@ -52,7 +52,7 @@ static int deactivate(char *interface, xmlDocPtr doc, DistributionList *list, ch
 	
 	    printf("Deactivate: %s on: %s of type: %s\n", service, target, type);
 	    
-	    command = g_strconcat(interface, " --deactivate ", service, " --type ", type, " ", target, NULL);
+	    command = g_strconcat(interface, " --deactivate ", service, " --type ", type, " --target ", target, NULL);
 	    status = system(command);
 	    g_free(command);
 	    
@@ -104,7 +104,7 @@ static int activate(char *interface, xmlDocPtr doc, DistributionList *list, char
 	
 	    printf("Activate: %s on: %s of type: %s\n", service, target, type);
 	    
-	    command = g_strconcat(interface, " --activate ", service, " --type ", type, " ", target, NULL);
+	    command = g_strconcat(interface, " --activate ", service, " --type ", type, " --target ", target, NULL);
 	    status = system(command);
 	    g_free(command);
 	    
