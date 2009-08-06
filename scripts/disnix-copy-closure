@@ -75,7 +75,7 @@ requisites=`nix-store --query --requisites $storePath`
 
 # Invoke a remote Disnix interface to fetch all the paths that 
 # are not already at the remote machine
-invalidPaths=`$interface --print-invalid-paths $requisites`
+invalidPaths=`$interface --target $target --print-invalid-paths $requisites`
 
 if [ "$invalidPaths" != "" ]
 then
@@ -85,7 +85,7 @@ then
     
     # Import the serialisation of the target by using the Disnix interface
     # on the remote machine
-    $interface --import --localfile $tmpfilename $target
+    $interface --target $target --import --localfile $tmpfilename
     
     # Remove the serialisation
     rm -f $tmpfilename
