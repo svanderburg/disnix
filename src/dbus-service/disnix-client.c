@@ -106,6 +106,7 @@ int main(int argc, char **argv)
 	{"type", required_argument, 0, 't'},
 	{"localfile", required_argument, 0, 'L'},
 	{"remotefile", required_argument, 0, 'R'},
+	{"target", required_argument, 0, 'T'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
