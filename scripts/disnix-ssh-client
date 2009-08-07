@@ -1,0 +1,140 @@
+#!/bin/bash -e
+
+showUsage()
+{
+    echo "Usage:"
+    echo "$0 {-i | --install} [-f file] [-A | --attr] args"
+    echo "$0 {-u | --upgrade} derivation"
+    echo "$0 {-e | --uninstall} derivation"
+    echo "$0 --instantiate [ -A attributepath | --attr attributepath ] filename"
+    echo "$0 {-r | --realise} pathname"
+    echo "$0 --import {--remotefile filename | --localfile filename}"
+    echo "$0 --print-invalid-paths paths"
+    echo "$0 --collect-garbage [-d | --delete-old]"
+    echo "$0 --type type --activate path"
+    echo "$0 --type type --deactivate path"
+    echo "$0 {-h | --help}"
+}
+
+# Parse valid argument options
+
+PARAMS=`getopt -n $0 -o iu:e:r:h -l install,upgrade:,uninstall:,instantiate,realise:,import,print-invalid-paths,collect-garbage,activate:,deactivate:,target:,remotefile:,localfile:,type:,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+eval set -- "$PARAMS"
+
+# Evaluate valid options
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -i|--install)
+	    operation="install";
+	    ;;
+	-u|--upgrade)
+	    operation="upgrade";
+	    ;;
+	-e|--uninstall)
+	    operation="uninstall";
+	    ;;
+	--instantiate)
+	    operation="instantiate";
+	    ;;
+	-r|--realise)
+	    operation="realise";
+	    ;;
+	--import)
+	    operation="import";
+	    ;;
+	--print-invalid-paths)
+	    operation="print-invalid-paths";
+	    ;;
+	--collect-garbage)
+	    operation="collect-garbage";
+	    ;;
+	--activate)
+	    operation="activate";
+	    path=$2
+	    ;;
+	--deactivate)
+	    operation="deactivate";
+	    path=$2
+	    ;;
+	--target)
+	    target=$2
+	    ;;
+	--localfile)
+	    localfile=$2
+	    ;;
+	--remotefile)
+	    remotefile=$2
+	    ;;
+	--type)
+	    type=$2
+	    ;;
+	-h|--help)
+	    showUsage
+	    exit 0
+	    ;;
+    esac
+    
+    shift
+done
+
+shift
+
+# Validate the given options
+
+if [ "$target" = "" ]
+then
+    echo "ERROR: A target hostname or IP address must be specified!" >&2
+    exit 1
+fi
+
+# Execute selected operation
+
+case "$operation" in
+    print-invalid-paths)
+	ssh $SSH_OPTS $target disnix-client --print-invalid-paths "$@"
+	;;
+    import)
+	if [ "$localfile" = "" ] && [ "$remotefile" = "" ]
+	then
+	    echo "ERROR: Either a remote or a localfile must be specified!" >&2
+	    exit 1
+	fi
+	
+	# A localfile must first be transferred
+	if [ "$localfile" != "" ]
+	then
+	    scp $SSH_OPTS $localfile $target:/tmp/out.closure # Preferably we should use mktemp for the filename
+	    remotefile=/tmp/out.closure
+	fi
+	
+	# Import the closure into the Nix store
+	ssh $SSH_OPTS $target disnix-client --import $remotefile  
+	;;
+    activate)
+	if [ "$type" = "" ]
+	then
+	    echo "ERROR: A type must be specified!" >&2
+	    exit 1
+	fi
+	
+	ssh $SSH_OPTS $target disnix-client --activate $path --type $type
+	;;
+    deactivate)
+	if [ "$type" = "" ]
+	then
+	    echo "ERROR: A type must be specified!" >&2
+	    exit 1
+	fi
+	
+	ssh $SSH_OPTS $target disnix-client --deactivate $path --type $type
+	;;
+esac
