@@ -247,6 +247,10 @@ int main(int argc, char **argv)
 		_exit(0);    
 		break;
 	    
+	    case 'T':
+		/* Do nothing */
+		break;
+		
 	    default:
 		print_usage();
 		_exit(1);
