@@ -90,6 +90,8 @@ gboolean disnix_deactivate(DisnixObject *obj, const gchar *path, const gchar *ty
 
 #include "disnix-service.h"
 
+char *activation_scripts;
+
 /*
  * Object initializer
  * Set ret_value to 0
@@ -98,7 +100,7 @@ static void
 disnix_object_init (DisnixObject *obj)
 {
     g_assert(obj != NULL);
-    obj->pid = NULL;
+    obj->pid = NULL;    
 }
 
 /*
@@ -898,7 +900,7 @@ static void disnix_activate_thread_func(gpointer data)
     
     /* Execute command */
 
-    cmd = g_strconcat(ACTIVATION_SCRIPTS_DIR, "/", type, " activate ", path, NULL);
+    cmd = g_strconcat(activation_scripts, "/", type, " activate ", path, NULL);
     
     fp = popen(cmd, "r");
     if(fp == NULL)
@@ -984,7 +986,7 @@ static void disnix_deactivate_thread_func(gpointer data)
     
     /* Execute command */
 
-    cmd = g_strconcat(ACTIVATION_SCRIPTS_DIR, "/", type, " deactivate ", path, NULL);
+    cmd = g_strconcat(activation_scripts, "/", type, " deactivate ", path, NULL);
     
     fp = popen(cmd, "r");
     if(fp == NULL)
@@ -1081,6 +1083,9 @@ int main(int argc, char **argv)
 
     /* Initialize thread system */
     g_thread_init (NULL);
+    
+    /* Set the activation scripts directory */
+    activation_scripts = g_strconcat(getenv("ACTIVATION_SCRIPTS"), "/lib/activation-scripts", NULL);
     
     /* Create a main loop that will dispatch callbacks. */
     mainloop = g_main_loop_new (NULL, FALSE);
