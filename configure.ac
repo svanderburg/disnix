@@ -3,10 +3,6 @@ AC_INIT([disnix], [0.1])
 AC_CONFIG_AUX_DIR([config])
 AM_INIT_AUTOMAKE([1.7.2 -Wall -Werror])
 
-# Change libexecdir
-libexecdir=\$\{exec_prefix\}/libexec/$PACKAGE/activation-scripts
-AC_SUBST(libexecdir)
-
 # Checks for programs
 AC_PROG_CC
 AC_PROG_INSTALL
