@@ -52,7 +52,6 @@ src/activate/Makefile
 scripts/Makefile
 data/Makefile
 man/Makefile
-activation-scripts/Makefile
 scripts/disnix-instantiate
 scripts/disnix-build
 scripts/disnix-gendist-roundrobin

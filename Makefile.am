@@ -1,1 +1,1 @@
-SUBDIRS = activation-scripts conf src scripts data man
+SUBDIRS = conf src scripts data man
