@@ -1085,7 +1085,7 @@ int main(int argc, char **argv)
     g_thread_init (NULL);
     
     /* Set the activation scripts directory */
-    activation_scripts = g_strconcat(getenv("ACTIVATION_SCRIPTS"), "/lib/activation-scripts", NULL);
+    activation_scripts = getenv("ACTIVATION_SCRIPTS");
     
     /* Create a main loop that will dispatch callbacks. */
     mainloop = g_main_loop_new (NULL, FALSE);
