@@ -57,8 +57,13 @@ rec {
     map (distributionItem:
           { service = getAttr serviceProperty distributionItem.service.pkg;
 	    target = getAttr targetProperty distributionItem.target;
-            dependsOn = map (dependencyName: getAttr serviceProperty (getAttr dependencyName services).pkg)
-	      (attrNames distributionItem.service.dependsOn);
+            dependsOn = 
+	      map (dependencyName:
+	        let serviceName = (getAttr dependencyName (distributionItem.service.dependsOn)).name;
+		in 
+	          getAttr serviceProperty (getAttr serviceName services).pkg
+		) 
+		(attrNames distributionItem.service.dependsOn);
 	    type = distributionItem.service.type;
           }
         ) distribution
