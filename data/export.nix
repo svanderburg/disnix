@@ -1,4 +1,4 @@
-{servicesFile, infrastructureFile, distributionFile, serviceProperty, targetProperty, stdenv}:
+{servicesFile, infrastructureFile, distributionFile, serviceProperty, targetProperty, pkgs}:
 
 let  
   lib = import ./lib.nix;
@@ -8,13 +8,17 @@ let
   newServices = lib.mapDependenciesOnPackages (lib.mapTargetsOnServices services distribution);
   newDistribution = import distributionFile { services = newServices; inherit infrastructure; };
   distributionXML = builtins.toXML (lib.generateDistributionExport newDistribution newServices serviceProperty targetProperty);
+  profilesXML = builtins.toXML (lib.generateProfileExport pkgs newDistribution newServices infrastructure serviceProperty targetProperty);
 in
-stdenv.mkDerivation {
+pkgs.stdenv.mkDerivation {
   name = "distributionExport";
   buildCommand = ''
     ensureDir $out
     cat > $out/export.xml <<EOF
     ${distributionXML}
+    EOF
+    cat > $out/profiles.xml <<EOF
+    ${profilesXML}
     EOF
   '';
 }

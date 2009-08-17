@@ -9,7 +9,7 @@
 static void print_usage()
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-distribute [{-i | --interface} interface] distribution_export_file\n");
+    fprintf(stderr, "disnix-distribute [{-i | --interface} interface] distribution_export\n");
     fprintf(stderr, "disnix-distribute {-h | --help}\n");
 }
 
@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 
     if(optind >= argc)
     {
-	fprintf(stderr, "ERROR: No distribution export file specified!\n");
+	fprintf(stderr, "ERROR: No distribution export specified!\n");
 	g_free(interface_arg);
 	return 1;
     }
@@ -50,23 +50,12 @@ int main(int argc, char *argv[])
 	xmlDocPtr doc;
 	DistributionList *list;
 	unsigned int i;
-	char *distribution_export_file = argv[optind];
+	gchar *profile_export_file = g_strconcat(argv[optind], "/profiles.xml", NULL);
 	int exit_status = 0;
 	
 	/* Open the XML document */
-	doc = create_distribution_export_doc(distribution_export_file);
-	
-	/* Check inter-dependencies */
-	if(!checkInterDependencies(doc))
-	{
-	    fprintf(stderr, "Distribution export file has an inter-dependency error!\n");
-	    fprintf(stderr, "Check if all inter-dependencies are present in the distribution!\n");
-	    
-	    xmlFreeDoc(doc);
-	    xmlCleanupParser();
-	    return 1;
-	}
-	
+	doc = create_distribution_export_doc(profile_export_file);
+		
 	/* Generate a distribution list */
 	list = generate_distribution_list(doc);
 	
@@ -96,6 +85,7 @@ int main(int argc, char *argv[])
 	}
 	
 	/* Clean up */
+	g_free(profile_export_file);
 	g_free(interface_arg);
 	delete_distribution_list(list);    
 	xmlFreeDoc(doc);

@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 	{0, 0, 0, 0}
     };
     gchar *interface = "disnix-client";
-    char *old_export_file = NULL;
+    char *old_export = NULL;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "i:o:h", long_options, &option_index)) != -1)
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 		interface = optarg;
 		break;
 	    case 'o':
-	        old_export_file = optarg;
+	        old_export = optarg;
 	        break;
 	    case 'h':
 		print_usage();
@@ -146,19 +146,24 @@ int main(int argc, char *argv[])
     }
     else
     {
-	xmlDocPtr doc_old = NULL, doc_new;
+	xmlDocPtr doc_old = NULL, doc_new, doc_profiles;
 	DistributionList *list_old, *list_new;
 	DistributionList *list_intersection, *list_activate, *list_deactivate;
+	DistributionList *list_profiles;
 	unsigned int i;
-	char *new_export_file = argv[optind];
+	gchar *new_export_file = g_strconcat(argv[optind], "/export.xml", NULL);
+	gchar *profiles_file = g_strconcat(argv[optind], "/profiles.xml", NULL);
 	
 	/* Open the XML document */
 	doc_new = create_distribution_export_doc(new_export_file);
+	g_free(new_export_file);
 
-	if(old_export_file != NULL)
+	if(old_export != NULL)
 	{
+	    gchar *old_export_file = g_strconcat(old_export, "/export.xml", NULL);
 	    doc_old = create_distribution_export_doc(old_export_file);
-    
+	    g_free(old_export_file);
+	    
 	    /* Check inter-dependencies */
 	    if(!checkInterDependencies(doc_old))
 	    {
@@ -186,7 +191,7 @@ int main(int argc, char *argv[])
     	    xmlCleanupParser();
     	    return 1;
 	}
-    
+    	
 	/* Generate a distribution list */
 	list_new = generate_distribution_list(doc_new);
 
@@ -204,6 +209,11 @@ int main(int argc, char *argv[])
 	list_activate = substract(list_new, list_intersection);
 	print_distribution_list(list_activate);
 
+	/* Open profiles document */
+	doc_profiles = create_distribution_export_doc(profiles_file);
+	g_free(profiles_file);
+	list_profiles = generate_distribution_list(doc_profiles);
+
 	/* Deactivate old services interdependency closures */
 	printf("Deactivating obsolete services from old configuration:\n");
 	
@@ -212,7 +222,7 @@ int main(int argc, char *argv[])
 	    printf("\n");
 	    deactivate(interface, doc_old, list_deactivate, list_deactivate->service[i], list_deactivate->target[i], list_deactivate->type[i]);
 	}
-    
+	
 	/* Activate new services interdependency closures */
 	printf("Activating new services from new configuration:\n");
 	
@@ -222,14 +232,27 @@ int main(int argc, char *argv[])
 	    activate(interface, doc_new, list_activate, list_activate->service[i], list_activate->target[i], list_activate->type[i]);
 	}
 	
+	/* Set the new profiles on the target machines */
+	
+	printf("Setting the new profiles on the target machines:\n");
+	
+	for(i = 0; i < list_profiles->size; i++)
+	{
+	    gchar *command = g_strconcat(interface, " --target ", list_profiles->target[i], " --set  ", list_profiles->service[i], NULL);
+	    printf("%s\n", command);
+	    g_free(command);
+	}
+	
 	/* Clean up */
 	delete_distribution_list(list_old);
 	delete_distribution_list(list_new);
+	delete_distribution_list(list_profiles);
 	delete_distribution_list(list_intersection);
 	delete_distribution_list(list_deactivate);
 	delete_distribution_list(list_activate);
 	xmlFreeDoc(doc_old);
 	xmlFreeDoc(doc_new);
+	xmlFreeDoc(doc_profiles);
 	xmlCleanupParser();
 	return 0;
     }

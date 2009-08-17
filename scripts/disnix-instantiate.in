@@ -119,7 +119,7 @@ rec {
     inherit servicesFile infrastructureFile distributionFile;
     inherit serviceProperty;
     targetProperty = "hostname";
-    inherit (pkgs) stdenv;
+    inherit pkgs;
   };
 }
 EOF

@@ -80,4 +80,31 @@ rec {
       else "  { service = services."+(head serviceNames)+"; target = infrastructure."+(head targets)+"; }\n" +
         generateDistributionModelBody (tail serviceNames) (tail targets) allTargets
   ;
+  
+  /*
+   * Returns a list of services which are distributed to the given target
+   */
+  getServices = target: distribution:
+    if distribution == [] then []
+    else
+      if (head distribution).target == target then [ ((head distribution).service) ] ++ getServices target (tail distribution)
+      else getServices target (tail distribution)
+  ;
+  
+  /*
+   * Generates a profile export file, which maps Nix profiles with installed services on each machine
+   * to each machine in the network
+   */
+  generateProfileExport = pkgs: distribution: services: infrastructure: serviceProperty: targetProperty:
+    map (targetName:
+      { service = (pkgs.buildEnv {
+          name = targetName;
+	  paths = map(service: getAttr serviceProperty (service.pkg)) (getServices (getAttr targetName infrastructure) distribution);
+	}).outPath;
+	target = getAttr targetProperty (getAttr targetName infrastructure);
+	dependsOn = [];
+	type = "";
+      }
+    ) (attrNames infrastructure)
+  ;      
 }
