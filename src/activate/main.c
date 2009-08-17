@@ -6,6 +6,13 @@
 #include <getopt.h>
 #include <glib.h>
 
+typedef enum
+{
+    ACTIVATE,
+    DEACTIVATE
+}
+TraversalType;
+
 static void print_usage()
 {
     fprintf(stderr, "Usage:\n");
@@ -13,12 +20,14 @@ static void print_usage()
     fprintf(stderr, "disnix-activate {-h | --help}\n");
 }
 
-static int deactivate(char *interface, xmlDocPtr doc, DistributionList *list, char *service, char *target, char *type)
+static int traverse_inter_dependency_graph(char *interface, xmlDocPtr doc, DistributionList *list, char *service, char *target, char *type, TraversalType traversal_type)
 {
+    /* Search for the given distribution item in the list */
     int index = distribution_item_index(list, service, target);
     
     if(index == -1)
     {
+	/* If the distribution item does not exists, abort and give an error message */
 	fprintf(stderr, "Mapping of service: %s to target: %s does not exists in distribution export file!\n", service, target);
 	return -1;
     }
@@ -28,7 +37,18 @@ static int deactivate(char *interface, xmlDocPtr doc, DistributionList *list, ch
 	{
 	    int status;
 	    gchar *command;
-	    xmlXPathObjectPtr result = select_inter_dependend_services_from(doc, service);
+	    char *operation;
+	    xmlXPathObjectPtr result = NULL;
+	    	    
+	    switch(traversal_type)
+	    {
+		ACTIVATE:
+		    result = select_inter_dependencies(doc, service);
+		    break;
+	        DEACTIVATE:
+		    result = select_inter_dependend_services_from(doc, service);
+		    break;
+	    }
 	    
 	    if(result)
 	    {
@@ -42,7 +62,7 @@ static int deactivate(char *interface, xmlDocPtr doc, DistributionList *list, ch
 		    DistributionList *mappings = select_distribution_items(list, inter_dependency);
 		    
 		    for(j = 0; j < mappings->size; j++)
-			deactivate(interface, doc, list, mappings->service[j], mappings->target[j], mappings->type[j]);
+			traverse_inter_dependency_graph(interface, doc, list, mappings->service[j], mappings->target[j], mappings->type[j], traversal_type);
 		    
 		    delete_distribution_list(mappings);
 		}
@@ -50,9 +70,19 @@ static int deactivate(char *interface, xmlDocPtr doc, DistributionList *list, ch
 	    
 	    xmlXPathFreeObject(result);
 	
-	    printf("Deactivate: %s on: %s of type: %s\n", service, target, type);
+	    switch(traversal_type)
+	    {
+		case ACTIVATE:
+		    operation = "activate";
+		    break;
+		case DEACTIVATE:
+		    operation = "deactivate";
+		    break;
+	    }
 	    
-	    command = g_strconcat(interface, " --deactivate ", service, " --type ", type, " --target ", target, NULL);
+	    printf("%s: %s on: %s of type: %s\n", operation, service, target, type);
+	    
+	    command = g_strconcat(interface, " --", operation, " ", service, " --type ", type, " --target ", target, NULL);
 	    status = system(command);
 	    g_free(command);
 	    
@@ -68,54 +98,14 @@ static int deactivate(char *interface, xmlDocPtr doc, DistributionList *list, ch
     }
 }
 
+static int deactivate(char *interface, xmlDocPtr doc, DistributionList *list, char *service, char *target, char *type)
+{
+    return traverse_inter_dependency_graph(interface, doc, list, service, target, type, DEACTIVATE);
+}
+
 static int activate(char *interface, xmlDocPtr doc, DistributionList *list, char *service, char *target, char *type)
 {
-    int index = distribution_item_index(list, service, target);
-    
-    if(index == -1)
-	fprintf(stderr, "Mapping of service: %s to target: %s does not exists in distribution export file!\n", service, target);
-    else
-    {
-	if(!list->visited[index])
-	{
-	    int status;
-	    gchar *command;
-	    xmlXPathObjectPtr result = select_inter_dependencies(doc, service);
-	    
-	    if(result)
-	    {
-		xmlNodeSetPtr nodeset = result->nodesetval;
-		unsigned int i, j;
-		
-		for(i = 0; i < nodeset->nodeNr; i++)
-		{
-		    xmlNodePtr node = nodeset->nodeTab[i]->children;
-		    xmlChar *inter_dependency = node->content;
-		    DistributionList *mappings = select_distribution_items(list, inter_dependency);
-		    
-		    for(j = 0; j < mappings->size; j++)
-			activate(interface, doc, list, mappings->service[j], mappings->target[j], mappings->type[j]);
-		    
-		    delete_distribution_list(mappings);
-		}
-	    }
-	    
-	    xmlXPathFreeObject(result);
-	
-	    printf("Activate: %s on: %s of type: %s\n", service, target, type);
-	    
-	    command = g_strconcat(interface, " --activate ", service, " --type ", type, " --target ", target, NULL);
-	    status = system(command);
-	    g_free(command);
-	    
-	    if(status == -1)
-		return -1;
-	    else if(WEXITSTATUS(status) != 0)
-		return WEXITSTATUS(status);
-
-	    list->visited[index] = TRUE;
-	}
-    }
+    return traverse_inter_dependency_graph(interface, doc, list, service, target, type, ACTIVATE);
 }
 
 int main(int argc, char *argv[])
