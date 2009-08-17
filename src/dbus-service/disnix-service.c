@@ -74,6 +74,8 @@ gboolean disnix_upgrade(DisnixObject *obj, const gchar *derivation, gchar **pid,
 
 gboolean disnix_uninstall(DisnixObject *obj, const gchar *derivation, gchar **pid, GError **error);
 
+gboolean disnix_set(DisnixObject *obj, const gchar *derivation, gchar **pid, GError **error);
+
 gboolean disnix_instantiate(DisnixObject *obj, const gchar *files, const gchar *attrPath, gchar **pid, GError **error);
 
 gboolean disnix_realise(DisnixObject *obj, const gchar *derivation, gchar **pid, GError **error);
@@ -420,6 +422,89 @@ gboolean disnix_uninstall(DisnixObject *obj, const gchar *derivation, gchar **pi
     
     /* Create thread */
     g_thread_create((GThreadFunc)disnix_uninstall_thread_func, params, FALSE, error);
+    
+    return TRUE;
+}
+
+/* Uninstall function */
+
+typedef struct
+{
+    gchar *derivation;
+    gchar *pid;
+    DisnixObject *obj;
+}
+DisnixSetParams;
+
+static void disnix_set_thread_func(gpointer data)
+{
+    /* Declarations */
+    gchar *cmd, *derivation, *pid;
+    FILE *fp;
+    char line[BUFFER_SIZE];
+    DisnixUninstallParams *params;
+    
+    /* Import variables */
+    params = (DisnixUninstallParams*)data;
+    derivation = params->derivation;
+    pid = params->pid;
+    
+    /* Print log entry */
+    g_print("Set profile: %s\n", derivation);
+    
+    /* Execute command */
+    cmd = g_strconcat("nix-env -p /nix/var/nix/profiles/disnix --set ", derivation, NULL);
+
+    fp = popen(cmd, "r");
+    if(fp == NULL)
+	disnix_emit_failure_signal(params->obj, pid); /* Something went wrong with forking the process */
+    else
+    {
+	while(fgets(line, sizeof(line), fp) != NULL)
+	    puts(line);
+	
+	if(pclose(fp) == 0)
+	{
+	    /* Emit success signal */
+	    disnix_emit_finish_signal(params->obj, pid);
+	}
+	else
+	    disnix_emit_failure_signal(params->obj, pid);
+    }
+    
+    /* Free variables */
+    g_free(derivation);
+    g_free(pid);
+    g_free(params);
+    g_free(cmd);
+}
+
+
+gboolean disnix_set(DisnixObject *obj, const gchar *derivation, gchar **pid, GError **error)
+{
+    /* Declarations */
+    gchar *pidstring;
+    FILE *fp;
+    char line[BUFFER_SIZE];
+    DisnixSetParams *params;
+    
+    /* State object should not be NULL */
+    g_assert(obj != NULL);
+    
+    /* Generate process id */
+    pidstring = g_strconcat("set:", derivation, NULL);
+    obj->pid = string_to_hash(pidstring);
+    *pid = obj->pid;
+    g_free(pidstring);
+    
+    /* Create parameter struct */
+    params = (DisnixSetParams*)g_malloc(sizeof(DisnixSetParams));
+    params->derivation = g_strdup(derivation);
+    params->pid = g_strdup(obj->pid);
+    params->obj = obj;
+    
+    /* Create thread */
+    g_thread_create((GThreadFunc)disnix_set_thread_func, params, FALSE, error);
     
     return TRUE;
 }

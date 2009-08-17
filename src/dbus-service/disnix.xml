@@ -19,6 +19,11 @@
 			<arg type="s" name="derivation" direction="in" />
 			<arg type="s" name="pid" direction="out" />
 		</method>
+		
+		<method name="set">
+			<arg type="s" name="derivation" direction="in" />
+			<arg type="s" name="pid" direction="out" />
+		</method>
 				
 		<method name="instantiate">
 			<arg type="s" name="files" direction="in" />

@@ -31,6 +31,7 @@ typedef enum
     OP_INSTALL,
     OP_UPGRADE,
     OP_UNINSTALL,
+    OP_SET,
     OP_INSTANTIATE,
     OP_REALISE,
     OP_IMPORT,
@@ -47,6 +48,7 @@ static void print_usage()
     g_print("disnix-client {-i | --install} [-f file] [-A | --attr] args\n");
     g_print("disnix-client {-u | --upgrade} derivation\n");
     g_print("disnix-client {-e | --uninstall} derivation\n");
+    g_print("disnix-client --set derivation\n");
     g_print("disnix-client --instantiate [-A attributepath | --attr attributepath] filename\n");
     g_print("disnix-client {-r | --realise} pathname\n");
     g_print("disnix-client --import {--remotefile filename | --localfile filename}\n");
@@ -94,6 +96,7 @@ int main(int argc, char **argv)
 	{"install", no_argument, 0, 'i'},
 	{"upgrade", required_argument, 0, 'u'},
 	{"uninstall", required_argument, 0, 'e'},
+	{"set", required_argument, 0, 's'},
 	{"instantiate", no_argument, 0, 'I'},
 	{"realise", required_argument, 0, 'r'},
 	{"import", no_argument, 0, 'M'},
@@ -187,6 +190,11 @@ int main(int argc, char **argv)
 		derivation = optarg;
 		break;
 	    
+	    case 's':
+		operation = OP_SET;
+		derivation = optarg;
+		break;
+		
 	    case 'A':
 		attr = optarg;
 		break;
@@ -294,6 +302,10 @@ int main(int argc, char **argv)
 	    org_nixos_disnix_Disnix_uninstall(remote_object, derivation, &pid, &error);
 	    break;
     
+	case OP_SET:
+	    org_nixos_disnix_Disnix_set(remote_object, derivation, &pid, &error);
+	    break;
+	    
 	case OP_INSTANTIATE:
 	    if(optind < argc)
 	    {
