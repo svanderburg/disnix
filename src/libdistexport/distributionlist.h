@@ -28,4 +28,6 @@ DistributionList *select_distribution_items(DistributionList *list, char *servic
 
 void print_distribution_list(DistributionList *list);
 
+void sort(DistributionList *list);
+
 #endif

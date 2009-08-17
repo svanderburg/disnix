@@ -217,5 +217,6 @@ DistributionList *generate_distribution_list(xmlDocPtr doc)
 	xmlXPathFreeObject(result);
     }
     
+    sort(list);
     return list;
 }

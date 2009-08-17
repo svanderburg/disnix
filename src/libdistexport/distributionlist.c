@@ -91,15 +91,32 @@ DistributionList *substract(DistributionList *list1, DistributionList *list2)
     return ret;
 }
 
+static int compare(char *service1, char *target1, char *service2, char *target2)
+{
+    int status = strcmp(target1, target2);
+    
+    if(status == 0)
+	return strcmp(service1, service2);
+    else
+	return status;
+}
+
 int distribution_item_index(DistributionList *list, char *service, char *target)
 {
-    int i;
+    int left = 0;
+    int right = list->size - 1;
     
-    for(i = 0; i < list->size; i++)
+    while(left <= right)
     {
-	if(strcmp(service, list->service[i]) == 0 &&
-	   strcmp(target, list->target[i]) == 0)
-	    return i;
+	int mid = (left + right) / 2;
+        int status = compare(list->service[mid], list->target[mid], service, target);
+	
+	if(status == 0)
+            return mid; /* Return index of the found distribution item */
+	else if(status > 0)
+	    right = mid - 1;
+	else if(status < 0)
+	    left = mid + 1;
     }
     
     return -1; /* Distribution item not found */
@@ -125,4 +142,51 @@ void print_distribution_list(DistributionList *list)
     
     for(i = 0; i < list->size; i++)
 	printf("Service: %s, Target: %s, Type: %s\n", list->service[i], list->target[i], list->type[i]);
+}
+
+static int partition(DistributionList *list, int left, int right)
+{
+    int i = left, j = right;
+    int mid = (left + right) / 2;
+    char *pivot_service = list->service[mid];
+    char *pivot_target = list->target[mid];
+    
+    while(i <= j)
+    {
+        while(compare(list->service[i], list->target[i], pivot_service, pivot_target) < 0)
+	    i++;
+	while(compare(list->service[j], list->target[j], pivot_service, pivot_target) > 0)
+	    j--;
+	
+	if(i <= j)
+	{
+	    char *tmp_service = list->service[i];
+	    char *tmp_target = list->target[i];
+	    
+	    list->service[i] = list->service[j];
+	    list->target[i] = list->target[j];
+	    
+	    list->service[j] = tmp_service;
+	    list->target[j] = tmp_target;
+	    
+	    i++;
+	    j--;
+	}
+    }
+    
+    return i;
+}
+
+static void quick_sort(DistributionList *list, int left, int right)
+{
+    int index = partition(list, left, right);
+    if(left < index - 1)
+	quick_sort(list, left, index - 1);
+    if(index < right)
+	quick_sort(list, index, right);
+}
+
+void sort(DistributionList *list)
+{
+    quick_sort(list, 0, list->size - 1);
 }
