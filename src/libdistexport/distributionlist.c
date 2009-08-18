@@ -162,12 +162,18 @@ static int partition(DistributionList *list, int left, int right)
 	{
 	    char *tmp_service = list->service[i];
 	    char *tmp_target = list->target[i];
+	    char *tmp_type = list->type[i];
+	    int tmp_visited = list->visited[i];
 	    
 	    list->service[i] = list->service[j];
 	    list->target[i] = list->target[j];
+	    list->type[i] = list->type[j];
+	    list->visited[i] = list->visited[j];
 	    
 	    list->service[j] = tmp_service;
 	    list->target[j] = tmp_target;
+	    list->type[j] = tmp_type;
+	    list->visited[j] = tmp_visited;
 	    
 	    i++;
 	    j--;
