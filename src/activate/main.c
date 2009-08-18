@@ -44,10 +44,10 @@ static int traverse_inter_dependency_graph(char *interface, xmlDocPtr doc, Distr
 	    	    
 	    switch(traversal_type)
 	    {
-		ACTIVATE:
+		case ACTIVATE:
 		    result = select_inter_dependencies(doc, service);
 		    break;
-	        DEACTIVATE:
+	        case DEACTIVATE:
 		    result = select_inter_dependend_services_from(doc, service);
 		    break;
 	    }
