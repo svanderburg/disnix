@@ -1,0 +1,94 @@
+#!/bin/bash -e
+
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    echo "Usage: $0 -s services_expr -i infrastructure_expr -d distribution_expr [options]"
+    echo "Options:"
+    echo
+    echo "-s,--services       Services Nix expression which describes all components of the distributed system"
+    echo "-i,--infrastructure Infrastructure Nix expression which captures properties of machines in the network"
+    echo "-d,--distribution   Distribution Nix expression which maps services to machines in the network"
+    echo "--interface         Process that communicates with the remote disnix service. Defaults to disnix-client"
+    echo "--show-trace        Shows a trace of the output"
+    echo "-h,--help           Shows the usage of this command"
+}
+
+# Parse valid argument options
+
+PARAMS=`getopt -n $0 -o s:i:d:h -l services:,infrastructure:,distribution:,interface:,show-trace,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+eval set -- "$PARAMS"
+
+# Evaluate valid options
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -s|--services)	    
+	    servicesFile=`readlink -f $2`
+	    ;;
+	-i|--infrastructure)
+	    infrastructureFile=`readlink -f $2`
+	    ;;
+	-d|--distribution)
+	    distributionFile=`readlink -f $2`
+	    ;;
+	--show-trace)
+	    showTrace=1
+	    ;;
+	--interface)
+	    interface=$2
+	    ;;
+	-h|--help)
+	    showUsage
+	    exit 0
+	    ;;
+    esac
+    
+    shift
+done
+
+# Validate the given options
+
+if [ "$servicesFile" = "" ]
+then
+    echo "ERROR: A services expression must be specified!" >&2
+    exit 1
+fi
+
+if [ "$infrastructureFile" = "" ]
+then
+    echo "ERROR: A infrastructure expression must be specified!" >&2
+    exit 1
+fi
+
+if [ "$distributionFile" = "" ]
+then
+    echo "ERROR: A distribution expression must be specified!" >&2
+    exit 1
+fi
+
+if [ "$interface" = "" ]
+then
+    interface="disnix-client"
+fi
+
+if [ "$showTrace" = "1" ]
+then
+    showTraceArg="--show-trace"
+fi
+
+# Execute operations
+
+distributionExport=`disnix-build -s $servicesFile -i $infrastructureFile -d $distributionFile $showTraceArg`
+disnix-distribute --interface $interface $distributionExport
+disnix-activate --interface $interface $distributionExport
+rm -f $distributionExport
