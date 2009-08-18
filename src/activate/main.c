@@ -4,6 +4,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <getopt.h>
+#include <unistd.h>
+#include <pwd.h>
 #include <glib.h>
 
 typedef enum
@@ -122,6 +124,9 @@ int main(int argc, char *argv[])
     gchar *interface = "disnix-client";
     char *old_export = NULL;
     
+    /* Get current username */
+    char *username = (getpwuid(1000))->pw_name;
+    
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "i:o:h", long_options, &option_index)) != -1)
     {
@@ -153,15 +158,33 @@ int main(int argc, char *argv[])
 	unsigned int i;
 	char *new_export = argv[optind];
 	gchar *new_export_file = g_strconcat(new_export, "/export.xml", NULL);
+	gchar *old_export_file = NULL;
 	gchar *profiles_file = g_strconcat(new_export, "/profiles.xml", NULL);
 	
 	/* Open the XML document */
 	doc_new = create_distribution_export_doc(new_export_file);
 	g_free(new_export_file);
-
-	if(old_export != NULL)
-	{
-	    gchar *old_export_file = g_strconcat(old_export, "/export.xml", NULL);
+		
+	if(old_export == NULL)
+        {
+	    /* If no old export file is given, try to to open the export file in the Nix profile */
+	    
+	    old_export_file = g_strconcat("/nix/var/nix/profiles/per-user/", username, "/disnix-coordinator/export.xml", NULL);
+	    FILE *file = fopen(old_export_file, "r");
+	    
+	    if(file == NULL)
+	    {
+		g_free(old_export_file);
+		old_export_file = NULL;
+	    }
+	    else
+		fclose(file);
+	}
+	else
+	    old_export_file = g_strconcat(old_export, "/export.xml", NULL);
+	
+	if(old_export_file != NULL)
+	{	    
 	    doc_old = create_distribution_export_doc(old_export_file);
 	    g_free(old_export_file);
 	    
@@ -260,7 +283,7 @@ int main(int argc, char *argv[])
 	    int status;
 	    
 	    printf("Setting the coordinator profile:\n");
-	    command = g_strconcat("nix-env -p /nix/var/nix/profiles/per-user/$(whoami)/disnix-coordinator --set $(readlink -f ", new_export, ")", NULL);
+	    command = g_strconcat("nix-env -p /nix/var/nix/profiles/per-user/", username, "/disnix-coordinator --set $(readlink -f ", new_export, ")", NULL);
 	    status = system(command);
 	    g_free(command);
 	    
