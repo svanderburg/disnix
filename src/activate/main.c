@@ -151,8 +151,9 @@ int main(int argc, char *argv[])
 	DistributionList *list_intersection, *list_activate, *list_deactivate;
 	DistributionList *list_profiles;
 	unsigned int i;
-	gchar *new_export_file = g_strconcat(argv[optind], "/export.xml", NULL);
-	gchar *profiles_file = g_strconcat(argv[optind], "/profiles.xml", NULL);
+	char *new_export = argv[optind];
+	gchar *new_export_file = g_strconcat(new_export, "/export.xml", NULL);
+	gchar *profiles_file = g_strconcat(new_export, "/profiles.xml", NULL);
 	
 	/* Open the XML document */
 	doc_new = create_distribution_export_doc(new_export_file);
@@ -240,10 +241,27 @@ int main(int argc, char *argv[])
 	{
 	    gchar *command;
 	    int status;
-	    printf("Setting profile: %s on target: %s", list_profiles->service[i], list_profiles->target[i]);
+	    printf("Setting profile: %s on target: %s\n", list_profiles->service[i], list_profiles->target[i]);
 	    
-	    command = g_strconcat(interface, " --target ", list_profiles->target[i], " --set  ", list_profiles->service[i], NULL);
+	    command = g_strconcat(interface, " --target ", list_profiles->target[i], " --set ", list_profiles->service[i], NULL);
 	    status = system(command);	    	    	    
+	    g_free(command);
+	    
+	    if(status == -1)
+		return -1;
+	    else if(WEXITSTATUS(status) != 0)
+		return WEXITSTATUS(status);
+	}
+	
+	/* Store the activated distribution export in the profile of the current user */
+	
+	{	    
+	    gchar *command;
+	    int status;
+	    
+	    printf("Setting the coordinator profile:\n");
+	    command = g_strconcat("nix-env -p /nix/var/nix/profiles/per-user/$(whoami)/disnix-coordinator --set $(readlink -f ", new_export, ")", NULL);
+	    status = system(command);
 	    g_free(command);
 	    
 	    if(status == -1)
