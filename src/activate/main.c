@@ -238,9 +238,18 @@ int main(int argc, char *argv[])
 	
 	for(i = 0; i < list_profiles->size; i++)
 	{
-	    gchar *command = g_strconcat(interface, " --target ", list_profiles->target[i], " --set  ", list_profiles->service[i], NULL);
-	    printf("%s\n", command);
+	    gchar *command;
+	    int status;
+	    printf("Setting profile: %s on target: %s", list_profiles->service[i], list_profiles->target[i]);
+	    
+	    command = g_strconcat(interface, " --target ", list_profiles->target[i], " --set  ", list_profiles->service[i], NULL);
+	    status = system(command);	    	    	    
 	    g_free(command);
+	    
+	    if(status == -1)
+		return -1;
+	    else if(WEXITSTATUS(status) != 0)
+		return WEXITSTATUS(status);
 	}
 	
 	/* Clean up */
