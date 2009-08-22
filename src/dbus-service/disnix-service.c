@@ -21,6 +21,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include "hash.h"
 #define BUFFER_SIZE 512
 
@@ -216,16 +218,17 @@ static void disnix_install_thread_func(gpointer data)
 	disnix_emit_failure_signal(params->obj, pid); /* Something went wrong with forking the process */
     else
     {
+	int status;
+	
 	while(fgets(line, sizeof(line), fp) != NULL)
 	    puts(line);
 	
-	if(pclose(fp) == 0)
-	{
-	    /* Emit success signal */
-	    disnix_emit_finish_signal(params->obj, pid);
-	}
-	else
+	status = pclose(fp);
+	
+	if(status == -1 || WEXITSTATUS(status) != 0)
 	    disnix_emit_failure_signal(params->obj, pid);
+	else
+	    disnix_emit_finish_signal(params->obj, pid);
     }
     
     /* Free variables */
@@ -298,16 +301,17 @@ static void disnix_upgrade_thread_func(gpointer data)
 	disnix_emit_failure_signal(params->obj, pid); /* Something went wrong with forking the process */
     else
     {
+	int status;
+	
 	while(fgets(line, sizeof(line), fp) != NULL)
 	    puts(line);
 	
-	if(pclose(fp) == 0)
-	{
-	    /* Emit success signal */
-	    disnix_emit_finish_signal(params->obj, pid);
-	}
-	else
+	status = pclose(fp);
+	
+	if(status == -1 || WEXITSTATUS(status) != 0)
 	    disnix_emit_failure_signal(params->obj, pid);
+	else
+	    disnix_emit_finish_signal(params->obj, pid);
     }
     
     /* Free variables */
@@ -378,16 +382,17 @@ static void disnix_uninstall_thread_func(gpointer data)
 	disnix_emit_failure_signal(params->obj, pid); /* Something went wrong with forking the process */
     else
     {
+	int status;
+	
 	while(fgets(line, sizeof(line), fp) != NULL)
 	    puts(line);
 	
-	if(pclose(fp) == 0)
-	{
-	    /* Emit success signal */
-	    disnix_emit_finish_signal(params->obj, pid);
-	}
-	else
+	status = pclose(fp);
+	
+	if(status == -1 || WEXITSTATUS(status) != 0)
 	    disnix_emit_failure_signal(params->obj, pid);
+	else
+	    disnix_emit_finish_signal(params->obj, pid);
     }
     
     /* Free variables */
@@ -460,16 +465,17 @@ static void disnix_set_thread_func(gpointer data)
 	disnix_emit_failure_signal(params->obj, pid); /* Something went wrong with forking the process */
     else
     {
+	int status;
+	
 	while(fgets(line, sizeof(line), fp) != NULL)
 	    puts(line);
 	
-	if(pclose(fp) == 0)
-	{
-	    /* Emit success signal */
-	    disnix_emit_finish_signal(params->obj, pid);
-	}
-	else
+	status = pclose(fp);
+	
+	if(status == -1 || WEXITSTATUS(status) != 0)
 	    disnix_emit_failure_signal(params->obj, pid);
+	else
+	    disnix_emit_finish_signal(params->obj, pid);
     }
     
     /* Free variables */
@@ -559,6 +565,8 @@ static void disnix_instantiate_thread_func(gpointer data)
 	disnix_emit_failure_signal(params->obj, pid); /* Something went wrong with forking the process */
     else
     {
+	int status;
+	
 	/* Initialize missing paths */
 	missingPaths = g_strdup("");	
     
@@ -571,13 +579,12 @@ static void disnix_instantiate_thread_func(gpointer data)
 	    g_free(oldMissingPaths);	    
 	}
 	
-	if(pclose(fp) == 0)
-	{
-	    /* Emit success signal */
-	    disnix_emit_success_signal(params->obj, pid, missingPaths);
-	}
-	else
+	status = pclose(fp);
+	
+	if(status == -1 || WEXITSTATUS(status) != 0)
 	    disnix_emit_failure_signal(params->obj, pid);
+	else
+	    disnix_emit_success_signal(params->obj, pid, missingPaths);
     }
     
     /* Free variables */
@@ -648,17 +655,22 @@ static void disnix_realise_thread_func(gpointer data)
 	disnix_emit_failure_signal(params->obj, pid); /* Something went wrong with forking the process */
     else
     {
+	int status;
+	
 	while(fgets(line, sizeof(line), fp) != NULL)
 	    puts(line);
 	
-	if(pclose(fp) == 0)
+	status = pclose(fp);
+	
+	if(status == -1 || WEXITSTATUS(status) != 0)
+	    disnix_emit_failure_signal(params->obj, pid);
+	else
 	{
 	    /* Emit success signal */
 	    path = line;
 	    disnix_emit_success_signal(params->obj, pid, path);
 	}
-	else
-	    disnix_emit_failure_signal(params->obj, pid);
+	    
     }
     
     /* Free variables */
@@ -729,16 +741,17 @@ static void disnix_import_thread_func(gpointer data)
 	disnix_emit_failure_signal(params->obj, pid); /* Something went wrong with forking the process */
     else
     {
+	int status;
+	
 	while(fgets(line, sizeof(line), fp) != NULL)
 	    puts(line);
 	
-	if(pclose(fp) == 0)
-	{
-	    /* Emit success signal */
-	    disnix_emit_finish_signal(params->obj, pid);
-	}
-	else
+	status = pclose(fp);
+	
+	if(status == -1 || WEXITSTATUS(status) != 0)
 	    disnix_emit_failure_signal(params->obj, pid);
+	else
+	    disnix_emit_finish_signal(params->obj, pid);
     }
     
     /* Free variables */
@@ -809,6 +822,8 @@ static void disnix_print_invalid_paths_thread_func(gpointer data)
 	disnix_emit_failure_signal(params->obj, pid); /* Something went wrong with forking the process */
     else
     {
+	int status;
+	
 	/* Initialize missing paths */
 	missingPaths = g_strdup("");	
 	
@@ -821,13 +836,12 @@ static void disnix_print_invalid_paths_thread_func(gpointer data)
 	    g_free(oldMissingPaths);	    
 	}
 	
-	if(pclose(fp) == 0)
-	{
-	    /* Emit success signal */
-	    disnix_emit_success_signal(params->obj, pid, missingPaths);
-	}
-	else
+	status = pclose(fp);
+	
+	if(status == -1 || WEXITSTATUS(status) != 0)
 	    disnix_emit_failure_signal(params->obj, pid);
+	else
+	    disnix_emit_success_signal(params->obj, pid, missingPaths);
     }
     
     /* Free variables */
@@ -905,17 +919,18 @@ static void disnix_garbage_collect_thread_func(gpointer data)
 	disnix_emit_failure_signal(params->obj, pid); /* Something went wrong with forking the process */
     else
     {
+	int status;
+	
 	/* Read the output */
 	while(fgets(line, sizeof(line), fp) != NULL)
 	    puts(line);
 	
-	if(pclose(fp) == 0)
-	{
-	    /* Emit success signal */
-	    disnix_emit_finish_signal(params->obj, pid);
-	}
-	else
+	status = pclose(fp);
+	
+	if(status == -1 || WEXITSTATUS(status) != 0)
 	    disnix_emit_failure_signal(params->obj, pid);
+	else
+	    disnix_emit_finish_signal(params->obj, pid);
     }
     
     /* Free variables */
@@ -992,17 +1007,18 @@ static void disnix_activate_thread_func(gpointer data)
         disnix_emit_failure_signal(params->obj, pid); /* Something went wrong with forking the process */
     else
     {
+	int status;
+	
         /* Read the output */
         while(fgets(line, sizeof(line), fp) != NULL)
     	    puts(line);
 	
-	if(pclose(fp) == 0)
-	{
-	    /* Emit success signal */
-	    disnix_emit_finish_signal(params->obj, pid);
-	}
-	else
+	status = pclose(fp);
+	
+	if(status == -1 || WEXITSTATUS(status) != 0)
 	    disnix_emit_failure_signal(params->obj, pid);
+	else
+	    disnix_emit_finish_signal(params->obj, pid);
     }
 
     /* Free variables */
@@ -1078,17 +1094,18 @@ static void disnix_deactivate_thread_func(gpointer data)
         disnix_emit_failure_signal(params->obj, pid); /* Something went wrong with forking the process */
     else
     {
+	int status;
+	
         /* Read the output */
         while(fgets(line, sizeof(line), fp) != NULL)
   	    puts(line);
 	
-	if(pclose(fp) == 0)
-	{
-	    /* Emit success signal */
-	    disnix_emit_finish_signal(params->obj, pid);
-	}
-	else
+	status = pclose(fp);
+	
+	if(status == -1 || WEXITSTATUS(status) != 0)
 	    disnix_emit_failure_signal(params->obj, pid);
+	else
+	    disnix_emit_finish_signal(params->obj, pid);
     }
 
     /* Free variables */
