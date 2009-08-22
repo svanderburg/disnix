@@ -56,6 +56,7 @@ static int traverse_inter_dependency_graph(char *interface, xmlDocPtr doc, Distr
 	    {
 		xmlNodeSetPtr nodeset = result->nodesetval;
 		unsigned int i, j;
+		int status;
 		
 		for(i = 0; i < nodeset->nodeNr; i++)
 		{
@@ -64,9 +65,15 @@ static int traverse_inter_dependency_graph(char *interface, xmlDocPtr doc, Distr
 		    DistributionList *mappings = select_distribution_items(list, inter_dependency);
 		    
 		    for(j = 0; j < mappings->size; j++)
-			traverse_inter_dependency_graph(interface, doc, list, mappings->service[j], mappings->target[j], mappings->type[j], traversal_type);
+			status = traverse_inter_dependency_graph(interface, doc, list, mappings->service[j], mappings->target[j], mappings->type[j], traversal_type);
 		    
 		    delete_distribution_list(mappings);
+		    
+		    if(status != 0)
+		    {
+			xmlXPathFreeObject(result);
+			return status;
+		    }
 		}
 	    }
 	    
@@ -244,7 +251,9 @@ int main(int argc, char *argv[])
 	for(i = 0; i < list_deactivate->size; i++)
 	{
 	    printf("\n");
-	    deactivate(interface, doc_old, list_deactivate, list_deactivate->service[i], list_deactivate->target[i], list_deactivate->type[i]);
+	    
+	    if(!deactivate(interface, doc_old, list_deactivate, list_deactivate->service[i], list_deactivate->target[i], list_deactivate->type[i]))
+		return 1;
 	}
 	
 	/* Activate new services interdependency closures */
@@ -253,7 +262,9 @@ int main(int argc, char *argv[])
 	for(i = 0; i < list_activate->size; i++)
 	{
 	    printf("\n");
-	    activate(interface, doc_new, list_activate, list_activate->service[i], list_activate->target[i], list_activate->type[i]);
+	    
+	    if(!activate(interface, doc_new, list_activate, list_activate->service[i], list_activate->target[i], list_activate->type[i]))
+		return 1;
 	}
 	
 	/* Set the new profiles on the target machines */
