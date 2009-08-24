@@ -10,6 +10,8 @@ showUsage()
     echo "-s,--services       Services Nix expression which describes all components of the distributed system"
     echo "-i,--infrastructure Infrastructure Nix expression which captures properties of machines in the network"
     echo "-d,--distribution   Distribution Nix expression which maps services to machines in the network"
+    echo "--target-property   The target property of an infrastructure model, that specifies how to "
+    echo "                    connect to the remote Disnix interface. (Defaults to hostname)"    
     echo "--interface         Process that communicates with the remote disnix service. Defaults to disnix-client"
     echo "--show-trace        Shows a trace of the output"
     echo "-h,--help           Shows the usage of this command"
@@ -17,7 +19,7 @@ showUsage()
 
 # Parse valid argument options
 
-PARAMS=`getopt -n $0 -o s:i:d:h -l services:,infrastructure:,distribution:,interface:,show-trace,help -- "$@"`
+PARAMS=`getopt -n $0 -o s:i:d:h -l services:,infrastructure:,distribution:,interface:,target-property:,show-trace,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -46,6 +48,9 @@ do
 	    ;;
 	--interface)
 	    interface=$2
+	    ;;
+	--target-property)
+	    targetProperty=$2
 	    ;;
 	-h|--help)
 	    showUsage
@@ -81,6 +86,11 @@ then
     interface="disnix-client"
 fi
 
+if [ "$targetProperty" != "" ]
+then
+    targetPropertyArg="--target-property $targetProperty"
+fi
+
 if [ "$showTrace" = "1" ]
 then
     showTraceArg="--show-trace"
@@ -88,7 +98,7 @@ fi
 
 # Execute operations
 
-distributionExport=`disnix-build -s $servicesFile -i $infrastructureFile -d $distributionFile $showTraceArg`
+distributionExport=`disnix-build -s $servicesFile -i $infrastructureFile -d $distributionFile $targetPropertyArg $showTraceArg`
 disnix-distribute --interface $interface $distributionExport
 disnix-activate --interface $interface $distributionExport
 rm -f $distributionExport

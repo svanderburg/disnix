@@ -13,6 +13,8 @@ showUsage()
     echo "-m,--method         Sets the transition method of the deployment. \"distribution\""
     echo "                    builds services on the coordinator machine, \"compilation\" builds services on the target machines."
     echo "                    Defauls to \"distribution\""
+    echo "--target-property   The target property of an infrastructure model, that specifies how to "
+    echo "                    connect to the remote Disnix interface. (Defaults to hostname)"
     echo "--show-trace        Shows a trace of the output"
     echo "-h,--help           Shows the usage of this command"
 }
@@ -23,7 +25,7 @@ export prefix=@prefix@
 
 # Parse valid argument options
 
-PARAMS=`getopt -n $0 -o s:i:d:m:h -l services:,infrastructure:,distribution:,method:,show-trace,help -- "$@"`
+PARAMS=`getopt -n $0 -o s:i:d:m:h -l services:,infrastructure:,distribution:,method:,target-property:,show-trace,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -49,6 +51,9 @@ do
 	    ;;
 	-m|--method)
 	    method=$2
+	    ;;
+	--target-property)
+	    targetProperty=$2;
 	    ;;
 	--show-trace)
 	    showTrace=1
@@ -95,6 +100,11 @@ case "$method" in
         ;;
 esac
 
+if [ "$targetProperty" = "" ]
+then
+    targetProperty="hostname";
+fi
+
 if [ "$showTrace" = "1" ]
 then
     showTraceArg="--show-trace"
@@ -112,13 +122,13 @@ rec {
   distributionFile = $distributionFile;
   
   serviceProperty = "$serviceProperty";
+  targetProperty = "$targetProperty";
   
   pkgs = import (builtins.getEnv "NIXPKGS_ALL") {};
   
   export = import $exportExpr {
     inherit servicesFile infrastructureFile distributionFile;
-    inherit serviceProperty;
-    targetProperty = "hostname";
+    inherit serviceProperty targetProperty;
     inherit pkgs;
   };
 }

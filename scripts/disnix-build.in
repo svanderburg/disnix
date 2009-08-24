@@ -10,13 +10,15 @@ showUsage()
     echo "-s,--services       Services Nix expression which describes all components of the distributed system"
     echo "-i,--infrastructure Infrastructure Nix expression which captures properties of machines in the network"
     echo "-d,--distribution   Distribution Nix expression which maps services to machines in the network"
+    echo "--target-property   The target property of an infrastructure model, that specifies how to "
+    echo "                    connect to the remote Disnix interface. (Defaults to hostname)"    
     echo "--show-trace        Shows a trace of the output"
     echo "-h,--help           Shows the usage of this command"
 }
 
 # Parse valid argument options
 
-PARAMS=`getopt -n $0 -o s:i:d:h -l services:,infrastructure:,distribution:,show-trace,help -- "$@"`
+PARAMS=`getopt -n $0 -o s:i:d:h -l services:,infrastructure:,distribution:,target-property:,show-trace,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -39,6 +41,9 @@ do
 	    ;;
 	-d|--distribution)
 	    distributionFile=`readlink -f $2`
+	    ;;
+	--target-property)
+	    targetProperty=$2
 	    ;;
 	--show-trace)
 	    showTrace=1
@@ -72,6 +77,11 @@ then
     exit 1
 fi
 
+if [ "$targetProperty" != "" ]
+then
+    targetPropertyArg="--target-property $targetProperty"
+fi
+
 if [ "$showTrace" = "1" ]
 then
     showTraceArg="--show-trace"
@@ -79,5 +89,5 @@ fi
 
 # Execute instantiation and realisation
 
-drvPath=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile $showTraceArg`
+drvPath=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile $targetPropertyArg $showTraceArg`
 nix-store --realise $drvPath --add-root result --indirect
