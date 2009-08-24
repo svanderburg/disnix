@@ -12,7 +12,7 @@
 static void print_usage()
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-collect-garbage [--interface interface] [-d|--delete-old] infrastructure_expr\n");
+    fprintf(stderr, "disnix-collect-garbage [--interface interface] [--target-property targetProperty] [-d|--delete-old] infrastructure_expr\n");
     fprintf(stderr, "disnix-activate {-h | --help}\n");
 }
 
@@ -99,12 +99,14 @@ int main(int argc, char *argv[])
     struct option long_options[] =
     {
 	{"interface", required_argument, 0, 'i'},
+	{"target-property", required_argument, 0, 't'},
 	{"delete-old", no_argument, 0, 'd'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
     gchar *interface = "disnix-client";
     char *delete_old_arg = "";
+    char *targetProperty = "hostname";
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "dh", long_options, &option_index)) != -1)
@@ -113,6 +115,9 @@ int main(int argc, char *argv[])
 	{
 	    case 'i':
 		interface = optarg;
+		break;
+	    case 't':
+		targetProperty = optarg;
 		break;
 	    case 'd':
 	        delete_old_arg = "-d";
@@ -158,7 +163,7 @@ int main(int argc, char *argv[])
     
 	/* Iterate over all targets */
         
-	result = query_targets(doc, "hostname");
+	result = query_targets(doc, targetProperty);
     
 	if(result)
 	{
