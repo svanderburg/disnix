@@ -31,7 +31,7 @@ static int traverse_inter_dependency_graph(char *interface, xmlDocPtr doc, Distr
     {
 	/* If the distribution item does not exists, abort and give an error message */
 	fprintf(stderr, "Mapping of service: %s to target: %s does not exists in distribution export file!\n", service, target);
-	return -1;
+	return FALSE;
     }
     else
     {	
@@ -69,7 +69,7 @@ static int traverse_inter_dependency_graph(char *interface, xmlDocPtr doc, Distr
 		    
 		    delete_distribution_list(mappings);
 		    
-		    if(status != 0)
+		    if(!status)
 		    {
 			xmlXPathFreeObject(result);
 			return status;
@@ -95,15 +95,13 @@ static int traverse_inter_dependency_graph(char *interface, xmlDocPtr doc, Distr
 	    status = system(command);
 	    g_free(command);
 	    
-	    if(status == -1)
-		return -1;
-	    else if(WEXITSTATUS(status) != 0)
-		return WEXITSTATUS(status);
+	    if(status == -1 || WEXITSTATUS(status) != 0)
+		return FALSE;
 			    
 	    list->visited[index] = TRUE;
 	}
 	
-	return 0;
+	return TRUE;
     }
 }
 
