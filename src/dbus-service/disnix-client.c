@@ -167,7 +167,7 @@ int main(int argc, char **argv)
     
     g_printerr (" : Call instantiate\n");
     gchar *pid = NULL, *derivation, *attr = NULL, *filename, *pathname, *file = NULL, *type;
-    gchar *paths, *oldPaths, *args = "";
+    gchar *paths, *oldPaths, *args, args_arg = strdup(""), old_args_arg;
     gchar *localfile = NULL, *remotefile = NULL;
     gboolean isAttr, delete_old = FALSE;
     
@@ -261,7 +261,9 @@ int main(int argc, char **argv)
 		break;
 	
 	    case 'a':
-	        args = optarg;
+	        old_args_arg = args_arg;
+	        args_arg = g_strconcat(old_args_arg, " ", optarg, NULL);
+		g_free(old_args_arg);
 	        break;
 		
 	    default:
@@ -361,11 +363,13 @@ int main(int argc, char **argv)
 	    break;
 	  
 	case OP_ACTIVATE:
-	    org_nixos_disnix_Disnix_activate(remote_object, pathname, type, args, &pid, &error);
+	    org_nixos_disnix_Disnix_activate(remote_object, pathname, type, args_arg, &pid, &error);
+	    g_free(args_arg);
 	    break;
 
 	case OP_DEACTIVATE:
-	    org_nixos_disnix_Disnix_deactivate(remote_object, pathname, type, args, &pid, &error);
+	    org_nixos_disnix_Disnix_deactivate(remote_object, pathname, type, args_arg, &pid, &error);
+	    g_free(args_arg);
 	    break;
 	    
 	default:

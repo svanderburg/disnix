@@ -82,7 +82,7 @@ do
 	    type=$2
 	    ;;
 	--args)
-	    args=$2
+	    args_arg="$args_arg --args $2"
 	    ;;
 	-h|--help)
 	    showUsage
@@ -101,11 +101,6 @@ if [ "$target" = "" ]
 then
     echo "ERROR: A target hostname or IP address must be specified!" >&2
     exit 1
-fi
-
-if [ "$args" != "" ]
-then
-    args_arg="--args $args"
 fi
 
 # Execute selected operation
