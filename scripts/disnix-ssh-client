@@ -12,14 +12,14 @@ showUsage()
     echo "$0 --import {--remotefile filename | --localfile filename}"
     echo "$0 --print-invalid-paths paths"
     echo "$0 --collect-garbage [-d | --delete-old]"
-    echo "$0 --type type --activate path"
-    echo "$0 --type type --deactivate path"
+    echo "$0 --type type [--args args] --activate path"
+    echo "$0 --type type [--args args] --deactivate path"
     echo "$0 {-h | --help}"
 }
 
 # Parse valid argument options
 
-PARAMS=`getopt -n $0 -o iu:e:r:h -l install,upgrade:,uninstall:,set,instantiate,realise:,import,print-invalid-paths,collect-garbage,activate:,deactivate:,target:,remotefile:,localfile:,type:,help -- "$@"`
+PARAMS=`getopt -n $0 -o iu:e:r:h -l install,upgrade:,uninstall:,set,instantiate,realise:,import,print-invalid-paths,collect-garbage,activate:,deactivate:,target:,remotefile:,localfile:,type:,args:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -81,6 +81,9 @@ do
 	--type)
 	    type=$2
 	    ;;
+	--args)
+	    args=$2
+	    ;;
 	-h|--help)
 	    showUsage
 	    exit 0
@@ -98,6 +101,11 @@ if [ "$target" = "" ]
 then
     echo "ERROR: A target hostname or IP address must be specified!" >&2
     exit 1
+fi
+
+if [ "$args" != "" ]
+then
+    args_arg="--args $args"
 fi
 
 # Execute selected operation
@@ -133,7 +141,7 @@ case "$operation" in
 	    exit 1
 	fi
 	
-	ssh $SSH_OPTS $target disnix-client --activate $path --type $type
+	ssh $SSH_OPTS $target disnix-client --type $type $args_arg --activate $path 
 	;;
     deactivate)
 	if [ "$type" = "" ]
@@ -142,6 +150,6 @@ case "$operation" in
 	    exit 1
 	fi
 	
-	ssh $SSH_OPTS $target disnix-client --deactivate $path --type $type
+	ssh $SSH_OPTS $target disnix-client --type $type $args_arg --deactivate $path 
 	;;
 esac

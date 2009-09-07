@@ -54,8 +54,8 @@ static void print_usage()
     g_print("disnix-client --import {--remotefile filename | --localfile filename}\n");
     g_print("disnix-client --print-invalid-paths paths\n");
     g_print("disnix-client --collect-garbage [-d | --delete-old]\n");
-    g_print("disnix-client --type type --activate path\n");
-    g_print("disnix-client --type type --deactivate path\n");
+    g_print("disnix-client --type type [--args args] --activate path\n");
+    g_print("disnix-client --type type [--args args] --deactivate path\n");
     g_print("disnix-client {-h | --help}\n");
 }
 
@@ -110,6 +110,7 @@ int main(int argc, char **argv)
 	{"localfile", required_argument, 0, 'L'},
 	{"remotefile", required_argument, 0, 'R'},
 	{"target", required_argument, 0, 'T'},
+	{"args", required_argument, 0, 'a'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
@@ -165,8 +166,8 @@ int main(int argc, char **argv)
     /* Do a call */
     
     g_printerr (" : Call instantiate\n");
-    gchar *pid = NULL, *args, *derivation, *attr = NULL, *filename, *pathname, *file = NULL, *type;
-    gchar *paths, *oldPaths;
+    gchar *pid = NULL, *derivation, *attr = NULL, *filename, *pathname, *file = NULL, *type;
+    gchar *paths, *oldPaths, *args = "";
     gchar *localfile = NULL, *remotefile = NULL;
     gboolean isAttr, delete_old = FALSE;
     
@@ -258,6 +259,10 @@ int main(int argc, char **argv)
 	    case 'T':
 		/* Do nothing */
 		break;
+	
+	    case 'a':
+	        args = optarg;
+	        break;
 		
 	    default:
 		print_usage();
@@ -356,11 +361,11 @@ int main(int argc, char **argv)
 	    break;
 	  
 	case OP_ACTIVATE:
-	    org_nixos_disnix_Disnix_activate(remote_object, pathname, type, &pid, &error);
+	    org_nixos_disnix_Disnix_activate(remote_object, pathname, type, args, &pid, &error);
 	    break;
 
 	case OP_DEACTIVATE:
-	    org_nixos_disnix_Disnix_deactivate(remote_object, pathname, type, &pid, &error);
+	    org_nixos_disnix_Disnix_deactivate(remote_object, pathname, type, args, &pid, &error);
 	    break;
 	    
 	default:

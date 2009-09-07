@@ -88,9 +88,9 @@ gboolean disnix_print_invalid_paths(DisnixObject *obj, const gchar *path, gchar 
 
 gboolean disnix_collect_garbage(DisnixObject *obj, const gboolean delete_old, gchar **pid, GError **error);
 
-gboolean disnix_activate(DisnixObject *obj, const gchar *path, const gchar *type, gchar **pid, GError **error);
+gboolean disnix_activate(DisnixObject *obj, const gchar *path, const gchar *type, const gchar *args, gchar **pid, GError **error);
 
-gboolean disnix_deactivate(DisnixObject *obj, const gchar *path, const gchar *type, gchar **pid, GError **error);
+gboolean disnix_deactivate(DisnixObject *obj, const gchar *path, const gchar *type, const gchar *args, gchar **pid, GError **error);
 
 #include "disnix-service.h"
 
@@ -976,6 +976,7 @@ typedef struct
 {
     gchar *path;
     gchar *type;
+    gchar *args;
     gchar *pid;
     DisnixObject *obj;
 }
@@ -984,7 +985,7 @@ DisnixActivateParams;
 static void disnix_activate_thread_func(gpointer data)
 {
     /* Declarations */
-    gchar *path, *type, *cmd, *pid;
+    gchar *path, *type, *args, *cmd, *pid;
     FILE *fp;
     char line[BUFFER_SIZE];
     DisnixActivateParams *params;
@@ -993,6 +994,7 @@ static void disnix_activate_thread_func(gpointer data)
     params = (DisnixActivateParams*)data;
     path = params->path;
     type = params->type;
+    args = params->args;
     pid = params->pid;
     
     /* Print log entry */
@@ -1000,7 +1002,7 @@ static void disnix_activate_thread_func(gpointer data)
     
     /* Execute command */
 
-    cmd = g_strconcat(activation_scripts, "/", type, " activate ", path, NULL);
+    cmd = g_strconcat(activation_scripts, "/", type, " activate ", path, " ", args, NULL);
     
     fp = popen(cmd, "r");
     if(fp == NULL)
@@ -1024,12 +1026,13 @@ static void disnix_activate_thread_func(gpointer data)
     /* Free variables */
     g_free(path);
     g_free(type);
+    g_free(args);
     g_free(pid);
     g_free(params);
     g_free(cmd);    
 }
 
-gboolean disnix_activate(DisnixObject *obj, const gchar *path, const gchar *type, gchar **pid, GError **error)
+gboolean disnix_activate(DisnixObject *obj, const gchar *path, const gchar *type, const gchar *args, gchar **pid, GError **error)
 {
     /* Declarations */
     gchar *pidstring;
@@ -1039,7 +1042,7 @@ gboolean disnix_activate(DisnixObject *obj, const gchar *path, const gchar *type
     g_assert(obj != NULL);
 
     /* Generate process id */
-    pidstring = g_strconcat("activate:", path, ":", type, NULL);
+    pidstring = g_strconcat("activate:", path, ":", type, ":", args, NULL);
     obj->pid = string_to_hash(pidstring);
     *pid = obj->pid;
     g_free(pidstring);
@@ -1048,6 +1051,7 @@ gboolean disnix_activate(DisnixObject *obj, const gchar *path, const gchar *type
     params = (DisnixActivateParams*)g_malloc(sizeof(DisnixActivateParams));
     params->path = g_strdup(path);
     params->type = g_strdup(type);
+    params->args = g_strdup(args);
     params->pid = g_strdup(obj->pid);
     params->obj = obj;
 
@@ -1063,6 +1067,7 @@ typedef struct
 {
     gchar *path;
     gchar *type;
+    gchar *args;
     gchar *pid;
     DisnixObject *obj;
 }
@@ -1071,7 +1076,7 @@ DisnixDeactivateParams;
 static void disnix_deactivate_thread_func(gpointer data)
 {
     /* Declarations */
-    gchar *path, *type, *cmd, *pid;
+    gchar *path, *type, *args, *cmd, *pid;
     FILE *fp;
     char line[BUFFER_SIZE];
     DisnixDeactivateParams *params;
@@ -1080,6 +1085,7 @@ static void disnix_deactivate_thread_func(gpointer data)
     params = (DisnixDeactivateParams*)data;
     path = params->path;
     type = params->type;
+    args = params->args;
     pid = params->pid;
     
     /* Print log entry */
@@ -1087,7 +1093,7 @@ static void disnix_deactivate_thread_func(gpointer data)
     
     /* Execute command */
 
-    cmd = g_strconcat(activation_scripts, "/", type, " deactivate ", path, NULL);
+    cmd = g_strconcat(activation_scripts, "/", type, " deactivate ", path, " ", args, NULL);
     
     fp = popen(cmd, "r");
     if(fp == NULL)
@@ -1111,12 +1117,13 @@ static void disnix_deactivate_thread_func(gpointer data)
     /* Free variables */
     g_free(path);
     g_free(type);
+    g_free(args);
     g_free(pid);
     g_free(params);
-    g_free(cmd);    
+    g_free(cmd);
 }
 
-gboolean disnix_deactivate(DisnixObject *obj, const gchar *path, const gchar *type, gchar **pid, GError **error)
+gboolean disnix_deactivate(DisnixObject *obj, const gchar *path, const gchar *type, const gchar *args, gchar **pid, GError **error)
 {
     /* Declarations */
     gchar *pidstring;
@@ -1126,7 +1133,7 @@ gboolean disnix_deactivate(DisnixObject *obj, const gchar *path, const gchar *ty
     g_assert(obj != NULL);
 
     /* Generate process id */
-    pidstring = g_strconcat("deactivate:", path, ":", type, NULL);
+    pidstring = g_strconcat("deactivate:", path, ":", type, ":", args, NULL);
     obj->pid = string_to_hash(pidstring);
     *pid = obj->pid;
     g_free(pidstring);
