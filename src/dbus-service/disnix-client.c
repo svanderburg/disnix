@@ -48,7 +48,7 @@ static void print_usage()
     g_print("disnix-client {-i | --install} [-f file] [-A | --attr] args\n");
     g_print("disnix-client {-u | --upgrade} derivation\n");
     g_print("disnix-client {-e | --uninstall} derivation\n");
-    g_print("disnix-client --set derivation\n");
+    g_print("disnix-client [{-p | --profile profile}] --set derivation\n");
     g_print("disnix-client --instantiate [-A attributepath | --attr attributepath] filename\n");
     g_print("disnix-client {-r | --realise} pathname\n");
     g_print("disnix-client --import {--remotefile filename | --localfile filename}\n");
@@ -111,6 +111,7 @@ int main(int argc, char **argv)
 	{"remotefile", required_argument, 0, 'R'},
 	{"target", required_argument, 0, 'T'},
 	{"args", required_argument, 0, 'a'},
+	{"profile", required_argument, 0, 'p'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
@@ -167,13 +168,13 @@ int main(int argc, char **argv)
     
     g_printerr (" : Call instantiate\n");
     gchar *pid = NULL, *derivation, *attr = NULL, *filename, *pathname, *file = NULL, *type;
-    gchar *paths, *oldPaths, *args, args_arg = strdup(""), old_args_arg;
+    gchar *paths, *oldPaths, *args, args_arg = strdup(""), old_args_arg, *profile = "default";
     gchar *localfile = NULL, *remotefile = NULL;
     gboolean isAttr, delete_old = FALSE;
     
     Operation operation = OP_NONE;
         
-    while((c = getopt_long(argc, argv, "iu:e:A:r:f:t:dh", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "iu:e:A:r:f:t:dp:h", long_options, &option_index)) != -1)
     {
 	switch(c)
 	{
@@ -265,6 +266,10 @@ int main(int argc, char **argv)
 	        args_arg = g_strconcat(old_args_arg, " ", optarg, NULL);
 		g_free(old_args_arg);
 	        break;
+	
+	    case 'p':
+		profile = optarg;
+		break;
 		
 	    default:
 		print_usage();
@@ -283,7 +288,7 @@ int main(int argc, char **argv)
 		args = attr;
 	    else
 	    {
-		gchar *oldArgs;		
+		gchar *oldArgs;
 		args = g_strdup("");
 		
 		while(optind < argc)
@@ -310,7 +315,7 @@ int main(int argc, char **argv)
 	    break;
     
 	case OP_SET:
-	    org_nixos_disnix_Disnix_set(remote_object, derivation, &pid, &error);
+	    org_nixos_disnix_Disnix_set(remote_object, profile, derivation, &pid, &error);
 	    break;
 	    
 	case OP_INSTANTIATE:

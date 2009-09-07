@@ -21,6 +21,7 @@
 		</method>
 		
 		<method name="set">
+			<arg type="s" name="profile" direction="in" />
 			<arg type="s" name="derivation" direction="in" />
 			<arg type="s" name="pid" direction="out" />
 		</method>

@@ -303,7 +303,7 @@ int main(int argc, char *argv[])
 	    int status;
 	    
 	    printf("Setting the coordinator profile:\n");
-	    command = g_strconcat("nix-env -p /nix/var/nix/profiles/per-user/", username, "/disnix-coordinator --set $(readlink -f ", new_export, ")", NULL);
+	    command = g_strconcat("nix-env -p /nix/var/nix/profiles/per-user/", username, "/disnix-coordinator/default --set $(readlink -f ", new_export, ")", NULL);
 	    status = system(command);
 	    g_free(command);
 	    

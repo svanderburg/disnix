@@ -76,7 +76,7 @@ gboolean disnix_upgrade(DisnixObject *obj, const gchar *derivation, gchar **pid,
 
 gboolean disnix_uninstall(DisnixObject *obj, const gchar *derivation, gchar **pid, GError **error);
 
-gboolean disnix_set(DisnixObject *obj, const gchar *derivation, gchar **pid, GError **error);
+gboolean disnix_set(DisnixObject *obj, const gchar *profile, const gchar *derivation, gchar **pid, GError **error);
 
 gboolean disnix_instantiate(DisnixObject *obj, const gchar *files, const gchar *attrPath, gchar **pid, GError **error);
 
@@ -435,7 +435,8 @@ gboolean disnix_uninstall(DisnixObject *obj, const gchar *derivation, gchar **pi
 
 typedef struct
 {
-    gchar *derivation;
+    gchar *profile;
+    gchar *derivation;    
     gchar *pid;
     DisnixObject *obj;
 }
@@ -444,21 +445,22 @@ DisnixSetParams;
 static void disnix_set_thread_func(gpointer data)
 {
     /* Declarations */
-    gchar *cmd, *derivation, *pid;
+    gchar *cmd, *profile, *derivation, *pid;
     FILE *fp;
     char line[BUFFER_SIZE];
-    DisnixUninstallParams *params;
+    DisnixSetParams *params;
     
     /* Import variables */
-    params = (DisnixUninstallParams*)data;
+    params = (DisnixSetParams*)data;
+    profile = params->profile;
     derivation = params->derivation;
     pid = params->pid;
     
     /* Print log entry */
-    g_print("Set profile: %s\n", derivation);
+    g_print("Set profile: %s with derivation: %s\n", profile, derivation);
     
     /* Execute command */
-    cmd = g_strconcat("nix-env -p /nix/var/nix/profiles/disnix --set ", derivation, NULL);
+    cmd = g_strconcat("nix-env -p /nix/var/nix/profiles/disnix/", profile, " --set ", derivation, NULL);
 
     fp = popen(cmd, "r");
     if(fp == NULL)
@@ -479,6 +481,7 @@ static void disnix_set_thread_func(gpointer data)
     }
     
     /* Free variables */
+    g_free(profile);
     g_free(derivation);
     g_free(pid);
     g_free(params);
@@ -486,7 +489,7 @@ static void disnix_set_thread_func(gpointer data)
 }
 
 
-gboolean disnix_set(DisnixObject *obj, const gchar *derivation, gchar **pid, GError **error)
+gboolean disnix_set(DisnixObject *obj, const gchar *profile, const gchar *derivation, gchar **pid, GError **error)
 {
     /* Declarations */
     gchar *pidstring;
@@ -498,13 +501,14 @@ gboolean disnix_set(DisnixObject *obj, const gchar *derivation, gchar **pid, GEr
     g_assert(obj != NULL);
     
     /* Generate process id */
-    pidstring = g_strconcat("set:", derivation, NULL);
+    pidstring = g_strconcat("set:", profile, ":", derivation, NULL);
     obj->pid = string_to_hash(pidstring);
     *pid = obj->pid;
     g_free(pidstring);
     
     /* Create parameter struct */
     params = (DisnixSetParams*)g_malloc(sizeof(DisnixSetParams));
+    params->profile = g_strdup(profile);
     params->derivation = g_strdup(derivation);
     params->pid = g_strdup(obj->pid);
     params->obj = obj;
