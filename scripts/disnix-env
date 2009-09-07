@@ -13,13 +13,14 @@ showUsage()
     echo "--target-property   The target property of an infrastructure model, that specifies how to "
     echo "                    connect to the remote Disnix interface. (Defaults to hostname)"    
     echo "--interface         Process that communicates with the remote disnix service. Defaults to disnix-client"
+    echo "-p,--profile        Name of the profile that is used for this system. Defaults to: default"
     echo "--show-trace        Shows a trace of the output"
     echo "-h,--help           Shows the usage of this command"
 }
 
 # Parse valid argument options
 
-PARAMS=`getopt -n $0 -o s:i:d:h -l services:,infrastructure:,distribution:,interface:,target-property:,show-trace,help -- "$@"`
+PARAMS=`getopt -n $0 -o s:i:d:p:h -l services:,infrastructure:,distribution:,interface:,target-property:,profile:,show-trace,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -48,6 +49,9 @@ do
 	    ;;
 	--interface)
 	    interface=$2
+	    ;;
+	-p|--profile)
+	    profileArg="--profile $2"
 	    ;;
 	--target-property)
 	    targetProperty=$2
@@ -105,5 +109,5 @@ fi
 
 distributionExport=`disnix-build -s $servicesFile -i $infrastructureFile -d $distributionFile $targetPropertyArg $showTraceArg`
 disnix-distribute --interface $interface $distributionExport
-disnix-activate --interface $interface $distributionExport
+disnix-activate --interface $interface $profileArg $distributionExport
 rm -f $distributionExport

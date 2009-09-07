@@ -18,7 +18,7 @@ TraversalType;
 static void print_usage()
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-activate [--interface interface] [{-o|--old-export} distribution_export_file] distribution_export_file\n");
+    fprintf(stderr, "disnix-activate [--interface interface] [{-p|--profile} profile] [{-o|--old-export} distribution_export_file] distribution_export_file\n");
     fprintf(stderr, "disnix-activate {-h | --help}\n");
 }
 
@@ -123,17 +123,19 @@ int main(int argc, char *argv[])
     {
 	{"interface", required_argument, 0, 'i'},
 	{"old-export", required_argument, 0, 'o'},
+	{"profile", required_argument, 0, 'p'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
     gchar *interface = NULL;
     char *old_export = NULL;
+    char *profile = "default";
     
     /* Get current username */
-    char *username = (getpwuid(1000))->pw_name;
+    char *username = (getpwuid(geteuid()))->pw_name;
     
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "o:h", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "o:p:h", long_options, &option_index)) != -1)
     {
 	switch(c)
 	{
@@ -143,6 +145,9 @@ int main(int argc, char *argv[])
 	    case 'o':
 	        old_export = optarg;
 	        break;
+	    case 'p':
+	        profile = optarg;
+		break;
 	    case 'h':
 		print_usage();
 		return 0;
@@ -185,7 +190,7 @@ int main(int argc, char *argv[])
         {
 	    /* If no old export file is given, try to to open the export file in the Nix profile */
 	    
-	    old_export_file = g_strconcat("/nix/var/nix/profiles/per-user/", username, "/disnix-coordinator/export.xml", NULL);
+	    old_export_file = g_strconcat("/nix/var/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, "/export.xml", NULL);
 	    FILE *file = fopen(old_export_file, "r");
 	    
 	    if(file == NULL)
@@ -286,7 +291,7 @@ int main(int argc, char *argv[])
 	    int status;
 	    printf("Setting profile: %s on target: %s\n", list_profiles->service[i], list_profiles->target[i]);
 	    
-	    command = g_strconcat(interface, " --target ", list_profiles->target[i], " --set ", list_profiles->service[i], NULL);
+	    command = g_strconcat(interface, " --target ", list_profiles->target[i], " --profile ", profile, " --set ", list_profiles->service[i], NULL);
 	    status = system(command);	    	    	    
 	    g_free(command);
 	    
@@ -303,7 +308,7 @@ int main(int argc, char *argv[])
 	    int status;
 	    
 	    printf("Setting the coordinator profile:\n");
-	    command = g_strconcat("nix-env -p /nix/var/nix/profiles/per-user/", username, "/disnix-coordinator/default --set $(readlink -f ", new_export, ")", NULL);
+	    command = g_strconcat("nix-env -p /nix/var/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, " --set $(readlink -f ", new_export, ")", NULL);
 	    status = system(command);
 	    g_free(command);
 	    

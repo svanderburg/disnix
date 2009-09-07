@@ -82,10 +82,10 @@ do
 	    type=$2
 	    ;;
 	--args)
-	    args_arg="$args_arg --args $2"
+	    args_arg="$argsArg --args $2"
 	    ;;
 	-p|--profile)
-	    profile_arg="--profile $2"
+	    profileArg="--profile $2"
 	    ;;
 	-h|--help)
 	    showUsage
@@ -110,7 +110,7 @@ fi
 
 case "$operation" in
     set)
-        ssh $SSH_OPTS $target disnix-client $profile_arg --set "$@"
+        ssh $SSH_OPTS $target disnix-client $profileArg --set "$@"
         ;;
     print-invalid-paths)
 	ssh $SSH_OPTS $target disnix-client --print-invalid-paths "$@"
@@ -139,7 +139,7 @@ case "$operation" in
 	    exit 1
 	fi
 	
-	ssh $SSH_OPTS $target disnix-client --type $type $args_arg --activate $path 
+	ssh $SSH_OPTS $target disnix-client --type $type $argsArg --activate $path 
 	;;
     deactivate)
 	if [ "$type" = "" ]
@@ -148,6 +148,6 @@ case "$operation" in
 	    exit 1
 	fi
 	
-	ssh $SSH_OPTS $target disnix-client --type $type $args_arg --deactivate $path 
+	ssh $SSH_OPTS $target disnix-client --type $type $argsArg --deactivate $path 
 	;;
 esac
