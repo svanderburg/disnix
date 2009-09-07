@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
-    gchar *interface = "disnix-client";
+    gchar *interface = NULL;
     char *delete_old_arg = "";
     char *targetProperty = "hostname";
     
@@ -126,6 +126,17 @@ int main(int argc, char *argv[])
 		print_usage();
 		return 0;
 	}
+    }
+    
+    /* Validate options */
+    if(interface == NULL)
+    {
+	char *interface_env = getenv("DISNIX_CLIENT_INTERFACE");
+	
+	if(interface_env == NULL)
+	    interface = "disnix-client";
+	else
+	    interface = interface_env;
     }
 
     if(optind >= argc)

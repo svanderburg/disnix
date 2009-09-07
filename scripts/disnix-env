@@ -83,7 +83,12 @@ fi
 
 if [ "$interface" = "" ]
 then
-    interface="disnix-client"
+    if [ "$DISNIX_CLIENT_INTERFACE" = "" ]
+    then
+        interface="disnix-client"
+    else
+        interface=$DISNIX_CLIENT_INTERFACE
+    fi
 fi
 
 if [ "$targetProperty" != "" ]

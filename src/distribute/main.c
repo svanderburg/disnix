@@ -9,7 +9,7 @@
 static void print_usage()
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-distribute [{-i | --interface} interface] distribution_export\n");
+    fprintf(stderr, "disnix-distribute [--interface] interface] distribution_export\n");
     fprintf(stderr, "disnix-distribute {-h | --help}\n");
 }
 
@@ -23,10 +23,10 @@ int main(int argc, char *argv[])
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
-    gchar *interface_arg = g_strdup("");
+    gchar *interface_arg = NULL;
     
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "i:h", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "h", long_options, &option_index)) != -1)
     {
 	switch(c)
 	{
@@ -38,6 +38,18 @@ int main(int argc, char *argv[])
 		return 0;
 	}
     }
+
+    /* Validate options */
+    if(interface_arg == NULL)
+    {
+	char *interface_env = getenv("DISNIX_CLIENT_INTERFACE");
+	
+	if(interface_env == NULL)
+	    interface_arg = g_strdup("");
+	else
+	    interface_arg = g_strconcat(" --interface ", interface_env, NULL);
+    }
+
 
     if(optind >= argc)
     {

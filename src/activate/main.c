@@ -18,7 +18,7 @@ TraversalType;
 static void print_usage()
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-activate [{-i | --interface} interface] [{-o|--old-export} distribution_export_file] distribution_export_file\n");
+    fprintf(stderr, "disnix-activate [--interface interface] [{-o|--old-export} distribution_export_file] distribution_export_file\n");
     fprintf(stderr, "disnix-activate {-h | --help}\n");
 }
 
@@ -126,14 +126,14 @@ int main(int argc, char *argv[])
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
-    gchar *interface = "disnix-client";
+    gchar *interface = NULL;
     char *old_export = NULL;
     
     /* Get current username */
     char *username = (getpwuid(1000))->pw_name;
     
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "i:o:h", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "o:h", long_options, &option_index)) != -1)
     {
 	switch(c)
 	{
@@ -147,6 +147,17 @@ int main(int argc, char *argv[])
 		print_usage();
 		return 0;
 	}
+    }
+
+    /* Validate options */
+    if(interface == NULL)
+    {
+	char *interface_env = getenv("DISNIX_CLIENT_INTERFACE");
+	
+	if(interface_env == NULL)
+	    interface = "disnix-client";
+	else
+	    interface = interface_env;
     }
 
     if(optind >= argc)
