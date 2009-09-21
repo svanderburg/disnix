@@ -1006,7 +1006,7 @@ static void disnix_activate_thread_func(gpointer data)
     
     /* Execute command */
 
-    cmd = g_strconcat(activation_scripts, "/", type, " activate ", path, " ", args, NULL);
+    cmd = g_strconcat("env ", args, " ", activation_scripts, "/", type, " activate ", path, NULL);
     
     fp = popen(cmd, "r");
     if(fp == NULL)
@@ -1097,7 +1097,7 @@ static void disnix_deactivate_thread_func(gpointer data)
     
     /* Execute command */
 
-    cmd = g_strconcat(activation_scripts, "/", type, " deactivate ", path, " ", args, NULL);
+    cmd = g_strconcat("env ", args, " ", activation_scripts, "/", type, " deactivate ", path, NULL);
     
     fp = popen(cmd, "r");
     if(fp == NULL)
