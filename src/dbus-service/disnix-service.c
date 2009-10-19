@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include "hash.h"
 #define BUFFER_SIZE 512
 
@@ -460,6 +461,8 @@ static void disnix_set_thread_func(gpointer data)
     g_print("Set profile: %s with derivation: %s\n", profile, derivation);
     
     /* Execute command */
+    
+    mkdir("/nix/var/nix/profiles/disnix", 0755);
     cmd = g_strconcat("nix-env -p /nix/var/nix/profiles/disnix/", profile, " --set ", derivation, NULL);
 
     fp = popen(cmd, "r");

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <getopt.h>
 #include <unistd.h>
 #include <pwd.h>
@@ -308,6 +309,11 @@ int main(int argc, char *argv[])
 	    int status;
 	    
 	    printf("Setting the coordinator profile:\n");
+	    
+	    command = g_strconcat("/nix/var/nix/profiles/per-user/", username, "/disnix-coordinator");
+	    mkdir(command, 0755);
+	    g_free(command);
+	    
 	    command = g_strconcat("nix-env -p /nix/var/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, " --set $(readlink -f ", new_export, ")", NULL);
 	    status = system(command);
 	    g_free(command);
