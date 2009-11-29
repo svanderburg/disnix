@@ -3,20 +3,23 @@
 
 <node name="/org/nixos/disnix/Disnix">
 	<interface name="org.nixos.disnix.Disnix">
-		<method name="install">
-			<arg type="s" name="file" direction="in" />			
-			<arg type="s" name="args" direction="in" />
-			<arg type="b" name="isAttr" direction="in" />
+		<method name="import">
+			<arg type="as" name="derivation" direction="in" />
 			<arg type="s" name="pid" direction="out" />
 		</method>
 		
-		<method name="upgrade">
-			<arg type="s" name="derivation" direction="in" />
+		<method name="export">
+			<arg type="as" name="derivation" direction="in" />
 			<arg type="s" name="pid" direction="out" />
 		</method>
 		
-		<method name="uninstall">
-			<arg type="s" name="derivation" direction="in" />
+		<method name="print_invalid">
+			<arg type="as" name="derivation" direction="in" />
+			<arg type="s" name="pid" direction="out" />
+		</method>
+		
+		<method name="realise">
+			<arg type="as" name="derivation" direction="in" />
 			<arg type="s" name="pid" direction="out" />
 		</method>
 		
@@ -24,45 +27,25 @@
 			<arg type="s" name="profile" direction="in" />
 			<arg type="s" name="derivation" direction="in" />
 			<arg type="s" name="pid" direction="out" />
-		</method>
-				
-		<method name="instantiate">
-			<arg type="s" name="files" direction="in" />
-			<arg type="s" name="attrPath" direction="in" />
-			<arg type="s" name="pid" direction="out" />
-		</method>
+		</method>		
 		
-		<method name="realise">
-			<arg type="s" name="derivation" direction="in" />
-			<arg type="s" name="pid" direction="out" />
-		</method>
-
-		<method name="import">
-			<arg type="s" name="path" direction="in" />
-			<arg type="s" name="pid" direction="out" />
-		</method>
-		
-		<method name="print_invalid_paths">
-			<arg type="s" name="path" direction="in" />
+		<method name="query_installed">
+			<arg type="s" name="profile" direction="in" />
 			<arg type="s" name="pid" direction="out" />
 		</method>
 		
 		<method name="collect_garbage">
-			<arg type="b" name="delete_old" direction="in" />
+			<arg type="s" name="delete_old" direction="in" />
 			<arg type="s" name="pid" direction="out" />
 		</method>
-
+		
 		<method name="activate">
-			<arg type="s" name="path" direction="in" />
-			<arg type="s" name="type" direction="in" />
-			<arg type="s" name="args" direction="in" />
+			<arg type="as" name="derivation" direction="in" />
 			<arg type="s" name="pid" direction="out" />
 		</method>
-
+		
 		<method name="deactivate">
-			<arg type="s" name="path" direction="in" />
-			<arg type="s" name="type" direction="in" />
-			<arg type="s" name="args" direction="in" />
+			<arg type="as" name="derivation" direction="in" />
 			<arg type="s" name="pid" direction="out" />
 		</method>
 		
@@ -72,7 +55,7 @@
 		
 		<signal name="success">
 			<arg type="s" name="pid" direction="out" />
-			<arg type="s" name="path" direction="out" />
+			<arg type="as" name="path" direction="out" />
 		</signal>
 		
 		<signal name="failure">
