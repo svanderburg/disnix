@@ -41,11 +41,13 @@
 		
 		<method name="activate">
 			<arg type="as" name="derivation" direction="in" />
+			<arg type="as" name="arguments" direction="in" />
 			<arg type="s" name="pid" direction="out" />
 		</method>
 		
 		<method name="deactivate">
 			<arg type="as" name="derivation" direction="in" />
+			<arg type="as" name="arguments" direction="in" />
 			<arg type="s" name="pid" direction="out" />
 		</method>
 		
