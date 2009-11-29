@@ -1,1 +1,1 @@
-pkgdata_DATA = lib.nix export.nix generatedistribution.nix
+pkgdata_DATA = lib.nix export.nix instantiate.nix

@@ -16,6 +16,10 @@ showUsage()
     echo "-h,--help           Shows the usage of this command"
 }
 
+# Autoconf settings
+
+export prefix=@prefix@
+
 # Parse valid argument options
 
 PARAMS=`getopt -n $0 -o s:i:d:h -l services:,infrastructure:,distribution:,target-property:,show-trace,help -- "$@"`
@@ -77,9 +81,9 @@ then
     exit 1
 fi
 
-if [ "$targetProperty" != "" ]
+if [ "$targetProperty" = "" ]
 then
-    targetPropertyArg="--target-property $targetProperty"
+    targetProperty="hostname";
 fi
 
 if [ "$showTrace" = "1" ]
@@ -87,7 +91,11 @@ then
     showTraceArg="--show-trace"
 fi
 
-# Execute instantiation and realisation
+# Build the distribution export file
 
-drvPath=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile $targetPropertyArg $showTraceArg`
-nix-store --realise $drvPath --add-root result --indirect
+nix-build --argstr servicesFile "$(readlink -f $servicesFile)" \
+          --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
+	  --argstr distributionFile "$(readlink -f $distributionFile)" \
+          --argstr targetProperty $targetProperty \
+	  $showTraceArg \
+	  "$(readlink -f @datadir@/@PACKAGE@/export.nix)"

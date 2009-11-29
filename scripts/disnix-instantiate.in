@@ -10,9 +10,6 @@ showUsage()
     echo "-s,--services       Services Nix expression which describes all components of the distributed system"
     echo "-i,--infrastructure Infrastructure Nix expression which captures properties of machines in the network"
     echo "-d,--distribution   Distribution Nix expression which maps services to machines in the network"
-    echo "-m,--method         Sets the transition method of the deployment. \"distribution\""
-    echo "                    builds services on the coordinator machine, \"compilation\" builds services on the target machines."
-    echo "                    Defauls to \"distribution\""
     echo "--target-property   The target property of an infrastructure model, that specifies how to "
     echo "                    connect to the remote Disnix interface. (Defaults to hostname)"
     echo "--show-trace        Shows a trace of the output"
@@ -25,7 +22,7 @@ export prefix=@prefix@
 
 # Parse valid argument options
 
-PARAMS=`getopt -n $0 -o s:i:d:m:h -l services:,infrastructure:,distribution:,method:,target-property:,show-trace,help -- "$@"`
+PARAMS=`getopt -n $0 -o s:i:d:h -l services:,infrastructure:,distribution:,target-property:,show-trace,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -48,9 +45,6 @@ do
 	    ;;
 	-d|--distribution)
 	    distributionFile=`readlink -f $2`
-	    ;;
-	-m|--method)
-	    method=$2
 	    ;;
 	--target-property)
 	    targetProperty=$2;
@@ -87,19 +81,6 @@ then
     exit 1
 fi
 
-case "$method" in
-    distribution|"")
-        serviceProperty="outPath";
-        ;;
-    compilation)
-        serviceProperty="drvPath";
-        ;;
-    *)
-        echo "ERROR: Transition method should be either \"distribution\" or \"compilation\""
-        exit 1
-        ;;
-esac
-
 if [ "$targetProperty" = "" ]
 then
     targetProperty="hostname";
@@ -110,32 +91,11 @@ then
     showTraceArg="--show-trace"
 fi
 
-# Generate Nix expression
+# Build the distributed derivation file
 
-exportExpr=`readlink -f @datadir@/@PACKAGE@/export.nix`
-tmpfilename=`mktemp -p /tmp`
-
-cat > $tmpfilename <<EOF
-rec {
-  servicesFile = $servicesFile;
-  infrastructureFile = $infrastructureFile;
-  distributionFile = $distributionFile;
-  
-  serviceProperty = "$serviceProperty";
-  targetProperty = "$targetProperty";
-  
-  pkgs = import (builtins.getEnv "NIXPKGS_ALL") {};
-  
-  export = import $exportExpr {
-    inherit servicesFile infrastructureFile distributionFile;
-    inherit serviceProperty targetProperty;
-    inherit pkgs;
-  };
-}
-EOF
-
-# Instantiate the expression
-nix-instantiate $showTraceArg $tmpfilename
-
-# Remove the generated Nix expression
-rm -f $tmpfilename
+nix-build --argstr servicesFile "$(readlink -f $servicesFile)" \
+          --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
+	  --argstr distributionFile "$(readlink -f $distributionFile)" \
+          --argstr targetProperty $targetProperty \
+	  $showTraceArg \
+	  "$(readlink -f @datadir@/@PACKAGE@/instantiate.nix)"

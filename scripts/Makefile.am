@@ -1,1 +1,1 @@
-bin_SCRIPTS = disnix-instantiate disnix-build disnix-gendist-roundrobin disnix-copy-closure disnix-env disnix-ssh-client
+bin_SCRIPTS = disnix-instantiate disnix-export disnix-gendist-roundrobin disnix-copy-closure disnix-env disnix-ssh-client

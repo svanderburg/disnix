@@ -50,7 +50,7 @@ scripts/Makefile
 data/Makefile
 man/Makefile
 scripts/disnix-instantiate
-scripts/disnix-build
+scripts/disnix-export
 scripts/disnix-gendist-roundrobin
 ])
 AC_OUTPUT

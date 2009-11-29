@@ -1,110 +1,250 @@
 rec {
-  /* Inherit some builtin functions for simplicity */
-  inherit (builtins) head tail getAttr attrNames listToAttrs;
+  inherit (builtins) attrNames getAttr listToAttrs head tail unsafeDiscardOutputDependency;
   
-  /* Extracts a list of machines from the distribution model to where the given service is distributed */
-  getTargets = service: distribution:
-    if distribution == [] then []
-    else
-      if (head distribution).service.name == service.name then [ (head distribution).target ] ++ getTargets service (tail distribution)	
-      else getTargets service (tail distribution)
-  ;
-  
-  /* Extracts the first target from the distribution model to where the given service is distributed */
-  getTarget = service: distribution:
-    if getTargets service distribution == [] then null else head (getTargets service distribution)
-  ;
+  /*
+   * Iterates over each service in the distribution attributeset, adds the according service
+   * declaration in the attributeset and augements the targets of every inter-dependency
+   * in the dependsOn attributeset
+   * 
+   * Parameters:
+   * distribution: Distribution attributeset
+   * services: Initial services attributeset
+   *
+   * Returns:
+   * Attributeset with service declarations augumented with targets in the dependsOn attribute
+   */
    
-  /* Searches for each dependency of a service the targets in the distribution model and adds them as targets and target attributes */
-  mapTargetsOnDependencies = dependencies: distribution:
-    listToAttrs (map (dependencyName:
-      let dependency = getAttr dependencyName dependencies;
-      in
-        { name = dependencyName;
-          value = dependency // 
-            { targets = getTargets dependency distribution; target = getTarget dependency distribution; };
-	}
-      ) (attrNames dependencies))
-  ;
-  
-  /* Maps the targets from the distribution model on each inter dependency of the service */
-  mapTargetsOnServices = services: distribution:
-    listToAttrs (map (serviceName: 
+  augumentTargetsInDependsOn = distribution: services:
+    listToAttrs (map (serviceName:
       let service = getAttr serviceName services;
       in
-        { name = serviceName;
-          value = service // { dependsOn = mapTargetsOnDependencies service.dependsOn distribution; };
-	}
-      ) (attrNames services))
-  ;
-  
-  /* Passes the inter-dependencies as function arguments to the build functions of each service */
-  mapDependenciesOnPackages = services:
-    listToAttrs (map (serviceName: 
-      let service = getAttr serviceName services;
-      in
-        { name = serviceName;
-          value = service // { pkg = if service.dependsOn == {} then service.pkg else service.pkg service.dependsOn; };
-        }
-     ) (attrNames services))
+      { name = serviceName;
+        value = service // {
+          dependsOn = if service ? dependsOn && service.dependsOn != {} then
+	    listToAttrs (map (argName: 
+	      let
+	        dependencyName = (getAttr argName (service.dependsOn)).name;
+	        targets = getAttr dependencyName distribution;
+	      in
+	      { name = argName;
+	        value = service // {
+	          inherit targets;
+	          target = head targets;
+	        };        
+	      }
+	    ) (attrNames (service.dependsOn)))
+	  else {};
+	};
+      }
+    ) (attrNames distribution))
   ;
 
   /*
-   * Generates a distribution export by mapping the Nix store paths of each dependsOn attribute to each distribution
-   * item and substituting the target property by a protocol specific property
-   */     
-  generateDistributionExport = distribution: services: serviceProperty: targetProperty:
-    map (distributionItem:
-          { service = getAttr serviceProperty distributionItem.service.pkg;
-	    target = getAttr targetProperty distributionItem.target;
-            dependsOn = 
-	      map (dependencyName:
-	        let serviceName = (getAttr dependencyName (distributionItem.service.dependsOn)).name;
-		in 
-	          getAttr serviceProperty (getAttr serviceName services).pkg
-		) 
-		(attrNames distributionItem.service.dependsOn);
-	    type = distributionItem.service.type;
-          }
-        ) distribution
+   * Iterates over all services in the distribution attributeset. For every
+   * service, the attribute 'distribution' is added to the service declaration
+   * which is a list that maps derivations to target machines.
+   *
+   * The distribution list is created by iterating over the targets in the distribution
+   * attributeset of a specific service. For every target the services function is used
+   * to retrieve the 'pkg' attribute. To the service function the 'system' attribute from
+   * the infrastructure model is passed, so that it will be built for the right platform.
+   * If the system attribute is omitted the system attribute of the coordinator system is used.
+   * To the 'pkg' attribute (which is a function) the dependsOn attributeset is passed as argument.
+   *
+   * By requesting the outPath property of the derivation the service is built or by
+   * requesting the drvPath property a store derivation file is created.
+   *
+   * Parameters:
+   * distribution: Distribution attribute set
+   * services: Services attribute set, augemented with targets in dependsOn
+   * servicesFun: Function that returns a services attributeset (defined in the services.nix file)
+   * serviceProperty: Defines which property we need of a derivation (either "outPath" or "drvPath")
+   *
+   * Returns:
+   * Service attributeset augumented with a distribution mapping property 
+   */
+   
+  evaluatePkgFunctions = distribution: services: servicesFun: serviceProperty:
+    listToAttrs (map (serviceName: 
+      let
+        targets = getAttr serviceName distribution;
+	service = getAttr serviceName services;
+      in
+      { name = serviceName;
+        value = service // {
+	  distribution = map (target:
+	    let
+	      system = if target ? system then target.system else builtins.currentSystem;
+	      pkg = (getAttr serviceName (servicesFun { inherit distribution; inherit system; })).pkg;
+	    in
+	    { service = 
+	        if serviceProperty == "outPath" then
+	          if service.dependsOn == {} then pkg.outPath
+	          else (pkg (service.dependsOn)).outPath
+		else
+		  if service.dependsOn == {} then unsafeDiscardOutputDependency (pkg.drvPath)
+		  else unsafeDiscardOutputDependency ((pkg (service.dependsOn)).drvPath)
+		;
+	      inherit target;
+	    }
+	  ) targets;
+	};
+      }	
+    ) (attrNames distribution))
+  ;
+
+  /*
+   * Maps a list of inter-dependency declarations to a list of inter-dependency
+   * distributions.
+   *
+   * Parameters:
+   * argNames: argument names of the dependsOn attributeset
+   * dependsOn: dependsOn attributeset from a service declaration
+   * services: Services attributeset, augumented with distributions
+   *
+   * Returns:
+   * List of derivation, target pairs
+   */
+   
+  generateDependencyMapping = argNames: dependsOn: services:
+    let
+      serviceName = (getAttr (head argNames) dependsOn).name;
+      service = getAttr serviceName services;
+      inherit (service) distribution;
+    in
+    if argNames == [] then [] else distribution ++ generateDependencyMapping (tail argNames) dependsOn services
+  ;
+
+  /*
+   * For every distribution item of every service, a mapping attribute is created
+   * which is a list of attributesets containing a service, target, type, targetProperty and dependsOn.
+   *
+   * Parameters:
+   * serviceNames: List of names of services in the service attributeset
+   * services: Services attributeset
+   * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
+   *
+   * Returns:
+   * List of mappings
+   */
+
+  generateServiceActivationMapping = serviceNames: services: targetProperty:     
+    let
+      service = getAttr (head serviceNames) services;
+      mappingItem = map (distributionItem:
+        { inherit (distributionItem) service target;
+	  inherit (service) type;
+	  inherit targetProperty;
+	  dependsOn = generateDependencyMapping (attrNames (service.dependsOn)) (service.dependsOn) services; 
+	}
+      ) (service.distribution);
+    in
+    if serviceNames == [] then [] else mappingItem ++ (generateServiceActivationMapping (tail serviceNames) services targetProperty)
   ;
   
   /*
-   * Generates the body of a distribution Nix expression, which iterates over all services
-   * and devides the over the machines in the infrastructure model in equal proportions and order
+   * Iterates over a service activation mapping list and filters out all the
+   * services that are distributed to a specific target.
+   *
+   * Parameters:
+   * serviceActivationMapping: List of activation mappings
+   * targetName: Name of the target in the infrastructure model to filter on 
+   * infrastructure: Infrastructure attributeset
+   *   
+   * Returns:
+   * List of services that are distributed to the given target name
    */
-  generateDistributionModelBody = serviceNames: targets: allTargets:
-    if targets == [] then generateDistributionModelBody serviceNames allTargets allTargets
+   
+  queryServicesByTargetName = serviceActivationMapping: targetName: infrastructure:
+    if serviceActivationMapping == [] then []
     else
-      if serviceNames == [] then ""
-      else "  { service = services."+(head serviceNames)+"; target = infrastructure."+(head targets)+"; }\n" +
-        generateDistributionModelBody (tail serviceNames) (tail targets) allTargets
+      if (head serviceActivationMapping).target == getAttr targetName infrastructure
+      then [ (head serviceActivationMapping).service ] ++ (queryServicesByTargetName (tail serviceActivationMapping) targetName infrastructure)
+      else queryServicesByTargetName (tail serviceActivationMapping) targetName infrastructure
   ;
   
   /*
-   * Returns a list of services which are distributed to the given target
+   * Generates profiles for every machine that has services deployed on it, and
+   * maps the profiles to the targets in the network.
+   *
+   * Parameters:
+   * pkgs: Nixpkgs top-level expression which contains the buildEnv function
+   * infrastructure: Infrastructure attributeset
+   * targetNames: Names of the targets in the infrastructure attributeset
+   * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
+   * serviceActivationMapping: List of activation mappings
+   *
+   * Returns:
+   * List of machine profiles mapping to targets in the network
    */
-  getServices = target: distribution:
-    if distribution == [] then []
-    else
-      if (head distribution).target == target then [ ((head distribution).service) ] ++ getServices target (tail distribution)
-      else getServices target (tail distribution)
-  ;
-  
-  /*
-   * Generates a profile export file, which maps Nix profiles with installed services on each machine
-   * to each machine in the network
-   */
-  generateProfileExport = pkgs: distribution: services: infrastructure: serviceProperty: targetProperty:
-    map (targetName:
-      { service = (pkgs.buildEnv {
-          name = targetName;
-	  paths = map(service: getAttr serviceProperty (service.pkg)) (getServices (getAttr targetName infrastructure) distribution);
+   
+  generateProfilesMapping = pkgs: infrastructure: targetNames: targetProperty: serviceActivationMapping:
+    let
+      target = getAttr (head targetNames) infrastructure;
+      mappingItem = {
+        profile = (pkgs.buildEnv {
+	  name = head targetNames;
+	  paths = queryServicesByTargetName serviceActivationMapping (head targetNames) infrastructure;
 	}).outPath;
-	target = getAttr targetProperty (getAttr targetName infrastructure);
-	dependsOn = [];
-	type = "";
-      }
-    ) (attrNames infrastructure)
-  ;      
+	target = getAttr targetProperty target;
+      };
+    in
+    if targetNames == [] then []
+    else [ mappingItem ] ++ generateProfilesMapping pkgs infrastructure (tail targetNames) targetProperty serviceActivationMapping
+  ;
+  
+  /*
+   * Generates a distribution export file constisting of a profile mapping and
+   * service activation mapping from the 3 Disnix models.
+   *
+   * Parameters:
+   * pkgs: Nixpkgs top-level expression which contains the buildEnv function
+   * servicesFun: The services model, which is a function that returns an attributeset of service declarations
+   * infrastructure: The infrastructure model, which is an attributeset containing targets in the network
+   * distributionFun: The distribution model, which is a function that returns an attributeset of
+   * services mapping to targets in the infrastructure model.
+   * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
+   *
+   * Returns: 
+   * An attributeset which should be exported to XML representing the distribution export
+   */
+   
+  generateDistributionExport = pkgs: servicesFun: infrastructure: distributionFun: targetProperty:
+    let
+      distribution = distributionFun { inherit infrastructure; };
+      initialServices = servicesFun { inherit distribution; system = null; };
+      servicesWithTargets = augumentTargetsInDependsOn distribution initialServices;
+      servicesWithDistribution = evaluatePkgFunctions distribution servicesWithTargets servicesFun "outPath";
+      serviceActivationMapping = generateServiceActivationMapping (attrNames servicesWithDistribution) servicesWithDistribution targetProperty;
+    in
+    { profiles = generateProfilesMapping pkgs infrastructure (attrNames infrastructure) targetProperty serviceActivationMapping;
+      activation = serviceActivationMapping;
+    }
+  ;
+  
+  /*
+   * Generates a distributed derivation file constisting of a mapping of store derivations
+   * to machines from the 3 Disnix models.
+   *
+   * Parameters:
+   * servicesFun: The services model, which is a function that returns an attributeset of service declarations
+   * infrastructure: The infrastructure model, which is an attributeset containing targets in the network
+   * distributionFun: The distribution model, which is a function that returns an attributeset of
+   * services mapping to targets in the infrastructure model.
+   * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
+   *
+   * Returns: 
+   * An attributeset which should be exported to XML representing the distributed derivation
+   */
+
+  generateDistributedDerivation = servicesFun: infrastructure: distributionFun: targetProperty:
+    let
+      distribution = distributionFun { inherit infrastructure; };
+      initialServices = servicesFun { inherit distribution; system = null; };
+      servicesWithTargets = augumentTargetsInDependsOn distribution initialServices;
+      servicesWithDistribution = evaluatePkgFunctions distribution servicesWithTargets servicesFun "drvPath";
+      serviceActivationMapping = generateServiceActivationMapping (attrNames servicesWithDistribution) servicesWithDistribution targetProperty;
+    in
+    map (mappingItem: { derivation = mappingItem.service; target = getAttr targetProperty (mappingItem.target); }) serviceActivationMapping
+  ;
 }
