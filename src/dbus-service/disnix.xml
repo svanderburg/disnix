@@ -35,7 +35,7 @@
 		</method>
 		
 		<method name="collect_garbage">
-			<arg type="s" name="delete_old" direction="in" />
+			<arg type="b" name="delete_old" direction="in" />
 			<arg type="s" name="pid" direction="out" />
 		</method>
 		
@@ -48,6 +48,14 @@
 		<method name="deactivate">
 			<arg type="s" name="derivation" direction="in" />
 			<arg type="as" name="arguments" direction="in" />
+			<arg type="s" name="pid" direction="out" />
+		</method>
+		
+		<method name="lock">
+			<arg type="s" name="pid" direction="out" />
+		</method>
+		
+		<method name="unlock">
 			<arg type="s" name="pid" direction="out" />
 		</method>
 		

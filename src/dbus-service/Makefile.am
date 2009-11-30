@@ -2,7 +2,7 @@ AM_CPPFLAGS=-ggdb
 
 bin_PROGRAMS = disnix-service disnix-client
 
-disnix_service_SOURCES = hash.c disnix-service.c
+disnix_service_SOURCES = hash.c methods.c disnix-service.c disnix-service-main.c 
 disnix_service_LDFLAGS = -lgthread-2.0 -lcrypto
 
 disnix_client_SOURCES = disnix-marshal.c disnix-client.c
