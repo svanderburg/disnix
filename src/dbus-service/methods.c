@@ -146,7 +146,7 @@ static void disnix_print_invalid_thread_func(gpointer data)
     derivations_string = generate_derivations_string(derivation, " ");
     
     /* Print log entry */
-    g_print("Print invalid paths: %s\n", derivations_string);
+    g_print("Print invalid: %s\n", derivations_string);
     
     /* Execute command */
     cmd = g_strconcat("nix-store --check-validity --print-invalid ", derivations_string, NULL);
@@ -311,8 +311,97 @@ gboolean disnix_set(DisnixObject *object, const gchar *profile, const gchar *der
     return TRUE;
 }
 
+/* Query installed method */
+
+typedef struct
+{
+    gchar *profile;
+    gchar *pid;
+    DisnixObject *object;
+}
+DisnixQueryInstalledParams;
+
+static void disnix_query_installed_thread_func(gpointer data)
+{
+    /* Declarations */
+    gchar *cmd, *profile, *pid, **derivation = NULL;
+    unsigned int derivation_size = 0;
+    FILE *fp;
+    char line[BUFFER_SIZE];
+    DisnixSetParams *params;
+    
+    /* Import variables */
+    params = (DisnixQueryInstalledParams*)data;
+    profile = params->profile;
+    pid = params->pid;
+    
+    /* Print log entry */
+    g_print("Query installed derivations from profile: %s\n", profile);
+    
+    /* Execute command */
+    
+    cmd = g_strconcat("nix-env -q \'*\' --out-path --no-name -p /nix/var/nix/profiles/disnix/", profile, NULL);
+
+    fp = popen(cmd, "r");
+    if(fp == NULL)
+	disnix_emit_failure_signal(params->object, pid); /* Something went wrong with forking the process */
+    else
+    {
+	int status;
+	
+	/* Read the output */
+	
+	while(fgets(line, sizeof(line), fp) != NULL)
+	{
+	    puts(line);
+	    derivation = (gchar**)g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
+	    derivation[derivation_size] = g_strdup(line);	    
+	    derivation_size++;
+	}
+	
+	/* Add NULL value to the end of the list */
+	derivation = (gchar**)g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
+	derivation[derivation_size] = NULL;
+	
+	status = pclose(fp);
+	
+	if(status == -1 || WEXITSTATUS(status) != 0)
+	    disnix_emit_failure_signal(params->object, pid);
+	else
+	    disnix_emit_success_signal(params->object, pid, derivation);
+    }
+    
+    /* Free variables */
+    g_strfreev(derivation);
+    g_free(profile);
+    g_free(pid);
+    g_free(params);
+    g_free(cmd);
+}
+
 gboolean disnix_query_installed(DisnixObject *object, const gchar *profile, gchar **pid, GError **error)
 {
+    /* Declarations */
+    gchar *pidstring;
+    DisnixQueryInstalledParams *params;
+    
+    /* State object should not be NULL */
+    g_assert(object != NULL);
+    
+    /* Generate process id */
+    pidstring = g_strconcat("query_installed:", profile, NULL);
+    object->pid = string_to_hash(pidstring);
+    *pid = object->pid;
+    g_free(pidstring);
+    
+    /* Create parameter struct */
+    params = (DisnixQueryInstalledParams*)g_malloc(sizeof(DisnixQueryInstalledParams));
+    params->profile = g_strdup(profile);
+    params->pid = g_strdup(object->pid);
+    params->object = object;
+
+    /* Create thread */
+    g_thread_create((GThreadFunc)disnix_query_installed_thread_func, params, FALSE, error);
 }
 
 gboolean disnix_collect_garbage(DisnixObject *object, const gboolean delete_old, gchar **pid, GError **error)

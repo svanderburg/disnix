@@ -38,9 +38,6 @@ char *unlock_manager;
 /* GType convienence macros */
 #include "disnix-gtype-def.h"
 
-/* Utility macro to define the value_object GType structure. */
-G_DEFINE_TYPE(DisnixObject, disnix_object, G_TYPE_OBJECT)
-
 /*
  * Forward declarations of D-Bus methods.
  * Since the stub generator will reference the functions from a call
@@ -53,6 +50,9 @@ G_DEFINE_TYPE(DisnixObject, disnix_object, G_TYPE_OBJECT)
 
 /* Include the signal definitions */
 #include "signals.h"
+
+/* Utility macro to define the value_object GType structure. */
+G_DEFINE_TYPE(DisnixObject, disnix_object, G_TYPE_OBJECT)
 
 /**
  * Initializes a Disnix object instance
@@ -104,7 +104,6 @@ static void disnix_object_class_init (DisnixObjectClass *klass)
     /* Bind this GType into the Glib/D-Bus wrappers */
     dbus_g_object_type_install_info (DISNIX_TYPE_OBJECT, &dbus_glib_disnix_object_info);
 }
-
 
 /**
  * Starts the Disnix D-Bus service

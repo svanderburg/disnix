@@ -75,7 +75,7 @@ static void disnix_success_signal_handler(DBusGProxy *proxy, const gchar *pid, c
     g_printerr("Received success signal from pid: %s\n", pid);
     
     for(i = 0; i < g_strv_length(derivation); i++)
-	g_print("%s\n", derivation[i]);
+	g_print("%s", derivation[i]);
 	
     exit(0);
 }
@@ -89,7 +89,7 @@ static void disnix_failure_signal_handler(DBusGProxy *proxy, const gchar *pid, g
 /**
  * Runs the client
  */
-static int run_disnix_client(Operation operation, gchar **derivation, int session_bus)
+static int run_disnix_client(Operation operation, gchar **derivation, int session_bus, char *profile, int delete_old)
 {
     /* The GObject representing a D-Bus connection. */
     DBusGConnection *bus;
@@ -180,28 +180,36 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
     
     switch(operation)
     {
-	case OP_IMPORT:	    
+	case OP_IMPORT:
+	    org_nixos_disnix_Disnix_import(remote_object, derivation, &pid, &error);	        
 	    break;
 	case OP_EXPORT:
+	    org_nixos_disnix_Disnix_export(remote_object, derivation, &pid, &error);
 	    break;
 	case OP_PRINT_INVALID:
 	    org_nixos_disnix_Disnix_print_invalid(remote_object, derivation, &pid, &error);
 	    break;
 	case OP_REALISE:
+	    org_nixos_disnix_Disnix_realise(remote_object, derivation, &pid, &error);
 	    break;
 	case OP_SET:
+	    org_nixos_disnix_Disnix_set(remote_object, profile, derivation[0], &pid, &error);
 	    break;
 	case OP_QUERY_INSTALLED:
+	    org_nixos_disnix_Disnix_query_installed(remote_object, profile, &pid, &error);
 	    break;
 	case OP_COLLECT_GARBAGE:
+	    org_nixos_disnix_Disnix_collect_garbage(remote_object, delete_old, &pid, &error);
 	    break;
 	case OP_ACTIVATE:
 	    break;
 	case OP_DEACTIVATE:
 	    break;
 	case OP_LOCK:
+	    org_nixos_disnix_Disnix_lock(remote_object, &pid, &error);
 	    break;
 	case OP_UNLOCK:
+	    org_nixos_disnix_Disnix_unlock(remote_object, &pid, &error);
 	    break;
 	case OP_NONE:
 	    g_printerr("ERROR: No operation specified!\n");	    
@@ -257,7 +265,7 @@ int main(int argc, char *argv[])
     Operation operation = OP_NONE;
     char *target, *profile = "default", *args;
     gchar **derivation = NULL;
-    unsigned int derivation_size;
+    unsigned int derivation_size = 0;
     int localfile = FALSE, remotefile = TRUE;
     int delete_old = FALSE, session_bus = FALSE;
     
@@ -329,7 +337,7 @@ int main(int argc, char *argv[])
     }
     
     /* Validate non-options */
-    if(optind < argc)
+    while(optind < argc)
     {
 	derivation = g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
 	derivation[derivation_size] = g_strdup(argv[optind]);
@@ -341,5 +349,5 @@ int main(int argc, char *argv[])
     derivation[derivation_size] = NULL;
     
     /* Execute Disnix client */
-    return run_disnix_client(operation, derivation, session_bus);
+    return run_disnix_client(operation, derivation, session_bus, profile, delete_old);
 }
