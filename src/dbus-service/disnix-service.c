@@ -32,29 +32,11 @@ char *lock_manager;
 /** Optional process that should be invoked by the unlock method */
 char *unlock_manager;
 
-/* D-Bus settings */
-#include "disnix-instance-def.h"
+/* Disnix instance definition */
+#include "disnix-instance.h"
 
-/* GType declarations and convienence macros */
-
-/**
- * Forward declaration of the function that will return the GType of
- * the Value implementation. Not used in this program
- */
- 
-GType disnix_object_get_type (void);
-
-/* 
- * Macro for the above. It is common to define macros using the
- * naming convention (seen below) for all GType implementations,
- * and that's why we're going to do that here as well.
- */
-#define DISNIX_TYPE_OBJECT              (disnix_object_get_type ())
-#define DISNIX_OBJECT(object)           (G_TYPE_CHECK_INSTANCE_CAST ((object), DISNIX_TYPE_OBJECT, DisnixObject))
-#define DISNIX_OBJECT_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), DISNIX_TYPE_OBJECT, DisnixObjectClass))
-#define DISNIX_IS_OBJECT(object)        (G_TYPE_CHECK_INSTANCE_TYPE ((object), DISNIX_TYPE_OBJECT))
-#define DISNIX_IS_OBJECT_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), DISNIX_TYPE_OBJECT))
-#define DISNIX_OBJECT_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), DISNIX_TYPE_OBJECT, DisnixObjectClass))
+/* GType convienence macros */
+#include "disnix-gtype-def.h"
 
 /* Utility macro to define the value_object GType structure. */
 G_DEFINE_TYPE(DisnixObject, disnix_object, G_TYPE_OBJECT)
@@ -68,6 +50,9 @@ G_DEFINE_TYPE(DisnixObject, disnix_object, G_TYPE_OBJECT)
 
 /* Include the generated server code */
 #include "disnix-service.h"
+
+/* Include the signal definitions */
+#include "signals.h"
 
 /**
  * Initializes a Disnix object instance
@@ -104,7 +89,7 @@ static void disnix_object_class_init (DisnixObjectClass *klass)
 						    g_cclosure_marshal_VOID__STRING,
 						    G_TYPE_NONE,
 						    2,
-						    G_TYPE_STRING, G_TYPE_STRING);
+						    G_TYPE_STRING, G_TYPE_STRV);
 
     klass->signals[E_FAILURE_SIGNAL] = g_signal_new ("failure",
                                                     G_OBJECT_CLASS_TYPE (klass),
@@ -127,9 +112,10 @@ static void disnix_object_class_init (DisnixObjectClass *klass)
  * @param activation_modules_dir Directory in which the activation modules can be found
  * @param lock_manager Optional process that should be invoked by the lock method
  * @param unlock_manager Optional process that should be invoked by the unlock method
+ * @param session_bus Indicates whether the daemon should be registered on the session bus or system bus
  */
 
-int start_disnix_service(char *activation_modules_dir_arg, char *lock_manager_arg, char *unlock_manager_arg)
+int start_disnix_service(char *activation_modules_dir_arg, char *lock_manager_arg, char *unlock_manager_arg, int session_bus)
 {
     /* The D-Bus connection object provided by dbus_glib */
     DBusGConnection *bus;
@@ -152,6 +138,9 @@ int start_disnix_service(char *activation_modules_dir_arg, char *lock_manager_ar
     
     /* Initialize the GType/GObject system */
     g_type_init();
+
+    /* Initialize GLib thread system */
+    g_thread_init(NULL);
     
     /* Add the server parameters to the global variables */
     activation_modules_dir = activation_modules_dir_arg;
@@ -166,12 +155,22 @@ int start_disnix_service(char *activation_modules_dir_arg, char *lock_manager_ar
 	return 1;
     }
     
-    /* Connect to the system bus */
-    g_print("Connecting to the system bus\n");
-    bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
+    /* Connect to the system/session bus */
+        
+    if(session_bus)
+    {
+	g_print("Connecting to the session bus\n");	
+	bus = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
+    }
+    else
+    {
+	g_print("Connecting to the system bus\n");
+	bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
+    }
+	
     if(error != NULL)
     {
-	g_printerr("ERROR: Cannot connect to the system bus! Reason: %s\n", error->message);
+	g_printerr("ERROR: Cannot connect to the system/session bus! Reason: %s\n", error->message);
 	g_error_free(error);
 	return 1;
     }

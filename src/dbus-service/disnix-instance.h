@@ -1,5 +1,5 @@
-#ifndef __DISNIX_INSTANCE_DEF_H
-#define __DISNIX_INSTANCE_DEF_H
+#ifndef __DISNIX_INSTANCE_H
+#define __DISNIX_INSTANCE_H
 #include <glib-object.h>
 
 /** Enumeration of possible signals this service can emit */

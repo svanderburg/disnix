@@ -1,6 +1,6 @@
 /*
  * Disnix - A distributed application layer for Nix
- * Copyright (C) 2008  Sander van der Burg
+ * Copyright (C) 2008-2009  Sander van der Burg
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,379 +17,329 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <dbus/dbus-glib.h>
 #include <stdio.h>
-#include <unistd.h>
+#include <stdlib.h>
 #define _GNU_SOURCE
 #include <getopt.h>
+#include <glib.h>
+#include <dbus/dbus-glib.h>
 #include "disnix-client.h"
 #include "disnix-marshal.h"
 
 typedef enum
 {
     OP_NONE,
-    OP_INSTALL,
-    OP_UPGRADE,
-    OP_UNINSTALL,
-    OP_SET,
-    OP_INSTANTIATE,
-    OP_REALISE,
     OP_IMPORT,
-    OP_PRINT_INVALID_PATHS,
+    OP_EXPORT,
+    OP_PRINT_INVALID,
+    OP_REALISE,
+    OP_SET,
+    OP_QUERY_INSTALLED,
     OP_COLLECT_GARBAGE,
     OP_ACTIVATE,
-    OP_DEACTIVATE
+    OP_DEACTIVATE,
+    OP_LOCK,
+    OP_UNLOCK,
 }
 Operation;
 
 static void print_usage()
 {
-    g_print("Usage:\n");
-    g_print("disnix-client {-i | --install} [-f file] [-A | --attr] args\n");
-    g_print("disnix-client {-u | --upgrade} derivation\n");
-    g_print("disnix-client {-e | --uninstall} derivation\n");
-    g_print("disnix-client [{-p | --profile profile}] --set derivation\n");
-    g_print("disnix-client --instantiate [-A attributepath | --attr attributepath] filename\n");
-    g_print("disnix-client {-r | --realise} pathname\n");
-    g_print("disnix-client --import {--remotefile filename | --localfile filename}\n");
-    g_print("disnix-client --print-invalid-paths paths\n");
-    g_print("disnix-client --collect-garbage [-d | --delete-old]\n");
-    g_print("disnix-client --type type [--args args] --activate path\n");
-    g_print("disnix-client --type type [--args args] --deactivate path\n");
-    g_print("disnix-client {-h | --help}\n");
+    /* Print the usage */
+    printf("Usage:\n");
+    printf("disnix-client --import [--localfile|--remotefile] storeDerivations\n");
+    printf("disnix-client --export [--localfile|--remotefile] storeDerivations\n");
+    printf("disnix-client --print-invalid storeDerivations\n");
+    printf("disnix-client {-r|--realise} storeDerivations\n");
+    printf("disnix-client --set [{-p|--profile} name] storeDerivation\n");
+    printf("disnix-client {-q|--query-installed} [{-p|--profile} name]\n");
+    printf("disnix-client --collect-garbage [{-d|--delete-old}]\n");
+    printf("disnix-client --activate storeDerivation\n");
+    printf("disnix-client --deactivate storeDerivation\n");    
+    printf("disnix-client --lock\n");
+    printf("disnix-client --unlock\n");
+    printf("disnix-client {-h|--help}\n");
 }
 
-/* Signal handler for status signal */
+/* Signal handlers */
 
 static void disnix_finish_signal_handler(DBusGProxy *proxy, const gchar *pid, gpointer user_data)
 {
     g_printerr("Received finish signal from pid: %s\n", pid);
-    _exit(0);
+    exit(0);
 }
 
-static void disnix_success_signal_handler(DBusGProxy *proxy, const gchar *pid, const gchar *path, gpointer user_data)
+static void disnix_success_signal_handler(DBusGProxy *proxy, const gchar *pid, const gchar **derivation, gpointer user_data)
 {
-    g_printerr("Received success signal from pid: %s, results path: %s\n", pid, path);
-    g_print(path);
-    _exit(0);
+    unsigned int i;
+    g_printerr("Received success signal from pid: %s\n", pid);
+    
+    for(i = 0; i < g_strv_length(derivation); i++)
+	g_print("%s\n", derivation[i]);
+	
+    exit(0);
 }
 
 static void disnix_failure_signal_handler(DBusGProxy *proxy, const gchar *pid, gpointer user_data)
 {
     g_printerr("Received failure signal from pid: %s\n", pid);
-    _exit(0);
+    exit(0);
 }
 
-int main(int argc, char **argv)
+/**
+ * Runs the client
+ */
+static int run_disnix_client(Operation operation, gchar **derivation, int session_bus)
 {
     /* The GObject representing a D-Bus connection. */
     DBusGConnection *bus;
+    
     /* Proxy object representing the D-Bus service object. */
     DBusGProxy *remote_object;
+
     /* GMainLoop object */
     GMainLoop *mainloop;
+    
+    /* Captures the results of D-Bus operations */
     GError *error = NULL;    
     gint reply;
-    int option_index = 0, c;
-    struct option long_options[] =
+    
+    /* Other declarations */
+    gchar *pid;
+    
+    /* If no operation is specified we should quit */
+    if(operation == OP_NONE)
     {
-	{"install", no_argument, 0, 'i'},
-	{"upgrade", required_argument, 0, 'u'},
-	{"uninstall", required_argument, 0, 'e'},
-	{"set", required_argument, 0, 's'},
-	{"instantiate", no_argument, 0, 'I'},
-	{"realise", required_argument, 0, 'r'},
-	{"import", no_argument, 0, 'M'},
-	{"print-invalid-paths", no_argument, 0, 'P'},
-	{"collect-garbage", no_argument, 0, 'C'},
-	{"activate", required_argument, 0, 'Q'},
-	{"deactivate", required_argument, 0, 'W'},
-	{"attr", required_argument, 0, 'A'},
-	{"delete-old", no_argument, 0, 'd'},
-	{"type", required_argument, 0, 't'},
-	{"localfile", required_argument, 0, 'L'},
-	{"remotefile", required_argument, 0, 'R'},
-	{"target", required_argument, 0, 'T'},
-	{"args", required_argument, 0, 'a'},
-	{"profile", required_argument, 0, 'p'},
-	{"help", no_argument, 0, 'h'},
-	{0, 0, 0, 0}
-    };
+	g_printerr("No operation is specified!\n");
+	return 1;
+    }
     
     /* Initialize the GType/GObject system. */
-    g_type_init ();
+    g_type_init();
 
     /* Create main loop */
-    mainloop = g_main_loop_new (NULL, FALSE);
+    mainloop = g_main_loop_new(NULL, FALSE);
     if(mainloop == NULL)
     {
-	g_printerr ("Cannot create main loop.\n");
+	g_printerr("Cannot create main loop.\n");
+	g_strfreev(derivation);
 	return 1;
     }
 
-    /*g_print (" : Connecting to Session D-Bus.\n");
-    bus = dbus_g_bus_get (DBUS_BUS_SESSION, &error);*/
+    /* Connect to the session/system bus */
     
-    g_printerr (" : Connecting to System D-Bus.\n");
-    bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+    if(session_bus)
+    {
+	g_printerr("Connecting to the session bus.\n");
+	bus = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
+    }
+    else
+    {
+	g_printerr("Connecting to the system bus.\n");
+	bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+    }
     
-    if (!bus) {
-        /* Print error and terminate. */
-        g_printerr (" : Couldn't connect to session bus, %s\n", error->message);
+    if(!bus)
+    {
+        g_printerr("Cannot connect to session/system bus! Reason: %s\n", error->message);
+	g_strfreev(derivation);
         return 1;
     }
-
+    
     /* Create the proxy object that will be used to access the object */
-    g_printerr (" : Creating a Glib proxy object.\n");
+    
+    g_printerr("Creating a Glib proxy object.\n");
     remote_object = dbus_g_proxy_new_for_name (bus,
-					       "org.nixos.disnix.Disnix",           /* name */
-					       "/org/nixos/disnix/Disnix",          /* obj path */
-					       "org.nixos.disnix.Disnix");          /* interface */
-
-    if(remote_object == NULL) {
-        /* Print error and terminate. */
-        g_printerr (" : Couldn't create the proxy object, %s\n", error->message);
+					       "org.nixos.disnix.Disnix", /* name */
+					       "/org/nixos/disnix/Disnix", /* Object path */
+					       "org.nixos.disnix.Disnix"); /* Interface */
+    if(remote_object == NULL)
+    {
+        g_printerr("Cannot create the proxy object! Reason: %s\n", error->message);
+	g_strfreev(derivation);
         return 1;
     }
+
+    /* Register marshaller for the return values of the success signal */
+    dbus_g_object_register_marshaller(marshal_VOID__STRING_BOXED, G_TYPE_NONE, G_TYPE_STRING, G_TYPE_STRV, G_TYPE_INVALID);
     
     /* Register the signatures for the signal handlers */
 
-    dbus_g_object_register_marshaller(marshal_VOID__STRING_STRING, G_TYPE_NONE, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INVALID);    
-    g_printerr (" : Add the argument signatures for the signal handler\n");
+    g_printerr("Add the argument signatures for the signal handler\n");
     dbus_g_proxy_add_signal(remote_object, "finish", G_TYPE_STRING, G_TYPE_INVALID);
-    dbus_g_proxy_add_signal(remote_object, "success", G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INVALID);
+    dbus_g_proxy_add_signal(remote_object, "success", G_TYPE_STRING, G_TYPE_STRV, G_TYPE_INVALID);
     dbus_g_proxy_add_signal(remote_object, "failure", G_TYPE_STRING, G_TYPE_INVALID);
-    g_printerr (" : Register D-Bus signal handlers\n");
+
+    g_printerr("Register D-Bus signal handlers\n");
     dbus_g_proxy_connect_signal(remote_object, "finish", G_CALLBACK(disnix_finish_signal_handler), NULL, NULL);
     dbus_g_proxy_connect_signal(remote_object, "success", G_CALLBACK(disnix_success_signal_handler), NULL, NULL);
     dbus_g_proxy_connect_signal(remote_object, "failure", G_CALLBACK(disnix_failure_signal_handler), NULL, NULL);
 
-    /* Do a call */
-    
-    g_printerr (" : Call instantiate\n");
-    gchar *pid = NULL, *derivation, *attr = NULL, *filename, *pathname, *file = NULL, *type;
-    gchar *paths, *oldPaths, *args, args_arg = strdup(""), old_args_arg, *profile = "default";
-    gchar *localfile = NULL, *remotefile = NULL;
-    gboolean isAttr, delete_old = FALSE;
-    
-    Operation operation = OP_NONE;
-        
-    while((c = getopt_long(argc, argv, "iu:e:A:r:f:t:dp:h", long_options, &option_index)) != -1)
-    {
-	switch(c)
-	{
-	    case 'i':
-		operation = OP_INSTALL;
-		break;
-	
-	    case 'u':
-		operation = OP_UPGRADE;
-		derivation = optarg;
-		break;
-	
-	    case 'e':
-		operation = OP_UNINSTALL;
-		derivation = optarg;
-		break;
-	    
-	    case 's':
-		operation = OP_SET;
-		derivation = optarg;
-		break;
-		
-	    case 'A':
-		attr = optarg;
-		break;
-		
-	    case 'I':
-		operation = OP_INSTANTIATE;
-		break;
-	
-	    case 'r':
-		operation = OP_REALISE;
-		pathname = optarg;
-		break;
-	    
-	    case 'M':
-		operation = OP_IMPORT;
-		break;
-	
-	    case 'P':
-		operation = OP_PRINT_INVALID_PATHS;
-		break;
-	
-	    case 'C':
-		operation = OP_COLLECT_GARBAGE;
-		break;
-	
-	    case 'Q':
-	        operation = OP_ACTIVATE;
-		pathname = optarg;
-		break;
-
-	    case 'W':
-	        operation = OP_DEACTIVATE;
-		pathname = optarg;
-		break;
-		
-	    case 'f':
-		file = optarg;
-		break;
-	
-	    case 'd':
-		delete_old = TRUE;
-		break;
-	
-	    case 't':
-		type = optarg;
-		break;
-	
-	    case 'L':
-		localfile = optarg;
-		break;
-	
-	    case 'R':
-		remotefile = optarg;
-		break;
-	
-	    case 'h':
-		print_usage();
-		_exit(0);    
-		break;
-	    
-	    case 'T':
-		/* Do nothing */
-		break;
-	
-	    case 'a':
-	        old_args_arg = args_arg;
-	        args_arg = g_strconcat(old_args_arg, " ", optarg, NULL);
-		g_free(old_args_arg);
-	        break;
-	
-	    case 'p':
-		profile = optarg;
-		break;
-		
-	    default:
-		print_usage();
-		_exit(1);
-	}
-    }
-    
     /* Execute operation */
+    g_printerr("Executing operation.\n");
     
     switch(operation)
     {
-	case OP_INSTALL:
-	    isAttr = (attr != NULL);
-	
-	    if(isAttr)
-		args = attr;
-	    else
-	    {
-		gchar *oldArgs;
-		args = g_strdup("");
-		
-		while(optind < argc)
-		{
-		    oldArgs = args;
-		    args = g_strconcat(oldArgs, " ", argv[optind++], NULL);
-		    g_free(oldArgs);
-		}
-	    }
-	    
-	    org_nixos_disnix_Disnix_install(remote_object, file, args, isAttr, &pid, &error);
-	    
-	    if(!isAttr)
-		g_free(args);
-		
+	case OP_IMPORT:	    
 	    break;
-    
-	case OP_UPGRADE:
-	    org_nixos_disnix_Disnix_upgrade(remote_object, derivation, &pid, &error);
+	case OP_EXPORT:
 	    break;
-    
-	case OP_UNINSTALL:
-	    org_nixos_disnix_Disnix_uninstall(remote_object, derivation, &pid, &error);
+	case OP_PRINT_INVALID:
+	    org_nixos_disnix_Disnix_print_invalid(remote_object, derivation, &pid, &error);
 	    break;
-    
-	case OP_SET:
-	    org_nixos_disnix_Disnix_set(remote_object, profile, derivation, &pid, &error);
-	    break;
-	    
-	case OP_INSTANTIATE:
-	    if(optind < argc)
-	    {
-		filename = argv[optind];
-		org_nixos_disnix_Disnix_instantiate(remote_object, filename, attr, &pid, &error);
-	    }
-	    else
-	    {
-		g_printerr("You must specify a filename!\n");
-		_exit(1);
-	    }
-	    break;
-	
 	case OP_REALISE:
-	    org_nixos_disnix_Disnix_realise(remote_object, pathname, &pid, &error);
 	    break;
-	
-	case OP_IMPORT:
-	    if(localfile != NULL)
-		filename = localfile;
-	    else if(remotefile != NULL)
-		filename = remotefile;
-	    else
-	    {
-		fprintf(stderr, "The import option requires either a local or a remote file!\n");
-		_exit(1);
-	    }
-	    
-	    org_nixos_disnix_Disnix_realise(remote_object, filename, &pid, &error);
+	case OP_SET:
 	    break;
-	
-	case OP_PRINT_INVALID_PATHS:	    
-	    paths = g_strdup("");
-	    
-	    while(optind < argc)
-	    {
-		oldPaths = paths;
-		paths = g_strconcat(oldPaths, " ", argv[optind++], NULL);
-		g_free(oldPaths);
-	    }
-	
-	    org_nixos_disnix_Disnix_print_invalid_paths(remote_object, paths, &pid, &error);
-	    g_free(paths);
+	case OP_QUERY_INSTALLED:
 	    break;
-	
 	case OP_COLLECT_GARBAGE:
-	    org_nixos_disnix_Disnix_collect_garbage(remote_object, delete_old, &pid, &error);
 	    break;
-	  
 	case OP_ACTIVATE:
-	    org_nixos_disnix_Disnix_activate(remote_object, pathname, type, args_arg, &pid, &error);
-	    g_free(args_arg);
 	    break;
-
 	case OP_DEACTIVATE:
-	    org_nixos_disnix_Disnix_deactivate(remote_object, pathname, type, args_arg, &pid, &error);
-	    g_free(args_arg);
 	    break;
-	    
-	default:
-	    g_printerr("You need to specify an operation!\n");
+	case OP_LOCK:
+	    break;
+	case OP_UNLOCK:
+	    break;
+	case OP_NONE:
+	    g_printerr("ERROR: No operation specified!\n");	    
 	    print_usage();
-	    _exit(1);
+	    g_strfreev(derivation);
+	    return 1;
+    }
+
+    if (error != NULL) 
+    {
+        g_printerr("Error while executing the operation! Reason: %s\n", error->message);
+	g_strfreev(derivation);
+	return 1;
     }
     
-    if (error  != NULL) 
-        g_printerr (" : fail, %s.\n", error->message);
-    /*else 
-        g_print (" : success, got reply %d.\n", reply);*/
-
-    /* Run loop and wait for signal */
+    /* Run loop and wait for signals */
     g_main_loop_run(mainloop);
     
-    return 0;
+    /* Operation is finished */
+    g_strfreev(derivation);
+    return EXIT_FAILURE;
+}
+
+int main(int argc, char *argv[])
+{
+    /* Declarations */
+    int c, option_index = 0;
+    struct option long_options[] =
+    {
+	{"import", no_argument, 0, 'I'},
+	{"export", no_argument, 0, 'E'},
+	{"print-invalid", no_argument, 0, 'P'},
+	{"realise", no_argument, 0, 'r'},
+	{"set", no_argument, 0, 'S'},
+	{"query-installed", no_argument, 0, 'q'},
+	{"collect-garbage", no_argument, 0, 'C'},
+	{"activate", no_argument, 0, 'A'},
+	{"deactivate", no_argument, 0, 'D'},
+	{"lock", no_argument, 0, 'L'},
+	{"unlock", no_argument, 0, 'U'},
+	{"help", no_argument, 0, 'h'},
+	{"target", required_argument, 0, 't'},
+	{"localfile", no_argument, 0, 'l'},
+	{"remotefile", no_argument, 0, 'R'},
+	{"profile", required_argument, 0, 'p'},
+	{"delete-old", no_argument, 0, 'd'},
+	{"args", required_argument, 0, 'a'},
+	{"session-bus", no_argument, 0, 'b'},
+	{0, 0, 0, 0}
+    };
+
+    /* Option value declarations */
+    Operation operation = OP_NONE;
+    char *target, *profile = "default", *args;
+    gchar **derivation = NULL;
+    unsigned int derivation_size;
+    int localfile = FALSE, remotefile = TRUE;
+    int delete_old = FALSE, session_bus = FALSE;
+    
+    /* Parse command-line options */
+    while((c = getopt_long(argc, argv, "rqt:p:dh", long_options, &option_index)) != -1)
+    {
+	switch(c)
+	{	    
+	    case 'I':
+		operation = OP_IMPORT;
+		break;
+	    case 'E':
+		operation = OP_EXPORT;		
+		break;
+	    case 'P':
+		operation = OP_PRINT_INVALID;		
+		break;
+	    case 'r':
+		operation = OP_REALISE;
+		break;
+	    case 'S':
+		operation = OP_SET;
+		break;
+	    case 'q':
+		operation = OP_QUERY_INSTALLED;
+		break;
+	    case 'C':
+		operation = OP_COLLECT_GARBAGE;
+		break;
+	    case 'A':
+		operation = OP_ACTIVATE;
+		break;
+	    case 'D':
+		operation = OP_DEACTIVATE;
+		break;
+	    case 'L':
+		operation = OP_LOCK;
+		break;
+	    case 'U':
+		operation = OP_UNLOCK;
+		break;
+	    case 't':
+		target = optarg;
+		break;
+	    case 'l':
+		localfile = TRUE;
+		remotefile = FALSE;
+		break;
+	    case 'R':
+		localfile = FALSE;
+		remotefile = TRUE;
+		break;
+	    case 'p':
+		profile = optarg;
+		break;
+	    case 'd':
+		delete_old = TRUE;
+		break;
+	    case 'a':
+		args = optarg;
+		break;
+	    case 'b':
+		session_bus = TRUE;
+		break;
+	    case 'h':
+		print_usage();
+		return 0;
+	}
+    }
+    
+    /* Validate non-options */
+    if(optind < argc)
+    {
+	derivation = g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
+	derivation[derivation_size] = g_strdup(argv[optind]);
+	derivation_size++;	
+	optind++;
+    }
+    
+    derivation = g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
+    derivation[derivation_size] = NULL;
+    
+    /* Execute Disnix client */
+    return run_disnix_client(operation, derivation, session_bus);
 }

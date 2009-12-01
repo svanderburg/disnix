@@ -1,6 +1,7 @@
 #ifndef __METHODS_H
 #define __METHODS_H
 #include <glib.h>
+#include "disnix-instance.h"
 
 gboolean disnix_import(DisnixObject *object, gchar **derivation, gchar **pid, GError **error);
 

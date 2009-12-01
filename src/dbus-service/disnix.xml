@@ -65,7 +65,7 @@
 		
 		<signal name="success">
 			<arg type="s" name="pid" direction="out" />
-			<arg type="as" name="path" direction="out" />
+			<arg type="as" name="derivation" direction="out" />
 		</signal>
 		
 		<signal name="failure">
