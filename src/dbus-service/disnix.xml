@@ -34,6 +34,11 @@
 			<arg type="s" name="pid" direction="out" />
 		</method>
 		
+		<method name="query_requisites">
+			<arg type="as" name="derivation" direction="in" />
+			<arg type="s" name="pid" direction="out" />
+		</method>
+		
 		<method name="collect_garbage">
 			<arg type="b" name="delete_old" direction="in" />
 			<arg type="s" name="pid" direction="out" />

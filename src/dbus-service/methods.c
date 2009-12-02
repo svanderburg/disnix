@@ -496,6 +496,106 @@ gboolean disnix_query_installed(DisnixObject *object, const gchar *profile, gcha
     g_thread_create((GThreadFunc)disnix_query_installed_thread_func, params, FALSE, error);
 }
 
+/* Query requisites method */
+
+typedef struct
+{
+    gchar **derivation;
+    gchar *pid;
+    DisnixObject *object;
+}
+DisnixQueryRequisitesParams;
+
+static void disnix_query_requisites_thread_func(gpointer data)
+{
+    /* Declarations */
+    gchar *cmd, *pid, **derivation, *derivations_string, **requisites = NULL;
+    unsigned int requisites_size = 0;
+    FILE *fp;
+    char line[BUFFER_SIZE];
+    DisnixQueryRequisitesParams *params;
+    
+    /* Import variables */
+    params = (DisnixQueryRequisitesParams*)data;
+    derivation = params->derivation;
+    pid = params->pid;
+    
+    /* Generate derivations string */
+    derivations_string = generate_derivations_string(derivation, " ");
+
+    /* Print log entry */
+    g_print("Query requisites from derivations: %s\n", derivations_string);
+    
+    /* Execute command */
+    
+    cmd = g_strconcat("nix-store -qR ", derivations_string, NULL);
+
+    fp = popen(cmd, "r");
+    if(fp == NULL)
+	disnix_emit_failure_signal(params->object, pid); /* Something went wrong with forking the process */
+    else
+    {
+	int status;
+	
+	/* Read the output */
+	
+	while(fgets(line, sizeof(line), fp) != NULL)
+	{
+	    puts(line);
+	    requisites = (gchar**)g_realloc(requisites, (requisites_size + 1) * sizeof(gchar*));
+	    requisites[requisites_size] = g_strdup(line);
+	    requisites_size++;
+	}
+	
+	/* Add NULL value to the end of the list */
+	requisites = (gchar**)g_realloc(requisites, (requisites_size + 1) * sizeof(gchar*));
+	requisites[requisites_size] = NULL;
+	
+	status = pclose(fp);
+	
+	if(status == -1 || WEXITSTATUS(status) != 0)
+	    disnix_emit_failure_signal(params->object, pid);
+	else
+	    disnix_emit_success_signal(params->object, pid, requisites);
+    }
+    
+    /* Free variables */
+    g_strfreev(requisites);
+    g_free(derivations_string);
+    g_free(pid);
+    g_free(params);
+    g_free(cmd);
+}
+
+gboolean disnix_query_requisites(DisnixObject *object, gchar **derivation, gchar **pid, GError **error)
+{
+    /* Declarations */
+    gchar *pidstring, *derivations_string;
+    DisnixQueryRequisitesParams *params;
+    
+    /* State object should not be NULL */
+    g_assert(object != NULL);
+    
+    /* Generate derivations string */
+    derivations_string = generate_derivations_string(derivation, ":");
+
+    /* Generate process id */
+    pidstring = g_strconcat("query_requisites:", derivations_string, NULL);
+    object->pid = string_to_hash(pidstring);
+    *pid = object->pid;
+    g_free(pidstring);
+    g_free(derivations_string);
+    
+    /* Create parameter struct */
+    params = (DisnixQueryRequisitesParams*)g_malloc(sizeof(DisnixQueryInstalledParams));
+    params->derivation = derivation;
+    params->pid = g_strdup(object->pid);
+    params->object = object;
+
+    /* Create thread */
+    g_thread_create((GThreadFunc)disnix_query_requisites_thread_func, params, FALSE, error);
+}
+
 /* Garbage collect method */
 
 typedef struct

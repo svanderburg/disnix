@@ -35,6 +35,7 @@ typedef enum
     OP_REALISE,
     OP_SET,
     OP_QUERY_INSTALLED,
+    OP_QUERY_REQUISITES,
     OP_COLLECT_GARBAGE,
     OP_ACTIVATE,
     OP_DEACTIVATE,
@@ -47,15 +48,16 @@ static void print_usage()
 {
     /* Print the usage */
     printf("Usage:\n");
-    printf("disnix-client --import [--localfile|--remotefile] storeDerivations\n");
-    printf("disnix-client --export [--localfile|--remotefile] storeDerivations\n");
-    printf("disnix-client --print-invalid storeDerivations\n");
-    printf("disnix-client {-r|--realise} storeDerivations\n");
-    printf("disnix-client --set [{-p|--profile} name] storeDerivation\n");
+    printf("disnix-client --import [--localfile|--remotefile] derivations\n");
+    printf("disnix-client --export [--localfile|--remotefile] derivations\n");
+    printf("disnix-client --print-invalid derivations\n");
+    printf("disnix-client {-r|--realise} derivations\n");
+    printf("disnix-client --set [{-p|--profile} name] derivation\n");
     printf("disnix-client {-q|--query-installed} [{-p|--profile} name]\n");
+    printf("disnix-client --query-requisites derivations\n");
     printf("disnix-client --collect-garbage [{-d|--delete-old}]\n");
-    printf("disnix-client --activate --type type --arguments arguments storeDerivation\n");
-    printf("disnix-client --deactivate --type type --arguments arguments storeDerivation\n");    
+    printf("disnix-client --activate --type type --arguments arguments derivation\n");
+    printf("disnix-client --deactivate --type type --arguments arguments derivation\n");    
     printf("disnix-client --lock\n");
     printf("disnix-client --unlock\n");
     printf("disnix-client {-h|--help}\n");
@@ -201,6 +203,9 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
 	case OP_QUERY_INSTALLED:
 	    org_nixos_disnix_Disnix_query_installed(remote_object, profile, &pid, &error);
 	    break;
+	case OP_QUERY_REQUISITES:
+	    org_nixos_disnix_Disnix_query_requisites(remote_object, derivation, &pid, &error);
+	    break;
 	case OP_COLLECT_GARBAGE:
 	    org_nixos_disnix_Disnix_collect_garbage(remote_object, delete_old, &pid, &error);
 	    break;
@@ -253,6 +258,7 @@ int main(int argc, char *argv[])
 	{"realise", no_argument, 0, 'r'},
 	{"set", no_argument, 0, 'S'},
 	{"query-installed", no_argument, 0, 'q'},
+	{"query-requisites", no_argument, 0, 'Q'},
 	{"collect-garbage", no_argument, 0, 'C'},
 	{"activate", no_argument, 0, 'A'},
 	{"deactivate", no_argument, 0, 'D'},
@@ -300,6 +306,9 @@ int main(int argc, char *argv[])
 		break;
 	    case 'q':
 		operation = OP_QUERY_INSTALLED;
+		break;
+	    case 'Q':
+		operation = OP_QUERY_REQUISITES;
 		break;
 	    case 'C':
 		operation = OP_COLLECT_GARBAGE;

@@ -15,6 +15,8 @@ gboolean disnix_set(DisnixObject *object, const gchar *profile, const gchar *der
 
 gboolean disnix_query_installed(DisnixObject *object, const gchar *profile, gchar **pid, GError **error);
 
+gboolean disnix_query_requisites(DisnixObject *object, gchar **derivation, gchar **pid, GError **error);
+
 gboolean disnix_collect_garbage(DisnixObject *object, const gboolean delete_old, gchar **pid, GError **error);
 
 gboolean disnix_activate(DisnixObject *object, const gchar *derivation, const gchar *type, gchar **arguments, gchar **pid, GError **error);
