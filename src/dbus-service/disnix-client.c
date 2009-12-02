@@ -54,8 +54,8 @@ static void print_usage()
     printf("disnix-client --set [{-p|--profile} name] storeDerivation\n");
     printf("disnix-client {-q|--query-installed} [{-p|--profile} name]\n");
     printf("disnix-client --collect-garbage [{-d|--delete-old}]\n");
-    printf("disnix-client --activate storeDerivation\n");
-    printf("disnix-client --deactivate storeDerivation\n");    
+    printf("disnix-client --activate --type type --arguments arguments storeDerivation\n");
+    printf("disnix-client --deactivate --type type --arguments arguments storeDerivation\n");    
     printf("disnix-client --lock\n");
     printf("disnix-client --unlock\n");
     printf("disnix-client {-h|--help}\n");
@@ -89,7 +89,7 @@ static void disnix_failure_signal_handler(DBusGProxy *proxy, const gchar *pid, g
 /**
  * Runs the client
  */
-static int run_disnix_client(Operation operation, gchar **derivation, int session_bus, char *profile, int delete_old)
+static int run_disnix_client(Operation operation, gchar **derivation, int session_bus, char *profile, int delete_old, gchar **arguments, char *type)
 {
     /* The GObject representing a D-Bus connection. */
     DBusGConnection *bus;
@@ -123,6 +123,7 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
     {
 	g_printerr("Cannot create main loop.\n");
 	g_strfreev(derivation);
+	g_strfreev(arguments);
 	return 1;
     }
 
@@ -143,6 +144,7 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
     {
         g_printerr("Cannot connect to session/system bus! Reason: %s\n", error->message);
 	g_strfreev(derivation);
+	g_strfreev(arguments);
         return 1;
     }
     
@@ -157,6 +159,7 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
     {
         g_printerr("Cannot create the proxy object! Reason: %s\n", error->message);
 	g_strfreev(derivation);
+	g_strfreev(arguments);
         return 1;
     }
 
@@ -202,8 +205,10 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
 	    org_nixos_disnix_Disnix_collect_garbage(remote_object, delete_old, &pid, &error);
 	    break;
 	case OP_ACTIVATE:
+	    org_nixos_disnix_Disnix_activate(remote_object, derivation[0], type, arguments, &pid, &error);
 	    break;
 	case OP_DEACTIVATE:
+	    org_nixos_disnix_Disnix_deactivate(remote_object, derivation[0], type, arguments, &pid, &error);
 	    break;
 	case OP_LOCK:
 	    org_nixos_disnix_Disnix_lock(remote_object, &pid, &error);
@@ -215,6 +220,7 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
 	    g_printerr("ERROR: No operation specified!\n");	    
 	    print_usage();
 	    g_strfreev(derivation);
+	    g_strfreev(arguments);
 	    return 1;
     }
 
@@ -222,6 +228,7 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
     {
         g_printerr("Error while executing the operation! Reason: %s\n", error->message);
 	g_strfreev(derivation);
+	g_strfreev(arguments);
 	return 1;
     }
     
@@ -230,6 +237,7 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
     
     /* Operation is finished */
     g_strfreev(derivation);
+    g_strfreev(arguments);
     return EXIT_FAILURE;
 }
 
@@ -256,15 +264,16 @@ int main(int argc, char *argv[])
 	{"remotefile", no_argument, 0, 'R'},
 	{"profile", required_argument, 0, 'p'},
 	{"delete-old", no_argument, 0, 'd'},
-	{"args", required_argument, 0, 'a'},
+	{"type", required_argument, 0, 'T'},
+	{"arguments", required_argument, 0, 'a'},
 	{"session-bus", no_argument, 0, 'b'},
 	{0, 0, 0, 0}
     };
 
     /* Option value declarations */
     Operation operation = OP_NONE;
-    char *target, *profile = "default", *args;
-    gchar **derivation = NULL;
+    char *target, *profile = "default", *type;
+    gchar **derivation = NULL, **arguments = NULL;
     unsigned int derivation_size = 0;
     int localfile = FALSE, remotefile = TRUE;
     int delete_old = FALSE, session_bus = FALSE;
@@ -324,8 +333,11 @@ int main(int argc, char *argv[])
 	    case 'd':
 		delete_old = TRUE;
 		break;
+	    case 'T':
+		type = optarg;
+		break;
 	    case 'a':
-		args = optarg;
+		arguments = g_strsplit(optarg, " ", 0);
 		break;
 	    case 'b':
 		session_bus = TRUE;
@@ -349,5 +361,5 @@ int main(int argc, char *argv[])
     derivation[derivation_size] = NULL;
     
     /* Execute Disnix client */
-    return run_disnix_client(operation, derivation, session_bus, profile, delete_old);
+    return run_disnix_client(operation, derivation, session_bus, profile, delete_old, arguments, type);
 }
