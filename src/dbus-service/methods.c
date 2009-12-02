@@ -103,7 +103,7 @@ gboolean disnix_import(DisnixObject *object, gchar **derivation, gchar **pid, GE
     
     /* Create parameter struct */
     params = (DisnixImportParams*)g_malloc(sizeof(DisnixImportParams));
-    params->derivation = derivation;
+    params->derivation = g_strdupv(derivation);
     params->pid = g_strdup(object->pid);
     params->object = object;
     
@@ -208,7 +208,7 @@ gboolean disnix_print_invalid(DisnixObject *object, gchar **derivation, gchar **
     
     /* Create parameter struct */
     params = (DisnixPrintInvalidPathsParams*)g_malloc(sizeof(DisnixPrintInvalidPathsParams));
-    params->derivation = derivation;
+    params->derivation = g_strdupv(derivation);
     params->pid = g_strdup(object->pid);
     params->object = object;
 
@@ -304,7 +304,7 @@ gboolean disnix_realise(DisnixObject *object, gchar **derivation, gchar **pid, G
 
     /* Create parameter struct */
     params = (DisnixRealiseParams*)g_malloc(sizeof(DisnixRealiseParams));
-    params->derivation = derivation;
+    params->derivation = g_strdupv(derivation);
     params->pid = g_strdup(object->pid);
     params->object = object;
     
@@ -588,7 +588,7 @@ gboolean disnix_query_requisites(DisnixObject *object, gchar **derivation, gchar
     
     /* Create parameter struct */
     params = (DisnixQueryRequisitesParams*)g_malloc(sizeof(DisnixQueryInstalledParams));
-    params->derivation = derivation;
+    params->derivation = g_strdupv(derivation);
     params->pid = g_strdup(object->pid);
     params->object = object;
 
@@ -777,7 +777,7 @@ gboolean disnix_activate(DisnixObject *object, const gchar *derivation, const gc
     params = (DisnixActivateParams*)g_malloc(sizeof(DisnixActivateParams));
     params->derivation = g_strdup(derivation);
     params->type = g_strdup(type);
-    params->arguments = arguments;
+    params->arguments = g_strdupv(arguments);
     params->pid = g_strdup(object->pid);
     params->object = object;
 
@@ -876,7 +876,7 @@ gboolean disnix_deactivate(DisnixObject *object, const gchar *derivation, const 
     params = (DisnixDeactivateParams*)g_malloc(sizeof(DisnixDeactivateParams));
     params->derivation = g_strdup(derivation);
     params->type = g_strdup(type);
-    params->arguments = arguments;
+    params->arguments = g_strdupv(arguments);
     params->pid = g_strdup(object->pid);
     params->object = object;
 
