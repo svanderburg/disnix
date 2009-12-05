@@ -80,7 +80,7 @@ requisites=`nix-store --query --requisites $storePath`
 
 # Invoke a remote Disnix interface to fetch all the paths that 
 # are not already at the remote machine
-invalidPaths=`$interface --target $target --print-invalid-paths $requisites`
+invalidPaths=`$interface --target $target --print-invalid $requisites`
 
 if [ "$invalidPaths" != "" ]
 then

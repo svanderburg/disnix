@@ -1,10 +1,108 @@
-#include <distributionexport.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <getopt.h>
 #include <glib.h>
+#include <libxml/parser.h>
+#include <libxml/xpath.h>
+
+typedef struct
+{
+    char *profile;
+    char *target;
+}
+DistributionItem;
+
+static xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, char *xpath)
+{
+    xmlXPathContextPtr context;
+    xmlXPathObjectPtr result;
+    
+    context = xmlXPathNewContext(doc);
+    result = xmlXPathEvalExpression(xpath, context);
+    xmlXPathFreeContext(context);
+    
+    if(xmlXPathNodeSetIsEmpty(result->nodesetval))
+    {
+        xmlXPathFreeObject(result);
+        return NULL;
+    }
+    else
+	return result;
+}
+
+static GArray *generate_distribution_array(char *distribution_export_file)
+{
+    xmlDocPtr doc;
+    xmlNodePtr node_root;
+    xmlXPathObjectPtr result;
+    GArray *distribution_array = NULL;
+    unsigned int i;
+    
+    /* Parse the XML document */
+    
+    if((doc = xmlParseFile(distribution_export_file)) == NULL)
+    {
+	fprintf(stderr, "Error with parsing the distribution export XML file!\n");
+	return NULL;
+    }
+
+    /* Retrieve root element */
+    node_root = xmlDocGetRootElement(doc);
+    
+    if(node_root == NULL)
+    {
+        fprintf(stderr, "The distribution export XML file is empty!\n");
+	xmlFreeDoc(doc);
+	return NULL;
+    }
+    
+    /* Query the distribution elements */
+    result = executeXPathQuery(doc, "/distributionexport/distribution/mapping");
+    
+    /* Iterate over all the distribution elements and add them to the array */
+    
+    if(result)
+    {
+	xmlNodeSetPtr nodeset = result->nodesetval;
+	
+	/* Create a distribution array */
+        distribution_array = g_array_new(FALSE, FALSE, sizeof(DistributionItem*));
+    
+	/* Iterate over all the mapping elements */
+	for(i = 0; i < nodeset->nodeNr; i++)
+        {
+	    xmlNodePtr mapping_children = nodeset->nodeTab[i]->children;
+	    DistributionItem *item = (DistributionItem*)g_malloc(sizeof(DistributionItem));
+	    gchar *profile, *target;
+	    
+	    /* Iterate over all the mapping item children (profile and target elements) */
+	    
+	    while(mapping_children != NULL)
+	    {
+		if(xmlStrcmp(mapping_children->name, (xmlChar*) "profile") == 0)
+		    profile = mapping_children->children->content;
+		if(xmlStrcmp(mapping_children->name, (xmlChar*) "target") == 0)
+		    target = mapping_children->children->content;
+		
+		mapping_children = mapping_children->next;
+	    }
+	    
+	    /* Added the mapping to the array */
+	    item->profile = profile;
+	    item->target = target;
+	    g_array_append_val(distribution_array, item);
+        }
+    }
+    
+    /* Cleanup */    
+    xmlXPathFreeObject(result);
+    xmlFreeDoc(doc);
+
+    /* Return the distribution array */
+    return distribution_array;
+}
 
 static void print_usage()
 {
@@ -59,29 +157,27 @@ int main(int argc, char *argv[])
     }
     else
     {
-	xmlDocPtr doc;
-	DistributionList *list;
-	unsigned int i;
-	gchar *profile_export_file = g_strconcat(argv[optind], "/profiles.xml", NULL);
 	int exit_status = 0;
+	unsigned int i;
+	GArray *distribution_array;
 	
-	/* Open the XML document */
-	doc = create_distribution_export_doc(profile_export_file);
-		
-	/* Generate a distribution list */
-	list = generate_distribution_list(doc);
+	/* Generate a distribution array from the distribution export file */
+	distribution_array = generate_distribution_array(argv[optind]);
 	
-	/* Distribute services in the distribution list */
-	for(i = 0; i < list->size; i++)
+	/* Iterate over the distribution array and distribute the profiles to the target machines */
+	for(i = 0; i < distribution_array->len; i++)
 	{
+	    DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
 	    int status;
 	    gchar *command;
 	    
-	    fprintf(stderr, "Distributing intra-dependency closure of service: %s to target: %s\n", list->service[i], list->target[i]);
-	    command = g_strconcat("disnix-copy-closure --target ", list->target[i], interface_arg, " ", list->service[i], NULL);
+	    fprintf(stderr, "Distributing intra-dependency closure of profile: %s to target: %s\n", item->profile, item->target);
+	    command = g_strconcat("disnix-copy-closure --target ", item->target, interface_arg, " ", item->profile, NULL);
 	    status = system(command);
 	    
+	    /* Cleanups */
 	    g_free(command);
+	    g_free(item); /* Free the distribution item, since we don't need it anymore */
 	    
 	    /* On error stop the distribute process */
 	    if(status == -1)
@@ -97,10 +193,8 @@ int main(int argc, char *argv[])
 	}
 	
 	/* Clean up */
-	g_free(profile_export_file);
+	g_array_free(distribution_array, TRUE);
 	g_free(interface_arg);
-	delete_distribution_list(list);    
-	xmlFreeDoc(doc);
 	xmlCleanupParser();
     
 	/* Return the exit status, which is 0 if everything succeeds */
