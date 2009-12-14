@@ -24,10 +24,11 @@ rec {
 	    listToAttrs (map (argName: 
 	      let
 	        dependencyName = (getAttr argName (service.dependsOn)).name;
+		dependency = getAttr dependencyName services;
 	        targets = getAttr dependencyName distribution;
 	      in
 	      { name = argName;
-	        value = service // {
+	        value = dependency // {
 	          inherit targets;
 	          target = head targets;
 	        };        

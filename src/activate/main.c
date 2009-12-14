@@ -1,20 +1,11 @@
-#include <distributionexport.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-#include <getopt.h>
 #include <unistd.h>
 #include <pwd.h>
+#include <sys/types.h>
+#define _GNU_SOURCE
+#include <getopt.h>
 #include <glib.h>
-
-typedef enum
-{
-    ACTIVATE,
-    DEACTIVATE
-}
-TraversalType;
+#include "activationmapping.h"
 
 static void print_usage()
 {
@@ -23,97 +14,45 @@ static void print_usage()
     fprintf(stderr, "disnix-activate {-h | --help}\n");
 }
 
-static int traverse_inter_dependency_graph(char *interface, xmlDocPtr doc, DistributionList *list, char *service, char *target, char *type, TraversalType traversal_type)
+static void activate(GArray *union_list, ActivationMapping *mapping)
 {
-    /* Search for the given distribution item in the list */
-    int index = distribution_item_index(list, service, target);
+    gint actual_mapping_index = activation_mapping_index(union_list, mapping);
+    ActivationMapping *actual_mapping = g_array_index(union_list, ActivationMapping*, actual_mapping_index);
     
-    if(index == -1)
+    /* First activate all inter-dependencies */
+    if(actual_mapping->depends_on != NULL)
     {
-	/* If the distribution item does not exists, abort and give an error message */
-	fprintf(stderr, "Mapping of service: %s to target: %s does not exists in distribution export file!\n", service, target);
-	return FALSE;
-    }
-    else
-    {	
-	if(!list->visited[index])
+	unsigned int i;
+	
+	for(i = 0; i < actual_mapping->depends_on->len; i++)
 	{
-	    int status;
-	    gchar *command;
-	    char *operation;
-	    xmlXPathObjectPtr result = NULL;
-	    	    
-	    switch(traversal_type)
-	    {
-		case ACTIVATE:
-		    result = select_inter_dependencies(doc, service);
-		    break;
-	        case DEACTIVATE:
-		    result = select_inter_dependend_services_from(doc, service);
-		    break;
-	    }
+	    Dependency *dependency = g_array_index(actual_mapping->depends_on, Dependency*, i);
+	    ActivationMapping lookup;
 	    
-	    if(result)
-	    {
-		xmlNodeSetPtr nodeset = result->nodesetval;
-		unsigned int i, j;
-		int status;
-		
-		for(i = 0; i < nodeset->nodeNr; i++)
-		{
-		    xmlNodePtr node = nodeset->nodeTab[i]->children;
-		    xmlChar *inter_dependency = node->content;
-		    DistributionList *mappings = select_distribution_items(list, inter_dependency);
-		    
-		    for(j = 0; j < mappings->size; j++)
-			status = traverse_inter_dependency_graph(interface, doc, list, mappings->service[j], mappings->target[j], mappings->type[j], traversal_type);
-		    
-		    delete_distribution_list(mappings);
-		    
-		    if(!status)
-		    {
-			xmlXPathFreeObject(result);
-			return status;
-		    }
-		}
-	    }
+	    lookup.service = dependency->service;
+	    lookup.target = dependency->target;	    	    	    
 	    
-	    xmlXPathFreeObject(result);
-	
-	    switch(traversal_type)
-	    {
-		case ACTIVATE:
-		    operation = "activate";
-		    break;
-		case DEACTIVATE:
-		    operation = "deactivate";
-		    break;
-	    }
-	    
-	    printf("%s: %s on: %s of type: %s\n", operation, service, target, type);
-	    
-	    command = g_strconcat(interface, " --", operation, " ", service, " --type ", type, " --target ", target, NULL);
-	    status = system(command);
-	    g_free(command);
-	    
-	    if(status == -1 || WEXITSTATUS(status) != 0)
-		return FALSE;
-			    
-	    list->visited[index] = TRUE;
+	    activate(union_list, &lookup);
 	}
+    }
+    
+    /* Finally activate the service itself */
+    if(!actual_mapping->activated)
+    {
+	gchar *arguments = generate_activation_arguments(actual_mapping->target);
+	gchar *target_interface = get_target_interface(actual_mapping);
 	
-	return TRUE;
+	printf("Now activating service: %s of type: %s through: %s\n", actual_mapping->service, actual_mapping->type, target_interface);
+	printf("Using arguments: %s\n", arguments);
+	actual_mapping->activated = TRUE;
+	
+	g_free(arguments);
     }
 }
 
-static int deactivate(char *interface, xmlDocPtr doc, DistributionList *list, char *service, char *target, char *type)
+static void deactivate(GArray *union_list, ActivationMapping *mapping)
 {
-    return traverse_inter_dependency_graph(interface, doc, list, service, target, type, DEACTIVATE);
-}
 
-static int activate(char *interface, xmlDocPtr doc, DistributionList *list, char *service, char *target, char *type)
-{
-    return traverse_inter_dependency_graph(interface, doc, list, service, target, type, ACTIVATE);
 }
 
 int main(int argc, char *argv[])
@@ -128,7 +67,7 @@ int main(int argc, char *argv[])
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
-    gchar *interface = NULL;
+    gchar *interface_arg = NULL;
     char *old_export = NULL;
     char *profile = "default";
     
@@ -141,7 +80,7 @@ int main(int argc, char *argv[])
 	switch(c)
 	{
 	    case 'i':
-		interface = optarg;
+		interface_arg = g_strconcat("--interface ", optarg, NULL);
 		break;
 	    case 'o':
 	        old_export = optarg;
@@ -156,42 +95,35 @@ int main(int argc, char *argv[])
     }
 
     /* Validate options */
-    if(interface == NULL)
+    if(interface_arg == NULL)
     {
 	char *interface_env = getenv("DISNIX_CLIENT_INTERFACE");
 	
-	if(interface_env == NULL)
-	    interface = "disnix-client";
-	else
-	    interface = interface_env;
+	if(interface_env != NULL)
+	    interface_arg = g_strconcat("--interface ", interface_env, NULL);
     }
 
     if(optind >= argc)
     {
 	fprintf(stderr, "A distribution export file has to be specified!\n");
+	g_free(interface_arg);
 	return 1;
     }
     else
     {
-	xmlDocPtr doc_old = NULL, doc_new, doc_profiles;
-	DistributionList *list_old, *list_new;
-	DistributionList *list_intersection, *list_activate, *list_deactivate;
-	DistributionList *list_profiles;
 	unsigned int i;
-	char *new_export = argv[optind];
-	gchar *new_export_file = g_strconcat(new_export, "/export.xml", NULL);
-	gchar *old_export_file = NULL;
-	gchar *profiles_file = g_strconcat(new_export, "/profiles.xml", NULL);
+	gchar *old_export_file;
+	GArray *list_new = create_activation_list(argv[optind]);	
+	GArray *list_old;
 	
-	/* Open the XML document */
-	doc_new = create_distribution_export_doc(new_export_file);
-	g_free(new_export_file);
-		
+	printf("new:\n");
+	print_activation_list(list_new);
+	
 	if(old_export == NULL)
         {
 	    /* If no old export file is given, try to to open the export file in the Nix profile */
 	    
-	    old_export_file = g_strconcat("/nix/var/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, "/export.xml", NULL);
+	    old_export_file = g_strconcat("/nix/var/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
 	    FILE *file = fopen(old_export_file, "r");
 	    
 	    if(file == NULL)
@@ -203,138 +135,70 @@ int main(int argc, char *argv[])
 		fclose(file);
 	}
 	else
-	    old_export_file = g_strconcat(old_export, "/export.xml", NULL);
-	
+	    old_export_file = g_strdup(old_export);
+
 	if(old_export_file != NULL)
-	{	    
-	    doc_old = create_distribution_export_doc(old_export_file);
+	{	    	    
+	    printf("Using previous distribution export: %s\n", old_export_file);
+	    list_old = create_activation_list(old_export_file);
 	    g_free(old_export_file);
-	    
-	    /* Check inter-dependencies */
-	    if(!checkInterDependencies(doc_old))
-	    {
-    		fprintf(stderr, "Distribution export file has an inter-dependency error!\n");
-    		fprintf(stderr, "Check if all inter-dependencies are present in the distribution!\n");
-	    
-    		xmlFreeDoc(doc_old);
-    		xmlCleanupParser();
-    		return 1;
-	    }
-	    
-	    /* Generate a distribution list */
-	    list_old = generate_distribution_list(doc_old);
         }
 	else
-	    list_old = new_distribution_list();
-	
-	/* Check inter-dependencies */
-	if(!checkInterDependencies(doc_new))
-	{
-    	    fprintf(stderr, "Distribution export file has an inter-dependency error!\n");
-	    fprintf(stderr, "Check if all inter-dependencies are present in the distribution!\n");
-	    
-    	    xmlFreeDoc(doc_new);
-    	    xmlCleanupParser();
-    	    return 1;
-	}
-    	
-	/* Generate a distribution list */
-	list_new = generate_distribution_list(doc_new);
+	    list_old = NULL;
 
-	printf("old:\n");
-	print_distribution_list(list_old);
-	printf("\nnew:\n");
-	print_distribution_list(list_new);
-	printf("\nintersect:\n");
-	list_intersection = intersection(list_old, list_new);
-	print_distribution_list(list_intersection);
-	printf("\nto deactivate:\n");
-	list_deactivate = substract(list_old, list_intersection);
-	print_distribution_list(list_deactivate);
-	printf("\nto activate:\n");
-	list_activate = substract(list_new, list_intersection);
-	print_distribution_list(list_activate);
+	GArray *unio;
+	GArray *deactivate_list;
+	GArray *activate_list;
+	
+	if(list_old != NULL)
+	{
+	    printf("old:\n");
+	    print_activation_list(list_old);
 
-	/* Open profiles document */
-	doc_profiles = create_distribution_export_doc(profiles_file);
-	g_free(profiles_file);
-	list_profiles = generate_distribution_list(doc_profiles);
+	    printf("intersect:\n");
+    	    GArray *intsect = intersect_activation_list(list_new, list_old);
+	    print_activation_list(intsect);
+		    	    
+	    printf("to deactivate:\n");
+	    deactivate_list = substract_activation_list(list_old, intsect);
+	    print_activation_list(deactivate_list);
+	    
+	    printf("to activate:\n");
+	    activate_list = substract_activation_list(list_new, intsect);
+	    print_activation_list(activate_list);
 
-	/* Deactivate old services interdependency closures */
-	printf("Deactivating obsolete services from old configuration:\n");
-	
-	for(i = 0; i < list_deactivate->size; i++)
+	    printf("union:\n");
+	    unio = union_activation_list(list_old, list_new, intsect);
+	    print_activation_list(unio);
+	}	
+	else	
 	{
-	    printf("\n");
-	    
-	    if(!deactivate(interface, doc_old, list_deactivate, list_deactivate->service[i], list_deactivate->target[i], list_deactivate->type[i]))
-		return 1;
+	    unio = list_new;
+	    deactivate_list = NULL;
+	    activate_list = list_new;
 	}
 	
-	/* Activate new services interdependency closures */
-	printf("Activating new services from new configuration:\n");
+	printf("Deactivate:\n");
 	
-	for(i = 0; i < list_activate->size; i++)
+	if(deactivate != NULL)
 	{
-	    printf("\n");
-	    
-	    if(!activate(interface, doc_new, list_activate, list_activate->service[i], list_activate->target[i], list_activate->type[i]))
-		return 1;
+	    for(i = 0; i < deactivate_list->len; i++)
+	    {
+		ActivationMapping *mapping = g_array_index(deactivate_list, ActivationMapping*, i);
+		deactivate(unio, mapping);
+	    }
 	}
 	
-	/* Set the new profiles on the target machines */
-	
-	printf("Setting the new profiles on the target machines:\n");
-	
-	for(i = 0; i < list_profiles->size; i++)
+	printf("Activate:\n");
+		
+	for(i = 0; i < activate_list->len; i++)
 	{
-	    gchar *command;
-	    int status;
-	    printf("Setting profile: %s on target: %s\n", list_profiles->service[i], list_profiles->target[i]);
-	    
-	    command = g_strconcat(interface, " --target ", list_profiles->target[i], " --profile ", profile, " --set ", list_profiles->service[i], NULL);
-	    status = system(command);	    	    	    
-	    g_free(command);
-	    
-	    if(status == -1)
-		return -1;
-	    else if(WEXITSTATUS(status) != 0)
-		return WEXITSTATUS(status);
+	    ActivationMapping *mapping = g_array_index(activate_list, ActivationMapping*, i);
+	    activate(unio, mapping);
 	}
 	
-	/* Store the activated distribution export in the profile of the current user */
+	g_free(interface_arg);
 	
-	{	    
-	    gchar *command;
-	    int status;
-	    
-	    printf("Setting the coordinator profile:\n");
-	    
-	    command = g_strconcat("/nix/var/nix/profiles/per-user/", username, "/disnix-coordinator");
-	    mkdir(command, 0755);
-	    g_free(command);
-	    
-	    command = g_strconcat("nix-env -p /nix/var/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, " --set $(readlink -f ", new_export, ")", NULL);
-	    status = system(command);
-	    g_free(command);
-	    
-	    if(status == -1)
-		return -1;
-	    else if(WEXITSTATUS(status) != 0)
-		return WEXITSTATUS(status);
-	}
-	
-	/* Clean up */
-	delete_distribution_list(list_old);
-	delete_distribution_list(list_new);
-	delete_distribution_list(list_profiles);
-	delete_distribution_list(list_intersection);
-	delete_distribution_list(list_deactivate);
-	delete_distribution_list(list_activate);
-	xmlFreeDoc(doc_old);
-	xmlFreeDoc(doc_new);
-	xmlFreeDoc(doc_profiles);
-	xmlCleanupParser();
 	return 0;
     }
 }

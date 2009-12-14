@@ -9,8 +9,8 @@
 
 typedef struct
 {
-    char *profile;
-    char *target;
+    gchar *profile;
+    gchar *target;
 }
 DistributionItem;
 
@@ -82,9 +82,9 @@ static GArray *generate_distribution_array(char *distribution_export_file)
 	    while(mapping_children != NULL)
 	    {
 		if(xmlStrcmp(mapping_children->name, (xmlChar*) "profile") == 0)
-		    profile = mapping_children->children->content;
+		    profile = g_strdup(mapping_children->children->content);
 		if(xmlStrcmp(mapping_children->name, (xmlChar*) "target") == 0)
-		    target = mapping_children->children->content;
+		    target = g_strdup(mapping_children->children->content);
 		
 		mapping_children = mapping_children->next;
 	    }
