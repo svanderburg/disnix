@@ -1,1 +1,1 @@
-pkgdata_DATA = lib.nix export.nix instantiate.nix generatedistributedderivation.xsl generatedistributionexport.xsl
+pkgdata_DATA = lib.nix export.nix gendist-roundrobin.nix instantiate.nix generatedistributedderivation.xsl generatedistributionexport.xsl

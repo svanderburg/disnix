@@ -62,27 +62,8 @@ then
     exit 1
 fi
 
-# Generate Nix expression
-
-generateDistributionExpr=`readlink -f @datadir@/@PACKAGE@/generatedistribution.nix`
-tmpfilename=`mktemp -p /tmp`
-
-cat > $tmpfilename <<EOF
-rec {
-  servicesFile = $servicesFile;
-  infrastructureFile = $infrastructureFile;
-  
-  pkgs = import (builtins.getEnv "NIXPKGS_ALL") {};
-  
-  export = import $generateDistributionExpr {
-    inherit servicesFile infrastructureFile;
-    inherit (pkgs) stdenv;
-  };
-}
-EOF
-
 # Build the distribution model
-nix-build $tmpfilename
 
-# Remove the generated Nix expression
-rm -f $tmpfilename
+nix-build --argstr servicesFile "$(readlink -f $servicesFile)" \
+          --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
+	  "$(readlink -f @datadir@/@PACKAGE@/gendist-roundrobin.nix)"
