@@ -50,7 +50,7 @@ static int activate(GArray *union_list, ActivationMapping *mapping, gchar *inter
 	printf("Now activating service: %s of type: %s through: %s\n", actual_mapping->service, actual_mapping->type, target_interface);
 	printf("Using arguments: %s\n", arguments);
 	
-	command = g_strconcat(interface, " --activate --type ", actual_mapping->type, " --arguments '", arguments, "' --target ", target_interface, NULL);
+	command = g_strconcat(interface, " --activate --type ", actual_mapping->type, " --arguments \"", arguments, "\" --target ", target_interface, NULL);
 	status = system(command);
 	g_free(command);
 	g_free(arguments);
@@ -93,7 +93,7 @@ static int deactivate(GArray *union_list, ActivationMapping *mapping, gchar *int
 	printf("Now deactivating service: %s of type: %s through: %s\n", actual_mapping->service, actual_mapping->type, target_interface);
 	printf("Using arguments: %s\n", arguments);
 	
-	command = g_strconcat(interface, " --deactivate --type ", actual_mapping->type, " --arguments '", arguments, "' --target ", target_interface, NULL);
+	command = g_strconcat(interface, " --deactivate --type ", actual_mapping->type, " --arguments \"", arguments, "\" --target ", target_interface, NULL);
 	status = system(command);
 	g_free(command);
 	g_free(arguments);
