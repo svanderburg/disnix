@@ -41,6 +41,8 @@ gchar *generate_activation_arguments(GArray *target);
 
 gchar *get_target_interface(ActivationMapping *mapping);
 
+GArray *find_interdependend_mappings(GArray *list, ActivationMapping *mapping);
+
 void print_activation_list(GArray *activation_list);
 
 #endif

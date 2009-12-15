@@ -413,3 +413,30 @@ gchar *get_target_interface(ActivationMapping *mapping)
     
     return NULL;
 }
+
+GArray *find_interdependend_mappings(GArray *list, ActivationMapping *mapping)
+{
+    unsigned int i;
+    GArray *return_list = g_array_new(NULL, NULL, sizeof(ActivationMapping*));
+    
+    for(i = 0; i < list->len; i++)
+    {
+	unsigned int j;
+	ActivationMapping *current_mapping = g_array_index(list, ActivationMapping*, i);
+	
+	for(j = 0; j < current_mapping->depends_on->len; j++)
+	{
+	    Dependency *dependency = g_array_index(current_mapping->depends_on, Dependency*, j);
+	    ActivationMapping compare_mapping, *compare_mapping_ptr;
+
+	    compare_mapping.service = dependency->service;
+	    compare_mapping.target = dependency->target;
+	    compare_mapping_ptr = &compare_mapping;
+	
+	    if(compare_activation_mapping(&mapping, &compare_mapping_ptr) == 0)	    
+		g_array_append_val(return_list, current_mapping);	    
+	}
+    }
+        
+    return return_list;
+}

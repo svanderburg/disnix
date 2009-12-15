@@ -52,7 +52,33 @@ static void activate(GArray *union_list, ActivationMapping *mapping)
 
 static void deactivate(GArray *union_list, ActivationMapping *mapping)
 {
-
+    gint actual_mapping_index = activation_mapping_index(union_list, mapping);
+    ActivationMapping *actual_mapping = g_array_index(union_list, ActivationMapping*, actual_mapping_index);
+    GArray *interdependend_services = find_interdependend_mappings(union_list, actual_mapping);
+    
+    /* First deactivate all service which have an inter-dependency on this service */
+        
+    unsigned int i;
+	
+    for(i = 0; i < interdependend_services->len; i++)
+    {
+        ActivationMapping *dependency_mapping = g_array_index(interdependend_services, Dependency*, i);
+	printf("found interdep: %s\n", dependency_mapping->service);
+        deactivate(union_list, dependency_mapping);
+    }
+    
+    /* Finally deactivate the service itself */
+    if(actual_mapping->activated)
+    {
+	gchar *arguments = generate_activation_arguments(actual_mapping->target);
+	gchar *target_interface = get_target_interface(actual_mapping);
+	
+	printf("Now deactivating service: %s of type: %s through: %s\n", actual_mapping->service, actual_mapping->type, target_interface);
+	printf("Using arguments: %s\n", arguments);
+	actual_mapping->activated = FALSE;
+	
+	g_free(arguments);
+    }
 }
 
 int main(int argc, char *argv[])
@@ -180,7 +206,7 @@ int main(int argc, char *argv[])
 	
 	printf("Deactivate:\n");
 	
-	if(deactivate != NULL)
+	if(deactivate_list != NULL)
 	{
 	    for(i = 0; i < deactivate_list->len; i++)
 	    {
