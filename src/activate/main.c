@@ -1,7 +1,9 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <pwd.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #define _GNU_SOURCE
 #include <getopt.h>
 #include <glib.h>
@@ -14,7 +16,7 @@ static void print_usage()
     fprintf(stderr, "disnix-activate {-h | --help}\n");
 }
 
-static void activate(GArray *union_list, ActivationMapping *mapping)
+static int activate(GArray *union_list, ActivationMapping *mapping, gchar *interface)
 {
     gint actual_mapping_index = activation_mapping_index(union_list, mapping);
     ActivationMapping *actual_mapping = g_array_index(union_list, ActivationMapping*, actual_mapping_index);
@@ -32,7 +34,8 @@ static void activate(GArray *union_list, ActivationMapping *mapping)
 	    lookup.service = dependency->service;
 	    lookup.target = dependency->target;	    	    	    
 	    
-	    activate(union_list, &lookup);
+	    if(!activate(union_list, &lookup, interface))
+		return FALSE;
 	}
     }
     
@@ -41,16 +44,27 @@ static void activate(GArray *union_list, ActivationMapping *mapping)
     {
 	gchar *arguments = generate_activation_arguments(actual_mapping->target);
 	gchar *target_interface = get_target_interface(actual_mapping);
+	gchar *command;
+	int status;
 	
 	printf("Now activating service: %s of type: %s through: %s\n", actual_mapping->service, actual_mapping->type, target_interface);
 	printf("Using arguments: %s\n", arguments);
-	actual_mapping->activated = TRUE;
 	
+	command = g_strconcat(interface, " --activate --type ", actual_mapping->type, " --arguments '", arguments, "' --target ", target_interface, NULL);
+	status = system(command);
+	g_free(command);
 	g_free(arguments);
+	
+	if(status == -1 || WEXITSTATUS(status) != 0)
+	    return FALSE;
+
+	actual_mapping->activated = TRUE;
     }
+    
+    return TRUE;
 }
 
-static void deactivate(GArray *union_list, ActivationMapping *mapping)
+static int deactivate(GArray *union_list, ActivationMapping *mapping, gchar *interface)
 {
     gint actual_mapping_index = activation_mapping_index(union_list, mapping);
     ActivationMapping *actual_mapping = g_array_index(union_list, ActivationMapping*, actual_mapping_index);
@@ -64,7 +78,8 @@ static void deactivate(GArray *union_list, ActivationMapping *mapping)
     {
         ActivationMapping *dependency_mapping = g_array_index(interdependend_services, Dependency*, i);
 	printf("found interdep: %s\n", dependency_mapping->service);
-        deactivate(union_list, dependency_mapping);
+        if(!deactivate(union_list, dependency_mapping, interface))
+	    return FALSE;
     }
     
     /* Finally deactivate the service itself */
@@ -72,13 +87,24 @@ static void deactivate(GArray *union_list, ActivationMapping *mapping)
     {
 	gchar *arguments = generate_activation_arguments(actual_mapping->target);
 	gchar *target_interface = get_target_interface(actual_mapping);
+	gchar *command;
+	int status;
 	
 	printf("Now deactivating service: %s of type: %s through: %s\n", actual_mapping->service, actual_mapping->type, target_interface);
 	printf("Using arguments: %s\n", arguments);
-	actual_mapping->activated = FALSE;
 	
+	command = g_strconcat(interface, " --deactivate --type ", actual_mapping->type, " --arguments '", arguments, "' --target ", target_interface, NULL);
+	status = system(command);
+	g_free(command);
 	g_free(arguments);
+	
+	if(status == -1 || WEXITSTATUS(status) != 0)
+	    return FALSE;
+	
+	actual_mapping->activated = FALSE;
     }
+    
+    return TRUE;
 }
 
 int main(int argc, char *argv[])
@@ -93,7 +119,7 @@ int main(int argc, char *argv[])
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
-    gchar *interface_arg = NULL;
+    gchar *interface = NULL;
     char *old_export = NULL;
     char *profile = "default";
     
@@ -106,7 +132,7 @@ int main(int argc, char *argv[])
 	switch(c)
 	{
 	    case 'i':
-		interface_arg = g_strconcat("--interface ", optarg, NULL);
+		interface = g_strdup(optarg);
 		break;
 	    case 'o':
 	        old_export = optarg;
@@ -121,18 +147,20 @@ int main(int argc, char *argv[])
     }
 
     /* Validate options */
-    if(interface_arg == NULL)
+    if(interface == NULL)
     {
 	char *interface_env = getenv("DISNIX_CLIENT_INTERFACE");
 	
 	if(interface_env != NULL)
-	    interface_arg = g_strconcat("--interface ", interface_env, NULL);
+	    interface = g_strdup(interface_env);
+	else
+	    interface = g_strdup("disnix-client");
     }
 
     if(optind >= argc)
     {
 	fprintf(stderr, "A distribution export file has to be specified!\n");
-	g_free(interface_arg);
+	g_free(interface);
 	return 1;
     }
     else
@@ -199,7 +227,16 @@ int main(int argc, char *argv[])
 	}	
 	else	
 	{
+	    unsigned int i;
+	    
 	    unio = list_new;
+	    
+	    for(i = 0; i < unio->len; i++)
+	    {
+		ActivationMapping *mapping = g_array_index(unio, ActivationMapping*, i);
+		mapping->activated = FALSE;
+	    }
+	    
 	    deactivate_list = NULL;
 	    activate_list = list_new;
 	}
@@ -211,7 +248,9 @@ int main(int argc, char *argv[])
 	    for(i = 0; i < deactivate_list->len; i++)
 	    {
 		ActivationMapping *mapping = g_array_index(deactivate_list, ActivationMapping*, i);
-		deactivate(unio, mapping);
+				
+		if(!deactivate(unio, mapping, interface))
+		    return 1;
 	    }
 	}
 	
@@ -220,10 +259,34 @@ int main(int argc, char *argv[])
 	for(i = 0; i < activate_list->len; i++)
 	{
 	    ActivationMapping *mapping = g_array_index(activate_list, ActivationMapping*, i);
-	    activate(unio, mapping);
+	    
+	    if(!activate(unio, mapping, interface))
+		return 1;
 	}
 	
-	g_free(interface_arg);
+	/* Store the activated distribution export in the profile of the current user */
+	
+	{	    
+	    gchar *command;
+	    int status;
+	    
+	    printf("Setting the coordinator profile:\n");
+	    
+	    command = g_strconcat("/nix/var/nix/profiles/per-user/", username, "/disnix-coordinator", NULL);
+	    mkdir(command, 0755);
+	    g_free(command);
+	    
+	    command = g_strconcat("nix-env -p /nix/var/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, " --set $(readlink -f ", argv[optind], ")", NULL);
+	    status = system(command);
+	    g_free(command);
+	    
+	    if(status == -1)
+		return -1;
+	    else if(WEXITSTATUS(status) != 0)
+		return WEXITSTATUS(status);
+	}
+	
+	g_free(interface);
 	
 	return 0;
     }
