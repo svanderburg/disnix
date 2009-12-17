@@ -3,23 +3,24 @@
 showUsage()
 {
     echo "Usage:"
-    echo "$0 {-i | --install} [-f file] [-A | --attr] args"
-    echo "$0 {-u | --upgrade} derivation"
-    echo "$0 {-e | --uninstall} derivation"
-    echo "$0 [{-p | --profile} profile] --set derivation"
-    echo "$0 --instantiate [ -A attributepath | --attr attributepath ] filename"
-    echo "$0 {-r | --realise} pathname"
-    echo "$0 --import {--remotefile filename | --localfile filename}"
-    echo "$0 --print-invalid-paths paths"
-    echo "$0 --collect-garbage [-d | --delete-old]"
-    echo "$0 --type type [--args args] --activate path"
-    echo "$0 --type type [--args args] --deactivate path"
+    echo "$0 --import [--localfile|--remotefile] derivations"
+    echo "$0 --export [--localfile|--remotefile] derivations"
+    echo "$0 --print-invalid derivations"
+    echo "$0 {-r|--realise} derivations"
+    echo "$0 --set [{-p|--profile} name] derivation"
+    echo "$0 {-q|--query-installed} [{-p|--profile} name]"
+    echo "$0 --query-requisites derivations"
+    echo "$0 --collect-garbage [{-d|--delete-old}]\n"
+    echo "$0 --activate --type type --arguments arguments derivation"
+    echo "$0 --deactivate --type type --arguments arguments derivation"
+    echo "$0 --lock"
+    echo "$0 --unlock"
     echo "$0 {-h | --help}"
 }
 
 # Parse valid argument options
 
-PARAMS=`getopt -n $0 -o iu:e:r:p:h -l install,upgrade:,uninstall:,set,instantiate,realise:,import,print-invalid-paths,collect-garbage,activate:,deactivate:,target:,remotefile:,localfile:,type:,args:,profile:,help -- "$@"`
+PARAMS=`getopt -n $0 -o rqp:d -l import,export,print-invalid,realise,set,query-installed,query-requisites,collect-garbage,activate,deactivate,lock,unlock,target:,localfile:,remotefile:,profile:,delete-old,type:,arguments:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -34,29 +35,26 @@ eval set -- "$PARAMS"
 while [ "$1" != "--" ]
 do
     case "$1" in
-        -i|--install)
-	    operation="install";
+        --import)
+	    operation="import";
 	    ;;
-	-u|--upgrade)
-	    operation="upgrade";
+	--export)
+	    operation="export";
 	    ;;
-	-e|--uninstall)
-	    operation="uninstall";
-	    ;;
-	--set)
-	    operation="set";
-	    ;;
-	--instantiate)
-	    operation="instantiate";
+	--print-invalid)
+	    operation="print-invalid";
 	    ;;
 	-r|--realise)
 	    operation="realise";
 	    ;;
-	--import)
-	    operation="import";
+	--set)
+	    operation="set";
 	    ;;
-	--print-invalid-paths)
-	    operation="print-invalid-paths";
+	-q|--query-installed)
+	    operation="query-installed";
+	    ;;
+	--query-requisites)
+	    operation="query-requisites";
 	    ;;
 	--collect-garbage)
 	    operation="collect-garbage";
@@ -69,6 +67,14 @@ do
 	    operation="deactivate";
 	    path=$2
 	    ;;
+	--lock)
+	    operation="lock";
+	    path=$2
+	    ;;
+	--unlock)
+	    operation="unlock";
+	    path=$2
+	    ;;
 	--target)
 	    target=$2
 	    ;;
@@ -78,14 +84,17 @@ do
 	--remotefile)
 	    remotefile=$2
 	    ;;
+	-p|--profile)
+	    profileArg="--profile $2"
+	    ;;
+	-d|--delete-old)
+	    deleteOldArg="-d"
+	    ;;
 	--type)
 	    type=$2
 	    ;;
-	--args)
-	    args_arg="$argsArg --args $2"
-	    ;;
-	-p|--profile)
-	    profileArg="--profile $2"
+	--arguments)
+	    args_arg="--arguments \"$2\""
 	    ;;
 	-h|--help)
 	    showUsage
@@ -109,12 +118,6 @@ fi
 # Execute selected operation
 
 case "$operation" in
-    set)
-        ssh $SSH_OPTS $target disnix-client $profileArg --set "$@"
-        ;;
-    print-invalid-paths)
-	ssh $SSH_OPTS $target disnix-client --print-invalid-paths "$@"
-	;;
     import)
 	if [ "$localfile" = "" ] && [ "$remotefile" = "" ]
 	then
@@ -130,8 +133,29 @@ case "$operation" in
 	fi
 	
 	# Import the closure into the Nix store
-	ssh $SSH_OPTS $target disnix-client --import $remotefile  
+	ssh $SSH_OPTS $target disnix-client --import $remotefile
 	;;
+    export)
+	ssh $SSH_OPTS $target disnix-client --export $remotefile
+        ;;
+    print-invalid)
+	ssh $SSH_OPTS $target disnix-client --print-invalid "$@"
+	;;
+    -r|--realise)
+        ssh $SSH_OPTS $target disnix-client --realise "$@"
+        ;;
+    set)
+        ssh $SSH_OPTS $target disnix-client $profileArg --set "$@"
+        ;;
+    -q|--query-installed)
+        ssh $SSH_OPTS $target disnix-client $profileArg --query-installed "$@"
+        ;;
+    --query-requisites)
+        ssh $SSH_OPTS $target disnix-client --query-requisites "$@"
+        ;;
+    --collect-garbage)
+        ssh $SSH_OPTS $target disnix-client --collect-garbage $deleteOldArg "$@"
+        ;;
     activate)
 	if [ "$type" = "" ]
 	then
@@ -139,7 +163,7 @@ case "$operation" in
 	    exit 1
 	fi
 	
-	ssh $SSH_OPTS $target disnix-client --type $type $argsArg --activate $path 
+	ssh $SSH_OPTS $target disnix-client --type $type $argsArg --activate "$@"
 	;;
     deactivate)
 	if [ "$type" = "" ]
@@ -148,6 +172,12 @@ case "$operation" in
 	    exit 1
 	fi
 	
-	ssh $SSH_OPTS $target disnix-client --type $type $argsArg --deactivate $path 
+	ssh $SSH_OPTS $target disnix-client --type $type $argsArg --deactivate "$@"
 	;;
+    lock)
+        ssh $SSH_OPTS $target disnix-client --lock
+        ;;
+    unlock)
+        ssh $SSH_OPTS $target disnix-client --unlock
+        ;;
 esac

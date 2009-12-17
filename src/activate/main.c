@@ -8,6 +8,7 @@
 #include <getopt.h>
 #include <glib.h>
 #include "activationmapping.h"
+#include "distributionmapping.h"
 
 static void print_usage()
 {
@@ -241,27 +242,31 @@ int main(int argc, char *argv[])
 	    activate_list = list_new;
 	}
 	
-	printf("Deactivate:\n");
+	/* Set the new profiles on the target machines */
 	
-	if(deactivate_list != NULL)
-	{
-	    for(i = 0; i < deactivate_list->len; i++)
-	    {
-		ActivationMapping *mapping = g_array_index(deactivate_list, ActivationMapping*, i);
-				
-		if(!deactivate(unio, mapping, interface))
-		    return 1;
-	    }
-	}
+	printf("Setting the new profiles on the target machines:\n");
 	
-	printf("Activate:\n");
-		
-	for(i = 0; i < activate_list->len; i++)
 	{
-	    ActivationMapping *mapping = g_array_index(activate_list, ActivationMapping*, i);
+	    unsigned int i;
+	    GArray *distribution_array = generate_distribution_array(argv[optind]);
 	    
-	    if(!activate(unio, mapping, interface))
-		return 1;
+	    for(i = 0; i < distribution_array->len; i++)
+	    {
+		gchar *command;
+		int status;
+		DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
+		
+		printf("Setting profile: %s on target: %s\n", item->profile, item->target);
+	    
+		command = g_strconcat(interface, " --target ", item->target, " --profile ", profile, " --set ", item->profile, NULL);
+		status = system(command);	    	    	    
+		g_free(command);
+	    
+		if(status == -1)
+		    return -1;
+		else if(WEXITSTATUS(status) != 0)
+		    return WEXITSTATUS(status);
+	    }
 	}
 	
 	/* Store the activated distribution export in the profile of the current user */
@@ -285,6 +290,30 @@ int main(int argc, char *argv[])
 	    else if(WEXITSTATUS(status) != 0)
 		return WEXITSTATUS(status);
 	}
+
+	printf("Deactivate:\n");
+	
+	if(deactivate_list != NULL)
+	{
+	    for(i = 0; i < deactivate_list->len; i++)
+	    {
+		ActivationMapping *mapping = g_array_index(deactivate_list, ActivationMapping*, i);
+				
+		if(!deactivate(unio, mapping, interface))
+		    return 1;
+	    }
+	}
+	
+	printf("Activate:\n");
+		
+	for(i = 0; i < activate_list->len; i++)
+	{
+	    ActivationMapping *mapping = g_array_index(activate_list, ActivationMapping*, i);
+	    
+	    if(!activate(unio, mapping, interface))
+		return 1;
+	}
+
 	
 	g_free(interface);
 	
