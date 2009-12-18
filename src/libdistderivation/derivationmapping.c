@@ -1,4 +1,4 @@
-#include "distributionmapping.h"
+#include "derivationmapping.h"
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 
@@ -20,22 +20,22 @@ static xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, char *xpath)
 	return result;
 }
 
-GArray *generate_distribution_array(char *distribution_export_file)
+GArray *create_derivation_array(char *distributed_derivation_file)
 {
     xmlDocPtr doc;
     xmlNodePtr node_root;
     xmlXPathObjectPtr result;
-    GArray *distribution_array = NULL;
+    GArray *derivation_array = NULL;
     unsigned int i;
     
     /* Parse the XML document */
     
-    if((doc = xmlParseFile(distribution_export_file)) == NULL)
+    if((doc = xmlParseFile(distributed_derivation_file)) == NULL)
     {
-	fprintf(stderr, "Error with parsing the distribution export XML file!\n");
+	fprintf(stderr, "Error with parsing the distributed derivation XML file!\n");
 	return NULL;
     }
-
+    
     /* Retrieve root element */
     node_root = xmlDocGetRootElement(doc);
     
@@ -45,32 +45,32 @@ GArray *generate_distribution_array(char *distribution_export_file)
 	xmlFreeDoc(doc);
 	return NULL;
     }
+
+    /* Query the mapping elements */
+    result = executeXPathQuery(doc, "/distributedderivation/mapping");
     
-    /* Query the distribution elements */
-    result = executeXPathQuery(doc, "/distributionexport/distribution/mapping");
-    
-    /* Iterate over all the distribution elements and add them to the array */
+    /* Iterate over all the mapping elements and add them to the array */
     
     if(result)
     {
 	xmlNodeSetPtr nodeset = result->nodesetval;
 	
-	/* Create a distribution array */
-        distribution_array = g_array_new(FALSE, FALSE, sizeof(DistributionItem*));
-    
+	/* Create a derivation array */
+        derivation_array = g_array_new(FALSE, FALSE, sizeof(DerivationItem*));
+	
 	/* Iterate over all the mapping elements */
 	for(i = 0; i < nodeset->nodeNr; i++)
         {
 	    xmlNodePtr mapping_children = nodeset->nodeTab[i]->children;
-	    DistributionItem *item = (DistributionItem*)g_malloc(sizeof(DistributionItem));
-	    gchar *profile, *target;
+	    DerivationItem *item = (DerivationItem*)g_malloc(sizeof(DerivationItem));
+	    gchar *derivation, *target;
 	    
-	    /* Iterate over all the mapping item children (profile and target elements) */
+	    /* Iterate over all the mapping item children (derivation and target elements) */
 	    
 	    while(mapping_children != NULL)
 	    {
-		if(xmlStrcmp(mapping_children->name, (xmlChar*) "profile") == 0)
-		    profile = g_strdup(mapping_children->children->content);
+		if(xmlStrcmp(mapping_children->name, (xmlChar*) "derivation") == 0)
+		    derivation = g_strdup(mapping_children->children->content);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "target") == 0)
 		    target = g_strdup(mapping_children->children->content);
 		
@@ -78,9 +78,9 @@ GArray *generate_distribution_array(char *distribution_export_file)
 	    }
 	    
 	    /* Added the mapping to the array */
-	    item->profile = profile;
+	    item->derivation = derivation;
 	    item->target = target;
-	    g_array_append_val(distribution_array, item);
+	    g_array_append_val(derivation_array, item);
         }
     }
     
@@ -88,6 +88,6 @@ GArray *generate_distribution_array(char *distribution_export_file)
     xmlXPathFreeObject(result);
     xmlFreeDoc(doc);
 
-    /* Return the distribution array */
-    return distribution_array;
+    /* Return the derivation array */
+    return derivation_array;
 }

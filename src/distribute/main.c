@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 	    gchar *command;
 	    
 	    fprintf(stderr, "Distributing intra-dependency closure of profile: %s to target: %s\n", item->profile, item->target);
-	    command = g_strconcat("disnix-copy-closure --target ", item->target, interface_arg, " ", item->profile, NULL);
+	    command = g_strconcat("disnix-copy-closure --to --target ", item->target, interface_arg, " ", item->profile, NULL);
 	    status = system(command);
 	    
 	    /* Cleanups */

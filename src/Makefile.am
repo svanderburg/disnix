@@ -1,1 +1,1 @@
-SUBDIRS = collect-garbage dbus-service libdistexport distribute activate
+SUBDIRS = collect-garbage dbus-service libdistderivation libdistexport build distribute activate
