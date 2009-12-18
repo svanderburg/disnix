@@ -113,9 +113,101 @@ gboolean disnix_import(DisnixObject *object, gchar **derivation, gchar **pid, GE
     return TRUE;
 }
 
+/* Export method */
+
+typedef struct
+{
+    gchar **derivation;
+    gchar *pid;
+    DisnixObject *object;
+}
+DisnixExportParams;
+
+static void disnix_export_thread_func(gpointer data)
+{
+    /* Declarations */
+    gchar **derivation, *derivations_string, *cmd, *pid;
+    FILE *fp;
+    char line[BUFFER_SIZE];
+    char *tempfilename;
+    DisnixExportParams *params;
+    
+    /* Import variables */
+    params = (DisnixExportParams*)data;
+    derivation = params->derivation;
+    pid = params->pid;
+
+    /* Generate derivation strings */
+    derivations_string = generate_derivations_string(derivation, " ");
+    
+    /* Generate temp file name */
+    tempfilename = tempnam("/tmp", "disnix_");
+    
+    /* Print log entry */
+    g_print("Exporting: %s\n", derivations_string);
+    
+    /* Execute command */
+    cmd = g_strconcat("nix-store --export ", derivations_string, " > ", tempfilename, NULL);
+    
+    fp = popen(cmd, "r");
+    if(fp == NULL)
+	disnix_emit_failure_signal(params->object, pid); /* Something went wrong with forking the process */
+    else
+    {
+	int status;
+	
+	while(fgets(line, sizeof(line), fp) != NULL)
+	    puts(line);
+	
+	status = pclose(fp);
+	
+	if(status == -1 || WEXITSTATUS(status) != 0)
+	    disnix_emit_failure_signal(params->object, pid);
+	else
+	{
+	    gchar *tempfilepaths[1];
+	    tempfilepaths[0] = tempfilename;
+	    disnix_emit_success_signal(params->object, pid, tempfilepaths);
+	}
+    }
+    
+    /* Free variables */    
+    g_free(pid);
+    g_free(derivations_string);
+    g_free(params);
+    g_free(cmd);
+    g_strfreev(derivation);
+}
 
 gboolean disnix_export(DisnixObject *object, gchar **derivation, gchar **pid, GError **error)
 {
+    /* Declarations */
+    gchar *pidstring, *derivations_string;
+    DisnixExportParams *params;
+    
+    /* State object should not be NULL */
+    g_assert(object != NULL);
+
+    /* Generate derivations string */
+    derivations_string = generate_derivations_string(derivation, ":");
+
+    /* Generate process id */    
+    pidstring = g_strconcat("export", derivations_string, NULL);
+    object->pid = string_to_hash(pidstring);
+    *pid = object->pid;
+    g_free(pidstring);
+    g_free(derivations_string);
+    
+    /* Create parameter struct */
+    params = (DisnixExportParams*)g_malloc(sizeof(DisnixExportParams));
+    params->derivation = g_strdupv(derivation);
+    params->pid = g_strdup(object->pid);
+    params->object = object;
+    
+    /* Create thread */
+    g_thread_create((GThreadFunc)disnix_export_thread_func, params, FALSE, error);
+    
+    return TRUE;    
 }
 
 /* Print invalid paths method */
