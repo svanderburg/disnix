@@ -4,9 +4,11 @@
 
 showUsage()
 {
-    echo "Usage: $0 [options] --target target path"
+    echo "Usage: $0 [options] [--to|--from] --target target path"
     echo "Options:"
     echo
+    echo "--to        Copy closure to the given target"
+    echo "--from      Copy closure from the given target"
     echo "-t,--target URL of the Disnix interface where the closure should be distributed to"
     echo "--interface Path to executable that communicates with a Disnix interface. Defaults to disnix-client"
     echo "-h,--help   Shows the usage of this command"
@@ -14,7 +16,7 @@ showUsage()
 
 # Parse valid argument options
 
-PARAMS=`getopt -n $0 -o t:h -l target:,interface:,help -- "$@"`
+PARAMS=`getopt -n $0 -o t:h -l to,from,target:,interface:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -29,6 +31,12 @@ eval set -- "$PARAMS"
 while [ "$1" != "--" ]
 do
     case "$1" in
+        --to)
+            to=1
+	    ;;
+	--from)
+	    from=1
+	    ;;
         -t|--target)
 	    target=$2
 	    ;;
@@ -49,6 +57,12 @@ shift
 component=$1
 
 # Validate the given options
+
+if [ ! "$to" = "1" ] && [ ! "$from" = "1" ]
+then
+    echo "ERROR: Either the --from or --to option has to be used!" >&2
+    exit 1
+fi
 
 if [ "$target" = "" ]
 then
@@ -72,26 +86,41 @@ then
     exit 1
 fi
 
-# Resolve the store path of the given file
-storePath=`nix-store --query --resolve $component`
-
-# Query the requisites of the given component
-requisites=`nix-store --query --requisites $storePath`
-
-# Invoke a remote Disnix interface to fetch all the paths that 
-# are not already at the remote machine
-invalidPaths=`$interface --target $target --print-invalid $requisites`
-
-if [ "$invalidPaths" != "" ]
+if [ "$to" = "1" ]
 then
-    # Serialise all the missing parts of the closure
-    tmpfilename=`mktemp -p /tmp`    
-    nix-store --export $invalidPaths > $tmpfilename
+    # Resolve the store path of the given file
+    storePath=`nix-store --query --resolve $component`
+
+    # Query the requisites of the given component
+    requisites=`nix-store --query --requisites $storePath`
+
+    # Invoke a remote Disnix interface to fetch all the paths that 
+    # are not already at the remote machine
+    invalidPaths=`$interface --target $target --print-invalid $requisites`
+
+    if [ "$invalidPaths" != "" ]
+    then
+        # Serialise all the missing parts of the closure
+        tmpfilename=`mktemp -p /tmp`    
+        nix-store --export $invalidPaths > $tmpfilename
     
-    # Import the serialisation of the target by using the Disnix interface
-    # on the remote machine
-    $interface --target $target --import --localfile $tmpfilename
+        # Import the serialisation of the target by using the Disnix interface
+        # on the remote machine
+        $interface --target $target --import --localfile $tmpfilename
     
-    # Remove the serialisation
-    rm -f $tmpfilename
+        # Remove the serialisation
+        rm -f $tmpfilename
+    fi
+else
+    # Query the requisites of the given component
+    requisites=`$interface --target $target --query-requisites $component`
+    
+    # Query all the invalid paths on this machine
+    invalidPaths=`nix-store --check-validity --print-invalid $requisites`
+    
+    # Export the closure all the invalid paths
+    closure=`$interface --target $target --export --remotefile $invalidPaths`
+    
+    # Import the closure
+    nix-store --import $closure
 fi

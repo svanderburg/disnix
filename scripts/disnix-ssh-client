@@ -20,7 +20,7 @@ showUsage()
 
 # Parse valid argument options
 
-PARAMS=`getopt -n $0 -o rqp:d -l import,export,print-invalid,realise,set,query-installed,query-requisites,collect-garbage,activate,deactivate,lock,unlock,target:,localfile:,remotefile:,profile:,delete-old,type:,arguments:,help -- "$@"`
+PARAMS=`getopt -n $0 -o rqp:d -l import,export,print-invalid,realise,set,query-installed,query-requisites,collect-garbage,activate,deactivate,lock,unlock,target:,localfile,remotefile,profile:,delete-old,type:,arguments:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -79,10 +79,10 @@ do
 	    target=$2
 	    ;;
 	--localfile)
-	    localfile=$2
+	    localfile=1
 	    ;;
 	--remotefile)
-	    remotefile=$2
+	    remotefile=1
 	    ;;
 	-p|--profile)
 	    profileArg="--profile $2"
@@ -119,7 +119,7 @@ fi
 
 case "$operation" in
     import)
-	if [ "$localfile" = "" ] && [ "$remotefile" = "" ]
+	if [ "$localfile" != "1" ] && [ "$remotefile" != "1" ]
 	then
 	    echo "ERROR: Either a remote or a localfile must be specified!" >&2
 	    exit 1
@@ -136,7 +136,21 @@ case "$operation" in
 	ssh $SSH_OPTS $target disnix-client --import $remotefile
 	;;
     export)
-	ssh $SSH_OPTS $target disnix-client --export $remotefile
+	if [ "$localfile" != "1" ] && [ "$remotefile" != "1" ]
+	then
+	    echo "ERROR: Either a remote or a localfile must be specified!" >&2
+	    exit 1
+	fi
+
+	closure=`ssh $SSH_OPTS $target disnix-client --export $remotefile`
+	
+	# A remote file must be downloaded afterwards
+	if [ "$remotefile" = "1" ]
+	then
+	    localClosure=`mktemp -p /tmp`
+	    scp $SSH_OPTS $target:$closure $localClosure
+	    echo $localClosure
+	fi
         ;;
     print-invalid)
 	ssh $SSH_OPTS $target disnix-client --print-invalid "$@"

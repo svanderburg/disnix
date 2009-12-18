@@ -41,8 +41,10 @@ AC_CONFIG_FILES([
 Makefile
 conf/Makefile
 src/Makefile
+src/build/Makefile
 src/collect-garbage/Makefile
 src/dbus-service/Makefile
+src/libdistderivation/Makefile
 src/libdistexport/Makefile
 src/distribute/Makefile
 src/activate/Makefile
