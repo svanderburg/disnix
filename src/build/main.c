@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "derivationmapping.h"
+#define BUFFER_SIZE 4096
 
 static void print_usage()
 {
@@ -22,7 +23,7 @@ int main(int argc, char *argv[])
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
-    gchar *interface_arg = NULL;
+    char *interface = NULL;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "h", long_options, &option_index)) != -1)
@@ -30,7 +31,7 @@ int main(int argc, char *argv[])
 	switch(c)
 	{
 	    case 'i':
-		interface_arg = g_strconcat(" --interface ", optarg, NULL);
+		interface = optarg;
 		break;
 	    case 'h':
 		print_usage();
@@ -39,26 +40,26 @@ int main(int argc, char *argv[])
     }
 
     /* Validate options */
-    if(interface_arg == NULL)
+    if(interface == NULL)
     {
 	char *interface_env = getenv("DISNIX_CLIENT_INTERFACE");
 	
 	if(interface_env == NULL)
-	    interface_arg = g_strdup("");
+	    interface = "disnix-client";
 	else
-	    interface_arg = g_strconcat(" --interface ", interface_env, NULL);
+	    interface = interface_env; 
     }
 
     if(optind >= argc)
     {
 	fprintf(stderr, "ERROR: No distribution export specified!\n");
-	g_free(interface_arg);
 	return 1;
     }
     else
     {
 	int exit_status = 0;
 	GArray *derivation_array;
+	GArray *result_array;
 	unsigned int i;
 	
 	/* Generate a distribution array from the distribution export file */
@@ -72,7 +73,7 @@ int main(int argc, char *argv[])
 	    gchar *command;
 	    
 	    fprintf(stderr, "Distributing intra-dependency closure of derivation: %s to target: %s\n", item->derivation, item->target);
-	    command = g_strconcat("disnix-copy-closure --to --target ", item->target, interface_arg, " ", item->derivation, NULL);
+	    command = g_strconcat("disnix-copy-closure --to --target ", item->target, " --interface '", interface, "' ", item->derivation, NULL);
 	    status = system(command);
 	    
 	    /* Cleanups */
@@ -85,20 +86,65 @@ int main(int argc, char *argv[])
 		return WEXITSTATUS(status);
 	}
 
-	/* Iterate over the derivation array and realise the store derivations on the target machines */	
+	/* Iterate over the derivation array and realise the store derivations on the target machines */
+	
+	result_array = g_array_new(FALSE, FALSE, sizeof(gchar*));
+	
 	for(i = 0; i < derivation_array->len; i++)
 	{
 	    DerivationItem *item = g_array_index(derivation_array, DerivationItem*, i);
 	    int status;
 	    gchar *command;
+	    FILE *fp;
 	    
 	    fprintf(stderr, "Realising derivation: %s on target: %s\n", item->derivation, item->target);
-	    command = g_strconcat("disnix-client --realise --target ", item->target, interface_arg, " ", item->derivation, NULL);
-	    status = system(command);
+	    command = g_strconcat(interface, " --realise --target ", item->target, " ", item->derivation, NULL);
+	    fp = popen(command, "r");
+	    
+	    if(fp == NULL)
+		return -1;
+	    else
+	    {
+		char line[BUFFER_SIZE];
+		
+		while(fgets(line, sizeof(line), fp) != NULL)
+		{
+		    gchar *result;
+		    
+		    puts(line);
+		    result = g_strdup(line);
+		    g_array_append_val(result_array, result);
+		}
+	
+		status = pclose(fp);
+
+		/* On error stop the process */
+		if(status == -1)
+		    return -1;
+		else if(WEXITSTATUS(status) != 0)
+		    return WEXITSTATUS(status);
+	    }
 	    
 	    /* Cleanups */
-	    g_free(command);
-	    
+	    g_free(command);	    
+	}
+	
+	/* Retrieve back the realised closures */
+    
+	for(i = 0; i < derivation_array->len; i++)
+	{
+	    gchar *command, *result;
+	    DerivationItem *item;
+	    int status;
+	
+	    result = g_array_index(result_array, gchar*, i);
+	    item = g_array_index(derivation_array, DerivationItem*, i);
+	
+	    fprintf(stderr, "Copying result: %s from: %s\n", result, item->target);
+	
+	    command = g_strconcat(interface, " --target ", item->target, " --export --remotefile ", result, NULL);
+	    status = system(command);
+
 	    /* On error stop the process */
 	    if(status == -1)
 		return -1;
