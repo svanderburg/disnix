@@ -118,9 +118,12 @@ else
     # Query all the invalid paths on this machine
     invalidPaths=`nix-store --check-validity --print-invalid $requisites`
     
-    # Export the closure all the invalid paths
-    closure=`$interface --target $target --export --remotefile $invalidPaths`
+    if [ "$invalidPaths" != "" ]
+    then
+	# Export the closure all the invalid paths
+	closure=`$interface --target $target --export --remotefile $invalidPaths`
     
-    # Import the closure
-    nix-store --import $closure
+	# Import the closure
+	cat $closure | nix-store --import
+    fi
 fi
