@@ -94,7 +94,7 @@ do
 	    type=$2
 	    ;;
 	--arguments)
-	    args_arg="--arguments \"$2\""
+	    argsArg="--arguments \"$2\""
 	    ;;
 	-h|--help)
 	    showUsage
@@ -163,19 +163,19 @@ case "$operation" in
     print-invalid)
 	ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --print-invalid "$@"
 	;;
-    -r|--realise)
+    realise)
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --realise "$@"
         ;;
     set)
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client $profileArg --set "$@"
         ;;
-    -q|--query-installed)
+    query-installed)
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client $profileArg --query-installed "$@"
         ;;
-    --query-requisites)
+    query-requisites)
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --query-requisites "$@"
         ;;
-    --collect-garbage)
+    collect-garbage)
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --collect-garbage $deleteOldArg "$@"
         ;;
     activate)
