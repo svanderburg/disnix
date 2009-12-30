@@ -165,8 +165,9 @@ static void disnix_export_thread_func(gpointer data)
 	    disnix_emit_failure_signal(params->object, pid);
 	else
 	{
-	    gchar *tempfilepaths[1];
+	    gchar *tempfilepaths[2];
 	    tempfilepaths[0] = tempfilename;
+	    tempfilepaths[1] = NULL;
 	    disnix_emit_success_signal(params->object, pid, tempfilepaths);
 	}
     }
