@@ -85,7 +85,7 @@ static void disnix_success_signal_handler(DBusGProxy *proxy, const gchar *pid, c
 static void disnix_failure_signal_handler(DBusGProxy *proxy, const gchar *pid, gpointer user_data)
 {
     g_printerr("Received failure signal from pid: %s\n", pid);
-    exit(0);
+    exit(1);
 }
 
 /**
