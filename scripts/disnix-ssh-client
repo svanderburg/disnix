@@ -115,6 +115,14 @@ then
     exit 1
 fi
 
+targetHostname=${target%%:*}
+targetPort=${target#*:}
+
+if [ "$targetPort" = "$targetHostname" ]
+then
+    targetPort=22
+fi
+
 # Execute selected operation
 
 case "$operation" in
@@ -128,12 +136,12 @@ case "$operation" in
 	# A localfile must first be transferred
 	if [ "$localfile" != "" ]
 	then
-	    scp $SSH_OPTS $localfile $target:/tmp/out.closure # Preferably we should use mktemp for the filename
+	    scp -P $targetPort $SSH_OPTS "$@" $targetHostname:/tmp/out.closure # Preferably we should use mktemp for the filename
 	    remotefile=/tmp/out.closure
 	fi
 	
 	# Import the closure into the Nix store
-	ssh $SSH_OPTS $target disnix-client --import $remotefile
+	ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --import $remotefile
 	;;
     export)
 	if [ "$localfile" != "1" ] && [ "$remotefile" != "1" ]
@@ -142,33 +150,33 @@ case "$operation" in
 	    exit 1
 	fi
 
-	closure=`ssh $SSH_OPTS $target disnix-client --export $remotefile`
+	closure=`ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --export $remotefile`
 	
 	# A remote file must be downloaded afterwards
 	if [ "$remotefile" = "1" ]
 	then
 	    localClosure=`mktemp -p /tmp`
-	    scp $SSH_OPTS $target:$closure $localClosure
+	    scp -P $targetPort $SSH_OPTS $targetHostname:$closure $localClosure
 	    echo $localClosure
 	fi
         ;;
     print-invalid)
-	ssh $SSH_OPTS $target disnix-client --print-invalid "$@"
+	ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --print-invalid "$@"
 	;;
     -r|--realise)
-        ssh $SSH_OPTS $target disnix-client --realise "$@"
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --realise "$@"
         ;;
     set)
-        ssh $SSH_OPTS $target disnix-client $profileArg --set "$@"
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client $profileArg --set "$@"
         ;;
     -q|--query-installed)
-        ssh $SSH_OPTS $target disnix-client $profileArg --query-installed "$@"
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client $profileArg --query-installed "$@"
         ;;
     --query-requisites)
-        ssh $SSH_OPTS $target disnix-client --query-requisites "$@"
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --query-requisites "$@"
         ;;
     --collect-garbage)
-        ssh $SSH_OPTS $target disnix-client --collect-garbage $deleteOldArg "$@"
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --collect-garbage $deleteOldArg "$@"
         ;;
     activate)
 	if [ "$type" = "" ]
@@ -177,7 +185,7 @@ case "$operation" in
 	    exit 1
 	fi
 	
-	ssh $SSH_OPTS $target disnix-client --type $type $argsArg --activate "$@"
+	ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --activate "$@"
 	;;
     deactivate)
 	if [ "$type" = "" ]
@@ -186,12 +194,12 @@ case "$operation" in
 	    exit 1
 	fi
 	
-	ssh $SSH_OPTS $target disnix-client --type $type $argsArg --deactivate "$@"
+	ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --deactivate "$@"
 	;;
     lock)
-        ssh $SSH_OPTS $target disnix-client --lock
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --lock
         ;;
     unlock)
-        ssh $SSH_OPTS $target disnix-client --unlock
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --unlock
         ;;
 esac
