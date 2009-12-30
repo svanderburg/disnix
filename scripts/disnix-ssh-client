@@ -150,7 +150,7 @@ case "$operation" in
 	    exit 1
 	fi
 
-	closure=`ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --export $remotefile`
+	closure=`ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --export $@`
 	
 	# A remote file must be downloaded afterwards
 	if [ "$remotefile" = "1" ]
