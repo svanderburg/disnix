@@ -134,7 +134,7 @@ GArray *create_activation_list(char *distribution_export_file)
     xmlDocPtr doc;
     xmlNodePtr node_root;
     xmlXPathObjectPtr result;
-    GArray *activation_list = NULL;
+    GArray *activation_list;
     unsigned int i;
     
     /* Parse the XML document */
@@ -158,13 +158,15 @@ GArray *create_activation_list(char *distribution_export_file)
     /* Query the distribution elements */
     result = executeXPathQuery(doc, "/distributionexport/activation/mapping");
     
+    /* Initialize activation list */
+    activation_list = g_array_new(NULL, NULL, sizeof(ActivationMapping*));
+    
     /* Iterate over all the distribution elements and add them to the list */
     
     if(result)
     {
 	xmlNodeSetPtr nodeset = result->nodesetval;
-	activation_list = g_array_new(NULL, NULL, sizeof(ActivationMapping*));
-	
+		
 	/* Iterate over all the mapping elements */
 	for(i = 0; i < nodeset->nodeNr; i++)
         {
@@ -293,10 +295,9 @@ GArray *create_activation_list(char *distribution_export_file)
 GArray *intersect_activation_list(GArray *left, GArray *right)
 {
     unsigned int i;
-    gboolean use_left = (left->len < right->len);
     GArray *return_list = g_array_new(NULL, NULL, sizeof(ActivationMapping*));
     
-    if(use_left)
+    if(left->len < right->len)
     {
 	for(i = 0; i < left->len; i++)
 	{
