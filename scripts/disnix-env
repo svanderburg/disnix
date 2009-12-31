@@ -11,16 +11,17 @@ showUsage()
     echo "-i,--infrastructure Infrastructure Nix expression which captures properties of machines in the network"
     echo "-d,--distribution   Distribution Nix expression which maps services to machines in the network"
     echo "--target-property   The target property of an infrastructure model, that specifies how to "
-    echo "                    connect to the remote Disnix interface. (Defaults to hostname)"    
+    echo "                    connect to the remote Disnix interface. (Defaults to hostname)"
     echo "--interface         Process that communicates with the remote disnix service. Defaults to disnix-client"
     echo "-p,--profile        Name of the profile that is used for this system. Defaults to: default"
+    echo "--build-on-targets  Build the services on the target machines in the network instead of handling the build by the coordinator"
     echo "--show-trace        Shows a trace of the output"
     echo "-h,--help           Shows the usage of this command"
 }
 
 # Parse valid argument options
 
-PARAMS=`getopt -n $0 -o s:i:d:p:h -l services:,infrastructure:,distribution:,interface:,target-property:,profile:,show-trace,help -- "$@"`
+PARAMS=`getopt -n $0 -o s:i:d:p:h -l services:,infrastructure:,distribution:,interface:,target-property:,profile:,build-on-targets,show-trace,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -43,6 +44,9 @@ do
 	    ;;
 	-d|--distribution)
 	    distributionFile=`readlink -f $2`
+	    ;;
+	--build-on-targets)
+	    buildOnTargets=1
 	    ;;
 	--show-trace)
 	    showTrace=1
@@ -107,7 +111,12 @@ fi
 
 # Execute operations
 
-distributionExport=`disnix-build -s $servicesFile -i $infrastructureFile -d $distributionFile $targetPropertyArg $showTraceArg`
+if [ "$buildOnTargets" = "1" ]
+then
+    distributedDerivation=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile $targetPropertyArg $showTraceArg`
+    disnix-build --interface $interface $distributedDerivation
+fi
+
+distributionExport=`disnix-export -s $servicesFile -i $infrastructureFile -d $distributionFile $targetPropertyArg $showTraceArg`
 disnix-distribute --interface $interface $distributionExport
 disnix-activate --interface $interface $profileArg $distributionExport
-rm -f $distributionExport

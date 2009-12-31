@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 	    g_free(command);	    
 	}
 	
-	/* Retrieve back the realised closures */
+	/* Retrieve back the realised closures and import them into the Nix store of the host */
     
 	for(i = 0; i < derivation_array->len; i++)
 	{
@@ -142,14 +142,14 @@ int main(int argc, char *argv[])
 	
 	    fprintf(stderr, "Copying result: %s from: %s\n", result, item->target);
 	
-	    command = g_strconcat(interface, " --target ", item->target, " --export --remotefile ", result, NULL);
+	    command = g_strconcat("disnix-copy-closure --from --target ", item->target, " --interface '", interface, "' ", result, NULL);	    
 	    status = system(command);
 
 	    /* On error stop the process */
 	    if(status == -1)
 		return -1;
 	    else if(WEXITSTATUS(status) != 0)
-		return WEXITSTATUS(status);
+		return WEXITSTATUS(status);			    
 	}
     }
 }
