@@ -9,9 +9,44 @@
 
 extern char *activation_modules_dir;
 
+extern GHashTable *job_table;
+
+typedef enum
+{
+    OP_IMPORT,
+    OP_EXPORT,
+    OP_PRINT_INVALID,
+    OP_REALISE,
+    OP_SET,
+    OP_QUERY_INSTALLED,
+    OP_QUERY_REQUISITES,
+    OP_COLLECT_GARBAGE,
+    OP_ACTIVATE,
+    OP_DEACTIVATE,
+}
+Operation;
+
+typedef struct
+{
+    Operation operation;
+    gpointer params;
+    GError **error;
+    gboolean running;
+}
+Job;
+
+Job *job_new(Operation operation, gpointer params, GError **error)
+{
+    Job *job = (Job*)g_malloc(sizeof(Job));
+    job->operation = operation;
+    job->params = params;
+    job->running = FALSE;
+    return job;
+}
+
 static gchar *generate_derivations_string(gchar **derivation, char *separator)
 {
-    int i;
+    unsigned int i;
     gchar *derivations_string = g_strdup("");
     
     for(i = 0; i < g_strv_length(derivation); i++)
@@ -23,6 +58,7 @@ static gchar *generate_derivations_string(gchar **derivation, char *separator)
     
     return derivations_string;
 }
+
 
 /* Import method */
 
@@ -107,7 +143,7 @@ gboolean disnix_import(DisnixObject *object, gchar **derivation, gchar **pid, GE
     params->pid = g_strdup(object->pid);
     params->object = object;
     
-    /* Create thread */
+    /* Add job to the job table */
     g_thread_create((GThreadFunc)disnix_import_thread_func, params, FALSE, error);
     
     return TRUE;
@@ -587,6 +623,8 @@ gboolean disnix_query_installed(DisnixObject *object, const gchar *profile, gcha
 
     /* Create thread */
     g_thread_create((GThreadFunc)disnix_query_installed_thread_func, params, FALSE, error);
+    
+    return TRUE;
 }
 
 /* Query requisites method */
@@ -665,6 +703,7 @@ gboolean disnix_query_requisites(DisnixObject *object, gchar **derivation, gchar
     /* Declarations */
     gchar *pidstring, *derivations_string;
     DisnixQueryRequisitesParams *params;
+    Job *job;
     
     /* State object should not be NULL */
     g_assert(object != NULL);
@@ -685,8 +724,11 @@ gboolean disnix_query_requisites(DisnixObject *object, gchar **derivation, gchar
     params->pid = g_strdup(object->pid);
     params->object = object;
 
-    /* Create thread */
-    g_thread_create((GThreadFunc)disnix_query_requisites_thread_func, params, FALSE, error);
+    /* Add this call to the job table */
+    job = job_new(OP_QUERY_REQUISITES, params, error);
+    g_hash_table_insert(job_table, g_strdup(params->pid), job);
+    
+    return TRUE;
 }
 
 /* Garbage collect method */
@@ -699,7 +741,7 @@ typedef struct
 }
 DisnixGarbageCollectParams;
 
-static void disnix_garbage_collect_thread_func(gpointer data)
+static void disnix_collect_garbage_thread_func(gpointer data)
 {
     /* Declarations */
     gchar *cmd, *pid;
@@ -776,7 +818,7 @@ gboolean disnix_collect_garbage(DisnixObject *object, const gboolean delete_old,
     params->object = object;
 
     /* Create thread */
-    g_thread_create((GThreadFunc)disnix_garbage_collect_thread_func, params, FALSE, error);    
+    g_thread_create((GThreadFunc)disnix_collect_garbage_thread_func, params, FALSE, error);    
     
     return TRUE;
 }
@@ -981,8 +1023,68 @@ gboolean disnix_deactivate(DisnixObject *object, const gchar *derivation, const 
 
 gboolean disnix_lock(DisnixObject *object, gchar **pid, GError **error)
 {
+    return TRUE;
 }
 
 gboolean disnix_unlock(DisnixObject *object, gchar **pid, GError **error)
 {
+    return TRUE;
+}
+
+/* Acknowledge method */
+
+static void print_job_item(gpointer key, gpointer value, gpointer user_data)
+{
+    gchar *pid = (gchar*)key;
+    Job *job = (Job*)value;
+    
+    g_print("key: %s, job operation: %d\n", pid, job->operation);    
+}
+
+gboolean disnix_acknowledge(DisnixObject *object, gchar *pid, GError **error)
+{
+    Job *job = (Job*)g_hash_table_lookup(job_table, pid);
+    
+    g_print("Acknowledging PID: %s\n", pid);
+    
+    if(job != NULL)
+    {
+	job->running = TRUE;
+	
+	switch(job->operation)
+	{
+	    case OP_IMPORT:
+		g_thread_create((GThreadFunc)disnix_import_thread_func, job->params, FALSE, job->error);
+		break;
+	    case OP_EXPORT:
+		g_thread_create((GThreadFunc)disnix_export_thread_func, job->params, FALSE, job->error);
+		break;
+	    case OP_PRINT_INVALID:
+		g_thread_create((GThreadFunc)disnix_print_invalid_thread_func, job->params, FALSE, job->error);
+		break;
+	    case OP_REALISE:
+		g_thread_create((GThreadFunc)disnix_realise_thread_func, job->params, FALSE, job->error);
+		break;
+	    case OP_SET:
+		g_thread_create((GThreadFunc)disnix_set_thread_func, job->params, FALSE, job->error);
+		break;
+	    case OP_QUERY_INSTALLED:
+		g_thread_create((GThreadFunc)disnix_query_installed_thread_func, job->params, FALSE, job->error);
+		break;
+	    case OP_QUERY_REQUISITES:
+		g_thread_create((GThreadFunc)disnix_query_requisites_thread_func, job->params, FALSE, job->error);
+		break;
+	    case OP_COLLECT_GARBAGE:
+		g_thread_create((GThreadFunc)disnix_collect_garbage_thread_func, job->params, FALSE, job->error);
+		break;
+	    case OP_ACTIVATE:
+		g_thread_create((GThreadFunc)disnix_activate_thread_func, job->params, FALSE, job->error);
+		break;
+	    case OP_DEACTIVATE:
+		g_thread_create((GThreadFunc)disnix_deactivate_thread_func, job->params, FALSE, job->error);
+		break;
+	}
+    }
+    
+    return TRUE;
 }

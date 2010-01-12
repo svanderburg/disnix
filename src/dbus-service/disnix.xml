@@ -3,6 +3,10 @@
 
 <node name="/org/nixos/disnix/Disnix">
 	<interface name="org.nixos.disnix.Disnix">
+		<method name="acknowledge">
+			<arg type="s" name="pid" direction="in" />
+		</method>
+	
 		<method name="import">
 			<arg type="as" name="derivation" direction="in" />
 			<arg type="s" name="pid" direction="out" />
@@ -38,6 +42,10 @@
 			<arg type="as" name="derivation" direction="in" />
 			<arg type="s" name="pid" direction="out" />
 		</method>
+		
+		<!--<method name="query_jobs">
+			<arg type="as" name="jobs" direction="out" />
+		</method>-->
 		
 		<method name="collect_garbage">
 			<arg type="b" name="delete_old" direction="in" />

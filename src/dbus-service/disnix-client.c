@@ -237,6 +237,10 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
 	return 1;
     }
     
+    /* Acknowledge the received PID so that the job will start */
+    g_printerr("Acknowledging PID: %s\n", pid);
+    org_nixos_disnix_Disnix_acknowledge(remote_object, pid, &error);
+    
     /* Run loop and wait for signals */
     g_main_loop_run(mainloop);
     

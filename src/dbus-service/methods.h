@@ -3,6 +3,8 @@
 #include <glib.h>
 #include "disnix-instance.h"
 
+gboolean disnix_acknowledge(DisnixObject *object, gchar *pid, GError **error);
+
 gboolean disnix_import(DisnixObject *object, gchar **derivation, gchar **pid, GError **error);
 
 gboolean disnix_export(DisnixObject *object, gchar **derivation, gchar **pid, GError **error);

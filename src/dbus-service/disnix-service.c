@@ -32,6 +32,9 @@ char *lock_manager;
 /** Optional process that should be invoked by the unlock method */
 char *unlock_manager;
 
+/** Contains a table of jobs and whether they are running */
+GHashTable *job_table;
+
 /* Disnix instance definition */
 #include "disnix-instance.h"
 
@@ -145,6 +148,9 @@ int start_disnix_service(char *activation_modules_dir_arg, char *lock_manager_ar
     activation_modules_dir = activation_modules_dir_arg;
     lock_manager = lock_manager_arg;
     unlock_manager = unlock_manager_arg;
+    
+    /* Create job hashtable */
+    job_table = g_hash_table_new(g_str_hash, g_str_equal);
     
     /* Create a GMainloop with initial state of 'not running' (FALSE) */
     mainloop = g_main_loop_new(NULL, FALSE);
