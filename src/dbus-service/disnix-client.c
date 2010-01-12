@@ -67,25 +67,39 @@ static void print_usage()
 
 static void disnix_finish_signal_handler(DBusGProxy *proxy, const gchar *pid, gpointer user_data)
 {
+    gchar *my_pid = *((gchar**)user_data);
+
     g_printerr("Received finish signal from pid: %s\n", pid);
-    exit(0);
+
+    /* Stop the main loop if our job is done */
+    if(g_strcmp0(pid, my_pid) == 0)
+	exit(0);    
 }
 
 static void disnix_success_signal_handler(DBusGProxy *proxy, const gchar *pid, const gchar **derivation, gpointer user_data)
 {
     unsigned int i;
+    gchar *my_pid = *((gchar**)user_data);
+    
     g_printerr("Received success signal from pid: %s\n", pid);
     
     for(i = 0; i < g_strv_length(derivation); i++)
 	g_print("%s", derivation[i]);
 	
-    exit(0);
+    /* Stop the main loop if our job is done */
+    if(g_strcmp0(pid, my_pid) == 0)
+	exit(0);
 }
 
 static void disnix_failure_signal_handler(DBusGProxy *proxy, const gchar *pid, gpointer user_data)
 {
+    gchar *my_pid = *((gchar**)user_data);
+    
     g_printerr("Received failure signal from pid: %s\n", pid);
-    exit(1);
+    
+    /* Stop the main loop if our job is done */
+    if(g_strcmp0(pid, my_pid) == 0)
+	exit(1);
 }
 
 /**
@@ -176,9 +190,9 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
     dbus_g_proxy_add_signal(remote_object, "failure", G_TYPE_STRING, G_TYPE_INVALID);
 
     g_printerr("Register D-Bus signal handlers\n");
-    dbus_g_proxy_connect_signal(remote_object, "finish", G_CALLBACK(disnix_finish_signal_handler), NULL, NULL);
-    dbus_g_proxy_connect_signal(remote_object, "success", G_CALLBACK(disnix_success_signal_handler), NULL, NULL);
-    dbus_g_proxy_connect_signal(remote_object, "failure", G_CALLBACK(disnix_failure_signal_handler), NULL, NULL);
+    dbus_g_proxy_connect_signal(remote_object, "finish", G_CALLBACK(disnix_finish_signal_handler), &pid, NULL);
+    dbus_g_proxy_connect_signal(remote_object, "success", G_CALLBACK(disnix_success_signal_handler), &pid, NULL);
+    dbus_g_proxy_connect_signal(remote_object, "failure", G_CALLBACK(disnix_failure_signal_handler), &pid, NULL);
 
     /* Execute operation */
     g_printerr("Executing operation.\n");
