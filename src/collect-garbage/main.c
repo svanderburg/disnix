@@ -7,7 +7,9 @@
 #include <glib.h>
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
-#define BUFFER_SIZE 512
+#include <libxslt/xslt.h>
+#include <libxslt/transform.h>
+#define BUFFER_SIZE 4096
 
 static void print_usage()
 {
@@ -18,9 +20,11 @@ static void print_usage()
 
 static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
 {
-    xmlDocPtr doc;
+    xmlDocPtr doc, transform_doc;
     xmlNodePtr root_node;
+    xsltStylesheetPtr style;
     
+    /* Parse XML file from XML string */
     doc = xmlParseMemory(infrastructureXML, strlen(infrastructureXML));
     
     if(doc == NULL)
@@ -29,6 +33,7 @@ static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
 	return NULL;
     }
     
+    /* Check if the document has a root */
     root_node = xmlDocGetRootElement(doc);
     
     if(root_node == NULL)
@@ -38,7 +43,16 @@ static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
 	return NULL;
     }
 
-    return doc;
+    /* Transform the document into a more concrete format */
+    style = xsltParseStylesheetFile((const xmlChar *) DATADIR "/infrastructure.xsl");
+    
+    transform_doc = xsltApplyStylesheet(style, doc, NULL);
+        
+    /* Cleanup */
+    xmlFreeDoc(doc);
+    xsltCleanupGlobals();
+        
+    return transform_doc;
 }
 
 static gchar *create_infrastructure_xml(char *infrastructure_expr)
@@ -86,7 +100,7 @@ static xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, char *xpath)
 
 static xmlXPathObjectPtr query_targets(xmlDocPtr doc, char *target_property)
 {
-    gchar *query = g_strconcat("/expr/attrs/attr/attrs/attr[@name='", target_property, "']/string/@value", NULL);
+    gchar *query = g_strconcat("/infrastructure/target/", target_property, NULL);
     xmlXPathObjectPtr result = executeXPathQuery(doc, query);
     g_free(query);
     return result;
@@ -184,6 +198,7 @@ int main(int argc, char *argv[])
 	    for(i = 0; i < nodeset->nodeNr; i++)
 	    {
 		xmlChar *target_value = nodeset->nodeTab[i]->children->content;
+		
 		gchar *command = g_strconcat(interface, " --target ", target_value, " --collect-garbage ", delete_old_arg, NULL);
 		int status;
 		
