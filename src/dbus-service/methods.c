@@ -31,7 +31,7 @@ static gchar *generate_derivations_string(gchar **derivation, char *separator)
 
 typedef struct
 {
-    gchar **derivation;
+    gchar *closure;
     gchar *pid;
     DisnixObject *object;
 }
@@ -40,24 +40,21 @@ DisnixImportParams;
 static void disnix_import_thread_func(gpointer data)
 {
     /* Declarations */
-    gchar **derivation, *derivations_string, *cmd, *pid;
+    gchar *closure, *derivations_string, *cmd, *pid;
     FILE *fp;
     char line[BUFFER_SIZE];
     DisnixImportParams *params;
     
     /* Import variables */
     params = (DisnixImportParams*)data;
-    derivation = params->derivation;
+    closure = params->closure;
     pid = params->pid;
 
-    /* Generate derivation strings */
-    derivations_string = generate_derivations_string(derivation, " ");
-    
     /* Print log entry */
-    g_print("Importing: %s\n", derivations_string);
+    g_print("Importing: %s\n", closure);
     
     /* Execute command */
-    cmd = g_strconcat("cat ", derivations_string, " | nix-store --import ", NULL);
+    cmd = g_strconcat("cat ", closure, " | nix-store --import ", NULL);
     
     fp = popen(cmd, "r");
     if(fp == NULL)
@@ -77,37 +74,33 @@ static void disnix_import_thread_func(gpointer data)
 	    disnix_emit_finish_signal(params->object, pid);
     }
     
-    /* Free variables */    
+    /* Free variables */
     g_free(pid);
     g_free(derivations_string);
     g_free(params);
     g_free(cmd);
-    g_strfreev(derivation);
+    g_free(closure);
 }
 
-gboolean disnix_import(DisnixObject *object, gchar **derivation, gchar **pid, GError **error)
+gboolean disnix_import(DisnixObject *object, gchar *closure, gchar **pid, GError **error)
 {
     /* Declarations */
-    gchar *pidstring, *derivations_string;
+    gchar *pidstring;
     DisnixImportParams *params;
     Job *job;
     
     /* State object should not be NULL */
     g_assert(object != NULL);
 
-    /* Generate derivations string */
-    derivations_string = generate_derivations_string(derivation, ":");
-
     /* Generate process id */    
-    pidstring = g_strconcat("import", derivations_string, NULL);
+    pidstring = g_strconcat("import:", closure, NULL);
     object->pid = string_to_hash(pidstring);
     *pid = object->pid;
     g_free(pidstring);
-    g_free(derivations_string);
     
     /* Create parameter struct */
     params = (DisnixImportParams*)g_malloc(sizeof(DisnixImportParams));
-    params->derivation = g_strdupv(derivation);
+    params->closure = g_strdup(closure);
     params->pid = g_strdup(object->pid);
     params->object = object;
     

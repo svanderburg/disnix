@@ -8,7 +8,7 @@
 		</method>
 	
 		<method name="import">
-			<arg type="as" name="derivation" direction="in" />
+			<arg type="s" name="closure" direction="in" />
 			<arg type="s" name="pid" direction="out" />
 		</method>
 		

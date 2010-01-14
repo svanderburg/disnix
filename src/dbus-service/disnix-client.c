@@ -200,7 +200,7 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
     switch(operation)
     {
 	case OP_IMPORT:
-	    org_nixos_disnix_Disnix_import(remote_object, derivation, &pid, &error);	        
+	    org_nixos_disnix_Disnix_import(remote_object, derivation[0], &pid, &error);
 	    break;
 	case OP_EXPORT:
 	    org_nixos_disnix_Disnix_export(remote_object, derivation, &pid, &error);

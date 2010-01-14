@@ -5,7 +5,7 @@
 
 gboolean disnix_acknowledge(DisnixObject *object, gchar *pid, GError **error);
 
-gboolean disnix_import(DisnixObject *object, gchar **derivation, gchar **pid, GError **error);
+gboolean disnix_import(DisnixObject *object, gchar *closure, gchar **pid, GError **error);
 
 gboolean disnix_export(DisnixObject *object, gchar **derivation, gchar **pid, GError **error);
 
