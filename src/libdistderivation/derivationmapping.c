@@ -91,3 +91,18 @@ GArray *create_derivation_array(char *distributed_derivation_file)
     /* Return the derivation array */
     return derivation_array;
 }
+
+void delete_derivation_array(GArray *derivation_array)
+{
+    unsigned int i;
+    
+    for(i = 0; i < derivation_array->len; i++)
+    {
+	DerivationItem *item = g_array_index(derivation_array, DerivationItem*, i);
+	g_free(item->derivation);
+	g_free(item->target);
+	g_free(item);
+    }
+    
+    g_array_unref(derivation_array);
+}

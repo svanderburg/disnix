@@ -292,6 +292,50 @@ GArray *create_activation_list(char *distribution_export_file)
     return activation_list;
 }
 
+static void delete_target_array(GArray *target)
+{
+    unsigned int i;
+    
+    for(i = 0; i < target->len; i++)
+    {
+        TargetProperty *target_property = g_array_index(target, TargetProperty*, i);
+        g_free(target_property->name);
+        g_free(target_property->value);
+        g_free(target_property);
+    }
+	
+    g_array_unref(target);
+}
+
+void delete_activation_list(GArray *activation_list)
+{
+    unsigned int i;
+    
+    for(i = 0; i < activation_list->len; i++)
+    {
+	ActivationMapping *mapping = g_array_index(activation_list, ActivationMapping*, i);
+	unsigned int j;
+	
+	g_free(mapping->service);
+	delete_target_array(mapping->target);	
+	g_free(mapping->targetProperty);
+	g_free(mapping->type);
+	
+	for(j = 0; j < mapping->depends_on->len; j++)
+	{
+	    Dependency *dependency = g_array_index(mapping->depends_on, Dependency*, j);
+	    g_free(dependency->service);
+	    delete_target_array(dependency->target);
+	    g_free(dependency);
+	}
+	
+	g_array_unref(mapping->depends_on);
+	g_free(mapping);
+    }
+    
+    g_array_unref(activation_list);
+}
+
 GArray *intersect_activation_list(GArray *left, GArray *right)
 {
     unsigned int i;

@@ -29,6 +29,8 @@ ActivationMapping;
 
 GArray *create_activation_list(char *distribution_export_file);
 
+void delete_activation_list(GArray *activation_list);
+
 gint activation_mapping_index(GArray *activation_list, ActivationMapping *keys);
 
 GArray *intersect_activation_list(GArray *left, GArray *right);

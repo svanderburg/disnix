@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 	}
 	
 	/* Clean up */
-	g_array_free(distribution_array, TRUE);
+	delete_distribution_array(distribution_array);
 	g_free(interface_arg);
 	xmlCleanupParser();
     

@@ -11,4 +11,6 @@ DistributionItem;
 
 GArray *generate_distribution_array(char *distribution_export_file);
 
+void delete_distribution_array(GArray *distribution_array);
+
 #endif

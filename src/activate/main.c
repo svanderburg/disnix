@@ -78,7 +78,6 @@ static int deactivate(GArray *union_list, ActivationMapping *mapping, gchar *int
     for(i = 0; i < interdependend_services->len; i++)
     {
         ActivationMapping *dependency_mapping = g_array_index(interdependend_services, Dependency*, i);
-	printf("found interdep: %s\n", dependency_mapping->service);
         if(!deactivate(union_list, dependency_mapping, interface))
 	    return FALSE;
     }
@@ -267,6 +266,8 @@ int main(int argc, char *argv[])
 		else if(WEXITSTATUS(status) != 0)
 		    return WEXITSTATUS(status);
 	    }
+	    
+	    delete_distribution_array(distribution_array);
 	}
 	
 	/* Store the activated distribution export in the profile of the current user */

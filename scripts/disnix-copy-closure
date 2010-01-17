@@ -4,7 +4,7 @@
 
 showUsage()
 {
-    echo "Usage: $0 [options] [--to|--from] --target target path"
+    echo "Usage: $0 [options] {--to|--from} --target target path"
     echo "Options:"
     echo
     echo "--to        Copy closure to the given target"

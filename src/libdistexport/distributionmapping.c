@@ -91,3 +91,19 @@ GArray *generate_distribution_array(char *distribution_export_file)
     /* Return the distribution array */
     return distribution_array;
 }
+
+void delete_distribution_array(GArray *distribution_array)
+{
+    unsigned int i;
+    
+    for(i = 0; i < distribution_array->len; i++)
+    {
+	DistributionItem* item = g_array_index(distribution_array, DistributionItem*, i);
+    
+	g_free(item->profile);
+	g_free(item->target);
+	g_free(item);
+    }
+    
+    g_array_unref(distribution_array);
+}

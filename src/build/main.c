@@ -151,5 +151,9 @@ int main(int argc, char *argv[])
 	    else if(WEXITSTATUS(status) != 0)
 		return WEXITSTATUS(status);			    
 	}
+	
+	/* Cleanup */
+	
+	delete_derivation_array(derivation_array);
     }
 }
