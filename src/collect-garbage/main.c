@@ -178,11 +178,11 @@ int main(int argc, char *argv[])
 	/* Parse the infrastructure XML file */
     
 	doc = create_infrastructure_doc(infrastructureXML);
-    
+	g_free(infrastructureXML);
+	
 	if(doc == NULL)
 	{
-	    fprintf(stderr, "Error with parsing infrastructure XML file!\n");
-	    g_free(infrastructureXML);
+	    fprintf(stderr, "Error with parsing infrastructure XML file!\n");    
 	    return 1;
 	}
     
@@ -207,9 +207,19 @@ int main(int argc, char *argv[])
 		g_free(command);
 		
 		if(status == -1)
+		{
+		    xmlXPathFreeObject(result);
+		    xmlFreeDoc(doc);
+		    xmlCleanupParser();
 		    return -1;
+		}
 		else
+		{
+		    xmlXPathFreeObject(result);
+		    xmlFreeDoc(doc);
+		    xmlCleanupParser();
 		    return WEXITSTATUS(status);
+		}
 	    }
 	
 	    xmlXPathFreeObject(result);
@@ -217,10 +227,9 @@ int main(int argc, char *argv[])
 	else
 	    fprintf(stderr, "No targets found!\n");
 	    
-	/* Cleanup */
+	/* Cleanup */	
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
-	g_free(infrastructureXML);
 	return 0;
     }
 }
