@@ -49,6 +49,7 @@ static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
     transform_doc = xsltApplyStylesheet(style, doc, NULL);
         
     /* Cleanup */
+    xsltFreeStylesheet(style);    
     xmlFreeDoc(doc);
     xsltCleanupGlobals();
         
@@ -88,6 +89,7 @@ static xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, char *xpath)
     
     context = xmlXPathNewContext(doc);
     result = xmlXPathEvalExpression(xpath, context);
+    xmlXPathFreeContext(context);
     
     if(xmlXPathNodeSetIsEmpty(result->nodesetval))
     {
