@@ -13,6 +13,19 @@ static void print_usage()
     fprintf(stderr, "disnix-build {-h | --help}\n");
 }
 
+static void delete_result_array(GArray *result_array)
+{
+    unsigned int i;
+    
+    for(i = 0; i < result_array->len; i++)
+    {
+	gchar *result = g_array_index(result_array, gchar*, i);
+	g_free(result);
+    }
+    
+    g_array_unref(result_array);
+}
+
 int main(int argc, char *argv[])
 {
     /* Declarations */
@@ -81,9 +94,15 @@ int main(int argc, char *argv[])
 	    
 	    /* On error stop the distribute process */
 	    if(status == -1)
+	    {
+		delete_derivation_array(derivation_array);
 		return -1;
+	    }
 	    else if(WEXITSTATUS(status) != 0)
+	    {
+		delete_derivation_array(derivation_array);
 		return WEXITSTATUS(status);
+	    }
 	}
 
 	/* Iterate over the derivation array and realise the store derivations on the target machines */
@@ -120,9 +139,17 @@ int main(int argc, char *argv[])
 
 		/* On error stop the process */
 		if(status == -1)
+		{
+		    delete_result_array(result_array);
+    		    delete_derivation_array(derivation_array);
 		    return -1;
+		}
 		else if(WEXITSTATUS(status) != 0)
+		{
+		    delete_result_array(result_array);
+    		    delete_derivation_array(derivation_array);
 		    return WEXITSTATUS(status);
+		}
 	    }
 	    
 	    /* Cleanups */
@@ -147,13 +174,21 @@ int main(int argc, char *argv[])
 
 	    /* On error stop the process */
 	    if(status == -1)
+	    {
+		delete_result_array(result_array);
+    		delete_derivation_array(derivation_array);
 		return -1;
+	    }
 	    else if(WEXITSTATUS(status) != 0)
-		return WEXITSTATUS(status);			    
+	    {
+		delete_result_array(result_array);
+    		delete_derivation_array(derivation_array);
+		return WEXITSTATUS(status);
+	    }
 	}
 	
-	/* Cleanup */
-	
+	/* Cleanup */	
+	delete_result_array(result_array);
 	delete_derivation_array(derivation_array);
     }
 }
