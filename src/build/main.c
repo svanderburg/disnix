@@ -23,7 +23,7 @@ static void delete_result_array(GArray *result_array)
 	g_free(result);
     }
     
-    g_array_unref(result_array);
+    g_array_free(result_array, TRUE);
 }
 
 int main(int argc, char *argv[])
@@ -78,64 +78,103 @@ int main(int argc, char *argv[])
 	/* Generate a distribution array from the distribution export file */
 	derivation_array = create_derivation_array(argv[optind]);
 	
-	/* Iterate over the derivation array and distribute the store derivation closures to the target machines */
-	for(i = 0; i < derivation_array->len; i++)
+	if(derivation_array == NULL)
+	    return -1;
+	else
 	{
-	    DerivationItem *item = g_array_index(derivation_array, DerivationItem*, i);
-	    int status;
-	    gchar *command;
-	    
-	    fprintf(stderr, "Distributing intra-dependency closure of derivation: %s to target: %s\n", item->derivation, item->target);
-	    command = g_strconcat("disnix-copy-closure --to --target ", item->target, " --interface '", interface, "' ", item->derivation, NULL);
-	    status = system(command);
-	    
-	    /* Cleanups */
-	    g_free(command);
-	    
-	    /* On error stop the distribute process */
-	    if(status == -1)
+	    /* Iterate over the derivation array and distribute the store derivation closures to the target machines */
+	    for(i = 0; i < derivation_array->len; i++)
 	    {
-		delete_derivation_array(derivation_array);
-		return -1;
-	    }
-	    else if(WEXITSTATUS(status) != 0)
-	    {
-		delete_derivation_array(derivation_array);
-		return WEXITSTATUS(status);
-	    }
-	}
-
-	/* Iterate over the derivation array and realise the store derivations on the target machines */
-	
-	result_array = g_array_new(FALSE, FALSE, sizeof(gchar*));
-	
-	for(i = 0; i < derivation_array->len; i++)
-	{
-	    DerivationItem *item = g_array_index(derivation_array, DerivationItem*, i);
-	    int status;
-	    gchar *command;
-	    FILE *fp;
+		DerivationItem *item = g_array_index(derivation_array, DerivationItem*, i);
+		int status;
+		gchar *command;
 	    
-	    fprintf(stderr, "Realising derivation: %s on target: %s\n", item->derivation, item->target);
-	    command = g_strconcat(interface, " --realise --target ", item->target, " ", item->derivation, NULL);
-	    fp = popen(command, "r");
+		fprintf(stderr, "Distributing intra-dependency closure of derivation: %s to target: %s\n", item->derivation, item->target);
+		command = g_strconcat("disnix-copy-closure --to --target ", item->target, " --interface '", interface, "' ", item->derivation, NULL);
+		status = system(command);
 	    
-	    if(fp == NULL)
-		return -1;
-	    else
-	    {
-		char line[BUFFER_SIZE];
-		
-		while(fgets(line, sizeof(line), fp) != NULL)
+		/* Cleanups */
+		g_free(command);
+	    
+		/* On error stop the distribute process */
+		if(status == -1)
 		{
-		    gchar *result;
-		    
-		    puts(line);
-		    result = g_strdup(line);
-		    g_array_append_val(result_array, result);
+		    delete_derivation_array(derivation_array);
+		    return -1;
 		}
+		else if(WEXITSTATUS(status) != 0)
+		{
+		    delete_derivation_array(derivation_array);
+		    return WEXITSTATUS(status);
+		}
+	    }
+
+	    /* Iterate over the derivation array and realise the store derivations on the target machines */
 	
-		status = pclose(fp);
+	    result_array = g_array_new(FALSE, FALSE, sizeof(gchar*));
+	
+	    for(i = 0; i < derivation_array->len; i++)
+	    {
+		DerivationItem *item = g_array_index(derivation_array, DerivationItem*, i);
+		int status;
+		gchar *command;
+		FILE *fp;
+	    
+		fprintf(stderr, "Realising derivation: %s on target: %s\n", item->derivation, item->target);
+		command = g_strconcat(interface, " --realise --target ", item->target, " ", item->derivation, NULL);
+		fp = popen(command, "r");
+	    
+		if(fp == NULL)
+		    return -1;
+		else
+		{
+		    char line[BUFFER_SIZE];
+		
+		    while(fgets(line, sizeof(line), fp) != NULL)
+		    {
+			gchar *result;
+		    
+			puts(line);
+			result = g_strdup(line);
+			g_array_append_val(result_array, result);
+		    }
+	
+		    status = pclose(fp);
+
+		    /* On error stop the process */
+		    if(status == -1)
+		    {
+			delete_result_array(result_array);
+    			delete_derivation_array(derivation_array);
+			return -1;
+		    }
+		    else if(WEXITSTATUS(status) != 0)
+		    {
+			delete_result_array(result_array);
+    			delete_derivation_array(derivation_array);
+			return WEXITSTATUS(status);
+		    }
+		}
+	    
+		/* Cleanups */
+		g_free(command);	    
+	    }
+	
+	    /* Retrieve back the realised closures and import them into the Nix store of the host */
+    
+	    for(i = 0; i < derivation_array->len; i++)
+	    {
+		gchar *command, *result;
+		DerivationItem *item;
+		int status;
+	
+		result = g_array_index(result_array, gchar*, i);
+		item = g_array_index(derivation_array, DerivationItem*, i);
+	
+	        fprintf(stderr, "Copying result: %s from: %s\n", result, item->target);
+	
+		command = g_strconcat("disnix-copy-closure --from --target ", item->target, " --interface '", interface, "' ", result, NULL);	    
+		status = system(command);
 
 		/* On error stop the process */
 		if(status == -1)
@@ -151,44 +190,10 @@ int main(int argc, char *argv[])
 		    return WEXITSTATUS(status);
 		}
 	    }
-	    
-	    /* Cleanups */
-	    g_free(command);	    
+	
+	    /* Cleanup */	
+	    delete_result_array(result_array);
+	    delete_derivation_array(derivation_array);
 	}
-	
-	/* Retrieve back the realised closures and import them into the Nix store of the host */
-    
-	for(i = 0; i < derivation_array->len; i++)
-	{
-	    gchar *command, *result;
-	    DerivationItem *item;
-	    int status;
-	
-	    result = g_array_index(result_array, gchar*, i);
-	    item = g_array_index(derivation_array, DerivationItem*, i);
-	
-	    fprintf(stderr, "Copying result: %s from: %s\n", result, item->target);
-	
-	    command = g_strconcat("disnix-copy-closure --from --target ", item->target, " --interface '", interface, "' ", result, NULL);	    
-	    status = system(command);
-
-	    /* On error stop the process */
-	    if(status == -1)
-	    {
-		delete_result_array(result_array);
-    		delete_derivation_array(derivation_array);
-		return -1;
-	    }
-	    else if(WEXITSTATUS(status) != 0)
-	    {
-		delete_result_array(result_array);
-    		delete_derivation_array(derivation_array);
-		return WEXITSTATUS(status);
-	    }
-	}
-	
-	/* Cleanup */	
-	delete_result_array(result_array);
-	delete_derivation_array(derivation_array);
     }
 }

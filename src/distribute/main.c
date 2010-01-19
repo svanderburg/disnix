@@ -67,35 +67,41 @@ int main(int argc, char *argv[])
 	/* Generate a distribution array from the distribution export file */
 	distribution_array = generate_distribution_array(argv[optind]);
 	
-	/* Iterate over the distribution array and distribute the profiles to the target machines */
-	for(i = 0; i < distribution_array->len; i++)
+	if(distribution_array == NULL)
+	    exit_status = 1;
+	else
 	{
-	    DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
-	    int status;
-	    gchar *command;
-	    
-	    fprintf(stderr, "Distributing intra-dependency closure of profile: %s to target: %s\n", item->profile, item->target);
-	    command = g_strconcat("disnix-copy-closure --to --target ", item->target, interface_arg, " ", item->profile, NULL);
-	    status = system(command);
-	    
-	    /* Cleanups */
-	    g_free(command);
-	    
-	    /* On error stop the distribute process */
-	    if(status == -1)
+	    /* Iterate over the distribution array and distribute the profiles to the target machines */
+	    for(i = 0; i < distribution_array->len; i++)
 	    {
-		exit_status = -1;
-		break;
+		DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
+		int status;
+		gchar *command;
+	    
+		fprintf(stderr, "Distributing intra-dependency closure of profile: %s to target: %s\n", item->profile, item->target);
+		command = g_strconcat("disnix-copy-closure --to --target ", item->target, interface_arg, " ", item->profile, NULL);
+		status = system(command);
+	    
+		/* Cleanups */
+		g_free(command);
+	    
+		/* On error stop the distribute process */
+		if(status == -1)
+		{
+		    exit_status = -1;
+		    break;
+		}
+		else if(WEXITSTATUS(status) != 0)
+		{
+		    exit_status = WEXITSTATUS(status);
+		    break;
+		}
 	    }
-	    else if(WEXITSTATUS(status) != 0)
-	    {
-		exit_status = WEXITSTATUS(status);
-		break;
-	    }
+	    
+	    delete_distribution_array(distribution_array);
 	}
 	
 	/* Clean up */
-	delete_distribution_array(distribution_array);
 	g_free(interface_arg);
 	xmlCleanupParser();
     

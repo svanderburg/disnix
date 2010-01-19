@@ -142,6 +142,7 @@ GArray *create_activation_list(char *distribution_export_file)
     if((doc = xmlParseFile(distribution_export_file)) == NULL)
     {
 	g_printerr("Error with parsing the distribution export XML file!\n");
+	xmlCleanupParser();
 	return NULL;
     }
 
@@ -152,6 +153,7 @@ GArray *create_activation_list(char *distribution_export_file)
     {
         g_printerr("The distribution export XML file is empty!\n");
 	xmlFreeDoc(doc);
+	xmlCleanupParser();
 	return NULL;
     }
 
@@ -284,6 +286,7 @@ GArray *create_activation_list(char *distribution_export_file)
     /* Cleanup */
     xmlXPathFreeObject(result);
     xmlFreeDoc(doc);
+    xmlCleanupParser();
 
     /* Sort the activation list */
     g_array_sort(activation_list, (GCompareFunc)compare_activation_mapping);
@@ -304,7 +307,7 @@ static void delete_target_array(GArray *target)
         g_free(target_property);
     }
 	
-    g_array_unref(target);
+    g_array_free(target, TRUE);
 }
 
 void delete_activation_list(GArray *activation_list)
@@ -329,11 +332,11 @@ void delete_activation_list(GArray *activation_list)
 	    g_free(dependency);
 	}
 	
-	g_array_unref(mapping->depends_on);
+	g_array_free(mapping->depends_on, TRUE);
 	g_free(mapping);
     }
     
-    g_array_unref(activation_list);
+    g_array_free(activation_list, TRUE);
 }
 
 GArray *intersect_activation_list(GArray *left, GArray *right)

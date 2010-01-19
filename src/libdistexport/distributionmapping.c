@@ -33,6 +33,7 @@ GArray *generate_distribution_array(char *distribution_export_file)
     if((doc = xmlParseFile(distribution_export_file)) == NULL)
     {
 	fprintf(stderr, "Error with parsing the distribution export XML file!\n");
+	xmlCleanupParser();
 	return NULL;
     }
 
@@ -43,6 +44,7 @@ GArray *generate_distribution_array(char *distribution_export_file)
     {
         fprintf(stderr, "The distribution export XML file is empty!\n");
 	xmlFreeDoc(doc);
+	xmlCleanupParser();
 	return NULL;
     }
     
@@ -82,11 +84,13 @@ GArray *generate_distribution_array(char *distribution_export_file)
 	    item->target = target;
 	    g_array_append_val(distribution_array, item);
         }
+	
+	xmlXPathFreeObject(result);
     }
     
-    /* Cleanup */    
-    xmlXPathFreeObject(result);
+    /* Cleanup */
     xmlFreeDoc(doc);
+    xmlCleanupParser();
 
     /* Return the distribution array */
     return distribution_array;
@@ -105,5 +109,5 @@ void delete_distribution_array(GArray *distribution_array)
 	g_free(item);
     }
     
-    g_array_unref(distribution_array);
+    g_array_free(distribution_array, TRUE);
 }

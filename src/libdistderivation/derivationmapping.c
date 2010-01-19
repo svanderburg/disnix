@@ -33,6 +33,7 @@ GArray *create_derivation_array(char *distributed_derivation_file)
     if((doc = xmlParseFile(distributed_derivation_file)) == NULL)
     {
 	fprintf(stderr, "Error with parsing the distributed derivation XML file!\n");
+	xmlCleanupParser();
 	return NULL;
     }
     
@@ -43,6 +44,7 @@ GArray *create_derivation_array(char *distributed_derivation_file)
     {
         fprintf(stderr, "The distribution export XML file is empty!\n");
 	xmlFreeDoc(doc);
+	xmlCleanupParser();
 	return NULL;
     }
 
@@ -87,6 +89,7 @@ GArray *create_derivation_array(char *distributed_derivation_file)
     /* Cleanup */    
     xmlXPathFreeObject(result);
     xmlFreeDoc(doc);
+    xmlCleanupParser();
 
     /* Return the derivation array */
     return derivation_array;
@@ -104,5 +107,5 @@ void delete_derivation_array(GArray *derivation_array)
 	g_free(item);
     }
     
-    g_array_unref(derivation_array);
+    g_array_free(derivation_array, TRUE);
 }
