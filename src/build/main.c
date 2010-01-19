@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #define _GNU_SOURCE
 #include <getopt.h>
 #include <sys/types.h>

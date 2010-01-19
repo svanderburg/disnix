@@ -75,7 +75,7 @@ gint activation_mapping_index(GArray *activation_list, ActivationMapping *keys)
     {
 	gint mid = (left + right) / 2;
 	ActivationMapping *mid_mapping = g_array_index(activation_list, ActivationMapping*, mid);
-        gint status = compare_activation_mapping(&mid_mapping, &keys);
+        gint status = compare_activation_mapping((const ActivationMapping**) &mid_mapping, (const ActivationMapping**) &keys);
 	
 	if(status == 0)
             return mid; /* Return index of the found activation mapping */
@@ -161,7 +161,7 @@ GArray *create_activation_list(char *distribution_export_file)
     result = executeXPathQuery(doc, "/distributionexport/activation/mapping");
     
     /* Initialize activation list */
-    activation_list = g_array_new(NULL, NULL, sizeof(ActivationMapping*));
+    activation_list = g_array_new(FALSE, FALSE, sizeof(ActivationMapping*));
     
     /* Iterate over all the distribution elements and add them to the list */
     
@@ -342,7 +342,7 @@ void delete_activation_list(GArray *activation_list)
 GArray *intersect_activation_list(GArray *left, GArray *right)
 {
     unsigned int i;
-    GArray *return_list = g_array_new(NULL, NULL, sizeof(ActivationMapping*));
+    GArray *return_list = g_array_new(FALSE, FALSE, sizeof(ActivationMapping*));
     
     if(left->len < right->len)
     {
@@ -371,7 +371,7 @@ GArray *intersect_activation_list(GArray *left, GArray *right)
 GArray *union_activation_list(GArray *left, GArray *right, GArray *intersect)
 {    
     unsigned int i;
-    GArray *return_list = g_array_new(NULL, NULL, sizeof(ActivationMapping*));
+    GArray *return_list = g_array_new(FALSE, FALSE, sizeof(ActivationMapping*));
     
     /* Create a clone of the left list and mark mappings as activated */
     
@@ -404,7 +404,7 @@ GArray *substract_activation_list(GArray *left, GArray *right)
 {
     unsigned int i;
     
-    GArray *return_list = g_array_new(NULL, NULL, sizeof(ActivationMapping*));
+    GArray *return_list = g_array_new(FALSE, FALSE, sizeof(ActivationMapping*));
     
     /* Create a clone of the left list */
     
@@ -465,7 +465,7 @@ gchar *get_target_interface(ActivationMapping *mapping)
 GArray *find_interdependend_mappings(GArray *list, ActivationMapping *mapping)
 {
     unsigned int i;
-    GArray *return_list = g_array_new(NULL, NULL, sizeof(ActivationMapping*));
+    GArray *return_list = g_array_new(FALSE, FALSE, sizeof(ActivationMapping*));
     
     for(i = 0; i < list->len; i++)
     {
@@ -481,7 +481,7 @@ GArray *find_interdependend_mappings(GArray *list, ActivationMapping *mapping)
 	    compare_mapping.target = dependency->target;
 	    compare_mapping_ptr = &compare_mapping;
 	
-	    if(compare_activation_mapping(&mapping, &compare_mapping_ptr) == 0)	    
+	    if(compare_activation_mapping((const ActivationMapping**) &mapping, (const ActivationMapping**) &compare_mapping_ptr) == 0)
 		g_array_append_val(return_list, current_mapping);	    
 	}
     }

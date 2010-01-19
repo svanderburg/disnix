@@ -77,7 +77,7 @@ static int deactivate(GArray *union_list, ActivationMapping *mapping, gchar *int
 	
     for(i = 0; i < interdependend_services->len; i++)
     {
-        ActivationMapping *dependency_mapping = g_array_index(interdependend_services, Dependency*, i);
+        ActivationMapping *dependency_mapping = g_array_index(interdependend_services, ActivationMapping*, i);
         if(!deactivate(union_list, dependency_mapping, interface))
 	    return FALSE;
     }

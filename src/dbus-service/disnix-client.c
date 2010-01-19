@@ -76,7 +76,7 @@ static void disnix_finish_signal_handler(DBusGProxy *proxy, const gchar *pid, gp
 	exit(0);    
 }
 
-static void disnix_success_signal_handler(DBusGProxy *proxy, const gchar *pid, const gchar **derivation, gpointer user_data)
+static void disnix_success_signal_handler(DBusGProxy *proxy, const gchar *pid, gchar **derivation, gpointer user_data)
 {
     unsigned int i;
     gchar *my_pid = *((gchar**)user_data);
@@ -203,13 +203,13 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
 	    org_nixos_disnix_Disnix_import(remote_object, derivation[0], &pid, &error);
 	    break;
 	case OP_EXPORT:
-	    org_nixos_disnix_Disnix_export(remote_object, derivation, &pid, &error);
+	    org_nixos_disnix_Disnix_export(remote_object, (const gchar**) derivation, &pid, &error);
 	    break;
 	case OP_PRINT_INVALID:
-	    org_nixos_disnix_Disnix_print_invalid(remote_object, derivation, &pid, &error);
+	    org_nixos_disnix_Disnix_print_invalid(remote_object, (const gchar**) derivation, &pid, &error);
 	    break;
 	case OP_REALISE:
-	    org_nixos_disnix_Disnix_realise(remote_object, derivation, &pid, &error);
+	    org_nixos_disnix_Disnix_realise(remote_object, (const gchar**) derivation, &pid, &error);
 	    break;
 	case OP_SET:
 	    org_nixos_disnix_Disnix_set(remote_object, profile, derivation[0], &pid, &error);
@@ -218,16 +218,16 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
 	    org_nixos_disnix_Disnix_query_installed(remote_object, profile, &pid, &error);
 	    break;
 	case OP_QUERY_REQUISITES:
-	    org_nixos_disnix_Disnix_query_requisites(remote_object, derivation, &pid, &error);
+	    org_nixos_disnix_Disnix_query_requisites(remote_object, (const gchar**) derivation, &pid, &error);
 	    break;
 	case OP_COLLECT_GARBAGE:
 	    org_nixos_disnix_Disnix_collect_garbage(remote_object, delete_old, &pid, &error);
 	    break;
 	case OP_ACTIVATE:
-	    org_nixos_disnix_Disnix_activate(remote_object, derivation[0], type, arguments, &pid, &error);
+	    org_nixos_disnix_Disnix_activate(remote_object, derivation[0], type, (const gchar**) arguments, &pid, &error);
 	    break;
 	case OP_DEACTIVATE:
-	    org_nixos_disnix_Disnix_deactivate(remote_object, derivation[0], type, arguments, &pid, &error);
+	    org_nixos_disnix_Disnix_deactivate(remote_object, derivation[0], type, (const gchar**) arguments, &pid, &error);
 	    break;
 	case OP_LOCK:
 	    org_nixos_disnix_Disnix_lock(remote_object, &pid, &error);

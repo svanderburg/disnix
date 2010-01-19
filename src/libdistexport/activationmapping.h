@@ -39,6 +39,8 @@ GArray *merge_activation_list(GArray *left, GArray *right);
 
 GArray *substract_activation_list(GArray *left, GArray *right);
 
+GArray *union_activation_list(GArray *left, GArray *right, GArray *intersect);
+
 gchar *generate_activation_arguments(GArray *target);
 
 gchar *get_target_interface(ActivationMapping *mapping);
