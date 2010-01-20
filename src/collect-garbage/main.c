@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
     };
     gchar *interface = NULL;
     char *delete_old_arg = "";
-    char *targetProperty = "hostname";
+    char *target_property = NULL;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "dh", long_options, &option_index)) != -1)
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
 		interface = optarg;
 		break;
 	    case 't':
-		targetProperty = optarg;
+		target_property = optarg;
 		break;
 	    case 'd':
 	        delete_old_arg = "-d";
@@ -153,6 +153,16 @@ int main(int argc, char *argv[])
 	    interface = "disnix-client";
 	else
 	    interface = interface_env;
+    }
+
+    if(target_property == NULL)
+    {
+	char *target_property_env = getenv("DISNIX_TARGET_PROPERTY");
+	
+	if(target_property_env == NULL)
+	    target_property = "hostname";
+	else
+	    target_property = target_property_env;
     }
 
     if(optind >= argc)
@@ -190,7 +200,7 @@ int main(int argc, char *argv[])
     
 	/* Iterate over all targets */
         
-	result = query_targets(doc, targetProperty);
+	result = query_targets(doc, target_property);
     
 	if(result)
 	{

@@ -102,6 +102,9 @@ fi
 if [ "$targetProperty" != "" ]
 then
     targetPropertyArg="--target-property $targetProperty"
+elif [ "$DISNIX_TARGET_PROPERTY" != "" ]
+then
+    targetPropertyArg="--target-property $DISNIX_TARGET_PROPERTY"
 fi
 
 if [ "$showTrace" = "1" ]

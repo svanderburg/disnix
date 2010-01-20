@@ -83,7 +83,12 @@ fi
 
 if [ "$targetProperty" = "" ]
 then
-    targetProperty="hostname";
+    if [ "$DISNIX_TARGET_PROPERTY" != "" ]
+    then
+	targetProperty=$DISNIX_TARGET_PROPERTY
+    else    
+	targetProperty="hostname";
+    fi
 fi
 
 if [ "$showTrace" = "1" ]
