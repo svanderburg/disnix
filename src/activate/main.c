@@ -107,6 +107,166 @@ static int deactivate(GArray *union_list, ActivationMapping *mapping, gchar *int
     return TRUE;
 }
 
+static int transition(GArray *list_new, GArray *list_old, char *interface)
+{
+    GArray *unio;
+    GArray *deactivate_list;
+    GArray *activate_list;
+    unsigned int i;
+    
+    printf("new:\n");
+    print_activation_list(list_new);
+    
+    if(list_old != NULL)
+    {
+        printf("old:\n");
+        print_activation_list(list_old);
+
+        printf("intersect:\n");
+        GArray *intsect = intersect_activation_list(list_new, list_old);
+        print_activation_list(intsect);
+		    	    
+        printf("to deactivate:\n");
+        deactivate_list = substract_activation_list(list_old, intsect);
+        print_activation_list(deactivate_list);
+	    
+        printf("to activate:\n");
+        activate_list = substract_activation_list(list_new, intsect);
+        print_activation_list(activate_list);
+
+        printf("union:\n");
+	unio = union_activation_list(list_old, list_new, intsect);
+	print_activation_list(unio);
+    }	
+    else
+    {	    
+        unio = list_new;
+	    
+        for(i = 0; i < unio->len; i++)
+        {
+    	    ActivationMapping *mapping = g_array_index(unio, ActivationMapping*, i);
+	    mapping->activated = FALSE;
+	}
+	    
+	deactivate_list = NULL;
+	activate_list = list_new;
+    }
+
+    printf("Deactivate:\n");
+	
+    if(deactivate_list != NULL)
+    {
+        for(i = 0; i < deactivate_list->len; i++)
+        {
+    	    ActivationMapping *mapping = g_array_index(deactivate_list, ActivationMapping*, i);
+				
+	    if(!deactivate(unio, mapping, interface))
+	    {
+		unsigned int j;
+		printf("Deactivation failed! Doing a rollback...\n");
+		
+		for(j = 0; j < list_old->len; j++)
+		{
+		    ActivationMapping *mapping = g_array_index(unio, ActivationMapping*, j);
+		    
+		    if(!activate(unio, mapping, interface))
+			printf("Rollback failed!\n");		    		    
+		}		
+		
+		return FALSE;
+	    }
+	}
+    }
+	
+    printf("Activate:\n");
+		
+    for(i = 0; i < activate_list->len; i++)
+    {
+        ActivationMapping *mapping = g_array_index(activate_list, ActivationMapping*, i);
+	    
+        if(!activate(unio, mapping, interface))
+	{
+	    unsigned int j;
+	    printf("Activation failed! Doing a rollback...\n");
+	    
+	    /* Deactivate the newly activated services */
+	    for(j = 0; j < activate_list->len; j++)
+	    {
+		ActivationMapping *mapping = g_array_index(activate_list, ActivationMapping*, j);
+	    
+		if(!deactivate(unio, mapping, interface))
+		    printf("Rollback failed!\n");
+	    }
+	    
+	    if(list_old != NULL)
+	    {
+		/* Activate all services in the old configuration */
+		for(j = 0; j < list_old->len; j++)
+		{
+		    ActivationMapping *mapping = g_array_index(list_old, ActivationMapping*, j);
+		
+		    if(!activate(unio, mapping, interface))
+			printf("Rollback failed!\n");
+		}
+	    }
+	    
+    	    return FALSE;
+	}
+    }
+    
+    return TRUE;
+}
+
+static int set_target_profiles(char *distribution_export, char *interface, char *profile)
+{
+    unsigned int i;
+    GArray *distribution_array = generate_distribution_array(distribution_export);
+	    
+    for(i = 0; i < distribution_array->len; i++)
+    {
+	gchar *command;
+	int status;
+	DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
+		
+	printf("Setting profile: %s on target: %s\n", item->profile, item->target);
+	    
+	command = g_strconcat(interface, " --target ", item->target, " --profile ", profile, " --set ", item->profile, NULL);
+	status = system(command);	    	    	    
+	g_free(command);
+	    
+	if(status == -1)
+	    return FALSE;
+	else if(WEXITSTATUS(status) != 0)
+	    return FALSE;
+    }
+	    
+    delete_distribution_array(distribution_array);
+    return TRUE;
+}
+
+static int set_coordinator_profile(char *distribution_export, char *profile, char *username)
+{
+    gchar *command;
+    int status;
+	    
+    printf("Setting the coordinator profile:\n");
+	    
+    command = g_strconcat("/nix/var/nix/profiles/per-user/", username, "/disnix-coordinator", NULL);
+    mkdir(command, 0755);
+    g_free(command);
+	    
+    command = g_strconcat("nix-env -p /nix/var/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, " --set $(readlink -f ", distribution_export, ")", NULL);
+    status = system(command);
+    g_free(command);
+	    
+    if(status == -1)
+	return FALSE;
+    else if(WEXITSTATUS(status) != 0)
+	return FALSE;
+    else
+	return TRUE;
+}
+
 int main(int argc, char *argv[])
 {
     /* Declarations */
@@ -119,12 +279,9 @@ int main(int argc, char *argv[])
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
-    gchar *interface = NULL;
+    char *interface = NULL;
     char *old_export = NULL;
     char *profile = "default";
-    
-    /* Get current username */
-    char *username = (getpwuid(geteuid()))->pw_name;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "o:p:h", long_options, &option_index)) != -1)
@@ -132,7 +289,7 @@ int main(int argc, char *argv[])
 	switch(c)
 	{
 	    case 'i':
-		interface = g_strdup(optarg);
+		interface = optarg;
 		break;
 	    case 'o':
 	        old_export = optarg;
@@ -152,27 +309,24 @@ int main(int argc, char *argv[])
 	char *interface_env = getenv("DISNIX_CLIENT_INTERFACE");
 	
 	if(interface_env != NULL)
-	    interface = g_strdup(interface_env);
+	    interface = interface_env;
 	else
-	    interface = g_strdup("disnix-client");
+	    interface = "disnix-client";
     }
 
     if(optind >= argc)
     {
 	fprintf(stderr, "A distribution export file has to be specified!\n");
-	g_free(interface);
 	return 1;
     }
     else
     {
-	unsigned int i;
+	/* Get current username */
+	char *username = (getpwuid(geteuid()))->pw_name;
 	gchar *old_export_file;
 	GArray *list_new = create_activation_list(argv[optind]);	
 	GArray *list_old;
-	
-	printf("new:\n");
-	print_activation_list(list_new);
-	
+		
 	if(old_export == NULL)
         {
 	    /* If no old export file is given, try to to open the export file in the Nix profile */
@@ -200,124 +354,20 @@ int main(int argc, char *argv[])
 	else
 	    list_old = NULL;
 
-	GArray *unio;
-	GArray *deactivate_list;
-	GArray *activate_list;
+	/* Execute transition */
 	
-	if(list_old != NULL)
-	{
-	    printf("old:\n");
-	    print_activation_list(list_old);
-
-	    printf("intersect:\n");
-    	    GArray *intsect = intersect_activation_list(list_new, list_old);
-	    print_activation_list(intsect);
-		    	    
-	    printf("to deactivate:\n");
-	    deactivate_list = substract_activation_list(list_old, intsect);
-	    print_activation_list(deactivate_list);
-	    
-	    printf("to activate:\n");
-	    activate_list = substract_activation_list(list_new, intsect);
-	    print_activation_list(activate_list);
-
-	    printf("union:\n");
-	    unio = union_activation_list(list_old, list_new, intsect);
-	    print_activation_list(unio);
-	}	
-	else	
-	{
-	    unsigned int i;
-	    
-	    unio = list_new;
-	    
-	    for(i = 0; i < unio->len; i++)
-	    {
-		ActivationMapping *mapping = g_array_index(unio, ActivationMapping*, i);
-		mapping->activated = FALSE;
-	    }
-	    
-	    deactivate_list = NULL;
-	    activate_list = list_new;
-	}
+	if(!transition(list_new, list_old, interface))
+	    return 1;
 	
 	/* Set the new profiles on the target machines */
-	
 	printf("Setting the new profiles on the target machines:\n");
-	
-	{
-	    unsigned int i;
-	    GArray *distribution_array = generate_distribution_array(argv[optind]);
-	    
-	    for(i = 0; i < distribution_array->len; i++)
-	    {
-		gchar *command;
-		int status;
-		DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
-		
-		printf("Setting profile: %s on target: %s\n", item->profile, item->target);
-	    
-		command = g_strconcat(interface, " --target ", item->target, " --profile ", profile, " --set ", item->profile, NULL);
-		status = system(command);	    	    	    
-		g_free(command);
-	    
-		if(status == -1)
-		    return -1;
-		else if(WEXITSTATUS(status) != 0)
-		    return WEXITSTATUS(status);
-	    }
-	    
-	    delete_distribution_array(distribution_array);
-	}
+	if(!set_target_profiles(argv[optind], interface, profile))
+	    return 1;
 	
 	/* Store the activated distribution export in the profile of the current user */
-	
-	{	    
-	    gchar *command;
-	    int status;
-	    
-	    printf("Setting the coordinator profile:\n");
-	    
-	    command = g_strconcat("/nix/var/nix/profiles/per-user/", username, "/disnix-coordinator", NULL);
-	    mkdir(command, 0755);
-	    g_free(command);
-	    
-	    command = g_strconcat("nix-env -p /nix/var/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, " --set $(readlink -f ", argv[optind], ")", NULL);
-	    status = system(command);
-	    g_free(command);
-	    
-	    if(status == -1)
-		return -1;
-	    else if(WEXITSTATUS(status) != 0)
-		return WEXITSTATUS(status);
-	}
+	if(!set_coordinator_profile(argv[optind], profile, username))
+	    return 1;
 
-	printf("Deactivate:\n");
-	
-	if(deactivate_list != NULL)
-	{
-	    for(i = 0; i < deactivate_list->len; i++)
-	    {
-		ActivationMapping *mapping = g_array_index(deactivate_list, ActivationMapping*, i);
-				
-		if(!deactivate(unio, mapping, interface))
-		    return 1;
-	    }
-	}
-	
-	printf("Activate:\n");
-		
-	for(i = 0; i < activate_list->len; i++)
-	{
-	    ActivationMapping *mapping = g_array_index(activate_list, ActivationMapping*, i);
-	    
-	    if(!activate(unio, mapping, interface))
-		return 1;
-	}
-
-	
-	g_free(interface);
-	
 	return 0;
     }
 }
