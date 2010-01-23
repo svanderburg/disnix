@@ -1,16 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#define _GNU_SOURCE
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <glib.h>
-#include "infrastructure.h"
 
 static void print_usage()
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-collect-garbage [--interface interface] [--target-property targetProperty] [-d|--delete-old] infrastructure_expr\n");
-    fprintf(stderr, "disnix-collect-garbage {-h | --help}\n");
+    fprintf(stderr, "disnix-query [--interface interface] [--target-property targetProperty] [{-p | --profile} profile] infrastructure_expr\n");
+    fprintf(stderr, "disnix-query {-h | --help}\n");
 }
 
 int main(int argc, char *argv[])
@@ -21,16 +21,16 @@ int main(int argc, char *argv[])
     {
 	{"interface", required_argument, 0, 'i'},
 	{"target-property", required_argument, 0, 't'},
-	{"delete-old", no_argument, 0, 'd'},
+	{"profile", required_argument, 0, 'p'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
     char *interface = NULL;
-    char *delete_old_arg = "";
     char *target_property = NULL;
+    char *profile = "default";
     
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "dh", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "p:h", long_options, &option_index)) != -1)
     {
 	switch(c)
 	{
@@ -40,15 +40,15 @@ int main(int argc, char *argv[])
 	    case 't':
 		target_property = optarg;
 		break;
-	    case 'd':
-	        delete_old_arg = "-d";
-	        break;
+	    case 'p':
+		profile = optarg;
+		break;
 	    case 'h':
 		print_usage();
 		return 0;
 	}
     }
-    
+
     /* Validate options */
     if(interface == NULL)
     {
@@ -86,10 +86,12 @@ int main(int argc, char *argv[])
 	    for(i = 0; i < target_array->len; i++)
 	    {
 		gchar *target = g_array_index(target_array, gchar*, i);
-		gchar *command = g_strconcat(interface, " --target ", target, " --collect-garbage ", delete_old_arg, NULL);
+		gchar *command = g_strconcat(interface, " --target ", target, " --profile ", profile, " --query-installed", NULL);
 		int status;
 		
-		printf("Collecting garbage on: %s\n", target);
+		printf("Services on: %s\n", target);
+		printf("--------------------------------------------------------------\n");
+		
 		status = system(command);						
 		g_free(command);
 		
@@ -101,7 +103,7 @@ int main(int argc, char *argv[])
 	    
 	    delete_target_array(target_array);
 	}
-	
+
 	return 0;
     }
 }

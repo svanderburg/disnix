@@ -1,1 +1,1 @@
-SUBDIRS = libinfrastructure collect-garbage dbus-service libdistderivation libdistexport build distribute activate
+SUBDIRS = libinfrastructure collect-garbage query dbus-service libdistderivation libdistexport build distribute activate

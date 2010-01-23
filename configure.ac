@@ -49,6 +49,7 @@ conf/Makefile
 src/Makefile
 src/build/Makefile
 src/collect-garbage/Makefile
+src/query/Makefile
 src/dbus-service/Makefile
 src/libdistderivation/Makefile
 src/libdistexport/Makefile
