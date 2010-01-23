@@ -52,6 +52,7 @@ src/collect-garbage/Makefile
 src/dbus-service/Makefile
 src/libdistderivation/Makefile
 src/libdistexport/Makefile
+src/libinfrastructure/Makefile
 src/distribute/Makefile
 src/activate/Makefile
 scripts/Makefile
