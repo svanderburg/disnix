@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <glib.h>
+#include "infrastructure.h"
 
 static void print_usage()
 {

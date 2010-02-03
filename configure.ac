@@ -52,7 +52,7 @@ src/collect-garbage/Makefile
 src/query/Makefile
 src/dbus-service/Makefile
 src/libdistderivation/Makefile
-src/libdistexport/Makefile
+src/libmanifest/Makefile
 src/libinfrastructure/Makefile
 src/distribute/Makefile
 src/activate/Makefile
@@ -60,7 +60,7 @@ scripts/Makefile
 data/Makefile
 man/Makefile
 scripts/disnix-instantiate
-scripts/disnix-export
+scripts/disnix-manifest
 scripts/disnix-gendist-roundrobin
 ])
 AC_OUTPUT

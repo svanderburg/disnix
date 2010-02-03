@@ -120,6 +120,6 @@ then
     disnix-build --interface $interface $distributedDerivation
 fi
 
-distributionExport=`disnix-export -s $servicesFile -i $infrastructureFile -d $distributionFile $targetPropertyArg $showTraceArg`
+distributionExport=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile $targetPropertyArg $showTraceArg`
 disnix-distribute --interface $interface $distributionExport
 disnix-activate --interface $interface $profileArg $distributionExport
