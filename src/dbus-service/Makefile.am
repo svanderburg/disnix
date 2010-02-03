@@ -1,6 +1,7 @@
 AM_CPPFLAGS=-ggdb
 
 bin_PROGRAMS = disnix-service disnix-client
+noinst_HEADERS = hash.h job.h methods.h signals.h disnix-gtype-def.h disnix-instance.h
 
 disnix_service_SOURCES = hash.c methods.c signals.c job.c disnix-service.c disnix-service-main.c 
 disnix_service_LDFLAGS = -lgthread-2.0 -lcrypto
@@ -22,3 +23,4 @@ disnix-marshal.c: marshal.list
 	glib-genmarshal --prefix=marshal marshal.list --body > disnix-marshal.c
 
 CLEANFILES = $(BUILT_SOURCES)
+EXTRA_DIST = disnix.xml marshal.list
