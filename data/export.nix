@@ -13,7 +13,7 @@ let
   lib = import ./lib.nix;
   distributionExport = lib.generateDistributionExport pkgs servicesFun infrastructure distributionFun targetProperty;
   
-  generateDistributionExportXSL = ./generatedistributionexport.xsl;
+  generateDistributionExportXSL = ./generatemanifest.xsl;
 in
 pkgs.stdenv.mkDerivation {
   name = "distributionExport.xml";

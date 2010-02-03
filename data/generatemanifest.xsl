@@ -2,7 +2,7 @@
 
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <xsl:template match="/expr/attrs">
-    <distributionexport>
+    <manifest>
       <distribution>
         <xsl:for-each select="attr[@name='profiles']/list/attrs">
 	  <mapping>
@@ -37,6 +37,6 @@
 	  </mapping>
         </xsl:for-each>
       </activation>
-    </distributionexport>
+    </manifest>
   </xsl:template>
 </xsl:stylesheet>

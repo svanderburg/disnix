@@ -158,7 +158,7 @@ GArray *create_activation_list(char *distribution_export_file)
     }
 
     /* Query the distribution elements */
-    result = executeXPathQuery(doc, "/distributionexport/activation/mapping");
+    result = executeXPathQuery(doc, "/manifest/activation/mapping");
     
     /* Initialize activation list */
     activation_list = g_array_new(FALSE, FALSE, sizeof(ActivationMapping*));

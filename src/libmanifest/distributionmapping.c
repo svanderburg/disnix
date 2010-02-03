@@ -49,7 +49,7 @@ GArray *generate_distribution_array(char *distribution_export_file)
     }
     
     /* Query the distribution elements */
-    result = executeXPathQuery(doc, "/distributionexport/distribution/mapping");
+    result = executeXPathQuery(doc, "/manifest/distribution/mapping");
     
     /* Iterate over all the distribution elements and add them to the array */
     
