@@ -133,11 +133,14 @@ int main(int argc, char *argv[])
 		
 		    while(fgets(line, sizeof(line), fp) != NULL)
 		    {
-			gchar *result;
-		    
 			puts(line);
-			result = g_strdup(line);
-			g_array_append_val(result_array, result);
+			
+			if(g_strcmp0(line, "\n") != 0)
+			{
+			    gchar *result;
+			    result = g_strdup(line);
+			    g_array_append_val(result_array, result);
+			}
 		    }
 	
 		    status = pclose(fp);
