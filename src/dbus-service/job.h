@@ -26,6 +26,8 @@ typedef struct
 }
 Job;
 
-Job *job_new(Operation operation, gpointer params, GError **error);
+Job *new_job(Operation operation, gpointer params, GError **error);
+
+void delete_job(Job *job);
 
 #endif

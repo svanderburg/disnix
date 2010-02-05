@@ -105,7 +105,7 @@ gboolean disnix_import(DisnixObject *object, gchar *closure, gchar **pid, GError
     params->object = object;
     
     /* Add this call to the job table */
-    job = job_new(OP_IMPORT, params, error);
+    job = new_job(OP_IMPORT, params, error);
     g_hash_table_insert(job_table, g_strdup(params->pid), job);    
     
     return TRUE;
@@ -205,7 +205,7 @@ gboolean disnix_export(DisnixObject *object, gchar **derivation, gchar **pid, GE
     params->object = object;
     
     /* Add this call to the job table */
-    job = job_new(OP_EXPORT, params, error);
+    job = new_job(OP_EXPORT, params, error);
     g_hash_table_insert(job_table, g_strdup(params->pid), job);
     
     return TRUE;    
@@ -307,7 +307,7 @@ gboolean disnix_print_invalid(DisnixObject *object, gchar **derivation, gchar **
     params->object = object;
 
     /* Add this call to the job table */
-    job = job_new(OP_PRINT_INVALID, params, error);
+    job = new_job(OP_PRINT_INVALID, params, error);
     g_hash_table_insert(job_table, g_strdup(params->pid), job);
         
     return TRUE;
@@ -405,7 +405,7 @@ gboolean disnix_realise(DisnixObject *object, gchar **derivation, gchar **pid, G
     params->object = object;
     
     /* Add this call to the job table */
-    job = job_new(OP_REALISE, params, error);
+    job = new_job(OP_REALISE, params, error);
     g_hash_table_insert(job_table, g_strdup(params->pid), job);
     return TRUE;
 }
@@ -495,7 +495,7 @@ gboolean disnix_set(DisnixObject *object, const gchar *profile, const gchar *der
     params->object = object;
     
     /* Add this call to the job table */
-    job = job_new(OP_SET, params, error);
+    job = new_job(OP_SET, params, error);
     g_hash_table_insert(job_table, g_strdup(params->pid), job);
     
     return TRUE;
@@ -592,7 +592,7 @@ gboolean disnix_query_installed(DisnixObject *object, const gchar *profile, gcha
     params->object = object;
 
     /* Add this call to the job table */
-    job = job_new(OP_QUERY_INSTALLED, params, error);
+    job = new_job(OP_QUERY_INSTALLED, params, error);
     g_hash_table_insert(job_table, g_strdup(params->pid), job);
     
     return TRUE;
@@ -696,7 +696,7 @@ gboolean disnix_query_requisites(DisnixObject *object, gchar **derivation, gchar
     params->object = object;
 
     /* Add this call to the job table */
-    job = job_new(OP_QUERY_REQUISITES, params, error);
+    job = new_job(OP_QUERY_REQUISITES, params, error);
     g_hash_table_insert(job_table, g_strdup(params->pid), job);
     
     return TRUE;
@@ -790,7 +790,7 @@ gboolean disnix_collect_garbage(DisnixObject *object, const gboolean delete_old,
     params->object = object;
 
     /* Add this call to the job table */
-    job = job_new(OP_COLLECT_GARBAGE, params, error);
+    job = new_job(OP_COLLECT_GARBAGE, params, error);
     g_hash_table_insert(job_table, g_strdup(params->pid), job);    
     return TRUE;
 }
@@ -890,7 +890,7 @@ gboolean disnix_activate(DisnixObject *object, const gchar *derivation, const gc
     params->object = object;
 
     /* Add this call to the job table */
-    job = job_new(OP_ACTIVATE, params, error);
+    job = new_job(OP_ACTIVATE, params, error);
     g_hash_table_insert(job_table, g_strdup(params->pid), job);    
     
     return TRUE;    
@@ -991,7 +991,7 @@ gboolean disnix_deactivate(DisnixObject *object, const gchar *derivation, const 
     params->object = object;
 
     /* Add this call to the job table */
-    job = job_new(OP_DEACTIVATE, params, error);
+    job = new_job(OP_DEACTIVATE, params, error);
     g_hash_table_insert(job_table, g_strdup(params->pid), job);    
     
     return TRUE;    
@@ -1065,6 +1065,9 @@ gboolean disnix_acknowledge(DisnixObject *object, gchar *pid, GError **error)
 		g_thread_create((GThreadFunc)disnix_deactivate_thread_func, job->params, FALSE, job->error);
 		break;
 	}
+	
+	g_hash_table_remove(job_table, pid);
+	delete_job(job);
     }
     
     return TRUE;
