@@ -14,7 +14,7 @@ showUsage()
     echo "                    connect to the remote Disnix interface. (Defaults to hostname)"
     echo "--interface         Process that communicates with the remote disnix service. Defaults to disnix-client"
     echo "-p,--profile        Name of the profile that is used for this system. Defaults to: default"
-    echo "--build-on-targets  Build the services on the target machines in the network instead of handling the build by the coordinator"
+    echo "--build-on-targets  Build the services on the target machines in the network instead of managing the build by the coordinator"
     echo "--show-trace        Shows a trace of the output"
     echo "-h,--help           Shows the usage of this command"
 }

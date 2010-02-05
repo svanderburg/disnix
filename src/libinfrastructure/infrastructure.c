@@ -12,6 +12,7 @@
 
 static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
 {
+    /* Declarations */
     xmlDocPtr doc, transform_doc;
     xmlNodePtr root_node;
     xsltStylesheetPtr style;
@@ -41,21 +42,28 @@ static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
     transform_doc = xsltApplyStylesheet(style, doc, NULL);
         
     /* Cleanup */
-    xsltFreeStylesheet(style);    
+    xsltFreeStylesheet(style);
     xmlFreeDoc(doc);
     xsltCleanupGlobals();
-        
+    
+    /* Return transformed XML document */
     return transform_doc;
 }
 
 static gchar *create_infrastructure_xml(char *infrastructure_expr)
 {
+    /* Declarations */
     FILE *fp;
     int status;
     char line[BUFFER_SIZE];
+
     gchar *infrastructureXML = g_strdup("");
-    gchar *command = g_strconcat("nix-instantiate --eval-only --xml ", infrastructure_expr, NULL);
     
+    /* 
+     * Execute nix-instantiate command to retrieve XML representation of the 
+     * infrastructure model
+     */     
+    gchar *command = g_strconcat("nix-instantiate --eval-only --xml ", infrastructure_expr, NULL);    
     fp = popen(command, "r");
     g_free(command);
     
@@ -66,12 +74,17 @@ static gchar *create_infrastructure_xml(char *infrastructure_expr)
 	g_free(old_infrastructureXML);
     }
     
+    /* Check status of the nix-instantiate command */
     status = pclose(fp);    
     
     if(status == -1 || WEXITSTATUS(status) != 0)
+    {
+	/* Return NULL on failure */
+	g_free(infrastructureXML);
 	return NULL;
+    }
     else
-	return infrastructureXML;
+	return infrastructureXML; /* Return the XML string on success */
 }
 
 static xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, char *xpath)
@@ -94,13 +107,13 @@ static xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, char *xpath)
 
 GArray *create_target_array(char *infrastructure_expr, char *target_property)
 {
+    /* Declarations */
     gchar *infrastructureXML, *query;
     xmlDocPtr doc;
     xmlXPathObjectPtr result;
     GArray *target_array = NULL;
     
-    /* Open the XML output of nix-instantiate */
-    
+    /* Open the XML output of nix-instantiate */    
     infrastructureXML = create_infrastructure_xml(infrastructure_expr);
     
     if(infrastructureXML == NULL)
@@ -109,8 +122,7 @@ GArray *create_target_array(char *infrastructure_expr, char *target_property)
         return NULL;
     }
     
-    /* Parse the infrastructure XML file */
-    
+    /* Parse the infrastructure XML file */    
     doc = create_infrastructure_doc(infrastructureXML);
     g_free(infrastructureXML);
 	
@@ -120,11 +132,12 @@ GArray *create_target_array(char *infrastructure_expr, char *target_property)
         return NULL;
     }
 
+    /* Query all the target properties from the XML document */
     query = g_strconcat("/infrastructure/target/", target_property, NULL);
     result = executeXPathQuery(doc, query);
     g_free(query);
 
-    /* Iterate over all targets */
+    /* Iterate over all targets and and them to the array */
             
     if(result)
     {
@@ -144,10 +157,11 @@ GArray *create_target_array(char *infrastructure_expr, char *target_property)
     else
         fprintf(stderr, "No targets found!\n");
 
-    /* Cleanup */	
+    /* Cleanup */
     xmlFreeDoc(doc);
     xmlCleanupParser();
 
+    /* Return the target array */
     return target_array;
 }
 

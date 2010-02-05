@@ -22,6 +22,7 @@ static xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, char *xpath)
 
 GArray *create_derivation_array(char *distributed_derivation_file)
 {
+    /* Declarations */    
     xmlDocPtr doc;
     xmlNodePtr node_root;
     xmlXPathObjectPtr result;

@@ -20,8 +20,9 @@ static xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, char *xpath)
 	return result;
 }
 
-GArray *generate_distribution_array(char *distribution_export_file)
+GArray *generate_distribution_array(char *manifest_file)
 {
+    /* Declarations */
     xmlDocPtr doc;
     xmlNodePtr node_root;
     xmlXPathObjectPtr result;
@@ -30,9 +31,9 @@ GArray *generate_distribution_array(char *distribution_export_file)
     
     /* Parse the XML document */
     
-    if((doc = xmlParseFile(distribution_export_file)) == NULL)
+    if((doc = xmlParseFile(manifest_file)) == NULL)
     {
-	fprintf(stderr, "Error with parsing the distribution export XML file!\n");
+	fprintf(stderr, "Error with parsing the manifest XML file!\n");
 	xmlCleanupParser();
 	return NULL;
     }

@@ -69,15 +69,15 @@ static int deactivate(GArray *union_list, ActivationMapping *mapping, gchar *int
 {
     gint actual_mapping_index = activation_mapping_index(union_list, mapping);
     ActivationMapping *actual_mapping = g_array_index(union_list, ActivationMapping*, actual_mapping_index);
-    GArray *interdependend_services = find_interdependend_mappings(union_list, actual_mapping);
+    GArray *interdependent_services = find_interdependent_mappings(union_list, actual_mapping);
     
     /* First deactivate all service which have an inter-dependency on this service */
         
     unsigned int i;
 	
-    for(i = 0; i < interdependend_services->len; i++)
+    for(i = 0; i < interdependent_services->len; i++)
     {
-        ActivationMapping *dependency_mapping = g_array_index(interdependend_services, ActivationMapping*, i);
+        ActivationMapping *dependency_mapping = g_array_index(interdependent_services, ActivationMapping*, i);
         if(!deactivate(union_list, dependency_mapping, interface))
 	    return FALSE;
     }
@@ -115,28 +115,28 @@ static int transition(GArray *list_new, GArray *list_old, char *interface)
     unsigned int i;
     
     printf("new:\n");
-    print_activation_list(list_new);
+    print_activation_array(list_new);
     
     if(list_old != NULL)
     {
         printf("old:\n");
-        print_activation_list(list_old);
+        print_activation_array(list_old);
 
         printf("intersect:\n");
-        GArray *intsect = intersect_activation_list(list_new, list_old);
-        print_activation_list(intsect);
+        GArray *intsect = intersect_activation_array(list_new, list_old);
+        print_activation_array(intsect);
 		    	    
         printf("to deactivate:\n");
-        deactivate_list = substract_activation_list(list_old, intsect);
-        print_activation_list(deactivate_list);
+        deactivate_list = substract_activation_array(list_old, intsect);
+        print_activation_array(deactivate_list);
 	    
         printf("to activate:\n");
-        activate_list = substract_activation_list(list_new, intsect);
-        print_activation_list(activate_list);
+        activate_list = substract_activation_array(list_new, intsect);
+        print_activation_array(activate_list);
 
         printf("union:\n");
-	unio = union_activation_list(list_old, list_new, intsect);
-	print_activation_list(unio);
+	unio = union_activation_array(list_old, list_new, intsect);
+	print_activation_array(unio);
     }	
     else
     {	    
@@ -324,7 +324,7 @@ int main(int argc, char *argv[])
 	/* Get current username */
 	char *username = (getpwuid(geteuid()))->pw_name;
 	gchar *old_export_file;
-	GArray *list_new = create_activation_list(argv[optind]);	
+	GArray *list_new = create_activation_array(argv[optind]);	
 	GArray *list_old;
 		
 	if(old_export == NULL)
@@ -348,7 +348,7 @@ int main(int argc, char *argv[])
 	if(old_export_file != NULL)
 	{	    	    
 	    printf("Using previous distribution export: %s\n", old_export_file);
-	    list_old = create_activation_list(old_export_file);
+	    list_old = create_activation_array(old_export_file);
 	    g_free(old_export_file);
         }
 	else
