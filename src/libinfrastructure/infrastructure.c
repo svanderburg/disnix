@@ -4,8 +4,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <libxml/parser.h>
-#include <libxml/xpath.h>
+#include <xmlutil.h>
 #include <libxslt/xslt.h>
 #include <libxslt/transform.h>
 #define BUFFER_SIZE 4096
@@ -85,24 +84,6 @@ static gchar *create_infrastructure_xml(char *infrastructure_expr)
     }
     else
 	return infrastructureXML; /* Return the XML string on success */
-}
-
-static xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, char *xpath)
-{
-    xmlXPathContextPtr context;
-    xmlXPathObjectPtr result;
-    
-    context = xmlXPathNewContext(doc);
-    result = xmlXPathEvalExpression(xpath, context);
-    xmlXPathFreeContext(context);
-    
-    if(xmlXPathNodeSetIsEmpty(result->nodesetval))
-    {
-        xmlXPathFreeObject(result);
-        return NULL;
-    }
-    else
-	return result;
 }
 
 GArray *create_target_array(char *infrastructure_expr, char *target_property)

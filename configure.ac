@@ -51,6 +51,7 @@ src/build/Makefile
 src/collect-garbage/Makefile
 src/query/Makefile
 src/dbus-service/Makefile
+src/libxmlutil/Makefile
 src/libdistderivation/Makefile
 src/libmanifest/Makefile
 src/libinfrastructure/Makefile

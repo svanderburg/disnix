@@ -1,25 +1,8 @@
 #include "activationmapping.h"
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
+#include <xmlutil.h>
 #define min(a,b) ((a) < (b) ? (a) : (b))
-
-static xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, char *xpath)
-{
-    xmlXPathContextPtr context;
-    xmlXPathObjectPtr result;
-    
-    context = xmlXPathNewContext(doc);
-    result = xmlXPathEvalExpression(xpath, context);
-    xmlXPathFreeContext(context);
-    
-    if(xmlXPathNodeSetIsEmpty(result->nodesetval))
-    {
-        xmlXPathFreeObject(result);
-        return NULL;
-    }
-    else
-	return result;
-}
 
 static gint compare_activation_mapping(const ActivationMapping **l, const ActivationMapping **r)
 {
