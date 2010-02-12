@@ -1,6 +1,6 @@
 /*
  * Disnix - A distributed application layer for Nix
- * Copyright (C) 2008  Sander van der Burg
+ * Copyright (C) 2008-2010  Sander van der Burg
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,14 @@
 #ifndef __HASH_H
 #define __HASH_H
 
+/**
+ * Converts a given string to a SHA256 in base-32 notation.
+ * The string containing the hash has to be freed when it has
+ * become obsolete.
+ *
+ * @param string String to hash
+ * @return A SHA256 hash of the string in base-32 notation
+ */
 char *string_to_hash(char *string);
 
 #endif

@@ -1,6 +1,6 @@
 /*
  * Disnix - A distributed application layer for Nix
- * Copyright (C) 2008-2009  Sander van der Burg
+ * Copyright (C) 2008-2010  Sander van der Burg
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -59,6 +59,8 @@ G_DEFINE_TYPE(DisnixObject, disnix_object, G_TYPE_OBJECT)
 
 /**
  * Initializes a Disnix object instance
+ *
+ * @param obj Disnix object instance to initialize
  */
 static void disnix_object_init(DisnixObject *obj)
 {
@@ -68,6 +70,8 @@ static void disnix_object_init(DisnixObject *obj)
 
 /**
  * Initializes the Disnix class
+ *
+ * @param klass Class to initialize
  */
 static void disnix_object_class_init (DisnixObjectClass *klass)
 {

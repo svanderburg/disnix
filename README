@@ -14,6 +14,7 @@ In order to build Disnix from source code, the following packages are required:
 
 - libxml2
 - libxslt
+- glib
 - DBus
 - DBus-GLib
 - OpenSSL
