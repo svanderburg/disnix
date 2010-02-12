@@ -1,20 +1,24 @@
-.TH "disnix-instantiate" "8" "June 2009" "Disnix" "System administration tools"
+.TH "disnix-manifest" "8" "June 2009" "Disnix" "System administration tools"
 .SH NAME
-disnix\-instantiate \- Instantiate a distributed derivation from Disnix expressions
+disnix\-manifest \- Generate a manifest file from Disnix expressions
 .SH SYNOPSIS
-.B disnix\-instantiate
+.B disnix\-manifest
 \-s services_expr \-i infrastructure_expr \-d distribution_expr
 [
 .B options
 ]
 .PP
 .SH DESCRIPTION
-The command \fBdisnix\-instantiate\fR generates a distributed derivation file from a service, infrastructure
-and distribution Nix expression, which can be used to build the services on the target machines from source code by
-using the \fBdisnix\-build\fR command.
+The command \fBdisnix\-manifest\fR generates a manifest file from a service, infrastructure
+and distribution Nix expression, which can be used for the distribution of services to machines
+in the network and for the activation of services on target machines in the right order.
+.PP
+Since the manifest file contains Nix store paths of every service, a side effect of running this
+command is that all the services that have to be activated are automatically built from source and stored
+in the Nix store of the coordinator machine.
 .PP
 Most users and developers don't need to use this command directly. The command \fBdisnix\-env\fR
-performs instantiation of a distributed derivation automatically. It is mostly used for debugging purposes or to perform certain
+performs generation of a manifest automatically. It is mostly used for debugging purposes or to perform certain
 tasks manually.
 .SH OPTIONS
 .TP
@@ -40,7 +44,8 @@ Shows the usage of this command to the user
 \fBDISNIX_TARGET_PROPERTY\fR
 Sets the target property of an infrastructure model, that specifies how to connect to the remote Disnix interface. (Defaults to hostname)
 .SH SEE ALSO
-.BR disnix-build (8),
+.BR disnix-distribute (8),
+.BR disnix-activate (8),
 .BR disnix-env (8)
 .SH AUTHOR
 Sander van der Burg <s.vanderburg@tudelft.nl>

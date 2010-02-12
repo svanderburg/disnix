@@ -25,7 +25,7 @@ showUsage()
     echo
     echo "-s,--services       Services Nix expression which describes all components of the distributed system"
     echo "-i,--infrastructure Infrastructure Nix expression which captures properties of machines in the network"
-    echo "-h,--help           Shows the usage of this command"
+    echo "-h,--help           Shows the usage of this command to the user"
 }
 
 # Autoconf settings

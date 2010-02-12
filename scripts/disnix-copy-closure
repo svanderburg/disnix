@@ -25,9 +25,9 @@ showUsage()
     echo
     echo "--to        Copy closure to the given target"
     echo "--from      Copy closure from the given target"
-    echo "-t,--target URL of the Disnix interface where the closure should be distributed to"
+    echo "-t,--target Address of the Disnix service running on the remote machine"
     echo "--interface Path to executable that communicates with a Disnix interface. Defaults to disnix-client"
-    echo "-h,--help   Shows the usage of this command"
+    echo "-h,--help   Shows the usage of this command to the user"
 }
 
 # Parse valid argument options

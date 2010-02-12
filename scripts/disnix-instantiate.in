@@ -29,7 +29,7 @@ showUsage()
     echo "--target-property   The target property of an infrastructure model, that specifies how to "
     echo "                    connect to the remote Disnix interface. (Defaults to hostname)"
     echo "--show-trace        Shows a trace of the output"
-    echo "-h,--help           Shows the usage of this command"
+    echo "-h,--help           Shows the usage of this command to the user"
 }
 
 # Autoconf settings
