@@ -459,8 +459,8 @@ static void disnix_set_thread_func(gpointer data)
     
     /* Execute command */
     
-    mkdir("/nix/var/nix/profiles/disnix", 0755);
-    cmd = g_strconcat("nix-env -p /nix/var/nix/profiles/disnix/", profile, " --set ", derivation, NULL);
+    mkdir(LOCALSTATEDIR "/nix/profiles/disnix", 0755);
+    cmd = g_strconcat("nix-env -p ", LOCALSTATEDIR, "/nix/profiles/disnix/", profile, " --set ", derivation, NULL);
 
     fp = popen(cmd, "r");
     if(fp == NULL)
@@ -549,7 +549,7 @@ static void disnix_query_installed_thread_func(gpointer data)
     
     /* Execute command */
     
-    cmd = g_strconcat("nix-env -q \'*\' --out-path --no-name -p /nix/var/nix/profiles/disnix/", profile, NULL);
+    cmd = g_strconcat("nix-env -q \'*\' --out-path --no-name -p ", LOCALSTATEDIR, "/nix/profiles/disnix/", profile, NULL);
 
     fp = popen(cmd, "r");
     if(fp == NULL)

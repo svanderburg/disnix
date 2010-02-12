@@ -42,6 +42,9 @@ AC_SUBST(DBUS_SYS_DIR)
 AC_CHECK_HEADERS([openssl/sha.h])
 AC_CHECK_LIB([crypto], [SHA256_Init])
 
+# State should be stored in /nix/var, unless the user overrides it explicitly.
+test "$localstatedir" = '${prefix}/var' && localstatedir=/nix/var
+
 # Output
 AC_CONFIG_FILES([
 Makefile

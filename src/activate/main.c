@@ -270,11 +270,11 @@ static int set_coordinator_profile(char *distribution_export, char *profile, cha
 	    
     printf("Setting the coordinator profile:\n");
 	    
-    command = g_strconcat("/nix/var/nix/profiles/per-user/", username, "/disnix-coordinator", NULL);
+    command = g_strconcat(LOCALSTATEDIR, "/nix/profiles/per-user/", username, "/disnix-coordinator", NULL);
     mkdir(command, 0755);
     g_free(command);
 	    
-    command = g_strconcat("nix-env -p /nix/var/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, " --set $(readlink -f ", distribution_export, ")", NULL);
+    command = g_strconcat("nix-env -p ", LOCALSTATEDIR, "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, " --set $(readlink -f ", distribution_export, ")", NULL);
     status = system(command);
     g_free(command);
 	    
@@ -350,7 +350,7 @@ int main(int argc, char *argv[])
         {
 	    /* If no old export file is given, try to to open the export file in the Nix profile */
 	    
-	    old_export_file = g_strconcat("/nix/var/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
+	    old_export_file = g_strconcat(LOCALSTATEDIR, "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
 	    FILE *file = fopen(old_export_file, "r");
 	    
 	    if(file == NULL)

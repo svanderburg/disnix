@@ -1,4 +1,4 @@
-AM_CPPFLAGS = -ggdb
+AM_CPPFLAGS = -ggdb -DLOCALSTATEDIR=\"$(localstatedir)\"
 
 bin_PROGRAMS = disnix-activate
 
