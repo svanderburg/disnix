@@ -1,34 +1,34 @@
 .TH "disnix-build" "8" "June 2009" "Disnix" "System administration tools"
 .SH NAME
-disnix\-build \- Build a combination of Disnix models
+disnix\-build \- Build store derivations on target machines in a network
 .SH SYNOPSIS
 .B disnix\-build
-\-s services_expr \-i infrastructure_expr \-d distribution_expr
-[
-.B options
-]
+[--interface interface] distributed_derivation
 .PP
 .SH DESCRIPTION
-The command \fBdisnix\-build\fR builds the derivations described by the three Disnix models that capture
-concerns of the deployment of a distributed system, which are the services, infrastructure and distribution
-expressions. If the build succeeds, it places a symlink to the result in the current directory. The symlink is
-called result.
+The command \fBdisnix\-build\fR builds derivations on the given target machines specified in a distributed derivation
+XML file. When the building process is complete, the results are transfered back to the coordinator machine,
+so that they are kept for further use and do not have to be rebuilt again in case of a configuration change.
 .PP
-The services expression captures all the components of the distributed system. The infrastructure model captures
-properties of the machines in the network. The distribution model maps the services from the services to the machines
-in the infrastructure model.
+In most cases this command should not be called directly. The command \fBdisnix\-env\fR automatically uses this
+command if the \fB\-\-build-on-targets\fR is specified.
 .SH OPTIONS
 .TP
-\fB\-s\fR, \fB\-\-services\fR
-Provide a services model, which captures the components of a distributed system
-.TP
-\fB\-i\fR, \fB\-\-infrastructure\fR
-Provide a infrastructure model, which captures properties of the machines in the network
-.TP
-\fB\-d\fR, \fB\-\-distribution\fR
-Provide a distribution model, which maps services to machines
+\fB\-\-interface\fR
+Specifies which process provides access to the \fBdisnix\-service\fR on the target machine.
+Defaults to: \fBdisnix\-client\fR.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
-Shows the usage of this command to the user
+Shows the usage of this command to the user.
+.SH ENVIRONMENT VARIABLES
+.TP
+\fBDISNIX_CLIENT_INTERFACE\fR
+Sets the client interface (which defaults to \fBdisnix-client\fR)
+.TP
+\fBDISNIX_TARGET_PROPERTY\fR
+Specifies which property in the infrastructure Nix expression specifies how to connect to the remote interface
+(defaults to: hostname).
+.SH SEE ALSO
+.BR disnix-env (8)
 .SH AUTHOR
 Sander van der Burg <s.vanderburg@tudelft.nl>

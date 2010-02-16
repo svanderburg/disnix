@@ -29,7 +29,7 @@
 static void print_usage()
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-build [--interface] interface] distributed_derivation\n");
+    fprintf(stderr, "disnix-build [--interface interface] distributed_derivation\n");
     fprintf(stderr, "disnix-build {-h | --help}\n");
 }
 
