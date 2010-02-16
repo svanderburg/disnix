@@ -19,19 +19,22 @@
 showUsage()
 {
     echo "Usage:"
-    echo "$0 --import [--localfile|--remotefile] derivations"
-    echo "$0 --export [--localfile|--remotefile] derivations"
-    echo "$0 --print-invalid derivations"
-    echo "$0 {-r|--realise} derivations"
-    echo "$0 --set [{-p|--profile} name] derivation"
-    echo "$0 {-q|--query-installed} [{-p|--profile} name]"
-    echo "$0 --query-requisites derivations"
-    echo "$0 --collect-garbage [{-d|--delete-old}]\n"
-    echo "$0 --activate --type type --arguments arguments derivation"
-    echo "$0 --deactivate --type type --arguments arguments derivation"
-    echo "$0 --lock"
-    echo "$0 --unlock"
-    echo "$0 {-h | --help}"
+    echo "$0 {[--target | -t ] hostname[:port] {operation}"
+    echo
+    echo "Operations:"
+    echo "  --import [--localfile|--remotefile] derivations"
+    echo "  --export [--localfile|--remotefile] derivations"
+    echo "  --print-invalid derivations"
+    echo "  {-r|--realise} derivations"
+    echo "  --set [{-p|--profile} name] derivation"
+    echo "  {-q|--query-installed} [{-p|--profile} name]"
+    echo "  --query-requisites derivations"
+    echo "  --collect-garbage [{-d|--delete-old}]\n"
+    echo "  --activate --type type --arguments arguments derivation"
+    echo "  --deactivate --type type --arguments arguments derivation"
+    echo "  --lock"
+    echo "  --unlock"
+    echo "  {-h | --help}"
 }
 
 # Parse valid argument options
