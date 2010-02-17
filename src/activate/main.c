@@ -32,7 +32,7 @@
 static void print_usage()
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-activate [--interface interface] [{-p|--profile} profile] [{-o|--old-export} distribution_export_file] distribution_export_file\n");
+    fprintf(stderr, "disnix-activate [--interface interface] [{-p|--profile} profile] [{-o|--old-export} manifest] manifest\n");
     fprintf(stderr, "disnix-activate {-h | --help}\n");
 }
 

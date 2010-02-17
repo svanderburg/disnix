@@ -29,7 +29,7 @@
 static void print_usage()
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-distribute [--interface] interface] distribution_export\n");
+    fprintf(stderr, "disnix-distribute [--interface interface] manifest\n");
     fprintf(stderr, "disnix-distribute {-h | --help}\n");
 }
 
