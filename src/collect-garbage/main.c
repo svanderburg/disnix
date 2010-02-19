@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <glib.h>
@@ -91,36 +92,53 @@ int main(int argc, char *argv[])
 
     if(optind >= argc)
     {
-	fprintf(stderr, "A infrastructure Nix expression has to be specified!\n");
+	fprintf(stderr, "An infrastructure Nix expression has to be specified!\n");
 	return 1;
     }
     else
     {
 	GArray *target_array = create_target_array(argv[optind], target_property);
+	int exit_status = 0;
 	
 	if(target_array != NULL)
 	{
-	    unsigned int i;
+	    unsigned int i, running_processes = 0;	    
+	    int status;
 	    
+	    /* Spawn garbage collection processes */
 	    for(i = 0; i < target_array->len; i++)
 	    {
 		gchar *target = g_array_index(target_array, gchar*, i);
-		gchar *command = g_strconcat(interface, " --target ", target, " --collect-garbage ", delete_old_arg, NULL);
-		int status;
+		char *args[] = { interface, "--target", target, "--collect-garbage", delete_old_arg, NULL };
 		
 		printf("Collecting garbage on: %s\n", target);
-		status = system(command);						
-		g_free(command);
 		
-		if(status == -1)
-	    	    return -1;
-		else if(WEXITSTATUS(status) != 0)
-	    	    return WEXITSTATUS(status);
+		if(fork())
+		{
+		    execvp(interface, args);
+		    fprintf(stderr, "Error starting garbage collection process on: %s\n", target);
+		    _exit(1);
+		}
+		
+		running_processes++;
 	    }
+	    	    
+	    /* Check statusses of the running processes */	    
+	    for(i = 0; i < running_processes; i++)
+	    {
+		/* Wait until a garbage collector processes is finished */
+		wait(&status);
 	    
+		/* If one of the processes fail, change the exit status */
+		if(status == -1)
+		    exit_status = -1;
+		else if(WEXITSTATUS(status) != 0)
+	    	    exit_status = WEXITSTATUS(status);
+	    }
+	    	
 	    delete_target_array(target_array);
 	}
 	
-	return 0;
+	return exit_status;
     }
 }
