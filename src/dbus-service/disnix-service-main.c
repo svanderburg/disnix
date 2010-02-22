@@ -33,6 +33,7 @@ static void print_usage()
     printf("--lock-manager            Optional process which is invoked when executing the lock method\n");
     printf("--unlock-manager          Optional process which is invoked when executing the unlock method\n");
     printf("--session-bus             Register the Disnix service on the session bus instead of the system bus (useful for testing)\n");
+    printf("--help                    Shows the usage of this command to the user\n");
 }
 
 int main(int argc, char *argv[])

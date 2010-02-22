@@ -1,0 +1,43 @@
+.TH "disnix-service" "8" "June 2009" "Disnix" "System administration tools"
+.SH NAME
+disnix\-service \- Provides remote access to deployment primitives
+.SH SYNOPSIS
+.B disnix\-service
+[
+.B options
+]
+.PP
+.SH DESCRIPTION
+The \fBdisnix\-service\fR tool is a daemon running on either the D-Bus system or session bus,
+which provides remote access to various deployment operations, 
+such as importing, exporting, activating and deactivating services.
+.PP
+The daemon is not very useful on its own, since it requires a wrapper that exposes the methods
+to remote users. The simplest wrapper that can be used is just running a SSH server and
+by using the \fBdisnix\-ssh\-client\fR from the client machines.
+.PP
+Other wrappers can also be used, which are basically thin layers that map the RPC
+protocol calls to D-Bus calls. A web service layer and client, for instance, is
+also available from the Disnix webpage which allows a user to use SOAP for
+executing deployment operations instead of SSH.
+.PP
+The \fBdisnix\-service\fR also requires activation modules. Since a service can have
+basically any form and can be deployed on various platforms and architectures, there is
+no generic way to activate them. The service therefore needs to know which activation module
+scripts it can use, to map activation types on activation modules.
+.SH OPTIONS
+.TP
+\fB\-\-activation-modules-dir\fR
+Directory where the activation modules can be found
+.TP
+\fB\-\-session-bus\fR
+Register the Disnix service on the session bus instead of the system bus (useful for testing)
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Shows the usage of this command to the user
+
+.SH SEE ALSO
+.BR sshd (8),
+.BR disnix-ssh-client (8),
+.SH AUTHOR
+Sander van der Burg <s.vanderburg@tudelft.nl>
