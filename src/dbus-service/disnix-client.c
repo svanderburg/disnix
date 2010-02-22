@@ -48,19 +48,22 @@ static void print_usage()
 {
     /* Print the usage */
     printf("Usage:\n");
-    printf("disnix-client --import [--localfile|--remotefile] derivations\n");
-    printf("disnix-client --export [--localfile|--remotefile] derivations\n");
-    printf("disnix-client --print-invalid derivations\n");
-    printf("disnix-client {-r|--realise} derivations\n");
-    printf("disnix-client --set [{-p|--profile} name] derivation\n");
-    printf("disnix-client {-q|--query-installed} [{-p|--profile} name]\n");
-    printf("disnix-client --query-requisites derivations\n");
-    printf("disnix-client --collect-garbage [{-d|--delete-old}]\n");
-    printf("disnix-client --activate --type type --arguments arguments derivation\n");
-    printf("disnix-client --deactivate --type type --arguments arguments derivation\n");    
-    printf("disnix-client --lock\n");
-    printf("disnix-client --unlock\n");
-    printf("disnix-client {-h|--help}\n");
+    printf("disnix-client [--session-bus] operation\n\n");
+    
+    printf("Operations:\n");
+    printf("--import [--localfile|--remotefile] derivations\n");
+    printf("--export [--localfile|--remotefile] derivations\n");
+    printf("--print-invalid derivations\n");
+    printf("{-r|--realise} derivations\n");
+    printf("--set [{-p|--profile} name] derivation\n");
+    printf("{-q|--query-installed} [{-p|--profile} name]\n");
+    printf("--query-requisites derivations\n");
+    printf("--collect-garbage [{-d|--delete-old}]\n");
+    printf("--activate --type type --arguments arguments derivation\n");
+    printf("--deactivate --type type --arguments arguments derivation\n");    
+    printf("--lock\n");
+    printf("--unlock\n");
+    printf("{-h|--help}\n");
 }
 
 /* Signal handlers */
