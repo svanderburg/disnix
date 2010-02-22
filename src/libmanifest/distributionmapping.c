@@ -43,7 +43,7 @@ GArray *generate_distribution_array(char *manifest_file)
     
     if(node_root == NULL)
     {
-        fprintf(stderr, "The distribution export XML file is empty!\n");
+        fprintf(stderr, "The manifest XML file is empty!\n");
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
 	return NULL;

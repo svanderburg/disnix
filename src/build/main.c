@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 
     if(optind >= argc)
     {
-	fprintf(stderr, "ERROR: No distribution export specified!\n");
+	fprintf(stderr, "ERROR: No manifest specified!\n");
 	return 1;
     }
     else
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 	GArray *result_array;
 	unsigned int i;
 	
-	/* Generate a distribution array from the distribution export file */
+	/* Generate a distribution array from the manifest file */
 	derivation_array = create_derivation_array(argv[optind]);
 	
 	if(derivation_array == NULL)

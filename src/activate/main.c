@@ -32,7 +32,7 @@
 static void print_usage()
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-activate [--interface interface] [{-p|--profile} profile] [{-o|--old-export} manifest] manifest\n");
+    fprintf(stderr, "disnix-activate [--interface interface] [{-p|--profile} profile] [{-o|--old-manifest} manifest] manifest\n");
     fprintf(stderr, "disnix-activate {-h | --help}\n");
 }
 
@@ -236,10 +236,10 @@ static int transition(GArray *list_new, GArray *list_old, char *interface)
     return TRUE;
 }
 
-static int set_target_profiles(char *distribution_export, char *interface, char *profile)
+static int set_target_profiles(char *distribution_manifest, char *interface, char *profile)
 {
     unsigned int i;
-    GArray *distribution_array = generate_distribution_array(distribution_export);
+    GArray *distribution_array = generate_distribution_array(distribution_manifest);
 	    
     for(i = 0; i < distribution_array->len; i++)
     {
@@ -263,7 +263,7 @@ static int set_target_profiles(char *distribution_export, char *interface, char 
     return TRUE;
 }
 
-static int set_coordinator_profile(char *distribution_export, char *profile, char *username)
+static int set_coordinator_profile(char *distribution_manifest, char *profile, char *username)
 {
     gchar *command;
     int status;
@@ -274,7 +274,7 @@ static int set_coordinator_profile(char *distribution_export, char *profile, cha
     mkdir(command, 0755);
     g_free(command);
 	    
-    command = g_strconcat("nix-env -p ", LOCALSTATEDIR, "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, " --set $(readlink -f ", distribution_export, ")", NULL);
+    command = g_strconcat("nix-env -p ", LOCALSTATEDIR, "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, " --set $(readlink -f ", distribution_manifest, ")", NULL);
     status = system(command);
     g_free(command);
 	    
@@ -293,13 +293,13 @@ int main(int argc, char *argv[])
     struct option long_options[] =
     {
 	{"interface", required_argument, 0, 'i'},
-	{"old-export", required_argument, 0, 'o'},
+	{"old-manifest", required_argument, 0, 'o'},
 	{"profile", required_argument, 0, 'p'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
     char *interface = NULL;
-    char *old_export = NULL;
+    char *old_manifest = NULL;
     char *profile = "default";
     
     /* Parse command-line options */
@@ -311,7 +311,7 @@ int main(int argc, char *argv[])
 		interface = optarg;
 		break;
 	    case 'o':
-	        old_export = optarg;
+	        old_manifest = optarg;
 	        break;
 	    case 'p':
 	        profile = optarg;
@@ -335,40 +335,40 @@ int main(int argc, char *argv[])
 
     if(optind >= argc)
     {
-	fprintf(stderr, "A distribution export file has to be specified!\n");
+	fprintf(stderr, "A manifest file has to be specified!\n");
 	return 1;
     }
     else
     {
 	/* Get current username */
 	char *username = (getpwuid(geteuid()))->pw_name;
-	gchar *old_export_file;
+	gchar *old_manifest_file;
 	GArray *list_new = create_activation_array(argv[optind]);	
 	GArray *list_old;
 		
-	if(old_export == NULL)
+	if(old_manifest == NULL)
         {
-	    /* If no old export file is given, try to to open the export file in the Nix profile */
+	    /* If no old manifest file is given, try to to open the manifest file in the Nix profile */
 	    
-	    old_export_file = g_strconcat(LOCALSTATEDIR, "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
-	    FILE *file = fopen(old_export_file, "r");
+	    old_manifest_file = g_strconcat(LOCALSTATEDIR, "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
+	    FILE *file = fopen(old_manifest_file, "r");
 	    
 	    if(file == NULL)
 	    {
-		g_free(old_export_file);
-		old_export_file = NULL;
+		g_free(old_manifest_file);
+		old_manifest_file = NULL;
 	    }
 	    else
 		fclose(file);
 	}
 	else
-	    old_export_file = g_strdup(old_export);
+	    old_manifest_file = g_strdup(old_manifest);
 
-	if(old_export_file != NULL)
+	if(old_manifest_file != NULL)
 	{	    	    
-	    printf("Using previous distribution export: %s\n", old_export_file);
-	    list_old = create_activation_array(old_export_file);
-	    g_free(old_export_file);
+	    printf("Using previous manifest: %s\n", old_manifest_file);
+	    list_old = create_activation_array(old_manifest_file);
+	    g_free(old_manifest_file);
         }
 	else
 	    list_old = NULL;
@@ -383,7 +383,7 @@ int main(int argc, char *argv[])
 	if(!set_target_profiles(argv[optind], interface, profile))
 	    return 1;
 	
-	/* Store the activated distribution export in the profile of the current user */
+	/* Store the activated manifest in the profile of the current user */
 	if(!set_coordinator_profile(argv[optind], profile, username))
 	    return 1;
 

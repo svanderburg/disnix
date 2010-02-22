@@ -22,6 +22,7 @@ In order to build Disnix from source code, the following packages are required:
 For running Disnix additional packages have to be installed:
 
 - Nix (http://www.nixos.org)
+- Nixpkgs (http://www.nixos.org/
 - OpenSSH (for using the disnix-ssh-client)
 - Disnix activation modules
 
@@ -32,7 +33,7 @@ Installation:
 =============
 
 Disnix is a typical autotools based package which can be compiled and installed
-by running the following commands from in the shell:
+by running the following commands in a shell:
 
 ./configure
 make
@@ -48,13 +49,19 @@ In order to use Disnix, every target machine should have the 'disnix-service'
 installed and running. The Disnix service also requires a protocol wrapper
 so that it can be invoked remotely. In the Disnix distribution a SSH wrapper
 is included, which requires a running SSH server on the same machine as
-every disnix-service. For more information about running the Disnix service,
-have a look at the manual page or the Disnix manual.
+every disnix-service. 
 
 Since activation and deactivation of services is different for every
 environment, the Disnix service requires the right activation modules package
-installed, which should be installed seperately. See the manual for more
-information.
+installed, which should be installed seperately.
+
+For more information about running the Disnix service, have a look at the 
+disnix-service manual page or refer to the Disnix manual.
+
+On every client machine, a Nix installation is required and a copy of Nixpkgs.
+In order to find the location of Nixpkgs, the environment variable NIXPKGS_ALL
+has to be set which points to the pkgs/top-level/all-packages.nix file included
+in the Nixpkgs tarball (this is already done automatically on NixOS).
 
 In order to deploy a distributed system a developer has to write a Nix
 expression that captures the services of a distributed machine, the network

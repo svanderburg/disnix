@@ -195,7 +195,7 @@ rec {
   ;
   
   /*
-   * Generates a distribution export file constisting of a profile mapping and
+   * Generates a manifest file constisting of a profile mapping and
    * service activation mapping from the 3 Disnix models.
    *
    * Parameters:
@@ -207,10 +207,10 @@ rec {
    * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
    *
    * Returns: 
-   * An attributeset which should be exported to XML representing the distribution export
+   * An attributeset which should be exported to XML representing the manifest
    */
    
-  generateDistributionExport = pkgs: servicesFun: infrastructure: distributionFun: targetProperty:
+  generateManifest = pkgs: servicesFun: infrastructure: distributionFun: targetProperty:
     let
       distribution = distributionFun { inherit infrastructure; };
       initialServices = servicesFun { inherit distribution; system = null; };

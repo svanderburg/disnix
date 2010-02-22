@@ -11,18 +11,18 @@ let
   
   pkgs = import (builtins.getEnv "NIXPKGS_ALL") {};
   lib = import ./lib.nix;
-  distributionExport = lib.generateDistributionExport pkgs servicesFun infrastructure distributionFun targetProperty;
+  manifest = lib.generateManifest pkgs servicesFun infrastructure distributionFun targetProperty;
   
-  generateDistributionExportXSL = ./generatemanifest.xsl;
+  generateManifestXSL = ./generatemanifest.xsl;
 in
 pkgs.stdenv.mkDerivation {
-  name = "distributionExport.xml";
+  name = "manifest.xml";
   buildInputs = [ pkgs.libxslt ];
   buildCommand = ''
     (
     cat <<EOF
-    ${builtins.toXML distributionExport}
+    ${builtins.toXML manifest}
     EOF
-    ) | xsltproc ${generateDistributionExportXSL} - > $out
+    ) | xsltproc ${generateManifestXSL} - > $out
   '';
 }

@@ -43,7 +43,7 @@ GArray *create_derivation_array(char *distributed_derivation_file)
     
     if(node_root == NULL)
     {
-        fprintf(stderr, "The distribution export XML file is empty!\n");
+        fprintf(stderr, "The distributed derivation XML file is empty!\n");
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
 	return NULL;

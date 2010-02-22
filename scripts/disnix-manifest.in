@@ -112,11 +112,11 @@ then
     showTraceArg="--show-trace"
 fi
 
-# Build the distribution export file
+# Build the manifest file
 
 nix-build --argstr servicesFile "$(readlink -f $servicesFile)" \
           --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
 	  --argstr distributionFile "$(readlink -f $distributionFile)" \
           --argstr targetProperty $targetProperty \
 	  $showTraceArg \
-	  "$(readlink -f @datadir@/@PACKAGE@/export.nix)"
+	  "$(readlink -f @datadir@/@PACKAGE@/manifest.nix)"

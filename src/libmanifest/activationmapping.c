@@ -143,7 +143,7 @@ GArray *create_activation_array(char *manifest_file)
     
     if((doc = xmlParseFile(manifest_file)) == NULL)
     {
-	g_printerr("Error with parsing the distribution export XML file!\n");
+	g_printerr("Error with parsing the manifest XML file!\n");
 	xmlCleanupParser();
 	return NULL;
     }
@@ -153,7 +153,7 @@ GArray *create_activation_array(char *manifest_file)
     
     if(node_root == NULL)
     {
-        g_printerr("The distribution export XML file is empty!\n");
+        g_printerr("The distribution manifest XML file is empty!\n");
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
 	return NULL;
@@ -204,7 +204,7 @@ GArray *create_activation_array(char *manifest_file)
 		    {
 			TargetProperty *property = (TargetProperty*)g_malloc(sizeof(TargetProperty));
 			
-			if(xmlStrcmp(target_children->name, (xmlChar*) "text") != 0) /* It seems that a text node is added when the distribution export is pretty printed */
+			if(xmlStrcmp(target_children->name, (xmlChar*) "text") != 0) /* It seems that a text node is added when the manifest is pretty printed */
 			{
 			    property->name = g_strdup(target_children->name);
 			    property->value = g_strdup(target_children->children->content);
@@ -247,7 +247,7 @@ GArray *create_activation_array(char *manifest_file)
 				    {
 					TargetProperty *property = (TargetProperty*)g_malloc(sizeof(TargetProperty));
 			
-					if(xmlStrcmp(target_children->name, (xmlChar*) "text") != 0) /* It seems that a text node is added when the distribution export is pretty printed */
+					if(xmlStrcmp(target_children->name, (xmlChar*) "text") != 0) /* It seems that a text node is added when the manifest is pretty printed */
 					{
 					    property->name = g_strdup(target_children->name);
 					    property->value = g_strdup(target_children->children->content);
