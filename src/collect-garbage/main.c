@@ -110,17 +110,25 @@ int main(int argc, char *argv[])
 	    {
 		gchar *target = g_array_index(target_array, gchar*, i);
 		char *args[] = { interface, "--target", target, "--collect-garbage", delete_old_arg, NULL };
+		int status;
 		
 		printf("Collecting garbage on: %s\n", target);
 		
-		if(fork())
+		status = fork();
+		
+		if(status == -1)
+		{
+		    fprintf(stderr, "Error forking garbage collection process!\n");
+		    return -1;
+		}
+		else if(status == 0)
 		{
 		    execvp(interface, args);
 		    fprintf(stderr, "Error starting garbage collection process on: %s\n", target);
 		    _exit(1);
 		}
-		
-		running_processes++;
+		else
+		    running_processes++;
 	    }
 	    	    
 	    /* Check statusses of the running processes */	    
