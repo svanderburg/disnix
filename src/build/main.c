@@ -110,22 +110,28 @@ int main(int argc, char *argv[])
 	    {
 		DerivationItem *item = g_array_index(derivation_array, DerivationItem*, i);
 		int status;
-		gchar *command;
 	    
 		fprintf(stderr, "Distributing intra-dependency closure of derivation: %s to target: %s\n", item->derivation, item->target);
-		command = g_strconcat("disnix-copy-closure --to --target ", item->target, " --interface '", interface, "' ", item->derivation, NULL);
-		status = system(command);
-	    
-		/* Cleanups */
-		g_free(command);
-	    
-		/* On error stop the distribute process */
+		
+		status = fork();
+		
 		if(status == -1)
-		{
+		{		
+		    fprintf(stderr, "Error with forking copy closure process!\n");
 		    delete_derivation_array(derivation_array);
 		    return -1;
 		}
-		else if(WEXITSTATUS(status) != 0)
+		else if(status == 0)
+		{
+		    char *args[] = {"disnix-copy-closure", "--to", "--target", item->target, "--interface", interface, item->derivation, NULL};
+		    execvp("disnix-copy-closure", args);
+		    fprintf(stderr, "Error with executing copy closure process!\n");
+		    _exit(1);
+		}
+		
+		wait(&status);
+			    
+		if(WEXITSTATUS(status) != 0)
 		{
 		    delete_derivation_array(derivation_array);
 		    return WEXITSTATUS(status);
@@ -148,7 +154,7 @@ int main(int argc, char *argv[])
 		
 		    if(status == -1)
 		    {
-			fprintf(stderr, "Error in forking realise process!\n");
+			fprintf(stderr, "Error with forking realise process!\n");
 			exit_status = -1;
 		    }
 		    else if(status == 0)
@@ -168,7 +174,6 @@ int main(int argc, char *argv[])
 			close(pipefd[1]); /* Close write-end */
 			g_array_append_val(output_array, pipefd[0]); /* Append read file descriptor to array */
 			running_processes++;
-			printf("running processes: %d\n", running_processes);
 		    }
 		}
 		else
@@ -220,7 +225,7 @@ int main(int argc, char *argv[])
     
 		for(i = 0; i < derivation_array->len; i++)
 		{
-		    gchar *command, *result;
+		    gchar *result;
 		    DerivationItem *item;
 		    int status;
 	
@@ -228,19 +233,27 @@ int main(int argc, char *argv[])
 		    item = g_array_index(derivation_array, DerivationItem*, i);
 	
 	    	    fprintf(stderr, "Copying result: %s from: %s\n", result, item->target);
-	
-		    command = g_strconcat("disnix-copy-closure --from --target ", item->target, " --interface '", interface, "' ", result, NULL);	    
-		    status = system(command);
-
-		    /* On error stop the process */
+		    
+		    status = fork();
+		    
 		    if(status == -1)
 		    {
-			g_array_free(output_array, TRUE);
+			fprintf(stderr, "Error with forking copy closure process!\n");
 			delete_result_array(result_array);
     			delete_derivation_array(derivation_array);
 			return -1;
 		    }
-		    else if(WEXITSTATUS(status) != 0)
+		    else if(status == 0)
+		    {
+			char *args[] = {"disnix-copy-closure", "--from", "--target", item->target, "--interface", interface, result, NULL};
+			execvp("disnix-copy-closure", args);
+			fprintf(stderr, "Error with executing copy closure process!\n");
+			_exit(1);
+		    }
+		    
+		    wait(&status);
+		    
+		    if(WEXITSTATUS(status) != 0)
 		    {
 		        g_array_free(output_array, TRUE);
 			delete_result_array(result_array);

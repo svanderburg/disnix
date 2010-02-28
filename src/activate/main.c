@@ -19,6 +19,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <pwd.h>
 #include <sys/types.h>
@@ -64,18 +65,30 @@ static int activate(GArray *union_list, ActivationMapping *mapping, gchar *inter
     {
 	gchar *arguments = generate_activation_arguments(actual_mapping->target);
 	gchar *target_interface = get_target_interface(actual_mapping);
-	gchar *command;
 	int status;
 	
 	printf("Now activating service: %s of type: %s through: %s\n", actual_mapping->service, actual_mapping->type, target_interface);
 	printf("Using arguments: %s\n", arguments);
+
+	status = fork();
 	
-	command = g_strconcat(interface, " --activate --type ", actual_mapping->type, " --arguments \"", arguments, "\" --target ", target_interface, " ", actual_mapping->service, NULL);
-	status = system(command);
-	g_free(command);
+	if(status == -1)
+	{
+	    g_free(arguments);
+	    return FALSE;
+	}
+	else if(status == 0)
+	{
+	    char *args[] = {interface, "--activate", "--type", actual_mapping->type, "--arguments", arguments, "--target", target_interface, actual_mapping->service, NULL};
+	    execvp(interface, args);
+	    _exit(1);
+	}
+	
 	g_free(arguments);
 	
-	if(status == -1 || WEXITSTATUS(status) != 0)
+	wait(&status);
+	
+	if(WEXITSTATUS(status) != 0)
 	    return FALSE;
 
 	actual_mapping->activated = TRUE;
@@ -106,18 +119,30 @@ static int deactivate(GArray *union_list, ActivationMapping *mapping, gchar *int
     {
 	gchar *arguments = generate_activation_arguments(actual_mapping->target);
 	gchar *target_interface = get_target_interface(actual_mapping);
-	gchar *command;
 	int status;
 	
 	printf("Now deactivating service: %s of type: %s through: %s\n", actual_mapping->service, actual_mapping->type, target_interface);
 	printf("Using arguments: %s\n", arguments);
 	
-	command = g_strconcat(interface, " --deactivate --type ", actual_mapping->type, " --arguments \"", arguments, "\" --target ", target_interface, " ", actual_mapping->service, NULL);
-	status = system(command);
-	g_free(command);
-	g_free(arguments);
+	status = fork();
 	
-	if(status == -1 || WEXITSTATUS(status) != 0)
+	if(status == -1)
+	{
+	    g_free(arguments);
+	    return FALSE;
+	}
+	else
+	{
+	    char *args[] = {interface, "--deactivate", "--type", actual_mapping->type, "--arguments", arguments, "--target", target_interface, actual_mapping->service, NULL};
+	    execvp(interface, args);
+	    _exit(1);
+	}
+		
+	g_free(arguments);
+
+	wait(&status);
+	
+	if(WEXITSTATUS(status) != 0)
 	    return FALSE;
 	
 	actual_mapping->activated = FALSE;
@@ -243,19 +268,25 @@ static int set_target_profiles(char *distribution_manifest, char *interface, cha
 	    
     for(i = 0; i < distribution_array->len; i++)
     {
-	gchar *command;
 	int status;
 	DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
 		
 	printf("Setting profile: %s on target: %s\n", item->profile, item->target);
-	    
-	command = g_strconcat(interface, " --target ", item->target, " --profile ", profile, " --set ", item->profile, NULL);
-	status = system(command);	    	    	    
-	g_free(command);
-	    
+	
+	status = fork();
+	
 	if(status == -1)
 	    return FALSE;
-	else if(WEXITSTATUS(status) != 0)
+	else if(status == 0)
+	{
+	    char *args[] = {interface, "--target", item->target, "--profile", profile, "--set", item->profile, NULL};
+	    execvp(interface, args);
+	    _exit(1);
+	}
+	
+	wait(&status);
+	    
+	if(WEXITSTATUS(status) != 0)
 	    return FALSE;
     }
 	    
@@ -265,22 +296,39 @@ static int set_target_profiles(char *distribution_manifest, char *interface, cha
 
 static int set_coordinator_profile(char *distribution_manifest, char *profile, char *username)
 {
-    gchar *command;
+    gchar *profile_path, *distribution_manifest_path;
     int status;
 	    
     printf("Setting the coordinator profile:\n");
 	    
-    command = g_strconcat(LOCALSTATEDIR, "/nix/profiles/per-user/", username, "/disnix-coordinator", NULL);
-    mkdir(command, 0755);
-    g_free(command);
-	    
-    command = g_strconcat("nix-env -p ", LOCALSTATEDIR, "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, " --set $(readlink -f ", distribution_manifest, ")", NULL);
-    status = system(command);
-    g_free(command);
-	    
+    profile_path = g_strconcat(LOCALSTATEDIR, "/nix/profiles/per-user/", username, "/disnix-coordinator", NULL);
+    mkdir(profile_path, 0755);
+    g_free(profile_path);
+    
+    if((strlen(distribution_manifest) >= 1 && distribution_manifest[0] == '/') ||
+       (strlen(distribution_manifest) >= 2 && distribution_manifest[0] == '.' || distribution_manifest[1] == '/'))
+        distribution_manifest_path = g_strdup(distribution_manifest);
+    else
+	distribution_manifest_path = g_strconcat("./", NULL);
+        
+    status = fork();
+    
     if(status == -1)
 	return FALSE;
-    else if(WEXITSTATUS(status) != 0)
+    else if(status == 0)
+    {
+	gchar *profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
+	char *args[] = {"nix-env", "-p", profile_path, "--set", distribution_manifest_path, NULL};
+	
+	execvp("nix-env", args);
+	_exit(1);
+    }
+    
+    g_free(distribution_manifest_path);
+    
+    wait(&status);
+    
+    if(WEXITSTATUS(status) != 0)
 	return FALSE;
     else
 	return TRUE;

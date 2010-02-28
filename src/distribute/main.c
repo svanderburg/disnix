@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #define _GNU_SOURCE
@@ -43,7 +44,7 @@ int main(int argc, char *argv[])
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
-    gchar *interface_arg = NULL;
+    char *interface = NULL;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "h", long_options, &option_index)) != -1)
@@ -51,7 +52,7 @@ int main(int argc, char *argv[])
 	switch(c)
 	{
 	    case 'i':
-		interface_arg = g_strconcat(" --interface ", optarg, NULL);
+		interface = optarg;
 		break;
 	    case 'h':
 		print_usage();
@@ -60,21 +61,20 @@ int main(int argc, char *argv[])
     }
 
     /* Validate options */
-    if(interface_arg == NULL)
+    if(interface == NULL)
     {
 	char *interface_env = getenv("DISNIX_CLIENT_INTERFACE");
 	
 	if(interface_env == NULL)
-	    interface_arg = g_strdup("");
+	    interface = g_strdup("disnix-client");
 	else
-	    interface_arg = g_strconcat(" --interface ", interface_env, NULL);
+	    interface = interface_env;
     }
 
 
     if(optind >= argc)
     {
 	fprintf(stderr, "ERROR: No manifest specified!\n");
-	g_free(interface_arg);
 	return 1;
     }
     else
@@ -95,22 +95,28 @@ int main(int argc, char *argv[])
 	    {
 		DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
 		int status;
-		gchar *command;
 	    
 		fprintf(stderr, "Distributing intra-dependency closure of profile: %s to target: %s\n", item->profile, item->target);
-		command = g_strconcat("disnix-copy-closure --to --target ", item->target, interface_arg, " ", item->profile, NULL);
-		status = system(command);
-	    
-		/* Cleanups */
-		g_free(command);
-	    
-		/* On error stop the distribute process */
+		
+		status = fork();
+		
 		if(status == -1)
 		{
 		    exit_status = -1;
 		    break;
 		}
-		else if(WEXITSTATUS(status) != 0)
+		else if(status == 0)
+		{
+		    char *args[] = {"disnix-copy-closure", "--to", "--target", item->target, "--interface", interface, item->profile, NULL};
+		    execvp("disnix-copy-closure", args);
+		    fprintf(stderr, "Error with executing copy closure process!\n");
+		    _exit(1);
+		}
+		
+	        wait(&status);
+		
+		/* On error stop the distribute process */
+		if(WEXITSTATUS(status) != 0)
 		{
 		    exit_status = WEXITSTATUS(status);
 		    break;
@@ -121,7 +127,6 @@ int main(int argc, char *argv[])
 	}
 	
 	/* Clean up */
-	g_free(interface_arg);
 	xmlCleanupParser();
     
 	/* Return the exit status, which is 0 if everything succeeds */
