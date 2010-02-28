@@ -185,9 +185,7 @@ int main(int argc, char *argv[])
 		if(status == -1)
 		    exit_status = -1;
 		else if(WEXITSTATUS(status) != 0)
-	    	    exit_status = WEXITSTATUS(status);
-		    
-		printf("terminate: %d\n", i);
+	    	    exit_status = WEXITSTATUS(status);		    
 	    }
 	    
 	    if(exit_status == 0)
@@ -200,9 +198,11 @@ int main(int argc, char *argv[])
 		{
 		    char line[BUFFER_SIZE];
 		    int pipefd = g_array_index(output_array, int, i);
-		
-		    while(read(pipefd, line, BUFFER_SIZE) > 0)
+		    ssize_t line_size;
+		    
+		    while((line_size = read(pipefd, line, sizeof(line))) > 0)
 		    {
+			line[line_size] = '\0';
 			puts(line);
 		    
 			if(g_strcmp0(line, "\n") != 0)
@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
 		    	    result = g_strdup(line);
 		    	    g_array_append_val(result_array, result);
 			}
-		    }
+		    }		    		    
 		
 		    close(pipefd);
 		}
