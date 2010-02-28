@@ -17,7 +17,6 @@ In order to build Disnix from source code, the following packages are required:
 - glib
 - DBus
 - DBus-GLib
-- OpenSSL
 
 For running Disnix additional packages have to be installed:
 
@@ -77,12 +76,3 @@ distributed system with Disnix.
 Disnix itself is a modular architecture, which supports various extensions that
 can be used to make integration with the host environment better. Refer
 to the Disnix manual to see what extensions can be used.
-
-Acknowledgements:
-=================
-
-* This product includes software developed by the OpenSSL Project for use in the
-  OpenSSL Toolkit (http://www.openssl.org/)
-
-* This product includes cryptographic software written by 
-  Eric Young (eay@cryptsoft.com)

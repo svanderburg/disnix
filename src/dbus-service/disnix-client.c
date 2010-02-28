@@ -60,7 +60,7 @@ static void print_usage()
     printf("--query-requisites derivations\n");
     printf("--collect-garbage [{-d|--delete-old}]\n");
     printf("--activate --type type --arguments arguments derivation\n");
-    printf("--deactivate --type type --arguments arguments derivation\n");    
+    printf("--deactivate --type type --arguments arguments derivation\n");
     printf("--lock\n");
     printf("--unlock\n");
     printf("{-h|--help}\n");
@@ -68,40 +68,40 @@ static void print_usage()
 
 /* Signal handlers */
 
-static void disnix_finish_signal_handler(DBusGProxy *proxy, const gchar *pid, gpointer user_data)
+static void disnix_finish_signal_handler(DBusGProxy *proxy, const gint pid, gpointer user_data)
 {
-    gchar *my_pid = *((gchar**)user_data);
+    gint my_pid = *((gint*)user_data);
 
-    g_printerr("Received finish signal from pid: %s\n", pid);
+    g_printerr("Received finish signal from pid: %d\n", pid);
 
     /* Stop the main loop if our job is done */
-    if(g_strcmp0(pid, my_pid) == 0)
+    if(pid == my_pid)
 	exit(0);    
 }
 
-static void disnix_success_signal_handler(DBusGProxy *proxy, const gchar *pid, gchar **derivation, gpointer user_data)
+static void disnix_success_signal_handler(DBusGProxy *proxy, const gint pid, gchar **derivation, gpointer user_data)
 {
     unsigned int i;
-    gchar *my_pid = *((gchar**)user_data);
+    gint my_pid = *((gint*)user_data);
     
-    g_printerr("Received success signal from pid: %s\n", pid);
+    g_printerr("Received success signal from pid: %d\n", pid);
     
     for(i = 0; i < g_strv_length(derivation); i++)
 	g_print("%s", derivation[i]);
 	
     /* Stop the main loop if our job is done */
-    if(g_strcmp0(pid, my_pid) == 0)
+    if(pid == my_pid)
 	exit(0);
 }
 
-static void disnix_failure_signal_handler(DBusGProxy *proxy, const gchar *pid, gpointer user_data)
+static void disnix_failure_signal_handler(DBusGProxy *proxy, const gint pid, gpointer user_data)
 {
-    gchar *my_pid = *((gchar**)user_data);
+    gint my_pid = *((gint*)user_data);
     
-    g_printerr("Received failure signal from pid: %s\n", pid);
+    g_printerr("Received failure signal from pid: %d\n", pid);
     
     /* Stop the main loop if our job is done */
-    if(g_strcmp0(pid, my_pid) == 0)
+    if(pid == my_pid)
 	exit(1);
 }
 
@@ -124,7 +124,7 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
     gint reply;
     
     /* Other declarations */
-    gchar *pid;
+    gint pid;
     
     /* If no operation is specified we should quit */
     if(operation == OP_NONE)
@@ -183,14 +183,14 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
     }
 
     /* Register marshaller for the return values of the success signal */
-    dbus_g_object_register_marshaller(marshal_VOID__STRING_BOXED, G_TYPE_NONE, G_TYPE_STRING, G_TYPE_STRV, G_TYPE_INVALID);
+    dbus_g_object_register_marshaller(marshal_VOID__INT_BOXED, G_TYPE_NONE, G_TYPE_INT, G_TYPE_STRV, G_TYPE_INVALID);
     
     /* Register the signatures for the signal handlers */
 
     g_printerr("Add the argument signatures for the signal handler\n");
-    dbus_g_proxy_add_signal(remote_object, "finish", G_TYPE_STRING, G_TYPE_INVALID);
-    dbus_g_proxy_add_signal(remote_object, "success", G_TYPE_STRING, G_TYPE_STRV, G_TYPE_INVALID);
-    dbus_g_proxy_add_signal(remote_object, "failure", G_TYPE_STRING, G_TYPE_INVALID);
+    dbus_g_proxy_add_signal(remote_object, "finish", G_TYPE_INT, G_TYPE_INVALID);
+    dbus_g_proxy_add_signal(remote_object, "success", G_TYPE_INT, G_TYPE_STRV, G_TYPE_INVALID);
+    dbus_g_proxy_add_signal(remote_object, "failure", G_TYPE_INT, G_TYPE_INVALID);
 
     g_printerr("Register D-Bus signal handlers\n");
     dbus_g_proxy_connect_signal(remote_object, "finish", G_CALLBACK(disnix_finish_signal_handler), &pid, NULL);
@@ -255,7 +255,7 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
     }
     
     /* Acknowledge the received PID so that the job will start */
-    g_printerr("Acknowledging PID: %s\n", pid);
+    g_printerr("Acknowledging PID: %d\n", pid);
     org_nixos_disnix_Disnix_acknowledge(remote_object, pid, &error);
     
     /* Run loop and wait for signals */

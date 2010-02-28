@@ -65,7 +65,7 @@ G_DEFINE_TYPE(DisnixObject, disnix_object, G_TYPE_OBJECT)
 static void disnix_object_init(DisnixObject *obj)
 {
     g_assert(obj != NULL);
-    obj->pid = NULL;    
+    obj->pid = 0;
 }
 
 /**
@@ -86,7 +86,7 @@ static void disnix_object_class_init (DisnixObjectClass *klass)
 						    g_cclosure_marshal_VOID__STRING,
 						    G_TYPE_NONE, 
 						    1, /* Number of parameter types to follow */
-						    G_TYPE_STRING /* Parameter types */);
+						    G_TYPE_INT /* Parameter types */);
 						    
     klass->signals[E_SUCCESS_SIGNAL] = g_signal_new ("success",
                                                     G_OBJECT_CLASS_TYPE (klass),
@@ -96,7 +96,7 @@ static void disnix_object_class_init (DisnixObjectClass *klass)
 						    g_cclosure_marshal_VOID__STRING,
 						    G_TYPE_NONE,
 						    2,
-						    G_TYPE_STRING, G_TYPE_STRV);
+						    G_TYPE_INT, G_TYPE_STRV);
 
     klass->signals[E_FAILURE_SIGNAL] = g_signal_new ("failure",
                                                     G_OBJECT_CLASS_TYPE (klass),
@@ -106,7 +106,7 @@ static void disnix_object_class_init (DisnixObjectClass *klass)
 						    g_cclosure_marshal_VOID__STRING,
 						    G_TYPE_NONE,
 						    1,
-						    G_TYPE_STRING);
+						    G_TYPE_INT);
     
     /* Bind this GType into the Glib/D-Bus wrappers */
     dbus_g_object_type_install_info (DISNIX_TYPE_OBJECT, &dbus_glib_disnix_object_info);
@@ -154,7 +154,7 @@ int start_disnix_service(char *activation_modules_dir_arg, char *lock_manager_ar
     unlock_manager = unlock_manager_arg;
     
     /* Create job hashtable */
-    job_table = g_hash_table_new(g_str_hash, g_str_equal);
+    job_table = g_hash_table_new(g_int_hash, g_int_equal);
     
     /* Create a GMainloop with initial state of 'not running' (FALSE) */
     mainloop = g_main_loop_new(NULL, FALSE);

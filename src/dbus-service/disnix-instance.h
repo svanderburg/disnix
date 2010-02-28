@@ -39,7 +39,7 @@ typedef struct
     GObject parent;
     
     /** Every D-Bus method returns a PID */
-    gchar *pid;
+    gint pid;
 }
 DisnixObject;
 

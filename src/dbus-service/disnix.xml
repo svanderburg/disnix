@@ -4,87 +4,83 @@
 <node name="/org/nixos/disnix/Disnix">
 	<interface name="org.nixos.disnix.Disnix">
 		<method name="acknowledge">
-			<arg type="s" name="pid" direction="in" />
+			<arg type="i" name="pid" direction="in" />
 		</method>
 	
 		<method name="import">
 			<arg type="s" name="closure" direction="in" />
-			<arg type="s" name="pid" direction="out" />
+			<arg type="i" name="pid" direction="out" />
 		</method>
 		
 		<method name="export">
 			<arg type="as" name="derivation" direction="in" />
-			<arg type="s" name="pid" direction="out" />
+			<arg type="i" name="pid" direction="out" />
 		</method>
 		
 		<method name="print_invalid">
 			<arg type="as" name="derivation" direction="in" />
-			<arg type="s" name="pid" direction="out" />
+			<arg type="i" name="pid" direction="out" />
 		</method>
 		
 		<method name="realise">
 			<arg type="as" name="derivation" direction="in" />
-			<arg type="s" name="pid" direction="out" />
+			<arg type="i" name="pid" direction="out" />
 		</method>
 		
 		<method name="set">
 			<arg type="s" name="profile" direction="in" />
 			<arg type="s" name="derivation" direction="in" />
-			<arg type="s" name="pid" direction="out" />
+			<arg type="i" name="pid" direction="out" />
 		</method>		
 		
 		<method name="query_installed">
 			<arg type="s" name="profile" direction="in" />
-			<arg type="s" name="pid" direction="out" />
+			<arg type="i" name="pid" direction="out" />
 		</method>
 		
 		<method name="query_requisites">
 			<arg type="as" name="derivation" direction="in" />
-			<arg type="s" name="pid" direction="out" />
+			<arg type="i" name="pid" direction="out" />
 		</method>
-		
-		<!--<method name="query_jobs">
-			<arg type="as" name="jobs" direction="out" />
-		</method>-->
 		
 		<method name="collect_garbage">
 			<arg type="b" name="delete_old" direction="in" />
-			<arg type="s" name="pid" direction="out" />
+			<arg type="i" name="pid" direction="out" />
 		</method>
 		
 		<method name="activate">
 			<arg type="s" name="derivation" direction="in" />
 			<arg type="s" name="type" direction="in" />
 			<arg type="as" name="arguments" direction="in" />
-			<arg type="s" name="pid" direction="out" />
+			<arg type="i" name="pid" direction="out" />
 		</method>
 		
 		<method name="deactivate">
 			<arg type="s" name="derivation" direction="in" />
 			<arg type="s" name="type" direction="in" />
 			<arg type="as" name="arguments" direction="in" />
-			<arg type="s" name="pid" direction="out" />
+			<arg type="i" name="pid" direction="out" />
 		</method>
 		
 		<method name="lock">
-			<arg type="s" name="pid" direction="out" />
+			<arg type="i" name="pid" direction="out" />
 		</method>
 		
 		<method name="unlock">
-			<arg type="s" name="pid" direction="out" />
+			<arg type="i" name="pid" direction="out" />
 		</method>
 		
 		<signal name="finish">
-			<arg type="s" name="pid" direction="out" />
+			<arg type="i" name="pid" direction="out" />
 		</signal>
 		
 		<signal name="success">
-			<arg type="s" name="pid" direction="out" />
+			<arg type="i" name="pid" direction="out" />
 			<arg type="as" name="derivation" direction="out" />
 		</signal>
 		
 		<signal name="failure">
-			<arg type="s" name="pid" direction="out" />
+			<arg type="i" name="pid" direction="out" />
 		</signal>
 	</interface>
 </node>

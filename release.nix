@@ -18,7 +18,7 @@ let
         src = disnix;
         inherit officialRelease;
 
-        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt openssl ];
+        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt ];
       };
 
 
@@ -33,7 +33,7 @@ let
         name = "disnix";
         src = tarball;
 
-        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt openssl ];
+        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt ];
       };
   };
 in jobs

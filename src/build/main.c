@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #define _GNU_SOURCE
 #include <getopt.h>
 #include <sys/types.h>
@@ -89,19 +90,21 @@ int main(int argc, char *argv[])
 	return 1;
     }
     else
-    {
-	int exit_status = 0;
-	GArray *derivation_array;
-	GArray *result_array;
-	unsigned int i;
-	
+    {		
 	/* Generate a distribution array from the manifest file */
-	derivation_array = create_derivation_array(argv[optind]);
+	GArray *derivation_array = create_derivation_array(argv[optind]);
 	
 	if(derivation_array == NULL)
 	    return -1;
 	else
 	{
+	    unsigned int i, running_processes = 0;
+	    int exit_status = 0;
+	    int status;
+	    
+	    GArray *output_array;
+	    GArray *result_array;
+	
 	    /* Iterate over the derivation array and distribute the store derivation closures to the target machines */
 	    for(i = 0; i < derivation_array->len; i++)
 	    {
@@ -129,94 +132,140 @@ int main(int argc, char *argv[])
 		}
 	    }
 
-	    /* Iterate over the derivation array and realise the store derivations on the target machines */
+	    /* Iterate over the derivation array and fork processes that realise the derivations remotely */
 	
-	    result_array = g_array_new(FALSE, FALSE, sizeof(gchar*));
+	    output_array = g_array_new(FALSE, FALSE, sizeof(int));    
 	
 	    for(i = 0; i < derivation_array->len; i++)
 	    {
-		DerivationItem *item = g_array_index(derivation_array, DerivationItem*, i);
+		int pipefd[2];
 		int status;
-		gchar *command;
-		FILE *fp;
-	    
-		fprintf(stderr, "Realising derivation: %s on target: %s\n", item->derivation, item->target);
-		command = g_strconcat(interface, " --realise --target ", item->target, " ", item->derivation, NULL);
-		fp = popen(command, "r");
-	    
-		if(fp == NULL)
-		    return -1;
+		DerivationItem *item = g_array_index(derivation_array, DerivationItem*, i);
+		
+		if(pipe(pipefd) == 0)
+		{
+		    status = fork();
+		
+		    if(status == -1)
+		    {
+			fprintf(stderr, "Error in forking realise process!\n");
+			exit_status = -1;
+		    }
+		    else if(status == 0)
+		    {			
+			char *args[] = {interface, "--realise", "--target", item->target, item->derivation, NULL};
+			
+			fprintf(stderr, "Realising derivation: %s on target: %s\n", item->derivation, item->target);
+			
+			close(pipefd[0]); /* Close read-end */
+			dup2(pipefd[1], 1); /* Attach pipe to the stdout */						
+			execvp(interface, args); /* Run remote realise process */
+			fprintf(stderr, "Error in executing realise process!\n");
+			_exit(1);
+		    }
+		    else
+		    {
+			close(pipefd[1]); /* Close write-end */
+			g_array_append_val(output_array, pipefd[0]); /* Append read file descriptor to array */
+			running_processes++;
+			printf("running processes: %d\n", running_processes);
+		    }
+		}
 		else
+		    fprintf(stderr, "Error in creating a pipe!\n");
+	    }
+	    
+	    /* Check statusses of the running processes */
+	    for(i = 0; i < running_processes; i++)
+	    {
+		/* Wait until a realise process is finished */
+		wait(&status);
+	    
+		/* If one of the processes fail, change the exit status */
+		if(status == -1)
+		    exit_status = -1;
+		else if(WEXITSTATUS(status) != 0)
+	    	    exit_status = WEXITSTATUS(status);
+		    
+		printf("terminate: %d\n", i);
+	    }
+	    
+	    if(exit_status == 0)
+	    {
+		result_array = g_array_new(FALSE, FALSE, sizeof(gchar*));
+		
+		/* Capture the output (Nix store components) of every realise process */
+	    
+		for(i = 0; i < output_array->len; i++)
 		{
 		    char line[BUFFER_SIZE];
+		    int pipefd = g_array_index(output_array, int, i);
 		
-		    while(fgets(line, sizeof(line), fp) != NULL)
+		    while(read(pipefd, line, BUFFER_SIZE) > 0)
 		    {
 			puts(line);
-			
+		    
 			if(g_strcmp0(line, "\n") != 0)
 			{
-			    gchar *result;
-			    result = g_strdup(line);
-			    g_array_append_val(result_array, result);
+		    	    gchar *result;
+		    	    result = g_strdup(line);
+		    	    g_array_append_val(result_array, result);
 			}
 		    }
+		
+		    close(pipefd);
+		}
+	    	
+		/* Retrieve back the realised closures and import them into the Nix store of the host */
+    
+		for(i = 0; i < derivation_array->len; i++)
+		{
+		    gchar *command, *result;
+		    DerivationItem *item;
+		    int status;
 	
-		    status = pclose(fp);
+		    result = g_array_index(result_array, gchar*, i);
+		    item = g_array_index(derivation_array, DerivationItem*, i);
+	
+	    	    fprintf(stderr, "Copying result: %s from: %s\n", result, item->target);
+	
+		    command = g_strconcat("disnix-copy-closure --from --target ", item->target, " --interface '", interface, "' ", result, NULL);	    
+		    status = system(command);
 
 		    /* On error stop the process */
 		    if(status == -1)
 		    {
+			g_array_free(output_array, TRUE);
 			delete_result_array(result_array);
     			delete_derivation_array(derivation_array);
 			return -1;
 		    }
 		    else if(WEXITSTATUS(status) != 0)
 		    {
+		        g_array_free(output_array, TRUE);
 			delete_result_array(result_array);
     			delete_derivation_array(derivation_array);
 			return WEXITSTATUS(status);
 		    }
 		}
-	    
-		/* Cleanups */
-		g_free(command);	    
+		
+		delete_result_array(result_array);
 	    }
-	
-	    /* Retrieve back the realised closures and import them into the Nix store of the host */
-    
-	    for(i = 0; i < derivation_array->len; i++)
+	    else
 	    {
-		gchar *command, *result;
-		DerivationItem *item;
-		int status;
-	
-		result = g_array_index(result_array, gchar*, i);
-		item = g_array_index(derivation_array, DerivationItem*, i);
-	
-	        fprintf(stderr, "Copying result: %s from: %s\n", result, item->target);
-	
-		command = g_strconcat("disnix-copy-closure --from --target ", item->target, " --interface '", interface, "' ", result, NULL);	    
-		status = system(command);
-
-		/* On error stop the process */
-		if(status == -1)
+		/* Close all open file descriptors */
+		for(i = 0; i < output_array->len; i++)
 		{
-		    delete_result_array(result_array);
-    		    delete_derivation_array(derivation_array);
-		    return -1;
-		}
-		else if(WEXITSTATUS(status) != 0)
-		{
-		    delete_result_array(result_array);
-    		    delete_derivation_array(derivation_array);
-		    return WEXITSTATUS(status);
+		    int pipefd = g_array_index(output_array, int, i);
+		    close(pipefd);
 		}
 	    }
 	
 	    /* Cleanup */	
-	    delete_result_array(result_array);
+	    g_array_free(output_array, TRUE);	    
 	    delete_derivation_array(derivation_array);
+	    
+	    return exit_status;
 	}
     }
 }
