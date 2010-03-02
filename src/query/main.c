@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <getopt.h>
 #define _GNU_SOURCE
 #include <sys/types.h>
@@ -106,19 +107,33 @@ int main(int argc, char *argv[])
 	    for(i = 0; i < target_array->len; i++)
 	    {
 		gchar *target = g_array_index(target_array, gchar*, i);
-		gchar *command = g_strconcat(interface, " --target ", target, " --profile ", profile, " --query-installed", NULL);
 		int status;
 		
-		printf("Services on: %s\n", target);
-		printf("--------------------------------------------------------------\n");
+		printf("\nServices on: %s\n\n", target);
 		
-		status = system(command);						
-		g_free(command);
+		status = fork();
 		
 		if(status == -1)
-	    	    return -1;
-		else if(WEXITSTATUS(status) != 0)
+		{
+		    fprintf(stderr, "Error with forking query process!\n");
+		    delete_target_array(target_array);
+		    return -1;
+		}
+		else if(status == 0)
+		{
+		    char *args[] = {interface, "--target", target, "--profile", profile, "--query-installed", NULL};
+		    execvp(interface, args);
+		    fprintf(stderr, "Error with executing query process!\n");
+		    _exit(1);
+		}
+		
+		wait(&status);
+				
+		if(WEXITSTATUS(status) != 0)
+		{
+		    delete_target_array(target_array);
 	    	    return WEXITSTATUS(status);
+		}
 	    }
 	    
 	    delete_target_array(target_array);
