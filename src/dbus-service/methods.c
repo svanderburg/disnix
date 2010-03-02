@@ -1003,42 +1003,58 @@ gboolean disnix_acknowledge(DisnixObject *object, gint pid, GError **error)
     
     if(job != NULL)
     {
+	int status;
+	
 	g_print("Running PID: %d\n", pid);
 
 	job->running = TRUE;
 	
-	switch(job->operation)
+	status = fork();
+	
+	if(status == -1)
 	{
-	    case OP_IMPORT:
-		g_thread_create((GThreadFunc)disnix_import_thread_func, job->params, FALSE, job->error);		
-		break;
-	    case OP_EXPORT:
-		g_thread_create((GThreadFunc)disnix_export_thread_func, job->params, FALSE, job->error);
-		break;
-	    case OP_PRINT_INVALID:
-		g_thread_create((GThreadFunc)disnix_print_invalid_thread_func, job->params, FALSE, job->error);
-		break;
-	    case OP_REALISE:
-		g_thread_create((GThreadFunc)disnix_realise_thread_func, job->params, FALSE, job->error);
-		break;
-	    case OP_SET:
-		g_thread_create((GThreadFunc)disnix_set_thread_func, job->params, FALSE, job->error);
-		break;
-	    case OP_QUERY_INSTALLED:
-		g_thread_create((GThreadFunc)disnix_query_installed_thread_func, job->params, FALSE, job->error);
-		break;
-	    case OP_QUERY_REQUISITES:
-		g_thread_create((GThreadFunc)disnix_query_requisites_thread_func, job->params, FALSE, job->error);
-		break;
-	    case OP_COLLECT_GARBAGE:
-		g_thread_create((GThreadFunc)disnix_collect_garbage_thread_func, job->params, FALSE, job->error);
-		break;
-	    case OP_ACTIVATE:
-		g_thread_create((GThreadFunc)disnix_activate_thread_func, job->params, FALSE, job->error);
-		break;
-	    case OP_DEACTIVATE:
-		g_thread_create((GThreadFunc)disnix_deactivate_thread_func, job->params, FALSE, job->error);
-		break;
+	    g_printerr("Error with forking job process!\n");
+	    disnix_emit_failure_signal(object, pid);	    
+	}
+	else if(status == 0)
+	{
+	    switch(job->operation)
+	    {
+		case OP_IMPORT:    
+		    disnix_import_thread_func(job->params);		
+		    break;
+		case OP_EXPORT:
+		    disnix_export_thread_func(job->params);
+		    break;
+		case OP_PRINT_INVALID:
+		    disnix_print_invalid_thread_func(job->params);
+		    break;
+		case OP_REALISE:
+		    disnix_realise_thread_func(job->params);
+		    break;
+		case OP_SET:
+		    disnix_set_thread_func(job->params);
+		    break;
+		case OP_QUERY_INSTALLED:
+		    disnix_query_installed_thread_func(job->params);
+		    break;
+		case OP_QUERY_REQUISITES:
+		    disnix_query_requisites_thread_func(job->params);
+		    break;
+		case OP_COLLECT_GARBAGE:
+		    disnix_collect_garbage_thread_func(job->params);
+		    break;
+		case OP_ACTIVATE:
+		    disnix_activate_thread_func(job->params);
+		    break;
+		case OP_DEACTIVATE:
+		    disnix_deactivate_thread_func(job->params);
+		    break;
+		default:
+		    g_printerr("Unknown operation: %d\n", job->operation);
+	    }
+	    
+	    _exit(0);
 	}	
     }
     
