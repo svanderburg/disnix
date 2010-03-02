@@ -169,7 +169,7 @@ rec {
    * maps the profiles to the targets in the network.
    *
    * Parameters:
-   * pkgs: Nixpkgs top-level expression which contains the buildEnv function
+   * pkgs: Nixpkgs top-level expression
    * infrastructure: Infrastructure attributeset
    * targetNames: Names of the targets in the infrastructure attributeset
    * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
@@ -182,10 +182,15 @@ rec {
   generateProfilesMapping = pkgs: infrastructure: targetNames: targetProperty: serviceActivationMapping:
     let
       target = getAttr (head targetNames) infrastructure;
+      servicesPerTarget = queryServicesByTargetName serviceActivationMapping (head targetNames) infrastructure;
       mappingItem = {
         profile = (pkgs.buildEnv {
 	  name = head targetNames;
-	  paths = queryServicesByTargetName serviceActivationMapping (head targetNames) infrastructure;
+	  paths = servicesPerTarget;
+	  manifest = pkgs.writeTextFile {
+	    name = "manifest";
+	    text = "${pkgs.lib.concatMapStrings (service: "${service}\n") servicesPerTarget}";
+	  };
 	}).outPath;
 	target = getAttr targetProperty target;
       };

@@ -537,9 +537,9 @@ static void disnix_query_installed_thread_func(gpointer data)
     
     /* Execute command */
     
-    cmd = g_strconcat("nix-env -q \'*\' --out-path --no-name -p ", LOCALSTATEDIR, "/nix/profiles/disnix/", profile, NULL);
+    cmd = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, "/manifest", NULL);
 
-    fp = popen(cmd, "r");
+    fp = fopen(cmd, "r");
     if(fp == NULL)
 	disnix_emit_failure_signal(params->object, pid); /* Something went wrong with forking the process */
     else
@@ -560,12 +560,9 @@ static void disnix_query_installed_thread_func(gpointer data)
 	derivation = (gchar**)g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
 	derivation[derivation_size] = NULL;
 	
-	status = pclose(fp);
+	fclose(fp);
 	
-	if(status == -1 || WEXITSTATUS(status) != 0)
-	    disnix_emit_failure_signal(params->object, pid);
-	else
-	    disnix_emit_success_signal(params->object, pid, derivation);
+	disnix_emit_success_signal(params->object, pid, derivation);
     }
     
     /* Free variables */
