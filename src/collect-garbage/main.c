@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
 	    for(i = 0; i < target_array->len; i++)
 	    {
 		gchar *target = g_array_index(target_array, gchar*, i);
-		char *args[] = { interface, "--target", target, "--collect-garbage", delete_old_arg, NULL };
+		char *args[] = {interface, "--target", target, "--collect-garbage", delete_old_arg, NULL};
 		int status;
 		
 		printf("Collecting garbage on: %s\n", target);
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
 		if(status == -1)
 		{
 		    fprintf(stderr, "Error forking garbage collection process!\n");
-		    return -1;
+		    exit_status = -1;
 		}
 		else if(status == 0)
 		{
@@ -138,9 +138,7 @@ int main(int argc, char *argv[])
 		wait(&status);
 	    
 		/* If one of the processes fail, change the exit status */
-		if(status == -1)
-		    exit_status = -1;
-		else if(WEXITSTATUS(status) != 0)
+		if(WEXITSTATUS(status) != 0)
 	    	    exit_status = WEXITSTATUS(status);
 	    }
 	    	

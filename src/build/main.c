@@ -115,26 +115,29 @@ int main(int argc, char *argv[])
 		
 		status = fork();
 		
-		if(status == -1)
-		{		
-		    fprintf(stderr, "Error with forking copy closure process!\n");
-		    delete_derivation_array(derivation_array);
-		    return -1;
-		}
-		else if(status == 0)
+		if(status == 0)
 		{
 		    char *args[] = {"disnix-copy-closure", "--to", "--target", item->target, "--interface", interface, item->derivation, NULL};
 		    execvp("disnix-copy-closure", args);
 		    fprintf(stderr, "Error with executing copy closure process!\n");
 		    _exit(1);
 		}
-		
-		wait(&status);
-			    
-		if(WEXITSTATUS(status) != 0)
+						
+		if(status == -1)
 		{
+		    fprintf(stderr, "Error with forking copy closure process!\n");
 		    delete_derivation_array(derivation_array);
-		    return WEXITSTATUS(status);
+		    return -1;
+		}
+		else
+		{
+		    wait(&status);
+			    
+		    if(WEXITSTATUS(status) != 0)
+		    {
+			delete_derivation_array(derivation_array);
+			return WEXITSTATUS(status);
+		    }
 		}
 	    }
 
@@ -187,9 +190,7 @@ int main(int argc, char *argv[])
 		wait(&status);
 	    
 		/* If one of the processes fail, change the exit status */
-		if(status == -1)
-		    exit_status = -1;
-		else if(WEXITSTATUS(status) != 0)
+		if(WEXITSTATUS(status) != 0)
 	    	    exit_status = WEXITSTATUS(status);		    
 	    }
 	    
@@ -236,14 +237,7 @@ int main(int argc, char *argv[])
 		    
 		    status = fork();
 		    
-		    if(status == -1)
-		    {
-			fprintf(stderr, "Error with forking copy closure process!\n");
-			delete_result_array(result_array);
-    			delete_derivation_array(derivation_array);
-			return -1;
-		    }
-		    else if(status == 0)
+		    if(status == 0)
 		    {
 			char *args[] = {"disnix-copy-closure", "--from", "--target", item->target, "--interface", interface, result, NULL};
 			execvp("disnix-copy-closure", args);
@@ -251,15 +245,26 @@ int main(int argc, char *argv[])
 			_exit(1);
 		    }
 		    
-		    wait(&status);
-		    
-		    if(WEXITSTATUS(status) != 0)
+		    if(status == -1)
 		    {
-		        g_array_free(output_array, TRUE);
+			fprintf(stderr, "Error with forking copy closure process!\n");
+			g_array_free(output_array, TRUE);
 			delete_result_array(result_array);
     			delete_derivation_array(derivation_array);
-			return WEXITSTATUS(status);
+			return -1;
 		    }
+		    else
+		    {
+			wait(&status);
+			
+			if(WEXITSTATUS(status) != 0)
+			{
+			    g_array_free(output_array, TRUE);
+			    delete_result_array(result_array);
+    			    delete_derivation_array(derivation_array);
+			    return WEXITSTATUS(status);
+			}
+		    }		    		    
 		}
 		
 		delete_result_array(result_array);

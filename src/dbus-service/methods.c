@@ -433,9 +433,9 @@ DisnixSetParams;
 static void disnix_set_thread_func(gpointer data)
 {
     /* Declarations */
-    gchar *cmd, *profile, *derivation;
+    gchar *cmd, *profile, *derivation, *profile_path;
     gint pid;
-    FILE *fp;
+    int status;
     char line[BUFFER_SIZE];
     DisnixSetParams *params;
     
@@ -451,27 +451,35 @@ static void disnix_set_thread_func(gpointer data)
     /* Execute command */
     
     mkdir(LOCALSTATEDIR "/nix/profiles/disnix", 0755);
-    cmd = g_strconcat("nix-env -p ", LOCALSTATEDIR, "/nix/profiles/disnix/", profile, " --set ", derivation, NULL);
+    profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, NULL);
 
-    fp = popen(cmd, "r");
-    if(fp == NULL)
-	disnix_emit_failure_signal(params->object, pid); /* Something went wrong with forking the process */
-    else
+    status = fork();    
+    
+    if(status == -1)
     {
-	int status;
+	g_printerr("Error with forking nix-env process!\n");
+	disnix_emit_failure_signal(params->object, pid);
+    }
+    else if(status == 0)
+    {
+	char *args[] = {"nix-env", "-p", profile_path, "--set", derivation, NULL};
+	execvp("nix-env", args);
+	g_printerr("Error with executing nix-env\n");
+	_exit(1);
+    }
+    
+    if(status != -1)
+    {
+	wait(&status);
 	
-	while(fgets(line, sizeof(line), fp) != NULL)
-	    puts(line);
-	
-	status = pclose(fp);
-	
-	if(status == -1 || WEXITSTATUS(status) != 0)
-	    disnix_emit_failure_signal(params->object, pid);
-	else
+	if(WEXITSTATUS(status) == 0)
 	    disnix_emit_finish_signal(params->object, pid);
+	else
+	    disnix_emit_failure_signal(params->object, pid);
     }
     
     /* Free variables */
+    g_free(profile_path);
     g_free(profile);
     g_free(derivation);
     g_free(params);
@@ -710,8 +718,8 @@ static void disnix_collect_garbage_thread_func(gpointer data)
     /* Declarations */
     gchar *cmd;
     gint pid;
+    int status;
     gboolean delete_old;
-    FILE *fp;
     char line[BUFFER_SIZE];
     DisnixGarbageCollectParams *params;
 
@@ -727,30 +735,40 @@ static void disnix_collect_garbage_thread_func(gpointer data)
 	g_print("Garbage collect\n");
     
     /* Execute command */
-    if(delete_old)
-	cmd = g_strdup("nix-collect-garbage -d");
-    else
-	cmd = g_strdup("nix-collect-garbage");
-	
-    fp = popen(cmd, "r");
-    if(fp == NULL)
-	disnix_emit_failure_signal(params->object, pid); /* Something went wrong with forking the process */
-    else
+    
+    status = fork();
+    
+    if(status == -1)
     {
-	int status;
-	
-	/* Read the output */
-	while(fgets(line, sizeof(line), fp) != NULL)
-	    puts(line);
-	
-	status = pclose(fp);
-	
-	if(status == -1 || WEXITSTATUS(status) != 0)
-	    disnix_emit_failure_signal(params->object, pid);
+	g_printerr("Error with forking garbage collect process!\n");
+	disnix_emit_failure_signal(params->object, pid);
+    }
+    else if(status == 0)
+    {
+	if(delete_old)
+	{
+	    char *args[] = {"nix-collect-garbage", NULL};
+	    execvp("nix-collect-garbage", args);
+	}
 	else
-	    disnix_emit_finish_signal(params->object, pid);
+	{
+	    char *args[] = {"nix-collect-garbage", "-d", NULL};
+	    execvp("nix-collect-garbage", args);
+	}
+	g_printerr("Error with executing garbage collect process\n");
+	_exit(1);
     }
     
+    if(status != -1)
+    {
+	wait(&status);
+	
+	if(WEXITSTATUS(status) == 0)
+	    disnix_emit_finish_signal(params->object, pid);
+	else
+	    disnix_emit_failure_signal(params->object, pid);
+    }
+        
     /* Free variables */
     g_free(params);
     g_free(cmd);    

@@ -72,12 +72,7 @@ static int activate(GArray *union_list, ActivationMapping *mapping, gchar *inter
 
 	status = fork();
 	
-	if(status == -1)
-	{
-	    g_free(arguments);
-	    return FALSE;
-	}
-	else if(status == 0)
+	if(status == 0)
 	{
 	    char *args[] = {interface, "--activate", "--type", actual_mapping->type, "--arguments", arguments, "--target", target_interface, actual_mapping->service, NULL};
 	    execvp(interface, args);
@@ -86,11 +81,16 @@ static int activate(GArray *union_list, ActivationMapping *mapping, gchar *inter
 	
 	g_free(arguments);
 	
-	wait(&status);
-	
-	if(WEXITSTATUS(status) != 0)
+	if(status == -1)
 	    return FALSE;
-
+	else
+	{	    	
+	    wait(&status);
+		
+	    if(WEXITSTATUS(status) != 0)
+		return FALSE;
+	}
+		
 	actual_mapping->activated = TRUE;
     }
     
@@ -126,12 +126,7 @@ static int deactivate(GArray *union_list, ActivationMapping *mapping, gchar *int
 	
 	status = fork();
 	
-	if(status == -1)
-	{
-	    g_free(arguments);
-	    return FALSE;
-	}
-	else
+	if(status == 0)
 	{
 	    char *args[] = {interface, "--deactivate", "--type", actual_mapping->type, "--arguments", arguments, "--target", target_interface, actual_mapping->service, NULL};
 	    execvp(interface, args);
@@ -140,10 +135,15 @@ static int deactivate(GArray *union_list, ActivationMapping *mapping, gchar *int
 		
 	g_free(arguments);
 
-	wait(&status);
-	
-	if(WEXITSTATUS(status) != 0)
+	if(status == -1)
 	    return FALSE;
+	else
+	{
+	    wait(&status);
+	
+	    if(WEXITSTATUS(status) != 0)
+		return FALSE;
+	}
 	
 	actual_mapping->activated = FALSE;
     }
@@ -275,19 +275,22 @@ static int set_target_profiles(char *distribution_manifest, char *interface, cha
 	
 	status = fork();
 	
-	if(status == -1)
-	    return FALSE;
-	else if(status == 0)
+	if(status == 0)
 	{
 	    char *args[] = {interface, "--target", item->target, "--profile", profile, "--set", item->profile, NULL};
 	    execvp(interface, args);
 	    _exit(1);
 	}
 	
-	wait(&status);
-	    
-	if(WEXITSTATUS(status) != 0)
+	if(status == -1)
 	    return FALSE;
+	else
+	{
+	    wait(&status);
+	    
+	    if(WEXITSTATUS(status) != 0)
+		return FALSE;
+	}
     }
 	    
     delete_distribution_array(distribution_array);
@@ -310,28 +313,32 @@ static int set_coordinator_profile(char *distribution_manifest, char *profile, c
         distribution_manifest_path = g_strdup(distribution_manifest);
     else
 	distribution_manifest_path = g_strconcat("./", NULL);
-        
+    
+    profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
+    
     status = fork();
     
-    if(status == -1)
-	return FALSE;
-    else if(status == 0)
+    if(status == 0)
     {
-	gchar *profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
-	char *args[] = {"nix-env", "-p", profile_path, "--set", distribution_manifest_path, NULL};
-	
+	char *args[] = {"nix-env", "-p", profile_path, "--set", distribution_manifest_path, NULL};	
 	execvp("nix-env", args);
 	_exit(1);
     }
     
+    g_free(profile_path);
     g_free(distribution_manifest_path);
     
-    wait(&status);
-    
-    if(WEXITSTATUS(status) != 0)
+    if(status == -1)
 	return FALSE;
     else
-	return TRUE;
+    {
+	wait(&status);
+    
+	if(WEXITSTATUS(status) == 0)
+	    return TRUE;
+	else
+	    return FALSE;
+    }
 }
 
 int main(int argc, char *argv[])

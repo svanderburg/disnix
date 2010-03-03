@@ -113,13 +113,7 @@ int main(int argc, char *argv[])
 		
 		status = fork();
 		
-		if(status == -1)
-		{
-		    fprintf(stderr, "Error with forking query process!\n");
-		    delete_target_array(target_array);
-		    return -1;
-		}
-		else if(status == 0)
+		if(status == 0)
 		{
 		    char *args[] = {interface, "--target", target, "--profile", profile, "--query-installed", NULL};
 		    execvp(interface, args);
@@ -127,12 +121,21 @@ int main(int argc, char *argv[])
 		    _exit(1);
 		}
 		
-		wait(&status);
-				
-		if(WEXITSTATUS(status) != 0)
+		if(status == -1)
 		{
+		    fprintf(stderr, "Error with forking query process!\n");
 		    delete_target_array(target_array);
-	    	    return WEXITSTATUS(status);
+		    return -1;
+		}
+		else
+		{		
+		    wait(&status);
+				
+		    if(WEXITSTATUS(status) != 0)
+		    {
+			delete_target_array(target_array);
+	    		return WEXITSTATUS(status);
+		    }
 		}
 	    }
 	    

@@ -100,12 +100,7 @@ int main(int argc, char *argv[])
 		
 		status = fork();
 		
-		if(status == -1)
-		{
-		    exit_status = -1;
-		    break;
-		}
-		else if(status == 0)
+		if(status == 0)
 		{
 		    char *args[] = {"disnix-copy-closure", "--to", "--target", item->target, "--interface", interface, item->profile, NULL};
 		    execvp("disnix-copy-closure", args);
@@ -113,13 +108,21 @@ int main(int argc, char *argv[])
 		    _exit(1);
 		}
 		
-	        wait(&status);
-		
-		/* On error stop the distribute process */
-		if(WEXITSTATUS(status) != 0)
+		if(status == -1)
 		{
-		    exit_status = WEXITSTATUS(status);
+		    exit_status = -1;
 		    break;
+		}
+		else
+		{    
+	    	    wait(&status);
+		
+		    /* On error stop the distribute process */
+		    if(WEXITSTATUS(status) != 0)
+		    {
+			exit_status = WEXITSTATUS(status);
+			break;
+		    }
 		}
 	    }
 	    
