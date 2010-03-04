@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -68,11 +69,10 @@ DisnixImportParams;
 static void disnix_import_thread_func(gpointer data)
 {
     /* Declarations */
-    gchar *closure, *derivations_string, *cmd;
+    gchar *closure;
     gint pid;
-    FILE *fp;
-    char line[BUFFER_SIZE];
     DisnixImportParams *params;
+    int closure_fd;
     
     /* Import variables */
     params = (DisnixImportParams*)data;
@@ -83,30 +83,46 @@ static void disnix_import_thread_func(gpointer data)
     g_print("Importing: %s\n", closure);
     
     /* Execute command */
-    cmd = g_strconcat("cat ", closure, " | nix-store --import ", NULL);
     
-    fp = popen(cmd, "r");
-    if(fp == NULL)
-	disnix_emit_failure_signal(params->object, pid); /* Something went wrong with forking the process */
+    closure_fd = open(closure, O_RDONLY);
+    
+    if(closure_fd == -1)
+    {
+	g_printerr("Cannot open closure file!\n");
+	disnix_emit_failure_signal(params->object, pid);
+    }
     else
     {
-	int status;
-	
-	while(fgets(line, sizeof(line), fp) != NULL)
-	    puts(line);
-	
-	status = pclose(fp);
-	
-	if(status == -1 || WEXITSTATUS(status) != 0)
-	    disnix_emit_failure_signal(params->object, pid);
-	else
-	    disnix_emit_finish_signal(params->object, pid);
-    }
+	int status = fork();
     
+	if(status == 0)
+	{
+	    char *args[] = {"nix-store", "--import", NULL};
+	    dup2(closure_fd, 0);
+	    execvp("nix-store", args);
+	    _exit(1);
+	}
+    
+	if(status == -1)
+	{
+	    g_printerr("Error with forking nix-store process!\n");
+	    disnix_emit_failure_signal(params->object, pid);
+	}
+	else
+	{
+	    wait(&status);
+	
+	    if(WEXITSTATUS(status) == 0)
+		disnix_emit_finish_signal(params->object, pid);
+	    else
+		disnix_emit_failure_signal(params->object, pid);
+	}
+    
+	close(closure_fd);
+    }
+        
     /* Free variables */
-    g_free(derivations_string);
     g_free(params);
-    g_free(cmd);
     g_free(closure);
 }
 
