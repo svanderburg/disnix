@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <xmlutil.h>
@@ -70,39 +71,70 @@ static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
 
 static gchar *create_infrastructure_xml(char *infrastructure_expr)
 {
-    /* Declarations */
-    FILE *fp;
-    int status;
-    char line[BUFFER_SIZE];
-
-    gchar *infrastructureXML = g_strdup("");
-    
+    int pipefd[2];
+        
     /* 
      * Execute nix-instantiate command to retrieve XML representation of the 
      * infrastructure model
      */     
-    gchar *command = g_strconcat("nix-instantiate --eval-only --xml ", infrastructure_expr, NULL);    
-    fp = popen(command, "r");
-    g_free(command);
     
-    while(fgets(line, sizeof(line), fp) != NULL)
+    if(pipe(pipefd) == 0)
     {
-	gchar *old_infrastructureXML = infrastructureXML;
-	infrastructureXML = g_strconcat(old_infrastructureXML, line, NULL);
-	g_free(old_infrastructureXML);
-    }
+	int status = fork();
     
-    /* Check status of the nix-instantiate command */
-    status = pclose(fp);    
-    
-    if(status == -1 || WEXITSTATUS(status) != 0)
-    {
-	/* Return NULL on failure */
-	g_free(infrastructureXML);
-	return NULL;
+	if(status == -1)
+	{
+	    fprintf(stderr, "Error with forking nix-instantiate process!\n");
+	    close(pipefd[0]);
+	    close(pipefd[1]);	
+	    return NULL;
+	}
+	else if(status == 0)
+	{
+	    char *args[] = {"nix-instantiate", "--eval-only", "--xml", infrastructure_expr, NULL};
+	    close(pipefd[0]); /* Close read-end of pipe */
+	    dup2(pipefd[1], 1); /* Attach write-end to stdout */
+	    execvp("nix-instantiate", args);
+	    _exit(1);
+	    return NULL;
+	}
+	else
+	{
+	    gchar *infrastructureXML = g_strdup("");
+	    
+	    close(pipefd[1]); /* Close write-end of pipe */
+	    
+	    wait(&status);
+
+	    if(WEXITSTATUS(status) == 0)
+	    {
+		ssize_t line_size;
+		char line[BUFFER_SIZE];
+		
+		while((line_size = read(pipefd[0], line, sizeof(line))) > 0)
+		{
+		    line[line_size] = '\0';
+		    gchar *old_infrastructureXML = infrastructureXML;
+		    infrastructureXML = g_strconcat(old_infrastructureXML, line, NULL);
+		    g_free(old_infrastructureXML);
+		}
+	    }
+	    else
+	    {
+		fprintf(stderr, "Error with executing nix-instantiate!\n");
+		return NULL;
+	    }
+	    	
+	    close(pipefd[0]);
+	    
+	    return infrastructureXML;
+	}    
     }
     else
-	return infrastructureXML; /* Return the XML string on success */
+    {
+	fprintf(stderr, "Error with creating pipe!\n");
+	return NULL;
+    }    
 }
 
 GArray *create_target_array(char *infrastructure_expr, char *target_property)
