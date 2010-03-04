@@ -282,13 +282,11 @@ DisnixPrintInvalidPathsParams;
 static void disnix_print_invalid_thread_func(gpointer data)
 {
     /* Declarations */
-    gchar **derivation, *derivations_string, *cmd, **missing_paths = NULL;
-    gint pid;
-    unsigned int missing_paths_size = 0;
-    FILE *fp;
-    char line[BUFFER_SIZE];
+    gchar **derivation, *derivations_string, *cmd;
+    gint pid;    
     DisnixPrintInvalidPathsParams *params;
-
+    int pipefd[2];
+    
     /* Import variables */
     params = (DisnixPrintInvalidPathsParams*)data;
     derivation = params->derivation;
@@ -301,38 +299,83 @@ static void disnix_print_invalid_thread_func(gpointer data)
     g_print("Print invalid: %s\n", derivations_string);
     
     /* Execute command */
-    cmd = g_strconcat("nix-store --check-validity --print-invalid ", derivations_string, NULL);
     
-    fp = popen(cmd, "r");
-    if(fp == NULL)
-	disnix_emit_failure_signal(params->object, pid); /* Something went wrong with forking the process */
+    if(pipe(pipefd) == 0)
+    {
+	int status = fork();
+	
+	if(status == 0)
+	{
+	    unsigned int i, derivation_length = g_strv_length(derivation);
+	    char **args = (char**)g_malloc((4 + derivation_length) * sizeof(char));
+	    
+	    close(pipefd[0]); /* Close read-end of the pipe */
+	
+	    args[0] = "nix-store";
+	    args[1] = "--check-validity";
+	    args[2] = "--print-invalid";
+	
+	    for(i = 0; i < derivation_length; i++)	
+		args[i + 3] = derivation[i];
+	    
+	    args[i + 3] = NULL;
+
+	    for(i = 0; i < 4 + derivation_length; i++)
+		g_printerr("elem: %s\n", args[i]);
+	
+	    dup2(pipefd[1], 1); /* Attach write-end to stdout */
+	    execvp("nix-store", args);
+	    _exit(1);
+	}
+    
+	if(status == -1)
+	{
+	    g_printerr("Error with forking nix-store process!\n");
+	    close(pipefd[0]);
+	    close(pipefd[1]);
+	    disnix_emit_failure_signal(params->object, pid);
+	}
+	else
+	{
+	    close(pipefd[1]); /* Close write-end of the pipe */
+	    
+	    wait(&status);
+	
+	    if(WEXITSTATUS(status) == 0)
+	    {
+		char line[BUFFER_SIZE];
+		ssize_t line_size;
+		gchar **missing_paths = NULL;
+		unsigned int missing_paths_size = 0;
+		
+		while((line_size = read(pipefd[0], line, sizeof(line))) > 0)
+		{
+		    line[line_size] = '\0';
+		    missing_paths = (gchar**)g_realloc(missing_paths, (missing_paths_size + 1) * sizeof(gchar*));
+		    missing_paths[missing_paths_size] = g_strdup(line);	    
+		    missing_paths_size++;
+		}
+		
+		/* Add NULL value to the end of the list */
+		missing_paths = (gchar**)g_realloc(missing_paths, (missing_paths_size + 1) * sizeof(gchar*));
+		missing_paths[missing_paths_size] = NULL;
+	
+		disnix_emit_success_signal(params->object, pid, missing_paths);
+		g_strfreev(missing_paths);
+	    }
+	    else
+		disnix_emit_failure_signal(params->object, pid);
+	    
+	    close(pipefd[0]);
+	}
+    }
     else
     {
-	int status;
-	
-	/* Read the output */
-	while(fgets(line, sizeof(line), fp) != NULL)
-	{
-	    puts(line);
-	    missing_paths = (gchar**)g_realloc(missing_paths, (missing_paths_size + 1) * sizeof(gchar*));
-	    missing_paths[missing_paths_size] = g_strdup(line);	    
-	    missing_paths_size++;
-	}
-	
-	/* Add NULL value to the end of the list */
-	missing_paths = (gchar**)g_realloc(missing_paths, (missing_paths_size + 1) * sizeof(gchar*));
-	missing_paths[missing_paths_size] = NULL;
-	
-	status = pclose(fp);
-	
-	if(status == -1 || WEXITSTATUS(status) != 0)
-	    disnix_emit_failure_signal(params->object, pid);
-	else
-	    disnix_emit_success_signal(params->object, pid, missing_paths);
+	fprintf(stderr, "Error with creating a pipe!\n");
+	disnix_emit_failure_signal(params->object, pid);
     }
-    
+        
     /* Free variables */
-    g_strfreev(missing_paths);
     g_free(derivations_string);
     g_free(params);
     g_free(cmd);    
