@@ -199,7 +199,7 @@ static void disnix_export_thread_func(gpointer data)
 	if(status == 0)
 	{
 	    unsigned int i, derivation_length = g_strv_length(derivation);
-	    char **args = (char**)g_malloc((3 + derivation_length) * sizeof(char));
+	    char **args = (char**)g_malloc((3 + derivation_length) * sizeof(char*));
 	
 	    args[0] = "nix-store";
 	    args[1] = "--export";
@@ -307,7 +307,7 @@ static void disnix_print_invalid_thread_func(gpointer data)
 	if(status == 0)
 	{
 	    unsigned int i, derivation_length = g_strv_length(derivation);
-	    char **args = (char**)g_malloc((4 + derivation_length) * sizeof(char));
+	    char **args = (char**)g_malloc((4 + derivation_length) * sizeof(char*));
 	    
 	    close(pipefd[0]); /* Close read-end of the pipe */
 	
@@ -320,9 +320,6 @@ static void disnix_print_invalid_thread_func(gpointer data)
 	    
 	    args[i + 3] = NULL;
 
-	    for(i = 0; i < 4 + derivation_length; i++)
-		g_printerr("elem: %s\n", args[i]);
-	
 	    dup2(pipefd[1], 1); /* Attach write-end to stdout */
 	    execvp("nix-store", args);
 	    _exit(1);
