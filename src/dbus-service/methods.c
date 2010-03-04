@@ -165,57 +165,87 @@ DisnixExportParams;
 static void disnix_export_thread_func(gpointer data)
 {
     /* Declarations */
-    gchar **derivation, *derivations_string, *cmd;
+    gchar **derivation, *derivations_string;
     gint pid;
-    FILE *fp;
     char line[BUFFER_SIZE];
-    char *tempfilename;
+    char tempfilename[19] = "/tmp/disnix.XXXXXX";
     DisnixExportParams *params;
+    int closure_fd;
     
     /* Import variables */
     params = (DisnixExportParams*)data;
     derivation = params->derivation;
     pid = params->pid;
 
-    /* Generate derivation strings */
+    /* Generate derivations string */
     derivations_string = generate_derivations_string(derivation, " ");
-    
-    /* Generate temp file name */
-    tempfilename = tempnam("/tmp", "disnix_");
     
     /* Print log entry */
     g_print("Exporting: %s\n", derivations_string);
     
     /* Execute command */
-    cmd = g_strconcat("nix-store --export ", derivations_string, " > ", tempfilename, NULL);
+        
+    closure_fd = mkstemp(tempfilename);
     
-    fp = popen(cmd, "r");
-    if(fp == NULL)
-	disnix_emit_failure_signal(params->object, pid); /* Something went wrong with forking the process */
+    if(closure_fd == -1)
+    {
+	g_printerr("Error opening tempfile!\n");
+	disnix_emit_failure_signal(params->object, pid);
+    }
     else
     {
-	int status;
+	int status = fork();
+    
+	if(status == 0)
+	{
+	    unsigned int count = 2;
+	    char **args = (char**)g_malloc(sizeof(char) * count);
 	
-	while(fgets(line, sizeof(line), fp) != NULL)
-	    puts(line);
+	    args[0] = "nix-store";
+	    args[1] = "--export";
 	
-	status = pclose(fp);
+	    while(derivation != NULL)
+	    {
+		args = (char**)g_realloc(args, sizeof(char) * count);
+		args[count] = *derivation;
+		derivation++;
+		count++;
+	    }
 	
-	if(status == -1 || WEXITSTATUS(status) != 0)
+	    args = (char**)g_realloc(args, sizeof(char) * count);
+	    args[count] = NULL;
+	
+	    dup2(closure_fd, 1);
+	    execvp("nix-store", args);
+	    _exit(1);
+	}
+	
+	if(status == -1)
+	{
+	    g_printerr("Error with forking nix-store process!\n");
 	    disnix_emit_failure_signal(params->object, pid);
+	}
 	else
 	{
-	    gchar *tempfilepaths[2];
-	    tempfilepaths[0] = tempfilename;
-	    tempfilepaths[1] = NULL;
-	    disnix_emit_success_signal(params->object, pid, tempfilepaths);
+	    wait(&status);
+	    
+	    if(WEXITSTATUS(status) == 0)
+	    {
+		gchar *tempfilepaths[2];
+		tempfilepaths[0] = tempfilename;
+		tempfilepaths[1] = NULL;
+		disnix_emit_success_signal(params->object, pid, tempfilepaths);
+	    }
+	    else
+		disnix_emit_failure_signal(params->object, pid);
 	}
+	
+	close(closure_fd);
     }
     
     /* Free variables */    
-    g_free(derivations_string);
     g_free(params);
-    g_free(cmd);
+    g_free(derivations_string);
     g_strfreev(derivation);
 }
 
