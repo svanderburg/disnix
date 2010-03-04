@@ -198,22 +198,16 @@ static void disnix_export_thread_func(gpointer data)
     
 	if(status == 0)
 	{
-	    unsigned int count = 2;
-	    char **args = (char**)g_malloc(sizeof(char) * count);
+	    unsigned int i, derivation_length = g_strv_length(derivation);
+	    char **args = (char**)g_malloc((3 + derivation_length) * sizeof(char));
 	
 	    args[0] = "nix-store";
 	    args[1] = "--export";
 	
-	    while(derivation != NULL)
-	    {
-		args = (char**)g_realloc(args, sizeof(char) * count);
-		args[count] = *derivation;
-		derivation++;
-		count++;
-	    }
+	    for(i = 0; i < derivation_length; i++)
+		args[i + 2] = derivation[i];
 	
-	    args = (char**)g_realloc(args, sizeof(char) * count);
-	    args[count] = NULL;
+	    args[i + 2] = NULL;
 	
 	    dup2(closure_fd, 1);
 	    execvp("nix-store", args);
