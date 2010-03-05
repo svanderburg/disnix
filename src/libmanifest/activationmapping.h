@@ -128,14 +128,14 @@ GArray *substract_activation_array(GArray *left, GArray *right);
 GArray *union_activation_array(GArray *left, GArray *right, GArray *intersect);
 
 /**
- * Generates a string with: 'name1='value1' name2='value2'...' from the
+ * Generates a string vector with: 'name=value' pairs from the
  * target properties, which are passed to the activation module as
  * environment variables.
  *
  * @param target Array with target properties
  * @return String with environment variable settings
  */
-gchar *generate_activation_arguments(GArray *target);
+gchar **generate_activation_arguments(GArray *target);
 
 /**
  * Returns the target interface property from the given

@@ -432,18 +432,15 @@ GArray *substract_activation_array(GArray *left, GArray *right)
 
 }
 
-gchar *generate_activation_arguments(GArray *target)
+gchar **generate_activation_arguments(GArray *target)
 {
     unsigned int i;
-    gchar *arguments = g_strdup("");
+    gchar **arguments = (gchar**)g_malloc(target->len * sizeof(gchar*));
     
     for(i = 0; i < target->len; i++)
     {
 	TargetProperty *target_property = g_array_index(target, TargetProperty*, i);
-	gchar *old_arguments = arguments;
-	
-	arguments = g_strconcat(old_arguments, target_property->name,"='", target_property->value, "' ", NULL);
-	g_free(old_arguments);	
+	arguments[i] = g_strconcat(target_property->name, "=", target_property->value, NULL);	
     }
     
     return arguments;

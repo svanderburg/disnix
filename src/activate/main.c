@@ -63,7 +63,7 @@ static int activate(GArray *union_list, ActivationMapping *mapping, gchar *inter
     /* Finally activate the service itself */
     if(!actual_mapping->activated)
     {
-	gchar *arguments = generate_activation_arguments(actual_mapping->target);
+	gchar **arguments = generate_activation_arguments(actual_mapping->target);
 	gchar *target_interface = get_target_interface(actual_mapping);
 	int status;
 	
@@ -74,12 +74,30 @@ static int activate(GArray *union_list, ActivationMapping *mapping, gchar *inter
 	
 	if(status == 0)
 	{
-	    char *args[] = {interface, "--activate", "--type", actual_mapping->type, "--arguments", arguments, "--target", target_interface, actual_mapping->service, NULL};
+	    unsigned int i, arguments_size = g_strv_length(arguments);
+	    char **args = (char**)g_malloc((8 + 2 * arguments_size) * sizeof(gchar*));
+	    
+	    args[0] = interface;
+	    args[1] = "--activate";
+	    args[2] = "--type";
+	    args[3] = actual_mapping->type;
+	    args[4] = "--target";
+	    args[5] = target_interface;
+	    
+	    for(i = 0; i < arguments_size * 2; i += 2)
+	    {
+		args[i + 6] = "--arguments";
+		args[i + 7] = arguments[i];
+	    }
+	    
+	    args[i + 6] = actual_mapping->service;
+	    args[i + 7] = NULL;
+
 	    execvp(interface, args);
-	    _exit(1);
+	    _exit(1);	    
 	}
 	
-	g_free(arguments);
+	g_strfreev(arguments);
 	
 	if(status == -1)
 	    return FALSE;
@@ -90,7 +108,7 @@ static int activate(GArray *union_list, ActivationMapping *mapping, gchar *inter
 	    if(WEXITSTATUS(status) != 0)
 		return FALSE;
 	}
-		
+	
 	actual_mapping->activated = TRUE;
     }
     
@@ -117,7 +135,7 @@ static int deactivate(GArray *union_list, ActivationMapping *mapping, gchar *int
     /* Finally deactivate the service itself */
     if(actual_mapping->activated)
     {
-	gchar *arguments = generate_activation_arguments(actual_mapping->target);
+	gchar **arguments = generate_activation_arguments(actual_mapping->target);
 	gchar *target_interface = get_target_interface(actual_mapping);
 	int status;
 	
@@ -128,7 +146,25 @@ static int deactivate(GArray *union_list, ActivationMapping *mapping, gchar *int
 	
 	if(status == 0)
 	{
-	    char *args[] = {interface, "--deactivate", "--type", actual_mapping->type, "--arguments", arguments, "--target", target_interface, actual_mapping->service, NULL};
+	    unsigned int i, arguments_size = g_strv_length(arguments);
+	    char **args = (char**)g_malloc((8 + 2 * arguments_size) * sizeof(gchar*));
+	    
+	    args[0] = interface;
+	    args[1] = "--deactivate";
+	    args[2] = "--type";
+	    args[3] = actual_mapping->type;
+	    args[4] = "--target";
+	    args[5] = target_interface;
+	    
+	    for(i = 0; i < arguments_size * 2; i += 2)
+	    {
+	    	args[i + 6] = "--arguments";
+		args[i + 7] = arguments[i];
+	    }
+	    
+	    args[i + 6] = actual_mapping->service;
+	    args[i + 7] = NULL;
+	    
 	    execvp(interface, args);
 	    _exit(1);
 	}
