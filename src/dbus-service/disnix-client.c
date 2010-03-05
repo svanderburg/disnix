@@ -264,6 +264,7 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
     /* Operation is finished */
     g_strfreev(derivation);
     g_strfreev(arguments);
+    
     return EXIT_FAILURE;
 }
 
@@ -301,7 +302,7 @@ int main(int argc, char *argv[])
     Operation operation = OP_NONE;
     char *target, *profile = "default", *type;
     gchar **derivation = NULL, **arguments = NULL;
-    unsigned int derivation_size = 0;
+    unsigned int derivation_size = 0, arguments_size = 0;
     int localfile = FALSE, remotefile = TRUE;
     int delete_old = FALSE, session_bus = FALSE;
     
@@ -367,7 +368,9 @@ int main(int argc, char *argv[])
 		type = optarg;
 		break;
 	    case 'a':
-		arguments = g_strsplit(optarg, " ", 0);
+		arguments = (gchar**)g_realloc(arguments, (arguments_size + 1) * sizeof(gchar*));
+		arguments[arguments_size] = g_strdup(optarg);
+		arguments_size++;
 		break;
 	    case 'b':
 		session_bus = TRUE;

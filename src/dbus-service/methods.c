@@ -973,12 +973,12 @@ DisnixActivateParams;
 static void disnix_activate_thread_func(gpointer data)
 {
     /* Declarations */
-    gchar *derivation, *type, **arguments, *arguments_string, *cmd;
+    gchar *derivation, *type, **arguments, *arguments_string;
     gint pid;
-    FILE *fp;
     char line[BUFFER_SIZE];
     DisnixActivateParams *params;
-
+    int status;
+        
     /* Import variables */
     params = (DisnixActivateParams*)data;
     derivation = params->derivation;
@@ -994,34 +994,46 @@ static void disnix_activate_thread_func(gpointer data)
     
     /* Execute command */
 
-    cmd = g_strconcat("env ", arguments_string, " ", activation_modules_dir, "/", type, " activate ", derivation, NULL);
+    status = fork();
     
-    fp = popen(cmd, "r");
-    if(fp == NULL)
-        disnix_emit_failure_signal(params->object, pid); /* Something went wrong with forking the process */
+    if(status == 0)
+    {
+	unsigned int i;
+	gchar *cmd = g_strconcat(activation_modules_dir, "/", type, NULL);
+	char *args[] = {cmd, "activate", derivation, NULL};
+	
+	for(i = 0; i < g_strv_length(arguments); i++)
+	{
+	    gchar **name_value_pair = g_strsplit(arguments[i], "=", 2);	    
+	    setenv(name_value_pair[0], name_value_pair[1], FALSE);
+	    g_strfreev(name_value_pair);
+	}
+	
+	execvp(cmd, args);
+	_exit(1);
+    }
+    
+    if(status == -1)
+    {
+	g_printerr("Error forking activation process!\n");
+	disnix_emit_failure_signal(params->object, pid);
+    }
     else
     {
-	int status;
+	wait(&status);
 	
-        /* Read the output */
-        while(fgets(line, sizeof(line), fp) != NULL)
-    	    puts(line);
-	
-	status = pclose(fp);
-	
-	if(status == -1 || WEXITSTATUS(status) != 0)
-	    disnix_emit_failure_signal(params->object, pid);
-	else
+	if(WEXITSTATUS(status) == 0)
 	    disnix_emit_finish_signal(params->object, pid);
+	else
+	    disnix_emit_failure_signal(params->object, pid);
     }
-
+    
     /* Free variables */
     g_free(derivation);
     g_free(type);
     g_free(arguments_string);
     g_strfreev(arguments);
     g_free(params);
-    g_free(cmd);
 }
 
 gboolean disnix_activate(DisnixObject *object, const gchar *derivation, const gchar *type, gchar **arguments, gint *pid, GError **error)
@@ -1067,14 +1079,14 @@ DisnixDeactivateParams;
 static void disnix_deactivate_thread_func(gpointer data)
 {
     /* Declarations */
-    gchar *derivation, *type, **arguments, *arguments_string, *cmd;
+    gchar *derivation, *type, **arguments, *arguments_string;
     gint pid;
-    FILE *fp;
     char line[BUFFER_SIZE];
-    DisnixDeactivateParams *params;
-
+    DisnixActivateParams *params;
+    int status;
+        
     /* Import variables */
-    params = (DisnixDeactivateParams*)data;
+    params = (DisnixActivateParams*)data;
     derivation = params->derivation;
     type = params->type;
     arguments = params->arguments;
@@ -1088,34 +1100,46 @@ static void disnix_deactivate_thread_func(gpointer data)
     
     /* Execute command */
 
-    cmd = g_strconcat("env ", arguments_string, " ", activation_modules_dir, "/", type, " deactivate ", derivation, NULL);
+    status = fork();
     
-    fp = popen(cmd, "r");
-    if(fp == NULL)
-        disnix_emit_failure_signal(params->object, pid); /* Something went wrong with forking the process */
+    if(status == 0)
+    {
+	unsigned int i;
+	gchar *cmd = g_strconcat(activation_modules_dir, "/", type, NULL);
+	char *args[] = {cmd, "deactivate", derivation, NULL};
+	
+	for(i = 0; i < g_strv_length(arguments); i++)
+	{
+	    gchar **name_value_pair = g_strsplit(arguments[i], "=", 2);	    
+	    setenv(name_value_pair[0], name_value_pair[1], FALSE);
+	    g_strfreev(name_value_pair);
+	}
+	
+	execvp(cmd, args);
+	_exit(1);
+    }
+    
+    if(status == -1)
+    {
+	g_printerr("Error forking deactivation process!\n");
+	disnix_emit_failure_signal(params->object, pid);
+    }
     else
     {
-	int status;
+	wait(&status);
 	
-        /* Read the output */
-        while(fgets(line, sizeof(line), fp) != NULL)
-    	    puts(line);
-	
-	status = pclose(fp);
-	
-	if(status == -1 || WEXITSTATUS(status) != 0)
-	    disnix_emit_failure_signal(params->object, pid);
-	else
+	if(WEXITSTATUS(status) == 0)
 	    disnix_emit_finish_signal(params->object, pid);
+	else
+	    disnix_emit_failure_signal(params->object, pid);
     }
-
+    
     /* Free variables */
     g_free(derivation);
     g_free(type);
     g_free(arguments_string);
     g_strfreev(arguments);
     g_free(params);
-    g_free(cmd);
 }
 
 gboolean disnix_deactivate(DisnixObject *object, const gchar *derivation, const gchar *type, gchar **arguments, gint *pid, GError **error)
