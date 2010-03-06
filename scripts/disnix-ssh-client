@@ -113,7 +113,7 @@ do
 	    type=$2
 	    ;;
 	--arguments)
-	    argsArg="--arguments \"$2\""
+	    argsArg="$argsArg --arguments \"$2\""
 	    ;;
 	-h|--help)
 	    showUsage
