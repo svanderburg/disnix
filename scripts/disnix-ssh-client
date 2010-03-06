@@ -155,8 +155,8 @@ case "$operation" in
 	# A localfile must first be transferred
 	if [ "$localfile" != "" ]
 	then
-	    scp -P $targetPort $SSH_OPTS "$@" $targetHostname:/tmp/out.closure # Preferably we should use mktemp for the filename
-	    remotefile=/tmp/out.closure
+	    remotefile=`ssh -p $targetPort $SSH_OPTS $targetHostname mktemp -p /tmp`
+	    scp -P $targetPort $SSH_OPTS "$@" $targetHostname:$remotefile
 	fi
 	
 	# Import the closure into the Nix store
