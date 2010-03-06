@@ -435,13 +435,15 @@ GArray *substract_activation_array(GArray *left, GArray *right)
 gchar **generate_activation_arguments(GArray *target)
 {
     unsigned int i;
-    gchar **arguments = (gchar**)g_malloc(target->len * sizeof(gchar*));
+    gchar **arguments = (gchar**)g_malloc((target->len + 1) * sizeof(gchar*));
     
     for(i = 0; i < target->len; i++)
     {
 	TargetProperty *target_property = g_array_index(target, TargetProperty*, i);
 	arguments[i] = g_strconcat(target_property->name, "=", target_property->value, NULL);	
     }
+    
+    arguments[i] = NULL;
     
     return arguments;
 }
