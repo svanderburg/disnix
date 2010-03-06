@@ -334,37 +334,36 @@ static void disnix_print_invalid_thread_func(gpointer data)
 	}
 	else
 	{
+	    char line[BUFFER_SIZE];
+	    ssize_t line_size;
+	    gchar **missing_paths = NULL;
+	    unsigned int missing_paths_size = 0;
+
 	    close(pipefd[1]); /* Close write-end of the pipe */
+	    	
+	    while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
+	    {
+	        line[line_size] = '\0';
+	        puts(line);
+	        missing_paths = (gchar**)g_realloc(missing_paths, (missing_paths_size + 1) * sizeof(gchar*));
+	        missing_paths[missing_paths_size] = g_strdup(line);	    
+	        missing_paths_size++;
+	    }
+		
+	    /* Add NULL value to the end of the list */
+	    missing_paths = (gchar**)g_realloc(missing_paths, (missing_paths_size + 1) * sizeof(gchar*));
+	    missing_paths[missing_paths_size] = NULL;
+	
+	    close(pipefd[0]);
 	    
 	    wait(&status);
 	
 	    if(WEXITSTATUS(status) == 0)
-	    {
-		char line[BUFFER_SIZE];
-		ssize_t line_size;
-		gchar **missing_paths = NULL;
-		unsigned int missing_paths_size = 0;
-		
-		while((line_size = read(pipefd[0], line, sizeof(line))) > 0)
-		{
-		    line[line_size] = '\0';
-		    puts(line);
-		    missing_paths = (gchar**)g_realloc(missing_paths, (missing_paths_size + 1) * sizeof(gchar*));
-		    missing_paths[missing_paths_size] = g_strdup(line);	    
-		    missing_paths_size++;
-		}
-		
-		/* Add NULL value to the end of the list */
-		missing_paths = (gchar**)g_realloc(missing_paths, (missing_paths_size + 1) * sizeof(gchar*));
-		missing_paths[missing_paths_size] = NULL;
-	
 		disnix_emit_success_signal(params->object, pid, missing_paths);
-		g_strfreev(missing_paths);
-	    }
 	    else
 		disnix_emit_failure_signal(params->object, pid);
 	    
-	    close(pipefd[0]);
+	    g_strfreev(missing_paths);
 	}
     }
     else
@@ -467,37 +466,35 @@ static void disnix_realise_thread_func(gpointer data)
 	}
 	else
 	{
+	    char line[BUFFER_SIZE];
+	    ssize_t line_size;
+	    gchar **realised = NULL;
+	    unsigned int realised_size = 0;
+	
 	    close(pipefd[1]); /* Close write-end of pipe */
+	    
+	    while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
+	    {
+	        line[line_size] = '\0';
+	        realised = (gchar**)g_realloc(realised, (realised_size + 1) * sizeof(gchar*));
+	        realised[realised_size] = g_strdup(line);
+	        realised_size++;
+	    }
+
+	    realised = (gchar**)g_realloc(realised, (realised_size + 1) * sizeof(gchar*));
+	    realised[realised_size] = NULL;
+	    realised_size++;
+	
+	    close(pipefd[0]);
 	    
 	    wait(&status);
 	    
 	    if(WEXITSTATUS(status) == 0)
-	    {
-		char line[BUFFER_SIZE];
-		ssize_t line_size;
-		gchar **realised = NULL;
-		unsigned int realised_size = 0;
-		
-		while((line_size = read(pipefd[0], line, sizeof(line))) > 0)
-		{
-		    line[line_size] = '\0';
-		    realised = (gchar**)g_realloc(realised, (realised_size + 1) * sizeof(gchar*));
-		    realised[realised_size] = g_strdup(line);
-		    realised_size++;
-		}
-
-		realised = (gchar**)g_realloc(realised, (realised_size + 1) * sizeof(gchar*));
-		realised[realised_size] = NULL;
-		realised_size++;
-		
 		disnix_emit_success_signal(params->object, pid, realised);
-		
-		g_strfreev(realised);
-	    }
 	    else
 		disnix_emit_failure_signal(params->object, pid);
 	    
-	    close(pipefd[0]);
+	    g_strfreev(realised);
 	}
     }
     else
@@ -790,37 +787,35 @@ static void disnix_query_requisites_thread_func(gpointer data)
 	}
 	else
 	{
+	    char line[BUFFER_SIZE];
+	    ssize_t line_size;
+	    gchar **requisites = NULL;
+	    unsigned int requisites_size = 0;
+
 	    close(pipefd[1]); /* Close write-end of pipe */
+	    	
+	    while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
+	    {
+	        line[line_size] = '\0';
+	        requisites = (gchar**)g_realloc(requisites, (requisites_size + 1) * sizeof(gchar*));
+	        requisites[requisites_size] = g_strdup(line);
+	        requisites_size++;
+	    }
+		
+	    /* Add NULL value to the end of the list */
+	    requisites = (gchar**)g_realloc(requisites, (requisites_size + 1) * sizeof(gchar*));
+	    requisites[requisites_size] = NULL;
 	    
+	    close(pipefd[0]);
+
 	    wait(&status);
 	    
 	    if(WEXITSTATUS(status) == 0)
-	    {
-		char line[BUFFER_SIZE];
-		ssize_t line_size;
-		gchar **requisites = NULL;
-		unsigned int requisites_size = 0;
-		
-		while((line_size = read(pipefd[0], line, 1)) > 0)
-		{
-		    line[line_size] = '\0';
-		    requisites = (gchar**)g_realloc(requisites, (requisites_size + 1) * sizeof(gchar*));
-		    requisites[requisites_size] = g_strdup(line);
-		    requisites_size++;
-		}
-		
-		/* Add NULL value to the end of the list */
-		requisites = (gchar**)g_realloc(requisites, (requisites_size + 1) * sizeof(gchar*));
-		requisites[requisites_size] = NULL;
-		
 		disnix_emit_success_signal(params->object, pid, requisites);
-		
-		g_strfreev(requisites);
-	    }
 	    else
 		disnix_emit_failure_signal(params->object, pid);
-		
-	    close(pipefd[0]);
+	
+	    g_strfreev(requisites);
 	}
     }
     else

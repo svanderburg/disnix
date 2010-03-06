@@ -101,33 +101,31 @@ static gchar *create_infrastructure_xml(char *infrastructure_expr)
 	else
 	{
 	    gchar *infrastructureXML = g_strdup("");
+	    ssize_t line_size;
+	    char line[BUFFER_SIZE];
 	    
 	    close(pipefd[1]); /* Close write-end of pipe */
+		
+	    while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
+	    {
+	        line[line_size] = '\0';
+	        gchar *old_infrastructureXML = infrastructureXML;
+		infrastructureXML = g_strconcat(old_infrastructureXML, line, NULL);
+		g_free(old_infrastructureXML);
+	    }
+	    
+	    close(pipefd[0]);
 	    
 	    wait(&status);
 
 	    if(WEXITSTATUS(status) == 0)
-	    {
-		ssize_t line_size;
-		char line[BUFFER_SIZE];
-		
-		while((line_size = read(pipefd[0], line, sizeof(line))) > 0)
-		{
-		    line[line_size] = '\0';
-		    gchar *old_infrastructureXML = infrastructureXML;
-		    infrastructureXML = g_strconcat(old_infrastructureXML, line, NULL);
-		    g_free(old_infrastructureXML);
-		}
-	    }
+		return infrastructureXML;
 	    else
 	    {
 		fprintf(stderr, "Error with executing nix-instantiate!\n");
+		g_free(infrastructureXML);
 		return NULL;
 	    }
-	    	
-	    close(pipefd[0]);
-	    
-	    return infrastructureXML;
 	}    
     }
     else

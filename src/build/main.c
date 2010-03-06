@@ -183,6 +183,32 @@ int main(int argc, char *argv[])
 		    fprintf(stderr, "Error in creating a pipe!\n");
 	    }
 	    
+	    result_array = g_array_new(FALSE, FALSE, sizeof(gchar*));
+		
+	    /* Capture the output (Nix store components) of every realise process */
+	    
+	    for(i = 0; i < output_array->len; i++)
+	    {
+		char line[BUFFER_SIZE];
+		int pipefd = g_array_index(output_array, int, i);
+		ssize_t line_size;
+		    
+		while((line_size = read(pipefd, line, sizeof(line))) > 0)
+		{
+		    line[line_size] = '\0';
+		    puts(line);
+		    
+		    if(g_strcmp0(line, "\n") != 0)
+		    {
+		    	gchar *result;
+		    	result = g_strdup(line);
+		        g_array_append_val(result_array, result);
+		    }
+	        }		    		    
+		
+	        close(pipefd);
+	    }
+
 	    /* Check statusses of the running processes */
 	    for(i = 0; i < running_processes; i++)
 	    {
@@ -195,33 +221,7 @@ int main(int argc, char *argv[])
 	    }
 	    
 	    if(exit_status == 0)
-	    {
-		result_array = g_array_new(FALSE, FALSE, sizeof(gchar*));
-		
-		/* Capture the output (Nix store components) of every realise process */
-	    
-		for(i = 0; i < output_array->len; i++)
-		{
-		    char line[BUFFER_SIZE];
-		    int pipefd = g_array_index(output_array, int, i);
-		    ssize_t line_size;
-		    
-		    while((line_size = read(pipefd, line, sizeof(line))) > 0)
-		    {
-			line[line_size] = '\0';
-			puts(line);
-		    
-			if(g_strcmp0(line, "\n") != 0)
-			{
-		    	    gchar *result;
-		    	    result = g_strdup(line);
-		    	    g_array_append_val(result_array, result);
-			}
-		    }		    		    
-		
-		    close(pipefd);
-		}
-	    	
+	    {	    	
 		/* Retrieve back the realised closures and import them into the Nix store of the host */
     
 		for(i = 0; i < derivation_array->len; i++)
@@ -265,22 +265,12 @@ int main(int argc, char *argv[])
 			    return WEXITSTATUS(status);
 			}
 		    }		    		    
-		}
-		
-		delete_result_array(result_array);
-	    }
-	    else
-	    {
-		/* Close all open file descriptors */
-		for(i = 0; i < output_array->len; i++)
-		{
-		    int pipefd = g_array_index(output_array, int, i);
-		    close(pipefd);
-		}
+		}	
 	    }
 	
-	    /* Cleanup */	
-	    g_array_free(output_array, TRUE);	    
+	    /* Cleanup */
+	    g_array_free(output_array, TRUE);
+	    delete_result_array(result_array);
 	    delete_derivation_array(derivation_array);
 	    
 	    return exit_status;
