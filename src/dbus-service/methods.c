@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -54,6 +55,66 @@ static gint *generate_int_key(gint *key)
     gint *ret = (gint*)g_malloc(sizeof(gint));
     *ret = *key;
     return ret;
+}
+
+gchar **update_lines_vector(gchar **lines, char *buf)
+{
+    unsigned int lines_length;
+    gchar **additional_lines = g_strsplit(buf, "\n", 0); /* Split the buffer by newlines */
+    unsigned int additional_lines_length = g_strv_length(additional_lines);
+    unsigned int i;
+    
+    if(lines == NULL)
+    {
+	lines = (gchar**)g_malloc(sizeof(gchar*));
+	lines[0] = NULL;
+	lines_length = 0;
+    }
+    else
+	lines_length = g_strv_length(lines);
+    
+    if(lines_length == 0)
+    {
+	lines = (gchar**)g_realloc(lines, (additional_lines_length + 1) * sizeof(gchar*));
+	lines[0] = additional_lines[0];
+    }
+    else if(strlen(lines[lines_length - 1]) > 0 && lines[lines_length - 1][strlen(lines[lines_length - 1]) - 1] == '\n')
+    {
+	/* Increase length */
+	lines_length++;
+	
+	/* Increase the allocated memory */
+	lines = (gchar**)g_realloc(lines, (lines_length + additional_lines_length + 1) * sizeof(gchar*));
+	
+	/* Add first additional line to the end */ 
+	lines[lines_length - 1] = additional_lines[0];
+    }
+    else
+    {
+        gchar *old_last_line, *new_last_line;
+	
+        /** Increase the allocated memory */
+        lines = (gchar**)g_realloc(lines, (lines_length + additional_lines_length + 1) * sizeof(gchar*));
+    
+        /* Append first addtional line to the end of the last line */
+        old_last_line = lines[lines_length - 1];
+        new_last_line = g_strconcat(old_last_line, additional_lines[0], NULL);
+        lines[lines_length - 1] = new_last_line;
+        g_free(old_last_line);
+        g_free(additional_lines[0]);
+    }
+    
+    /* Add the other additional lines to the end of the lines vector */
+    for(i = 1; i < additional_lines_length; i++)
+        lines[lines_length + i] = additional_lines[i];
+    
+    /* Add NULL termination */
+    lines[lines_length + additional_lines_length] = NULL;
+    
+    /* Clean up additional lines vector */
+    g_free(additional_lines);
+    
+    return lines;
 }
 
 /* Import method */
@@ -338,22 +399,19 @@ static void disnix_print_invalid_thread_func(gpointer data)
 	    ssize_t line_size;
 	    gchar **missing_paths = NULL;
 	    unsigned int missing_paths_size = 0;
-
+	    
 	    close(pipefd[1]); /* Close write-end of the pipe */
 	    	
 	    while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
 	    {
 	        line[line_size] = '\0';
-	        puts(line);
-	        missing_paths = (gchar**)g_realloc(missing_paths, (missing_paths_size + 1) * sizeof(gchar*));
-	        missing_paths[missing_paths_size] = g_strdup(line);	    
-	        missing_paths_size++;
+	        g_print("%s", line);
+				
+		missing_paths = update_lines_vector(missing_paths, line);		
 	    }
-		
-	    /* Add NULL value to the end of the list */
-	    missing_paths = (gchar**)g_realloc(missing_paths, (missing_paths_size + 1) * sizeof(gchar*));
-	    missing_paths[missing_paths_size] = NULL;
 	
+	    g_print("\n");
+	    
 	    close(pipefd[0]);
 	    
 	    wait(&status);
@@ -476,15 +534,12 @@ static void disnix_realise_thread_func(gpointer data)
 	    while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
 	    {
 	        line[line_size] = '\0';
-	        realised = (gchar**)g_realloc(realised, (realised_size + 1) * sizeof(gchar*));
-	        realised[realised_size] = g_strdup(line);
-	        realised_size++;
+		g_print("%s", line);
+		realised = update_lines_vector(realised, line);
 	    }
 
-	    realised = (gchar**)g_realloc(realised, (realised_size + 1) * sizeof(gchar*));
-	    realised[realised_size] = NULL;
-	    realised_size++;
-	
+	    g_print("\n");
+	    
 	    close(pipefd[0]);
 	    
 	    wait(&status);
@@ -797,14 +852,11 @@ static void disnix_query_requisites_thread_func(gpointer data)
 	    while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
 	    {
 	        line[line_size] = '\0';
-	        requisites = (gchar**)g_realloc(requisites, (requisites_size + 1) * sizeof(gchar*));
-	        requisites[requisites_size] = g_strdup(line);
-	        requisites_size++;
+		g_print("%s", line);
+		requisites = update_lines_vector(requisites, line);
 	    }
 		
-	    /* Add NULL value to the end of the list */
-	    requisites = (gchar**)g_realloc(requisites, (requisites_size + 1) * sizeof(gchar*));
-	    requisites[requisites_size] = NULL;
+	    g_print("\n");
 	    
 	    close(pipefd[0]);
 

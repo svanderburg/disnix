@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
 		int pipefd = g_array_index(output_array, int, i);
 		ssize_t line_size;
 		    
-		while((line_size = read(pipefd, line, sizeof(line))) > 0)
+		while((line_size = read(pipefd, line, BUFFER_SIZE - 1)) > 0)
 		{
 		    line[line_size] = '\0';
 		    puts(line);
