@@ -145,9 +145,6 @@ int start_disnix_service(char *activation_modules_dir_arg, char *lock_manager_ar
     /* Initialize the GType/GObject system */
     g_type_init();
 
-    /* Initialize GLib thread system */
-    g_thread_init(NULL);
-    
     /* Add the server parameters to the global variables */
     activation_modules_dir = activation_modules_dir_arg;
     lock_manager = lock_manager_arg;
