@@ -1,7 +1,8 @@
 AM_CPPFLAGS=-ggdb
 
-noinst_LIBRARIES = libmanifest.a
+pkglib_LTLIBRARIES = libmanifest.la
 noinst_HEADERS = activationmapping.h distributionmapping.h
 
-libmanifest_a_SOURCES = activationmapping.c distributionmapping.c
-libmanifest_a_CFLAGS = $(LIBXML2_CFLAGS) -I../libxmlutil
+libmanifest_la_SOURCES = activationmapping.c distributionmapping.c
+libmanifest_la_CFLAGS = $(LIBXML2_CFLAGS) -I../libxmlutil
+libmanifest_la_LIBADD = ../libxmlutil/libxmlutil.la

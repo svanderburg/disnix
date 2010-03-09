@@ -1,7 +1,7 @@
 AM_CPPFLAGS=-ggdb
 
-noinst_LIBRARIES = libxmlutil.a
+pkglib_LTLIBRARIES = libxmlutil.la
 noinst_HEADERS = xmlutil.h
 
-libxmlutil_a_SOURCES = xmlutil.c
-libxmlutil_a_CFLAGS = $(LIBXML2_CFLAGS)
+libxmlutil_la_SOURCES = xmlutil.c
+libxmlutil_la_CFLAGS = $(LIBXML2_CFLAGS)
