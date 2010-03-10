@@ -197,46 +197,50 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
     dbus_g_proxy_connect_signal(remote_object, "success", G_CALLBACK(disnix_success_signal_handler), &pid, NULL);
     dbus_g_proxy_connect_signal(remote_object, "failure", G_CALLBACK(disnix_failure_signal_handler), &pid, NULL);
 
+    /* Receive a PID for the job we want to execute */
+    org_nixos_disnix_Disnix_get_job_id(remote_object, &pid, &error);
+    g_printerr("Assigned PID: %d\n", pid);
+
     /* Execute operation */
     g_printerr("Executing operation.\n");
     
     switch(operation)
     {
 	case OP_IMPORT:
-	    org_nixos_disnix_Disnix_import(remote_object, derivation[0], &pid, &error);
+	    org_nixos_disnix_Disnix_import(remote_object, pid, derivation[0], &error);
 	    break;
 	case OP_EXPORT:
-	    org_nixos_disnix_Disnix_export(remote_object, (const gchar**) derivation, &pid, &error);
+	    org_nixos_disnix_Disnix_export(remote_object, pid, (const gchar**) derivation, &error);
 	    break;
 	case OP_PRINT_INVALID:
-	    org_nixos_disnix_Disnix_print_invalid(remote_object, (const gchar**) derivation, &pid, &error);
+	    org_nixos_disnix_Disnix_print_invalid(remote_object, pid, (const gchar**) derivation, &error);
 	    break;
 	case OP_REALISE:
-	    org_nixos_disnix_Disnix_realise(remote_object, (const gchar**) derivation, &pid, &error);
+	    org_nixos_disnix_Disnix_realise(remote_object, pid, (const gchar**) derivation, &error);
 	    break;
 	case OP_SET:
-	    org_nixos_disnix_Disnix_set(remote_object, profile, derivation[0], &pid, &error);
+	    org_nixos_disnix_Disnix_set(remote_object, pid, profile, derivation[0], &error);
 	    break;
 	case OP_QUERY_INSTALLED:
-	    org_nixos_disnix_Disnix_query_installed(remote_object, profile, &pid, &error);
+	    org_nixos_disnix_Disnix_query_installed(remote_object, pid, profile, &error);
 	    break;
 	case OP_QUERY_REQUISITES:
-	    org_nixos_disnix_Disnix_query_requisites(remote_object, (const gchar**) derivation, &pid, &error);
+	    org_nixos_disnix_Disnix_query_requisites(remote_object, pid, (const gchar**) derivation, &error);
 	    break;
 	case OP_COLLECT_GARBAGE:
-	    org_nixos_disnix_Disnix_collect_garbage(remote_object, delete_old, &pid, &error);
+	    org_nixos_disnix_Disnix_collect_garbage(remote_object, pid, delete_old, &error);
 	    break;
 	case OP_ACTIVATE:
-	    org_nixos_disnix_Disnix_activate(remote_object, derivation[0], type, (const gchar**) arguments, &pid, &error);
+	    org_nixos_disnix_Disnix_activate(remote_object, pid, derivation[0], type, (const gchar**) arguments, &error);
 	    break;
 	case OP_DEACTIVATE:
-	    org_nixos_disnix_Disnix_deactivate(remote_object, derivation[0], type, (const gchar**) arguments, &pid, &error);
+	    org_nixos_disnix_Disnix_deactivate(remote_object, pid, derivation[0], type, (const gchar**) arguments, &error);
 	    break;
 	case OP_LOCK:
-	    org_nixos_disnix_Disnix_lock(remote_object, &pid, &error);
+	    org_nixos_disnix_Disnix_lock(remote_object, pid, &error);
 	    break;
 	case OP_UNLOCK:
-	    org_nixos_disnix_Disnix_unlock(remote_object, &pid, &error);
+	    org_nixos_disnix_Disnix_unlock(remote_object, pid, &error);
 	    break;
 	case OP_NONE:
 	    g_printerr("ERROR: No operation specified!\n");	    
@@ -246,17 +250,13 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
 	    return 1;
     }
 
-    if (error != NULL) 
+    if(error != NULL) 
     {
         g_printerr("Error while executing the operation! Reason: %s\n", error->message);
 	g_strfreev(derivation);
 	g_strfreev(arguments);
 	return 1;
     }
-    
-    /* Acknowledge the received PID so that the job will start */
-    g_printerr("Acknowledging PID: %d\n", pid);
-    org_nixos_disnix_Disnix_acknowledge(remote_object, pid, &error);
     
     /* Run loop and wait for signals */
     g_main_loop_run(mainloop);

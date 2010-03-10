@@ -22,30 +22,30 @@
 #include <glib.h>
 #include "disnix-instance.h"
 
-gboolean disnix_acknowledge(DisnixObject *object, gint pid, GError **error);
+gboolean disnix_get_job_id(DisnixObject *object, gint *pid, GError **error);
 
-gboolean disnix_import(DisnixObject *object, gchar *closure, gint *pid, GError **error);
+gboolean disnix_import(DisnixObject *object, const gint pid, gchar *closure, GError **error);
 
-gboolean disnix_export(DisnixObject *object, gchar **derivation, gint *pid, GError **error);
+gboolean disnix_export(DisnixObject *object, const gint pid, gchar **derivation, GError **error);
 
-gboolean disnix_print_invalid(DisnixObject *object, gchar **derivation, gint *pid, GError **error);
+gboolean disnix_print_invalid(DisnixObject *object, const gint pid, gchar **derivation, GError **error);
 
-gboolean disnix_realise(DisnixObject *object, gchar **derivation, gint *pid, GError **error);
+gboolean disnix_realise(DisnixObject *object, const gint pid, gchar **derivation, GError **error);
 
-gboolean disnix_set(DisnixObject *object, const gchar *profile, const gchar *derivation, gint *pid, GError **error);
+gboolean disnix_set(DisnixObject *object, const gint pid, const gchar *profile, gchar *derivation, GError **error);
 
-gboolean disnix_query_installed(DisnixObject *object, const gchar *profile, gint *pid, GError **error);
+gboolean disnix_query_installed(DisnixObject *object, const gint pid, const gchar *profile, GError **error);
 
-gboolean disnix_query_requisites(DisnixObject *object, gchar **derivation, gint *pid, GError **error);
+gboolean disnix_query_requisites(DisnixObject *object, const gint pid, gchar **derivation, GError **error);
 
-gboolean disnix_collect_garbage(DisnixObject *object, const gboolean delete_old, gint *pid, GError **error);
+gboolean disnix_collect_garbage(DisnixObject *object, const gint pid, const gboolean delete_old, GError **error);
 
-gboolean disnix_activate(DisnixObject *object, const gchar *derivation, const gchar *type, gchar **arguments, gint *pid, GError **error);
+gboolean disnix_activate(DisnixObject *object, const gint pid, gchar *derivation, const gchar *type, gchar **arguments, GError **error);
 
-gboolean disnix_deactivate(DisnixObject *object, const gchar *derivation, const gchar *type, gchar **arguments, gint *pid, GError **error);
+gboolean disnix_deactivate(DisnixObject *object, const gint pid, gchar *derivation, const gchar *type, gchar **arguments, GError **error);
 
-gboolean disnix_lock(DisnixObject *object, gint *pid, GError **error);
+gboolean disnix_lock(DisnixObject *object, const gint pid, GError **error);
 
-gboolean disnix_unlock(DisnixObject *object, gint *pid, GError **error);
+gboolean disnix_unlock(DisnixObject *object, const gint pid, GError **error);
 
 #endif

@@ -26,12 +26,9 @@
 #include <sys/wait.h>
 #include <glib.h>
 #include "signals.h"
-#include "job.h"
 #define BUFFER_SIZE 1024
 
 extern char *activation_modules_dir;
-
-extern GHashTable *job_table;
 
 static int job_counter = 0;
 
@@ -119,38 +116,21 @@ gchar **update_lines_vector(gchar **lines, char *buf)
 
 /* Import method */
 
-typedef struct
-{
-    gchar *closure;
-    gint pid;
-    DisnixObject *object;
-}
-DisnixImportParams;
-
-static void disnix_import_thread_func(gpointer data)
+static void disnix_import_thread_func(DisnixObject *object, const gint pid, gchar *closure)
 {
     /* Declarations */
-    gchar *closure;
-    gint pid;
-    DisnixImportParams *params;
     int closure_fd;
     
-    /* Import variables */
-    params = (DisnixImportParams*)data;
-    closure = params->closure;
-    pid = params->pid;
-
     /* Print log entry */
     g_print("Importing: %s\n", closure);
     
     /* Execute command */
-    
     closure_fd = open(closure, O_RDONLY);
     
     if(closure_fd == -1)
     {
 	g_printerr("Cannot open closure file!\n");
-	disnix_emit_failure_signal(params->object, pid);
+	disnix_emit_failure_signal(object, pid);
     }
     else
     {
@@ -167,77 +147,46 @@ static void disnix_import_thread_func(gpointer data)
 	if(status == -1)
 	{
 	    g_printerr("Error with forking nix-store process!\n");
-	    disnix_emit_failure_signal(params->object, pid);
+	    disnix_emit_failure_signal(object, pid);
 	}
 	else
 	{
 	    wait(&status);
 	
 	    if(WEXITSTATUS(status) == 0)
-		disnix_emit_finish_signal(params->object, pid);
+		disnix_emit_finish_signal(object, pid);
 	    else
-		disnix_emit_failure_signal(params->object, pid);
+		disnix_emit_failure_signal(object, pid);
 	}
     
 	close(closure_fd);
     }
-        
-    /* Free variables */
-    g_free(params);
-    g_free(closure);
+    
+    _exit(0);
 }
 
-gboolean disnix_import(DisnixObject *object, gchar *closure, gint *pid, GError **error)
+gboolean disnix_import(DisnixObject *object, const gint pid, gchar *closure, GError **error)
 {
-    /* Declarations */
-    DisnixImportParams *params;
-    Job *job;
-    
     /* State object should not be NULL */
     g_assert(object != NULL);
-
-    /* Generate process id */    
-    object->pid = job_counter++;
-    *pid = object->pid;
     
-    /* Create parameter struct */
-    params = (DisnixImportParams*)g_malloc(sizeof(DisnixImportParams));
-    params->closure = g_strdup(closure);
-    params->pid = object->pid;
-    params->object = object;
-    
-    /* Add this call to the job table */
-    job = new_job(OP_IMPORT, params, error);
-    g_hash_table_insert(job_table, generate_int_key(pid), job);    
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+	disnix_import_thread_func(object, pid, closure);
     
     return TRUE;
 }
 
 /* Export method */
 
-typedef struct
-{
-    gchar **derivation;
-    gint pid;
-    DisnixObject *object;
-}
-DisnixExportParams;
-
-static void disnix_export_thread_func(gpointer data)
+static void disnix_export_thread_func(DisnixObject *object, const gint pid, gchar **derivation)
 {
     /* Declarations */
-    gchar **derivation, *derivations_string;
-    gint pid;
+    gchar *derivations_string;
     char line[BUFFER_SIZE];
     char tempfilename[19] = "/tmp/disnix.XXXXXX";
-    DisnixExportParams *params;
     int closure_fd;
     
-    /* Import variables */
-    params = (DisnixExportParams*)data;
-    derivation = params->derivation;
-    pid = params->pid;
-
     /* Generate derivations string */
     derivations_string = generate_derivations_string(derivation, " ");
     
@@ -251,7 +200,7 @@ static void disnix_export_thread_func(gpointer data)
     if(closure_fd == -1)
     {
 	g_printerr("Error opening tempfile!\n");
-	disnix_emit_failure_signal(params->object, pid);
+	disnix_emit_failure_signal(object, pid);
     }
     else
     {
@@ -278,7 +227,7 @@ static void disnix_export_thread_func(gpointer data)
 	if(status == -1)
 	{
 	    g_printerr("Error with forking nix-store process!\n");
-	    disnix_emit_failure_signal(params->object, pid);
+	    disnix_emit_failure_signal(object, pid);
 	}
 	else
 	{
@@ -289,69 +238,40 @@ static void disnix_export_thread_func(gpointer data)
 		gchar *tempfilepaths[2];
 		tempfilepaths[0] = tempfilename;
 		tempfilepaths[1] = NULL;
-		disnix_emit_success_signal(params->object, pid, tempfilepaths);
+		disnix_emit_success_signal(object, pid, tempfilepaths);
 	    }
 	    else
-		disnix_emit_failure_signal(params->object, pid);
+		disnix_emit_failure_signal(object, pid);
 	}
 	
 	close(closure_fd);
     }
     
     /* Free variables */    
-    g_free(params);
     g_free(derivations_string);
-    g_strfreev(derivation);
+    
+    _exit(0);
 }
 
-gboolean disnix_export(DisnixObject *object, gchar **derivation, gint *pid, GError **error)
+gboolean disnix_export(DisnixObject *object, const gint pid, gchar **derivation, GError **error)
 {
-    /* Declarations */
-    DisnixExportParams *params;
-    Job *job;
-    
     /* State object should not be NULL */
     g_assert(object != NULL);
 
-    /* Generate process id */    
-    object->pid = job_counter++;
-    *pid = object->pid;
-    
-    /* Create parameter struct */
-    params = (DisnixExportParams*)g_malloc(sizeof(DisnixExportParams));
-    params->derivation = g_strdupv(derivation);
-    params->pid = object->pid;
-    params->object = object;
-    
-    /* Add this call to the job table */
-    job = new_job(OP_EXPORT, params, error);
-    g_hash_table_insert(job_table, generate_int_key(pid), job);
-    
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+	disnix_export_thread_func(object, pid, derivation);
+        
     return TRUE;
 }
 
 /* Print invalid paths method */
 
-typedef struct
-{
-    gchar **derivation;
-    gint pid;
-    DisnixObject *object;
-}
-DisnixPrintInvalidPathsParams;
-
-static void disnix_print_invalid_thread_func(gpointer data)
+static void disnix_print_invalid_thread_func(DisnixObject *object, const gint pid, gchar **derivation)
 {
     /* Declarations */
-    gchar **derivation, *derivations_string, *cmd;
-    gint pid;    
-    DisnixPrintInvalidPathsParams *params;
+    gchar *derivations_string;
     int pipefd[2];
-    
-    /* Import variables */
-    params = (DisnixPrintInvalidPathsParams*)data;
-    derivation = params->derivation;
-    pid = params->pid;
     
     /* Generate derivations string */
     derivations_string = generate_derivations_string(derivation, " ");
@@ -391,7 +311,7 @@ static void disnix_print_invalid_thread_func(gpointer data)
 	    g_printerr("Error with forking nix-store process!\n");
 	    close(pipefd[0]);
 	    close(pipefd[1]);
-	    disnix_emit_failure_signal(params->object, pid);
+	    disnix_emit_failure_signal(object, pid);
 	}
 	else
 	{
@@ -417,9 +337,9 @@ static void disnix_print_invalid_thread_func(gpointer data)
 	    wait(&status);
 	
 	    if(WEXITSTATUS(status) == 0)
-		disnix_emit_success_signal(params->object, pid, missing_paths);
+		disnix_emit_success_signal(object, pid, missing_paths);
 	    else
-		disnix_emit_failure_signal(params->object, pid);
+		disnix_emit_failure_signal(object, pid);
 	    
 	    g_strfreev(missing_paths);
 	}
@@ -427,64 +347,35 @@ static void disnix_print_invalid_thread_func(gpointer data)
     else
     {
 	fprintf(stderr, "Error with creating a pipe!\n");
-	disnix_emit_failure_signal(params->object, pid);
+	disnix_emit_failure_signal(object, pid);
     }
         
     /* Free variables */
     g_free(derivations_string);
-    g_free(params);
-    g_free(cmd);    
+    
+    _exit(0);
 }
 
-gboolean disnix_print_invalid(DisnixObject *object, gchar **derivation, gint *pid, GError **error)
+gboolean disnix_print_invalid(DisnixObject *object, const gint pid, gchar **derivation, GError **error)
 {
-    /* Declarations */
-    DisnixPrintInvalidPathsParams *params;
-    Job *job;
-    
     /* State object should not be NULL */
     g_assert(object != NULL);
 
-    /* Generate process id */    
-    object->pid = job_counter++;
-    *pid = object->pid;
-    
-    /* Create parameter struct */
-    params = (DisnixPrintInvalidPathsParams*)g_malloc(sizeof(DisnixPrintInvalidPathsParams));
-    params->derivation = g_strdupv(derivation);
-    params->pid = object->pid;
-    params->object = object;
-
-    /* Add this call to the job table */
-    job = new_job(OP_PRINT_INVALID, params, error);
-    g_hash_table_insert(job_table, generate_int_key(pid), job);
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+	disnix_print_invalid_thread_func(object, pid, derivation);    
         
     return TRUE;
 }
 
 /* Realise method */
 
-typedef struct
-{
-    gchar **derivation;
-    gint pid;
-    DisnixObject *object;
-}
-DisnixRealiseParams;
-
-static void disnix_realise_thread_func(gpointer data)
+static void disnix_realise_thread_func(DisnixObject *object, const gint pid, gchar **derivation)
 {
     /* Declarations */
-    gchar *cmd, **derivation, *derivations_string;
-    gint pid;
-    DisnixRealiseParams *params;
+    gchar *derivations_string;
     int pipefd[2];
     
-    /* Import variables */
-    params = (DisnixRealiseParams*)data;
-    derivation = params->derivation;
-    pid = params->pid;
-
     /* Generate derivation strings */
     derivations_string = generate_derivations_string(derivation, " ");
     
@@ -520,7 +411,7 @@ static void disnix_realise_thread_func(gpointer data)
 	if(status == -1)
 	{
 	    g_printerr("Error with forking nix-store process!\n");
-	    disnix_emit_failure_signal(params->object, pid);
+	    disnix_emit_failure_signal(object, pid);
 	}
 	else
 	{
@@ -545,9 +436,9 @@ static void disnix_realise_thread_func(gpointer data)
 	    wait(&status);
 	    
 	    if(WEXITSTATUS(status) == 0)
-		disnix_emit_success_signal(params->object, pid, realised);
+		disnix_emit_success_signal(object, pid, realised);
 	    else
-		disnix_emit_failure_signal(params->object, pid);
+		disnix_emit_failure_signal(object, pid);
 	    
 	    g_strfreev(realised);
 	}
@@ -555,67 +446,35 @@ static void disnix_realise_thread_func(gpointer data)
     else
     {
 	g_printerr("Error with creating a pipe\n");
-	disnix_emit_failure_signal(params->object, pid);
+	disnix_emit_failure_signal(object, pid);
     }
     
     /* Free variables */
     g_free(derivations_string);
-    g_strfreev(derivation);
-    g_free(params);
-    g_free(cmd);
+    
+    _exit(0);
 }
 
-gboolean disnix_realise(DisnixObject *object, gchar **derivation, gint *pid, GError **error)
+gboolean disnix_realise(DisnixObject *object, const gint pid, gchar **derivation, GError **error)
 {
-    /* Declarations */
-    DisnixRealiseParams *params;
-    Job *job;
-    
     /* State object should not be NULL */
     g_assert(object != NULL);
 
-    /* Generate process id */    
-    object->pid = job_counter++;
-    *pid = object->pid;
-
-    /* Create parameter struct */
-    params = (DisnixRealiseParams*)g_malloc(sizeof(DisnixRealiseParams));
-    params->derivation = g_strdupv(derivation);
-    params->pid = object->pid;
-    params->object = object;
-    
-    /* Add this call to the job table */
-    job = new_job(OP_REALISE, params, error);
-    g_hash_table_insert(job_table, generate_int_key(pid), job);
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+	disnix_realise_thread_func(object, pid, derivation);    
     
     return TRUE;
 }
 
 /* Set method */
 
-typedef struct
-{
-    gchar *profile;
-    gchar *derivation;    
-    gint pid;
-    DisnixObject *object;
-}
-DisnixSetParams;
-
-static void disnix_set_thread_func(gpointer data)
+static void disnix_set_thread_func(DisnixObject *object, const gint pid, const gchar *profile, gchar *derivation)
 {
     /* Declarations */
-    gchar *cmd, *profile, *derivation, *profile_path;
-    gint pid;
+    gchar *profile_path;
     int status;
     char line[BUFFER_SIZE];
-    DisnixSetParams *params;
-    
-    /* Import variables */
-    params = (DisnixSetParams*)data;
-    profile = params->profile;
-    derivation = params->derivation;
-    pid = params->pid;
     
     /* Print log entry */
     g_print("Set profile: %s with derivation: %s\n", profile, derivation);
@@ -630,7 +489,7 @@ static void disnix_set_thread_func(gpointer data)
     if(status == -1)
     {
 	g_printerr("Error with forking nix-env process!\n");
-	disnix_emit_failure_signal(params->object, pid);
+	disnix_emit_failure_signal(object, pid);
     }
     else if(status == 0)
     {
@@ -645,72 +504,36 @@ static void disnix_set_thread_func(gpointer data)
 	wait(&status);
 	
 	if(WEXITSTATUS(status) == 0)
-	    disnix_emit_finish_signal(params->object, pid);
+	    disnix_emit_finish_signal(object, pid);
 	else
-	    disnix_emit_failure_signal(params->object, pid);
+	    disnix_emit_failure_signal(object, pid);
     }
     
     /* Free variables */
     g_free(profile_path);
-    g_free(profile);
-    g_free(derivation);
-    g_free(params);
-    g_free(cmd);
+    
+    _exit(0);
 }
 
-gboolean disnix_set(DisnixObject *object, const gchar *profile, const gchar *derivation, gint *pid, GError **error)
+gboolean disnix_set(DisnixObject *object, const gint pid, const gchar *profile, gchar *derivation, GError **error)
 {
-    /* Declarations */
-    FILE *fp;
-    char line[BUFFER_SIZE];
-    DisnixSetParams *params;
-    Job *job;
-    
     /* State object should not be NULL */
     g_assert(object != NULL);
     
-    /* Generate process id */    
-    object->pid = job_counter++;
-    *pid = object->pid;
-    
-    /* Create parameter struct */
-    params = (DisnixSetParams*)g_malloc(sizeof(DisnixSetParams));
-    params->profile = g_strdup(profile);
-    params->derivation = g_strdup(derivation);
-    params->pid = object->pid;
-    params->object = object;
-    
-    /* Add this call to the job table */
-    job = new_job(OP_SET, params, error);
-    g_hash_table_insert(job_table, generate_int_key(pid), job);
-    
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+	disnix_set_thread_func(object, pid, profile, derivation);
+        
     return TRUE;
 }
 
 /* Query installed method */
 
-typedef struct
-{
-    gchar *profile;
-    gint pid;
-    DisnixObject *object;
-}
-DisnixQueryInstalledParams;
-
-static void disnix_query_installed_thread_func(gpointer data)
+static void disnix_query_installed_thread_func(DisnixObject *object, const gint pid, const gchar *profile)
 {
     /* Declarations */
-    gchar *cmd, *profile, **derivation = NULL;
-    gint pid;
-    unsigned int derivation_size = 0;
+    gchar *cmd;
     FILE *fp;
-    char line[BUFFER_SIZE];
-    DisnixQueryInstalledParams *params;
-    
-    /* Import variables */
-    params = (DisnixQueryInstalledParams*)data;
-    profile = params->profile;
-    pid = params->pid;
     
     /* Print log entry */
     g_print("Query installed derivations from profile: %s\n", profile);
@@ -721,10 +544,13 @@ static void disnix_query_installed_thread_func(gpointer data)
 
     fp = fopen(cmd, "r");
     if(fp == NULL)
-	disnix_emit_failure_signal(params->object, pid); /* Something went wrong with forking the process */
+	disnix_emit_failure_signal(object, pid); /* Something went wrong with forking the process */
     else
     {
 	int status;
+	char line[BUFFER_SIZE];
+	gchar **derivation = NULL;
+	unsigned int derivation_size = 0;
 	
 	/* Read the output */
 	
@@ -742,64 +568,33 @@ static void disnix_query_installed_thread_func(gpointer data)
 	
 	fclose(fp);
 	
-	disnix_emit_success_signal(params->object, pid, derivation);
+	disnix_emit_success_signal(object, pid, derivation);
+	
+	g_strfreev(derivation);
     }
     
-    /* Free variables */
-    g_strfreev(derivation);
-    g_free(profile);
-    g_free(params);
-    g_free(cmd);
+    _exit(0);
 }
 
-gboolean disnix_query_installed(DisnixObject *object, const gchar *profile, gint *pid, GError **error)
+gboolean disnix_query_installed(DisnixObject *object, const gint pid, const gchar *profile, GError **error)
 {
-    /* Declarations */
-    DisnixQueryInstalledParams *params;
-    Job *job;
-    
     /* State object should not be NULL */
     g_assert(object != NULL);
     
-    /* Generate process id */    
-    object->pid = job_counter++;
-    *pid = object->pid;
-    
-    /* Create parameter struct */
-    params = (DisnixQueryInstalledParams*)g_malloc(sizeof(DisnixQueryInstalledParams));
-    params->profile = g_strdup(profile);
-    params->pid = object->pid;
-    params->object = object;
-
-    /* Add this call to the job table */
-    job = new_job(OP_QUERY_INSTALLED, params, error);
-    g_hash_table_insert(job_table, generate_int_key(pid), job);
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+	disnix_query_installed_thread_func(object, pid, profile);
     
     return TRUE;
 }
 
 /* Query requisites method */
 
-typedef struct
-{
-    gchar **derivation;
-    gint pid;
-    DisnixObject *object;
-}
-DisnixQueryRequisitesParams;
-
-static void disnix_query_requisites_thread_func(gpointer data)
+static void disnix_query_requisites_thread_func(DisnixObject *object, const gint pid, gchar **derivation)
 {
     /* Declarations */
-    gchar *cmd, **derivation, *derivations_string;
-    gint pid;
-    DisnixQueryRequisitesParams *params;
+    gchar *derivations_string;
     int pipefd[2];
-    
-    /* Import variables */
-    params = (DisnixQueryRequisitesParams*)data;
-    derivation = params->derivation;
-    pid = params->pid;
     
     /* Generate derivations string */
     derivations_string = generate_derivations_string(derivation, " ");
@@ -838,7 +633,7 @@ static void disnix_query_requisites_thread_func(gpointer data)
 	    fprintf(stderr, "Error with forking nix-store process!\n");
 	    close(pipefd[0]);
 	    close(pipefd[1]);
-	    disnix_emit_failure_signal(params->object, pid);
+	    disnix_emit_failure_signal(object, pid);
 	}
 	else
 	{
@@ -863,9 +658,9 @@ static void disnix_query_requisites_thread_func(gpointer data)
 	    wait(&status);
 	    
 	    if(WEXITSTATUS(status) == 0)
-		disnix_emit_success_signal(params->object, pid, requisites);
+		disnix_emit_success_signal(object, pid, requisites);
 	    else
-		disnix_emit_failure_signal(params->object, pid);
+		disnix_emit_failure_signal(object, pid);
 	
 	    g_strfreev(requisites);
 	}
@@ -873,66 +668,34 @@ static void disnix_query_requisites_thread_func(gpointer data)
     else
     {
 	g_printerr("Error with creating pipe!\n");
-	disnix_emit_failure_signal(params->object, pid);
+	disnix_emit_failure_signal(object, pid);
     }
         
     /* Free variables */
     g_free(derivations_string);
-    g_free(params);
-    g_free(cmd);
+    
+    _exit(0);
 }
 
-gboolean disnix_query_requisites(DisnixObject *object, gchar **derivation, gint *pid, GError **error)
+gboolean disnix_query_requisites(DisnixObject *object, const gint pid, gchar **derivation, GError **error)
 {
-    /* Declarations */
-    DisnixQueryRequisitesParams *params;
-    Job *job;
-    
     /* State object should not be NULL */
     g_assert(object != NULL);
     
-    /* Generate process id */    
-    object->pid = job_counter++;
-    *pid = object->pid;
-    
-    /* Create parameter struct */
-    params = (DisnixQueryRequisitesParams*)g_malloc(sizeof(DisnixQueryInstalledParams));
-    params->derivation = g_strdupv(derivation);
-    params->pid = object->pid;
-    params->object = object;
-
-    /* Add this call to the job table */
-    job = new_job(OP_QUERY_REQUISITES, params, error);
-    g_hash_table_insert(job_table, generate_int_key(pid), job);
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+	disnix_query_requisites_thread_func(object, pid, derivation);
     
     return TRUE;
 }
 
 /* Garbage collect method */
 
-typedef struct
-{
-    gboolean delete_old;
-    gint pid;
-    DisnixObject *object;
-}
-DisnixGarbageCollectParams;
-
-static void disnix_collect_garbage_thread_func(gpointer data)
+static void disnix_collect_garbage_thread_func(DisnixObject *object, const gint pid, const gboolean delete_old)
 {
     /* Declarations */
-    gchar *cmd;
-    gint pid;
     int status;
-    gboolean delete_old;
-    char line[BUFFER_SIZE];
-    DisnixGarbageCollectParams *params;
 
-    /* Import variables */
-    params = (DisnixGarbageCollectParams*)data;
-    delete_old = params->delete_old;
-    pid = params->pid;
-    
     /* Print log entry */
     if(delete_old)
 	g_print("Garbage collect and remove old derivations\n");
@@ -946,7 +709,7 @@ static void disnix_collect_garbage_thread_func(gpointer data)
     if(status == -1)
     {
 	g_printerr("Error with forking garbage collect process!\n");
-	disnix_emit_failure_signal(params->object, pid);
+	disnix_emit_failure_signal(object, pid);
     }
     else if(status == 0)
     {
@@ -969,70 +732,34 @@ static void disnix_collect_garbage_thread_func(gpointer data)
 	wait(&status);
 	
 	if(WEXITSTATUS(status) == 0)
-	    disnix_emit_finish_signal(params->object, pid);
+	    disnix_emit_finish_signal(object, pid);
 	else
-	    disnix_emit_failure_signal(params->object, pid);
+	    disnix_emit_failure_signal(object, pid);
     }
         
-    /* Free variables */
-    g_free(params);
-    g_free(cmd);    
+    _exit(0);
 }
 
-gboolean disnix_collect_garbage(DisnixObject *object, const gboolean delete_old, gint *pid, GError **error)
+gboolean disnix_collect_garbage(DisnixObject *object, const gint pid, const gboolean delete_old, GError **error)
 {
-    /* Declarations */
-    DisnixGarbageCollectParams *params;
-    Job *job;
-
     /* State object should not be NULL */
     g_assert(object != NULL);
 
-    /* Generate process id */    
-    object->pid = job_counter++;
-    *pid = object->pid;
-    
-    /* Create parameter struct */
-    params = (DisnixGarbageCollectParams*)g_malloc(sizeof(DisnixGarbageCollectParams));
-    params->delete_old = delete_old;
-    params->pid = object->pid;
-    params->object = object;
-
-    /* Add this call to the job table */
-    job = new_job(OP_COLLECT_GARBAGE, params, error);
-    g_hash_table_insert(job_table, generate_int_key(pid), job);
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+	disnix_collect_garbage_thread_func(object, pid, delete_old);
     
     return TRUE;
 }
 
 /* Activate method */
 
-typedef struct
-{
-    gchar *derivation;
-    gchar *type;
-    gchar **arguments;
-    gint pid;
-    DisnixObject *object;
-}
-DisnixActivateParams;
-
-static void disnix_activate_thread_func(gpointer data)
+static void disnix_activate_thread_func(DisnixObject *object, const gint pid, gchar *derivation, const gchar *type, gchar **arguments)
 {
     /* Declarations */
-    gchar *derivation, *type, **arguments, *arguments_string;
-    gint pid;
-    char line[BUFFER_SIZE];
-    DisnixActivateParams *params;
+    gchar *arguments_string;
     int status;
         
-    /* Import variables */
-    params = (DisnixActivateParams*)data;
-    derivation = params->derivation;
-    type = params->type;
-    arguments = params->arguments;
-    pid = params->pid;
-    
     /* Generate arguments string */
     arguments_string = generate_derivations_string(arguments, " ");
     
@@ -1063,82 +790,44 @@ static void disnix_activate_thread_func(gpointer data)
     if(status == -1)
     {
 	g_printerr("Error forking activation process!\n");
-	disnix_emit_failure_signal(params->object, pid);
+	disnix_emit_failure_signal(object, pid);
     }
     else
     {
 	wait(&status);
 	
 	if(WEXITSTATUS(status) == 0)
-	    disnix_emit_finish_signal(params->object, pid);
+	    disnix_emit_finish_signal(object, pid);
 	else
-	    disnix_emit_failure_signal(params->object, pid);
+	    disnix_emit_failure_signal(object, pid);
     }
     
     /* Free variables */
-    g_free(derivation);
-    g_free(type);
     g_free(arguments_string);
-    g_strfreev(arguments);
-    g_free(params);
+    
+    _exit(0);
 }
 
-gboolean disnix_activate(DisnixObject *object, const gchar *derivation, const gchar *type, gchar **arguments, gint *pid, GError **error)
+gboolean disnix_activate(DisnixObject *object, const gint pid, gchar *derivation, const gchar *type, gchar **arguments, GError **error)
 {
-    /* Declarations */
-    DisnixActivateParams *params;
-    Job *job;
-    
     /* State object should not be NULL */
     g_assert(object != NULL);
 
-    /* Generate process id */    
-    object->pid = job_counter++;
-    *pid = object->pid;
-    
-    /* Create parameter struct */
-    params = (DisnixActivateParams*)g_malloc(sizeof(DisnixActivateParams));
-    params->derivation = g_strdup(derivation);
-    params->type = g_strdup(type);
-    params->arguments = g_strdupv(arguments);
-    params->pid = object->pid;
-    params->object = object;
-
-    /* Add this call to the job table */
-    job = new_job(OP_ACTIVATE, params, error);
-    g_hash_table_insert(job_table, generate_int_key(pid), job);    
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+	disnix_activate_thread_func(object, pid, derivation, type, arguments);
     
     return TRUE;    
 }
 
 /* Deactivate method */
 
-typedef struct
-{
-    gchar *derivation;
-    gchar *type;
-    gchar **arguments;
-    gint pid;
-    DisnixObject *object;
-}
-DisnixDeactivateParams;
-
-static void disnix_deactivate_thread_func(gpointer data)
+static void disnix_deactivate_thread_func(DisnixObject *object, const gint pid, gchar *derivation, const gchar *type, gchar **arguments)
 {
     /* Declarations */
-    gchar *derivation, *type, **arguments, *arguments_string;
-    gint pid;
-    char line[BUFFER_SIZE];
-    DisnixActivateParams *params;
+    gchar *arguments_string;
     int status;
         
-    /* Import variables */
-    params = (DisnixActivateParams*)data;
-    derivation = params->derivation;
-    type = params->type;
-    arguments = params->arguments;
-    pid = params->pid;
-    
     /* Generate arguments string */
     arguments_string = generate_derivations_string(arguments, " ");
     
@@ -1169,141 +858,52 @@ static void disnix_deactivate_thread_func(gpointer data)
     if(status == -1)
     {
 	g_printerr("Error forking deactivation process!\n");
-	disnix_emit_failure_signal(params->object, pid);
+	disnix_emit_failure_signal(object, pid);
     }
     else
     {
 	wait(&status);
 	
 	if(WEXITSTATUS(status) == 0)
-	    disnix_emit_finish_signal(params->object, pid);
+	    disnix_emit_finish_signal(object, pid);
 	else
-	    disnix_emit_failure_signal(params->object, pid);
+	    disnix_emit_failure_signal(object, pid);
     }
     
     /* Free variables */
-    g_free(derivation);
-    g_free(type);
     g_free(arguments_string);
-    g_strfreev(arguments);
-    g_free(params);
+    
+    _exit(0);
 }
 
-gboolean disnix_deactivate(DisnixObject *object, const gchar *derivation, const gchar *type, gchar **arguments, gint *pid, GError **error)
+gboolean disnix_deactivate(DisnixObject *object, const gint pid, gchar *derivation, const gchar *type, gchar **arguments, GError **error)
 {
-    /* Declarations */
-    DisnixDeactivateParams *params;
-    Job *job;
-    
     /* State object should not be NULL */
     g_assert(object != NULL);
 
-    /* Generate process id */    
-    object->pid = job_counter++;
-    *pid = object->pid;
-    
-    /* Create parameter struct */
-    params = (DisnixDeactivateParams*)g_malloc(sizeof(DisnixDeactivateParams));
-    params->derivation = g_strdup(derivation);
-    params->type = g_strdup(type);
-    params->arguments = g_strdupv(arguments);
-    params->pid = object->pid;
-    params->object = object;
-
-    /* Add this call to the job table */
-    job = new_job(OP_DEACTIVATE, params, error);
-    g_hash_table_insert(job_table, generate_int_key(pid), job);    
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+	disnix_deactivate_thread_func(object, pid, derivation, type, arguments);
     
     return TRUE;    
 }
 
-gboolean disnix_lock(DisnixObject *object, gint *pid, GError **error)
+gboolean disnix_lock(DisnixObject *object, const gint pid, GError **error)
 {
     return TRUE;
 }
 
-gboolean disnix_unlock(DisnixObject *object, gint *pid, GError **error)
+gboolean disnix_unlock(DisnixObject *object, const gint pid, GError **error)
 {
     return TRUE;
 }
 
-/* Acknowledge method */
+/* Get job id method */
 
-static void print_job_item(gpointer key, gpointer value, gpointer user_data)
+gboolean disnix_get_job_id(DisnixObject *object, gint *pid, GError **error)
 {
-    gchar *pid = (gchar*)key;
-    Job *job = (Job*)value;
-    
-    g_print("key: %s, job operation: %d\n", pid, job->operation);    
-}
-
-gboolean disnix_acknowledge(DisnixObject *object, gint pid, GError **error)
-{
-    Job *job;
-    
-    /* State object should not be NULL */
-    g_assert(object != NULL);
-    
-    job = (Job*)g_hash_table_lookup(job_table, &pid);
-    
-    g_print("Acknowledging PID: %d\n", pid);
-    
-    if(job != NULL)
-    {
-	int status;
-	
-	g_print("Running PID: %d\n", pid);
-
-	job->running = TRUE;
-	
-	status = fork();
-	
-	if(status == -1)
-	{
-	    g_printerr("Error with forking job process!\n");
-	    disnix_emit_failure_signal(object, pid);	    
-	}
-	else if(status == 0)
-	{
-	    switch(job->operation)
-	    {
-		case OP_IMPORT:    
-		    disnix_import_thread_func(job->params);		
-		    break;
-		case OP_EXPORT:
-		    disnix_export_thread_func(job->params);
-		    break;
-		case OP_PRINT_INVALID:
-		    disnix_print_invalid_thread_func(job->params);
-		    break;
-		case OP_REALISE:
-		    disnix_realise_thread_func(job->params);
-		    break;
-		case OP_SET:
-		    disnix_set_thread_func(job->params);
-		    break;
-		case OP_QUERY_INSTALLED:
-		    disnix_query_installed_thread_func(job->params);
-		    break;
-		case OP_QUERY_REQUISITES:
-		    disnix_query_requisites_thread_func(job->params);
-		    break;
-		case OP_COLLECT_GARBAGE:
-		    disnix_collect_garbage_thread_func(job->params);
-		    break;
-		case OP_ACTIVATE:
-		    disnix_activate_thread_func(job->params);
-		    break;
-		case OP_DEACTIVATE:
-		    disnix_deactivate_thread_func(job->params);
-		    break;
-		default:
-		    g_printerr("Unknown operation: %d\n", job->operation);
-	    }
-	    
-	    _exit(0);
-	}	
-    }
-    
+    g_printerr("Assigned job id: %d\n", job_counter);
+    *pid = job_counter;
+    job_counter++;
     return TRUE;
 }
