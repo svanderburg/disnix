@@ -34,11 +34,11 @@ static int job_counter = 0;
 
 gchar **update_lines_vector(gchar **lines, char *buf)
 {
-    unsigned int lines_length;
-    gchar **additional_lines = g_strsplit(buf, "\n", 0); /* Split the buffer by newlines */
-    unsigned int additional_lines_length = g_strv_length(additional_lines);
     unsigned int i;
+    unsigned int start_offset = 0;
+    unsigned int lines_length; 
     
+    /* If lines is NULL, first allocate memory */
     if(lines == NULL)
     {
 	lines = (gchar**)g_malloc(sizeof(gchar*));
@@ -48,47 +48,65 @@ gchar **update_lines_vector(gchar **lines, char *buf)
     else
 	lines_length = g_strv_length(lines);
     
-    if(lines_length == 0)
+    /* Check the buffer for lines */
+    for(i = 0; i < strlen(buf); i++)
     {
-	lines = (gchar**)g_realloc(lines, (additional_lines_length + 1) * sizeof(gchar*));
-	lines[0] = additional_lines[0];
+	/* If a linefeed is found append the line to the lines vector */
+	if(buf[i] == '\n')
+	{
+	    unsigned int line_size = i - start_offset + 1;
+	    gchar *line = (gchar*)g_malloc((line_size + 1) * sizeof(gchar));
+	    strncpy(line, buf + start_offset, line_size);
+	    line[line_size] = '\0';
+	    
+	    start_offset = i + 1;
+	    
+	    if(lines_length == 0)
+	    {
+		lines_length++;
+		lines = (gchar**)g_realloc(lines, (lines_length + 1) * sizeof(gchar*));
+		lines[0] = line;
+		lines[1] = NULL;
+	    }
+	    else
+	    {
+		gchar *last_line = lines[lines_length - 1];
+		
+		if(strlen(last_line) > 0 && last_line[strlen(last_line) - 1] == '\n')
+		{
+		    lines_length++;
+		    lines = (gchar**)g_realloc(lines, (lines_length + 1) * sizeof(gchar*));
+		    lines[lines_length - 1] = line;
+		    lines[lines_length] = NULL;
+		}
+		else
+		{
+		    gchar *old_last_line = lines[lines_length - 1];
+		    
+		    lines[lines_length - 1] = g_strconcat(old_last_line, line, NULL);
+		    
+		    g_free(old_last_line);
+		    g_free(line);
+		}
+	    }
+	}
     }
-    else if(strlen(lines[lines_length - 1]) > 0 && lines[lines_length - 1][strlen(lines[lines_length - 1]) - 1] == '\n')
+    
+    /* If there is trailing stuff, append it to the lines vector */
+    if(start_offset < i)
     {
-	/* Increase length */
+	unsigned int line_size = i - start_offset + 1;
+	gchar *line = (gchar*)g_malloc((line_size + 1) * sizeof(gchar));
+	strncpy(line, buf + start_offset, line_size);
+	line[line_size] = '\0';
+
 	lines_length++;
-	
-	/* Increase the allocated memory */
-	lines = (gchar**)g_realloc(lines, (lines_length + additional_lines_length + 1) * sizeof(gchar*));
-	
-	/* Add first additional line to the end */ 
-	lines[lines_length - 1] = additional_lines[0];
-    }
-    else
-    {
-        gchar *old_last_line, *new_last_line;
-	
-        /** Increase the allocated memory */
-        lines = (gchar**)g_realloc(lines, (lines_length + additional_lines_length + 1) * sizeof(gchar*));
-    
-        /* Append first addtional line to the end of the last line */
-        old_last_line = lines[lines_length - 1];
-        new_last_line = g_strconcat(old_last_line, additional_lines[0], NULL);
-        lines[lines_length - 1] = new_last_line;
-        g_free(old_last_line);
-        g_free(additional_lines[0]);
+	lines = (gchar**)g_realloc(lines, (lines_length + 1) * sizeof(gchar*));
+	lines[lines_length - 1] = line;
+	lines[lines_length] = NULL;
     }
     
-    /* Add the other additional lines to the end of the lines vector */
-    for(i = 1; i < additional_lines_length; i++)
-        lines[lines_length + i] = additional_lines[i];
-    
-    /* Add NULL termination */
-    lines[lines_length + additional_lines_length] = NULL;
-    
-    /* Clean up additional lines vector */
-    g_free(additional_lines);
-    
+    /* Return modified lines vector */
     return lines;
 }
 
