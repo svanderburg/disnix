@@ -87,7 +87,7 @@ static void disnix_success_signal_handler(DBusGProxy *proxy, const gint pid, gch
     g_printerr("Received success signal from pid: %d\n", pid);
     
     for(i = 0; i < g_strv_length(derivation); i++)
-	g_print("%s", derivation[i]);
+	g_print("%s\n", derivation[i]);
 	
     /* Stop the main loop if our job is done */
     if(pid == my_pid)

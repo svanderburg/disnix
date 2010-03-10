@@ -32,28 +32,6 @@ extern char *activation_modules_dir;
 
 static int job_counter = 0;
 
-static gchar *generate_derivations_string(gchar **derivation, char *separator)
-{
-    unsigned int i;
-    gchar *derivations_string = g_strdup("");
-    
-    for(i = 0; i < g_strv_length(derivation); i++)
-    {
-	gchar *old_derivations_string = derivations_string;
-	derivations_string = g_strconcat(old_derivations_string, separator, derivation[i], NULL);
-	g_free(old_derivations_string);
-    }
-    
-    return derivations_string;
-}
-
-static gint *generate_int_key(gint *key)
-{
-    gint *ret = (gint*)g_malloc(sizeof(gint));
-    *ret = *key;
-    return ret;
-}
-
 gchar **update_lines_vector(gchar **lines, char *buf)
 {
     unsigned int lines_length;
@@ -112,6 +90,14 @@ gchar **update_lines_vector(gchar **lines, char *buf)
     g_free(additional_lines);
     
     return lines;
+}
+
+static void print_derivations(gchar **derivation)
+{
+    unsigned int i;
+    
+    for(i = 0; i < g_strv_length(derivation); i++)
+	g_print("%s ", derivation[i]);
 }
 
 /* Import method */
@@ -182,16 +168,14 @@ gboolean disnix_import(DisnixObject *object, const gint pid, gchar *closure, GEr
 static void disnix_export_thread_func(DisnixObject *object, const gint pid, gchar **derivation)
 {
     /* Declarations */
-    gchar *derivations_string;
     char line[BUFFER_SIZE];
     char tempfilename[19] = "/tmp/disnix.XXXXXX";
     int closure_fd;
     
-    /* Generate derivations string */
-    derivations_string = generate_derivations_string(derivation, " ");
-    
     /* Print log entry */
-    g_print("Exporting: %s\n", derivations_string);
+    g_print("Exporting: ");
+    print_derivations(derivation);
+    g_print("\n");
     
     /* Execute command */
         
@@ -247,9 +231,6 @@ static void disnix_export_thread_func(DisnixObject *object, const gint pid, gcha
 	close(closure_fd);
     }
     
-    /* Free variables */    
-    g_free(derivations_string);
-    
     _exit(0);
 }
 
@@ -270,14 +251,12 @@ gboolean disnix_export(DisnixObject *object, const gint pid, gchar **derivation,
 static void disnix_print_invalid_thread_func(DisnixObject *object, const gint pid, gchar **derivation)
 {
     /* Declarations */
-    gchar *derivations_string;
     int pipefd[2];
     
-    /* Generate derivations string */
-    derivations_string = generate_derivations_string(derivation, " ");
-    
     /* Print log entry */
-    g_print("Print invalid: %s\n", derivations_string);
+    g_print("Print invalid: ");
+    print_derivations(derivation);
+    g_print("\n");
     
     /* Execute command */
     
@@ -350,9 +329,6 @@ static void disnix_print_invalid_thread_func(DisnixObject *object, const gint pi
 	disnix_emit_failure_signal(object, pid);
     }
         
-    /* Free variables */
-    g_free(derivations_string);
-    
     _exit(0);
 }
 
@@ -373,14 +349,12 @@ gboolean disnix_print_invalid(DisnixObject *object, const gint pid, gchar **deri
 static void disnix_realise_thread_func(DisnixObject *object, const gint pid, gchar **derivation)
 {
     /* Declarations */
-    gchar *derivations_string;
     int pipefd[2];
     
-    /* Generate derivation strings */
-    derivations_string = generate_derivations_string(derivation, " ");
-    
     /* Print log entry */
-    g_print("Realising: %s\n", derivations_string);
+    g_print("Realising: ");
+    print_derivations(derivation);
+    g_print("\n");
     
     /* Execute command */    
 
@@ -448,9 +422,6 @@ static void disnix_realise_thread_func(DisnixObject *object, const gint pid, gch
 	g_printerr("Error with creating a pipe\n");
 	disnix_emit_failure_signal(object, pid);
     }
-    
-    /* Free variables */
-    g_free(derivations_string);
     
     _exit(0);
 }
@@ -593,14 +564,12 @@ gboolean disnix_query_installed(DisnixObject *object, const gint pid, const gcha
 static void disnix_query_requisites_thread_func(DisnixObject *object, const gint pid, gchar **derivation)
 {
     /* Declarations */
-    gchar *derivations_string;
     int pipefd[2];
     
-    /* Generate derivations string */
-    derivations_string = generate_derivations_string(derivation, " ");
-
     /* Print log entry */
-    g_print("Query requisites from derivations: %s\n", derivations_string);
+    g_print("Query requisites from derivations: ");
+    print_derivations(derivation);
+    g_print("\n");
     
     /* Execute command */
     
@@ -671,9 +640,6 @@ static void disnix_query_requisites_thread_func(DisnixObject *object, const gint
 	disnix_emit_failure_signal(object, pid);
     }
         
-    /* Free variables */
-    g_free(derivations_string);
-    
     _exit(0);
 }
 
@@ -757,14 +723,12 @@ gboolean disnix_collect_garbage(DisnixObject *object, const gint pid, const gboo
 static void disnix_activate_thread_func(DisnixObject *object, const gint pid, gchar *derivation, const gchar *type, gchar **arguments)
 {
     /* Declarations */
-    gchar *arguments_string;
     int status;
         
-    /* Generate arguments string */
-    arguments_string = generate_derivations_string(arguments, " ");
-    
     /* Print log entry */
-    g_print("Activate: %s of type: %s with arguments: %s\n", derivation, type, arguments_string);
+    g_print("Activate: %s of type: %s with arguments: ", derivation, type);
+    print_derivations(arguments);
+    g_print("\n");
     
     /* Execute command */
 
@@ -802,9 +766,6 @@ static void disnix_activate_thread_func(DisnixObject *object, const gint pid, gc
 	    disnix_emit_failure_signal(object, pid);
     }
     
-    /* Free variables */
-    g_free(arguments_string);
-    
     _exit(0);
 }
 
@@ -825,14 +786,12 @@ gboolean disnix_activate(DisnixObject *object, const gint pid, gchar *derivation
 static void disnix_deactivate_thread_func(DisnixObject *object, const gint pid, gchar *derivation, const gchar *type, gchar **arguments)
 {
     /* Declarations */
-    gchar *arguments_string;
     int status;
         
-    /* Generate arguments string */
-    arguments_string = generate_derivations_string(arguments, " ");
-    
     /* Print log entry */
-    g_print("Deactivate: %s of type: %s with arguments: %s\n", derivation, type, arguments_string);
+    g_print("Deactivate: %s of type: %s with arguments: ", derivation, type);
+    print_derivations(arguments);
+    g_print("\n");
     
     /* Execute command */
 
@@ -869,9 +828,6 @@ static void disnix_deactivate_thread_func(DisnixObject *object, const gint pid, 
 	else
 	    disnix_emit_failure_signal(object, pid);
     }
-    
-    /* Free variables */
-    g_free(arguments_string);
     
     _exit(0);
 }
