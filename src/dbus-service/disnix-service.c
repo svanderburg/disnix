@@ -26,12 +26,6 @@
 /** Directory in which the activation modules can be found */
 char *activation_modules_dir;
 
-/** Optional process that should be invoked by the lock method */
-char *lock_manager;
-
-/** Optional process that should be invoked by the unlock method */
-char *unlock_manager;
-
 /* Disnix instance definition */
 #include "disnix-instance.h"
 
@@ -113,12 +107,10 @@ static void disnix_object_class_init (DisnixObjectClass *klass)
  * Starts the Disnix D-Bus service
  *
  * @param activation_modules_dir Directory in which the activation modules can be found
- * @param lock_manager Optional process that should be invoked by the lock method
- * @param unlock_manager Optional process that should be invoked by the unlock method
  * @param session_bus Indicates whether the daemon should be registered on the session bus or system bus
  */
 
-int start_disnix_service(char *activation_modules_dir_arg, char *lock_manager_arg, char *unlock_manager_arg, int session_bus)
+int start_disnix_service(char *activation_modules_dir_arg, int session_bus)
 {
     /* The D-Bus connection object provided by dbus_glib */
     DBusGConnection *bus;
@@ -144,8 +136,6 @@ int start_disnix_service(char *activation_modules_dir_arg, char *lock_manager_ar
 
     /* Add the server parameters to the global variables */
     activation_modules_dir = activation_modules_dir_arg;
-    lock_manager = lock_manager_arg;
-    unlock_manager = unlock_manager_arg;
     
     /* Create a GMainloop with initial state of 'not running' (FALSE) */
     mainloop = g_main_loop_new(NULL, FALSE);

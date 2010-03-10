@@ -30,8 +30,6 @@ static void print_usage()
     
     printf("Options:\n");
     printf("--activation-modules-dir  Directory where the activation modules can be found\n");
-    printf("--lock-manager            Optional process which is invoked when executing the lock method\n");
-    printf("--unlock-manager          Optional process which is invoked when executing the unlock method\n");
     printf("--session-bus             Register the Disnix service on the session bus instead of the system bus (useful for testing)\n");
     printf("--help                    Shows the usage of this command to the user\n");
 }
@@ -43,14 +41,12 @@ int main(int argc, char *argv[])
     struct option long_options[] =
     {
 	{"activation-modules-dir", required_argument, 0, 'a'},
-	{"lock-manager", required_argument, 0, 'l'},
-	{"unlock-manager", required_argument, 0, 'u'}, 
 	{"session-bus", no_argument, 0, 's'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
     
-    char *activation_modules_dir = NULL, *lock_manager = NULL, *unlock_manager = NULL;
+    char *activation_modules_dir = NULL;
     int session_bus = FALSE;
     
     /* Parse command-line options */
@@ -60,12 +56,6 @@ int main(int argc, char *argv[])
 	{
 	    case 'a':
 		activation_modules_dir = optarg;
-		break;
-	    case 'l':
-	        lock_manager = optarg;
-		break;
-	    case 'u':
-	        unlock_manager = optarg;
 		break;
 	    case 's':
 		session_bus = TRUE;
@@ -77,5 +67,5 @@ int main(int argc, char *argv[])
     }
 
     /* Start the program with the given options */
-    return start_disnix_service(activation_modules_dir, lock_manager, unlock_manager, session_bus);
+    return start_disnix_service(activation_modules_dir, session_bus);
 }
