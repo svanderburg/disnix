@@ -32,8 +32,6 @@ extern char *activation_modules_dir;
 
 static int job_counter = 0;
 
-static int activation_lock = FALSE;
-
 gchar **update_lines_vector(gchar **lines, char *buf)
 {
     unsigned int i;
