@@ -32,6 +32,8 @@ extern char *activation_modules_dir;
 
 static int job_counter = 0;
 
+static int activation_lock = FALSE;
+
 gchar **update_lines_vector(gchar **lines, char *buf)
 {
     unsigned int i;
@@ -862,13 +864,61 @@ gboolean disnix_deactivate(DisnixObject *object, const gint pid, gchar *derivati
     return TRUE;    
 }
 
-gboolean disnix_lock(DisnixObject *object, const gint pid, GError **error)
+/* Lock method */
+
+static void disnix_lock_thread_func(DisnixObject *object, const gint pid, const gchar *profile)
 {
-    return TRUE;
+    int fd;
+    
+    /* Print log entry */
+    g_print("Acquiring lock on profile: %s\n", profile);
+    
+    /* If no lock exists, try to create one */
+    if((fd = open("/tmp/disnix.lock", O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR)) == -1)
+        disnix_emit_failure_signal(object, pid); /* Lock already exists -> fail */
+    else
+    {
+        close(fd);
+
+        /* Send finish signal */
+        disnix_emit_finish_signal(object, pid);
+    }
 }
 
-gboolean disnix_unlock(DisnixObject *object, const gint pid, GError **error)
+gboolean disnix_lock(DisnixObject *object, const gint pid, const gchar *profile, GError **error)
 {
+    /* State object should not be NULL */
+    g_assert(object != NULL);
+
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+	disnix_lock_thread_func(object, pid, profile);    
+    
+    return TRUE;    
+}
+
+/* Unlock method */
+
+static void disnix_unlock_thread_func(DisnixObject *object, const gint pid, const gchar *profile)
+{
+    /* Print log entry */
+    g_print("Releasing lock on profile: %s\n", profile);
+
+    if(unlink("/tmp/disnix.lock") == 0)
+	disnix_emit_finish_signal(object, pid);
+    else
+	disnix_emit_failure_signal(object, pid); /* There was no lock -> fail */
+}
+
+gboolean disnix_unlock(DisnixObject *object, const gint pid, const gchar *profile, GError **error)
+{
+    /* State object should not be NULL */
+    g_assert(object != NULL);
+
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+	disnix_unlock_thread_func(object, pid, profile);    
+
     return TRUE;
 }
 

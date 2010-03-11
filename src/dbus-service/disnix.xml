@@ -64,10 +64,12 @@
 		
 		<method name="lock">
 			<arg type="i" name="pid" direction="in" />
+			<arg type="s" name="profile" direction="in" />
 		</method>
 		
 		<method name="unlock">
 			<arg type="i" name="pid" direction="in" />
+			<arg type="s" name="profile" direction="in" />
 		</method>
 		
 		<signal name="finish">

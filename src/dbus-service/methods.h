@@ -44,8 +44,8 @@ gboolean disnix_activate(DisnixObject *object, const gint pid, gchar *derivation
 
 gboolean disnix_deactivate(DisnixObject *object, const gint pid, gchar *derivation, const gchar *type, gchar **arguments, GError **error);
 
-gboolean disnix_lock(DisnixObject *object, const gint pid, GError **error);
+gboolean disnix_lock(DisnixObject *object, const gint pid, const gchar *profile, GError **error);
 
-gboolean disnix_unlock(DisnixObject *object, const gint pid, GError **error);
+gboolean disnix_unlock(DisnixObject *object, const gint pid, const gchar *profile, GError **error);
 
 #endif

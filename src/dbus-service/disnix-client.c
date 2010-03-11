@@ -61,8 +61,8 @@ static void print_usage()
     printf("--collect-garbage [{-d|--delete-old}]\n");
     printf("--activate --type type --arguments arguments derivation\n");
     printf("--deactivate --type type --arguments arguments derivation\n");
-    printf("--lock\n");
-    printf("--unlock\n");
+    printf("--lock [{-p|--profile} profile]\n");
+    printf("--unlock [{-p|--profile} profile]\n");
     printf("{-h|--help}\n");
 }
 
@@ -237,10 +237,10 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
 	    org_nixos_disnix_Disnix_deactivate(remote_object, pid, derivation[0], type, (const gchar**) arguments, &error);
 	    break;
 	case OP_LOCK:
-	    org_nixos_disnix_Disnix_lock(remote_object, pid, &error);
+	    org_nixos_disnix_Disnix_lock(remote_object, pid, profile, &error);
 	    break;
 	case OP_UNLOCK:
-	    org_nixos_disnix_Disnix_unlock(remote_object, pid, &error);
+	    org_nixos_disnix_Disnix_unlock(remote_object, pid, profile, &error);
 	    break;
 	case OP_NONE:
 	    g_printerr("ERROR: No operation specified!\n");	    

@@ -32,8 +32,8 @@ showUsage()
     echo "  --collect-garbage [{-d|--delete-old}]\n"
     echo "  --activate --type type --arguments arguments derivation"
     echo "  --deactivate --type type --arguments arguments derivation"
-    echo "  --lock"
-    echo "  --unlock"
+    echo "  --lock [{-p|--profile} profile]"
+    echo "  --unlock [{-p|--profile} profile]"
     echo "  {-h | --help}"
 }
 
@@ -216,9 +216,9 @@ case "$operation" in
 	ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --deactivate "$@"
 	;;
     lock)
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --lock
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --lock $profileArg
         ;;
     unlock)
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --unlock
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --unlock $profileArg
         ;;
 esac

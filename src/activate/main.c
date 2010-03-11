@@ -204,7 +204,7 @@ static int transition(GArray *list_new, GArray *list_old, char *interface)
     GArray *unio;
     GArray *deactivate_list;
     GArray *activate_list;
-    unsigned int i;
+    unsigned int i;        
     
     printf("new:\n");
     print_activation_array(list_new);
@@ -309,11 +309,10 @@ static int transition(GArray *list_new, GArray *list_old, char *interface)
     return TRUE;
 }
 
-static int set_target_profiles(char *distribution_manifest, char *interface, char *profile)
+static int set_target_profiles(GArray *distribution_array, char *interface, char *profile)
 {
     unsigned int i;
-    GArray *distribution_array = generate_distribution_array(distribution_manifest);
-	    
+    	    
     for(i = 0; i < distribution_array->len; i++)
     {
 	int status;
@@ -340,8 +339,7 @@ static int set_target_profiles(char *distribution_manifest, char *interface, cha
 		return FALSE;
 	}
     }
-	    
-    delete_distribution_array(distribution_array);
+
     return TRUE;
 }
 
@@ -387,6 +385,104 @@ static int set_coordinator_profile(char *distribution_manifest, char *profile, c
 	else
 	    return FALSE;
     }
+}
+
+static int unlock(GArray *distribution_array, char *interface, char *profile)
+{
+    unsigned int i, running_processes = 0;
+    int exit_status = TRUE;
+    int status;
+    
+    /* For each locked machine, release the lock */
+    for(i = 0; i < distribution_array->len; i++)
+    {
+	DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
+	status = fork();
+	
+	if(status == -1)
+	{
+	    fprintf(stderr, "Error with forking unlock process!\n");
+	    exit_status = FALSE;
+	}
+	else if(status == 0)
+	{
+	    char *args[] = {interface, "--unlock", "--target", item->target, "--profile", profile, NULL};
+	    execvp(interface, args);
+	    _exit(1);
+	}
+	else
+	    running_processes++;
+    }
+    
+    /* Wait until every lock is released */
+    for(i = 0; i < running_processes; i++)
+    {
+        wait(&status);
+	    
+        if(WEXITSTATUS(status) != 0)
+	{
+    	    fprintf(stderr, "Failed to release the lock!\n");
+	    exit_status = FALSE;
+	}
+    }
+    
+    /* Return exit status */
+    return exit_status;
+}
+
+static int lock(GArray *distribution_array, char *interface, char *profile)
+{
+    unsigned int i;
+    GArray *try_array = g_array_new(FALSE, FALSE, sizeof(DistributionItem*));
+    GArray *lock_array = g_array_new(FALSE, FALSE, sizeof(DistributionItem*));
+    int exit_status = TRUE;
+    int status;
+    
+    /* For each machine acquire a lock */
+    for(i = 0; i < distribution_array->len; i++)
+    {
+	DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
+	status = fork();
+
+	if(status == -1)
+	{
+	    fprintf(stderr, "Error with forking lock process!\n");
+	    exit_status = FALSE;
+	}	
+	else if(status == 0)
+	{
+	    char *args[] = {interface, "--lock", "--target", item->target, "--profile", profile, NULL};
+	    execvp(interface, args);
+	    _exit(1);
+	}
+	else
+	    g_array_append_val(try_array, item);
+    }    
+    
+    /* Wait until every lock is acquired */
+    for(i = 0; i < try_array->len; i++)
+    {
+	wait(&status);
+	
+	if(WEXITSTATUS(status) == 0)
+	    g_array_append_val(lock_array, g_array_index(try_array, DistributionItem*, i));
+	else
+	{
+	    fprintf(stderr, "Failed to acquire a lock!\n");
+	    exit_status = FALSE;
+	}
+    }
+    
+    /* If a lock fails then unlock every machine that is locked */
+    if(!exit_status)
+	unlock(lock_array, interface, profile);
+    
+    /* Cleanup */
+    g_array_free(try_array, TRUE);
+    g_array_free(lock_array, TRUE);
+    
+    /* Return exit status */
+    return exit_status;
 }
 
 int main(int argc, char *argv[])
@@ -448,13 +544,14 @@ int main(int argc, char *argv[])
 	gchar *old_manifest_file;
 	GArray *list_new = create_activation_array(argv[optind]);	
 	GArray *list_old;
-		
+	GArray *distribution_array = generate_distribution_array(argv[optind]);
+	
 	if(old_manifest == NULL)
         {
-	    /* If no old manifest file is given, try to to open the manifest file in the Nix profile */
-	    
-	    old_manifest_file = g_strconcat(LOCALSTATEDIR, "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
 	    FILE *file = fopen(old_manifest_file, "r");
+	    
+	    /* If no old manifest file is given, try to to open the manifest file in the Nix profile */	    
+	    old_manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);	    
 	    
 	    if(file == NULL)
 	    {
@@ -476,19 +573,40 @@ int main(int argc, char *argv[])
 	else
 	    list_old = NULL;
 
-	/* Execute transition */
-	
-	if(!transition(list_new, list_old, interface))
+	/* Try to acquire a lock */
+	if(!lock(distribution_array, interface, profile))
+	{
+	    delete_distribution_array(distribution_array);
 	    return 1;
+	}
+	
+	/* Execute transition */	
+	if(!transition(list_new, list_old, interface))
+	{
+	    delete_distribution_array(distribution_array);
+	    return 1;
+	}
+	
+	/* Try to release the lock */
+	unlock(distribution_array, interface, profile);
 	
 	/* Set the new profiles on the target machines */
 	printf("Setting the new profiles on the target machines:\n");
-	if(!set_target_profiles(argv[optind], interface, profile))
+	if(!set_target_profiles(distribution_array, interface, profile))
+	{
+	    delete_distribution_array(distribution_array);
 	    return 1;
+	}
 	
 	/* Store the activated manifest in the profile of the current user */
 	if(!set_coordinator_profile(argv[optind], profile, username))
+	{
+	    delete_distribution_array(distribution_array);
 	    return 1;
+	}
+
+	/* Cleanup */
+	delete_distribution_array(distribution_array);
 
 	return 0;
     }

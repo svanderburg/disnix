@@ -56,10 +56,10 @@ Activates the given service on the target machine.
 Deactivates the given service on the target machine.
 .TP
 \fB\-\-lock\fR
-Acquires a lock on the Disnix profile of the target machine.
+Acquires a lock on a Disnix profile of the target machine.
 .TP
 \fB\-\-unlock\fR
-Release the lock on the Disnix profile of the target machine.
+Release the lock on a Disnix profile of the target machine.
 
 .SH OPTIONS
 .TP
@@ -99,6 +99,11 @@ Specifies the activation module that should be used, such as \fBecho\fR or \fBpr
 .TP
 \fB\-\-arguments\fR
 Specifies the arguments passed to the activation module, which is a string with key=value pairs.
+
+.SH Lock/Unlock operation
+.TP
+\fB\-p\fR, \fB\-\-profile\fR
+Specifies the name of the profile that should be used. Defaults to: default.
 
 .SH ENVIRONMENT VARIABLES
 .TP
