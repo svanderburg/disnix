@@ -545,6 +545,7 @@ int main(int argc, char *argv[])
 	GArray *list_new = create_activation_array(argv[optind]);	
 	GArray *list_old;
 	GArray *distribution_array = generate_distribution_array(argv[optind]);
+	int status;
 	
 	if(old_manifest == NULL)
         {
@@ -581,14 +582,17 @@ int main(int argc, char *argv[])
 	}
 	
 	/* Execute transition */	
-	if(!transition(list_new, list_old, interface))
+	status = transition(list_new, list_old, interface);
+
+	/* Try to release the lock */
+	unlock(distribution_array, interface, profile);
+	
+	/* If the transition failed, abort */
+	if(!status)
 	{
 	    delete_distribution_array(distribution_array);
 	    return 1;
 	}
-	
-	/* Try to release the lock */
-	unlock(distribution_array, interface, profile);
 	
 	/* Set the new profiles on the target machines */
 	printf("Setting the new profiles on the target machines:\n");
