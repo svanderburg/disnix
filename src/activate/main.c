@@ -584,19 +584,25 @@ int main(int argc, char *argv[])
 	/* Execute transition */	
 	status = transition(list_new, list_old, interface);
 
-	/* Try to release the lock */
-	unlock(distribution_array, interface, profile);
-	
 	/* If the transition failed, abort */
 	if(!status)
 	{
+	    /* Try to release the lock */
+	    unlock(distribution_array, interface, profile);
+	    
 	    delete_distribution_array(distribution_array);
 	    return 1;
 	}
 	
 	/* Set the new profiles on the target machines */
 	printf("Setting the new profiles on the target machines:\n");
-	if(!set_target_profiles(distribution_array, interface, profile))
+	status = set_target_profiles(distribution_array, interface, profile);
+
+	/* Try to release the lock */
+	unlock(distribution_array, interface, profile);
+	
+	/* If setting the profiles failed, abort */
+	if(!status)
 	{
 	    delete_distribution_array(distribution_array);
 	    return 1;
