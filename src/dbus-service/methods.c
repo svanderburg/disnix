@@ -540,15 +540,23 @@ static void disnix_query_installed_thread_func(DisnixObject *object, const gint 
 	char line[BUFFER_SIZE];
 	gchar **derivation = NULL;
 	unsigned int derivation_size = 0;
+	int is_component = TRUE;
 	
 	/* Read the output */
 	
 	while(fgets(line, sizeof(line), fp) != NULL)
 	{
 	    puts(line);
-	    derivation = (gchar**)g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
-	    derivation[derivation_size] = g_strdup(line);	    
-	    derivation_size++;
+	    
+	    if(is_component)
+	    {
+		derivation = (gchar**)g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
+		derivation[derivation_size] = g_strdup(line);	    
+		derivation_size++;
+		is_component = FALSE;
+	    }
+	    else
+		is_component = TRUE;
 	}
 	
 	/* Add NULL value to the end of the list */
@@ -864,23 +872,170 @@ gboolean disnix_deactivate(DisnixObject *object, const gint pid, gchar *derivati
 
 /* Lock method */
 
+static int unlock_services(gchar **derivation, unsigned int derivation_size, gchar **type, unsigned int type_size)
+{
+    unsigned int i;
+    int failed = FALSE;
+    
+    for(i = 0; i < derivation_size; i++)
+    {
+	int status = fork();
+	    
+	g_print("Notifying unlock on %s: of type: %s\n", derivation[i], type[i]);
+	    
+	if(status == 0)
+	{
+	    gchar *cmd = g_strconcat(activation_modules_dir, "/", type[i], NULL);
+	    char *args[] = {cmd, "unlock", derivation[i], NULL};
+	    execvp(cmd, args);
+	    _exit(1);
+	}
+	    
+	if(status == -1)
+	{
+	    g_printerr("Error forking unlock process!\n");
+	    failed = TRUE;
+	}
+	else
+	{
+	    wait(&status);
+		
+	    if(WEXITSTATUS(status) != 0)
+	    {
+	        g_printerr("Unlock failed!\n");
+	        failed = TRUE;
+	    }
+	}
+    }
+    
+    return failed;
+}
+
 static void disnix_lock_thread_func(DisnixObject *object, const gint pid, const gchar *profile)
 {
-    int fd;
+    FILE *fp;
+    gchar *cmd;
+    gchar **derivation = NULL;
+    unsigned int derivation_size = 0;
+    gchar **type = NULL;
+    unsigned int type_size = 0;
     
     /* Print log entry */
     g_print("Acquiring lock on profile: %s\n", profile);
     
-    /* If no lock exists, try to create one */
-    if((fd = open("/tmp/disnix.lock", O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR)) == -1)
-        disnix_emit_failure_signal(object, pid); /* Lock already exists -> fail */
+    /* First check which services are currently active on this machine */
+    cmd = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, "/manifest", NULL);
+
+    fp = fopen(cmd, "r");
+    if(fp != NULL)
+    {
+	int status;
+	char line[BUFFER_SIZE];
+	int is_component = TRUE;
+	
+	/* Read the output */
+	
+	while(fgets(line, sizeof(line), fp) != NULL)
+	{
+	    puts(line);
+	    
+	    if(is_component)
+	    {
+		derivation = (gchar**)g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
+		derivation[derivation_size] = g_strdup(line);	    
+		derivation_size++;
+		is_component = FALSE;
+	    }
+	    else
+	    {
+		type = (gchar**)g_realloc(type, (type_size + 1) * sizeof(gchar*));
+		type[type_size] = g_strdup(line);	    
+		type_size++;
+		is_component = TRUE;
+	    }
+	}
+	
+	/* Add NULL value to the end of the list */
+	derivation = (gchar**)g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
+	derivation[derivation_size] = NULL;
+	type = (gchar**)g_realloc(type, (type_size + 1) * sizeof(gchar*));
+	type[type_size] = NULL;	
+	
+	fclose(fp);
+    }
+    
+    /* For every derivation we need a type */
+    if(derivation_size == type_size)
+    {
+	unsigned int i;
+	int exit_status = 0;
+	
+        /* Notify all currently running services that we want to acquire a lock */
+        for(i = 0; i < derivation_size; i++)
+        {
+	    int status = fork();
+	    
+	    g_print("Notifying lock on %s: of type: %s\n", derivation[i], type[i]);
+	    
+	    if(status == 0)
+	    {
+		gchar *cmd = g_strconcat(activation_modules_dir, "/", type[i], NULL);
+		char *args[] = {cmd, "lock", derivation[i], NULL};
+		execvp(cmd, args);
+		_exit(1);
+	    }
+	    
+	    if(status == -1)
+	    {
+		g_printerr("Error forking lock process!\n");
+		exit_status = -1;
+	    }
+	    else
+	    {
+		wait(&status);
+		
+		if(WEXITSTATUS(status) != 0)
+		{
+		    g_printerr("Lock rejected!\n");
+		    exit_status = -1;
+		}
+	    }
+        }
+	
+	/* If we did not receive any rejection, start the lock itself */
+	if(exit_status == 0)
+	{
+	    int fd;
+	    
+	    /* If no lock exists, try to create one */
+	    if((fd = open("/tmp/disnix.lock", O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR)) == -1)
+	    {
+		unlock_services(derivation, derivation_size, type, type_size);
+    		disnix_emit_failure_signal(object, pid); /* Lock already exists -> fail */
+	    }
+	    else
+	    {
+    		close(fd);
+
+    		/* Send finish signal */
+    		disnix_emit_finish_signal(object, pid);
+	    }
+	}
+	else
+	{
+	    unlock_services(derivation, derivation_size, type, type_size);
+	    disnix_emit_failure_signal(object, pid);
+	}
+    }
     else
     {
-        close(fd);
-
-        /* Send finish signal */
-        disnix_emit_finish_signal(object, pid);
+	g_printerr("Corrupt profile manifest: a service or type is missing!\n");
+	disnix_emit_failure_signal(object, pid);
     }
+    
+    /* Cleanup */
+    g_strfreev(derivation);
+    g_strfreev(type);
 }
 
 gboolean disnix_lock(DisnixObject *object, const gint pid, const gchar *profile, GError **error)
@@ -899,13 +1054,75 @@ gboolean disnix_lock(DisnixObject *object, const gint pid, const gchar *profile,
 
 static void disnix_unlock_thread_func(DisnixObject *object, const gint pid, const gchar *profile)
 {
+    FILE *fp;
+    gchar *cmd;
+    gchar **derivation = NULL;
+    unsigned int derivation_size = 0;
+    gchar **type = NULL;
+    unsigned int type_size = 0;
+    int failed = FALSE;
+    
     /* Print log entry */
     g_print("Releasing lock on profile: %s\n", profile);
 
-    if(unlink("/tmp/disnix.lock") == 0)
-	disnix_emit_finish_signal(object, pid);
+    /* First check which services are currently active on this machine */
+    cmd = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, "/manifest", NULL);
+
+    fp = fopen(cmd, "r");
+    if(fp != NULL)
+    {
+	int status;
+	char line[BUFFER_SIZE];
+	int is_component = TRUE;
+	
+	/* Read the output */
+	
+	while(fgets(line, sizeof(line), fp) != NULL)
+	{
+	    puts(line);
+	    
+	    if(is_component)
+	    {
+		derivation = (gchar**)g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
+		derivation[derivation_size] = g_strdup(line);	    
+		derivation_size++;
+		is_component = FALSE;
+	    }
+	    else
+	    {
+		type = (gchar**)g_realloc(type, (type_size + 1) * sizeof(gchar*));
+		type[type_size] = g_strdup(line);	    
+		type_size++;
+		is_component = TRUE;
+	    }
+	}
+	
+	/* Add NULL value to the end of the list */
+	derivation = (gchar**)g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
+	derivation[derivation_size] = NULL;
+	type = (gchar**)g_realloc(type, (type_size + 1) * sizeof(gchar*));
+	type[type_size] = NULL;	
+	
+	fclose(fp);
+    }
+    
+    /* For every derivation we need a type */
+    if(derivation_size == type_size)
+	if(!unlock_services(derivation, derivation_size, type, type_size))
+	    failed = TRUE;
     else
-	disnix_emit_failure_signal(object, pid); /* There was no lock -> fail */
+    {
+	g_printerr("Corrupt profile manifest: a service or type is missing!\n");
+	failed = TRUE;
+    }
+
+    if(unlink("/tmp/disnix.lock") == -1)
+	failed = TRUE; /* There was no lock -> fail */
+	
+    if(failed)
+	disnix_emit_failure_signal(object, pid); 
+    else
+	disnix_emit_finish_signal(object, pid);
 }
 
 gboolean disnix_unlock(DisnixObject *object, const gint pid, const gchar *profile, GError **error)

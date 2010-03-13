@@ -163,6 +163,27 @@ rec {
       then [ (head serviceActivationMapping).service ] ++ (queryServicesByTargetName (tail serviceActivationMapping) targetName infrastructure)
       else queryServicesByTargetName (tail serviceActivationMapping) targetName infrastructure
   ;
+
+  /*
+   * Iterates over a service activation mapping list and filters out all the
+   * services and types that are distributed to a specific target.
+   *
+   * Parameters:
+   * serviceActivationMapping: List of activation mappings
+   * targetName: Name of the target in the infrastructure model to filter on 
+   * infrastructure: Infrastructure attributeset
+   *   
+   * Returns:
+   * List of services and types that are distributed to the given target name
+   */
+  
+  generateProfileManifest = serviceActivationMapping: targetName: infrastructure:
+    if serviceActivationMapping == [] then []
+    else
+      if (head serviceActivationMapping).target == getAttr targetName infrastructure
+      then [ (head serviceActivationMapping).service (head serviceActivationMapping).type ] ++ (generateProfileManifest (tail serviceActivationMapping) targetName infrastructure)
+      else generateProfileManifest (tail serviceActivationMapping) targetName infrastructure
+  ;
   
   /*
    * Generates profiles for every machine that has services deployed on it, and
@@ -183,13 +204,14 @@ rec {
     let
       target = getAttr (head targetNames) infrastructure;
       servicesPerTarget = queryServicesByTargetName serviceActivationMapping (head targetNames) infrastructure;
+      profileManifest = generateProfileManifest serviceActivationMapping (head targetNames) infrastructure;
       mappingItem = {
         profile = (pkgs.buildEnv {
 	  name = head targetNames;
 	  paths = servicesPerTarget;
 	  manifest = pkgs.writeTextFile {
 	    name = "manifest";
-	    text = "${pkgs.lib.concatMapStrings (service: "${service}\n") servicesPerTarget}";
+	    text = "${pkgs.lib.concatMapStrings (manifestItem: "${manifestItem}\n") profileManifest}";
 	  };
 	}).outPath;
 	target = getAttr targetProperty target;
