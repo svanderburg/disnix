@@ -102,6 +102,13 @@ then
     exit 1
 fi
 
+if [ "$TMPDIR" = "" ]
+then
+    export TMPDIR=/tmp
+fi
+
+# Execute operation
+
 if [ "$to" = "1" ]
 then
     # Resolve the store path of the given file
@@ -117,7 +124,7 @@ then
     if [ "$invalidPaths" != "" ]
     then
         # Serialise all the missing parts of the closure
-        tmpfilename=`mktemp -p /tmp`    
+        tmpfilename=`mktemp -p $TMPDIR`    
         nix-store --export $invalidPaths > $tmpfilename
     
         # Import the serialisation of the target by using the Disnix interface

@@ -26,6 +26,9 @@
 /** Directory in which the activation modules can be found */
 char *activation_modules_dir;
 
+/** Path to the temp directory */
+char *tmpdir;
+
 /* Disnix instance definition */
 #include "disnix-instance.h"
 
@@ -136,6 +139,12 @@ int start_disnix_service(char *activation_modules_dir_arg, int session_bus)
 
     /* Add the server parameters to the global variables */
     activation_modules_dir = activation_modules_dir_arg;
+    
+    /* Determine the temp directory */
+    tmpdir = getenv("TMPDIR");
+    
+    if(tmpdir == NULL)
+	tmpdir = "/tmp";
     
     /* Create a GMainloop with initial state of 'not running' (FALSE) */
     mainloop = g_main_loop_new(NULL, FALSE);

@@ -30,6 +30,8 @@
 
 extern char *activation_modules_dir;
 
+extern char *tmpdir;
+
 static int job_counter = 0;
 
 gchar **update_lines_vector(gchar **lines, char *buf)
@@ -187,7 +189,7 @@ static void disnix_export_thread_func(DisnixObject *object, const gint pid, gcha
 {
     /* Declarations */
     char line[BUFFER_SIZE];
-    char tempfilename[19] = "/tmp/disnix.XXXXXX";
+    char *tempfilename = g_strconcat(tmpdir, "/disnix.XXXXXX", NULL);
     int closure_fd;
     
     /* Print log entry */
@@ -248,6 +250,9 @@ static void disnix_export_thread_func(DisnixObject *object, const gint pid, gcha
 	
 	close(closure_fd);
     }
+    
+    /* Cleanup */
+    g_free(tempfilename);
     
     _exit(0);
 }
@@ -1006,9 +1011,10 @@ static void disnix_lock_thread_func(DisnixObject *object, const gint pid, const 
 	if(exit_status == 0)
 	{
 	    int fd;
+	    gchar *lock_filename = g_strconcat(tmpdir, "/disnix.lock");
 	    
 	    /* If no lock exists, try to create one */
-	    if((fd = open("/tmp/disnix.lock", O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR)) == -1)
+	    if((fd = open(lock_filename, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR)) == -1)
 	    {
 		unlock_services(derivation, derivation_size, type, type_size);
     		disnix_emit_failure_signal(object, pid); /* Lock already exists -> fail */
@@ -1020,6 +1026,8 @@ static void disnix_lock_thread_func(DisnixObject *object, const gint pid, const 
     		/* Send finish signal */
     		disnix_emit_finish_signal(object, pid);
 	    }
+	    
+	    g_free(lock_filename);
 	}
 	else
 	{
@@ -1036,6 +1044,8 @@ static void disnix_lock_thread_func(DisnixObject *object, const gint pid, const 
     /* Cleanup */
     g_strfreev(derivation);
     g_strfreev(type);
+    
+    _exit(0);
 }
 
 gboolean disnix_lock(DisnixObject *object, const gint pid, const gchar *profile, GError **error)
@@ -1061,6 +1071,7 @@ static void disnix_unlock_thread_func(DisnixObject *object, const gint pid, cons
     gchar **type = NULL;
     unsigned int type_size = 0;
     int failed = FALSE;
+    gchar *lock_filename = g_strconcat(tmpdir, "/disnix.lock", NULL);
     
     /* Print log entry */
     g_print("Releasing lock on profile: %s\n", profile);
@@ -1116,13 +1127,18 @@ static void disnix_unlock_thread_func(DisnixObject *object, const gint pid, cons
 	failed = TRUE;
     }
 
-    if(unlink("/tmp/disnix.lock") == -1)
+    if(unlink(lock_filename) == -1)
 	failed = TRUE; /* There was no lock -> fail */
 	
     if(failed)
 	disnix_emit_failure_signal(object, pid); 
     else
 	disnix_emit_finish_signal(object, pid);
+    
+    /* Cleanup */
+    g_free(lock_filename);
+    
+    _exit(0);
 }
 
 gboolean disnix_unlock(DisnixObject *object, const gint pid, const gchar *profile, GError **error)
