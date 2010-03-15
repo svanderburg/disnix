@@ -18,7 +18,7 @@ let
         src = disnix;
         inherit officialRelease;
 
-        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt ];
+        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable ];
       };
 
 
@@ -33,7 +33,7 @@ let
         name = "disnix";
         src = tarball;
 
-        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt ];
+        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable ];
       };
   };
 in jobs

@@ -3,12 +3,24 @@ AC_INIT([disnix], [0.1])
 AC_CONFIG_AUX_DIR([config])
 AM_INIT_AUTOMAKE([1.7.2 -Wall -Werror])
 
+# Checks for installed programs
+AC_DEFUN([NEED_PROG],
+[
+AC_PATH_PROG($1, $2)
+if test -z "$$1"; then
+    AC_MSG_ERROR([$2 is required])
+fi
+])
+
 # Checks for programs
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 AM_PROG_CC_C_O
 PKG_PROG_PKG_CONFIG
+NEED_PROG(bash, bash)
+NEED_PROG(getopt, getopt)
+NEED_PROG(nix_store, nix-store)
 
 # Checks for D-Bus libraries
 PKG_CHECK_MODULES(GLIB_DBUS, [dbus-1 dbus-glib-1])
@@ -62,5 +74,8 @@ man/Makefile
 scripts/disnix-instantiate
 scripts/disnix-manifest
 scripts/disnix-gendist-roundrobin
+tests/Makefile
+tests/manifest/Makefile
+tests/manifest/common.bash
 ])
 AC_OUTPUT
