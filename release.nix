@@ -65,11 +65,28 @@ let
                   mount -t aufs -o dirs=/mnt-store-tmpfs=rw:$targetRoot/nix/store=rr none $targetRoot/nix/store
                 '';
 
+              services.dbus.enable = true;
+	      services.dbus.packages = [ disnix ];
+	      jobs.disnix =
+                { description = "Disnix server";
+
+                  startOn = "started dbus";
+
+                  script =
+                    ''
+                      export PATH=/var/run/current-system/sw/bin:/var/run/current-system/sw/sbin
+                      export HOME=/root
+	
+                      ${disnix}/bin/disnix-service #--activation-modules-dir=
+                    '';
+		};
+	      
 	      environment.systemPackages = [ pkgs.stdenv disnix ];
-	    }
-	    ;
+	    };
 	  testScript = 
 	    ''
+	      #### Test disnix-manifest
+	      
 	      # Complete inter-dependency test
 	      $machine->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
 	      
@@ -87,39 +104,39 @@ let
 	      my $target2ProfileClosure = $machine->mustSucceed("nix-store -qR @target2Profile");
 	      
 	      if($target1ProfileClosure =~ /\-testService1/) {
-	          print "testService1 is distributed to testTarget1 -> OK";
+	          print "testService1 is distributed to testTarget1 -> OK\n";
 	      } else {
-	          die "testService1 should be distributed to testTarget1";
+	          die "testService1 should be distributed to testTarget1\n";
 	      }
 		 
 	      if($target2ProfileClosure =~ /\-testService1/) {
-	          print "testService1 is distributed to testTarget2 -> OK";
+	          print "testService1 is distributed to testTarget2 -> OK\n";
 	      } else {
-	          die "testService1 should be distributed to testTarget2";
+	          die "testService1 should be distributed to testTarget2\n";
 	      }
 
 	      if($target1ProfileClosure =~ /\-testService2/) {
-	          print "testService2 is distributed to testTarget1 -> OK";
+	          print "testService2 is distributed to testTarget1 -> OK\n";
 	      } else {
-	          die "testService2 should be distributed to testTarget1";
+	          die "testService2 should be distributed to testTarget1\n";
 	      }
 		 
 	      if($target2ProfileClosure =~ /\-testService2/) {
-	          print "testService2 is distributed to testTarget2 -> OK";
+	          print "testService2 is distributed to testTarget2 -> OK\n";
 	      } else {
-	          die "testService2 should be distributed to testTarget2";
+	          die "testService2 should be distributed to testTarget2\n";
 	      }
 
 	      if($target1ProfileClosure =~ /\-testService3/) {
-	          print "testService3 is distributed to testTarget1 -> OK";
+	          print "testService3 is distributed to testTarget1 -> OK\n";
 	      } else {
-	          die "testService3 should be distributed to testTarget1";
+	          die "testService3 should be distributed to testTarget1\n";
 	      }
 		 
 	      if($target2ProfileClosure =~ /\-testService3/) {
-	          die "testService3 should NOT be distributed to testTarget2";
+	          die "testService3 should NOT be distributed to testTarget2\n";
 	      } else {
-	          print "testService3 is NOT distributed to testTarget2 -> OK";	          
+	          print "testService3 is NOT distributed to testTarget2 -> OK\n";
 	      }
 	      
 	      # Composition test
@@ -134,6 +151,21 @@ let
 	      	  
 	      # Incomplete distribution test
 	      $machine->mustFail("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-incomplete.nix");
+	      
+	      #### Test dbus-service
+	      	      	      
+	      my $result = $machine->mustSucceed("disnix-client --print-invalid /nix/store/invalid");
+	      
+	      if($result =~ /\/nix\/store\/invalid/) {
+	          print "/nix/store/invalid is invalid";
+	      } else {
+	          print "/nix/store/invalid should be invalid";
+	      }
+	      	      
+	      $machine->mustSucceed("disnix-client --lock");
+	      $machine->mustFail("disnix-client --lock");
+	      $machine->mustSucceed("disnix-client --unlock");
+	      $machine->mustFail("disnix-client --unlock");
 	    '';
 	};
       };

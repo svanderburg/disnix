@@ -1011,7 +1011,7 @@ static void disnix_lock_thread_func(DisnixObject *object, const gint pid, const 
 	if(exit_status == 0)
 	{
 	    int fd;
-	    gchar *lock_filename = g_strconcat(tmpdir, "/disnix.lock");
+	    gchar *lock_filename = g_strconcat(tmpdir, "/disnix.lock", NULL);
 	    
 	    /* If no lock exists, try to create one */
 	    if((fd = open(lock_filename, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR)) == -1)
