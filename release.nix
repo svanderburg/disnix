@@ -40,68 +40,76 @@ let
       let
         disnix = build { inherit system; };
 	manifestTests = ./tests/manifest;
+	machine =
+	  {config, pkgs, ...}:
+	    
+	  {
+	    # Make the Nix store in this VM writable using AUFS.  Use Linux
+            # 2.6.27 because 2.6.32 doesn't work (probably we need AUFS2).
+            # This should probably be moved to qemu-vm.nix.
+
+            boot.kernelPackages = (if pkgs ? linuxPackages then
+              pkgs.linuxPackages_2_6_27 else pkgs.kernelPackages_2_6_27);
+            boot.extraModulePackages = [ config.boot.kernelPackages.aufs ];
+            boot.initrd.availableKernelModules = [ "aufs" ];
+	      
+            boot.initrd.postMountCommands =
+              ''
+                mkdir /mnt-store-tmpfs
+                mount -t tmpfs -o "mode=755" none /mnt-store-tmpfs
+                mount -t aufs -o dirs=/mnt-store-tmpfs=rw:$targetRoot/nix/store=rr none $targetRoot/nix/store
+              '';
+
+            services.dbus.enable = true;
+            services.dbus.packages = [ disnix ];
+	    services.sshd.enable = true;
+	    
+	    jobs.disnix =
+              { description = "Disnix server";
+
+                startOn = "started dbus";
+
+                script =
+                  ''
+                    export PATH=/var/run/current-system/sw/bin:/var/run/current-system/sw/sbin
+                    export HOME=/root
+	
+                    ${disnix}/bin/disnix-service #--activation-modules-dir=
+                  '';
+	       };
+	      
+	    environment.systemPackages = [ pkgs.stdenv disnix ];
+	  };	
       in
       with import "${nixos}/lib/testing.nix" { inherit nixpkgs system; services = null; };
       
       {
         install = simpleTest {
-	  machine =
-	    {config, pkgs, ...}:
-	    
-	    {
-	      # Make the Nix store in this VM writable using AUFS.  Use Linux
-              # 2.6.27 because 2.6.32 doesn't work (probably we need AUFS2).
-              # This should probably be moved to qemu-vm.nix.
-
-	      boot.kernelPackages = (if pkgs ? linuxPackages then
-                pkgs.linuxPackages_2_6_27 else pkgs.kernelPackages_2_6_27);
-              boot.extraModulePackages = [ config.boot.kernelPackages.aufs ];
-              boot.initrd.availableKernelModules = [ "aufs" ];
-	      
-	      boot.initrd.postMountCommands =
-                ''
-                  mkdir /mnt-store-tmpfs
-                  mount -t tmpfs -o "mode=755" none /mnt-store-tmpfs
-                  mount -t aufs -o dirs=/mnt-store-tmpfs=rw:$targetRoot/nix/store=rr none $targetRoot/nix/store
-                '';
-
-              services.dbus.enable = true;
-	      services.dbus.packages = [ disnix ];
-	      jobs.disnix =
-                { description = "Disnix server";
-
-                  startOn = "started dbus";
-
-                  script =
-                    ''
-                      export PATH=/var/run/current-system/sw/bin:/var/run/current-system/sw/sbin
-                      export HOME=/root
-	
-                      ${disnix}/bin/disnix-service #--activation-modules-dir=
-                    '';
-		};
-	      
-	      environment.systemPackages = [ pkgs.stdenv disnix ];
-	    };
+	  nodes = {
+	    client = machine;
+	    server = machine;
+	  };	    
 	  testScript = 
 	    ''
+	      startAll;
+	      
 	      #### Test disnix-manifest
 	      
 	      # Complete inter-dependency test
-	      $machine->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+	      $client->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
 	      
 	      # Incomplete inter-dependency test
-	      $machine->mustFail("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-incomplete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+	      $client->mustFail("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-incomplete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
 	      
 	      # Load balancing test
-	      my $manifest = $machine->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-loadbalancing.nix");
-	      my @closure = split('\n', $machine->mustSucceed("nix-store -qR $manifest"));
+	      my $manifest = $client->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-loadbalancing.nix");
+	      my @closure = split('\n', $client->mustSucceed("nix-store -qR $manifest"));
 	      
 	      my @target1Profile = grep(/\-testTarget1/, @closure);
 	      my @target2Profile = grep(/\-testTarget2/, @closure);
 	      
-	      my $target1ProfileClosure	= $machine->mustSucceed("nix-store -qR @target1Profile");
-	      my $target2ProfileClosure = $machine->mustSucceed("nix-store -qR @target2Profile");
+	      my $target1ProfileClosure	= $client->mustSucceed("nix-store -qR @target1Profile");
+	      my $target2ProfileClosure = $client->mustSucceed("nix-store -qR @target2Profile");
 	      
 	      if($target1ProfileClosure =~ /\-testService1/) {
 	          print "testService1 is distributed to testTarget1 -> OK\n";
@@ -140,8 +148,8 @@ let
 	      }
 	      
 	      # Composition test
-	      my $manifest = $machine->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-composition.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-composition.nix");
-	      my $closure = $machine->mustSucceed("nix-store -qR $manifest");
+	      my $manifest = $client->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-composition.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-composition.nix");
+	      my $closure = $client->mustSucceed("nix-store -qR $manifest");
 	      
 	      if($closure =~ /\-testService2B/) {
 	          print "Found testService2B";
@@ -150,22 +158,32 @@ let
 	      }
 	      	  
 	      # Incomplete distribution test
-	      $machine->mustFail("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-incomplete.nix");
+	      $client->mustFail("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-incomplete.nix");
 	      
-	      #### Test dbus-service
+	      #### Test disnix-client / dbus-service
 	      	      	      
-	      my $result = $machine->mustSucceed("disnix-client --print-invalid /nix/store/invalid");
+	      my $result = $client->mustSucceed("disnix-client --print-invalid /nix/store/invalid");
 	      
 	      if($result =~ /\/nix\/store\/invalid/) {
-	          print "/nix/store/invalid is invalid";
+	          print "/nix/store/invalid is invalid\n";
 	      } else {
-	          print "/nix/store/invalid should be invalid";
+	          die "/nix/store/invalid should be invalid\n";
 	      }
 	      	      
-	      $machine->mustSucceed("disnix-client --lock");
-	      $machine->mustFail("disnix-client --lock");
-	      $machine->mustSucceed("disnix-client --unlock");
-	      $machine->mustFail("disnix-client --unlock");
+	      $client->mustSucceed("disnix-client --lock");
+	      $client->mustFail("disnix-client --lock");
+	      $client->mustSucceed("disnix-client --unlock");
+	      $client->mustFail("disnix-client --unlock");
+	      
+	      #### Test disnix-ssh-client
+
+	      #my $result = $client->mustSucceed("disnix-ssh-client --target server --print-invalid /nix/store/invalid");
+	      
+	      #if($result =~ /\/nix\/store\/invalid/) {
+	          #print "/nix/store/invalid is invalid\n";
+	      #} else {
+	          #die "/nix/store/invalid should be invalid\n";
+	      #}
 	    '';
 	};
       };
