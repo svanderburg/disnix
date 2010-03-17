@@ -880,7 +880,7 @@ gboolean disnix_deactivate(DisnixObject *object, const gint pid, gchar *derivati
 static int unlock_services(gchar **derivation, unsigned int derivation_size, gchar **type, unsigned int type_size)
 {
     unsigned int i;
-    int failed = FALSE;
+    int exit_status = TRUE;
     
     for(i = 0; i < derivation_size; i++)
     {
@@ -899,7 +899,7 @@ static int unlock_services(gchar **derivation, unsigned int derivation_size, gch
 	if(status == -1)
 	{
 	    g_printerr("Error forking unlock process!\n");
-	    failed = TRUE;
+	    exit_status = FALSE;
 	}
 	else
 	{
@@ -908,12 +908,12 @@ static int unlock_services(gchar **derivation, unsigned int derivation_size, gch
 	    if(WEXITSTATUS(status) != 0)
 	    {
 	        g_printerr("Unlock failed!\n");
-	        failed = TRUE;
+	        exit_status = FALSE;
 	    }
 	}
     }
     
-    return failed;
+    return exit_status;
 }
 
 static void disnix_lock_thread_func(DisnixObject *object, const gint pid, const gchar *profile)
@@ -1119,8 +1119,13 @@ static void disnix_unlock_thread_func(DisnixObject *object, const gint pid, cons
     
     /* For every derivation we need a type */
     if(derivation_size == type_size)
+    {
 	if(!unlock_services(derivation, derivation_size, type, type_size))
+	{
+	    g_printerr("Failed to send unlock notification to old services!\n");
 	    failed = TRUE;
+	}
+    }
     else
     {
 	g_printerr("Corrupt profile manifest: a service or type is missing!\n");
@@ -1128,8 +1133,11 @@ static void disnix_unlock_thread_func(DisnixObject *object, const gint pid, cons
     }
 
     if(unlink(lock_filename) == -1)
+    {
+	g_printerr("There is no lock file!\n");
 	failed = TRUE; /* There was no lock -> fail */
-	
+    }
+    
     if(failed)
 	disnix_emit_failure_signal(object, pid); 
     else
