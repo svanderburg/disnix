@@ -37,6 +37,9 @@ PKG_CHECK_MODULES(LIBXSLT, libxslt >= $LIBXSLT_REQUIRED)
 AC_SUBST(LIBXSLT_CFLAGS)
 AC_SUBST(LIBXSLT_LIBS)	
 
+# Checks for Nixpkgs
+AC_SUBST(NIXPKGS_ALL)
+
 # Add D-Bus specific flags
 CFLAGS="$CFLAGS $GLIB_DBUS_CFLAGS"
 LIBS="$LIBS $GLIB_DBUS_LIBS"
@@ -74,8 +77,5 @@ man/Makefile
 scripts/disnix-instantiate
 scripts/disnix-manifest
 scripts/disnix-gendist-roundrobin
-tests/Makefile
-tests/manifest/Makefile
-tests/manifest/common.bash
 ])
 AC_OUTPUT

@@ -1,1 +1,1 @@
-SUBDIRS = conf src scripts data man tests
+SUBDIRS = conf src scripts data man
