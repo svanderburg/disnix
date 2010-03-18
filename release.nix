@@ -177,13 +177,32 @@ let
 	      
 	      #### Test disnix-ssh-client
 
-	      #my $result = $client->mustSucceed("disnix-ssh-client --target server --print-invalid /nix/store/invalid");
+              # Initialise ssh stuff
+	      my $key=`${pkgs.openssh}/bin/ssh-keygen -t dsa -f key -N ""`;
+    
+              $server->mustSucceed("mkdir /root/.ssh");
+              $server->mustSucceed("chmod 700 /root/.ssh");
+              $server->copyFileFromHost("key.pub", "/root/.ssh/authorized_keys");
+    
+              $client->mustSucceed("mkdir /root/.ssh");
+              $client->mustSucceed("chmod 700 /root/.ssh");
+              $client->copyFileFromHost("key", "/root/.ssh/id_dsa");
+              $client->mustSucceed("chmod 600 /root/.ssh/id_dsa");
 	      
-	      #if($result =~ /\/nix\/store\/invalid/) {
-	          #print "/nix/store/invalid is invalid\n";
-	      #} else {
-	          #die "/nix/store/invalid should be invalid\n";
-	      #}
+	      # Run test-cases
+	      
+	      my $result = $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --print-invalid /nix/store/invalid");
+	      
+	      if($result =~ /\/nix\/store\/invalid/) {
+	          print "/nix/store/invalid is invalid\n";
+	      } else {
+	          die "/nix/store/invalid should be invalid\n";
+	      }
+	      
+	      $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --lock");
+	      $client->mustFail("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --lock");
+	      $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --unlock");
+	      $client->mustFail("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --unlock");
 	    '';
 	};
       };
