@@ -34,7 +34,7 @@ let
       
     tests = 
       { nixos ? /etc/nixos/nixos
-      , activation_scripts ? (import ../../disnix-activation-scripts-nixos/trunk/release.nix {}).build {}
+      , disnix_activation_scripts ? (import ../../disnix-activation-scripts-nixos/trunk/release.nix {}).build {}
       }:
       
       let
@@ -74,7 +74,7 @@ let
                     export PATH=/var/run/current-system/sw/bin:/var/run/current-system/sw/sbin
                     export HOME=/root
 	
-                    ${disnix}/bin/disnix-service --activation-modules-dir=${activation_scripts}/libexec/disnix/activation-scripts
+                    ${disnix}/bin/disnix-service --activation-modules-dir=${disnix_activation_scripts}/libexec/disnix/activation-scripts
                   '';
 	       };
 	      
