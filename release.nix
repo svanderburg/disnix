@@ -175,6 +175,12 @@ let
 	      $client->mustSucceed("disnix-client --unlock");
 	      $client->mustFail("disnix-client --unlock");
 	      
+	      my @closure = split('\n', $client->mustSucceed("nix-store -qR $manifest"));
+	      my @testService1 = grep(/\-testService1/, @closure);
+	      
+	      $client->mustSucceed("disnix-client --activate --arguments foo=foo --arguments bar=bar --type echo @testService1");
+	      $client->mustSucceed("disnix-client --deactivate --arguments foo=foo --arguments bar=bar --type echo @testService1");
+	      
 	      #### Test disnix-ssh-client
 
               # Initialise ssh stuff
@@ -203,6 +209,15 @@ let
 	      $client->mustFail("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --lock");
 	      $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --unlock");
 	      $client->mustFail("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --unlock");
+	      
+	      $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --activate --arguments foo=foo --arguments bar=bar --type echo @testService1");
+	      $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --deactivate --arguments foo=foo --arguments bar=bar --type echo @testService1");
+	      
+	      #### Test copy closure
+	      
+	      $server->mustFail("nix-store --check-validity @testService1");
+	      $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-copy-closure --interface disnix-ssh-client --target server --to @testService1");
+	      $server->mustSucceed("nix-store --check-validity @testService1");
 	    '';
 	};
       };
