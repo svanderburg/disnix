@@ -34,11 +34,11 @@ let
       
     tests = 
       { nixos ? /etc/nixos/nixos
-      , system ? "x86_64-linux"
+      , activation_scripts ? (import ../../disnix-activation-scripts-nixos/trunk/release.nix {}).build {}
       }:
       
       let
-        disnix = build { inherit system; };
+        disnix = build { system = "x86_64-linux"; };
 	manifestTests = ./tests/manifest;
 	machine =
 	  {config, pkgs, ...}:
@@ -74,14 +74,14 @@ let
                     export PATH=/var/run/current-system/sw/bin:/var/run/current-system/sw/sbin
                     export HOME=/root
 	
-                    ${disnix}/bin/disnix-service #--activation-modules-dir=
+                    ${disnix}/bin/disnix-service --activation-modules-dir=${activation_scripts}/libexec/disnix/activation-scripts
                   '';
 	       };
 	      
 	    environment.systemPackages = [ pkgs.stdenv disnix ];
 	  };	
       in
-      with import "${nixos}/lib/testing.nix" { inherit nixpkgs system; services = null; };
+      with import "${nixos}/lib/testing.nix" { inherit nixpkgs; system = "x86_64-linux"; services = null; };
       
       {
         install = simpleTest {
