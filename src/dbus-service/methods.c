@@ -884,9 +884,10 @@ static int unlock_services(gchar **derivation, unsigned int derivation_size, gch
     
     for(i = 0; i < derivation_size; i++)
     {
-	int status = fork();
+	int status; 
 	    
 	g_print("Notifying unlock on %s: of type: %s\n", derivation[i], type[i]);
+	status = fork();
 	    
 	if(status == 0)
 	{
@@ -940,8 +941,14 @@ static void disnix_lock_thread_func(DisnixObject *object, const gint pid, const 
 	
 	/* Read the output */
 	
-	while(fgets(line, sizeof(line), fp) != NULL)
+	while(fgets(line, BUFFER_SIZE - 1, fp) != NULL)
 	{
+	    unsigned int line_length = strlen(line);
+	    
+	    /* Chop off the linefeed at the end */
+	    if(line > 0)
+	      line[line_length - 1] = '\0';
+	      
 	    puts(line);
 	    
 	    if(is_component)
@@ -978,9 +985,10 @@ static void disnix_lock_thread_func(DisnixObject *object, const gint pid, const 
         /* Notify all currently running services that we want to acquire a lock */
         for(i = 0; i < derivation_size; i++)
         {
-	    int status = fork();
+	    int status; 
 	    
 	    g_print("Notifying lock on %s: of type: %s\n", derivation[i], type[i]);
+	    status = fork();
 	    
 	    if(status == 0)
 	    {
@@ -1088,8 +1096,14 @@ static void disnix_unlock_thread_func(DisnixObject *object, const gint pid, cons
 	
 	/* Read the output */
 	
-	while(fgets(line, sizeof(line), fp) != NULL)
+	while(fgets(line, BUFFER_SIZE - 1, fp) != NULL)
 	{
+	    unsigned int line_length = strlen(line);
+	    
+	    /* Chop off the linefeed at the end */
+	    if(line > 0)
+	      line[line_length - 1] = '\0';
+
 	    puts(line);
 	    
 	    if(is_component)
