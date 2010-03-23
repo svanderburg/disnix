@@ -21,6 +21,9 @@ PKG_PROG_PKG_CONFIG
 NEED_PROG(bash, bash)
 NEED_PROG(getopt, getopt)
 NEED_PROG(nix_store, nix-store)
+AC_PATH_PROG(xmllint, xmllint, false)
+AC_PATH_PROG(xsltproc, xsltproc, false)
+AC_PATH_PROG(dblatex, dblatex)
 
 # Checks for D-Bus libraries
 PKG_CHECK_MODULES(GLIB_DBUS, [dbus-1 dbus-glib-1])
@@ -39,6 +42,17 @@ AC_SUBST(LIBXSLT_LIBS)
 
 # Checks for Nixpkgs
 AC_SUBST(NIXPKGS_ALL)
+
+# Checks for Docbook stuff
+AC_ARG_WITH(docbook-rng, AC_HELP_STRING([--with-docbook-rng=PATH],
+  [path of the DocBook RelaxNG schema]),
+  docbookrng=$withval, docbookrng=/docbook-rng-missing)
+AC_SUBST(docbookrng)
+
+AC_ARG_WITH(docbook-xsl, AC_HELP_STRING([--with-docbook-xsl=PATH],
+  [path of the DocBook XSL stylesheets]),
+  docbookxsl=$withval, docbookxsl=/docbook-xsl-missing)
+AC_SUBST(docbookxsl)
 
 # Add D-Bus specific flags
 CFLAGS="$CFLAGS $GLIB_DBUS_CFLAGS"
@@ -77,5 +91,7 @@ man/Makefile
 scripts/disnix-instantiate
 scripts/disnix-manifest
 scripts/disnix-gendist-roundrobin
+doc/Makefile
+doc/manual/Makefile
 ])
 AC_OUTPUT

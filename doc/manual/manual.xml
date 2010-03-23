@@ -1,0 +1,33 @@
+<book xmlns="http://docbook.org/ns/docbook"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+
+  <info>
+    <title>Disnix User's Guide</title>
+
+    <subtitle>Draft (Version <xi:include href="version.txt" parse="text" />)</subtitle>
+
+    <author>
+      <personname>
+        <firstname>Sander</firstname>
+        <surname>van der Burg</surname>
+      </personname>
+      <affiliation>
+        <orgname>Delft University of Technology</orgname>
+        <orgdiv>Department of Software Technology</orgdiv>
+      </affiliation>
+      <contrib>Author</contrib>
+    </author>
+
+    <copyright>
+      <year>2008</year>
+      <year>2009</year>
+      <year>2010</year>
+      <holder>Sander van der Burg</holder>
+    </copyright>
+
+    <date>April 2010</date>
+  </info>
+  
+  <xi:include href="introduction.xml" />
+  <xi:include href="installation.xml" />    
+</book>

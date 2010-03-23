@@ -21,7 +21,7 @@ In order to build Disnix from source code, the following packages are required:
 For running Disnix additional packages have to be installed:
 
 - Nix (http://www.nixos.org)
-- Nixpkgs (http://www.nixos.org/
+- Nixpkgs (http://www.nixos.org)
 - OpenSSH (for using the disnix-ssh-client)
 - Disnix activation modules
 

@@ -1,0 +1,151 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="chap-introduction">
+
+<title>Installation</title>
+
+<section>
+<title>Obtaining Disnix</title>
+
+<para>
+The easiest way to use Disnix is by installing the Disnix package with
+the Nix package manager from the
+<link xlink:href="http://nixos.org/nixpkgs">Nixpkgs</link>
+repository by typing:
+
+<screen>
+$ nix-env -i disnix
+</screen>
+
+Another way is downloading the Disnix source distribution
+and to compile it manually. 
+</para>
+
+</section>
+
+<section>
+<title>Prerequisites</title>
+
+<para>
+In order to build Disnix the following dependencies are required
+(only required if Disnix is built from source code):
+Disnix uses XML for representing the lower level data formats and
+therefore requires
+<link xlink:href="http://www.xmlsoft.org">libxml2</link>
+and
+<link xlink:href="http://www.xmlsoft.org">libxslt</link>
+to parse and transform them.
+
+The Disnix service that provides remote access to deployment operations
+is a D-Bus service and requires
+<link xlink:href="http://www.freedesktop.org/wiki/Software/DBusBindings">dbus-glib</link>
+(which itself depends on
+<link xlink:href="http://www.gtk.org">GLib</link>
+and
+<link xlink:href="http://www.freedesktop.org/wiki/Software/dbus">D-Bus</link>
+).
+</para>
+
+<para>
+In order to run a Disnix client, the
+<link xlink:href="http://nixos.org/nix">Nix package manager</link>
+must be installed, a copy of
+<link xlink:href="http://nixos.org/nixpkgs">Nixpkgs</link> is required
+and an environment variable NIXPKGS_ALL must point to the path where
+it is installed.
+</para>
+
+<para>
+By default, Disnix includes a SSH client and wrapper that can be used
+to execute remote deployment operations. If you want to use SSH as a 
+communication protocol, a
+<link xlink:href="http://www.openssh.org">OpenSSH</link>
+server must be running on each target machine and a client machine
+requires a OpenSSH client.
+</para>
+
+</section>
+
+<section>
+<title>Compiling Disnix</title>
+
+<para>
+After unpacking or checking out the Disnix sources, it can be
+compiled by executing the following commands:
+
+<screen>
+$ ./configure <replaceable>options...</replaceable>
+$ make
+$ make install
+</screen>
+
+</para>
+
+<para>
+When building from the Subversion repository, these should be
+preceded by the command:
+
+<screen>
+$ ./bootstrap
+</screen>
+
+</para>
+
+<para>
+The installation path can be specified by passing the
+<option>--prefix=<replaceable>prefix</replaceable></option> to
+<command>configure</command>. The default installation directory is
+<filename>/usr/local</filename>. You can change this to any location
+you like.  You must have write permission to the
+<replaceable>prefix</replaceable> path.
+</para>
+
+</section>
+
+<section>
+<title>Running a Disnix service on a target machine</title>
+</section>
+
+<para>
+In order to deploy a distributed system in a network of machines, every
+machine needs to be reachable by the coordinator, in order to perform deployment
+steps remotely.
+The Disnix service is a service that provides access to these operations
+through a RPC protocol.
+</para>
+
+<para>
+The Disnix service consists of two parts. A core Disnix component which actually performs
+the deployment operations and a wrapper which exposes the operations to remote users
+through a RPC protocol (such as the SSH wrapper which is included in the
+Disnix distribution).
+</para>
+
+<para>
+The core Disnix service is a D-Bus service operating on the system bus,
+thus it requires the D-Bus system daemon running.
+Moreover, it also requires the Disnix service configuration file
+(which installed in PREFIX/etc/dbus-1/system.d) in the right location
+so that it is allowed to register itself on the system bus with the right access permissions
+(on most systems this location is in /etc/dbus-1/system.d).
+</para>
+
+<para>
+Except for the core Disnix service, a protocol wrapper is required that provides remote
+access to the core service operations through a RPC protocol. A SSH wrapper is included
+which only requires a OpenSSH server running on the same machine. For other protocols,
+you have to read the documentation that is included with the extension.
+</para>
+
+<para>
+By default, only users who are members of the group 'disnix' may access operations
+of the core Disnix service. Thus in order to access the Disnix operations remotely, either
+an account with the right permissions is required or the protocol wrapper should perform
+the authentication to the core Disnix service. The OpenSSH wrapper, for instance,
+uses the credentials of the calling user from the coordinator by default
+and therefore every target machine requires
+the user to be defined in /etc/passwd and the user should be member of
+the 'disnix' group.
+</para>
+
+</chapter>
