@@ -213,6 +213,7 @@ rec {
 	    name = "manifest";
 	    text = "${pkgs.lib.concatMapStrings (manifestItem: "${manifestItem}\n") profileManifest}";
 	  };
+	  ignoreCollisions = true;
 	}).outPath;
 	target = getAttr targetProperty target;
       };
