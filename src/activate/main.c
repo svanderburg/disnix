@@ -549,10 +549,11 @@ int main(int argc, char *argv[])
 	
 	if(old_manifest == NULL)
         {
-	    FILE *file = fopen(old_manifest_file, "r");
+	    FILE *file;
 	    
 	    /* If no old manifest file is given, try to to open the manifest file in the Nix profile */	    
 	    old_manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);	    
+	    file = fopen(old_manifest_file, "r");
 	    
 	    if(file == NULL)
 	    {
