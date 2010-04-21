@@ -18,6 +18,7 @@
  */
 
 #include <stdlib.h>
+#include <signal.h>
 #include <dbus/dbus-glib.h>
 #include <glib.h>
 
@@ -28,6 +29,9 @@ char *activation_modules_dir;
 
 /** Path to the temp directory */
 char *tmpdir;
+
+/** Stores the original signal action for the SIGCHLD signal */
+struct sigaction oldact;
 
 /* Disnix instance definition */
 #include "disnix-instance.h"
@@ -107,6 +111,19 @@ static void disnix_object_class_init (DisnixObjectClass *klass)
 }
 
 /**
+ * Handles a SIGCHLD signal.
+ *
+ * @param signum Singnal number
+ */
+ 
+static void handle_sigchild(int signum)
+{
+    int status;
+    
+    wait(&status);
+}
+
+/**
  * Starts the Disnix D-Bus service
  *
  * @param activation_modules_dir Directory in which the activation modules can be found
@@ -133,6 +150,9 @@ int start_disnix_service(char *activation_modules_dir_arg, int session_bus)
     /* Variables used to store error information */
     GError *error = NULL;
     guint result;
+
+    /* Specifies the new action for a SIGCHLD signal */
+    struct sigaction act;
     
     /* Initialize the GType/GObject system */
     g_type_init();
@@ -145,6 +165,11 @@ int start_disnix_service(char *activation_modules_dir_arg, int session_bus)
     
     if(tmpdir == NULL)
 	tmpdir = "/tmp";
+    
+    /* Create a new SIGCHLD handler which discards the result of the child process */
+    act.sa_handler = handle_sigchild;
+    act.sa_flags = 0;
+    sigaction(SIGCHLD, &act, &oldact);
     
     /* Create a GMainloop with initial state of 'not running' (FALSE) */
     mainloop = g_main_loop_new(NULL, FALSE);

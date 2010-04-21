@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
+#include <signal.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -31,6 +32,8 @@
 extern char *activation_modules_dir;
 
 extern char *tmpdir;
+
+extern struct sigact oldact;
 
 static int job_counter = 0;
 
@@ -178,7 +181,10 @@ gboolean disnix_import(DisnixObject *object, const gint pid, gchar *closure, GEr
     
     /* Fork job process which returns a signal later */
     if(fork() == 0)
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
 	disnix_import_thread_func(object, pid, closure);
+    }
     
     return TRUE;
 }
@@ -264,7 +270,10 @@ gboolean disnix_export(DisnixObject *object, const gint pid, gchar **derivation,
 
     /* Fork job process which returns a signal later */
     if(fork() == 0)
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
 	disnix_export_thread_func(object, pid, derivation);
+    }
         
     return TRUE;
 }
@@ -362,7 +371,10 @@ gboolean disnix_print_invalid(DisnixObject *object, const gint pid, gchar **deri
 
     /* Fork job process which returns a signal later */
     if(fork() == 0)
-	disnix_print_invalid_thread_func(object, pid, derivation);    
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
+	disnix_print_invalid_thread_func(object, pid, derivation);
+    }
         
     return TRUE;
 }
@@ -456,7 +468,10 @@ gboolean disnix_realise(DisnixObject *object, const gint pid, gchar **derivation
 
     /* Fork job process which returns a signal later */
     if(fork() == 0)
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
 	disnix_realise_thread_func(object, pid, derivation);    
+    }
     
     return TRUE;
 }
@@ -516,7 +531,10 @@ gboolean disnix_set(DisnixObject *object, const gint pid, const gchar *profile, 
     
     /* Fork job process which returns a signal later */
     if(fork() == 0)
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
 	disnix_set_thread_func(object, pid, profile, derivation);
+    }
         
     return TRUE;
 }
@@ -585,7 +603,10 @@ gboolean disnix_query_installed(DisnixObject *object, const gint pid, const gcha
     
     /* Fork job process which returns a signal later */
     if(fork() == 0)
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
 	disnix_query_installed_thread_func(object, pid, profile);
+    }
     
     return TRUE;
 }
@@ -681,7 +702,10 @@ gboolean disnix_query_requisites(DisnixObject *object, const gint pid, gchar **d
     
     /* Fork job process which returns a signal later */
     if(fork() == 0)
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
 	disnix_query_requisites_thread_func(object, pid, derivation);
+    }
     
     return TRUE;
 }
@@ -744,8 +768,11 @@ gboolean disnix_collect_garbage(DisnixObject *object, const gint pid, const gboo
 
     /* Fork job process which returns a signal later */
     if(fork() == 0)
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
 	disnix_collect_garbage_thread_func(object, pid, delete_old);
-    
+    }
+        
     return TRUE;
 }
 
@@ -807,7 +834,10 @@ gboolean disnix_activate(DisnixObject *object, const gint pid, gchar *derivation
 
     /* Fork job process which returns a signal later */
     if(fork() == 0)
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
 	disnix_activate_thread_func(object, pid, derivation, type, arguments);
+    }
     
     return TRUE;    
 }
@@ -870,7 +900,10 @@ gboolean disnix_deactivate(DisnixObject *object, const gint pid, gchar *derivati
 
     /* Fork job process which returns a signal later */
     if(fork() == 0)
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
 	disnix_deactivate_thread_func(object, pid, derivation, type, arguments);
+    }
     
     return TRUE;    
 }
@@ -1063,7 +1096,10 @@ gboolean disnix_lock(DisnixObject *object, const gint pid, const gchar *profile,
 
     /* Fork job process which returns a signal later */
     if(fork() == 0)
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
 	disnix_lock_thread_func(object, pid, profile);    
+    }
     
     return TRUE;    
 }
@@ -1170,8 +1206,11 @@ gboolean disnix_unlock(DisnixObject *object, const gint pid, const gchar *profil
 
     /* Fork job process which returns a signal later */
     if(fork() == 0)
-	disnix_unlock_thread_func(object, pid, profile);    
-
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
+	disnix_unlock_thread_func(object, pid, profile);
+    }
+    
     return TRUE;
 }
 
