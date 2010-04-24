@@ -27,8 +27,7 @@
 typedef struct
 {
     /** Target property name */
-    gchar *name;
-    
+    gchar *name;    
     /** Target property value */
     gchar *value;
 }
@@ -72,7 +71,7 @@ ActivationMapping;
  * Creates an array with activation mappings from a manifest XML file.
  *
  * @param manifest_file Path to the manifest XML file
- * @return 
+ * @return GArray containing activation mappings
  */
 GArray *create_activation_array(char *manifest_file);
 

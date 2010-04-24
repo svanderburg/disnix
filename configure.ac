@@ -85,6 +85,7 @@ src/libmanifest/Makefile
 src/libinfrastructure/Makefile
 src/distribute/Makefile
 src/activate/Makefile
+src/visualize/Makefile
 scripts/Makefile
 data/Makefile
 man/Makefile

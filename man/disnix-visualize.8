@@ -1,0 +1,23 @@
+.TH "disnix-visualize" "8" "June 2009" "Disnix" "System administration tools"
+.SH NAME
+disnix\-visualize \- Generate a visualization graph of a manifest 
+.SH SYNOPSIS
+.B disnix\-distribute
+[
+.B options
+]
+manifest
+.PP
+.SH DESCRIPTION
+The command \fBdisnix\-visualize\fR generates a graph showing services (as nodes), inter-dependencies
+(as arrows) and target machines (as clusters). The graph is exported as dot format, which
+can be transformed in a raster image format by using the \fBdot\fR command.
+.SH OPTIONS
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Shows the usage of this command to the user
+.SH SEE ALSO
+.BR disnix-manifest (8),
+.BR dot (1)
+.SH AUTHOR
+Sander van der Burg <s.vanderburg@tudelft.nl>
