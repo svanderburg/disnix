@@ -23,6 +23,14 @@
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 
+/**
+ * Creates an XML XPath object pointer from a XPath query on a
+ * XML document.
+ *
+ * @param doc Pointer to XML document
+ * @param xpath String containing the XPath query
+ * @return XML XPath object pointer
+ */
 xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, char *xpath);
 
 #endif
