@@ -231,10 +231,26 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
 	    org_nixos_disnix_Disnix_collect_garbage(remote_object, pid, delete_old, &error);
 	    break;
 	case OP_ACTIVATE:
-	    org_nixos_disnix_Disnix_activate(remote_object, pid, derivation[0], type, (const gchar**) arguments, &error);
+	    if(type == NULL)
+	    {
+		g_printerr("ERROR: A type must be specified!\n");
+		g_strfreev(derivation);
+		g_strfreev(arguments);
+		return 1;
+	    }
+	    else
+		org_nixos_disnix_Disnix_activate(remote_object, pid, derivation[0], type, (const gchar**) arguments, &error);
 	    break;
 	case OP_DEACTIVATE:
-	    org_nixos_disnix_Disnix_deactivate(remote_object, pid, derivation[0], type, (const gchar**) arguments, &error);
+	    if(type == NULL)
+	    {
+		g_printerr("ERROR: A type must be specified!\n");
+		g_strfreev(derivation);
+		g_strfreev(arguments);
+		return 1;
+	    }
+	    else
+		org_nixos_disnix_Disnix_deactivate(remote_object, pid, derivation[0], type, (const gchar**) arguments, &error);
 	    break;
 	case OP_LOCK:
 	    org_nixos_disnix_Disnix_lock(remote_object, pid, profile, &error);
@@ -300,7 +316,7 @@ int main(int argc, char *argv[])
 
     /* Option value declarations */
     Operation operation = OP_NONE;
-    char *target, *profile = "default", *type;
+    char *target, *profile = "default", *type = NULL;
     gchar **derivation = NULL, **arguments = NULL;
     unsigned int derivation_size = 0, arguments_size = 0;
     int localfile = FALSE, remotefile = TRUE;
