@@ -1,5 +1,5 @@
 AC_PREREQ(2.61)
-AC_INIT([disnix], [0.1])
+AC_INIT([disnix], m4_esyscmd([echo -n $(cat ./version)$VERSION_SUFFIX]))
 AC_CONFIG_AUX_DIR([config])
 AM_INIT_AUTOMAKE([1.7.2 -Wall -Werror])
 
