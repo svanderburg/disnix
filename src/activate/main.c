@@ -33,7 +33,7 @@
 static void print_usage()
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-activate [--interface interface] [{-p|--profile} profile] [{-o|--old-manifest} manifest] manifest\n");
+    fprintf(stderr, "disnix-activate [--interface interface] [{-p|--profile} profile] [--coordinator-profile-path path] [{-o|--old-manifest} manifest] manifest\n");
     fprintf(stderr, "disnix-activate {-h | --help}\n");
 }
 
@@ -343,14 +343,18 @@ static int set_target_profiles(GArray *distribution_array, char *interface, char
     return TRUE;
 }
 
-static int set_coordinator_profile(char *distribution_manifest, char *profile, char *username)
+static int set_coordinator_profile(char *coordinator_profile_path, char *distribution_manifest, char *profile, char *username)
 {
     gchar *profile_path, *distribution_manifest_path;
     int status;
 	    
     printf("Setting the coordinator profile:\n");
-	    
-    profile_path = g_strconcat(LOCALSTATEDIR, "/nix/profiles/per-user/", username, "/disnix-coordinator", NULL);
+
+    if(coordinator_profile_path == NULL)
+	profile_path = g_strconcat(LOCALSTATEDIR, "/nix/profiles/per-user/", username, "/disnix-coordinator", NULL);
+    else
+	profile_path = g_strdup(coordinator_profile_path);
+    
     mkdir(profile_path, 0755);
     g_free(profile_path);
     
@@ -360,7 +364,10 @@ static int set_coordinator_profile(char *distribution_manifest, char *profile, c
     else
 	distribution_manifest_path = g_strconcat("./", NULL);
     
-    profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
+    if(coordinator_profile_path == NULL)
+	profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
+    else
+	profile_path = g_strconcat(coordinator_profile_path, "/", profile, NULL);
     
     status = fork();
     
@@ -493,6 +500,7 @@ int main(int argc, char *argv[])
     {
 	{"interface", required_argument, 0, 'i'},
 	{"old-manifest", required_argument, 0, 'o'},
+	{"coordinator-profile-path", required_argument, 0, 'P'},
 	{"profile", required_argument, 0, 'p'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
@@ -500,6 +508,7 @@ int main(int argc, char *argv[])
     char *interface = NULL;
     char *old_manifest = NULL;
     char *profile = "default";
+    char *coordinator_profile_path = NULL;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "o:p:h", long_options, &option_index)) != -1)
@@ -514,6 +523,9 @@ int main(int argc, char *argv[])
 	        break;
 	    case 'p':
 	        profile = optarg;
+		break;
+	    case 'P':
+	        coordinator_profile_path = optarg;
 		break;
 	    case 'h':
 		print_usage();
@@ -551,8 +563,13 @@ int main(int argc, char *argv[])
         {
 	    FILE *file;
 	    
-	    /* If no old manifest file is given, try to to open the manifest file in the Nix profile */	    
-	    old_manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);	    
+	    /* If no old manifest file is given, try to to open the manifest file in the Nix profile */
+	    
+	    if(coordinator_profile_path == NULL)
+		old_manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);	    
+	    else
+		old_manifest_file = g_strconcat(coordinator_profile_path, "/", profile, NULL);
+	    
 	    file = fopen(old_manifest_file, "r");
 	    
 	    if(file == NULL)
@@ -610,7 +627,7 @@ int main(int argc, char *argv[])
 	}
 	
 	/* Store the activated manifest in the profile of the current user */
-	if(!set_coordinator_profile(argv[optind], profile, username))
+	if(!set_coordinator_profile(coordinator_profile_path, argv[optind], profile, username))
 	{
 	    delete_distribution_array(distribution_array);
 	    return 1;

@@ -37,6 +37,12 @@ Path to the manifest of the previous configuration. By default this tool will us
 stored in the disnix-coordinator profile instead of the specified one, which is usually sufficient
 in most cases.
 .TP
+\fB\-\-coordinator\-profile\-path\fR
+Nix profile path where the manifest should be stored, so that Disnix knows the current configuration
+of a distributed system. By default it is stored in the profile directory of the user.
+Most users do not want to use this option directly, but it is used by e.g. the virtualization
+extension to store virtual machine profile in a separate directory.
+.TP
 \fB\-h\fR, \fB\-\-help\fR
 Shows the usage of this command to the user
 .SH ENVIRONMENT VARIABLES

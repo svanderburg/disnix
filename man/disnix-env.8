@@ -53,6 +53,12 @@ Name of the profile that is used for this system. Defaults to: default
 \fB\-\-build\-on\-targets\fR
 Build the services on the target machines in the network instead of managing the build by the coordinator.
 .TP
+\fB\-\-coordinator\-profile\-path\fR
+Nix profile path where the manifest should be stored, so that Disnix knows the current configuration
+of a distributed system. By default it is stored in the profile directory of the user.
+Most users do not want to use this option directly, but it is used by e.g. the virtualization
+extension to store virtual machine profile in a separate directory.
+.TP
 \fB\-\-show-trace\fR
 Shows a trace of the output.
 .TP
