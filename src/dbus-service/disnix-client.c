@@ -207,7 +207,15 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
     switch(operation)
     {
 	case OP_IMPORT:
-	    org_nixos_disnix_Disnix_import(remote_object, pid, derivation[0], &error);
+	    if(derivation[0] == NULL)
+	    {
+		g_printerr("ERROR: A Nix store component has to be specified!\n");
+		g_strfreev(derivation);
+		g_strfreev(arguments);
+		return 1;
+	    }
+	    else
+		org_nixos_disnix_Disnix_import(remote_object, pid, derivation[0], &error);
 	    break;
 	case OP_EXPORT:
 	    org_nixos_disnix_Disnix_export(remote_object, pid, (const gchar**) derivation, &error);
@@ -238,6 +246,13 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
 		g_strfreev(arguments);
 		return 1;
 	    }
+	    else if(derivation[0] == NULL)
+	    {
+		g_printerr("ERROR: A Nix store component has to be specified!\n");
+		g_strfreev(derivation);
+		g_strfreev(arguments);
+		return 1;
+	    }
 	    else
 		org_nixos_disnix_Disnix_activate(remote_object, pid, derivation[0], type, (const gchar**) arguments, &error);
 	    break;
@@ -245,6 +260,13 @@ static int run_disnix_client(Operation operation, gchar **derivation, int sessio
 	    if(type == NULL)
 	    {
 		g_printerr("ERROR: A type must be specified!\n");
+		g_strfreev(derivation);
+		g_strfreev(arguments);
+		return 1;
+	    }
+	    else if(derivation[0] == NULL)
+	    {
+		g_printerr("ERROR: A Nix store component has to be specified!\n");
 		g_strfreev(derivation);
 		g_strfreev(arguments);
 		return 1;
@@ -408,6 +430,10 @@ int main(int argc, char *argv[])
     
     derivation = g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
     derivation[derivation_size] = NULL;
+    
+    /* Add NULL termination to the arguments vector */
+    arguments = g_realloc(arguments, (arguments_size + 1) * sizeof(gchar*));
+    arguments[arguments_size] = NULL;
     
     /* Execute Disnix client */
     return run_disnix_client(operation, derivation, session_bus, profile, delete_old, arguments, type);
