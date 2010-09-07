@@ -16,6 +16,16 @@ let
         inherit officialRelease;
 
         buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable ];
+	
+        # Add documentation in the tarball
+        configureFlags = ''
+	  --with-docbook-rng=${docbook5}/xml/rng/docbook
+	  --with-docbook-xsl=${docbook5_xsl}/xml/xsl/docbook
+	'';
+	
+	preDist = ''
+	  make -C doc/manual install prefix=$out
+	'';        
       };
 
     build =

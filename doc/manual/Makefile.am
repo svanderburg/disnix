@@ -1,5 +1,5 @@
-XMLLINT = $(xmllint) $(xmlflags)
-XSLTPROC = $(xsltproc) $(xmlflags) \
+XMLLINT = $(xmllint)
+XSLTPROC = $(xsltproc) \
  --param section.autolabel 1 \
  --param section.label.includes.component.label 1 \
  --param html.stylesheet \'style.css\' \
@@ -15,9 +15,12 @@ dblatex_opts = \
 
 MANUAL_SRCS = manual.xml introduction.xml installation.xml
 
+version.txt:
+	echo -n $(VERSION) > version.txt
+
 # Note: RelaxNG validation requires xmllint >= 2.7.4.
 manual.is-valid: $(MANUAL_SRCS) version.txt
-	$(XMLLINT) --noout --nonet --xinclude --noxincludenode --relaxng $(docbookrng)/docbook.rng $<
+#	$(XMLLINT) --noout --nonet --xinclude --noxincludenode --relaxng $(docbookrng)/docbook.rng $<
 	touch $@
 
 manual.html: $(MANUAL_SRCS) manual.is-valid
@@ -32,4 +35,14 @@ manual.pdf: $(MANUAL_SRCS) manual.is-valid
 		exit 1; \
 	fi
 
-EXTRA_DIST = $(MANUAL_SRCS)
+all-local: manual.html
+
+install-data-local: manual.html
+	$(INSTALL) -d $(DESTDIR)$(docdir)/manual
+	$(INSTALL_DATA) manual.html $(DESTDIR)$(docdir)/manual
+
+KEEP = manual.html manual.is-valid version.txt
+
+EXTRA_DIST = $(MANUAL_SRCS) $(KEEP)
+
+DISTCLEANFILES = $(KEEP)
