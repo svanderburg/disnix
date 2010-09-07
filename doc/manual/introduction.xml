@@ -5,12 +5,7 @@
 <title>Introduction</title>
 
 <para>
-Disnix is a distributed deployment extension for Nix,
-a purely functional package manager.
-</para>
-
-<para>
-Nix has various advantages
+Nix is a purely function packager, which has various advantages
 over conventional package managers, such as the option to install
 multiple versions or variants of components safely next to each
 other, a declarative language to specify how to build a component,
@@ -18,6 +13,8 @@ support for complete dependencies and atomic upgrades and rollbacks.
 </para>
 
 <para>
+Disnix is a distributed deployment extension for the
+Nix package manager.
 Disnix reuses the Nix package manager for local deployment and
 extends the deployment concepts to distributed systems.
 </para>
@@ -34,12 +31,13 @@ specifications for the deployment of distributed
 systems.
 </para>
 <para>
-Disnix requires three models each capturing a specific concern
-in deploying a distributed system. The services model is used
+Disnix requires three models, each capturing a specific concern
+in deploying a distributed system. The <emphasis>services</emphasis> model is used
 for specifying the components of a distributed system and
-its inter-dependencies. The infrastructure model is used for
+its inter-dependencies.
+The <emphasis>infrastructure model</emphasis> is used for
 specifying the network of machines and their relevant properties.
-The distribution model is used to map services to machines
+The <emphasis>distribution</emphasis> model is used to map services to machines
 in the network.
 </para>
 </simplesect>
@@ -121,6 +119,7 @@ Except for the portability of Disnix itself, Disnix also allows a user to deploy
 a distributed system into a heterogeneous network (i.e. a network consisting
 of various types of machines, running different operating systems). Disnix reuses
 Nix to automatically build a component for the given target platform.
+Optionally, it can also perform builds on target machines in the network.
 </para>
 
 </simplesect>
@@ -137,7 +136,7 @@ The architecture of Disnix is therefore very modular and provides
 a plugin architecture which can be used to integrate
 custom developed components used for the activation and deactivation of services,
 and a custom plugin that provides access to deployment operations through
-a specific interfaces.
+specific interfaces.
 </para>
 
 <para>

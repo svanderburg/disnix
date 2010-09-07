@@ -1,0 +1,66 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="chap-overview">
+
+<title>Overview</title>
+
+<mediaobject>
+<imageobject>
+<imagedata fileref="model.png" format="PNG"/>
+</imageobject>
+</mediaobject>
+
+<para>
+The figure above shows the concept of Disnix in a nutshell.
+In the center of the figure the <command>disnix-env</command>
+command line tool is shown, which performs the complete deployment
+process of a distributed system.
+The tool requires three models as input parameters, which are shown
+on the left part of the figure.
+The <emphasis>services</emphasis> model describes of which distributable
+components the system consists, their inter-dependencies and their types.
+The service model has a reference to the file <command>all-packages.nix</command>,
+which captures all the intra-dependencies of every service and all the local dependencies,
+such as libraries, configuration files and compilers.
+The <emphasis>infrastructure</emphasis> model describes all the machines
+in the network and their relevant properties and capabilities.
+The <emphasis>distribution</emphasis> model maps services defined
+in the services model.
+On the right part of the figure, the network is shown in which the system
+has to be deployed. Every machine in the network requires the
+<emphasis>DisnixService</emphasis> component installed, so that
+remote deployment steps can be performed from the coordinator machine.
+</para>
+
+<para>
+The machine on which <command>disnix-env</command> is executed is called
+the <emphasis>coordinator</emphasis> machine. The machines in the network
+are called <emphasis>targets</emphasis>.
+</para>
+
+<para>
+By writing instances of the specifications shown above and by running the following command:
+</para>
+
+<para>
+<command>disnix-env -s services.nix -i infrastructure.nix -d distribution.nix</command>
+</para>
+
+<para>
+All the services that are defined in the distribution model are built from source code,
+then transferred to the machines in the network and finally activated in the right order.
+By adapting one of the models and by running <command>disnix-env</command> again,
+an upgrade is performed. In this case only services that are changed are built from
+source code, only components that have to be upgraded are transferred to target
+machines and only changed services are deactivated and activated (also in the right
+order), making this phase efficient and reliable.
+</para>
+
+<para>
+Since the coordinator machine may be of a different type as one of the machines in the
+network, it may not be able to compile a service on the coordinator for the given target platform.
+In those cases, Disnix can also compile a service on a target machine in the network,
+which is achieved by specifying the <command>--build-on-targets</command> option.
+</para>
+
+</chapter>

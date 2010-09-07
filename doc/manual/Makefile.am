@@ -13,7 +13,9 @@ dblatex_opts = \
  -P doc.collab.show=0 \
  -P latex.output.revhistory=0
 
-MANUAL_SRCS = manual.xml introduction.xml installation.xml
+FIGURES = model.png
+
+MANUAL_SRCS = manual.xml introduction.xml overview.xml installation.xml
 
 version.txt:
 	echo -n $(VERSION) > version.txt
@@ -40,9 +42,10 @@ all-local: manual.html
 install-data-local: manual.html
 	$(INSTALL) -d $(DESTDIR)$(docdir)/manual
 	$(INSTALL_DATA) manual.html $(DESTDIR)$(docdir)/manual
+	$(INSTALL_DATA) $(FIGURES) $(DESTDIR)$(docdir)/manual
 
 KEEP = manual.html manual.is-valid version.txt
 
-EXTRA_DIST = $(MANUAL_SRCS) $(KEEP)
+EXTRA_DIST = $(MANUAL_SRCS) $(FIGURES) $(KEEP)
 
 DISTCLEANFILES = $(KEEP)
