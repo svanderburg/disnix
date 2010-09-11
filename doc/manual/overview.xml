@@ -40,13 +40,11 @@ are called <emphasis>targets</emphasis>.
 
 <para>
 By writing instances of the specifications shown above and by running the following command:
-</para>
 
-<para>
-<command>disnix-env -s services.nix -i infrastructure.nix -d distribution.nix</command>
-</para>
+<screen>
+disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
+</screen>
 
-<para>
 All the services that are defined in the distribution model are built from source code,
 then transferred to the machines in the network and finally activated in the right order.
 By adapting one of the models and by running <command>disnix-env</command> again,

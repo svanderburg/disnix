@@ -1,0 +1,58 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="chap-models">
+
+	<title>Writing Disnix models</title>
+
+        <para>
+		In this section we explain how to write models that Disnix can use to
+		automatically deploy a distributed system into a network of machines.
+		We use the <code>StaffTracker</code> system as an example for this.
+        </para>
+        
+	<section>
+		<title>Background</title>
+		
+		<para>
+			This example is a system which is used to manage staff of a
+			university. For each staff member, the system can track
+			its zipcode from the staff members' room number.
+			From the zipcode it can determine the address of the
+			building. From the IP address the system can determine
+			the current location from the staff member.
+			All the data repositories are stored in separate databases.
+			Each data repository can be accessed by a web service.
+		</para>
+	</section>
+        
+	<section>
+		<title>Architecture</title>
+		
+		<mediaobject>
+			<imageobject>
+				<imagedata fileref="stafftracker.png" format="PNG"/>
+			</imageobject>
+		</mediaobject>
+
+		<para>
+			The picture above shows the architecture of the 
+			<code>StaffTracker</code> system.
+			In the database layer, database components are shown,
+			which store records such as zipcodes and staff members.
+			In the web service layer, web service components are
+			shown, which provide access to the data in de databases
+			(the <code>GeolocationService</code> uses GeoIP to track a location).
+			In the presentation layer, the <code>StaffTracker</code>
+			web application front-end is shown, which can be 
+			used by end users to manage staff of a university.
+		</para>
+		
+		<para>
+			All the components shown in the picture are
+			<emphasis>distributable</emphasis> components (or services).
+			For instance, the <code>GeolocationService</code> can
+			be deployed on a different machine in the network as
+			the <code>StaffTracker</code> web application front-end.
+		</para>
+	</section>
+</chapter>
