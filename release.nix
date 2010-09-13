@@ -54,23 +54,9 @@ let
 	  {config, pkgs, ...}:
 	    
 	  {
-	    # Make the Nix store in this VM writable using AUFS.  Use Linux
-            # 2.6.27 because 2.6.32 doesn't work (probably we need AUFS2).
-            # This should probably be moved to qemu-vm.nix.
+	    virtualisation.writableStore = true;
 
-            boot.kernelPackages = (if pkgs ? linuxPackages then
-              pkgs.linuxPackages_2_6_27 else pkgs.kernelPackages_2_6_27);
-            boot.extraModulePackages = [ config.boot.kernelPackages.aufs ];
-            boot.initrd.availableKernelModules = [ "aufs" ];
-	      
-            boot.initrd.postMountCommands =
-              ''
-                mkdir /mnt-store-tmpfs
-                mount -t tmpfs -o "mode=755" none /mnt-store-tmpfs
-                mount -t aufs -o dirs=/mnt-store-tmpfs=rw:$targetRoot/nix/store=rr none $targetRoot/nix/store
-              '';
-
-            services.dbus.enable = true;
+	    services.dbus.enable = true;
             services.dbus.packages = [ disnix ];
 	    services.sshd.enable = true;
 	    
