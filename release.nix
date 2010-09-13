@@ -171,6 +171,8 @@ let
 	      $client->mustFail("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-incomplete.nix");
 	      
 	      #### Test disnix-client / dbus-service
+	      
+	      # Check invalid path
 	      	      	      
 	      my $result = $client->mustSucceed("disnix-client --print-invalid /nix/store/invalid");
 	      
@@ -180,10 +182,14 @@ let
 	          die "/nix/store/invalid should be invalid\n";
 	      }
 	      	      
+	      # Lock/unlock test
+	      
 	      $client->mustSucceed("disnix-client --lock");
 	      $client->mustFail("disnix-client --lock");
 	      $client->mustSucceed("disnix-client --unlock");
 	      $client->mustFail("disnix-client --unlock");
+	      
+	      # Activation/deactivation test
 	      
 	      my @closure = split('\n', $client->mustSucceed("nix-store -qR $manifest"));
 	      my @testService1 = grep(/\-testService1/, @closure);
@@ -205,7 +211,7 @@ let
               $client->copyFileFromHost("key", "/root/.ssh/id_dsa");
               $client->mustSucceed("chmod 600 /root/.ssh/id_dsa");
 	      
-	      # Run test-cases
+	      # Print invalid test
 	      
 	      my $result = $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --print-invalid /nix/store/invalid");
 	      
@@ -215,15 +221,17 @@ let
 	          die "/nix/store/invalid should be invalid\n";
 	      }
 	      
+	      # Lock/unlock test
 	      $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --lock");
 	      $client->mustFail("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --lock");
 	      $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --unlock");
 	      $client->mustFail("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --unlock");
 	      
+	      # Activate/deactivate test
 	      $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --activate --arguments foo=foo --arguments bar=bar --type echo @testService1");
 	      $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --deactivate --arguments foo=foo --arguments bar=bar --type echo @testService1");
 	      
-	      #### Test copy closure
+	      # Test copy closure
 	      
 	      $server->mustFail("nix-store --check-validity @testService1");
 	      $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-copy-closure --interface disnix-ssh-client --target server --to @testService1");
