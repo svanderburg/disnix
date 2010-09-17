@@ -47,8 +47,8 @@ in the network.
 <para>
 The standard Nix package manager ensures that package dependency
 specifications are complete on a single system, i.e. intra-dependencies.
-Components of a distributed system may have dependencies on other components
-running of different machines in the network, i.e. inter-dependencies.
+Components of a distributed system may have dependencies on components
+running on different machines in the network, i.e. inter-dependencies.
 </para>
 
 <para>
