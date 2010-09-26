@@ -32,4 +32,5 @@
   <xi:include href="overview.xml" />
   <xi:include href="installation.xml" />
   <xi:include href="models.xml" />
+  <xi:include href="usage.xml" />
 </book>

@@ -15,7 +15,7 @@ dblatex_opts = \
 
 FIGURES = model.png stafftracker.png
 
-MANUAL_SRCS = manual.xml introduction.xml overview.xml installation.xml models.xml images
+MANUAL_SRCS = manual.xml introduction.xml overview.xml installation.xml models.xml usage.xml images
 
 version.txt:
 	echo -n $(VERSION) > version.txt
