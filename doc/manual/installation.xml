@@ -4,6 +4,20 @@
 
 	<title>Installation</title>
 
+	<para>
+		This chapter explains how Disnix can be installed. Basically, the coordinator machine needs the Disnix
+		client tools. Every target machine needs a Disnix service instance running so that the coordinator
+		machine can perform remote deployment steps. Disnix can be used on various platforms.
+		The most convenient platform to use is
+		<link xlink:href="http://nixos.org">NixOS</link>,
+		which only requires a little configuration effort.
+		Disnix can also be used on other Linux distributions and other Unix-like systems such as FreeBSD. 
+		On those platforms more configuration steps have to be performed.
+		Moreover, Disnix can be installed on various systems by using the
+		<link xlink:href="http://nixos.org/nix">>Nix package manager</link> or
+		by compiling it from source code.
+	</para>
+	
 	<section>
 		<title>Compiling Disnix from source</title>
 
@@ -88,9 +102,22 @@ $ nix-env -i disnix
 			A copy of
 			<link xlink:href="http://nixos.org/nixpkgs">Nixpkgs</link> is required
 			and an environment variable <code>NIXPKGS_ALL</code> must point to the path where
-			it is installed, so that Disnix is able to find it (On NixOS this
-			variable is already defined).
+			it is installed, so that Disnix is able to find it. On NixOS a copy is 
+			already present and this environment variable has already been configured.
+			On other systems the variable can be configured by adding the following lines to your
+			<filename>~/.bash_profile</filename> configuration:
 		</para>
+		
+		<screen>
+$ cat &gt;&gt; ~/.bash_profile &lt;&lt;EOF
+# Begin Nixpkgs addition
+
+NIXPKGS_ALL=/path/to/nixpkgs/pkgs/top-level/all-packages.nix
+export NIXPKGS_ALL
+
+# End Nixpkgs addition
+EOF
+		</screen>
 	</section>
 
 	<section>
@@ -145,9 +172,9 @@ services.openssh.enable = true;
 
 			<para>
 				The core Disnix service is a D-Bus service operating on the system bus,
-				thus it requires the D-Bus system daemon running.
+				which requires the D-Bus system daemon running.
 				Moreover, it also requires the Disnix service configuration file
-				(which installed in <code>PREFIX/etc/dbus-1/system.d</code>) in the right location
+				(which installed in <code>$PREFIX/etc/dbus-1/system.d</code>) in the right location
 				so that it is allowed to register itself on the system bus with the right access permissions
 				(on most systems this location is in <code>/etc/dbus-1/system.d</code>).
 			</para>
@@ -164,10 +191,10 @@ services.openssh.enable = true;
 			</para>
 			
 			<para>
-				Also the host system must configured to start the Disnix D-Bus service automatically. 
+				Moreover, the host system must configured to start the Disnix D-Bus service automatically. 
 				In most Linux distributions this can be done by creating a <code>/etc/init.d/disnix</code>
-				script and configure your distribution so that it will be launched on system startup.
-				A init.d script for Disnix could look like this:
+				<code>init.d</code> script and configure your distribution so that it will be launched on system startup.
+				An <code>init.d</code> script for the Disnix service could look like this:
 			</para>
 			
 			<screen>
@@ -192,12 +219,21 @@ esac
 			</screen>
 			
 			<para>
+				Rerfer to your distribution's <code>init.d</code> script style to see how services
+				are configured and launched.
+			</para>
+			
+			<para>
 				Except for the core Disnix service, a protocol wrapper is required that provides remote
 				access to the core service operations through a RPC protocol. A SSH wrapper is included
 				which only requires a OpenSSH server running on the same machine. For other protocols,
 				you have to read the documentation that is included with the extension.
 			</para>
-
+		</section>
+		
+		<section>
+			<title>Setting the right user permissions</title>
+			
 			<para>
 				By default, only users who are members of the group <code>disnix</code> may access operations
 				of the core Disnix service. Thus in order to access the Disnix operations remotely, either
@@ -207,6 +243,36 @@ esac
 				and therefore every target machine requires
 				the user to be defined in <code>/etc/passwd</code> and the user should be member of
 				the <code>disnix</code> group.
+			</para>
+			
+			<para>
+				On NixOS the <code>disnix</code> user group is automatically added. For other systems this
+				must be done by the system adminstrator.
+				On most systems this user group can be added by typing:
+			</para>
+			
+			<screen>
+$ groupadd disnix
+			</screen>
+			
+			<para>
+				A particular user can be made member of the <code>disnix</code>
+				group by the following command-line instruction (<replaceable>someuser</replaceable> must be 
+				replaced by a desired username):
+			</para>
+			
+			<screen>
+$ usermod -G disnix someuser
+			</screen>
+		</section>
+		
+		<section>
+			<title>Additional settings for the SSH wrapper</title>
+			
+			<para>
+				If a SSH connection is used, normally it will ask for user credentials for each operation.
+				This is not a bug, but an implication of using SSH. In order to make this process non-interactive
+				a SSH keypair must be generated. Refer to the <command>ssh-agent</command> manual page for this.
 			</para>
 		</section>
 	</section>

@@ -15,14 +15,14 @@ dblatex_opts = \
 
 FIGURES = model.png stafftracker.png
 
-MANUAL_SRCS = manual.xml introduction.xml overview.xml installation.xml models.xml usage.xml images
+MANUAL_SRCS = manual.xml introduction.xml overview.xml installation.xml models.xml activation-scripts.xml usage.xml images
 
 version.txt:
 	echo -n $(VERSION) > version.txt
 
 # Note: RelaxNG validation requires xmllint >= 2.7.4.
 manual.is-valid: $(MANUAL_SRCS) version.txt
-#	$(XMLLINT) --noout --nonet --xinclude --noxincludenode --relaxng $(docbookrng)/docbook.rng $<
+	$(XMLLINT) --noout --nonet --xinclude --noxincludenode --relaxng $(docbookrng)/docbook.rng $<
 	touch $@
 
 manual.html: $(MANUAL_SRCS) manual.is-valid

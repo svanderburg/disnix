@@ -17,13 +17,13 @@
 		</para>
 		
 		<screen>
-disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
+$ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
 		</screen>
 
 		<para>
 			By executing the command above, first all the services and their dependencies are compiled from source code
-			on the coordinator machine, then the services and intra-dependencies are transferred to the target machines
-			in the network. Finally the obsolete services from the previous configuration are deactivated and the
+			on the coordinator machine, then the services and their intra-dependencies are transferred to the target machines
+			in the network. Finally, the obsolete services from the previous configuration are deactivated and the
 			new services are activated.
 
 			It may be possible that the coordinator machine is not able build services for every machine in the network
@@ -33,7 +33,7 @@ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
 		</para>
 		
 		<screen>
-disnix-env --build-on-targets -s services.nix -i infrastructure.nix -d distribution.nix
+$ disnix-env --build-on-targets -s services.nix -i infrastructure.nix -d distribution.nix
 		</screen>
 	</section>
 		
@@ -45,25 +45,28 @@ disnix-env --build-on-targets -s services.nix -i infrastructure.nix -d distribut
 		</para>
 		
 		<screen>
-disnix-manifest -s services.nix -i infrastructure.nix -d distribution.nix
+$ disnix-manifest -s services.nix -i infrastructure.nix -d distribution.nix
 		</screen>
 		
 		<para>
-			This command will produce a <emphasis>manifest</emphasis> file, which is basically
+			This command produces a <emphasis>manifest</emphasis> file, which is basically
 			a more concrete version of the distribution model. This file contains
-			to the Nix store paths of all the build results, which can be used to distribute
-			services and to activate them. The manifest is produced in the Nix store
-			and the current directory contains a symlink called <code>result</code> pointing
+			to the Nix store paths of all the build results, types and connection settings, which can be used to distribute
+			services and to activate them. 
+			As a side effect, all the services that are specified in the distribution model
+			are built from source code.
+			The manifest is produced in the Nix store
+			and the current directory contains a symlink called <filename>result</filename> pointing
 			to it.
 		</para>
 		
 		<para>
-			For instance by querying the runtime dependencies on the generated manifest file,
+			For instance by querying the runtime dependencies of the generated manifest file,
 			all the services including their runtime dependencies can be retrieved:
 		</para>
 		
 		<screen>
-nix-store -qR ./result
+$ nix-store -qR ./result
 		</screen>
 	</section>
 	
@@ -80,12 +83,12 @@ nix-store -qR ./result
 		</para>
 		
 		<screen>
-disnix-instantiate -s services.nix -i infrastructure.nix -d distribution.nix
+$ disnix-instantiate -s services.nix -i infrastructure.nix -d distribution.nix
 		</screen>
 		
 		<para>
 			Like the manifest file, the distributed derivation file is also produced
-			in the Nix store and a <code>result</code> symlink is stored in the
+			in the Nix store and a <filename>result</filename> symlink is stored in the
 			current directory pointing to it.
 		</para>
 		
@@ -96,7 +99,7 @@ disnix-instantiate -s services.nix -i infrastructure.nix -d distribution.nix
 		</para>
 		
 		<screen>
-nix-store -qR ./result
+$ nix-store -qR ./result
 		</screen>
 		
 		<para>
@@ -104,7 +107,7 @@ nix-store -qR ./result
 		</para>
 
 		<screen>
-disnix-build ./result
+$ disnix-build ./result
 		</screen>
 		
 		<para>
@@ -119,13 +122,13 @@ disnix-build ./result
 		<title>Distributing services to target machines</title>
 		
 		<para>
-			After services have been built by invoking <code>disnix-manifest</code>,
+			After services have been built by invoking <command>disnix-manifest</command>,
 			then the services including their runtime dependencies can be distributed
 			to machines in the network by calling:
 		</para>
 		
 		<screen>
-disnix-distribute ./result
+$ disnix-distribute ./result
 		</screen>
 	</section>
 	
@@ -133,12 +136,12 @@ disnix-distribute ./result
 		<title>Deactivating obsolete services and activating services on target machines</title>
 		
 		<para>
-		      After services have been distributed by invoking <code>disnix-distribute</code>, the
+		      After services have been distributed by invoking <command>disnix-distribute</command>, the
 		      obsolete services can be deactivated and the new services activated by running:
 		</para>
 		
 		<screen>
-disnix-activate ./result
+$ disnix-activate ./result
 		</screen>
 	</section>
 	
@@ -148,21 +151,21 @@ disnix-activate ./result
 		<para>
 			Like the standard Nix, Disnix also offers an option to safely remove components
 			and their intra-dependencies that are no longer in use. The following command
-			will remove garbage:
+			will remove garbage from every machine defined in the infrastructure model:
 		</para>
 		
 		<screen>
-disnix-collect-garbage infrastructure.nix
+$ disnix-collect-garbage infrastructure.nix
 		</screen>
 		
 		<para>
 			By default Disnix will not remove all its previous deployment states. In order
-			to remove them, including all the garbage can be done by using the
-			<code>-d</code> option:
+			to remove previous deployment states, including all the garbage the
+			<option>-d</option> option can be used:
 		</para>
 		
 		<screen>
-disnix-collect-garbage -d infrastructure.nix
+$ disnix-collect-garbage -d infrastructure.nix
 		</screen>
 	</section>
 </chapter>

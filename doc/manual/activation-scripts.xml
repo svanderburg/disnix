@@ -1,0 +1,45 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="chap-activation-scripts">
+
+	<title>Activation scripts</title>
+
+	<para>
+		As explained in <xref linkend="chap-models" /> a type is assigned to each service, which
+		is used for tasks such as activating and deactivating the service. Each type is mapped
+		onto an activation script which performs the actual steps. In this chapter we explain
+		how activation scripts work.
+	</para>
+	
+	<section>
+		<title>Activation script for the <code>mysql-database</code> type</title>
+		
+		<example xml:id="ex-7-mysql-database">
+			<title>MySQL database activation script</title>
+			
+			<programlisting>
+#!/bin/bash -e
+
+case "$1" in
+    activate)
+        # Initalize the given schema if the database does not exists
+        componentName=`basename $2`
+        dbName=${componentName:33}
+
+        if [ "$(echo "show databases" | mysql --user=$mysqlUsername --password=$mysqlPassword -N | grep -x $dbName)" = "" ]
+        then
+            ( echo "create database $dbName;"
+              echo "use $dbName;"
+              cat $2/mysql-databases/*.sql ) | mysql --user=$mysqlUsername --password=$mysqlPassword -N
+        fi
+        ;;
+    deactivate)
+        # A MySQL database cannot be deactivated, we do not want to drop a database
+        # with all data in it, right?
+        echo
+        ;;
+esac
+			</programlisting>
+		</example>
+	</section>
+</chapter>

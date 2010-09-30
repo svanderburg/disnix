@@ -10,23 +10,26 @@
 		We use the <code>StaffTracker</code> system as an example for this,
 		which is a distributed system consisting of MySQL databases,
 		Java web services and Java web applications. Other types of distributed
-		systems can be deployed with Disnix as well. Other examples
+		systems, with different types of components can be deployed with Disnix as well, such
+		as PHP applications and UNIX processes. Some examples (including the
+		<code>StaffTracker</code>)
 		can be found in our Subversion repository:
-		<link xlink:href="https://svn.nixos.org/repos/nix/disnix/examples">
-			https://svn.nixos.org/repos/nix/disnix/examples
-		</link>.
+		<link xlink:href="https://svn.nixos.org/repos/nix/disnix/examples">https://svn.nixos.org/repos/nix/disnix/examples</link>.
         </para>
         
 	<section>
 		<title>Background</title>
 		
 		<para>
-			This example is a system which is used to manage staff of a
-			university. For each staff member, the system can track
-			its zipcode from the staff members' room number.
+			The example used in this section is a system which is used to manage staff of a
+			university. This system stores various records about staff members, such as their
+			names, room numbers and IP addresses.
+			
+			The system can determine
+			a zipcode from the staff members' room number.
 			From the zipcode it can determine the address of the
-			building. From the IP address the system can determine
-			the current location from the staff member.
+			building. From the IP address of a staff member, the system can determine
+			the current location of the staff member.
 			All the data repositories are stored in separate databases.
 			Each data repository can be accessed by a web service.
 		</para>
@@ -35,7 +38,7 @@
 	<section>
 		<title>Architecture</title>
 		
-		<mediaobject>
+		<mediaobject xml:id="fig-1-stafftracker">
 			<imageobject>
 				<imagedata fileref="stafftracker.png" format="PNG"/>
 			</imageobject>
@@ -43,11 +46,13 @@
 
 		<para>
 			The picture above shows the architecture of the 
-			<code>StaffTracker</code> system.
-			In the database layer, database components are shown,
+			<code>StaffTracker</code> system. Basically, the
+			architecture consists of three layers: 
+			The <emphasis>data layer</emphasis>, <emphasis>service layer</emphasis> and <emphasis>presentation layer</emphasis>.
+			In the database layer, MySQL database components are shown,
 			which store records such as zipcodes and staff members.
 			In the web service layer, web service components are
-			shown, which provide access to the data in de databases
+			shown, which exposos operations to access data in de databases and to update recors
 			(the <code>GeolocationService</code> uses GeoIP to track a location).
 			In the presentation layer, the <code>StaffTracker</code>
 			web application front-end is shown, which can be 
@@ -67,22 +72,96 @@
 		<title>Writing a Disnix expression</title>
 		
 		<para>
-			Similar to writing a standard Nix expression for each package,
-			every service also requires a expression which describes how to
-			build it.
+			The Nix package manager builds components from specifications called
+			Nix expressions, written in the Nix expression language.
 		</para>
+		
+		<example xml:id="ex-1-hello">
+			<title>Nix expression for the GNU Hello package</title>
+			<programlisting>
+{stdenv, fetchurl, perl}: <co xml:id='co-1-functionHeader' />
+
+stdenv.mkDerivation { <co xml:id='co-2-mkDerivation' />
+  name = "hello-2.1.1"; <co xml:id='co-3-name' />
+  src = fetchurl { <co xml:id='co-4-src' />
+    url = ftp://ftp.gnu.org/gnu/hello/hello-2.1.1.tar.gz;
+    md5 = "70c9ccf9fac07f762c24f2df2290784d";
+  };
+
+  meta = { <co xml:id='co-5-meta' />
+    description = "GNU Hello, a classic computer science tool";
+    homepage = http://www.gnu.org/software/hello/;
+  };
+}
+			</programlisting>
+		</example>
 		
 		<para>
-			This section shows you how a Disnix expression is written for
-			a particular web service component of the <code>StaffTracker</code>
-			system. Basically, a Disnix expression is very similar to an ordinary
-			Nix expression, except that it is a nested function (which has two
-			function headers instead of one). The headers represent 
-			intra-dependencies and inter-dependencies repspectively,
-			which both can be used to build and configure the service.
+			<xref linkend="ex-1-hello" /> shows a Nix expression for the GNU Hello package,
+			a trivial package which contains the <command>hello</command> command
+			showing the "Hello World" quote.
 		</para>
 		
-		<example xml:id="ex-1-zipcode-service">
+		<calloutlist>
+			<callout arearefs='co-1-functionHeader'>
+				<para>
+					This line states that the expression is a function, taking 3 arguments:
+					<varname>stdenv</varname>, <varname>fetchurl</varname> and <varname>perl</varname>.					
+					<varname>stdenv</varname> component is is the standard
+					environment containing basic UNIX utilities and build environment,
+					such as <code>cat</code>, <code>ls</code> and <code>gcc</code>.
+					The <varname>fetchurl</varname> argument is used to download a source tarball
+					from a particular URL. The <varname>perl</varname> argument is the Perl
+					interpreter.
+				</para>
+			</callout>
+			
+			<callout arearefs='co-2-mkDerivation'>
+				<para>
+					Here, we call the <code>stdenv.mkDerivation</code> function which performs
+					a build. We have not specified in the arguments how to build this component,
+					and by default it will then assume that this package is a GNU Autotools based
+					package and performs the following instructions:
+					<code>./configure; make; make install</code>.
+				</para>
+			</callout>
+			
+			<callout arearefs='co-3-name'>
+				<para>
+					Every package has a human readable name. This filename becomes part
+					of the filename of the component in the Nix store and also gives a user
+					the option to look it up after it has been installed.
+				</para>
+			</callout>
+			
+			<callout arearefs='co-4-src'>
+				<para>
+					This attribute specifies the source code that we have to compile and
+					is bound to the result of the <varname>fetchurl</varname>
+					function, which downloads the GNU Hello source tarball from the GNU FTP
+					site and uses the MD5 hash to verify whether the source tarball is the
+					expected one.
+				</para>
+			</callout>
+			
+			<callout arearefs='co-5-meta'>
+				<para>
+					We can also specify some meta data for a package, so that we have a description
+					and other useful information, such as the homepage and a license. These properties are not used
+					for building a component.
+				</para>
+			</callout>
+		</calloutlist>
+		
+		<para>
+			Similar to writing a Nix expression for an arbitrary package,
+			every service managed by Disnix also requires a expression which describes how to
+			build it from source code and its dependencies. A Disnix expression is
+			nearly identical to an ordinary Nix expression, except that it also
+			takes inter-dependencies into account to configure and build a component.
+		</para>
+		
+		<example xml:id="ex-2-zipcode-service">
 			<title>Disnix expression for the <code>ZipcodeService</code></title>
 			<programlisting>
 {stdenv, apacheAnt, axis2}: <co xml:id='co-1-outerFunctionHeader' />
@@ -117,58 +196,93 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 			</programlisting>
 		</example>
 		
+		<para>
+			<xref linkend="ex-2-zipcode-service" /> shows a Disnix expression for
+			a particular web service component of the <code>StaffTracker</code>
+			system, called <code>ZipcodeService</code>, which provides access
+			to records in the <code>zipcode</code> database.
+			Basically, a Disnix expression is nearly identical to an ordinary
+			Nix expression, except that it is a nested function (which has two
+			function headers instead of one). The headers represent 
+			intra-dependencies and inter-dependencies repspectively,
+			which both can be used to build and configure the service.
+		</para>
+		
 		<calloutlist>
 			<callout arearefs='co-1-outerFunctionHeader'>
-				 This is the outer function header, which specifies all the local dependencies,
-				 or <emphasis>intra-dependencies</emphasis> of the service.
-				 Intra-dependencies are all build-time and run-time dependencies
-				 located on the same system. In order to build the <code>ZipcodeService</code>
-				 a <varname>stdenv</varname> component is needed which is the standard
-				 environment containing basic UNIX utilities and build environment,
-				 such as <code>cat</code>, <code>ls</code> and <code>gcc</code>.
-				 The <varname>apacheAnt</varname> argument specifies that we need
-				 Apache Ant to compile the project, since it is written in Java
-				 and requires Ant as a build tool. The <varname>axis2</varname> argument
-				 refers to the Apache Axis2 library used to build web services.
+				 <para>
+					This is the outer function header, which specifies all the local dependencies,
+					or <emphasis>intra-dependencies</emphasis> of the service.
+					Intra-dependencies are all build-time and run-time dependencies
+					located on the same system. In order to build the <code>ZipcodeService</code>
+					a <varname>stdenv</varname> component is needed which is the standard
+					environment containing basic UNIX utilities and build environment,
+					such as <code>cat</code>, <code>ls</code> and <code>gcc</code>.
+					The <varname>apacheAnt</varname> argument specifies that we need
+					Apache Ant to compile the project, since it is written in Java
+					and requires Ant as a build tool. The <varname>axis2</varname> argument
+					refers to the Apache Axis2 library used to build web services.
+				 </para>
 			</callout>
 			
 			<callout arearefs='co-2-innerFunctionHeader'>
-				  This is the inner function header, which specifies all the runtime dependencies
-				  on distributable components, which we call <emphasis>inter-dependencies</emphasis>.
-				  The <varname>zipcodes</varname> argument refers to a database in which all the
-				  zipcodes are stored. The database may be running on a different machine as the
-				  <code>ZipcodeService</code>.
+				  <para>
+					This is the inner function header, which specifies all the runtime dependencies
+					on distributable components, which we call <emphasis>inter-dependencies</emphasis>.
+					The <varname>zipcodes</varname> argument refers to a database in which all the
+					zipcodes are stored. The database may be running on a different machine as the
+					<code>ZipcodeService</code>.
+				  </para>
 			</callout>
 			
 			<callout arearefs='co-3-contextXML'>
-				  This string contains a so-called context XML file. This is a configuration
-				  file used by Apache Tomcat in order to configure web application specific settings.
-				  One of these configuration settings are database settings.
-				  In this string we use the inter-dependency parameter: <varname>zipcodes</varname>
-				  to generate a JDBC connection string that can be used to connect to the
-				  remote database. The <varname>zipcodes</varname> argument is an attribute set,
-				  containing service and infrastructure properties, which can be used
-				  to configure the web service. Each inter-dependency parameters contains
-				  the attribute <varname>targets</varname> which contains a list of machines
-				  and its properties on which the inter-dependency is deployed.
-				  The <varname>target</varname> parameter is the first element from the 
-				  <varname>targets</varname> list, other properties of are defined
-				  in the services model of every service.
+				  <para>
+					This string contains a so-called context XML file. This is a configuration
+					file used by Apache Tomcat in order to configure web application specific settings.
+					One of these configuration settings are database settings.
+					In this string we use the inter-dependency parameter: <varname>zipcodes</varname>
+					to generate a JDBC connection string that can be used to connect to the
+					remote database. The <varname>zipcodes</varname> argument is an attribute set,
+					containing service and infrastructure properties, which can be used
+					to configure the web service. Each inter-dependency parameters contains
+					the attribute <varname>targets</varname> which contains a list of machines
+					and its properties on which the inter-dependency is deployed.
+					The <varname>target</varname> parameter is the first element from the 
+					<varname>targets</varname> list, other properties of are defined
+					in the services model of every service.
+					The properties of the inter-dependencies are defined in the services model, which
+					we show later. The properties in the <varname>target attribute</varname> are
+					defined in the infrastructure model (also shown later).
+				  </para>
 			</callout>
 			
 			<callout arearefs='co-4-mkDerivation'>
-				  Like ordinary Nix expressions, we must call the derivation function to build something
-				  from source code and to produce the output in the Nix store. It also requires
-				  you to define attributes, such as <varname>name</varname> which is compulsory in
-				  order to build a package from source code.
+				  <para>
+					Like ordinary Nix expressions, we must call the derivation function to build a component
+					from source code and to produce the output in the Nix store. It also requires
+					you to define attributes, such as <varname>name</varname> which is compulsory in
+					order to build a package from source code.
+				  </para>
 			</callout>
 			
 			<callout arearefs='co-5-cat-contextXML'>
-				  Here, the context XML file defined earlier is written into a text file and included
-				  with the generated web application so that the configuration settings can be
-				  found by the Apache Tomcat web service. 
+				  <para>
+					Here, the context XML file defined earlier is written into a text file and included
+					with the generated web application so that the configuration settings can be
+					found by the Apache Tomcat web service. An activation module for Apache Tomcat
+					takes care of the activation process.
+				  </para>
 			</callout>
 		</calloutlist>
+		
+		<para>
+			<xref linkend="ex-2-zipcode-service" /> shows how to build and configure an Apache Axis2 web service.
+			A different type of component has different configuration steps, however. The only thing Disnix
+			takes care of is that the locations of the inter-dependencies and the properties of
+			the services and machines are provided in the build environment of the component.
+			These properties must then be used by the developer to properly configure the
+			service, generating a configuration file which the service understands and so on.
+		</para>
 	</section>
 	
 	<section>
@@ -182,7 +296,7 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 			by using the inter-dependency arguments.
 		</para>
 		
-		<example xml:id="ex-2-intra-dependency-composition">
+		<example xml:id="ex-3-intra-dependency-composition">
 			<title>Intra-dependency composition for the <code>StaffTracker</code></title>
 			
 			<programlisting>
@@ -228,26 +342,42 @@ rec { <co xml:id='co-3-rec' />
 			</programlisting>
 		</example>
 		
+		<para>
+			<xref linkend="ex-3-intra-dependency-composition" /> shows a Nix expression in which
+			services all are called with the right intra-dependency arguments.
+		</para>
+		
 		<calloutlist>
 			<callout arearefs='co-1-importPkgs'>
-				This line imports all the packages from Nixpkgs. This allows us to use various packages
-				from the Nixpkgs repository such as the Java compiler and other compilers and libraries
-				to build the components
+				<para>
+					This line imports all the packages from Nixpkgs. This allows us to use various packages
+					from the Nixpkgs repository such as the Java compiler and other compilers and libraries
+					to build the components.
+				</para>
 			</callout>
 			
 			<callout arearefs='co-2-withPkgs'>
-				This statement will make it easier to refer to packages defined in Nixpkgs.
-				Otherwise you have to refer them by <code>pkgs.axis2</code> and so on.
+				<para>
+					This statement will make it easier to refer to packages defined in Nixpkgs.
+					Otherwise you have to refer them by <code>pkgs.axis2</code> and so on.
+				</para>
 			</callout>
 			
 			<callout arearefs='co-3-rec'>
-				 Like the <code>pkgs/top-level/all-packages.nix</code> file in Nixpkgs, this composition expression
-				 is also an mutually recursive attribute set in which attributes can refer to each other.
+				 <para>
+					Like the <code>pkgs/top-level/all-packages.nix</code> file in Nixpkgs, this composition expression
+					is also an mutually recursive attribute set in which attributes can refer to each other.
+					This is required, because we have to pass attributes as function parameters to every function
+					imported in this file.
+				 </para>
 			</callout>
 			
 			<callout arearefs='co-4-composition'>
-				Here, the expression from the previous example is imported and called with the right
-				intra-dependency arguments.
+				<para>
+					Here, the expression from <xref linkend="ex-2-zipcode-service" /> is imported and called with the right
+					intra-dependency arguments. The arguments are defined as attributes in this model, or defined
+					in Nixpkgs.
+				</para>
 			</callout>
 		</calloutlist>
 	</section>
@@ -261,7 +391,7 @@ rec { <co xml:id='co-3-rec' />
 			how to activate or deactivate them. This is information captured in the services model.
 		</para>
 		
-		<example>
+		<example xml:id="ex-4-services-model">
 			<title>Services model for the <code>StaffTracker</code></title>
 			
 			<programlisting>
@@ -305,57 +435,79 @@ rec { <co xml:id='co-2-rec2' />
 			</programlisting>
 		</example>
 		
+		<para>
+			<xref linkend="ex-4-services-model" /> represents the services model of the <code>StaffTracker</code>
+			system. Here all the distributable components are shown, their inter-dependencies and other relevant
+			properties. All the services and inter-dependency relationships are the same as illustrated
+			in <xref linkend="fig-1-stafftracker" />.
+		</para>
+		
 		<calloutlist>
 			<callout arearefs='co-1-importIntra'>
-				Here, the expression from the previous example is imported so that we can use the
-				intra-dependency compositions of the system. This is the expression shown
-				in the previous example.
+				<para>
+					Here, the expression from the previous example is imported so that we can use the
+					intra-dependency compositions of the system. This is the expression shown
+					in the previous example.
+				</para>
 			</callout>
 			
 			<callout arearefs='co-2-rec2'>
-				 Like the intra-dependency composition expression in the previous example,
-				 the services expression is also a recursive attribute set in which attributes
-				 can refer to each other.
+				<para>
+					Like the intra-dependency composition expression in the previous example,
+					the services expression is also a recursive attribute set in which attributes
+					can refer to each other. This required to pass the services as inter-dependency
+					arguments to each service.
+				</para>
 			</callout>
 			
 			<callout arearefs='co-3-service'>
-				 Every attribute represents a <emphasis>serivce</emphasis> (i.e. a distributable
-				 component). These attributes represent to the components shown in the
-				 architecture.
+				 <para>
+					Every attribute represents a <emphasis>serivce</emphasis> (i.e. a distributable
+					component). These attributes represent to the components shown in the
+					architecture in <xref linkend="fig-1-stafftracker" />.
+				 </para>
 			</callout>
 			
 			<callout arearefs='co-4-serviceName'>
-				Every service has a canonical name, so that it is known when invoking
-				them from inter-dependency arguments.
+				<para>
+					Every service has a canonical name, so that it is known when invoking
+					them from inter-dependency arguments. This name must match the attribute name.
+				</para>
 			</callout>
 			
 			<callout arearefs='co-5-pkg'>
-				For every service we need to know how to build it and what the intra-dependencies are. 
-				This attribute refers to the function call that actually builds the service and
-				its intra-dependencies from source code, which is defined in the previous example.
+				<para>
+					For every service we need to know how to build it and what the intra-dependencies are. 
+					This attribute refers to the function call that actually builds the service and
+					its intra-dependencies from source code, which is defined in the previous example.
+				</para>
 			</callout>
 			
 			<callout arearefs='co-6-dependsOn'>
-				We also need to know for each service what the inter-dependencies are. In this
-				case we specify that the attribute <varname>zipcodes</varname> (a service also
-				defined in the services model) is an inter-dependency
-				of the <code>ZipcodeService</code>. 
-				By using Nix expression language constructs, you can also create different inter-dependency
-				compositions. For instance by specifying: <code>zipcodes = mycustomzipcodes;</code>
-				instead of <code>inherit zipcodes;</code>,
-				you can configure the <code>ZipcodeService</code> to use a different database.
+				<para>
+					We also need to know for each service what the inter-dependencies are. In this
+					case we specify that the attribute <varname>zipcodes</varname> (a service also
+					defined in the services model) is an inter-dependency
+					of the <code>ZipcodeService</code>. 
+					By using Nix expression language constructs, you can also create different inter-dependency
+					compositions. For instance by specifying: <code>zipcodes = mycustomzipcodes;</code>
+					instead of <code>inherit zipcodes;</code>,
+					you can configure the <code>ZipcodeService</code> to use a different database.
+				</para>
 			</callout>
 			
 			<callout arearefs='co-7-type'>
-				Finally, we must know how to activate and deactive a service. Since, services can represent
-				many things such as a database or web application, we cannot perform this step generically.
-				This attribute specifies the type of the web service, which will invoke a activation script
-				on the target machine that performs the actual activation or deactivation process. 
-				Various types are supported such as: <code>tomcat-webapplication</code> which will activate
-				a web application on Apache Tomcat, <code>mysql-database</code> which will import
-				a MySQL database schema on first startup and <code>process</code> which activates a generic
-				UNIX process. Moreover a <code>wrapper</code> type exists, which allows the developer to include
-				his own activation script inside the service.
+				<para>
+					Finally, we must know how to activate and deactive a service. Since services can represent
+					many things such as a database or web application, we cannot perform this step generically.
+					This attribute specifies the type of the web service, which will invoke a activation script
+					on the target machine that performs the actual activation or deactivation process. 
+					Various types are supported such as: <code>tomcat-webapplication</code> which will activate
+					a web application on Apache Tomcat, <code>mysql-database</code> which will import
+					a MySQL database schema on first startup and <code>process</code> which activates a generic
+					UNIX process. Moreover a <code>wrapper</code> type exists, which allows the developer to include
+					his own activation script inside the service.
+				</para>
 			</callout>
 		</calloutlist>
 	</section>
@@ -364,12 +516,12 @@ rec { <co xml:id='co-2-rec2' />
 		<title>Infrastructure model</title>
 		
 		<para>
-			Except for the services and their properties, we also need to know what machines are
+			Except for the services and their relevant properties, we also need to know what machines are
 			available and their relevant properties and capabilities, which is captured in the
 			infrastructure model.
 		</para>
 		
-		<example>
+		<example xml:id="ex-5-infrastructure-model">
 			<title>Infrastructure model</title>
 			
 			<programlisting>
@@ -387,37 +539,50 @@ rec { <co xml:id='co-2-rec2' />
     mysqlPort = 3306; <co xml:id='co-4-mysqlPort' />
     mysqlUsername = "root";
     mysqlPassword = "admin";
-    
   }; 
 }
 			</programlisting>
 		</example>
 		
+		<para>
+			<xref linkend="ex-5-infrastructure-model" /> shows an infrastructure model capturing 2 machines, which can be used to
+			deploy the <code>StaffTracker</code> services on.
+		</para>
+		
 		<calloutlist>
 			  <callout arearefs='co-1-target'>
-				  The infrastructure model is an attribute set in which each attribute represents a 
-				  machine in the network.
+				  <para>
+					The infrastructure model is an attribute set in which each attribute represents a 
+					machine in the network.
+				  </para>
 			  </callout>
 			  
 			  <callout arearefs='co-2-hostname'>
-				  In order to perform deployment steps remotely, we need to know how to connect
-				  to the machine. The <code>hostname</code> attribute can be used for this.
+				  <para>
+					In order to perform deployment steps remotely, we need to know how to connect
+					to the machine. The <code>hostname</code> attribute can be used for this.
+				  </para>
 			  </callout>
 			  
 			  <callout arearefs='co-3-system'>
-				  A machine in the network may have a different architecture as the coordinator machine.
-				  This attribute can be used to specify the architecture of the machine. By specifying
-				  an architecture the coordinator will try to build the service for that particular
-				  platform. In some cases the coordinator may not be able to do that. In such cases
-				  you can either build the service on a target machine in the network or on a different
-				  machine. Omitting the <code>system</code> attribute, will build the service for
-				  the same architecture as the coordinator machine.
+				  <para>
+					A machine in the network may have a different architecture as the coordinator machine.
+					This attribute can be used to specify the architecture of the machine. By specifying
+					an architecture the coordinator will try to build the service for that particular
+					platform. In some cases the coordinator may not be able to do that. In such cases
+					you can either build the service on a target machine in the network or on a different
+					machine. Omitting the <code>system</code> attribute, will build the service for
+					the same architecture as the coordinator machine.
+				  </para>
 			  </callout>
 			  
 			  <callout arearefs='co-4-mysqlPort'>
-				  The other properties of a machine can be freely chosen and are used by the
-				  activation modules to activate a particular service. For instance, the
-				  <code>mysqlPort</code> specifies on which port the MySQL can be reached.
+				  <para>
+					The other properties of a machine can be freely chosen and are used by the
+					activation modules to activate a particular service. For instance, the
+					<code>mysqlPort</code> specifies on which port the MySQL can be reached.
+					The MySQL properties in this model are used by the MySQL activation script.
+				  </para>
 			  </callout>
 		</calloutlist>
 		
@@ -438,8 +603,8 @@ rec { <co xml:id='co-2-rec2' />
 			which can be done in the distribution model.
 		</para>
 		
-		<example>
-			<title>Distribution model</title>
+		<example xml:id="ex-6-distribution-model">
+			<title>Distribution model for the <code>StaffTracker</code></title>
 			
 			<programlisting>
 {infrastructure}:
@@ -453,21 +618,38 @@ rec { <co xml:id='co-2-rec2' />
 			</programlisting>
 		</example>
 		
+		<para>
+			<xref linkend="ex-6-distribution-model" /> shows a distribution model for a particular
+			deployment scenario of the <code>StaffTracker</code> system.
+		</para>
+		
 		<calloutlist>
 			<callout arearefs='co-1-zipcodes'>
-				This attribute assignment states that the <code>zipcodes</code> service should be
-				deployed on machine <code>test2</code>.
+				<para>
+					This attribute assignment states that the <code>zipcodes</code> service should be
+					deployed on machine <code>test2</code>.
+					The machine and its properties be accessed by using the <varname>target</varname> property
+					on an inter-dependency argument in a Disnix expression, such as
+					<xref linkend="ex-2-zipcode-service" />.
+				</para>
 			</callout>
 			
 			<callout arearefs='co-2-ZipcodeService'>
-				This attribute assignment states that the <code>ZipcodeService</code> service should be
-				deployed on machine <code>test1</code>.
+				<para>
+					This attribute assignment states that the <code>ZipcodeService</code> service should be
+					deployed on machine <code>test1</code>.
+				</para>
 			</callout>
 			
 			<callout arearefs='co-3-StaffTracker'>
-				This attribute assignment states that the <code>StaffTracker</code> service should be
-				deployed on both <code>test1</code> and <code>test2</code>. By specifying multiple
-				machines you can implement features such as a fallback mechanism or load balancing.
+				<para>
+					This attribute assignment states that the <code>StaffTracker</code> service should be
+					deployed on both <code>test1</code> and <code>test2</code>. By specifying multiple
+					machines you can implement features such as a fallback mechanism or load balancing.
+					This list of machines can be accessed by using the <varname>targets</varname> property
+					on an inter-dependency argument in a Disnix expression, such as
+					<xref linkend="ex-2-zipcode-service" />.
+				</para>
 			</callout>
 		</calloutlist>
 	</section>

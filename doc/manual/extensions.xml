@@ -1,0 +1,37 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="chap-extensions">
+
+	<title>Extensions</title>
+
+        <para>
+		Although, Disnix makes the deployment of a distributed system more convenient and
+		offers features to make this process reiable and efficient, some extensions have been
+		developed to make this process more convenient.
+        </para>
+        
+	<section>
+		<title>DisnixWebService</title> 
+		
+		<para>
+			In some cases other communication protocols are desired to use in order to
+			connect to remote machines, except SSH. The <code>DisnixWebService</code>
+			is a package that contains a SOAP interface for deployment operations and
+			the <command>disnix-soap-client</command> to connect to it.
+		</para>
+	</section>
+
+	<section>
+		<title>NixOS integration</title>
+		
+		<para>
+			Although Disnix manages the distributable components (services) of which a
+			distributed system is composed and the inter-dependencies, Disnix does
+			not manage the systtem configurations of the actual machines on which services are activated.
+			This package contains additional tooling to manage
+			<link xlink:href="http://nixos.org/nixos">NixOS</link>
+			system configurations of the machines in the network, and an extension to automatically
+			create virtual machine instances from the network configuration for testing.
+		</para>
+	</section>
+</chapter>
