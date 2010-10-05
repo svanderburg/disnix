@@ -16,9 +16,9 @@
 			To deploy a complete system the following instruction can be used:
 		</para>
 		
-		<screen>
+<screen>
 $ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
-		</screen>
+</screen>
 
 		<para>
 			By executing the command above, first all the services and their dependencies are compiled from source code
@@ -32,9 +32,9 @@ $ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
 			back to the coordinator for further use:
 		</para>
 		
-		<screen>
+<screen>
 $ disnix-env --build-on-targets -s services.nix -i infrastructure.nix -d distribution.nix
-		</screen>
+</screen>
 	</section>
 		
 	<section>
@@ -44,9 +44,9 @@ $ disnix-env --build-on-targets -s services.nix -i infrastructure.nix -d distrib
 			In order to build all the services from source code, the following command can be used:
 		</para>
 		
-		<screen>
+<screen>
 $ disnix-manifest -s services.nix -i infrastructure.nix -d distribution.nix
-		</screen>
+</screen>
 		
 		<para>
 			This command produces a <emphasis>manifest</emphasis> file, which is basically
@@ -65,16 +65,16 @@ $ disnix-manifest -s services.nix -i infrastructure.nix -d distribution.nix
 			all the services including their runtime dependencies can be retrieved:
 		</para>
 		
-		<screen>
+<screen>
 $ nix-store -qR ./result
-		</screen>
+</screen>
 	</section>
 	
 	<section>
 		<title>Building services on target machines</title>
 		
 		<para>
-			You can also perform all the build on the target machines and then retrieve
+			You can also perform all the builds on the target machines and then retrieve
 			back the results. The following command generates a
 			<emphasis>distributed derivation</emphasis> file, which is basically
 			a similar file as a manifest, except that this file maps Nix store derivation
@@ -82,9 +82,9 @@ $ nix-store -qR ./result
 			machines.
 		</para>
 		
-		<screen>
+<screen>
 $ disnix-instantiate -s services.nix -i infrastructure.nix -d distribution.nix
-		</screen>
+</screen>
 		
 		<para>
 			Like the manifest file, the distributed derivation file is also produced
@@ -98,20 +98,20 @@ $ disnix-instantiate -s services.nix -i infrastructure.nix -d distribution.nix
 			dependencies can be retrieved:
 		</para>
 		
-		<screen>
+<screen>
 $ nix-store -qR ./result
-		</screen>
+</screen>
 		
 		<para>
 			The distributed derivation file can then be used to perform the builds:
 		</para>
 
-		<screen>
+<screen>
 $ disnix-build ./result
-		</screen>
+</screen>
 		
 		<para>
-			This command distributed the store derivation file of each service and its
+			This command distributes the store derivation file of each service and its
 			dependencies to the machines in the network, then it performs the build on each
 			machine and finally copies the build results back into the Nix store of the 
 			coordinator machine.
@@ -127,9 +127,9 @@ $ disnix-build ./result
 			to machines in the network by calling:
 		</para>
 		
-		<screen>
+<screen>
 $ disnix-distribute ./result
-		</screen>
+</screen>
 	</section>
 	
 	<section>
@@ -140,9 +140,9 @@ $ disnix-distribute ./result
 		      obsolete services can be deactivated and the new services activated by running:
 		</para>
 		
-		<screen>
+<screen>
 $ disnix-activate ./result
-		</screen>
+</screen>
 	</section>
 	
 	<section>
@@ -154,9 +154,9 @@ $ disnix-activate ./result
 			will remove garbage from every machine defined in the infrastructure model:
 		</para>
 		
-		<screen>
+<screen>
 $ disnix-collect-garbage infrastructure.nix
-		</screen>
+</screen>
 		
 		<para>
 			By default Disnix will not remove all its previous deployment states. In order
@@ -164,8 +164,8 @@ $ disnix-collect-garbage infrastructure.nix
 			<option>-d</option> option can be used:
 		</para>
 		
-		<screen>
+<screen>
 $ disnix-collect-garbage -d infrastructure.nix
-		</screen>
+</screen>
 	</section>
 </chapter>

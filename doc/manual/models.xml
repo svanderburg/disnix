@@ -38,21 +38,24 @@
 	<section>
 		<title>Architecture</title>
 		
-		<mediaobject xml:id="fig-1-stafftracker">
-			<imageobject>
-				<imagedata fileref="stafftracker.png" format="PNG"/>
-			</imageobject>
-		</mediaobject>
-
+		<figure xml:id="fig-1-stafftracker">
+			<title>Architecture of the <code>StaffTracker</code></title>
+			<mediaobject>
+				<imageobject>
+					<imagedata fileref="stafftracker.png" format="PNG"/>
+				</imageobject>
+			</mediaobject>
+		</figure>
+		
 		<para>
-			The picture above shows the architecture of the 
+			<xref linkend="fig-1-stafftracker" /> shows the architecture of the 
 			<code>StaffTracker</code> system. Basically, the
 			architecture consists of three layers: 
-			The <emphasis>data layer</emphasis>, <emphasis>service layer</emphasis> and <emphasis>presentation layer</emphasis>.
-			In the database layer, MySQL database components are shown,
+			a <emphasis>data layer</emphasis>, <emphasis>service layer</emphasis> and <emphasis>presentation layer</emphasis>.
+			The database layer contains MySQL database components,
 			which store records such as zipcodes and staff members.
-			In the web service layer, web service components are
-			shown, which exposos operations to access data in de databases and to update recors
+			The web service layer contains web service components, which expose
+			operations to access data in de databases and to update records
 			(the <code>GeolocationService</code> uses GeoIP to track a location).
 			In the presentation layer, the <code>StaffTracker</code>
 			web application front-end is shown, which can be 
@@ -78,7 +81,7 @@
 		
 		<example xml:id="ex-1-hello">
 			<title>Nix expression for the GNU Hello package</title>
-			<programlisting>
+<programlisting>
 {stdenv, fetchurl, perl}: <co xml:id='co-1-functionHeader' />
 
 stdenv.mkDerivation { <co xml:id='co-2-mkDerivation' />
@@ -93,7 +96,7 @@ stdenv.mkDerivation { <co xml:id='co-2-mkDerivation' />
     homepage = http://www.gnu.org/software/hello/;
   };
 }
-			</programlisting>
+</programlisting>
 		</example>
 		
 		<para>
@@ -163,7 +166,7 @@ stdenv.mkDerivation { <co xml:id='co-2-mkDerivation' />
 		
 		<example xml:id="ex-2-zipcode-service">
 			<title>Disnix expression for the <code>ZipcodeService</code></title>
-			<programlisting>
+<programlisting>
 {stdenv, apacheAnt, axis2}: <co xml:id='co-1-outerFunctionHeader' />
 {zipcodes}: <co xml:id='co-2-innerFunctionHeader' />
 
@@ -193,7 +196,7 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
     cp *.war $out/webapps
   '';
 }
-			</programlisting>
+</programlisting>
 		</example>
 		
 		<para>
@@ -244,14 +247,13 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 					to generate a JDBC connection string that can be used to connect to the
 					remote database. The <varname>zipcodes</varname> argument is an attribute set,
 					containing service and infrastructure properties, which can be used
-					to configure the web service. Each inter-dependency parameters contains
-					the attribute <varname>targets</varname> which contains a list of machines
+					to configure the web service. Each inter-dependency parameter contains
+					the attribute <varname>targets</varname>, which contains a list of machines
 					and its properties on which the inter-dependency is deployed.
 					The <varname>target</varname> parameter is the first element from the 
-					<varname>targets</varname> list, other properties of are defined
-					in the services model of every service.
+					<varname>targets</varname> list.
 					The properties of the inter-dependencies are defined in the services model, which
-					we show later. The properties in the <varname>target attribute</varname> are
+					we show later. The properties in the <varname>target</varname> attribute are
 					defined in the infrastructure model (also shown later).
 				  </para>
 			</callout>
@@ -276,12 +278,13 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 		</calloutlist>
 		
 		<para>
-			<xref linkend="ex-2-zipcode-service" /> shows how to build and configure an Apache Axis2 web service.
+			<xref linkend="ex-2-zipcode-service" /> shows you how to build and configure an Apache Axis2 web service.
 			A different type of component has different configuration steps, however. The only thing Disnix
 			takes care of is that the locations of the inter-dependencies and the properties of
 			the services and machines are provided in the build environment of the component.
-			These properties must then be used by the developer to properly configure the
-			service, generating a configuration file which the service understands and so on.
+			These properties must then be used by the developer to properly configure and build the
+			service, such as generating a configuration file which the service understands and specifying
+			the build steps.
 		</para>
 	</section>
 	
@@ -289,7 +292,7 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 		<title>Intra-dependency composition</title>
 		
 		<para>
-			Like ordinary Nix expressions, we cannot use the expression in example 1 directly to build the
+			Like ordinary Nix expressions, we cannot use the expression in <xref linkend="ex-2-zipcode-service" /> directly to build the
 			service. We need to <emphasis>compose</emphasis> it by calling the function with the right arguments.
 			In the case of Disnix, we need to call this function twice. First we have to compose this expression locally,
 			by calling it with the required intra-dependency arguments. Later on, we have to compose it
@@ -299,7 +302,7 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 		<example xml:id="ex-3-intra-dependency-composition">
 			<title>Intra-dependency composition for the <code>StaffTracker</code></title>
 			
-			<programlisting>
+<programlisting>
 {system ? builtins.currentSystem}:
 
 let pkgs = import (builtins.getEnv "NIXPKGS_ALL") { inherit system; }; <co xml:id='co-1-importPkgs' />
@@ -339,7 +342,7 @@ rec { <co xml:id='co-3-rec' />
     inherit GeolocationServiceClient RoomServiceClient StaffServiceClient ZipcodeServiceClient;
   };
 }
-			</programlisting>
+</programlisting>
 		</example>
 		
 		<para>
@@ -394,7 +397,7 @@ rec { <co xml:id='co-3-rec' />
 		<example xml:id="ex-4-services-model">
 			<title>Services model for the <code>StaffTracker</code></title>
 			
-			<programlisting>
+<programlisting>
 {distribution, system}:
 
 let pkgs = import ../top-level/all-packages.nix { inherit system; }; <co xml:id='co-1-importIntra' />
@@ -432,7 +435,7 @@ rec { <co xml:id='co-2-rec2' />
     type = "tomcat-webapplication";
   };
 }
-			</programlisting>
+</programlisting>
 		</example>
 		
 		<para>
@@ -445,16 +448,15 @@ rec { <co xml:id='co-2-rec2' />
 		<calloutlist>
 			<callout arearefs='co-1-importIntra'>
 				<para>
-					Here, the expression from the previous example is imported so that we can use the
-					intra-dependency compositions of the system. This is the expression shown
-					in the previous example.
+					Here, the expression from <xref linkend="ex-3-intra-dependency-composition" /> is imported so that we can use the
+					intra-dependency compositions of the system.
 				</para>
 			</callout>
 			
 			<callout arearefs='co-2-rec2'>
 				<para>
 					Like the intra-dependency composition expression in the previous example,
-					the services expression is also a recursive attribute set in which attributes
+					the services expression is also a mutually recursive attribute set in which attributes
 					can refer to each other. This required to pass the services as inter-dependency
 					arguments to each service.
 				</para>
@@ -462,7 +464,7 @@ rec { <co xml:id='co-2-rec2' />
 			
 			<callout arearefs='co-3-service'>
 				 <para>
-					Every attribute represents a <emphasis>serivce</emphasis> (i.e. a distributable
+					Every attribute represents a <emphasis>service</emphasis> (i.e. a distributable
 					component). These attributes represent to the components shown in the
 					architecture in <xref linkend="fig-1-stafftracker" />.
 				 </para>
@@ -479,7 +481,8 @@ rec { <co xml:id='co-2-rec2' />
 				<para>
 					For every service we need to know how to build it and what the intra-dependencies are. 
 					This attribute refers to the function call that actually builds the service and
-					its intra-dependencies from source code, which is defined in the previous example.
+					its intra-dependencies from source code, which is defined in
+					<xref linkend="ex-3-intra-dependency-composition" />.
 				</para>
 			</callout>
 			
@@ -524,7 +527,7 @@ rec { <co xml:id='co-2-rec2' />
 		<example xml:id="ex-5-infrastructure-model">
 			<title>Infrastructure model</title>
 			
-			<programlisting>
+<programlisting>
 {
   test1 = {
     hostname = "test1.example.org";
@@ -541,7 +544,7 @@ rec { <co xml:id='co-2-rec2' />
     mysqlPassword = "admin";
   }; 
 }
-			</programlisting>
+</programlisting>
 		</example>
 		
 		<para>
@@ -571,7 +574,7 @@ rec { <co xml:id='co-2-rec2' />
 					an architecture the coordinator will try to build the service for that particular
 					platform. In some cases the coordinator may not be able to do that. In such cases
 					you can either build the service on a target machine in the network or on a different
-					machine. Omitting the <code>system</code> attribute, will build the service for
+					machine. By omitting the <code>system</code> attribute, Disnix will build the service for
 					the same architecture as the coordinator machine.
 				  </para>
 			  </callout>
@@ -579,7 +582,7 @@ rec { <co xml:id='co-2-rec2' />
 			  <callout arearefs='co-4-mysqlPort'>
 				  <para>
 					The other properties of a machine can be freely chosen and are used by the
-					activation modules to activate a particular service. For instance, the
+					activation scripts to activate a particular service. For instance, the
 					<code>mysqlPort</code> specifies on which port the MySQL can be reached.
 					The MySQL properties in this model are used by the MySQL activation script.
 				  </para>
@@ -606,7 +609,7 @@ rec { <co xml:id='co-2-rec2' />
 		<example xml:id="ex-6-distribution-model">
 			<title>Distribution model for the <code>StaffTracker</code></title>
 			
-			<programlisting>
+<programlisting>
 {infrastructure}:
 
 {
@@ -615,7 +618,7 @@ rec { <co xml:id='co-2-rec2' />
   StaffTracker = [ infrastructure.test1 infrastructure.test2 ]; <co xml:id='co-3-StaffTracker' />
   ...
 }
-			</programlisting>
+</programlisting>
 		</example>
 		
 		<para>

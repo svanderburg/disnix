@@ -84,12 +84,12 @@ systems.
 </para>
 <para>
 Disnix requires three models, each capturing a specific concern
-in deploying a distributed system. The <emphasis>services</emphasis> model is used
+in deploying a distributed system. The <emphasis>services model</emphasis> is used
 for specifying the components of a distributed system and
 its inter-dependencies.
 The <emphasis>infrastructure model</emphasis> is used for
 specifying the network of machines and their relevant properties.
-The <emphasis>distribution</emphasis> model is used to map services to machines
+The <emphasis>distribution model</emphasis> is used to map services to machines
 in the network.
 </para>
 </simplesect>
@@ -135,7 +135,7 @@ always perform a rollback.
 </para>
 
 <para>
-The only impure step involved in upgrading is the activation of obsolete
+The only impure step while upgrading, is the activation of obsolete
 services and activation of newly installed services, a phase in which
 users may observe that the system is changing. To make this process truly
 atomic, Disnix has an extension mechanism that can be used to temporary

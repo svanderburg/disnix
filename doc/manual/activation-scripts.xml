@@ -12,6 +12,31 @@
 	</para>
 	
 	<section>
+		<title>Structure</title>
+		
+		<para>
+			Basically, every activation script is a process, which takes 2 arguments. The first argument is
+			one of the following:
+		</para>
+		
+		<itemizedlist>
+			<listitem><simpara><varname>activate</varname>. Used to activate a service</simpara></listitem>
+			<listitem><simpara><varname>deactivate</varname>. Used to deactivate a service</simpara></listitem>
+			<listitem><simpara><varname>lock</varname>. Invoked for each service before the activation phase starts</simpara></listitem>
+			<listitem><simpara><varname>unlock</varname>. Invoked for each service after the activation phase</simpara></listitem>
+		</itemizedlist>
+		
+		<para>
+			The second parameter is the path to the Nix store. Moreover, all the properties defined in the infrastructure
+			model are passed as environment variables. A package called <filename>disnix-activation-scripts-nixos</filename>
+			is available which contains a collection of activation scripts for commonly found services, such as:
+			<varname>tomcat-webapplication</varname>, which activates a web application on Apache Tomcat,
+			<varname>mysql-database</varname>, which activates a MySQL database and <varname>process</varname>, which
+			activates a generic UNIX process. Many more types can be found in this package.
+		</para>
+	</section>
+	
+	<section>
 		<title>Activation script for the <code>mysql-database</code> type</title>
 		
 		<example xml:id="ex-7-mysql-database">
@@ -21,7 +46,7 @@
 #!/bin/bash -e
 
 case "$1" in
-    activate)
+    activate) <co xml:id='co-1-activate' />
         # Initalize the given schema if the database does not exists
         componentName=`basename $2`
         dbName=${componentName:33}
@@ -33,7 +58,7 @@ case "$1" in
               cat $2/mysql-databases/*.sql ) | mysql --user=$mysqlUsername --password=$mysqlPassword -N
         fi
         ;;
-    deactivate)
+    deactivate) <co xml:id='co-2-deactivate' />
         # A MySQL database cannot be deactivated, we do not want to drop a database
         # with all data in it, right?
         echo
@@ -41,5 +66,98 @@ case "$1" in
 esac
 			</programlisting>
 		</example>
+		
+		<para>
+			<xref linkend="ex-7-mysql-database" /> shows the activation script used for the <code>mysql-database</code> type:
+		</para>
+		
+		<calloutlist>
+			<callout arearefs="co-1-activate">
+				<para>
+					This part performs the activation step of a MySQL service. In this step,
+					we first check whether the database already exists. If the database is not there yet,
+					we create a MySQL database having the same name as the Nix component
+					and finally we import the attached MySQL schema into the database.
+				</para>
+			</callout>
+			
+			<callout arearefs="co-2-deactivate">
+				<para>
+					This part performs the deactivation step of a MySQL service. 
+					For a MySQL database, we do not do anything because we do not want
+					to discard data.
+				</para>
+			</callout>
+		</calloutlist>				
+	</section>
+	
+	<section>
+		<title>Implementing a custom activation interface</title>
+		
+		<para>
+			Although the <filename>disnix-activation-scripts-nixos</filename> package contains activation
+			scripts for commonly found services, there may be reasons to perform the activation and deactivation
+			yourself, because there is no activation type available or the service requires a specialized
+			procedure.
+		</para>
+		
+		<para>
+			In these cases the <code>wrapper</code> type can be used. Basically the wrapper invokes
+			the <filename>bin/wrapper</filename> executable in the Nix store component with the first
+			parameter (which is <varname>activate</varname>, <varname>deactivate</varname> etc.).
+			Then this process performs all the steps to activate the component and so on.
+		</para>
+		
+		<example xml:id="ex-8-tcp-proxy-wrapper">
+			<title>Disnix TCP proxy wrapper script</title>
+			
+			<programlisting>
+#!/bin/bash -e
+
+export PATH=@PREFIX@/bin:$PATH
+
+case "$1" in
+    activate)
+        nohup disnix-tcp-proxy @srcPort@ @destHostname@ @destPort@ /tmp/disnix-tcp-proxy-@srcPort@.lock > /var/log/$(basename @PREFIX@).log &amp; pid=$!
+        echo $pid > /var/run/$(basename @PREFIX@).pid
+        ;;
+    deactivate)
+        kill $(cat /var/run/@PREFIX@.pid)
+        rm -f /var/run/$(basename @PREFIX@).pid
+        ;;
+    lock)
+        if [ -f /tmp/disnix-tcp-proxy-@srcPort@.lock ]
+        then
+            exit 1
+        else
+            touch /tmp/disnix-tcp-proxy-@srcPort@.lock
+            
+            if [ -f /var/run/$(basename @PREFIX@).pid ]
+            then
+                while [ "$(disnix-tcp-proxy-client)" != "0" ]
+                do
+                    sleep 1
+                done
+            fi
+        fi
+        ;;
+    unlock)
+        rm -f /tmp/disnix-tcp-proxy-@srcPort@.lock
+        ;;
+esac
+			</programlisting>
+		</example>
+		
+		<para>
+			<xref linkend="ex-8-tcp-proxy-wrapper" /> shows an example of a wrapper script used for the TCP proxy example
+			available from our Subversion repository. As you may notice the structure is very
+			similar to an activation script, since it also contains a <code>activate</code> and <code>deactivate</code> step.
+		</para>
+		
+		<para>
+			Moreover, this wrapper script also implements a <code>lock</code> and <code>unlock</code> step, which notify
+			the service that an upgrade is starting (a phase in which services are deactivated and activated and temporarily
+			makes certain parts of the system unavailable for use) and that the upgrade phase is finished.
+		</para>
 	</section>
 </chapter>

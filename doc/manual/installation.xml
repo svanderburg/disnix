@@ -14,7 +14,7 @@
 		Disnix can also be used on other Linux distributions and other Unix-like systems such as FreeBSD. 
 		On those platforms more configuration steps have to be performed.
 		Moreover, Disnix can be installed on various systems by using the
-		<link xlink:href="http://nixos.org/nix">>Nix package manager</link> or
+		<link xlink:href="http://nixos.org/nix">Nix package manager</link> or
 		by compiling it from source code.
 	</para>
 	
@@ -54,20 +54,20 @@
 				After unpacking or checking out the Disnix sources, it can be
 				compiled by executing the following commands:
 
-				<screen>
+<screen>
 $ ./configure <replaceable>options...</replaceable>
 $ make
 $ make install
-				</screen>
+</screen>
 			</para>
 
 			<para>
 				When building from the Subversion repository, these should be
 				preceded by the command:
 
-				<screen>
+<screen>
 $ ./bootstrap
-				</screen>
+</screen>
 			</para>
 
 			<para>
@@ -90,9 +90,9 @@ $ ./bootstrap
 			<link xlink:href="http://nixos.org/nixpkgs">Nixpkgs</link>
 			repository by typing:
 
-			<screen>
+<screen>
 $ nix-env -i disnix
-			</screen>
+</screen>
 
 			Another way is downloading the Disnix source distribution
 			and to compile it manually. 
@@ -105,10 +105,11 @@ $ nix-env -i disnix
 			it is installed, so that Disnix is able to find it. On NixOS a copy is 
 			already present and this environment variable has already been configured.
 			On other systems the variable can be configured by adding the following lines to your
-			<filename>~/.bash_profile</filename> configuration:
+			<filename>~/.bash_profile</filename> configuration (or another configuration
+			file if you use a different shell):
 		</para>
 		
-		<screen>
+<screen>
 $ cat &gt;&gt; ~/.bash_profile &lt;&lt;EOF
 # Begin Nixpkgs addition
 
@@ -117,7 +118,7 @@ export NIXPKGS_ALL
 
 # End Nixpkgs addition
 EOF
-		</screen>
+</screen>
 	</section>
 
 	<section>
@@ -141,7 +142,7 @@ EOF
 		<para>
 			By default, Disnix includes a SSH client and wrapper that can be used
 			to execute remote deployment operations. If you want to use SSH as a 
-			communication protocol, a
+			communication protocol, an
 			<link xlink:href="http://www.openssh.org">OpenSSH</link>
 			server must be running on each target machine and a client machine
 			requires a OpenSSH client.
@@ -154,16 +155,16 @@ EOF
 				To enable the Disnix core service on NixOS the following property
 				must be defined in the <code>/etc/nixos/configuration.nix</code> file:
 				
-				<screen>
+<screen>
 services.disnix.enable = true;
-				</screen>
+</screen>
 				
 				In order to use the OpenSSH wrapper, also the OpenSSH service must
 				be activated in the <code>/etc/nixos/configuration.nix</code> file:
 				
-				<screen>
+<screen>
 services.openssh.enable = true;
-				</screen>
+</screen>
 			</para>
 		</section>
 
@@ -197,7 +198,7 @@ services.openssh.enable = true;
 				An <code>init.d</code> script for the Disnix service could look like this:
 			</para>
 			
-			<screen>
+<screen>
 #!/bin/bash
 
 source /etc/init.d/functions
@@ -216,7 +217,7 @@ case "$1":
         $0 start
         ;;
 esac
-			</screen>
+</screen>
 			
 			<para>
 				Rerfer to your distribution's <code>init.d</code> script style to see how services
@@ -235,7 +236,7 @@ esac
 			<title>Setting the right user permissions</title>
 			
 			<para>
-				By default, only users who are members of the group <code>disnix</code> may access operations
+				By default, only users who are members of the <code>disnix</code> group may access operations
 				of the core Disnix service. Thus in order to access the Disnix operations remotely, either
 				an account with the right permissions is required or the protocol wrapper should perform
 				the authentication to the core Disnix service. The OpenSSH wrapper, for instance,
@@ -251,9 +252,9 @@ esac
 				On most systems this user group can be added by typing:
 			</para>
 			
-			<screen>
+<screen>
 $ groupadd disnix
-			</screen>
+</screen>
 			
 			<para>
 				A particular user can be made member of the <code>disnix</code>
@@ -261,9 +262,9 @@ $ groupadd disnix
 				replaced by a desired username):
 			</para>
 			
-			<screen>
+<screen>
 $ usermod -G disnix someuser
-			</screen>
+</screen>
 		</section>
 		
 		<section>
