@@ -33,9 +33,8 @@ GHashTable *generate_cluster_table(GArray *activation_array);
 /**
  * Removes a clustered table including all its contents from memory
  *
- * @param Clustered table to destroy
+ * @param cluster_table Clustered table to destroy
  */
 void destroy_cluster_table(GHashTable *cluster_table);
-
 
 #endif

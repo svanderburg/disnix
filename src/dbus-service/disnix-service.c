@@ -126,10 +126,9 @@ static void handle_sigchild(int signum)
 /**
  * Starts the Disnix D-Bus service
  *
- * @param activation_modules_dir Directory in which the activation modules can be found
+ * @param activation_modules_dir_arg Directory in which the activation modules can be found
  * @param session_bus Indicates whether the daemon should be registered on the session bus or system bus
  */
-
 int start_disnix_service(char *activation_modules_dir_arg, int session_bus)
 {
     /* The D-Bus connection object provided by dbus_glib */

@@ -140,7 +140,7 @@ gchar **generate_activation_arguments(GArray *target);
  * Returns the target interface property from the given
  * activation mapping.
  *
- * @param ActivationMapping Activation mapping
+ * @param mapping Activation mapping
  * @return The target interface value
  */
 gchar *get_target_interface(ActivationMapping *mapping);
