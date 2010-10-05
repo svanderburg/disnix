@@ -3,6 +3,7 @@ XSLTPROC = $(xsltproc) \
  --param section.autolabel 1 \
  --param section.label.includes.component.label 1 \
  --param html.stylesheet \'style.css\' \
+ --param make.valid.html 1 \
  --param xref.with.number.and.title 1 \
  --param toc.section.depth 3 \
  --param admon.style \'\' \
@@ -15,7 +16,7 @@ dblatex_opts = \
 
 FIGURES = model.png stafftracker.png
 
-MANUAL_SRCS = manual.xml introduction.xml overview.xml installation.xml models.xml activation-scripts.xml usage.xml images
+MANUAL_SRCS = manual.xml introduction.xml overview.xml installation.xml models.xml activation-scripts.xml usage.xml images style.css
 
 version.txt:
 	echo -n $(VERSION) > version.txt
@@ -48,6 +49,7 @@ all-local: manual.html
 install-data-local: manual.html
 	$(INSTALL) -d $(DESTDIR)$(docdir)/manual
 	$(INSTALL_DATA) manual.html $(DESTDIR)$(docdir)/manual
+	$(INSTALL_DATA) style.css $(DESTDIR)$(docdir)/manual
 	$(INSTALL_DATA) $(FIGURES) $(DESTDIR)$(docdir)/manual
 	cp -r images $(DESTDIR)$(docdir)/manual/images
 

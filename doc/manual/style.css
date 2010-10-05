@@ -1,0 +1,29 @@
+body
+{
+	font-family: arial, lucida, helvetica, sans-serif;
+	font-size: 100%;
+}
+
+h1
+{
+	color: #0055aa;
+	font-size: 170%;
+}
+
+h2
+{
+	font-size: 150%;
+}
+
+h3
+{
+	font-size: 125%;
+}
+
+pre.screen, pre.programlisting
+{
+	border-style: solid;
+	border-width: 1px;
+	background-color: #dddddd;
+	padding: 0.5em;
+}
