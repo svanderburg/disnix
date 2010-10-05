@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 	char *interface_env = getenv("DISNIX_CLIENT_INTERFACE");
 	
 	if(interface_env == NULL)
-	    interface = g_strdup("disnix-client");
+	    interface = g_strdup("disnix-ssh-client");
 	else
 	    interface = interface_env;
     }

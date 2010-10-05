@@ -28,7 +28,7 @@ showUsage()
     echo "-d,--distribution           Distribution Nix expression which maps services to machines in the network"
     echo "--target-property           The target property of an infrastructure model, that specifies how to "
     echo "                            connect to the remote Disnix interface. (Defaults to hostname)"
-    echo "--interface                 Process that communicates with the remote disnix service. Defaults to disnix-client"
+    echo "--interface                 Process that communicates with the remote disnix service. Defaults to disnix-ssh-client"
     echo "-p,--profile                Name of the profile that is used for this system. Defaults to: default"
     echo "--build-on-targets          Build the services on the target machines in the network instead of managing the build by the coordinator"
     echo "--coordinator-profile-path  Path where to store the coordinator profile generations"
@@ -113,7 +113,7 @@ if [ "$interface" = "" ]
 then
     if [ "$DISNIX_CLIENT_INTERFACE" = "" ]
     then
-        interface="disnix-client"
+        interface="disnix-ssh-client"
     else
         interface=$DISNIX_CLIENT_INTERFACE
     fi

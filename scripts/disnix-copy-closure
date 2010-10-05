@@ -26,7 +26,7 @@ showUsage()
     echo "--to        Copy closure to the given target"
     echo "--from      Copy closure from the given target"
     echo "-t,--target Address of the Disnix service running on the remote machine"
-    echo "--interface Path to executable that communicates with a Disnix interface. Defaults to disnix-client"
+    echo "--interface Path to executable that communicates with a Disnix interface. Defaults to disnix-ssh-client"
     echo "-h,--help   Shows the usage of this command to the user"
 }
 
@@ -90,7 +90,7 @@ if [ "$interface" = "" ]
 then
     if [ "$DISNIX_CLIENT_INTERFACE" = "" ]
     then
-        interface="disnix-client"
+        interface="disnix-ssh-client"
     else
         interface=$DISNIX_CLIENT_INTERFACE
     fi

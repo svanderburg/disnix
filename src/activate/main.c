@@ -541,7 +541,7 @@ int main(int argc, char *argv[])
 	if(interface_env != NULL)
 	    interface = interface_env;
 	else
-	    interface = "disnix-client";
+	    interface = "disnix-ssh-client";
     }
 
     if(optind >= argc)
