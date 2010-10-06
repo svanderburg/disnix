@@ -1,0 +1,115 @@
+<refentry xmlns="http://docbook.org/ns/docbook"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+          xmlns:xi="http://www.w3.org/2001/XInclude"
+          xml:id="sec-disnix-instantiate">
+          
+	<refmeta>
+		<refentrytitle>disnix-instantiate</refentrytitle>
+		<manvolnum>1</manvolnum>
+		<refmiscinfo class="source">Disnix</refmiscinfo>
+		<refmiscinfo class="version"><xi:include href="version.txt" parse="text" /></refmiscinfo>
+	</refmeta>
+	
+	<refnamediv>
+		<refname>disnix-instantiate</refname>
+		<refpurpose>Instantiate a distributed derivation from Disnix expressions</refpurpose>
+	</refnamediv>
+	
+	<refsynopsisdiv>
+		<cmdsynopsis>
+			<command>disnix-instantiate</command>
+			<arg choice="plain"><option>-s</option> <replaceable>services_expr</replaceable></arg>
+			<arg choice="plain"><option>-i</option> <replaceable>infrastructure_expr</replaceable></arg>
+			<arg choice="plain"><option>-d</option> <replaceable>distribution_expr</replaceable></arg>
+			<arg><replaceable>options</replaceable></arg>
+		</cmdsynopsis>
+	</refsynopsisdiv>
+	
+	<refsection>
+		<title>Description</title>
+		
+		<para>
+			The command <command>disnix-instantiate</command> generates a distributed derivation file from a service, infrastructure
+			and distribution Nix expression, which can be used to build the services on the target machines from source code by
+			using the <command>disnix-build</command> command.
+		</para>
+		<para>
+			Most users and developers don't need to use this command directly. The command
+			<link linkend="sec-disnix-env"><command>disnix-env</command></link>
+			performs instantiation of a distributed derivation automatically. It is mostly used for debugging purposes or to perform certain
+			tasks manually.
+		</para>
+	</refsection>
+	
+	<refsection>
+		<title>Options</title>
+		
+		<variablelist>
+			<varlistentry>
+				<term><option>-s</option>, <option>--services</option></term>
+				<listitem>
+					<para>
+						Services Nix expression which describes all components of the distributed system
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-i</option>, <option>--infrastructure</option></term>
+				<listitem>
+					<para>
+						Infrastructure Nix expression which captures properties of machines in the network
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-d</option>, <option>--distribution</option></term>
+				<listitem>
+					<para>
+						Distribution Nix expression which maps services to machines in the network
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--target-property</option></term>
+				<listitem>
+					<para>
+						The target property of an infrastructure model, that specifies how to connect
+						to the remote Disnix interface. (Defaults to hostname)
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--show-trace</option></term>
+				<listitem>
+					<para>
+						Shows a trace of the output.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-h</option>, <option>--help</option></term>
+				<listitem>
+					<para>
+						Shows the usage of this command to the user.
+					</para>
+				</listitem>
+			</varlistentry>	
+		</variablelist>
+	</refsection>
+	
+	<refsection>
+		<title>Environment variables</title>
+		
+		<variablelist>
+			<varlistentry>
+				<term><option>DISNIX_TARGET_PROPERTY</option></term>
+				<listitem>
+					<para>
+						Sets the target property of an infrastructure model,
+						that specifies how to connect to the remote Disnix interface. (Defaults to hostname)
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</refsection>
+</refentry>

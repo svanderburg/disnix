@@ -1,2 +1,0 @@
-man_MANS = disnix-activate.8 disnix-build.8 disnix-client.8 disnix-collect-garbage.8 disnix-copy-closure.8 disnix-distribute.8 disnix-env.8 disnix-gendist-roundrobin.8 disnix-instantiate.8 disnix-manifest.8 disnix-service.8 disnix-ssh-client.8 disnix-visualize.8
-EXTRA_DIST = disnix-activate.8 disnix-build.8 disnix-client.8 disnix-collect-garbage.8 disnix-copy-closure.8 disnix-distribute.8 disnix-env.8 disnix-gendist-roundrobin.8 disnix-instantiate.8 disnix-manifest.8 disnix-service.8 disnix-ssh-client.8 disnix-visualize.8

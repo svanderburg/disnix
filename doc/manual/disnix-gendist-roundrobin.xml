@@ -1,0 +1,66 @@
+<refentry xmlns="http://docbook.org/ns/docbook"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+          xmlns:xi="http://www.w3.org/2001/XInclude"
+          xml:id="sec-disnix-gendist-roundrobin">
+          
+	<refmeta>
+		<refentrytitle>disnix-gendist-roundrobin</refentrytitle>
+		<manvolnum>1</manvolnum>
+		<refmiscinfo class="source">Disnix</refmiscinfo>
+		<refmiscinfo class="version"><xi:include href="version.txt" parse="text" /></refmiscinfo>
+	</refmeta>
+	
+	<refnamediv>
+		<refname>disnix-gendist-roundrobin</refname>
+		<refpurpose>Generate a distribution expression from a service and infrastructure expression</refpurpose>
+	</refnamediv>
+	
+	<refsynopsisdiv>
+		<cmdsynopsis>
+			<command>disnix-gendist-roundrobin</command>
+			<arg choice="plain"><option>-s</option> <replaceable>services_expr</replaceable></arg>
+			<arg choice="plain"><option>-i</option> <replaceable>infrastructure_expr</replaceable></arg>
+		</cmdsynopsis>
+	</refsynopsisdiv>
+	
+	<refsection>
+		<title>Description</title>
+		
+		<para>
+			The command <command>disnix-gendist-roundrobin</command> generates a distribution expression from a given
+			services and infrastructure expression. It uses the round robin scheduling method to distribute every
+			service in the services model over each machine in the infrastructure in equal proportions and order.
+		</para>
+	</refsection>
+	
+	<refsection>
+		<title>Options</title>
+		
+		<variablelist>
+			<varlistentry>
+				<term><option>-s</option>, <option>--services</option></term>
+				<listitem>
+					<para>
+						Services Nix expression which describes all components of the distributed system
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-i</option>, <option>--infrastructure</option></term>
+				<listitem>
+					<para>
+						Infrastructure Nix expression which captures properties of machines in the network
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-h</option>, <option>--help</option></term>
+				<listitem>
+					<para>
+						Shows the usage of this command to the user.
+					</para>
+				</listitem>
+			</varlistentry>	
+		</variablelist>
+	</refsection>
+</refentry>

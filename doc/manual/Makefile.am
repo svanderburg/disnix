@@ -16,7 +16,13 @@ dblatex_opts = \
 
 FIGURES = model.png stafftracker.png
 
-MANUAL_SRCS = manual.xml introduction.xml overview.xml installation.xml models.xml activation-scripts.xml usage.xml images style.css
+man1_MANS = disnix-activate.1 disnix-build.1 disnix-client.1 disnix-copy-closure.1 disnix-distribute.1 disnix-env.1 \
+  disnix-gendist-roundrobin.1 disnix-instantiate.1 disnix-manifest.1 disnix-ssh-client.1 disnix-visualize.1
+
+man8_MANS = disnix-service.8
+
+MANUAL_SRCS = manual.xml introduction.xml overview.xml installation.xml models.xml activation-scripts.xml usage.xml images style.css \
+  $(man1_MANS:.1=.xml) $(man8_MANS:.8=.xml)
 
 version.txt:
 	echo -n $(VERSION) > version.txt
@@ -25,6 +31,9 @@ version.txt:
 manual.is-valid: $(MANUAL_SRCS) version.txt
 	$(XMLLINT) --noout --nonet --xinclude --noxincludenode --relaxng $(docbookrng)/docbook.rng $<
 	touch $@
+
+man $(MANS): $(MANUAL_SRCS) manual.is-valid
+	$(XSLTPROC) --nonet --xinclude $(docbookxsl)/manpages/docbook.xsl manual.xml
 
 manual.html: $(MANUAL_SRCS) manual.is-valid
 	$(XSLTPROC) --nonet --xinclude --output manual.html \
@@ -53,7 +62,7 @@ install-data-local: manual.html
 	$(INSTALL_DATA) $(FIGURES) $(DESTDIR)$(docdir)/manual
 	cp -r images $(DESTDIR)$(docdir)/manual/images
 
-KEEP = manual.html manual.is-valid version.txt
+KEEP = manual.html manual.is-valid version.txt $(MANS)
 
 EXTRA_DIST = $(MANUAL_SRCS) $(FIGURES) $(KEEP)
 

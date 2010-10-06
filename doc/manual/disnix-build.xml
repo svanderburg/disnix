@@ -1,0 +1,89 @@
+<refentry xmlns="http://docbook.org/ns/docbook"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+          xmlns:xi="http://www.w3.org/2001/XInclude"
+          xml:id="sec-disnix-build">
+          
+	<refmeta>
+		<refentrytitle>disnix-build</refentrytitle>
+		<manvolnum>1</manvolnum>
+		<refmiscinfo class="source">Disnix</refmiscinfo>
+		<refmiscinfo class="version"><xi:include href="version.txt" parse="text" /></refmiscinfo>
+	</refmeta>
+	
+	<refnamediv>
+		<refname>disnix-build</refname>
+		<refpurpose>Build store derivations on target machines in a network</refpurpose>
+	</refnamediv>
+	
+	<refsynopsisdiv>
+		<cmdsynopsis>
+			<command>disnix-build</command>
+			<arg><replaceable>options</replaceable></arg>
+			<arg choice="plain"><replaceable>distributed_derivation</replaceable></arg>
+		</cmdsynopsis>
+	</refsynopsisdiv>
+	
+	<refsection>
+		<title>Description</title>
+		
+		<para>
+			The command <command>disnix-build</command> builds derivations on the given target machines specified in a distributed derivation
+			XML file. When the building process is complete, the results are transfered back to the coordinator machine,
+			so that they are kept for further use and do not have to be rebuilt again in case of a configuration change.
+		</para>
+		<para>
+			In most cases this command should not be called directly. The command
+			<link linkend="sec-disnix-env"><command>disnix-env</command></link> automatically uses this
+			command if the <command>--build-on-targets</command> is specified.
+		</para>
+	</refsection>
+	
+	<refsection>
+		<title>Options</title>
+		
+		<variablelist>
+			<varlistentry>
+				<term><option>--interface</option></term>
+				<listitem>
+					<para>
+						Path to executable that communicates with a Disnix interface. Defaults to
+						<link linkend="sec-disnix-ssh-client"><command>disnix-ssh-client</command></link>.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-h</option>, <option>--help</option></term>
+				<listitem>
+					<para>
+						Shows the usage of this command to the user.
+					</para>
+				</listitem>
+			</varlistentry>	
+		</variablelist>
+	</refsection>
+	
+	<refsection>
+		<title>Environment variables</title>
+		
+		<variablelist>
+			<varlistentry>
+				<term><option>DISNIX_CLIENT_INTERFACE</option></term>
+				<listitem>
+					<para>
+						Sets the client interface (which defaults to
+						<link linkend="sec-disnix-env"><command>disnix-env</command></link>)
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>DISNIX_TARGET_PROPERTY</option></term>
+				<listitem>
+					<para>
+						Specifies which property in the infrastructure Nix expression specifies how to
+						connect to the remote interface (defaults to: hostname).
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</refsection>
+</refentry>

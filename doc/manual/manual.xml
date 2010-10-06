@@ -35,4 +35,31 @@
   <xi:include href="activation-scripts.xml" />
   <xi:include href="usage.xml" />
   <xi:include href="extensions.xml" />
+  
+  <appendix>
+    <title>Command Reference</title>
+    
+    <section>
+      <title>Main commands</title>
+      
+      <xi:include href="disnix-collect-garbage.xml" />
+      <xi:include href="disnix-env.xml" />
+    </section>
+    
+    <section>
+      <title>Utilities</title>
+      
+      <xi:include href="disnix-activate.xml" />
+      <xi:include href="disnix-build.xml" />
+      <xi:include href="disnix-client.xml" />
+      <xi:include href="disnix-copy-closure.xml" />
+      <xi:include href="disnix-distribute.xml" />
+      <xi:include href="disnix-gendist-roundrobin.xml" />
+      <xi:include href="disnix-instantiate.xml" />
+      <xi:include href="disnix-manifest.xml" />
+      <xi:include href="disnix-service.xml" />
+      <xi:include href="disnix-ssh-client.xml" />
+      <xi:include href="disnix-visualize.xml" />
+    </section>
+  </appendix>
 </book>

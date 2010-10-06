@@ -88,7 +88,6 @@ src/activate/Makefile
 src/visualize/Makefile
 scripts/Makefile
 data/Makefile
-man/Makefile
 scripts/disnix-instantiate
 scripts/disnix-manifest
 scripts/disnix-gendist-roundrobin

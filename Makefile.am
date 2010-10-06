@@ -1,1 +1,1 @@
-SUBDIRS = conf src scripts data man doc
+SUBDIRS = conf src scripts data doc

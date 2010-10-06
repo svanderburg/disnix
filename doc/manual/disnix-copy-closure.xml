@@ -1,0 +1,107 @@
+<refentry xmlns="http://docbook.org/ns/docbook"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+          xmlns:xi="http://www.w3.org/2001/XInclude"
+          xml:id="sec-disnix-copy-closure">
+          
+	<refmeta>
+		<refentrytitle>disnix-copy-closure</refentrytitle>
+		<manvolnum>1</manvolnum>
+		<refmiscinfo class="source">Disnix</refmiscinfo>
+		<refmiscinfo class="version"><xi:include href="version.txt" parse="text" /></refmiscinfo>
+	</refmeta>
+	
+	<refnamediv>
+		<refname>disnix-copy-closure</refname>
+		<refpurpose>Copy a closure from or to a remote machine through a Disnix interface</refpurpose>
+	</refnamediv>
+	
+	<refsynopsisdiv>
+		<cmdsynopsis>
+			<command>disnix-copy-closure</command>
+			<group>
+				<arg choice="plain"><option>--from</option></arg>
+				<arg choice="plain"><option>--to</option></arg>
+			</group>
+			<arg><replaceable>options</replaceable></arg>
+			<arg choice="plain"><replaceable>Nix_store_path</replaceable></arg>
+		</cmdsynopsis>
+	</refsynopsisdiv>
+	
+	<refsection>
+		<title>Description</title>
+		
+		<para>
+			The command <command>disnix-copy-closure</command> copies a Nix store component and all its intra-dependencies
+			to or from a given target machine through a Disnix interface. This process is very efficient, since
+			it scans for all intra-dependencies and only copies the missing parts.
+		</para>
+		<para>
+			This command is very similar to the <command>nix-copy-closure</command> command, except that it uses a Disnix interface
+			for transport (which optionally uses SSH or a custom protocol) instead of using SSH directly.
+		</para>
+	</refsection>
+	
+	<refsection>
+		<title>Options</title>
+		
+		<variablelist>
+			<varlistentry>
+				<term><option>--to</option></term>
+				<listitem>
+					<para>
+						Copy closure to the given target.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--from</option></term>
+				<listitem>
+					<para>
+						Copy closure from the given target.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-t</option>, <option>--target</option></term>
+				<listitem>
+					<para>
+						Address of the Disnix service running on the remote machine.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--interface</option></term>
+				<listitem>
+					<para>
+						Path to executable that communicates with a Disnix interface. Defaults to
+						<link linkend="sec-disnix-ssh-client"><command>disnix-ssh-client</command></link>
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>-h</option>, <option>--help</option></term>
+				<listitem>
+					<para>
+						Shows the usage of this command to the user.
+					</para>
+				</listitem>
+			</varlistentry>	
+		</variablelist>
+	</refsection>
+	
+	<refsection>
+		<title>Environment variables</title>
+		
+		<variablelist>
+			<varlistentry>
+				<term><option>DISNIX_CLIENT_INTERFACE</option></term>
+				<listitem>
+					<para>
+						Sets the client interface (which defaults to
+						<link linkend="sec-disnix-ssh-client"><command>disnix-ssh-client</command></link>)
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</refsection>
+</refentry>

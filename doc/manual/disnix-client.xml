@@ -1,0 +1,287 @@
+<refentry xmlns="http://docbook.org/ns/docbook"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+          xmlns:xi="http://www.w3.org/2001/XInclude"
+          xml:id="sec-disnix-client">
+          
+	<refmeta>
+		<refentrytitle>disnix-client</refentrytitle>
+		<manvolnum>1</manvolnum>
+		<refmiscinfo class="source">Disnix</refmiscinfo>
+		<refmiscinfo class="version"><xi:include href="version.txt" parse="text" /></refmiscinfo>
+	</refmeta>
+	
+	<refnamediv>
+		<refname>disnix-client</refname>
+		<refpurpose>Provides access to the disnix-service through the D-Bus interface</refpurpose>
+	</refnamediv>
+	
+	<refsynopsisdiv>
+		<cmdsynopsis>
+			<command>disnix-client</command>
+			<arg choice="req"><replaceable>operation</replaceable></arg>
+			<arg><replaceable>options</replaceable></arg>
+			<arg><replaceable>Nix_store_path</replaceable></arg>
+		</cmdsynopsis>
+	</refsynopsisdiv>
+	
+	<refsection>
+		<title>Description</title>
+		
+		<para>
+			The command <command>disnix-client</command> provides access to a
+			<link linkend="sec-disnix-service"><command>disnix-service</command></link> instance running
+			on the same machine by connecting to the D-Bus system or session bus. 
+			In most cases this tool is only needed for debugging purposes, since it only uses the D-Bus
+			protocol and cannot connect to a remote machine. A more useful client for use in production
+			environments is: <link linkend="sec-disnix-ssh-client"><command>disnix-ssh-client</command></link>.
+		</para>
+	</refsection>
+	
+	<refsection>
+		<title>Operations</title>
+		
+		<variablelist>
+			<varlistentry>
+				<term><option>--import</option></term>
+				<listitem>
+					<para>
+						Imports a given closure into the Nix store of the target machine. Optionally,
+						it transfers the closure from this machine to the target machine.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--export</option></term>
+				<listitem>
+					<para>
+						Exports the closure of a given Nix store path of the target machine into a file,
+						and optionally downloads it.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--print-invalid</option></term>
+				<listitem>
+					<para>
+						Prints all the paths that are not valid in the Nix store of the target machine.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--realise</option></term>
+				<listitem>
+					<para>
+						Realises the given store derivation on the target machine.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--set</option></term>
+				<listitem>
+					<para>
+						Creates a Disnix profile only containing the given derivation on the target machine.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--query-installed</option></term>
+				<listitem>
+					<para>
+						Queries all the installed services on the given target machine.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--query-requisites</option></term>
+				<listitem>
+					<para>
+						Queries all the requisites (intra-dependencies) of the given services on the target machine.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--collect-garbage</option></term>
+				<listitem>
+					<para>
+						Collects garbage on the given target machine.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--activate</option></term>
+				<listitem>
+					<para>
+						Activates the given service on the target machine.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--deactivate</option></term>
+				<listitem>
+					<para>
+						Deactivates the given service on the target machine.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--lock</option></term>
+				<listitem>
+					<para>
+						Acquires a lock on a Disnix profile of the target machine.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--unlock</option></term>
+				<listitem>
+					<para>
+						Release the lock on a Disnix profile of the target machine.
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</refsection>
+	
+	<refsection>
+		<title>Options</title>
+		
+		<variablelist>
+			<varlistentry>
+				<term><option>-t</option>, <option>--target</option></term>
+				<listitem>
+					<para>
+						This option does nothing. It is only defined to match the interfaces of other Disnix clients.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--session-bus</option></term>
+				<listitem>
+					<para>
+						Connects to the session bus instead of the system bus. This is useful for testing/debugging purposes.
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+		
+		<refsection>
+			<title>Import operation</title>
+			
+			<variablelist>
+				<varlistentry>
+					<term><option>--localfile</option></term>
+					<listitem>
+						<para>
+							Specifies that the given closure is stored locally,
+							so that it will be transfered to the target machine first.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>--remotefile</option></term>
+					<listitem>
+						<para>
+							Specifies that the given closure is stored remotely,
+							so that it does not have to be transfered to the target machine.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+		</refsection>
+		
+		<refsection>
+			<title>Export operation</title>
+			
+			<variablelist>
+				<varlistentry>
+					<term><option>--localfile</option></term>
+					<listitem>
+						<para>
+							Specifies that the exported closure should be stored locally.
+							This option does not download the closure.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>--remotefile</option></term>
+					<listitem>
+						<para>
+							Specifies that the exported closure should be stored remotely.
+							This option downloads the closure from the target machine.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+		</refsection>
+		
+		<refsection>
+			<title>Set operation/Query installed operation</title>
+			
+			<variablelist>
+				<varlistentry>
+					<term><option>-p</option>, <option>--profile</option></term>
+					<listitem>
+						<para>
+							Specifies the name of the profile that should be used. Defaults to: default
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+		</refsection>
+		
+		<refsection>
+			<title>Collect garbage operation</title>
+			
+			<variablelist>
+				<varlistentry>
+					<term><option>-d</option>, <option>--delete-old</option></term>
+					<listitem>
+						<para>
+							Specifies that also the older generations of the profiles have to be deleted.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+		</refsection>
+		
+		<refsection>
+			<title>Activation/Deactivation operation</title>
+			
+			<variablelist>
+				<varlistentry>
+					<term><option>--type</option></term>
+					<listitem>
+						<para>
+							Specifies the activation module that should be used, such as
+							<command>echo</command> or <command>process</command>.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term><option>--arguments</option></term>
+					<listitem>
+						<para>
+							Specifies the arguments passed to the activation module,
+							which is a string with key=value pairs.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+		</refsection>
+		
+		<refsection>
+			<title>Lock/Unlock operation</title>
+			
+			<variablelist>
+				<varlistentry>
+					<term><option>-p</option>, <option>--profile</option></term>
+					<listitem>
+						<para>
+							Specifies the name of the profile that should be used. Defaults to: default.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+		</refsection>
+	</refsection>
+</refentry>
