@@ -1,0 +1,78 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="chap-advanced-options">
+
+	<title>Advanced options</title>
+
+	<section>
+		<title>Configuring a custom connection protocol</title>
+		
+		<para>
+			As mentioned before, the Disnix service consists of a core service and a protocol wrapper.
+			By default a SSH connection is used, but other types of connections can be used as well,
+			such as SOAP, provided by the external <code>DisnixWebService</code> package.  
+		</para>
+		
+		<para>
+			The coordinator machine invokes an external process which performs communication with
+			the disnix service. By default <code>disnix-ssh-client</code> is used. A different
+			client can be used by either setting the <varname>DISNIX_CLIENT_INTERFACE</varname>
+			environment variable with the path to the executable or by using the
+			<option>--interface</option> command-line option.
+		</para>
+		
+		<para>
+			Except for configuring the coordinator machine, each target machine must also run the
+			connection wrapper so that it can use the given protocol. Refer to the documentation
+			of the extension for specific instructions.
+		</para>
+		
+		<para>
+			Another useful usecase is setting the client interface to <code>disnix-client</code>.
+			This client interface connects directly to the D-Bus system bus to invoke the disnix 
+			service operations. This is useful for debugging purposes, but you cannot use this client
+			for remote connections.
+		</para>
+	</section>
+	
+	<section>
+		<title>Managing multiple distributed system configurations</title>
+		
+		<para>
+			By default Disnix assumes that the models that you are currently using represent one particular
+			distributed environment. You can also use multiple profiles, which allow you to maintain
+			multiple distributed system environment from one coordinator machine.
+			By using the <option>--profile</option> option for the <command>disnix-env</command>
+			and <command>disnix-activate</command> commands, you can specify which profile you want
+			to use, so that they do not interfere with each other.
+		</para>
+		
+		<para>
+			The following instructions will install a particular distributed environment:
+		</para>
+		
+<screen>
+$ disnix-env -s my-default-services.nix -i my-default-infrastructure.nix -d my-default-distribution.nix
+</screen>
+		
+		<para>
+			By running the following command with three models of another distributed environment:
+		</para>
+
+<screen>
+$ disnix-env -s my-other-services.nix -i my-other-infrastructure.nix -d my-other-distribution.nix
+</screen>
+
+		<para>
+			Disnix will upgrade the previous the default environment to match the models defined
+			in the other environment, which is not desirable.
+			However, by using the <option>--profile</option> option Disnix
+			deploys the new distributed system without looking to the default system's deployment
+			state and maintains two seperate configuration next to each other:
+		</para>
+
+<screen>
+$ disnix-env --profile other -s my-other-services.nix -i my-other-infrastructure.nix -d my-other-distribution.nix
+</screen>
+	</section>
+</chapter>

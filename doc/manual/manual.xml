@@ -34,6 +34,7 @@
   <xi:include href="models.xml" />
   <xi:include href="activation-scripts.xml" />
   <xi:include href="usage.xml" />
+  <xi:include href="advanced-options.xml" />
   <xi:include href="extensions.xml" />
   
   <appendix>
