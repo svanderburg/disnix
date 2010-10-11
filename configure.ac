@@ -81,6 +81,7 @@ src/query/Makefile
 src/dbus-service/Makefile
 src/libxmlutil/Makefile
 src/libdistderivation/Makefile
+src/libmain/Makefile
 src/libmanifest/Makefile
 src/libinfrastructure/Makefile
 src/distribute/Makefile

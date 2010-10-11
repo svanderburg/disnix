@@ -27,8 +27,9 @@
 #define _GNU_SOURCE
 #include <getopt.h>
 #include <glib.h>
-#include "activationmapping.h"
-#include "distributionmapping.h"
+#include <activationmapping.h>
+#include <distributionmapping.h>
+#include <defaultoptions.h>
 
 static void print_usage()
 {
@@ -507,7 +508,7 @@ int main(int argc, char *argv[])
     };
     char *interface = NULL;
     char *old_manifest = NULL;
-    char *profile = "default";
+    char *profile = NULL;
     char *coordinator_profile_path = NULL;
     
     /* Parse command-line options */
@@ -534,15 +535,9 @@ int main(int argc, char *argv[])
     }
 
     /* Validate options */
-    if(interface == NULL)
-    {
-	char *interface_env = getenv("DISNIX_CLIENT_INTERFACE");
-	
-	if(interface_env != NULL)
-	    interface = interface_env;
-	else
-	    interface = "disnix-ssh-client";
-    }
+    
+    interface = check_interface_option(interface);
+    profile = check_profile_option(profile);
 
     if(optind >= argc)
     {

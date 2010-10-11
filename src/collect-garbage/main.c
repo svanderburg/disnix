@@ -24,7 +24,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <glib.h>
-#include "infrastructure.h"
+#include <infrastructure.h>
+#include <defaultoptions.h>
 
 static void print_usage()
 {
@@ -70,26 +71,10 @@ int main(int argc, char *argv[])
     }
     
     /* Validate options */
-    if(interface == NULL)
-    {
-	char *interface_env = getenv("DISNIX_CLIENT_INTERFACE");
-	
-	if(interface_env == NULL)
-	    interface = "disnix-ssh-client";
-	else
-	    interface = interface_env;
-    }
-
-    if(target_property == NULL)
-    {
-	char *target_property_env = getenv("DISNIX_TARGET_PROPERTY");
-	
-	if(target_property_env == NULL)
-	    target_property = "hostname";
-	else
-	    target_property = target_property_env;
-    }
-
+    
+    interface = check_interface_option(interface);
+    target_property = check_target_property_option(target_property);
+    
     if(optind >= argc)
     {
 	fprintf(stderr, "An infrastructure Nix expression has to be specified!\n");

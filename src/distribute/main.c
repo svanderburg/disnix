@@ -25,7 +25,8 @@
 #define _GNU_SOURCE
 #include <getopt.h>
 #include <glib.h>
-#include "distributionmapping.h"
+#include <distributionmapping.h>
+#include <defaultoptions.h>
 
 static void print_usage()
 {
@@ -61,17 +62,9 @@ int main(int argc, char *argv[])
     }
 
     /* Validate options */
-    if(interface == NULL)
-    {
-	char *interface_env = getenv("DISNIX_CLIENT_INTERFACE");
-	
-	if(interface_env == NULL)
-	    interface = g_strdup("disnix-ssh-client");
-	else
-	    interface = interface_env;
-    }
-
-
+    
+    interface = check_interface_option(interface);
+    
     if(optind >= argc)
     {
 	fprintf(stderr, "ERROR: No manifest specified!\n");
