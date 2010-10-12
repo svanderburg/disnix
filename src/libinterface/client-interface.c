@@ -127,6 +127,20 @@ pid_t exec_collect_garbage(gchar *interface, gchar *target, gboolean delete_old)
 	return pid;
 }
 
+pid_t exec_set(gchar *interface, gchar *target, gchar *profile, gchar *component)
+{
+    pid_t pid = fork();
+    
+    if(pid == 0)
+    {
+        char *args[] = {interface, "--target", target, "--profile", profile, "--set", component, NULL};
+        execvp(interface, args);
+        _exit(1);
+    }
+    else
+	return pid;
+}
+
 pid_t exec_query_installed(gchar *interface, gchar *target, gchar *profile)
 {
     pid_t pid = fork();

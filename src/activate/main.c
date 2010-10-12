@@ -258,24 +258,10 @@ static int set_target_profiles(GArray *distribution_array, char *interface, char
 		
 	printf("Setting profile: %s on target: %s\n", item->profile, item->target);
 	
-	status = fork();
+	status = wait_to_finish(exec_set(interface, item->target, profile, item->profile));
 	
-	if(status == 0)
-	{
-	    char *args[] = {interface, "--target", item->target, "--profile", profile, "--set", item->profile, NULL};
-	    execvp(interface, args);
-	    _exit(1);
-	}
-	
-	if(status == -1)
+	if(status != 0)
 	    return FALSE;
-	else
-	{
-	    wait(&status);
-	    
-	    if(WEXITSTATUS(status) != 0)
-		return FALSE;
-	}
     }
 
     return TRUE;

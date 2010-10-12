@@ -88,7 +88,17 @@ pid_t exec_unlock(gchar *interface, gchar *target, gchar *profile);
 pid_t exec_collect_garbage(gchar *interface, gchar *target, gboolean delete_old);
 
 /**
- * Queries the installed services operation through a Disnix client interface
+ * Invokes the set operation through a Disnix client interface
+ *
+ * @param interface Path to the interface executable
+ * @param target Target Address of the remote interface
+ * @param profile Identifier of the distributed profile
+ * @param component Component which becomes the contents of the profile
+ */
+pid_t exec_set(gchar *interface, gchar *target, gchar *profile, gchar *component);
+
+/**
+ * Invokes the the query installed operation through a Disnix client interface
  *
  * @param interface Path to the interface executable
  * @param target Target Address of the remote interface
