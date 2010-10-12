@@ -97,4 +97,24 @@ pid_t exec_collect_garbage(gchar *interface, gchar *target, gboolean delete_old)
  */
 pid_t exec_query_installed(gchar *interface, gchar *target, gchar *profile);
 
+/**
+ * Invokes the copy closure process to copy a closure from a machine
+ *
+ * @param interface Path to the interface executable
+ * @param target Target Address of the remote interface
+ * @param component Component to copy (including all intra-dependencies)
+ * @return PID of the client interface process performing the operation, or -1 in case of a failure
+ */ 
+pid_t exec_copy_closure_from(gchar *interface, gchar *target, gchar *component);
+
+/**
+ * Invokes the copy closure process to copy a closure to a machine
+ *
+ * @param interface Path to the interface executable
+ * @param target Target Address of the remote interface
+ * @param component Component to copy (including all intra-dependencies)
+ * @return PID of the client interface process performing the operation, or -1 in case of a failure
+ */ 
+pid_t exec_copy_closure_to(gchar *interface, gchar *target, gchar *component);
+
 #endif

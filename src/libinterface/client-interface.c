@@ -38,7 +38,7 @@ int wait_to_finish(pid_t pid)
 
 static pid_t exec_activate_or_deactivate(gchar *operation, gchar *interface, gchar *target, gchar *type, gchar **arguments, unsigned int arguments_size, gchar *service)
 {
-    int pid = fork();
+    pid_t pid = fork();
 	
     if(pid == 0)
     {
@@ -80,7 +80,7 @@ pid_t exec_deactivate(gchar *interface, gchar *target, gchar *type, gchar **argu
 
 static pid_t exec_lock_or_unlock(gchar *operation, gchar *interface, gchar *target, gchar *profile)
 {
-    int pid = fork();
+    pid_t pid = fork();
     
     if(pid == 0)
     {
@@ -105,7 +105,7 @@ pid_t exec_unlock(gchar *interface, gchar *target, gchar *profile)
 pid_t exec_collect_garbage(gchar *interface, gchar *target, gboolean delete_old)
 {
     /* Declarations */
-    int pid;
+    pid_t pid;
     char *delete_old_arg;
     
     /* Determine whether to use the delete old option */
@@ -129,7 +129,7 @@ pid_t exec_collect_garbage(gchar *interface, gchar *target, gboolean delete_old)
 
 pid_t exec_query_installed(gchar *interface, gchar *target, gchar *profile)
 {
-    int pid = fork();
+    pid_t pid = fork();
     
     if(pid == 0)
     {
@@ -139,4 +139,28 @@ pid_t exec_query_installed(gchar *interface, gchar *target, gchar *profile)
     }
     else
 	return pid;
+}
+
+static pid_t exec_copy_closure(gchar *operation, gchar *interface, gchar *target, gchar *component)
+{
+    pid_t pid = fork();
+    
+    if(pid == 0)
+    {
+	char *args[] = {"disnix-copy-closure", operation, "--target", target, "--interface", interface, component, NULL};
+	execvp("disnix-copy-closure", args);
+	_exit(1);
+    }
+    else
+	return pid;
+}
+
+pid_t exec_copy_closure_from(gchar *interface, gchar *target, gchar *component)
+{
+    return exec_copy_closure("--from", interface, target, component);
+}
+
+pid_t exec_copy_closure_to(gchar *interface, gchar *target, gchar *component)
+{
+    return exec_copy_closure("--to", interface, target, component);
 }

@@ -27,6 +27,7 @@
 #include <glib.h>
 #include <distributionmapping.h>
 #include <defaultoptions.h>
+#include <client-interface.h>
 
 static void print_usage()
 {
@@ -89,33 +90,14 @@ int main(int argc, char *argv[])
 		DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
 		int status;
 	    
-		fprintf(stderr, "Distributing intra-dependency closure of profile: %s to target: %s\n", item->profile, item->target);
+		fprintf(stderr, "Distributing intra-dependency closure of profile: %s to target: %s\n", item->profile, item->target);		
+		status = wait_to_finish(exec_copy_closure_to(interface, item->target, item->profile));
 		
-		status = fork();
-		
-		if(status == 0)
+		/* On error stop the distribute process */
+		if(status != 0)
 		{
-		    char *args[] = {"disnix-copy-closure", "--to", "--target", item->target, "--interface", interface, item->profile, NULL};
-		    execvp("disnix-copy-closure", args);
-		    fprintf(stderr, "Error with executing copy closure process!\n");
-		    _exit(1);
-		}
-		
-		if(status == -1)
-		{
-		    exit_status = -1;
+		    exit_status = WEXITSTATUS(status);
 		    break;
-		}
-		else
-		{    
-	    	    wait(&status);
-		
-		    /* On error stop the distribute process */
-		    if(WEXITSTATUS(status) != 0)
-		    {
-			exit_status = WEXITSTATUS(status);
-			break;
-		    }
 		}
 	    }
 	    
