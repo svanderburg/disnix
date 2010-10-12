@@ -26,6 +26,7 @@
 #include <glib.h>
 #include <infrastructure.h>
 #include <defaultoptions.h>
+#include <client-interface.h>
 
 static void print_usage()
 {
@@ -47,7 +48,7 @@ int main(int argc, char *argv[])
 	{0, 0, 0, 0}
     };
     char *interface = NULL;
-    char *delete_old_arg = "";
+    gboolean delete_old = FALSE;
     char *target_property = NULL;
     
     /* Parse command-line options */
@@ -62,7 +63,7 @@ int main(int argc, char *argv[])
 		target_property = optarg;
 		break;
 	    case 'd':
-	        delete_old_arg = "-d";
+	        delete_old = TRUE;
 	        break;
 	    case 'h':
 		print_usage();
@@ -94,23 +95,14 @@ int main(int argc, char *argv[])
 	    for(i = 0; i < target_array->len; i++)
 	    {
 		gchar *target = g_array_index(target_array, gchar*, i);
-		char *args[] = {interface, "--target", target, "--collect-garbage", delete_old_arg, NULL};
-		int status;
-		
+				
 		printf("Collecting garbage on: %s\n", target);
-		
-		status = fork();
+		status = exec_collect_garbage(interface, target, delete_old);		
 		
 		if(status == -1)
 		{
 		    fprintf(stderr, "Error forking garbage collection process!\n");
 		    exit_status = -1;
-		}
-		else if(status == 0)
-		{
-		    execvp(interface, args);
-		    fprintf(stderr, "Error starting garbage collection process on: %s\n", target);
-		    _exit(1);
 		}
 		else
 		    running_processes++;

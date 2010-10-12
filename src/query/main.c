@@ -27,6 +27,7 @@
 #include <glib.h>
 #include <infrastructure.h>
 #include <defaultoptions.h>
+#include <client-interface.h>
 
 static void print_usage()
 {
@@ -50,6 +51,7 @@ int main(int argc, char *argv[])
     char *interface = NULL;
     char *target_property = NULL;
     char *profile = NULL;
+    int exit_status = 0;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "p:h", long_options, &option_index)) != -1)
@@ -97,37 +99,15 @@ int main(int argc, char *argv[])
 		
 		printf("\nServices on: %s\n\n", target);
 		
-		status = fork();
-		
-		if(status == 0)
-		{
-		    char *args[] = {interface, "--target", target, "--profile", profile, "--query-installed", NULL};
-		    execvp(interface, args);
-		    fprintf(stderr, "Error with executing query process!\n");
-		    _exit(1);
-		}
-		
-		if(status == -1)
-		{
-		    fprintf(stderr, "Error with forking query process!\n");
-		    delete_target_array(target_array);
-		    return -1;
-		}
-		else
-		{		
-		    wait(&status);
-				
-		    if(WEXITSTATUS(status) != 0)
-		    {
-			delete_target_array(target_array);
-	    		return WEXITSTATUS(status);
-		    }
-		}
+		status = wait_to_finish(exec_query_installed(interface, target, profile));
+						
+		if(status != 0)
+		    exit_status = status;
 	    }
 	    
 	    delete_target_array(target_array);
 	}
 
-	return 0;
+	return exit_status;
     }
 }

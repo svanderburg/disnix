@@ -30,6 +30,7 @@
 #include <activationmapping.h>
 #include <distributionmapping.h>
 #include <defaultoptions.h>
+#include <client-interface.h>
 
 static void print_usage()
 {
@@ -77,46 +78,14 @@ static int activate(GArray *union_list, ActivationMapping *mapping, gchar *inter
 	
 	printf("\n");
 
-	status = fork();
-	
-	if(status == 0)
-	{
-	    unsigned int i;
-	    char **args = (char**)g_malloc((8 + 2 * arguments_size) * sizeof(gchar*));
-	    
-	    args[0] = interface;
-	    args[1] = "--activate";
-	    args[2] = "--type";
-	    args[3] = actual_mapping->type;
-	    args[4] = "--target";
-	    args[5] = target_interface;
-	    
-	    for(i = 0; i < arguments_size * 2; i += 2)
-	    {
-		args[i + 6] = "--arguments";
-		args[i + 7] = arguments[i / 2];
-	    }
-	    
-	    args[i + 6] = actual_mapping->service;
-	    args[i + 7] = NULL;
-	    
-	    execvp(interface, args);
-	    _exit(1);	    
-	}
+	status = wait_to_finish(exec_activate(interface, target_interface, actual_mapping->type, arguments, arguments_size, actual_mapping->service));
 	
 	g_strfreev(arguments);
 	
-	if(status == -1)
+	if(status != 0)
 	    return FALSE;
-	else
-	{	    	
-	    wait(&status);
-		
-	    if(WEXITSTATUS(status) != 0)
-		return FALSE;
-	}
-	
-	actual_mapping->activated = TRUE;
+	else    	
+	    actual_mapping->activated = TRUE;
     }
     
     return TRUE;
@@ -155,46 +124,14 @@ static int deactivate(GArray *union_list, ActivationMapping *mapping, gchar *int
 	
 	printf("\n");
 	
-	status = fork();
-	
-	if(status == 0)
-	{
-	    unsigned int i;
-	    char **args = (char**)g_malloc((8 + 2 * arguments_size) * sizeof(gchar*));
-	    
-	    args[0] = interface;
-	    args[1] = "--deactivate";
-	    args[2] = "--type";
-	    args[3] = actual_mapping->type;
-	    args[4] = "--target";
-	    args[5] = target_interface;
-	    
-	    for(i = 0; i < arguments_size * 2; i += 2)
-	    {
-	    	args[i + 6] = "--arguments";
-		args[i + 7] = arguments[i / 2];
-	    }
-	    
-	    args[i + 6] = actual_mapping->service;
-	    args[i + 7] = NULL;
-	    
-	    execvp(interface, args);
-	    _exit(1);
-	}
+	status = wait_to_finish(exec_deactivate(interface, target_interface, actual_mapping->type, arguments, arguments_size, actual_mapping->service));
 		
 	g_free(arguments);
 
-	if(status == -1)
+	if(status != 0)
 	    return FALSE;
-	else
-	{
-	    wait(&status);
-	
-	    if(WEXITSTATUS(status) != 0)
-		return FALSE;
-	}
-	
-	actual_mapping->activated = FALSE;
+	else	
+	    actual_mapping->activated = FALSE;
     }
     
     return TRUE;
@@ -405,18 +342,13 @@ static int unlock(GArray *distribution_array, char *interface, char *profile)
     for(i = 0; i < distribution_array->len; i++)
     {
 	DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
-	status = fork();
+	
+	status = exec_unlock(interface, item->target, profile);
 	
 	if(status == -1)
 	{
 	    fprintf(stderr, "Error with forking unlock process!\n");
 	    exit_status = FALSE;
-	}
-	else if(status == 0)
-	{
-	    char *args[] = {interface, "--unlock", "--target", item->target, "--profile", profile, NULL};
-	    execvp(interface, args);
-	    _exit(1);
 	}
 	else
 	    running_processes++;
@@ -450,19 +382,14 @@ static int lock(GArray *distribution_array, char *interface, char *profile)
     for(i = 0; i < distribution_array->len; i++)
     {
 	DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
-	status = fork();
-
+	
+	status = exec_lock(interface, item->target, profile);
+	
 	if(status == -1)
 	{
 	    fprintf(stderr, "Error with forking lock process!\n");
 	    exit_status = FALSE;
 	}	
-	else if(status == 0)
-	{
-	    char *args[] = {interface, "--lock", "--target", item->target, "--profile", profile, NULL};
-	    execvp(interface, args);
-	    _exit(1);
-	}
 	else
 	    g_array_append_val(try_array, item);
     }    

@@ -1,1 +1,1 @@
-SUBDIRS = libmain libxmlutil libinfrastructure collect-garbage query dbus-service libdistderivation libmanifest build distribute activate visualize
+SUBDIRS = libmain libxmlutil libinfrastructure libinterface collect-garbage query dbus-service libdistderivation libmanifest build distribute activate visualize

@@ -84,6 +84,7 @@ src/libdistderivation/Makefile
 src/libmain/Makefile
 src/libmanifest/Makefile
 src/libinfrastructure/Makefile
+src/libinterface/Makefile
 src/distribute/Makefile
 src/activate/Makefile
 src/visualize/Makefile
