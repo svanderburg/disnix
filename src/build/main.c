@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 		if(status != 0)
 		{
 		    delete_derivation_array(derivation_array);
-		    return WEXITSTATUS(status);
+		    return status;
 		}
 	    }
 
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
 		        g_array_free(output_array, TRUE);
 		        delete_result_array(result_array);
     		        delete_derivation_array(derivation_array);
-		        return WEXITSTATUS(status);
+		        return status;
 		    }
 		}	
 	    }

@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 		/* On error stop the distribute process */
 		if(status != 0)
 		{
-		    exit_status = WEXITSTATUS(status);
+		    exit_status = status;
 		    break;
 		}
 	    }
