@@ -122,9 +122,6 @@ int main(int argc, char *argv[])
 	    delete_distribution_array(distribution_array);
 	}
 	
-	/* Clean up */
-	xmlCleanupParser();
-    
 	/* Return the exit status, which is 0 if everything succeeds */
 	return exit_status;
     }
