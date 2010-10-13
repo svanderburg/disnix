@@ -278,8 +278,10 @@ static int set_coordinator_profile(char *coordinator_profile_path, char *distrib
 	profile_path = g_strconcat(LOCALSTATEDIR, "/nix/profiles/per-user/", username, "/disnix-coordinator", NULL);
     else
 	profile_path = g_strdup(coordinator_profile_path);
-    
-    mkdir(profile_path, 0755);
+        
+    if(mkdir(profile_path, 0755) == -1)
+	fprintf(stderr, "Cannot create profile directory: %s\n", profile_path);
+	
     g_free(profile_path);
     
     if((strlen(distribution_manifest) >= 1 && distribution_manifest[0] == '/') ||
