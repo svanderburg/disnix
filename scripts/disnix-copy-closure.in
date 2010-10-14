@@ -30,6 +30,14 @@ showUsage()
     echo "-h,--help   Shows the usage of this command to the user"
 }
 
+# Autoconf settings
+
+export prefix=@prefix@
+
+# Import checks
+
+source @datadir@/@PACKAGE@/checks
+
 # Parse valid argument options
 
 PARAMS=`getopt -n $0 -o t:h -l to,from,target:,interface:,help -- "$@"`
@@ -80,21 +88,9 @@ then
     exit 1
 fi
 
-if [ "$target" = "" ]
-then
-    echo "ERROR: A target address must be specified!" >&2
-    exit 1
-fi
+checkTarget
 
-if [ "$interface" = "" ]
-then
-    if [ "$DISNIX_CLIENT_INTERFACE" = "" ]
-    then
-        interface="disnix-ssh-client"
-    else
-        interface=$DISNIX_CLIENT_INTERFACE
-    fi
-fi
+checkClientInterface
 
 if [ "$component" = "" ]
 then
@@ -102,10 +98,7 @@ then
     exit 1
 fi
 
-if [ "$TMPDIR" = "" ]
-then
-    export TMPDIR=/tmp
-fi
+checkTmpDir
 
 # Execute operation
 

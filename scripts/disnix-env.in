@@ -36,6 +36,14 @@ showUsage()
     echo "-h,--help                   Shows the usage of this command"
 }
 
+# Autoconf settings
+
+export prefix=@prefix@
+
+# Import checks
+
+source @datadir@/@PACKAGE@/checks
+
 # Parse valid argument options
 
 PARAMS=`getopt -n $0 -o s:i:d:p:h -l services:,infrastructure:,distribution:,interface:,target-property:,profile:,build-on-targets,coordinator-profile-path:,show-trace,help -- "$@"`
@@ -91,52 +99,18 @@ done
 
 # Validate the given options
 
-if [ "$servicesFile" = "" ]
-then
-    echo "ERROR: A services expression must be specified!" >&2
-    exit 1
-fi
-
-if [ "$infrastructureFile" = "" ]
-then
-    echo "ERROR: A infrastructure expression must be specified!" >&2
-    exit 1
-fi
-
-if [ "$distributionFile" = "" ]
-then
-    echo "ERROR: A distribution expression must be specified!" >&2
-    exit 1
-fi
-
-if [ "$interface" = "" ]
-then
-    if [ "$DISNIX_CLIENT_INTERFACE" = "" ]
-    then
-        interface="disnix-ssh-client"
-    else
-        interface=$DISNIX_CLIENT_INTERFACE
-    fi
-fi
-
-if [ "$targetProperty" != "" ]
-then
-    targetPropertyArg="--target-property $targetProperty"
-elif [ "$DISNIX_TARGET_PROPERTY" != "" ]
-then
-    targetPropertyArg="--target-property $DISNIX_TARGET_PROPERTY"
-fi
-
-if [ "$showTrace" = "1" ]
-then
-    showTraceArg="--show-trace"
-fi
+checkServicesFile
+checkInfrastructureFile
+checkDistributionFile
+checkClientInterface
+checkTargetProperty
+checkShowTrace
 
 # Execute operations
 
 if [ "$buildOnTargets" = "1" ]
 then
-    distributedDerivation=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile $targetPropertyArg $showTraceArg`
+    distributedDerivation=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty $showTraceArg`
     disnix-build --interface $interface $distributedDerivation
 fi
 

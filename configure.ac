@@ -90,6 +90,8 @@ src/activate/Makefile
 src/visualize/Makefile
 scripts/Makefile
 data/Makefile
+scripts/disnix-copy-closure
+scripts/disnix-env
 scripts/disnix-instantiate
 scripts/disnix-manifest
 scripts/disnix-gendist-roundrobin

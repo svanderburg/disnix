@@ -1,0 +1,117 @@
+#!/bin/bash -e
+# Disnix - A distributed application layer for Nix
+# Copyright (C) 2008-2010  Sander van der Burg
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+# Checks the client interface property.
+# If not set it will use the value of the DISNIX_CLIENT_INTERFACE environment
+# variable or else a default value.
+
+checkClientInterface()
+{
+    if [ "$interface" = "" ]
+    then
+	if [ "$DISNIX_CLIENT_INTERFACE" = "" ]
+	then
+    	    interface="disnix-ssh-client"
+	else
+    	    interface=$DISNIX_CLIENT_INTERFACE
+	fi
+    fi
+}
+
+# Checks the target property.
+# If not set it will use the value of the DISNIX_TARGET_PROPERTY environment
+# variable or else a default value.
+
+checkTargetProperty()
+{
+    if [ "$targetProperty" = "" ]
+    then
+	if [ "$DISNIX_TARGET_PROPERTY" != "" ]
+	then
+	    targetProperty=$DISNIX_TARGET_PROPERTY
+	else
+	    targetProperty="hostname";
+	fi
+    fi
+}
+
+# Checks whether a service expression is given. Exits with status 1 if not set.
+
+checkServicesFile()
+{
+    if [ "$servicesFile" = "" ]
+    then
+	echo "ERROR: A services expression must be specified!" >&2
+	exit 1
+    fi
+}
+
+# Checks whether an infrastructure expression is given. Exits with status 1 if not set.
+
+checkInfrastructureFile()
+{
+    if [ "$infrastructureFile" = "" ]
+    then
+	echo "ERROR: An infrastructure expression must be specified!" >&2
+	exit 1
+    fi
+}
+
+# Checks whether a distribution expression is given. Exits with status 1 if not set.
+
+checkDistributionFile()
+{
+    if [ "$distributionFile" = "" ]
+    then
+	echo "ERROR: A distribution expression must be specified!" >&2
+	exit 1
+    fi
+}
+
+# Checks whether the --show-trace option is specified and sets the
+# showTraceArg variable.
+
+checkShowTrace()
+{
+    if [ "$showTrace" = "1" ]
+    then
+	showTraceArg="--show-trace"
+    fi
+}
+
+# Checks whether a target is given. Exits with status 1 if not set.
+
+checkTarget()
+{
+    if [ "$target" = "" ]
+    then
+	echo "ERROR: A target address must be specified!" >&2
+	exit 1
+    fi
+}
+
+# Checks whether TMPDIR environment variable is set, if not it is set to
+# a default value.
+
+checkTmpDir()
+{
+    if [ "$TMPDIR" = "" ]
+    then
+	export TMPDIR=/tmp
+    fi
+}

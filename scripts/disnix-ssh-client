@@ -37,6 +37,14 @@ showUsage()
     echo "  {-h | --help}"
 }
 
+# Autoconf settings
+
+export prefix=@prefix@
+
+# Import checks
+
+source @datadir@/@PACKAGE@/checks
+
 # Parse valid argument options
 
 PARAMS=`getopt -n $0 -o rqp:d -l import,export,print-invalid,realise,set,query-installed,query-requisites,collect-garbage,activate,deactivate,lock,unlock,target:,localfile,remotefile,profile:,delete-old,type:,arguments:,help -- "$@"`
@@ -128,11 +136,7 @@ shift
 
 # Validate the given options
 
-if [ "$target" = "" ]
-then
-    echo "ERROR: A target hostname or IP address must be specified!" >&2
-    exit 1
-fi
+checkTarget
 
 targetHostname=${target%%:*}
 targetPort=${target#*:}
@@ -142,10 +146,7 @@ then
     targetPort=22
 fi
 
-if [ "$TMPDIR" = "" ]
-then
-    export TMPDIR=/tmp
-fi
+checkTmpDir
 
 # Execute selected operation
 

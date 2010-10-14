@@ -36,6 +36,10 @@ showUsage()
 
 export prefix=@prefix@
 
+# Import checks
+
+source @datadir@/@PACKAGE@/checks
+
 # Parse valid argument options
 
 PARAMS=`getopt -n $0 -o s:i:d:h -l services:,infrastructure:,distribution:,target-property:,show-trace,help -- "$@"`
@@ -79,38 +83,11 @@ done
 
 # Validate the given options
 
-if [ "$servicesFile" = "" ]
-then
-    echo "ERROR: A services expression must be specified!" >&2
-    exit 1
-fi
-
-if [ "$infrastructureFile" = "" ]
-then
-    echo "ERROR: A infrastructure expression must be specified!" >&2
-    exit 1
-fi
-
-if [ "$distributionFile" = "" ]
-then
-    echo "ERROR: A distribution expression must be specified!" >&2
-    exit 1
-fi
-
-if [ "$targetProperty" = "" ]
-then
-    if [ "$DISNIX_TARGET_PROPERTY" != "" ]
-    then
-	targetProperty=$DISNIX_TARGET_PROPERTY
-    else    
-	targetProperty="hostname";
-    fi
-fi
-
-if [ "$showTrace" = "1" ]
-then
-    showTraceArg="--show-trace"
-fi
+checkServicesFile
+checkInfrastructureFile
+checkDistributionFile
+checkTargetProperty
+checkShowTrace
 
 # Build the distributed derivation file
 
