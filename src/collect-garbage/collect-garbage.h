@@ -16,49 +16,21 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef __COLLECT_GARBAGE_H
+#define __COLLECT_GARBAGE_H
+#include <glib.h>
 
-#include <stdio.h>
-#define _GNU_SOURCE
-#include <getopt.h>
-#include "graph.h"
+/**
+ * Iterates over targets defined in an infrastructure Nix expression and
+ * performs the garbage collection operation on each target.
+ *
+ * @param interface Path to the client interface executable
+ * @param target_property Property in the infrastructure model which specifies
+ *                        how to connect to the Disnix service
+ * @param infrastructure_expr Path to the infrastructure expression
+ * @param delete_old Indicates whether to delete old profile generations
+ * @return 0 if everything succeeds, else a non-zero exit value
+ */
+int collect_garbage(gchar *interface, gchar *target_property, gchar *infrastructure_expr, gboolean delete_old);
 
-static void print_usage()
-{
-    fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-visualize manifest\n");
-    fprintf(stderr, "disnix-visualize {-h | --help}\n");
-}
-
-int main(int argc, char *argv[])
-{
-    /* Declarations */
-    int c, option_index = 0;
-    struct option long_options[] =
-    {
-	{"help", no_argument, 0, 'h'},
-	{0, 0, 0, 0}
-    };
-
-    /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "h", long_options, &option_index)) != -1)
-    {
-	switch(c)
-	{
-	    case 'h':
-		print_usage();
-		return 0;
-	}
-    }
-
-    if(optind >= argc)
-    {
-	fprintf(stderr, "ERROR: No manifest specified!\n");
-	return 1;
-    }
-    else
-    {
-	/* Execute operation */
-	generate_graph(argv[optind]);
-	return 0;
-    }
-}
+#endif

@@ -18,16 +18,9 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#define _GNU_SOURCE
 #include <getopt.h>
-#include <glib.h>
-#include <distributionmapping.h>
+#define _GNU_SOURCE
 #include <defaultoptions.h>
-#include <client-interface.h>
 
 static void print_usage()
 {
@@ -72,39 +65,5 @@ int main(int argc, char *argv[])
 	return 1;
     }
     else
-    {
-	int exit_status = 0;
-	unsigned int i;
-	GArray *distribution_array;
-	
-	/* Generate a distribution array from the manifest file */
-	distribution_array = generate_distribution_array(argv[optind]);
-	
-	if(distribution_array == NULL)
-	    exit_status = 1;
-	else
-	{
-	    /* Iterate over the distribution array and distribute the profiles to the target machines */
-	    for(i = 0; i < distribution_array->len; i++)
-	    {
-		DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
-		int status;
-	    
-		fprintf(stderr, "Distributing intra-dependency closure of profile: %s to target: %s\n", item->profile, item->target);		
-		status = wait_to_finish(exec_copy_closure_to(interface, item->target, item->profile));
-		
-		/* On error stop the distribute process */
-		if(status != 0)
-		{
-		    exit_status = status;
-		    break;
-		}
-	    }
-	    
-	    delete_distribution_array(distribution_array);
-	}
-	
-	/* Return the exit status, which is 0 if everything succeeds */
-	return exit_status;
-    }
+	return distribute(interface, argv[optind]); /* Execute distribute operation */
 }

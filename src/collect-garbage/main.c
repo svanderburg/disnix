@@ -18,15 +18,10 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <getopt.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <glib.h>
-#include <infrastructure.h>
+#define _GNU_SOURCE
 #include <defaultoptions.h>
-#include <client-interface.h>
+#include "collect-garbage.h"
 
 static void print_usage()
 {
@@ -82,46 +77,5 @@ int main(int argc, char *argv[])
 	return 1;
     }
     else
-    {
-	GArray *target_array = create_target_array(argv[optind], target_property);
-	int exit_status = 0;
-	
-	if(target_array != NULL)
-	{
-	    unsigned int i, running_processes = 0;	    
-	    int status;
-	    
-	    /* Spawn garbage collection processes */
-	    for(i = 0; i < target_array->len; i++)
-	    {
-		gchar *target = g_array_index(target_array, gchar*, i);
-				
-		printf("Collecting garbage on: %s\n", target);
-		status = exec_collect_garbage(interface, target, delete_old);		
-		
-		if(status == -1)
-		{
-		    fprintf(stderr, "Error forking garbage collection process!\n");
-		    exit_status = -1;
-		}
-		else
-		    running_processes++;
-	    }
-	    	    
-	    /* Check statusses of the running processes */	    
-	    for(i = 0; i < running_processes; i++)
-	    {
-		/* Wait until a garbage collector processes is finished */
-		wait(&status);
-	    
-		/* If one of the processes fail, change the exit status */
-		if(WEXITSTATUS(status) != 0)
-	    	    exit_status = WEXITSTATUS(status);
-	    }
-	    	
-	    delete_target_array(target_array);
-	}
-	
-	return exit_status;
-    }
+	return collect_garbage(interface, target_property, argv[optind], delete_old); /* Execute garbage collection operation */
 }

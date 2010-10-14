@@ -18,16 +18,10 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <getopt.h>
 #define _GNU_SOURCE
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <glib.h>
-#include <infrastructure.h>
 #include <defaultoptions.h>
-#include <client-interface.h>
+#include "query-installed.h"
 
 static void print_usage()
 {
@@ -51,7 +45,6 @@ int main(int argc, char *argv[])
     char *interface = NULL;
     char *target_property = NULL;
     char *profile = NULL;
-    int exit_status = 0;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "p:h", long_options, &option_index)) != -1)
@@ -85,29 +78,5 @@ int main(int argc, char *argv[])
 	return 1;
     }
     else
-    {
-	GArray *target_array = create_target_array(argv[optind], target_property);
-	
-	if(target_array != NULL)
-	{
-	    unsigned int i;
-	    
-	    for(i = 0; i < target_array->len; i++)
-	    {
-		gchar *target = g_array_index(target_array, gchar*, i);
-		int status;
-		
-		printf("\nServices on: %s\n\n", target);
-		
-		status = wait_to_finish(exec_query_installed(interface, target, profile));
-						
-		if(status != 0)
-		    exit_status = status;
-	    }
-	    
-	    delete_target_array(target_array);
-	}
-
-	return exit_status;
-    }
+	return query_installed(interface, target_property, argv[optind], profile); /* Execute query operation */
 }

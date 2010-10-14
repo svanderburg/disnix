@@ -17,48 +17,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <stdio.h>
-#define _GNU_SOURCE
-#include <getopt.h>
-#include "graph.h"
+#ifndef __DISTRIBUTE_H
+#define __DISTRIBUTE_H
+#include <glib.h>
 
-static void print_usage()
-{
-    fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-visualize manifest\n");
-    fprintf(stderr, "disnix-visualize {-h | --help}\n");
-}
+/**
+ * Distributes all services defined in the manifest file to target machines
+ * in the network.
+ *
+ * @param interface Path to the client interface executable
+ * @param manifest_file Path to the manifest file which maps services to machines
+ * @return 0 if everything succeeds, else a non-zero exit status
+ */
+int distribute(gchar *interface, gchar *manifest_file);
 
-int main(int argc, char *argv[])
-{
-    /* Declarations */
-    int c, option_index = 0;
-    struct option long_options[] =
-    {
-	{"help", no_argument, 0, 'h'},
-	{0, 0, 0, 0}
-    };
-
-    /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "h", long_options, &option_index)) != -1)
-    {
-	switch(c)
-	{
-	    case 'h':
-		print_usage();
-		return 0;
-	}
-    }
-
-    if(optind >= argc)
-    {
-	fprintf(stderr, "ERROR: No manifest specified!\n");
-	return 1;
-    }
-    else
-    {
-	/* Execute operation */
-	generate_graph(argv[optind]);
-	return 0;
-    }
-}
+#endif

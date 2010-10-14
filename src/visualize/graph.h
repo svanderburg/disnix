@@ -17,48 +17,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <stdio.h>
-#define _GNU_SOURCE
-#include <getopt.h>
-#include "graph.h"
+#ifndef __GRAPH_H
+#define __GRAPH_H
+#include <glib.h>
 
-static void print_usage()
-{
-    fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-visualize manifest\n");
-    fprintf(stderr, "disnix-visualize {-h | --help}\n");
-}
+/**
+ * Prints a clustered graph in dot format from a manifest file to
+ * the standard output.
+ *
+ * @param manifest_file Manifest file to visualize
+ */
+void generate_graph(gchar *manifest_file);
 
-int main(int argc, char *argv[])
-{
-    /* Declarations */
-    int c, option_index = 0;
-    struct option long_options[] =
-    {
-	{"help", no_argument, 0, 'h'},
-	{0, 0, 0, 0}
-    };
-
-    /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "h", long_options, &option_index)) != -1)
-    {
-	switch(c)
-	{
-	    case 'h':
-		print_usage();
-		return 0;
-	}
-    }
-
-    if(optind >= argc)
-    {
-	fprintf(stderr, "ERROR: No manifest specified!\n");
-	return 1;
-    }
-    else
-    {
-	/* Execute operation */
-	generate_graph(argv[optind]);
-	return 0;
-    }
-}
+#endif
