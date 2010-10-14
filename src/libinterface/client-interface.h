@@ -127,4 +127,15 @@ pid_t exec_copy_closure_from(gchar *interface, gchar *target, gchar *component);
  */ 
 pid_t exec_copy_closure_to(gchar *interface, gchar *target, gchar *component);
 
+/**
+ * Invokes the realise operation through a Disnix client interface
+ *
+ * @param interface Path to the interface executable
+ * @param target Target Address of the remote interface
+ * @param derivation Derivation to build
+ * @param pipefd Pipe which can be used to capture the output of the process
+ * @return PID of the client interface process performing the operation, or -1 in case of a failure
+ */
+pid_t exec_realise(gchar *interface, gchar *target, gchar *derivation, int pipefd[2]);
+
 #endif
