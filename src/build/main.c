@@ -20,8 +20,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#define _GNU_SOURCE
 #include <getopt.h>
+#define _GNU_SOURCE
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <derivationmapping.h>
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
 		}
 	    }
 
-	    /* Iterate over the derivation array and fork processes that realise the derivations remotely */
+	    /* Iterate over the derivation array and invoke processes that realise the derivations remotely */
 	
 	    output_array = g_array_new(FALSE, FALSE, sizeof(int));    
 	
@@ -129,36 +129,18 @@ int main(int argc, char *argv[])
 		int status;
 		DerivationItem *item = g_array_index(derivation_array, DerivationItem*, i);
 		
-		if(pipe(pipefd) == 0)
-		{
-		    status = fork();
+		status = exec_realise(interface, item->target, item->derivation, pipefd);
 		
-		    if(status == -1)
-		    {
-			fprintf(stderr, "Error with forking realise process!\n");
-			exit_status = -1;
-		    }
-		    else if(status == 0)
-		    {			
-			char *args[] = {interface, "--realise", "--target", item->target, item->derivation, NULL};
-			
-			fprintf(stderr, "Realising derivation: %s on target: %s\n", item->derivation, item->target);
-			
-			close(pipefd[0]); /* Close read-end */
-			dup2(pipefd[1], 1); /* Attach pipe to the stdout */						
-			execvp(interface, args); /* Run remote realise process */
-			fprintf(stderr, "Error in executing realise process!\n");
-			_exit(1);
-		    }
-		    else
-		    {
-			close(pipefd[1]); /* Close write-end */
-			g_array_append_val(output_array, pipefd[0]); /* Append read file descriptor to array */
-			running_processes++;
-		    }
+		if(status == -1)
+		{
+		    fprintf(stderr, "Error with forking realise process!\n");
+		    exit_status = -1;
 		}
 		else
-		    fprintf(stderr, "Error in creating a pipe!\n");
+		{
+		    g_array_append_val(output_array, pipefd[0]); /* Append read file descriptor to array */
+		    running_processes++;
+		}
 	    }
 	    
 	    result_array = g_array_new(FALSE, FALSE, sizeof(gchar*));
@@ -182,7 +164,7 @@ int main(int argc, char *argv[])
 		    	result = g_strdup(line);
 		        g_array_append_val(result_array, result);
 		    }
-	        }		    		    
+	        }	    		    
 		
 	        close(pipefd);
 	    }
@@ -223,7 +205,7 @@ int main(int argc, char *argv[])
     		        delete_derivation_array(derivation_array);
 		        return status;
 		    }
-		}	
+		}
 	    }
 	
 	    /* Cleanup */

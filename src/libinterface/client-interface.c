@@ -17,9 +17,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include "client-interface.h"
 #include <sys/wait.h>
 #include <sys/types.h>
-#include "client-interface.h"
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 int wait_to_finish(pid_t pid)
 {
@@ -177,4 +180,34 @@ pid_t exec_copy_closure_from(gchar *interface, gchar *target, gchar *component)
 pid_t exec_copy_closure_to(gchar *interface, gchar *target, gchar *component)
 {
     return exec_copy_closure("--to", interface, target, component);
+}
+
+pid_t exec_realise(gchar *interface, gchar *target, gchar *derivation, int pipefd[2])
+{
+    if(pipe(pipefd) == 0)
+    {
+        pid_t pid = fork();
+	
+	if(pid == 0)
+	{
+	    char *args[] = {interface, "--realise", "--target", target, derivation, NULL};
+	    close(pipefd[0]); /* Close read-end */
+	    dup2(pipefd[1], 1); /* Attach pipe to the stdout */						
+	    execvp(interface, args); /* Run process */
+	    _exit(1);
+	}
+	else if(pid == -1)
+	{
+	    close(pipefd[0]); /* Close read-end */
+	    close(pipefd[1]); /* Close write-end */
+	    return pid;
+	}
+	else
+	{
+	    close(pipefd[1]); /* Close write-end */
+	    return pid;
+	}
+    }
+    else
+	return -1;
 }
