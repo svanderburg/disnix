@@ -22,8 +22,6 @@
 #include <client-interface.h>
 
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 
 #define BUFFER_SIZE 4096
 
@@ -110,12 +108,14 @@ static int realise(gchar *interface, GArray *derivation_array, GArray *result_ar
     /* Check statusses of the running processes */
     for(i = 0; i < running_processes; i++)
     {
-	/* Wait until a realise process is finished */
-	wait(&status);
-    
-	/* If one of the processes fail, change the exit status */
-	if(WEXITSTATUS(status) != 0)
-    	    exit_status = WEXITSTATUS(status);		    
+	status = wait_to_finish(0);
+
+	/* If one of the processes fail, change the exit status */	
+	if(status != 0)
+	{
+	    g_printerr("Error with executing realise process!\n");
+	    exit_status = status;
+	}
     }
     
     /* Cleanup */

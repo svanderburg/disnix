@@ -18,10 +18,6 @@
  */
 
 #include "collect-garbage.h"
-
-#include <sys/types.h>
-#include <sys/wait.h>
-
 #include <infrastructure.h>
 #include <client-interface.h> 
 
@@ -35,21 +31,21 @@ int collect_garbage(gchar *interface, gchar *target_property, gchar *infrastruct
     if(target_array != NULL)
     {
         unsigned int i, running_processes = 0;	    
-        int status;
 	
         /* Spawn garbage collection processes */
         for(i = 0; i < target_array->len; i++)
         {    
     	    gchar *target = g_array_index(target_array, gchar*, i);
-				
+	    int pid;
+	    			
 	    g_printerr("Collecting garbage on: %s\n", target);
-	    status = exec_collect_garbage(interface, target, delete_old);		
+	    pid = exec_collect_garbage(interface, target, delete_old);		
 	
 	    /* If an operation failed, change the exit status */
-	    if(status == -1)
+	    if(pid == -1)
 	    {
-	        g_printerr("Error executing garbage collection operation!\n");
-	        exit_status = status;
+	        g_printerr("Error forking garbage collection operation!\n");
+	        exit_status = -1;
 	    }
 	    else
 	        running_processes++;
@@ -58,12 +54,14 @@ int collect_garbage(gchar *interface, gchar *target_property, gchar *infrastruct
 	/* Check statusses of the running processes */	    
 	for(i = 0; i < running_processes; i++)
 	{
-	    /* Wait until a garbage collector processes is finished */
-	    wait(&status);
+	    int status = wait_to_finish(0);
 	    
 	    /* If one of the processes fail, change the exit status */
-	    if(WEXITSTATUS(status) != 0)
-		exit_status = WEXITSTATUS(status);
+	    if(status != 0)
+	    {
+		g_printerr("Error executing garbage collection operation!\n");
+		exit_status = status;
+	    }
 	}
 	    	
 	/* Delete the target array from memory */

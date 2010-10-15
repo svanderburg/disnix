@@ -345,11 +345,12 @@ static int unlock(GArray *distribution_array, char *interface, char *profile)
     /* Wait until every lock is released */
     for(i = 0; i < running_processes; i++)
     {
-        wait(&status);
-	    
-        if(WEXITSTATUS(status) != 0)
+	status = wait_to_finish(0);
+	
+	/* If a process fails, change the exit status */
+	if(status != 0)
 	{
-    	    fprintf(stderr, "Failed to release the lock!\n");
+	    g_printerr("Failed to release the lock!\n");
 	    exit_status = FALSE;
 	}
     }
@@ -385,13 +386,12 @@ static int lock(GArray *distribution_array, char *interface, char *profile)
     /* Wait until every lock is acquired */
     for(i = 0; i < try_array->len; i++)
     {
-	wait(&status);
+	status = wait_to_finish(0);
 	
-	if(WEXITSTATUS(status) == 0)
-	    g_array_append_val(lock_array, g_array_index(try_array, DistributionItem*, i));
-	else
+	/* If a process fails, change the exit status */
+	if(status != 0)
 	{
-	    fprintf(stderr, "Failed to acquire a lock!\n");
+	    g_printerr("Failed to acquire a lock!\n");
 	    exit_status = FALSE;
 	}
     }
