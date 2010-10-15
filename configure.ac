@@ -95,6 +95,7 @@ scripts/disnix-env
 scripts/disnix-instantiate
 scripts/disnix-manifest
 scripts/disnix-gendist-roundrobin
+scripts/disnix-ssh-client
 doc/Makefile
 doc/manual/Makefile
 ])
