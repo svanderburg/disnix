@@ -17,21 +17,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define _GNU_SOURCE
 #include <stdio.h>
 #include <getopt.h>
+#define _GNU_SOURCE
 #define TRUE 1
 #define FALSE 0
 
 static void print_usage()
 {
-    printf("Usage:\n");
-    printf("disnix-service [options]\n\n");
+    fprintf(stderr, "Usage:\n");
+    fprintf(stderr, "disnix-service [options]\n\n");
     
-    printf("Options:\n");
-    printf("--activation-modules-dir  Directory where the activation modules can be found\n");
-    printf("--session-bus             Register the Disnix service on the session bus instead of the system bus (useful for testing)\n");
-    printf("--help                    Shows the usage of this command to the user\n");
+    fprintf(stderr, "Options:\n");
+    fprintf(stderr, "--activation-modules-dir  Directory where the activation modules can be found\n");
+    fprintf(stderr, "--session-bus             Register the Disnix service on the session bus instead of the system bus (useful for testing)\n");
+    fprintf(stderr, "--help                    Shows the usage of this command to the user\n");
 }
 
 int main(int argc, char *argv[])
