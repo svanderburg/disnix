@@ -261,7 +261,10 @@ static int set_target_profiles(GArray *distribution_array, char *interface, char
 	status = wait_to_finish(exec_set(interface, item->target, profile, item->profile));
 	
 	if(status != 0)
+	{
+	    fprintf(stderr, "Cannot set profile!\n");
 	    return FALSE;
+	}
     }
 
     return TRUE;
