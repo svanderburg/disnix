@@ -33,7 +33,7 @@ GHashTable *generate_edges_table(GArray *activation_array)
 	ActivationMapping *mapping = g_array_index(activation_array, ActivationMapping*, i);
 	
 	/* Retrieve the target property */
-	gchar *target = get_target_interface(mapping);
+	gchar *target = get_target_property(mapping);
 	
 	/* Generate an edge table key, which consist of Nix store component:targetProperty */
 	gchar *mapping_key = g_strconcat(mapping->service, ":", target, NULL);
@@ -70,7 +70,7 @@ GHashTable *generate_edges_table(GArray *activation_array)
 		actual_mapping = g_array_index(activation_array, ActivationMapping*, actual_mapping_index);
 		
 		/* Get the target interface */
-		target = get_target_interface(actual_mapping);
+		target = get_target_property(actual_mapping);
 		
 		/* Generate mapping value from the service and target property */
 		mapping_value = g_strconcat(actual_mapping->service, ":", target, NULL);

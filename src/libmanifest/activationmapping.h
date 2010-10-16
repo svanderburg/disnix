@@ -143,7 +143,7 @@ gchar **generate_activation_arguments(GArray *target);
  * @param mapping Activation mapping
  * @return The target interface value
  */
-gchar *get_target_interface(ActivationMapping *mapping);
+gchar *get_target_property(ActivationMapping *mapping);
 
 /**
  * Searches for all the mappings in an array that have an inter-dependency

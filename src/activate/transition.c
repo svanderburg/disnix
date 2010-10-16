@@ -60,10 +60,10 @@ static gboolean activate(gchar *interface, GArray *union_array, ActivationMappin
 	unsigned int arguments_size = g_strv_length(arguments);
 	
 	/* Get the target interface property from the mapping */
-	gchar *target_interface = get_target_interface(actual_mapping);
+	gchar *target_property = get_target_property(actual_mapping);
 	
 	/* Print debug message */
-	g_print("Now activating service: %s of type: %s through: %s\n", actual_mapping->service, actual_mapping->type, target_interface);
+	g_print("Now activating service: %s of type: %s through: %s\n", actual_mapping->service, actual_mapping->type, target_property);
 	g_print("Using arguments: ");
 	
 	for(i = 0; i < arguments_size; i++)
@@ -72,7 +72,7 @@ static gboolean activate(gchar *interface, GArray *union_array, ActivationMappin
 	g_print("\n");
 
 	/* Execute the activation operation */
-	status = wait_to_finish(exec_activate(interface, target_interface, actual_mapping->type, arguments, arguments_size, actual_mapping->service));
+	status = wait_to_finish(exec_activate(interface, target_property, actual_mapping->type, arguments, arguments_size, actual_mapping->service));
 	
 	/* Cleanup */
 	g_strfreev(arguments);
@@ -125,10 +125,10 @@ static gboolean deactivate(gchar *interface, GArray *union_array, ActivationMapp
 	unsigned int arguments_size = g_strv_length(arguments);
 	
 	/* Get the target interface property from the mapping */
-	gchar *target_interface = get_target_interface(actual_mapping);
+	gchar *target_property = get_target_property(actual_mapping);
 	
 	/* Print debug message */
-	g_print("Now deactivating service: %s of type: %s through: %s\n", actual_mapping->service, actual_mapping->type, target_interface);
+	g_print("Now deactivating service: %s of type: %s through: %s\n", actual_mapping->service, actual_mapping->type, target_property);
 	g_print("Using arguments: ");
 	
 	for(i = 0; i < arguments_size; i++)
@@ -137,7 +137,7 @@ static gboolean deactivate(gchar *interface, GArray *union_array, ActivationMapp
 	g_print("\n");
 	
 	/* Execute the deactivation operation */
-	status = wait_to_finish(exec_deactivate(interface, target_interface, actual_mapping->type, arguments, arguments_size, actual_mapping->service));
+	status = wait_to_finish(exec_deactivate(interface, target_property, actual_mapping->type, arguments, arguments_size, actual_mapping->service));
 	
 	/* Cleanup */
 	g_free(arguments);

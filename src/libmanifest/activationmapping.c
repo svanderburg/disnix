@@ -448,7 +448,7 @@ gchar **generate_activation_arguments(GArray *target)
     return arguments;
 }
 
-gchar *get_target_interface(ActivationMapping *mapping)
+gchar *get_target_property(ActivationMapping *mapping)
 {
     unsigned int i;
     

@@ -34,7 +34,7 @@ GHashTable *generate_cluster_table(GArray *activation_array)
 	ActivationMapping *mapping = g_array_index(activation_array, ActivationMapping*, i);
 	
 	/* Get target property of the current mapping item */
-	gchar *target = get_target_interface(mapping);
+	gchar *target = get_target_property(mapping);
 		
 	/* See whether the target already exists in the table */
 	GArray *services_array = g_hash_table_lookup(cluster_table, target);
