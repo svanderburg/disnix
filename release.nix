@@ -39,7 +39,9 @@ let
         name = "disnix";
         src = tarball;
 
-        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable ] ++ lib.optional (!stdenv.isLinux) libiconv;
+        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable ]
+	              ++ lib.optional (!stdenv.isLinux) libiconv
+		      ++ lib.optional (!stdenv.isLinux) gettext;
       };
       
     tests = 
