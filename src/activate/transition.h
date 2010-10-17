@@ -28,8 +28,8 @@
  * @param interface Path to the client interface executable
  * @param new_activation_mappings Array containing the activation mappings of the new configuration
  * @param old_activation_mappings Array containing the activation mappings of the old configuration
- * @return TRUE if the phase succeeds, else FALSE
+ * @return 0 if the phase succeeds, else a non-zero exit status
  */
-gboolean transition(gchar *interface, GArray *new_activation_mappings, GArray *old_activation_mappings);
+int transition(gchar *interface, GArray *new_activation_mappings, GArray *old_activation_mappings);
 
 #endif

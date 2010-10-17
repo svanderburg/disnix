@@ -26,10 +26,11 @@
 #include <sys/stat.h>
 #include <string.h>
 
-gboolean set_target_profiles(GArray *distribution_array, gchar *interface, gchar *profile)
+int set_target_profiles(GArray *distribution_array, gchar *interface, gchar *profile)
 {
     unsigned int i;
-        
+    int exit_status = 0;
+    
     for(i = 0; i < distribution_array->len; i++)
     {
 	int status;
@@ -42,14 +43,14 @@ gboolean set_target_profiles(GArray *distribution_array, gchar *interface, gchar
 	if(status != 0)
 	{
 	    g_printerr("Cannot set profile!\n");
-	    return FALSE;
+	    exit_status = status;
 	}
     }
 
-    return TRUE;
+    return exit_status;
 }
 
-gboolean set_coordinator_profile(gchar *coordinator_profile_path, gchar *manifest_file, gchar *profile, gchar *username)
+int set_coordinator_profile(gchar *coordinator_profile_path, gchar *manifest_file, gchar *profile, gchar *username)
 {
     gchar *profile_path, *manifest_file_path;
     int status;
@@ -104,14 +105,14 @@ gboolean set_coordinator_profile(gchar *coordinator_profile_path, gchar *manifes
     
     /* If the process suceeds the the operation succeeded */
     if(status == -1)
-	return FALSE;
+	return -1;
     else
     {
 	wait(&status);
     
 	if(WEXITSTATUS(status) == 0)
-	    return TRUE;
+	    return 0;
 	else
-	    return FALSE;
+	    return WEXITSTATUS(status);
     }
 }

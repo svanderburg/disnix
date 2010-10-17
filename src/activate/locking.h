@@ -27,9 +27,9 @@
  * @param interface Path to the client interface executable
  * @param distribution_array Array with profiles distributed to the target machines
  * @param profile Identifier of the distributed profile
- * @return TRUE if the unlocking phase succeeds, else FALSE
+ * @return 0 if the unlocking phase succeeds, else a non-zero exit status
  */
-gboolean unlock(gchar *interface, GArray *distribution_array, gchar *profile);
+int unlock(gchar *interface, GArray *distribution_array, gchar *profile);
 
 /**
  * Locks the given profile on each machine defined in the distribution array.
@@ -38,8 +38,8 @@ gboolean unlock(gchar *interface, GArray *distribution_array, gchar *profile);
  * @param interface Path to the client interface executable
  * @param distribution_array Array with profiles distributed to the target machines
  * @param profile Identifier of the distributed profile
- * @return TRUE if the locking phase succeeds, else FALSE
+ * @return 0 if the unlocking phase succeeds, else a non-zero exit status
  */
-gboolean lock(gchar *interface, GArray *distribution_array, gchar *profile);
+int lock(gchar *interface, GArray *distribution_array, gchar *profile);
 
 #endif

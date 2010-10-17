@@ -28,9 +28,9 @@
  * @param distribution_array Array with Nix profiles containing installed services for each machine
  * @param interface Path to the client interface executable
  * @param profile Name of the distributed profile
- * @return TRUE if everything succeeds, else FALSE
+ * @return 0 if everything succeeds, else a non-zero exit status
  */
-gboolean set_target_profiles(GArray *distribution_array, gchar *interface, gchar *profile);
+int set_target_profiles(GArray *distribution_array, gchar *interface, gchar *profile);
 
 /**
  * Sets the Disnix coordinator profile, so that the current configuration is 
@@ -40,8 +40,8 @@ gboolean set_target_profiles(GArray *distribution_array, gchar *interface, gchar
  * @param manifest_file Path to the manifest file representing the deployment state
  * @param profile Name of the distributed profile
  * @param username Username of the current user invoking the activation
- * @return TRUE if everything succeeds, else FALSE
+ * @return 0 if everything succeeds, else a non-zero exit status
  */
-gboolean set_coordinator_profile(gchar *coordinator_profile_path, gchar *manifest_file, gchar *profile, gchar *username);
+int set_coordinator_profile(gchar *coordinator_profile_path, gchar *manifest_file, gchar *profile, gchar *username);
 
 #endif

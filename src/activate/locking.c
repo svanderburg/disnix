@@ -21,10 +21,10 @@
 #include <distributionmapping.h>
 #include <client-interface.h>
 
-gboolean unlock(gchar *interface, GArray *distribution_array, gchar *profile)
+int unlock(gchar *interface, GArray *distribution_array, gchar *profile)
 {
     unsigned int i, running_processes = 0;
-    int exit_status = TRUE;
+    int exit_status = 0;
     int status;
     
     /* For each locked machine, release the lock */
@@ -37,7 +37,7 @@ gboolean unlock(gchar *interface, GArray *distribution_array, gchar *profile)
 	if(status == -1)
 	{
 	    g_printerr("Error with forking unlock process!\n");
-	    exit_status = FALSE;
+	    exit_status = -1;
 	}
 	else
 	    running_processes++;
@@ -52,20 +52,20 @@ gboolean unlock(gchar *interface, GArray *distribution_array, gchar *profile)
 	if(status != 0)
 	{
 	    g_printerr("Failed to release the lock!\n");
-	    exit_status = FALSE;
+	    exit_status = status;
 	}
     }
     
-    /* Return exit status */
+    /* Return exit status, which is 0 if everything succeeds */
     return exit_status;
 }
 
-gboolean lock(gchar *interface, GArray *distribution_array, gchar *profile)
+int lock(gchar *interface, GArray *distribution_array, gchar *profile)
 {
     unsigned int i;
     GArray *try_array = g_array_new(FALSE, FALSE, sizeof(DistributionItem*));
     GArray *lock_array = g_array_new(FALSE, FALSE, sizeof(DistributionItem*));
-    int exit_status = TRUE;
+    int exit_status = 0;
     int status;
     
     /* For each machine acquire a lock */
@@ -79,8 +79,8 @@ gboolean lock(gchar *interface, GArray *distribution_array, gchar *profile)
 	if(status == -1)
 	{
 	    g_printerr("Error with forking lock process!\n");
-	    exit_status = FALSE;
-	}	
+	    exit_status = -1;
+	}
 	else
 	    g_array_append_val(try_array, item);
     }    
@@ -94,7 +94,7 @@ gboolean lock(gchar *interface, GArray *distribution_array, gchar *profile)
 	if(status != 0)
 	{
 	    g_printerr("Failed to acquire a lock!\n");
-	    exit_status = FALSE;
+	    exit_status = status;
 	}
     }
     
@@ -106,6 +106,6 @@ gboolean lock(gchar *interface, GArray *distribution_array, gchar *profile)
     g_array_free(try_array, TRUE);
     g_array_free(lock_array, TRUE);
     
-    /* Return exit status */
+    /* Return exit status, which is 0 if everything succeeds */
     return exit_status;
 }

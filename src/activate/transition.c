@@ -21,7 +21,7 @@
 #include <activationmapping.h>
 #include <client-interface.h>
 
-static gboolean activate(gchar *interface, GArray *union_array, ActivationMapping *mapping)
+static int activate(gchar *interface, GArray *union_array, ActivationMapping *mapping)
 {
     /* Search for the location of the mapping in the union array */
     gint actual_mapping_index = activation_mapping_index(union_array, mapping);
@@ -33,6 +33,7 @@ static gboolean activate(gchar *interface, GArray *union_array, ActivationMappin
     if(actual_mapping->depends_on != NULL)
     {
 	unsigned int i;
+	int status;
 	
 	for(i = 0; i < actual_mapping->depends_on->len; i++)
 	{
@@ -41,9 +42,11 @@ static gboolean activate(gchar *interface, GArray *union_array, ActivationMappin
 	    ActivationMapping lookup;
 	    lookup.service = dependency->service;
 	    lookup.target = dependency->target;
-	    	    
-	    if(!activate(interface, union_array, &lookup))
-		return FALSE; /* If the activation of an inter-dependency fails, abort */
+	    
+	    status = activate(interface, union_array, &lookup);
+	    
+	    if(status != 0)
+		return status; /* If the activation of an inter-dependency fails, abort */
 	}
     }
     
@@ -78,15 +81,15 @@ static gboolean activate(gchar *interface, GArray *union_array, ActivationMappin
 	g_strfreev(arguments);
 	
 	if(status != 0)
-	    return FALSE; /* If the activation fails, abort */
+	    return status; /* If the activation fails, abort */
 	else    	
 	    actual_mapping->activated = TRUE; /* Mark activation mapping as activated */
     }
     
-    return TRUE; /* The activation of the closure succeeded */
+    return 0; /* The activation of the closure succeeded */
 }
 
-static gboolean deactivate(gchar *interface, GArray *union_array, ActivationMapping *mapping)
+static int deactivate(gchar *interface, GArray *union_array, ActivationMapping *mapping)
 {
     /* Search for the location of the mapping in the union array */
     gint actual_mapping_index = activation_mapping_index(union_array, mapping);
@@ -104,10 +107,12 @@ static gboolean deactivate(gchar *interface, GArray *union_array, ActivationMapp
     for(i = 0; i < interdependent_mappings->len; i++)
     {
         ActivationMapping *dependency_mapping = g_array_index(interdependent_mappings, ActivationMapping*, i);
-        if(!deactivate(interface, union_array, dependency_mapping))
+	int status = deactivate(interface, union_array, dependency_mapping);
+	
+        if(status != 0)
 	{
 	    g_array_free(interdependent_mappings, TRUE);
-	    return FALSE; /* If the deactivation of an inter-dependency fails, abort */
+	    return status; /* If the deactivation of an inter-dependency fails, abort */
 	}
     }
     
@@ -143,21 +148,21 @@ static gboolean deactivate(gchar *interface, GArray *union_array, ActivationMapp
 	g_free(arguments);
 
 	if(status != 0)
-	    return FALSE; /* If the deactivation fails, abort */
+	    return status; /* If the deactivation fails, abort */
 	else
 	    actual_mapping->activated = FALSE; /* Mark activation mapping as deactivated */
     }
     
-    return TRUE; /* The deactivation of the closure succeeded */
+    return 0; /* The deactivation of the closure succeeded */
 }
 
-gboolean transition(gchar *interface, GArray *new_activation_mappings, GArray *old_activation_mappings)
+int transition(gchar *interface, GArray *new_activation_mappings, GArray *old_activation_mappings)
 {
     GArray *union_array;
     GArray *deactivation_array;
     GArray *activation_array;
-    gboolean exit_status = TRUE;
     unsigned int i;
+    int exit_status = 0;
     
     /* Print configurations */
     
@@ -215,11 +220,12 @@ gboolean transition(gchar *interface, GArray *new_activation_mappings, GArray *o
         for(i = 0; i < deactivation_array->len; i++)
         {
     	    ActivationMapping *mapping = g_array_index(deactivation_array, ActivationMapping*, i);
-				
-	    if(!deactivate(interface, union_array, mapping))
+	    int status = deactivate(interface, union_array, mapping);
+	    		
+	    if(status != 0)
 	    {
 		/* If the deactivation fails, perform a rollback */
-		
+				
 		unsigned int j;
 		g_print("Deactivation failed! Doing a rollback...\n");
 		
@@ -227,11 +233,11 @@ gboolean transition(gchar *interface, GArray *new_activation_mappings, GArray *o
 		{
 		    ActivationMapping *mapping = g_array_index(union_array, ActivationMapping*, j);
 		    
-		    if(!activate(interface, union_array, mapping))
+		    if(activate(interface, union_array, mapping) != 0)
 			g_print("Rollback failed!\n");		    		    
 		}		
 		
-		exit_status = FALSE;
+		exit_status = status;
 		break;
 	    }
 	}
@@ -239,7 +245,7 @@ gboolean transition(gchar *interface, GArray *new_activation_mappings, GArray *o
 
     /* Execute activation process (if deactivation process did not fail) */
     
-    if(exit_status)
+    if(exit_status == 0)
     {
 	g_print("Executing activation:\n");
 
@@ -248,8 +254,9 @@ gboolean transition(gchar *interface, GArray *new_activation_mappings, GArray *o
 	for(i = 0; i < activation_array->len; i++)
 	{
     	    ActivationMapping *mapping = g_array_index(activation_array, ActivationMapping*, i);
+	    int status = activate(interface, union_array, mapping);
 	    
-    	    if(!activate(interface, union_array, mapping))
+    	    if(status != 0)
 	    {
 		/* If the activation fails, perform a rollback */
 	    
@@ -261,7 +268,7 @@ gboolean transition(gchar *interface, GArray *new_activation_mappings, GArray *o
 		{
 		    ActivationMapping *mapping = g_array_index(activation_array, ActivationMapping*, j);
 	    
-		    if(!deactivate(interface, union_array, mapping))
+		    if(deactivate(interface, union_array, mapping) != 0)
 			g_print("Rollback failed!\n");
 		}
 	    
@@ -272,12 +279,12 @@ gboolean transition(gchar *interface, GArray *new_activation_mappings, GArray *o
 		    {
 			ActivationMapping *mapping = g_array_index(old_activation_mappings, ActivationMapping*, j);
 		
-			if(!activate(interface, union_array, mapping))
+			if(activate(interface, union_array, mapping) != 0)
 			    g_print("Rollback failed!\n");
 		    }
 		}
 	    
-    		exit_status = FALSE;
+    		exit_status = status;
 		break;
 	    }
 	}
@@ -292,6 +299,6 @@ gboolean transition(gchar *interface, GArray *new_activation_mappings, GArray *o
 	g_array_free(union_array, TRUE);
     }
     
-    /* Transition process succeeded */
+    /* Returns the exit status, which is 0 if everything succeeded */
     return exit_status;
 }

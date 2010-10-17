@@ -34,6 +34,7 @@ int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, 
 {
     gchar *old_manifest_file;
     GArray *old_activation_mappings;
+    int status;
     int exit_status = 0;
     
     /* Get all the distribution items of the new configuration */
@@ -72,7 +73,7 @@ int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, 
     /* If we have an old configuration -> open it */
     if(old_manifest_file != NULL)
     {	    	    
-        printf("Using previous manifest: %s\n", old_manifest_file);
+        g_print("Using previous manifest: %s\n", old_manifest_file);
         old_activation_mappings = create_activation_array(old_manifest_file);
         
 	/* Free the variable because it's not needed anymore */
@@ -81,40 +82,44 @@ int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, 
     else
         old_activation_mappings = NULL;
 
-
     /* Try to acquire a lock */
-    if(lock(interface, distribution_array, profile))
+    
+    status = lock(interface, distribution_array, profile);
+    
+    if(status == 0)
     {
 	/* Execute transition */
-	if(transition(interface, new_activation_mappings, old_activation_mappings))
-	{
-	    int status;
-	    
+	status = transition(interface, new_activation_mappings, old_activation_mappings);
+	
+	if(status == 0)
+	{	    	    
 	    /* Set the new profiles on the target machines */
-	    printf("Setting the new profiles on the target machines:\n");
+	    g_print("Setting the new profiles on the target machines:\n");
 	    status = set_target_profiles(distribution_array, interface, profile);
 	    
 	    /* Try to release the lock */
 	    unlock(interface, distribution_array, profile);
 	    
 	    /* If setting the profiles succeeds -> set the coordinator profile */
-	    if(status)
+	    if(status == 0)
 	    {
-		if(!set_coordinator_profile(coordinator_profile_path, new_manifest, profile, username))
-		    exit_status = 1; /* if settings the coordinator profile fails -> change exit status */
+		status = set_coordinator_profile(coordinator_profile_path, new_manifest, profile, username);
+		
+		if(status != 0)
+		    exit_status = status; /* if settings the coordinator profile fails -> change exit status */
 	    }
 	    else
-		exit_status = 1; /* else change exit status */
+		exit_status = status; /* else change exit status */
 	}
 	else
 	{
 	    /* Try to release the lock */
 	    unlock(interface, distribution_array, profile); 
-	    exit_status = 1;
+	    exit_status = status;
 	}
     }
     else
-	exit_status = 1;
+	exit_status = status;
 
     /* Cleanup */
     delete_distribution_array(distribution_array);
