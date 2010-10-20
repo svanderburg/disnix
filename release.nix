@@ -46,7 +46,7 @@ let
       
     tests = 
       { nixos ? /etc/nixos/nixos
-      , disnix_activation_scripts ? (import ../../disnix-activation-scripts-nixos/trunk/release.nix {}).build {}
+      , disnix_activation_scripts ? (import ../../disnix-activation-scripts/trunk/release.nix {}).build {}
       }:
       
       let
@@ -68,10 +68,7 @@ let
                 startOn = "started dbus";
 
                 script =
-                  ''
-                    export PATH=/var/run/current-system/sw/bin:/var/run/current-system/sw/sbin
-                    export HOME=/root
-	
+                  ''	
                     ${disnix}/bin/disnix-service --activation-modules-dir=${disnix_activation_scripts}/libexec/disnix/activation-scripts
                   '';
 	       };
