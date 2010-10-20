@@ -42,7 +42,7 @@
 			executing deployment operations instead of SSH.
 		</para>
 		<para>
-			The <command>disnix-service</command> also requires activation modules. Since a service can have
+			The <command>disnix-service</command> also requires activation scripts. Since a service can have
 			basically any form and can be deployed on various platforms and architectures, there is
 			no generic way to activate them. The service therefore needs to know which activation module
 			scripts it can use, to map activation types on activation modules.
@@ -57,7 +57,7 @@
 				<term><option>--activation-modules-dir</option></term>
 				<listitem>
 					<para>
-						Directory where the activation modules can be found.
+						Directory where the activation scripts can be found.
 					</para>
 				</listitem>
 			</varlistentry>

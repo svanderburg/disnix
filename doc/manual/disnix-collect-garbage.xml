@@ -27,7 +27,7 @@
 		<title>Description</title>
 		
 		<para>
-			The command <command>disnix-collect-garbage</command> collects all garbage from all the machines defined in a infrastructure
+			The command <command>disnix-collect-garbage</command> collects all garbage from all the machines defined in an infrastructure
 			Nix expression and optionally removes all the older profiles.
 		</para>
 	</refsection>

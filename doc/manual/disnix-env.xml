@@ -123,7 +123,7 @@
 						Nix profile path where the manifest should be stored, so that Disnix knows the current configuration
 						of a distributed system. By default it is stored in the profile directory of the user.
 						Most users do not want to use this option directly, but it is used by e.g. the virtualization
-						extension to store virtual machine profile in a separate directory.
+						extension to store a virtual machine network configuration in a separate directory.
 					</para>
 				</listitem>
 			</varlistentry>
