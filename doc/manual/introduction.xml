@@ -2,221 +2,214 @@
          xmlns:xlink="http://www.w3.org/1999/xlink"
          xml:id="chap-introduction">
 
-<title>Introduction</title>
+	<title>Introduction</title>
 
-<para>
-Disnix is a toolset used to perform distributed deployment tasks
-and is built on top of the Nix; a package manager which has some distinct
-features compared to conventional package
-managers to make deployment safe and reliable.
-</para>
+	<para>
+		Disnix is a toolset used to perform distributed deployment tasks
+		and is built on top of the Nix; a package manager which has some distinct
+		features compared to conventional package
+		managers to make deployment safe and reliable.
+	</para>
 
-<para>
-Nix stores packages in isolation from each other in a directory
-called the <emphasis>Nix store</emphasis>. Every package has a special file
-name such as:
-</para>
+	<para>
+		Nix stores packages in isolation from each other in a directory
+		called the <emphasis>Nix store</emphasis>. Every package has a special file
+		name such as:
+	</para>
 
 <screen>
 /nix/store/h3ybhij06f3lhjx0p9axfcbyg9z9bljj-firefox-3.6.8
 </screen>
 
-<para>
-The first part <filename>h3ybhij06f3lhjx0p9axfcbyg9z9bljj</filename> is a cryptographic hash
-derived from all the inputs
-(e.g. libraries, compilers, build scripts)
-used to build the component. If a user decides to build the component
-with, say, a different
-compiler, this will result in a different hash and thus a different filename in
-the Nix store. This approach makes it safe to store multiple versions and variants next
-to each other, because no components share the same name.
-</para>
+	<para>
+		The first part <filename>h3ybhij06f3lhjx0p9axfcbyg9z9bljj</filename> is a cryptographic hash
+		derived from all the inputs
+		(e.g. libraries, compilers, build scripts)
+		used to build the component. If a user decides to build the component
+		with, say, a different
+		compiler, this will result in a different hash and thus a different filename in
+		the Nix store. This approach makes it safe to store multiple versions and variants next
+		to each other, because no components share the same name.
+	</para>
 
-<para>
-Since every component is stored in isolation in the Nix store, rather than a global directory
-such as <filename>/usr/lib</filename>, we have stricter guarantees that its dependencies are
-correct and complete. With conventional package managers 
-the fact that a package builds successfully does not guarantee that the
-dependency specification is correct, since dependencies are stored in global locations.
-In Nix, all packages reside in the Nix store and must therefore
-be explicitly specified.  This guarantees that if a package builds
-correctly on one machine,
-it will build on other machines of the same type as well.
-</para>
+	<para>
+		Since every component is stored in isolation in the Nix store, rather than a global directory
+		such as <filename>/usr/lib</filename>, we have stricter guarantees that its dependencies are
+		correct and complete. With conventional package managers 
+		the fact that a package builds successfully does not guarantee that the
+		dependency specification is correct, since dependencies are stored in global locations.
+		In Nix, all packages reside in the Nix store and must therefore
+		be explicitly specified.  This guarantees that if a package builds
+		correctly on one machine,
+		it will build on other machines of the same type as well.
+	</para>
 
-<para>
-Nix supports atomic upgrades and rollbacks, because components are stored
-safely next to each other and are never overwritten or automatically removed. Thus 
-there is no time window in which a package has some files from the old version and some
-files from the new version (which would be bad because a program may crash if 
-it is started during that period).
-</para>
+	<para>
+		Nix supports atomic upgrades and rollbacks, because components are stored
+		safely next to each other and are never overwritten or automatically removed. Thus 
+		there is no time window in which a package has some files from the old version and some
+		files from the new version (which would be bad because a program may crash if 
+		it is started during that period).
+	</para>
 
-<para>
-Moreover, Nix uses a purely functional domain-specific language called the Nix expression language
-to specify build actions. This makes building a package deterministic and reproducable.
-A garbage collector is included to safely remove packages that are no longer in use.
-</para>
+	<para>
+		Moreover, Nix uses a purely functional domain-specific language called the Nix expression language
+		to specify build actions. This makes building a package deterministic and reproducable.
+		A garbage collector is included to safely remove packages that are no longer in use.
+	</para>
 
-<para>
-Because of these features, Nix is a very good basis to build
-a distributed deployment tool to make the deployment process of a distributed system
-efficient, reliable and atomic.
-However, Nix only deals with <emphasis>intra-dependencies</emphasis>, which are either run-time or
-build-time dependencies residing on the same machine.
-In order to deploy a distributed system into a network of machines additional features 
-are provided by Disnix.  Most importantly, these include models to describe machines in the
-network, and 
-management of <emphasis>inter-dependencies</emphasis> -- the run-time dependencies between components
-residing on different machines.
-</para>
+	<para>
+		Because of these features, Nix is a very good basis to build
+		a distributed deployment tool to make the deployment process of a distributed system
+		efficient, reliable and atomic.
+		However, Nix only deals with <emphasis>intra-dependencies</emphasis>, which are either run-time or
+		build-time dependencies residing on the same machine.
+		In order to deploy a distributed system into a network of machines additional features 
+		are provided by Disnix.  Most importantly, these include models to describe machines in the
+		network, and 
+		management of <emphasis>inter-dependencies</emphasis> -- the run-time dependencies between components
+		residing on different machines.
+	</para>
 
-<section>
-<title>Features</title>
+	<section>
+		<title>Features</title>
 
-<simplesect>
-<title>Declarative distributed systems modeling</title>
-<para>
-Like the standard Nix deployment system, Disnix uses
-the Nix expression language, which is used to write
-specifications for the deployment of distributed
-systems.
-</para>
-<para>
-Disnix requires three models, each capturing a specific concern
-in deploying a distributed system. The <emphasis>services model</emphasis> is used
-for specifying the components of a distributed system and
-its inter-dependencies.
-The <emphasis>infrastructure model</emphasis> is used for
-specifying the network of machines and their relevant properties.
-The <emphasis>distribution model</emphasis> is used to map services to machines
-in the network.
-</para>
-</simplesect>
+		<simplesect>
+			<title>Declarative distributed systems modeling</title>
+			<para>
+				Like the standard Nix deployment system, Disnix uses
+				the Nix expression language, which is used to write
+				specifications for the deployment of distributed
+				systems.
+			</para>
+			<para>
+				Disnix requires three models, each capturing a specific concern
+				in deploying a distributed system. The <emphasis>services model</emphasis> is used
+				for specifying the components of a distributed system and
+				its inter-dependencies.
+				The <emphasis>infrastructure model</emphasis> is used for
+				specifying the network of machines and their relevant properties.
+				The <emphasis>distribution model</emphasis> is used to map services to machines
+				in the network.
+			</para>
+		</simplesect>
 
-<simplesect>
-<title>Complete dependencies</title>
-<para>
-The standard Nix package manager ensures that package dependency
-specifications are complete on a single system, i.e. intra-dependencies.
-Components of a distributed system may have dependencies on components
-running on different machines in the network, i.e. inter-dependencies.
-</para>
+		<simplesect>
+			<title>Complete dependencies</title>
+			<para>
+				The standard Nix package manager ensures that package dependency
+				specifications are complete on a single system, i.e. intra-dependencies.
+				Components of a distributed system may have dependencies on components
+				running on different machines in the network, i.e. inter-dependencies.
+			</para>
 
-<para>
-Disnix also allows you to specify inter-dependencies of distributed system
-components, which can be used to compose distributed system components
-into a complete system. If a certain service has an inter-dependency on a
-different service, and the dependency is missing, Disnix will notice this
-before deploying the system.
-</para>
+			<para>
+				Disnix also allows you to specify inter-dependencies of distributed system
+				components, which can be used to compose distributed system components
+				into a complete system. If a certain service has an inter-dependency on a
+				different service, and the dependency is missing, Disnix will notice this
+				before deploying the system.
+			</para>
 
-<para>
-Moreover, Disnix uses inter-dependency specifcations for the installation
-or upgrade process of a distributed system to ensure that every service
-is activated or deactivated in the right order and that the system will
-not fail due to a missing inter-dependency or a broken inter-dependency
-relationship.
-</para>
+			<para>
+				Moreover, Disnix uses inter-dependency specifcations for the installation
+				or upgrade process of a distributed system to ensure that every service
+				is activated or deactivated in the right order and that the system will
+				not fail due to a missing inter-dependency or a broken inter-dependency
+				relationship.
+			</para>
+		</simplesect>
 
-</simplesect>
+		<simplesect>
+			<title>Atomic upgrades and rollbacks</title>
 
-<simplesect>
-<title>Atomic upgrades and rollbacks</title>
+			<para>
+				Like the standard Nix package manager, which support atomic upgrades,
+				Disnix uses a two-phase commit variant mapped onto Nix deployment
+				operations to upgrade a distributed system atomically.
+				Since the Nix package manager always stores components next to each
+				other in a Nix store and never overwrites existing files,
+				upgrading a distributed system is also very safe and we can almost
+				always perform a rollback.
+			</para>
 
-<para>
-Like the standard Nix package manager, which support atomic upgrades,
-Disnix uses a two-phase commit variant mapped onto Nix deployment
-operations to upgrade a distributed system atomically.
-Since the Nix package manager always stores components next to each
-other in a Nix store and never overwrites existing files,
-upgrading a distributed system is also very safe and we can almost
-always perform a rollback.
-</para>
+			<para>
+				The only impure step while upgrading, is the activation of obsolete
+				services and activation of newly installed services, a phase in which
+				users may observe that the system is changing. To make this process truly
+				atomic, Disnix has an extension mechanism that can be used to temporary
+				queue/block incoming connections until the transition is finished.
+				We developed a simple example with stateful TCP connections to demonstrate
+				this.
+			</para>
+		</simplesect>
 
-<para>
-The only impure step while upgrading, is the activation of obsolete
-services and activation of newly installed services, a phase in which
-users may observe that the system is changing. To make this process truly
-atomic, Disnix has an extension mechanism that can be used to temporary
-queue/block incoming connections until the transition is finished.
-We developed a simple example with stateful TCP connections to demonstrate
-this.
-</para>
+		<simplesect>
+			<title>Garbage collection</title>
 
-</simplesect>
+			<para>
+				Like the standard Nix package manager, Disnix also provides a garbage
+				collector, which safely removes all obsolete components from the machines
+				in the network.
+			</para>
+		</simplesect>
 
-<simplesect>
-<title>Garbage collection</title>
+		<simplesect>
+			<title>Portability</title>
 
-<para>
-Like the standard Nix package manager, Disnix also provides a garbage
-collector, which safely removes all obsolete components from the machines
-in the network.
-</para>
+			<para>
+				Disnix is, like Nix, supported on several platforms including most Unix flavours
+				such as Linux, FreeBSD, OpenBSD and Mac OS X. It is also supported on Windows
+				using Cygwin.
+			</para>
 
-</simplesect>
+			<para>
+				Except for the portability of Disnix itself, Disnix also allows a user to deploy
+				a distributed system into a heterogeneous network (i.e. a network consisting
+				of various types of machines, running various operating systems). Disnix reuses
+				Nix to automatically build a component for the given target platform.
+				Optionally, it can also perform builds on target machines in the network.
+			</para>
+		</simplesect>
 
-<simplesect>
-<title>Portability</title>
+		<simplesect>
+			<title>Extensibility</title>
 
-<para>
-Disnix is, like Nix, supported on several platforms including most Unix flavours
-such as Linux, FreeBSD, OpenBSD and Mac OS X. It is also supported on Windows
-using Cygwin.
-</para>
+			<para>
+				Since distributed systems can be deployed in heterogeneous networks
+				consisting of various platforms and using various communication protocols,
+				and distributed system components can have basically any form,
+				not all operations can be solved in a generic manner. 
+				The architecture of Disnix is therefore very modular and provides
+				a plugin architecture which can be used to integrate
+				custom developed components used for the activation and deactivation of services,
+				and a custom plugin that provides access to deployment operations through
+				specific interfaces.
+			</para>
 
-<para>
-Except for the portability of Disnix itself, Disnix also allows a user to deploy
-a distributed system into a heterogeneous network (i.e. a network consisting
-of various types of machines, running different operating systems). Disnix reuses
-Nix to automatically build a component for the given target platform.
-Optionally, it can also perform builds on target machines in the network.
-</para>
+			<para>
+				Currently, Disnix includes a SSH wrapper which can be used to access
+				remote machines through a SSH connection. A seperate extension that uses
+				SOAP + MTOM is also available. A custom extension can be developed trivially.
+			</para>
+		</simplesect>
+	</section>
 
-</simplesect>
+	<section>
+		<title>License</title>
 
-<simplesect>
-<title>Extensibility</title>
-
-<para>
-Since distributed systems can be deployed in heterogeneous networks
-consisting of various platforms and using various communication protocols,
-and distributed system components can have basically any form,
-not all operations can be solved in a generic manner. 
-The architecture of Disnix is therefore very modular and provides
-a plugin architecture which can be used to integrate
-custom developed components used for the activation and deactivation of services,
-and a custom plugin that provides access to deployment operations through
-specific interfaces.
-</para>
-
-<para>
-Currently, Disnix includes a SSH wrapper which can be used to access
-remote machines through a SSH connection. A seperate extension that uses
-SOAP + MTOM is also available. A custom extension can be developed trivially.
-</para>
-
-</simplesect>
-
-</section>
-
-<section>
-<title>License</title>
-
-<para>
-Disnix is free software; you can redistribute it and/or modify it
-under the terms of the
-<link xlink:href="http://www.gnu.org/licenses/lgpl.html">
-GNU Lesser General Public License</link> as published by the
-<link xlink:href="http://www.fsf.org/">Free Software Foundation</link>;
-either version 2.1 of the License, or (at your option) any later
-version. Disnix is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-Lesser General Public License for more details.
-</para>
-
-</section>
+		<para>
+			Disnix is free software; you can redistribute it and/or modify it
+			under the terms of the
+			<link xlink:href="http://www.gnu.org/licenses/lgpl.html">
+			GNU Lesser General Public License</link> as published by the
+			<link xlink:href="http://www.fsf.org/">Free Software Foundation</link>;
+			either version 2.1 of the License, or (at your option) any later
+			version. Disnix is distributed in the hope that it will be useful, but
+			WITHOUT ANY WARRANTY; without even the implied warranty of
+			MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+			Lesser General Public License for more details.
+		</para>
+	</section>
 
 </chapter>

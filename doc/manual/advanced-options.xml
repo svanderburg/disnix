@@ -15,10 +15,23 @@
 		
 		<para>
 			The coordinator machine invokes an external process which performs communication with
-			the disnix service. By default <code>disnix-ssh-client</code> is used. A different
+			the Disnix service. By default <command>disnix-ssh-client</command> is used. A different
 			client can be used by either setting the <varname>DISNIX_CLIENT_INTERFACE</varname>
 			environment variable with the path to the executable or by using the
-			<option>--interface</option> command-line option.
+			<option>--interface</option> command-line option, for commands such as
+			<command>disnix-env</command>.
+		</para>
+		
+		<para>
+			For example, by specifying:
+		</para>
+		
+<screen>
+$ export DISNIX_CLIENT_INTERFACE=disnix-soap-client
+</screen>
+
+		<para>
+			The <command>disnix-soap-client</command> command is used to communicate with a remote Disnix service.
 		</para>
 		
 		<para>
@@ -28,10 +41,32 @@
 		</para>
 		
 		<para>
-			Another useful usecase is setting the client interface to <code>disnix-client</code>.
+			Another useful usecase is setting the client interface to <command>disnix-client</command>.
 			This client interface connects directly to the D-Bus system bus to invoke the disnix 
 			service operations. This is useful for debugging purposes, but you cannot use this client
 			for remote connections.
+		</para>
+		
+		<para>
+			In some cases, also the target property must be configured. By default Disnix uses the
+			<varname>hostname</varname> property defined in the infrastructure model, to determine
+			how to connect to the remote Disnix service in order to perform remote deployment steps.
+			This property can be changed by either setting the <varname>DISNIX_TARGET_PROPERTY</varname>
+			environment variable with the attribute name that contains the address of the remote
+			Disnix service or by using the <option>--target-property</option> command-line option.
+		</para>
+		
+		<para>
+			For example, by specifying:
+		</para>
+		
+<screen>
+$ export DISNIX_TARGET_PROPERTY=sshTarget
+</screen>
+		
+		<para>
+			The <varname>sshTarget</varname> attribute defined in the infrastructure model is used
+			to determine the address of the Disnix service.
 		</para>
 	</section>
 	
@@ -39,9 +74,9 @@
 		<title>Managing multiple distributed system configurations</title>
 		
 		<para>
-			By default Disnix assumes that the models that you are currently using represent one particular
+			By default, Disnix assumes that the models that you are currently using represent one particular
 			distributed environment. You can also use multiple profiles, which allow you to maintain
-			multiple distributed system environment from one coordinator machine.
+			multiple distributed system environments from one coordinator machine.
 			By using the <option>--profile</option> option for the <command>disnix-env</command>
 			and <command>disnix-activate</command> commands, you can specify which profile you want
 			to use, so that they do not interfere with each other.
@@ -64,7 +99,7 @@ $ disnix-env -s my-other-services.nix -i my-other-infrastructure.nix -d my-other
 </screen>
 
 		<para>
-			Disnix will upgrade the previous the default environment to match the models defined
+			Disnix will <emphasis>upgrade</emphasis> the previous the default environment to match the models defined
 			in the other environment, which is not desirable.
 			However, by using the <option>--profile</option> option Disnix
 			deploys the new distributed system without looking to the default system's deployment

@@ -19,17 +19,17 @@
 		command line tool is shown, which performs the complete deployment
 		process of a distributed system.
 		The tool requires three models as input parameters, which are shown
-		on the left part of the figure.
+		on the left side of the figure.
 		The <emphasis>services model</emphasis> describes of which distributable
-		components the system consists, their inter-dependencies and their types.
+		components (called services) the system consists, their inter-dependencies and their types.
 		The <emphasis>infrastructure model</emphasis> describes all the machines
 		in the network and their relevant properties and capabilities.
 		The <emphasis>distribution model</emphasis> maps services defined
 		in the services model to machines defined in the infrastructure model.
-		The service model has a reference to the file <command>all-packages.nix</command>,
+		The service model has a reference to the file <filename>all-packages.nix</filename>,
 		which captures all the intra-dependencies of every service,
 		such as libraries, configuration files and compilers.
-		On the right part of the figure, the network is shown in which the system
+		On the right side of the figure, the network is shown in which the system
 		has to be deployed. Every machine in the network requires the
 		<emphasis>DisnixService</emphasis> component installed, so that
 		remote deployment steps can be performed from the coordinator machine.

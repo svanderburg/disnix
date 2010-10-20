@@ -11,16 +11,25 @@
 		The most convenient platform to use is
 		<link xlink:href="http://nixos.org">NixOS</link>,
 		which only requires a little configuration effort.
-		Disnix can also be used on other Linux distributions and other Unix-like systems such as FreeBSD. 
+		Disnix can also be used on other Linux distributions, other Unix-like systems such as FreeBSD and
+		on Windows through Cygwin. 
 		On those platforms more configuration steps have to be performed.
 		Moreover, Disnix can be installed on various systems by using the
 		<link xlink:href="http://nixos.org/nix">Nix package manager</link> or
-		by compiling it from source code.
+		by compiling it from source code. Instructions on how to install Nix can be found
+		<link xlink:href="http://nixos.org/nix/docs.html">here</link>.
 	</para>
 	
 	<section>
 		<title>Compiling Disnix from source</title>
 
+		<para>
+			This section explains how to compile Disnix from source code.
+			Usually, this is only needed in special circumstances such as for 
+			development, or trying a new platform. A more convenient way to install
+			Disnix is to use the Nix package manager.
+		</para>
+		
 		<section>
 			<title>Prerequisites</title>
 			<para>
@@ -106,7 +115,7 @@ $ nix-env -i disnix
 			already present and this environment variable has already been configured.
 			On other systems the variable can be configured by adding the following lines to your
 			<filename>~/.bash_profile</filename> configuration (or another configuration
-			file if you use a different shell):
+			file, if you use a different shell):
 		</para>
 		
 <screen>
@@ -126,7 +135,7 @@ EOF
 
 		<para>
 			In order to deploy a distributed system in a network of machines, every
-			machine needs to be reachable by the coordinator, in order to perform deployment
+			machine needs to be reachable by the coordinator in order to perform deployment
 			steps remotely.
 			The Disnix service is a service that provides access to these operations
 			through a RPC protocol.
@@ -152,15 +161,19 @@ EOF
 			<title>Installing a target machine running NixOS</title>
 			
 			<para>
+				Installing Disnix on NixOS is quite trivial. Follow the instructions
+				explained in the
+				<link xlink:href="http://nixos.org/nixos/docs.html">NixOS manual</link>
+				to install a NixOS machine.
 				To enable the Disnix core service on NixOS the following property
-				must be defined in the <code>/etc/nixos/configuration.nix</code> file:
+				must be defined in the <filename>/etc/nixos/configuration.nix</filename> file:
 				
 <screen>
 services.disnix.enable = true;
 </screen>
 				
 				In order to use the OpenSSH wrapper, also the OpenSSH service must
-				be activated in the <code>/etc/nixos/configuration.nix</code> file:
+				be activated in the <filename>/etc/nixos/configuration.nix</filename> file:
 				
 <screen>
 services.openssh.enable = true;
@@ -170,33 +183,77 @@ services.openssh.enable = true;
 
 		<section>
 			<title>Installing a target machine manually</title>
+			
+			<para>
+				NixOS has a modular configuration
+				system, which automatically configures the activation scripts package with the right
+				options depending on the configuration settings. For instance, if the MySQL module is
+				enabled on NixOS, the activation scripts package is automatically configured to
+				use the MySQL instance. On other types of systems this must be done
+				by the user.
+			</para>
+			
+			<section>
+				<title>Installing activation scripts</title>
+				
+				<para>
+					Disnix has to activate and deactivate various types of components,
+					such as a web application, web service, process or database.
+					These procedures are part of the <filename>disnix-activation-scripts</filename>
+					package, which is a required dependency of the Disnix service. 
+					The <filename>disnix-activation-scripts</filename> package is autotools based,
+					which must be installed by executing the following commands:
+				</para>
+			
+<screen>
+$ ./configure <replaceable>options...</replaceable>
+$ make
+$ make install
+</screen>
+			
+				<para>
+					The configure script tries to detect which activation scripts can be
+					used on the system. For example, if the configure script is able to detect
+					the <command>mysql</command> command on the host system, then the <code>mysql-database</code>
+					activation script is configured and installed and thus a MySQL database can
+					be deployed on this system (this requires you to manually install MySQL
+					first).
+				</para>
+			
+				<para>
+					Additionally, it may be possible that not every capability can be detected automatically
+					or some activation types may need some manual configuration. Consult the
+					documentation of the <code>disnix-activation-scripts</code> or invoke the command:
 
-			<para>
-				The core Disnix service is a D-Bus service operating on the system bus,
-				which requires the D-Bus system daemon running.
-				Moreover, it also requires the Disnix service configuration file
-				(which installed in <code>$PREFIX/etc/dbus-1/system.d</code>) in the right location
-				so that it is allowed to register itself on the system bus with the right access permissions
-				(on most systems this location is in <code>/etc/dbus-1/system.d</code>).
-			</para>
+<screen>
+$ ./configure --help
+</screen>
+					for more information about parameters which can be used to configure activation scripts.
+				</para>
+			</section>
 			
-			<para>
-				The Disnix service also performs the activation and deactivation of a service on the machine.
-				Since services can have many forms, such as a MySQL database, web application or a UNIX process,
-				a Disnix activation scripts package must be installed, which takes care of these steps for
-				each service type on the given machine. From the Disnix website, a package for NixOS can
-				be downloaded called <code>disnix-activation-scripts-nixos</code>, that will also work on
-				most Linux distribution with some configuration options.
-				For other platforms these modules have to be adapted so that they will work on that particular
-				type of machine.
-			</para>
+			<section>
+				<title>Configuring service permissions</title>
+				
+				<para>
+					The core Disnix service is a D-Bus service operating on the system bus,
+					which requires the D-Bus system daemon running.
+					Moreover, it also requires the Disnix service configuration file
+					(which installed in <code>$PREFIX/etc/dbus-1/system.d</code>) in the right location
+					so that it is allowed to register itself on the system bus with the right access permissions
+					(on most systems this location is in <code>/etc/dbus-1/system.d</code>).
+				</para>
+			</section>
 			
-			<para>
-				Moreover, the host system must configured to start the Disnix D-Bus service automatically. 
-				In most Linux distributions this can be done by creating a <code>/etc/init.d/disnix</code>
-				<code>init.d</code> script and configure your distribution so that it will be launched on system startup.
-				An <code>init.d</code> script for the Disnix service could look like this:
-			</para>
+			<section>
+				<title>Configuring boot scripts</title>
+				
+				<para>
+					The host system must configured to start the Disnix D-Bus service automatically. 
+					In most Linux distributions this can be done by creating a <code>/etc/init.d/disnix</code>
+					<code>init.d</code> script and configure your distribution so that it will be launched on system startup.
+					An <code>init.d</code> script for the Disnix service could look like this:
+				</para>
 			
 <screen>
 #!/bin/bash
@@ -219,17 +276,22 @@ case "$1":
 esac
 </screen>
 			
-			<para>
-				Rerfer to your distribution's <code>init.d</code> script style to see how services
-				are configured and launched.
-			</para>
+				<para>
+					Refer to your distribution's <code>init.d</code> script style to see how services
+					are configured and launched.
+				</para>
+			</section>
 			
-			<para>
-				Except for the core Disnix service, a protocol wrapper is required that provides remote
-				access to the core service operations through a RPC protocol. A SSH wrapper is included
-				which only requires a OpenSSH server running on the same machine. For other protocols,
-				you have to read the documentation that is included with the extension.
-			</para>
+			<section>
+				<title>Installing a protocol wrapper</title>
+				
+				<para>
+					Except for the core Disnix service, a protocol wrapper is required that provides remote
+					access to the core service operations through a RPC protocol. A SSH wrapper is included
+					which only requires a OpenSSH server running on the same machine. For other protocols,
+					you have to read the documentation that is included with the extension.
+				</para>
+			</section>
 		</section>
 		
 		<section>
