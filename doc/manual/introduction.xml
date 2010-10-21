@@ -6,7 +6,7 @@
 
 	<para>
 		Disnix is a toolset used to perform distributed deployment tasks
-		and is built on top of the Nix; a package manager which has some distinct
+		and is built on top of Nix; a package manager which has some distinct
 		features compared to conventional package
 		managers to make deployment safe and reliable.
 	</para>
@@ -107,7 +107,7 @@
 				Disnix also allows you to specify inter-dependencies of distributed system
 				components, which can be used to compose distributed system components
 				into a complete system. If a certain service has an inter-dependency on a
-				different service, and the dependency is missing, Disnix will notice this
+				particular service, and the dependency is missing, Disnix will notice this
 				before deploying the system.
 			</para>
 
@@ -159,7 +159,7 @@
 
 			<para>
 				Disnix is, like Nix, supported on several platforms including most Unix flavours
-				such as Linux, FreeBSD, OpenBSD and Mac OS X. It is also supported on Windows
+				such as Linux, FreeBSD, OpenBSD and Mac OS X. Disnix is also supported on Windows
 				using Cygwin.
 			</para>
 

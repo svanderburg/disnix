@@ -50,9 +50,9 @@ $ disnix-manifest -s services.nix -i infrastructure.nix -d distribution.nix
 		
 		<para>
 			This command produces a <emphasis>manifest</emphasis> file, which is basically
-			a more concrete version of the distribution model. This file contains
-			to the Nix store paths of all the build results, types and connection settings, which can be used to distribute
-			services and to activate them. 
+			a more concrete version of the distribution model. This file contains references
+			to the Nix store paths of all the build results, types and connection settings and dependent
+			mappings which can be used to distribute services and to activate them. 
 			As a side effect, all the services that are specified in the distribution model
 			are built from source code.
 			The manifest is produced in the Nix store

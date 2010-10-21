@@ -289,7 +289,7 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 				Basically, a Disnix expression is nearly identical to an ordinary
 				Nix expression, except that it is a nested function (which has two
 				function headers instead of one). The headers represent 
-				intra-dependencies and inter-dependencies repspectively,
+				intra-dependencies and inter-dependencies respectively,
 				which are both used to build and configure the service.
 			</para>
 		
@@ -531,9 +531,9 @@ rec { <co xml:id='co-3-rec2' />
 				<para>
 					The services expression is a function, which takes 2 arguments.
 					The <varname>distribution</varname> parameter represents the distribution model,
-					in which services are mapped onto 1 or more machines (this model is explained
+					in which services are mapped onto machines in the network (this model is explained
 					later). This model can be used by services to configure themselves based on the
-					location of each service. The <varname>service</varname> parameter is an identifier
+					location of each service. The <varname>system</varname> parameter is an identifier
 					for the system architecture on which services must be built. An examples of an
 					identifier is: <code>i686-linux</code> representing a 32-bit <code>x86</code> Linux machine.
 				</para>
@@ -597,7 +597,7 @@ rec { <co xml:id='co-3-rec2' />
 				<para>
 					Finally, we must know how to activate and deactive a service. Since services can represent
 					many things such as a database or web application, we cannot perform this step generically.
-					This attribute specifies the type of the web service, which will invoke a activation script
+					This attribute specifies the type of the service, which will invoke a activation script
 					on the target machine performing the actual activation or deactivation process. 
 					Various types are supported such as: <code>tomcat-webapplication</code> which will activate
 					a web application on Apache Tomcat, <code>mysql-database</code> which will import
@@ -650,7 +650,8 @@ rec { <co xml:id='co-3-rec2' />
 			  <callout arearefs='co-1-target'>
 				  <para>
 					The infrastructure model is an attribute set in which each attribute represents a 
-					machine in the network.
+					machine in the network. This attribute refers to the properties of a machine called
+					<code>test2</code>.
 				  </para>
 			  </callout>
 			  
@@ -728,7 +729,7 @@ rec { <co xml:id='co-3-rec2' />
 				<para>
 					This attribute assignment states that the <code>zipcodes</code> service should be
 					deployed on machine <code>test2</code>.
-					The machine and its properties be accessed by using the <varname>target</varname> property
+					The machine and its properties can be accessed by using the <varname>target</varname> property
 					on an inter-dependency argument in a Disnix expression, such as
 					<xref linkend="ex-3-zipcode-service" />.
 				</para>
