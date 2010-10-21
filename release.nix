@@ -60,7 +60,7 @@ let
 
 	    services.dbus.enable = true;
             services.dbus.packages = [ disnix ];
-	    services.sshd.enable = true;
+	    services.openssh.enable = true;
 	    
 	    jobs.disnix =
               { description = "Disnix server";
