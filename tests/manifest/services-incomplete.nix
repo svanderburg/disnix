@@ -23,7 +23,7 @@ rec {
     name = "testService3";
     pkg = pkgs.testService3;
     dependsOn = {
-      inherit testService1; /*testService2;*/
+      inherit testService1; /*testService2;*/ # This triggers an error
     };
     type = "echo";
   };

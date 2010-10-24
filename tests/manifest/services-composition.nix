@@ -33,7 +33,7 @@ rec {
     pkg = pkgs.testService3;
     dependsOn = {
       inherit testService1;
-      testService2 = testService2B;
+      testService2 = testService2B; # A custom composition
     };
     type = "echo";
   };
