@@ -444,7 +444,15 @@ let
 	      # This test should succeed.
 	      
 	      my $result = $client->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-gendist-roundrobin -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix");
-	      $client->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d $result");
+	      my $result = $client->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d $result");
+	      
+	      #### Test disnix-visualize
+	      
+	      # Makes a visualization of the roundrobin distribution. the output
+	      # is produced as a Hydra report. This test should succeed.
+	      
+	      $client->mustSucceed("(disnix-visualize $result) > visualize.dot");
+	      $client->mustSucceed("${pkgs.graphviz}/bin/dot -Tpng visualize.dot > /hostfs/$ENV{out}/visualize.png");
 	    '';
 	};
 	
