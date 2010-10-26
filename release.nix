@@ -460,18 +460,88 @@ let
 	      
 	      $coordinator->mustSucceed("mkdir -m 700 /root/.ssh");
               $coordinator->copyFileFromHost("key", "/root/.ssh/id_dsa");
-              $coordinator->mustSucceed("chmod 600 /root/.ssh/id_dsa");	      
+              $coordinator->mustSucceed("chmod 600 /root/.ssh/id_dsa");
 	      
-	      # Use disnix-env to create a new installation
-	      # This should succeed.
+	      # Use disnix-env to perform a new installation.
+	      # This test should succeed.
 	      $coordinator->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
 	      
-	      # Use disnix-query to see if the services are installed on the
-	      # target platforms. This test should succeed.
+	      # Use disnix-query to see if the right services are installed on
+	      # the right target platforms. This test should succeed.
 	      
-	      $coordinator->mustSucceed("disnix-query ${manifestTests}/infrastructure.nix");
+	      my @lines = split('\n', $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-query ${manifestTests}/infrastructure.nix"));
+	      
+	      if(@lines[1] != "Service on: testtarget1") {
+	          die "disnix-query output line 1 does not match what we expect!\n";
+	      }
+	      
+	      if(@lines[3] =~ /\-testService1/) {
+	          print "Found testService1 on disnix-query output line 3\n";
+	      } else {
+	          die "disnix-query output line 3 does not contain testService1!\n";
+	      }
+	      
+	      if(@lines[5] != "Service on: testtarget2") {
+	          die "disnix-query output line 5 does not match what we expect!\n";
+	      }
+	      
+	      if(@lines[7] =~ /\-testService2/) {
+	          print "Found testService2 on disnix-query output line 7\n";
+	      } else {
+	          die "disnix-query output line 7 does not contain testService2!\n";
+	      }
+	      
+	      if(@lines[8] =~ /\-testService3/) {
+	          print "Found testService3 on disnix-query output line 8\n";
+	      } else {
+	          die "disnix-query output line 8 does not contain testService3!\n";
+	      }
+	      
+	      # Check the disnix logfiles to see whether it has indeed activated
+	      # the services in the distribution model. This test should
+	      # succeed.
+	      
+	      $testtarget1->mustSucceed("[ \"\$(grep \"@lines[3]\" /var/log/upstart/disnix)\" != \"\" ]");
+	      $testtarget2->mustSucceed("[ \"\$(grep \"@lines[7]\" /var/log/upstart/disnix)\" != \"\" ]");
+	      $testtarget2->mustSucceed("[ \"\$(grep \"@lines[8]\" /var/log/upstart/disnix)\" != \"\" ]");
+	      
+	      # We now perform an upgrade. In this case testService2 is replaced
+	      # by testService2B. This test should succeed.
+	      
+	      $coordinator->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-composition.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-composition.nix");
+	      
+	      # Use disnix-query to see if the right services are installed on
+	      # the right target platforms. This test should succeed.
+	      
+	      my @lines = split('\n', $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-query ${manifestTests}/infrastructure.nix"));
+	      
+	      if(@lines[1] != "Service on: testtarget1") {
+	          die "disnix-query output line 1 does not match what we expect!\n";
+	      }
+	      
+	      if(@lines[3] =~ /\-testService1/) {
+	          print "Found testService1 on disnix-query output line 3\n";
+	      } else {
+	          die "disnix-query output line 3 does not contain testService1!\n";
+	      }
+	      
+	      if(@lines[5] != "Service on: testtarget2") {
+	          die "disnix-query output line 5 does not match what we expect!\n";
+	      }
+	      
+	      if(@lines[7] =~ /\-testService2B/) {
+	          print "Found testService2B on disnix-query output line 7\n";
+	      } else {
+	          die "disnix-query output line 7 does not contain testService2B!\n";
+	      }
+	      
+	      if(@lines[8] =~ /\-testService3/) {
+	          print "Found testService3 on disnix-query output line 8\n";
+	      } else {
+	          die "disnix-query output line 8 does not contain testService3!\n";
+	      }	      
 	    '';
-	};
+        };
       };
   };
 in jobs
