@@ -86,10 +86,25 @@ let
 	  nodes = {
 	    client = machine;
 	    server = machine;
-	  };	    
+	  };
 	  testScript = 
 	    ''
 	      startAll;
+	      
+	      #### Test disnix-instantiate
+	      
+	      # Generates a distributed derivation file. The closure should be
+	      # contain store derivation files. This test should succeed.
+	      
+	      my $result = $client->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-instantiate -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+	      my @closure = split('\n', $client->mustSucceed("nix-store -qR $result"));
+	      my @derivations = grep(/\.drv/, @closure);
+	      
+	      if(scalar(@derivations) > 0) {
+	          print "The closure of the distributed derivation contains store derivations\n";
+	      } else {
+	          die "The closure of the distributed derivation contains no store derivations!\n";
+	      }
 	      
 	      #### Test disnix-manifest
 	      
@@ -106,54 +121,54 @@ let
 	      $client->mustFail("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-incomplete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
 	      	      	      
 	      # Load balancing test. Here we distribute testService1 and
-	      # testService2 to machines testTarget1 and testTarget2.
+	      # testService2 to machines testtarget1 and testtarget2.
 	      # We verify this by checking whether the services testService1
-	      # and testService2 are in the closure of the testTarget1 and
-	      # testTarget2 profiles. This test should succeed.
+	      # and testService2 are in the closure of the testtarget1 and
+	      # testtarget2 profiles. This test should succeed.
 	      
 	      my $manifest = $client->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-loadbalancing.nix");
 	      my @closure = split('\n', $client->mustSucceed("nix-store -qR $manifest"));
 	      
-	      my @target1Profile = grep(/\-testTarget1/, @closure);
-	      my @target2Profile = grep(/\-testTarget2/, @closure);
+	      my @target1Profile = grep(/\-testtarget1/, @closure);
+	      my @target2Profile = grep(/\-testtarget2/, @closure);
 	      
 	      my $target1ProfileClosure	= $client->mustSucceed("nix-store -qR @target1Profile");
 	      my $target2ProfileClosure = $client->mustSucceed("nix-store -qR @target2Profile");
 	      
 	      if($target1ProfileClosure =~ /\-testService1/) {
-	          print "testService1 is distributed to testTarget1 -> OK\n";
+	          print "testService1 is distributed to testtarget1 -> OK\n";
 	      } else {
-	          die "testService1 should be distributed to testTarget1\n";
+	          die "testService1 should be distributed to testtarget1\n";
 	      }
 		 
 	      if($target2ProfileClosure =~ /\-testService1/) {
-	          print "testService1 is distributed to testTarget2 -> OK\n";
+	          print "testService1 is distributed to testtarget2 -> OK\n";
 	      } else {
-	          die "testService1 should be distributed to testTarget2\n";
+	          die "testService1 should be distributed to testtarget2\n";
 	      }
 
 	      if($target1ProfileClosure =~ /\-testService2/) {
-	          print "testService2 is distributed to testTarget1 -> OK\n";
+	          print "testService2 is distributed to testtarget1 -> OK\n";
 	      } else {
-	          die "testService2 should be distributed to testTarget1\n";
+	          die "testService2 should be distributed to testtarget1\n";
 	      }
 		 
 	      if($target2ProfileClosure =~ /\-testService2/) {
-	          print "testService2 is distributed to testTarget2 -> OK\n";
+	          print "testService2 is distributed to testtarget2 -> OK\n";
 	      } else {
-	          die "testService2 should be distributed to testTarget2\n";
+	          die "testService2 should be distributed to testtarget2\n";
 	      }
 
 	      if($target1ProfileClosure =~ /\-testService3/) {
-	          print "testService3 is distributed to testTarget1 -> OK\n";
+	          print "testService3 is distributed to testtarget1 -> OK\n";
 	      } else {
-	          die "testService3 should be distributed to testTarget1\n";
+	          die "testService3 should be distributed to testtarget1\n";
 	      }
 		 
 	      if($target2ProfileClosure =~ /\-testService3/) {
-	          die "testService3 should NOT be distributed to testTarget2\n";
+	          die "testService3 should NOT be distributed to testtarget2\n";
 	      } else {
-	          print "testService3 is NOT distributed to testTarget2 -> OK\n";
+	          print "testService3 is NOT distributed to testtarget2 -> OK\n";
 	      }
 	      
 	      # Composition test. Here we create a custom inter-dependency by
@@ -221,7 +236,7 @@ let
 	      my $result = $client->mustSucceed("nix-instantiate ${nixpkgs} -A bash");
 	      $client->mustSucceed("disnix-client --realise $result");
 	      
-	      # Set test. Adds the testTarget1 profile as only derivation into 
+	      # Set test. Adds the testtarget1 profile as only derivation into 
 	      # the Disnix profile. We first set the profile, then we check
 	      # whether the profile is part of the closure.
 	      # This test should succeed.
@@ -290,12 +305,10 @@ let
               # Initialise ssh stuff by creating a key pair for communication
 	      my $key=`${pkgs.openssh}/bin/ssh-keygen -t dsa -f key -N ""`;
     
-              $server->mustSucceed("mkdir /root/.ssh");
-              $server->mustSucceed("chmod 700 /root/.ssh");
+              $server->mustSucceed("mkdir -m 700 /root/.ssh");
               $server->copyFileFromHost("key.pub", "/root/.ssh/authorized_keys");
     
-              $client->mustSucceed("mkdir /root/.ssh");
-              $client->mustSucceed("chmod 700 /root/.ssh");
+              $client->mustSucceed("mkdir -m 700 /root/.ssh");
               $client->copyFileFromHost("key", "/root/.ssh/id_dsa");
               $client->mustSucceed("chmod 600 /root/.ssh/id_dsa");
 	      
@@ -350,7 +363,7 @@ let
 	      $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --import --localfile /root/target2Profile.closure");
 	      $server->mustSucceed("nix-store --check-validity @target2Profile");
 	      	      
-	      # Set test. Adds the testTarget2 profile as only derivation into 
+	      # Set test. Adds the testtarget2 profile as only derivation into 
 	      # the Disnix profile. We first set the profile, then we check
 	      # whether the profile is part of the closure.
 	      # This test should succeed.
@@ -421,6 +434,42 @@ let
 	      $client->mustFail("nix-store --check-validity $result");
 	      $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-copy-closure --target server --from $result");
 	      $client->mustSucceed("nix-store --check-validity $result");
+	      
+	      # TODO: test roundrobin	      
+	    '';
+	};
+	
+	deployment = simpleTest {
+	  nodes = {
+	    coordinator = machine;
+	    testtarget1 = machine;
+	    testtarget2 = machine;
+	  };
+	  testScript =
+	    ''
+	      startAll;
+	      
+	      # Initialise ssh stuff by creating a key pair for communication
+	      my $key=`${pkgs.openssh}/bin/ssh-keygen -t dsa -f key -N ""`;
+    
+              $testtarget1->mustSucceed("mkdir -m 700 /root/.ssh");
+              $testtarget1->copyFileFromHost("key.pub", "/root/.ssh/authorized_keys");
+
+              $testtarget2->mustSucceed("mkdir -m 700 /root/.ssh");
+              $testtarget2->copyFileFromHost("key.pub", "/root/.ssh/authorized_keys");
+	      
+	      $coordinator->mustSucceed("mkdir -m 700 /root/.ssh");
+              $coordinator->copyFileFromHost("key", "/root/.ssh/id_dsa");
+              $coordinator->mustSucceed("chmod 600 /root/.ssh/id_dsa");	      
+	      
+	      # Use disnix-env to create a new installation
+	      # This should succeed.
+	      $coordinator->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+	      
+	      # Use disnix-query to see if the services are installed on the
+	      # target platforms. This test should succeed.
+	      
+	      $coordinator->mustSucceed("disnix-query ${manifestTests}/infrastructure.nix");
 	    '';
 	};
       };

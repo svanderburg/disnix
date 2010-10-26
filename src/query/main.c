@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     
     if(optind >= argc)
     {
-	fprintf(stderr, "A infrastructure Nix expression has to be specified!\n");
+	fprintf(stderr, "An infrastructure Nix expression has to be specified!\n");
 	return 1;
     }
     else

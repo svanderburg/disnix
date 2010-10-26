@@ -1,9 +1,9 @@
 {
-  testTarget1 = {
-    hostname = "testTarget1";
+  testtarget1 = {
+    hostname = "testtarget1";
   };
   
-  testTarget2 = {
-    hostname = "testTarget2";
+  testtarget2 = {
+    hostname = "testtarget2";
   };
 }

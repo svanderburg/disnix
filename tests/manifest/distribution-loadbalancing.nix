@@ -1,7 +1,7 @@
 {infrastructure}:
 
 {
-  testService1 = [ infrastructure.testTarget1 infrastructure.testTarget2 ]; # Multiple targets
-  testService2 = [ infrastructure.testTarget1 infrastructure.testTarget2 ]; # Multiple targets
-  testService3 = [ infrastructure.testTarget1 ];
+  testService1 = [ infrastructure.testtarget1 infrastructure.testtarget2 ]; # Multiple targets
+  testService2 = [ infrastructure.testtarget1 infrastructure.testtarget2 ]; # Multiple targets
+  testService3 = [ infrastructure.testtarget1 ];
 }
