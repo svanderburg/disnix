@@ -22,7 +22,7 @@
 
 int query_installed(gchar *interface, gchar *target_property, gchar *infrastructure_expr, gchar *profile)
 {
-    int exit_status;
+    int exit_status = 0;
     
     /* Retrieve an array of all target machines from the infrastructure expression */
     GArray *target_array = create_target_array(infrastructure_expr, target_property);
