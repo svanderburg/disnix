@@ -91,7 +91,7 @@ static gchar *create_infrastructure_xml(char *infrastructure_expr)
 	}
 	else if(status == 0)
 	{
-	    char *args[] = {"nix-instantiate", "--eval-only", "--xml", infrastructure_expr, NULL};
+	    char *args[] = {"nix-instantiate", "--eval-only", "--strict", "--xml", infrastructure_expr, NULL};
 	    close(pipefd[0]); /* Close read-end of pipe */
 	    dup2(pipefd[1], 1); /* Attach write-end to stdout */
 	    execvp("nix-instantiate", args);
