@@ -80,8 +80,6 @@ static int realise(gchar *interface, GArray *derivation_array, GArray *result_ar
     }
     	
     /* Capture the output (Nix store components) of every realise process */
-
-    result_array = g_array_new(FALSE, FALSE, sizeof(gchar*));
     
     for(i = 0; i < output_array->len; i++)
     {
