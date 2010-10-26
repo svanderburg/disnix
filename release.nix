@@ -415,6 +415,8 @@ let
 	      # Deactivate the same service using the echo type. This test should succeed.
 	      $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --deactivate --arguments foo=foo --arguments bar=bar --type echo @testService1");
 	      
+	      #### Test disnix-copy-closure
+	      
 	      # Test copy closure. Here, we first dermine the closure of
 	      # testService3 and then we copy the closure of testService3 from
 	      # the client to the server. This test should succeed.
@@ -435,7 +437,14 @@ let
 	      $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-copy-closure --target server --from $result");
 	      $client->mustSucceed("nix-store --check-validity $result");
 	      
-	      # TODO: test roundrobin	      
+	      #### Test disnix-gendist-roundrobin
+	      
+	      # Run disnix-gendist-roundrobin and check whether we can use the
+	      # generated distribution model to build the system.
+	      # This test should succeed.
+	      
+	      my $result = $client->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-gendist-roundrobin -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix");
+	      $client->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d $result");
 	    '';
 	};
 	
