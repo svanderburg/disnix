@@ -15,7 +15,7 @@ let
         src = disnix;
         inherit officialRelease;
 
-        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable ];
+        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable dblatex tetex nukeReferences ];
 	
         # Add documentation in the tarball
         configureFlags = ''
@@ -26,6 +26,18 @@ let
 	preDist = ''
 	  make -C doc/manual install prefix=$out
 	  
+	  make -C doc/manual index.pdf prefix=$out
+          cp doc/manual/index.pdf $out/index.pdf
+
+          # The PDF containes filenames of included graphics (see
+          # http://www.tug.org/pipermail/pdftex/2007-August/007290.html).
+          # This causes a retained dependency on dblatex, which Hydra
+          # doesn't like (the output of the tarball job is distributed
+          # to Windows and Macs, so there should be no Linux binaries
+          # in the closure).
+          nuke-refs $out/index.pdf
+	  
+	  echo "doc-pdf manual $out/index.pdf" >> $out/nix-support/hydra-build-products
 	  echo "doc manual $out/share/doc/disnix/manual" >> $out/nix-support/hydra-build-products
 	'';        
       };

@@ -21,7 +21,7 @@ man1_MANS = disnix-activate.1 disnix-build.1 disnix-client.1 disnix-copy-closure
 
 man8_MANS = disnix-service.8
 
-MANUAL_SRCS = manual.xml introduction.xml overview.xml installation.xml models.xml activation-scripts.xml usage.xml advanced-options.xml images style.css \
+MANUAL_SRCS = index.xml introduction.xml overview.xml installation.xml models.xml activation-scripts.xml usage.xml advanced-options.xml images style.css \
   $(man1_MANS:.1=.xml) $(man8_MANS:.8=.xml)
 
 version.txt:
@@ -33,15 +33,15 @@ manual.is-valid: $(MANUAL_SRCS) version.txt
 	touch $@
 
 man $(MANS): $(MANUAL_SRCS) manual.is-valid
-	$(XSLTPROC) --nonet --xinclude $(docbookxsl)/manpages/docbook.xsl manual.xml
+	$(XSLTPROC) --nonet --xinclude $(docbookxsl)/manpages/docbook.xsl index.xml
 
-manual.html: $(MANUAL_SRCS) manual.is-valid
-	$(XSLTPROC) --nonet --xinclude --output manual.html \
-	  $(docbookxsl)/html/docbook.xsl manual.xml
+index.html: $(MANUAL_SRCS) manual.is-valid images
+	$(XSLTPROC) --nonet --xinclude --output index.html \
+	  $(docbookxsl)/html/docbook.xsl index.xml
 
-manual.pdf: $(MANUAL_SRCS) manual.is-valid
+index.pdf: $(MANUAL_SRCS) manual.is-valid images
 	if test "$(dblatex)" != ""; then \
-		$(dblatex) $(dblatex_opts) manual.xml; \
+		$(dblatex) $(dblatex_opts) index.xml; \
 	else \
 		echo "Please install dblatex and rerun configure."; \
 		exit 1; \
@@ -53,16 +53,16 @@ images:
 	cp $(docbookxsl)/images/callouts/*.gif images/callouts
 	chmod -R +w images
 
-all-local: manual.html
+all-local: index.html
 
-install-data-local: manual.html
+install-data-local: index.html
 	$(INSTALL) -d $(DESTDIR)$(docdir)/manual
-	$(INSTALL_DATA) manual.html $(DESTDIR)$(docdir)/manual
+	$(INSTALL_DATA) index.html $(DESTDIR)$(docdir)/manual
 	$(INSTALL_DATA) style.css $(DESTDIR)$(docdir)/manual
 	$(INSTALL_DATA) $(FIGURES) $(DESTDIR)$(docdir)/manual
 	cp -r images $(DESTDIR)$(docdir)/manual/images
 
-KEEP = manual.html manual.is-valid version.txt $(MANS)
+KEEP = index.html manual.is-valid version.txt $(MANS)
 
 EXTRA_DIST = $(MANUAL_SRCS) $(FIGURES) $(KEEP)
 
