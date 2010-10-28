@@ -23,6 +23,11 @@ let
 	  --with-docbook-xsl=${docbook5_xsl}/xml/xsl/docbook
 	'';
 	
+	preConfigure = ''
+	  # TeX needs a writable font cache.
+          export VARTEXFONTS=$TMPDIR/texfonts
+	'';
+	
 	preDist = ''
 	  make -C doc/manual install prefix=$out
 	  
