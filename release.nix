@@ -25,6 +25,8 @@ let
 	
 	preDist = ''
 	  make -C doc/manual install prefix=$out
+	  
+	  echo "doc manual $out/share/doc/disnix/manual" >> $out/nix-support/hydra-build-products
 	'';        
       };
 
