@@ -76,6 +76,24 @@ let
 	    
 	  {
 	    virtualisation.writableStore = true;
+	    
+	    ids.gids = { disnix = 200; };
+	    users.extraGroups = [ { gid = 200; name = "disnix"; } ];
+	    
+	    users.extraUsers = [
+	      { name = "unprivileged";
+	        group = "users";
+		shell = "/bin/sh";
+	        description = "Unprivileged user for the disnix-service";
+	      }
+	      
+              { name = "privileged";
+	        group = "users";
+		shell = "/bin/sh";
+		extraGroups = [ "disnix" ];
+	        description = "Privileged user for the disnix-service";
+	      }
+	    ];
 
 	    services.dbus.enable = true;
             services.dbus.packages = [ disnix ];
@@ -318,6 +336,13 @@ let
 	      
 	      # Deactivate the same service using the echo type. This test should succeed.
 	      $client->mustSucceed("disnix-client --deactivate --arguments foo=foo --arguments bar=bar --type echo @testService1");
+	      
+	      # Security test. First we try to invoke a Disnix operation by an
+	      # unprivileged user, which should fail. Then we try the same
+	      # command by a privileged user, which should succeed.
+	      
+	      $client->mustFail("su - unprivileged -c 'disnix-client --print-invalid /nix/store/invalid'");
+	      $client->mustSucceed("su - privileged -c 'disnix-client --print-invalid /nix/store/invalid'");
 	      
 	      #### Test disnix-ssh-client
 

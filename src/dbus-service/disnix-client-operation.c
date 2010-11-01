@@ -83,6 +83,8 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
     if(operation == OP_NONE)
     {
 	g_printerr("No operation is specified!\n");
+	g_strfreev(derivation);
+	g_strfreev(arguments);
 	return 1;
     }
     
