@@ -1,7 +1,7 @@
 AM_CPPFLAGS = -ggdb -DDATADIR="\"$(prefix)/share/disnix\""
 
 pkglib_LTLIBRARIES = libinfrastructure.la
-noinst_HEADERS = infrastructure.h
+pkginclude_HEADERS = infrastructure.h
 
 libinfrastructure_la_SOURCES = infrastructure.c
 libinfrastructure_la_CFLAGS = $(LIBXML2_CFLAGS) $(LIBXSLT_CFLAGS) -I../libxmlutil
