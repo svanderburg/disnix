@@ -27,7 +27,6 @@ GArray *create_derivation_array(char *distributed_derivation_file)
     xmlNodePtr node_root;
     xmlXPathObjectPtr result;
     GArray *derivation_array = NULL;
-    unsigned int i;
     
     /* Parse the XML document */
     
@@ -57,6 +56,7 @@ GArray *create_derivation_array(char *distributed_derivation_file)
     if(result)
     {
 	xmlNodeSetPtr nodeset = result->nodesetval;
+	unsigned int i;
 	
 	/* Create a derivation array */
         derivation_array = g_array_new(FALSE, FALSE, sizeof(DerivationItem*));
@@ -66,7 +66,7 @@ GArray *create_derivation_array(char *distributed_derivation_file)
         {
 	    xmlNodePtr mapping_children = nodeset->nodeTab[i]->children;
 	    DerivationItem *item = (DerivationItem*)g_malloc(sizeof(DerivationItem));
-	    gchar *derivation, *target;
+	    gchar *derivation = NULL, *target = NULL;
 	    
 	    /* Iterate over all the mapping item children (derivation and target elements) */
 	    

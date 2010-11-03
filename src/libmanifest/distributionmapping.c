@@ -27,7 +27,6 @@ GArray *generate_distribution_array(char *manifest_file)
     xmlNodePtr node_root;
     xmlXPathObjectPtr result;
     GArray *distribution_array = NULL;
-    unsigned int i;
     
     /* Parse the XML document */
     
@@ -56,6 +55,7 @@ GArray *generate_distribution_array(char *manifest_file)
     
     if(result)
     {
+	unsigned int i;
 	xmlNodeSetPtr nodeset = result->nodesetval;
 	
 	/* Create a distribution array */
@@ -66,7 +66,7 @@ GArray *generate_distribution_array(char *manifest_file)
         {
 	    xmlNodePtr mapping_children = nodeset->nodeTab[i]->children;
 	    DistributionItem *item = (DistributionItem*)g_malloc(sizeof(DistributionItem));
-	    gchar *profile, *target;
+	    gchar *profile = NULL, *target = NULL;
 	    
 	    /* Iterate over all the mapping item children (profile and target elements) */
 	    
@@ -80,7 +80,7 @@ GArray *generate_distribution_array(char *manifest_file)
 		mapping_children = mapping_children->next;
 	    }
 	    
-	    /* Added the mapping to the array */
+	    /* Add the mapping to the array */
 	    item->profile = profile;
 	    item->target = target;
 	    g_array_append_val(distribution_array, item);

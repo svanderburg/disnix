@@ -137,7 +137,6 @@ GArray *create_activation_array(char *manifest_file)
     xmlNodePtr node_root;
     xmlXPathObjectPtr result;
     GArray *activation_array;
-    unsigned int i;
     
     /* Parse the XML document */
     
@@ -170,15 +169,16 @@ GArray *create_activation_array(char *manifest_file)
     if(result)
     {
 	xmlNodeSetPtr nodeset = result->nodesetval;
-		
+	unsigned int i;
+	
 	/* Iterate over all the mapping elements */
 	for(i = 0; i < nodeset->nodeNr; i++)
         {
 	    xmlNodePtr mapping_children = nodeset->nodeTab[i]->children;
-	    gchar *service;
-	    GArray *target;
-	    gchar *targetProperty;
-	    gchar *type;
+	    gchar *service = NULL;
+	    GArray *target = NULL;
+	    gchar *targetProperty = NULL;
+	    gchar *type = NULL;
 	    GArray *depends_on = NULL;
 	    ActivationMapping *mapping = (ActivationMapping*)g_malloc(sizeof(ActivationMapping));
 	    
@@ -299,17 +299,20 @@ GArray *create_activation_array(char *manifest_file)
 
 static void delete_target_array(GArray *target)
 {
-    unsigned int i;
-    
-    for(i = 0; i < target->len; i++)
+    if(target != NULL)
     {
-        TargetProperty *target_property = g_array_index(target, TargetProperty*, i);
-        g_free(target_property->name);
-        g_free(target_property->value);
-        g_free(target_property);
-    }
+	unsigned int i;
+    
+	for(i = 0; i < target->len; i++)
+	{
+    	    TargetProperty *target_property = g_array_index(target, TargetProperty*, i);
+    	    g_free(target_property->name);
+    	    g_free(target_property->value);
+    	    g_free(target_property);
+	}
 	
-    g_array_free(target, TRUE);
+	g_array_free(target, TRUE);
+    }
 }
 
 void delete_activation_array(GArray *activation_array)
@@ -322,16 +325,19 @@ void delete_activation_array(GArray *activation_array)
 	unsigned int j;
 	
 	g_free(mapping->service);
-	delete_target_array(mapping->target);	
+	delete_target_array(mapping->target);
 	g_free(mapping->targetProperty);
 	g_free(mapping->type);
 	
-	for(j = 0; j < mapping->depends_on->len; j++)
+	if(mapping->depends_on != NULL)
 	{
-	    Dependency *dependency = g_array_index(mapping->depends_on, Dependency*, j);
-	    g_free(dependency->service);
-	    delete_target_array(dependency->target);
-	    g_free(dependency);
+	    for(j = 0; j < mapping->depends_on->len; j++)
+	    {
+		Dependency *dependency = g_array_index(mapping->depends_on, Dependency*, j);
+		g_free(dependency->service);
+		delete_target_array(dependency->target);
+		g_free(dependency);
+	    }
 	}
 	
 	g_array_free(mapping->depends_on, TRUE);
@@ -405,7 +411,6 @@ GArray *union_activation_array(GArray *left, GArray *right, GArray *intersect)
 GArray *substract_activation_array(GArray *left, GArray *right)
 {
     unsigned int i;
-    
     GArray *return_array = g_array_new(FALSE, FALSE, sizeof(ActivationMapping*));
     
     /* Create a clone of the left array */
