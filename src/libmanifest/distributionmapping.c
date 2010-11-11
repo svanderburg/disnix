@@ -20,7 +20,7 @@
 #include "distributionmapping.h"
 #include <xmlutil.h>
 
-GArray *generate_distribution_array(char *manifest_file)
+GArray *generate_distribution_array(gchar *manifest_file)
 {
     /* Declarations */
     xmlDocPtr doc;
@@ -32,7 +32,7 @@ GArray *generate_distribution_array(char *manifest_file)
     
     if((doc = xmlParseFile(manifest_file)) == NULL)
     {
-	fprintf(stderr, "Error with parsing the manifest XML file!\n");
+	g_printerr("Error with parsing the manifest XML file!\n");
 	xmlCleanupParser();
 	return NULL;
     }
@@ -42,7 +42,7 @@ GArray *generate_distribution_array(char *manifest_file)
     
     if(node_root == NULL)
     {
-        fprintf(stderr, "The manifest XML file is empty!\n");
+        g_printerr("The manifest XML file is empty!\n");
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
 	return NULL;

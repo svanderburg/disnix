@@ -41,7 +41,7 @@ static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
     
     if(doc == NULL)
     {
-	fprintf(stderr, "Error with parsing infrastructure XML file!\n");
+	g_printerr("Error with parsing infrastructure XML file!\n");
 	return NULL;
     }
     
@@ -50,7 +50,7 @@ static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
     
     if(root_node == NULL)
     {
-        fprintf(stderr, "The infrastructure XML file is empty!\n");
+        g_printerr("The infrastructure XML file is empty!\n");
 	xmlFreeDoc(doc);
 	return NULL;
     }
@@ -69,7 +69,7 @@ static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
     return transform_doc;
 }
 
-static gchar *create_infrastructure_xml(char *infrastructure_expr)
+static gchar *create_infrastructure_xml(gchar *infrastructure_expr)
 {
     int pipefd[2];
         
@@ -84,7 +84,7 @@ static gchar *create_infrastructure_xml(char *infrastructure_expr)
     
 	if(status == -1)
 	{
-	    fprintf(stderr, "Error with forking nix-instantiate process!\n");
+	    g_printerr("Error with forking nix-instantiate process!\n");
 	    close(pipefd[0]);
 	    close(pipefd[1]);	
 	    return NULL;
@@ -108,8 +108,9 @@ static gchar *create_infrastructure_xml(char *infrastructure_expr)
 		
 	    while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
 	    {
-	        line[line_size] = '\0';
 	        gchar *old_infrastructureXML = infrastructureXML;
+
+	        line[line_size] = '\0';
 		infrastructureXML = g_strconcat(old_infrastructureXML, line, NULL);
 		g_free(old_infrastructureXML);
 	    }
@@ -122,7 +123,7 @@ static gchar *create_infrastructure_xml(char *infrastructure_expr)
 		return infrastructureXML;
 	    else
 	    {
-		fprintf(stderr, "Error with executing nix-instantiate!\n");
+		g_printerr("Error with executing nix-instantiate!\n");
 		g_free(infrastructureXML);
 		return NULL;
 	    }
@@ -130,7 +131,7 @@ static gchar *create_infrastructure_xml(char *infrastructure_expr)
     }
     else
     {
-	fprintf(stderr, "Error with creating pipe!\n");
+	g_printerr("Error with creating pipe!\n");
 	return NULL;
     }    
 }
@@ -148,7 +149,7 @@ GArray *create_target_array(char *infrastructure_expr, char *target_property)
     
     if(infrastructureXML == NULL)
     {
-        fprintf(stderr, "Error opening infrastructure XML file!\n");
+        g_printerr("Error opening infrastructure XML file!\n");
         return NULL;
     }
     
@@ -158,7 +159,7 @@ GArray *create_target_array(char *infrastructure_expr, char *target_property)
 	
     if(doc == NULL)
     {
-        fprintf(stderr, "Error with parsing infrastructure XML file!\n");    
+        g_printerr("Error with parsing infrastructure XML file!\n");    
         return NULL;
     }
 
@@ -185,7 +186,7 @@ GArray *create_target_array(char *infrastructure_expr, char *target_property)
 	xmlXPathFreeObject(result);
     }
     else
-        fprintf(stderr, "No targets found!\n");
+        g_printerr("No targets found!\n");
 
     /* Cleanup */
     xmlFreeDoc(doc);

@@ -39,7 +39,7 @@ DistributionItem;
  * @param manifest_file Path to the manifest XML file
  * @return GArray with DistributionItems
  */
-GArray *generate_distribution_array(char *manifest_file);
+GArray *generate_distribution_array(gchar *manifest_file);
 
 /**
  * Deletes an array with distribution items.

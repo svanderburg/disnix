@@ -131,7 +131,7 @@ void print_activation_array(GArray *activation_array)
     }
 }
 
-GArray *create_activation_array(char *manifest_file)
+GArray *create_activation_array(gchar *manifest_file)
 {
     xmlDocPtr doc;
     xmlNodePtr node_root;

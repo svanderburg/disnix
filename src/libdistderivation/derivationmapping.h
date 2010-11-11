@@ -41,7 +41,7 @@ DerivationItem;
  * @param distributed_derivation_file Path to the distributed derivation XML file
  * @return GArray with DerivationItems
  */ 
-GArray *create_derivation_array(char *distributed_derivation_file);
+GArray *create_derivation_array(gchar *distributed_derivation_file);
 
 /**
  * Deletes an array with derivation items

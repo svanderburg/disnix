@@ -73,7 +73,7 @@ ActivationMapping;
  * @param manifest_file Path to the manifest XML file
  * @return GArray containing activation mappings
  */
-GArray *create_activation_array(char *manifest_file);
+GArray *create_activation_array(gchar *manifest_file);
 
 /**
  * Deletes an array with activation mappings including its contents.

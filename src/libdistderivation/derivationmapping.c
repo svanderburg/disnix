@@ -20,7 +20,7 @@
 #include "derivationmapping.h"
 #include <xmlutil.h>
 
-GArray *create_derivation_array(char *distributed_derivation_file)
+GArray *create_derivation_array(gchar *distributed_derivation_file)
 {
     /* Declarations */    
     xmlDocPtr doc;
@@ -32,7 +32,7 @@ GArray *create_derivation_array(char *distributed_derivation_file)
     
     if((doc = xmlParseFile(distributed_derivation_file)) == NULL)
     {
-	fprintf(stderr, "Error with parsing the distributed derivation XML file!\n");
+	g_printerr("Error with parsing the distributed derivation XML file!\n");
 	xmlCleanupParser();
 	return NULL;
     }
@@ -42,7 +42,7 @@ GArray *create_derivation_array(char *distributed_derivation_file)
     
     if(node_root == NULL)
     {
-        fprintf(stderr, "The distributed derivation XML file is empty!\n");
+        g_printerr("The distributed derivation XML file is empty!\n");
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
 	return NULL;
