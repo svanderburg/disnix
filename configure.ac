@@ -75,6 +75,7 @@ AC_CONFIG_FILES([
 Makefile
 conf/Makefile
 src/Makefile
+src/disnix.pc
 src/build/Makefile
 src/collect-garbage/Makefile
 src/query/Makefile
