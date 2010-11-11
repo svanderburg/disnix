@@ -168,7 +168,7 @@ GArray *create_target_array(char *infrastructure_expr, char *target_property)
     result = executeXPathQuery(doc, query);
     g_free(query);
 
-    /* Iterate over all targets and and them to the array */
+    /* Iterate over all targets and add them to the array */
             
     if(result)
     {

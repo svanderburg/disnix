@@ -15,7 +15,7 @@ let
         src = disnix;
         inherit officialRelease;
 
-        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable dblatex tetex nukeReferences ];
+        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable dblatex tetex doxygen nukeReferences ];
 	
         # Add documentation in the tarball
         configureFlags = ''
@@ -33,6 +33,9 @@ let
 	  
 	  make -C doc/manual index.pdf prefix=$out
           cp doc/manual/index.pdf $out/index.pdf
+	  
+	  make -C src apidox
+	  cp -av doc/apidox $out/share/doc/disnix
 
           # The PDF containes filenames of included graphics (see
           # http://www.tug.org/pipermail/pdftex/2007-August/007290.html).
@@ -44,6 +47,7 @@ let
 	  
 	  echo "doc-pdf manual $out/index.pdf" >> $out/nix-support/hydra-build-products
 	  echo "doc manual $out/share/doc/disnix/manual" >> $out/nix-support/hydra-build-products
+	  echo "doc api $out/share/doc/disnix/apidox/html" >> $out/nix-support/hydra-build-products
 	'';        
       };
 

@@ -3,4 +3,7 @@ SUBDIRS = libmain libxmlutil libinfrastructure libinterface collect-garbage quer
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = disnix.pc
 
+apidox:
+	doxygen Doxyfile
+
 EXTRA_DIST = disnix.pc.in
