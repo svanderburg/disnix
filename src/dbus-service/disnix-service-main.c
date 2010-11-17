@@ -65,6 +65,14 @@ int main(int argc, char *argv[])
 		return 0;
 	}
     }
+    
+    /* Validate options */
+    
+    if(activation_modules_dir == NULL)
+    {
+	fprintf(stderr, "A path to the activation modules directory must be specified!\n");
+	return 1;
+    }
 
     /* Start the program with the given options */
     return start_disnix_service(activation_modules_dir, session_bus);
