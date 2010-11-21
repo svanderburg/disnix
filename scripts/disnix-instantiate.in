@@ -71,7 +71,7 @@ do
 	    targetProperty=$2;
 	    ;;
 	--no-out-link)
-	    noOutLinkArg="--no-out-link"
+	    noOutLink=1
 	    ;;
 	--show-trace)
 	    showTrace=1
@@ -91,6 +91,7 @@ checkServicesFile
 checkInfrastructureFile
 checkDistributionFile
 checkTargetProperty
+checkNoOutLink
 checkShowTrace
 
 # Build the distributed derivation file

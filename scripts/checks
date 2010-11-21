@@ -94,6 +94,17 @@ checkShowTrace()
     fi
 }
 
+# Checks whether the --no-out-link option is specified and sets the
+# noOutLinkArg variable.
+
+checkNoOutLink()
+{
+    if [ "$noOutLink" = "1" ]
+    then
+	noOutLinkArg="--no-out-link"
+    fi
+}
+
 # Checks whether a target is given. Exits with status 1 if not set.
 
 checkTarget()
