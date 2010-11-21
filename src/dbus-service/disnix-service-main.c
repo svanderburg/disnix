@@ -23,10 +23,10 @@
 #define TRUE 1
 #define FALSE 0
 
-static void print_usage()
+static void print_usage(char *command)
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-service [options]\n\n");
+    fprintf(stderr, "%s [options]\n\n", command);
     
     fprintf(stderr, "Options:\n");
     fprintf(stderr, "--activation-modules-dir  Directory where the activation modules can be found\n");
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 		session_bus = TRUE;
 		break;
 	    case 'h':
-		print_usage();
+		print_usage(argv[0]);
 		return 0;
 	}
     }

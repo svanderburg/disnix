@@ -110,10 +110,10 @@ checkShowTrace
 
 if [ "$buildOnTargets" = "1" ]
 then
-    distributedDerivation=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty $showTraceArg`
+    distributedDerivation=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link $showTraceArg`
     disnix-build --interface $interface $distributedDerivation
 fi
 
-distributionExport=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty $showTraceArg`
+distributionExport=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link $showTraceArg`
 disnix-distribute --interface $interface $distributionExport
 disnix-activate --interface $interface $profileArg $coordinatorProfilePathArg $distributionExport

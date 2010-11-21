@@ -22,11 +22,11 @@
 #define _GNU_SOURCE
 #include <defaultoptions.h>
 
-static void print_usage()
+static void print_usage(char *command)
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-distribute [--interface interface] manifest\n");
-    fprintf(stderr, "disnix-distribute {-h | --help}\n");
+    fprintf(stderr, "%s [--interface interface] manifest\n", command);
+    fprintf(stderr, "%s {-h | --help}\n", command);
 }
 
 int main(int argc, char *argv[])
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 		interface = optarg;
 		break;
 	    case 'h':
-		print_usage();
+		print_usage(argv[0]);
 		return 0;
 	}
     }

@@ -23,11 +23,11 @@
 #include <defaultoptions.h>
 #include "activate.h"
 
-static void print_usage()
+static void print_usage(char *command)
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-activate [--interface interface] [{-p|--profile} profile] [--coordinator-profile-path path] [{-o|--old-manifest} manifest] manifest\n");
-    fprintf(stderr, "disnix-activate {-h | --help}\n");
+    fprintf(stderr, "%s [--interface interface] [{-p|--profile} profile] [--coordinator-profile-path path] [{-o|--old-manifest} manifest] manifest\n", command);
+    fprintf(stderr, "%s {-h | --help}\n", command);
 }
 
 int main(int argc, char *argv[])
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 	        coordinator_profile_path = optarg;
 		break;
 	    case 'h':
-		print_usage();
+		print_usage(argv[0]);
 		return 0;
 	}
     }

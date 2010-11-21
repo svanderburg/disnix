@@ -23,11 +23,11 @@
 #include <defaultoptions.h>
 #include "query-installed.h"
 
-static void print_usage()
+static void print_usage(char *command)
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-query [--interface interface] [--target-property targetProperty] [{-p | --profile} profile] infrastructure_expr\n");
-    fprintf(stderr, "disnix-query {-h | --help}\n");
+    fprintf(stderr, "%s [--interface interface] [--target-property targetProperty] [{-p | --profile} profile] infrastructure_expr\n", command);
+    fprintf(stderr, "%s {-h | --help}\n", command);
 }
 
 int main(int argc, char *argv[])
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 		profile = optarg;
 		break;
 	    case 'h':
-		print_usage();
+		print_usage(argv[0]);
 		return 0;
 	}
     }

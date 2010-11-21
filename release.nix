@@ -644,6 +644,7 @@ let
 	      # coordinator machine. This test should fail, since the build
 	      # is performed on a target machine.
 	      
+	      my $manifest = $coordinator->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
 	      my @closure = split('\n', $coordinator->mustSucceed("nix-store -qR result"));
 	      my @testService1 = grep(/\-testService1/, @closure);
 	      	      

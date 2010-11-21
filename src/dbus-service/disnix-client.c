@@ -24,11 +24,11 @@
 #include "operation.h"
 #include "disnix-client-operation.h"
 
-static void print_usage()
+static void print_usage(char *command)
 {
     /* Print the usage */
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "disnix-client [--session-bus] operation\n\n");
+    fprintf(stderr, "%s [--session-bus] operation\n\n", command);
     
     fprintf(stderr, "Operations:\n");
     fprintf(stderr, "--import [--localfile|--remotefile] derivations\n");
@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
 		session_bus = TRUE;
 		break;
 	    case 'h':
-		print_usage();
+		print_usage(argv[0]);
 		return 0;
 	}
     }
