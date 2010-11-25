@@ -604,7 +604,61 @@ let
 	          print "Found testService3 on disnix-query output line 8\n";
 	      } else {
 	          die "disnix-query output line 8 does not contain testService3!\n";
-	      }	      
+	      }
+	      
+	      # We now perform another upgrade. We move all services from
+	      # testTarget2 to testTarget1. In this case testTarget2 has become
+	      # unavailable (not defined in infrastructure model), so the service
+	      # should not be deactivated on testTarget2. This test should
+	      # succeed.
+	      
+	      $coordinator->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-single.nix > result");
+	      $coordinator->mustSucceed("[ \"\$(grep \"Skip deactivation\" result | grep \"testService2B\" | grep \"testtarget2\")\" != \"\" ]");
+	      $coordinator->mustSucceed("[ \"\$(grep \"Skip deactivation\" result | grep \"testService3\" | grep \"testtarget2\")\" != \"\" ]");
+	      
+	      # Use disnix-query to check whether testService{1,2,3} are
+	      # available on testtarget1 and testService{2B,3} are still
+	      # deployed on testtarget2. This test should succeed.
+	      
+	      my @lines = split('\n', $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-query ${manifestTests}/infrastructure.nix"));
+	      
+	      if(@lines[1] != "Service on: testtarget1") {
+	          die "disnix-query output line 1 does not match what we expect!\n";
+	      }
+	      
+	      if(@lines[3] =~ /\-testService1/) {
+	          print "Found testService1 on disnix-query output line 3\n";
+	      } else {
+	          die "disnix-query output line 3 does not contain testService1!\n";
+	      }
+	      
+	      if(@lines[4] =~ /\-testService2/) {
+	          print "Found testService1 on disnix-query output line 4\n";
+	      } else {
+	          die "disnix-query output line 4 does not contain testService1!\n";
+	      }
+	      
+	      if(@lines[5] =~ /\-testService3/) {
+	          print "Found testService1 on disnix-query output line 5\n";
+	      } else {
+	          die "disnix-query output line 5 does not contain testService1!\n";
+	      }
+	      
+	      if(@lines[7] != "Service on: testtarget2") {
+	          die "disnix-query output line 7 does not match what we expect!\n";
+	      }
+	      
+	      if(@lines[9] =~ /\-testService2B/) {
+	          print "Found testService2B on disnix-query output line 9\n";
+	      } else {
+	          die "disnix-query output line 9 does not contain testService1!\n";
+	      }
+	      
+	      if(@lines[10] =~ /\-testService3/) {
+	          print "Found testService3 on disnix-query output line 10\n";
+	      } else {
+	          die "disnix-query output line 10 does not contain testService1!\n";
+	      }
 	    '';
         };
 	

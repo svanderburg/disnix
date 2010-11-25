@@ -19,6 +19,7 @@
 		<cmdsynopsis>
 			<command>disnix-activate</command>
 			<arg><replaceable>options</replaceable></arg>
+			<arg choice="req">--infrastructure <replaceable>infrastructure_expr</replaceable></arg>
 			<arg choice="plain"><replaceable>manifest</replaceable></arg>
 		</cmdsynopsis>
 	</refsynopsisdiv>
@@ -53,6 +54,14 @@
 		
 		<variablelist>
 			<varlistentry>
+				<term><option>-i</option>, <option>--infrastructure</option></term>
+				<listitem>
+					<para>
+						Infrastructure Nix expression which captures properties of machines in the network
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>--interface</option></term>
 				<listitem>
 					<para>
@@ -66,6 +75,15 @@
 				<listitem>
 					<para>
 						Name of the profile in which the services are registered. Defaults to: default
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--target-property</option></term>
+				<listitem>
+					<para>
+						The target property of an infrastructure model, that specifies how to connect
+						to the remote Disnix interface. (Defaults to hostname)
 					</para>
 				</listitem>
 			</varlistentry>
@@ -111,6 +129,15 @@
 					<para>
 						Sets the client interface (which defaults to
 						<link linkend="sec-disnix-ssh-client"><command>disnix-ssh-client</command></link>)
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>DISNIX_TARGET_PROPERTY</option></term>
+				<listitem>
+					<para>
+						Sets the target property of an infrastructure model,
+						that specifies how to connect to the remote Disnix interface. (Defaults to hostname)
 					</para>
 				</listitem>
 			</varlistentry>

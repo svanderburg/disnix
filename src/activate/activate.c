@@ -29,8 +29,9 @@
 
 #include <distributionmapping.h>
 #include <activationmapping.h>
+#include <infrastructure.h>
 
-int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, gchar *coordinator_profile_path, gchar *profile)
+int activate_system(gchar *interface, gchar *infrastructure, gchar *new_manifest, gchar *old_manifest, gchar *coordinator_profile_path, gchar *profile, gchar *target_property)
 {
     gchar *old_manifest_file;
     GArray *old_activation_mappings;
@@ -42,6 +43,9 @@ int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, 
 
     /* Get all the activation items of the new configuration */
     GArray *new_activation_mappings = create_activation_array(new_manifest);
+    
+    /* Get all target properties from the infrastructure model */
+    GArray *target_array = create_target_array(infrastructure, target_property);
     
     /* Get current username */
     char *username = (getpwuid(geteuid()))->pw_name;
@@ -89,7 +93,7 @@ int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, 
     if(status == 0)
     {
 	/* Execute transition */
-	status = transition(interface, new_activation_mappings, old_activation_mappings);
+	status = transition(interface, new_activation_mappings, old_activation_mappings, target_array);
 	
 	if(status == 0)
 	{	    	    
@@ -122,6 +126,7 @@ int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, 
 	exit_status = status;
 
     /* Cleanup */
+    delete_target_array(target_array);
     delete_distribution_array(distribution_array);
     delete_activation_array(new_activation_mappings);
     

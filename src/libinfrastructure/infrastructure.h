@@ -38,4 +38,11 @@ GArray *create_target_array(char *infrastructure_expr, char *target_property);
  */
 void delete_target_array(GArray *target_array);
 
+/**
+ * Returns the index of the target in the targets array.
+ *
+ * @return Index of the target or -1 if not found
+ */
+int target_index(GArray *target_array, gchar *target);
+
 #endif

@@ -116,4 +116,4 @@ fi
 
 distributionExport=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link $showTraceArg`
 disnix-distribute --interface $interface $distributionExport
-disnix-activate --interface $interface $profileArg $coordinatorProfilePathArg $distributionExport
+disnix-activate --interface $interface -i $infrastructureFile $profileArg $coordinatorProfilePathArg $distributionExport

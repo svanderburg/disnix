@@ -28,8 +28,9 @@
  * @param interface Path to the client interface executable
  * @param new_activation_mappings Array containing the activation mappings of the new configuration
  * @param old_activation_mappings Array containing the activation mappings of the old configuration
+ * @param target_array Array containing all the targets of the new configuration
  * @return 0 if the phase succeeds, else a non-zero exit status
  */
-int transition(gchar *interface, GArray *new_activation_mappings, GArray *old_activation_mappings);
+int transition(gchar *interface, GArray *new_activation_mappings, GArray *old_activation_mappings, GArray *target_array);
 
 #endif

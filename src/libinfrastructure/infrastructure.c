@@ -208,3 +208,25 @@ void delete_target_array(GArray *target_array)
 
     g_array_free(target_array, TRUE);
 }
+
+int target_index(GArray *target_array, gchar *target)
+{
+    gint left = 0;
+    gint right = target_array->len - 1;
+    
+    while(left <= right)
+    {
+	gint mid = (left + right) / 2;
+	gchar *mid_target = g_array_index(target_array, gchar*, mid);
+        gint status = g_strcmp0(mid_target, target);
+	
+	if(status == 0)
+            return mid; /* Return index of the found target */
+	else if(status > 0)
+	    right = mid - 1;
+	else if(status < 0)
+	    left = mid + 1;
+    }
+    
+    return -1; /* Target not found */
+}

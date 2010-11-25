@@ -20,6 +20,7 @@
 #include "transition.h"
 #include <activationmapping.h>
 #include <client-interface.h>
+#include <infrastructure.h>
 
 static int activate(gchar *interface, GArray *union_array, ActivationMapping *mapping)
 {
@@ -89,7 +90,7 @@ static int activate(gchar *interface, GArray *union_array, ActivationMapping *ma
     return 0; /* The activation of the closure succeeded */
 }
 
-static int deactivate(gchar *interface, GArray *union_array, ActivationMapping *mapping)
+static int deactivate(gchar *interface, GArray *union_array, ActivationMapping *mapping, GArray *target_array)
 {
     /* Search for the location of the mapping in the union array */
     gint actual_mapping_index = activation_mapping_index(union_array, mapping);
@@ -107,7 +108,7 @@ static int deactivate(gchar *interface, GArray *union_array, ActivationMapping *
     for(i = 0; i < interdependent_mappings->len; i++)
     {
         ActivationMapping *dependency_mapping = g_array_index(interdependent_mappings, ActivationMapping*, i);
-	int status = deactivate(interface, union_array, dependency_mapping);
+	int status = deactivate(interface, union_array, dependency_mapping, target_array);
 	
         if(status != 0)
 	{
@@ -141,8 +142,13 @@ static int deactivate(gchar *interface, GArray *union_array, ActivationMapping *
 	
 	g_print("\n");
 	
-	/* Execute the deactivation operation */
-	status = wait_to_finish(exec_deactivate(interface, target_property, actual_mapping->type, arguments, arguments_size, actual_mapping->service));
+	if(target_index(target_array, target_property) >= 0) /* Only deactivate services on machines that are available */
+	{
+	    /* Execute the deactivation operation */	    
+	    status = wait_to_finish(exec_deactivate(interface, target_property, actual_mapping->type, arguments, arguments_size, actual_mapping->service));
+	}
+	else
+	    g_print("Skip deactivation of service: %s through: %s\n", actual_mapping->service, target_property);
 	
 	/* Cleanup */
 	g_free(arguments);
@@ -156,7 +162,7 @@ static int deactivate(gchar *interface, GArray *union_array, ActivationMapping *
     return 0; /* The deactivation of the closure succeeded */
 }
 
-int transition(gchar *interface, GArray *new_activation_mappings, GArray *old_activation_mappings)
+int transition(gchar *interface, GArray *new_activation_mappings, GArray *old_activation_mappings, GArray *target_array)
 {
     GArray *union_array;
     GArray *deactivation_array;
@@ -220,7 +226,7 @@ int transition(gchar *interface, GArray *new_activation_mappings, GArray *old_ac
         for(i = 0; i < deactivation_array->len; i++)
         {
     	    ActivationMapping *mapping = g_array_index(deactivation_array, ActivationMapping*, i);
-	    int status = deactivate(interface, union_array, mapping);
+	    int status = deactivate(interface, union_array, mapping, target_array);
 	    		
 	    if(status != 0)
 	    {
@@ -268,7 +274,7 @@ int transition(gchar *interface, GArray *new_activation_mappings, GArray *old_ac
 		{
 		    ActivationMapping *mapping = g_array_index(activation_array, ActivationMapping*, j);
 	    
-		    if(deactivate(interface, union_array, mapping) != 0)
+		    if(deactivate(interface, union_array, mapping, target_array) != 0)
 			g_print("Rollback failed!\n");
 		}
 	    
