@@ -1,12 +1,13 @@
 { servicesFile
 , infrastructureFile
+, nixpkgs ? builtins.getEnv "NIXPKGS_ALL"
 }:
 
 let 
   servicesFun = import servicesFile;
   infrastructure = import infrastructureFile;
   
-  pkgs = import (builtins.getEnv "NIXPKGS_ALL") {};
+  pkgs = import nixpkgs {};
   lib = import ./lib.nix;
 in
 pkgs.stdenv.mkDerivation {

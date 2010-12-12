@@ -2,6 +2,7 @@
 , infrastructureFile
 , distributionFile
 , targetProperty
+, nixpkgs ? builtins.getEnv "NIXPKGS_ALL"
 }:
 
 let 
@@ -9,7 +10,7 @@ let
   infrastructure = import infrastructureFile;
   distributionFun = import distributionFile;
   
-  pkgs = import (builtins.getEnv "NIXPKGS_ALL") {};
+  pkgs = import nixpkgs {};
   lib = import ./lib.nix;
   distributedDerivation = lib.generateDistributedDerivation servicesFun infrastructure distributionFun targetProperty;
   
