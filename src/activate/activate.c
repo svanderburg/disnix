@@ -31,7 +31,7 @@
 #include <activationmapping.h>
 #include <infrastructure.h>
 
-int activate_system(gchar *interface, gchar *infrastructure, gchar *new_manifest, gchar *old_manifest, gchar *coordinator_profile_path, gchar *profile, gchar *target_property)
+int activate_system(gchar *interface, gchar *infrastructure, gchar *new_manifest, gchar *old_manifest, gchar *coordinator_profile_path, gchar *profile, gchar *target_property, gboolean no_coordinator_profile)
 {
     gchar *old_manifest_file;
     GArray *old_activation_mappings;
@@ -49,7 +49,7 @@ int activate_system(gchar *interface, gchar *infrastructure, gchar *new_manifest
     
     /* Get current username */
     char *username = (getpwuid(geteuid()))->pw_name;
-	
+
     /* If no previous configuration is given, check whether we have one in the coordinator profile */
     if(old_manifest == NULL)
     {
@@ -105,7 +105,7 @@ int activate_system(gchar *interface, gchar *infrastructure, gchar *new_manifest
 	    unlock(interface, distribution_array, profile);
 	    
 	    /* If setting the profiles succeeds -> set the coordinator profile */
-	    if(status == 0)
+	    if(status == 0 && !no_coordinator_profile)
 	    {
 		status = set_coordinator_profile(coordinator_profile_path, new_manifest, profile, username);
 		

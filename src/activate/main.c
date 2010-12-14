@@ -26,7 +26,16 @@
 static void print_usage(char *command)
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "%s [--interface interface] [{-p|--profile} profile] [--coordinator-profile-path path] [{-o|--old-manifest} manifest] [--target-property targetProperty] --infrastructure infrastructure_expr manifest\n", command);
+    fprintf(stderr, "%s [options] --infrastructure infrastructure_expr manifest\n\n", command);
+    fprintf(stderr, "Options:\n");
+    fprintf(stderr, "--interface interface\n");
+    fprintf(stderr, "--profile profile\n");
+    fprintf(stderr, "--coordinator-profile-path path\n");
+    fprintf(stderr, "--old-manifest manifest\n");
+    fprintf(stderr, "--target-property targetProperty\n");
+    fprintf(stderr, "--no-coordinator-profile\n");
+    fprintf(stderr, "\n");
+    
     fprintf(stderr, "%s {-h | --help}\n", command);
 }
 
@@ -42,6 +51,7 @@ int main(int argc, char *argv[])
 	{"coordinator-profile-path", required_argument, 0, 'P'},
 	{"profile", required_argument, 0, 'p'},
 	{"target-property", required_argument, 0, 't'},
+	{"no-coordinator-profile", no_argument, 0, 'c'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
@@ -51,6 +61,7 @@ int main(int argc, char *argv[])
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
     char *target_property = NULL;
+    int no_coordinator_profile = FALSE;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "i:o:p:h", long_options, &option_index)) != -1)
@@ -74,6 +85,9 @@ int main(int argc, char *argv[])
 		break;
 	    case 't':
 		target_property = optarg;
+		break;
+	    case 'c':
+		no_coordinator_profile = TRUE;
 		break;
 	    case 'h':
 		print_usage(argv[0]);
@@ -99,5 +113,5 @@ int main(int argc, char *argv[])
 	return 1;
     }
     else
-	return activate_system(interface, infrastructure, argv[optind], old_manifest, coordinator_profile_path, profile, target_property); /* Execute activation operation */
+	return activate_system(interface, infrastructure, argv[optind], old_manifest, coordinator_profile_path, profile, target_property, no_coordinator_profile); /* Execute activation operation */
 }
