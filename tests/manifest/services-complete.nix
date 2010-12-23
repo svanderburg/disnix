@@ -1,18 +1,18 @@
-{distribution, system}:
+{distribution, system, pkgs}:
 
 let
-  pkgs = import ./pkgs { inherit system; };
+  customPkgs = import ./pkgs { inherit system; };
 in
 rec {
   testService1 = {
     name = "testService1";
-    pkg = pkgs.testService1;
+    pkg = customPkgs.testService1;
     type = "echo";
   };
   
   testService2 = {
     name = "testService2";
-    pkg = pkgs.testService2;
+    pkg = customPkgs.testService2;
     dependsOn = {
       inherit testService1;
     };
@@ -21,7 +21,7 @@ rec {
   
   testService3 = {
     name = "testService3";
-    pkg = pkgs.testService3;
+    pkg = customPkgs.testService3;
     dependsOn = {
       inherit testService1 testService2;
     };

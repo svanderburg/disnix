@@ -11,7 +11,7 @@ let
   distributionFun = import distributionFile;
   
   pkgs = import nixpkgs {};
-  lib = import ./lib.nix;
+  lib = import ./lib.nix { inherit nixpkgs pkgs; };
   distributedDerivation = lib.generateDistributedDerivation servicesFun infrastructure distributionFun targetProperty;
   
   generateDistributedDerivationXSL = ./generatedistributedderivation.xsl;

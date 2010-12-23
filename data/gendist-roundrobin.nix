@@ -8,7 +8,7 @@ let
   infrastructure = import infrastructureFile;
   
   pkgs = import nixpkgs {};
-  lib = import ./lib.nix;
+  lib = import ./lib.nix { inherit pkgs nixpkgs; };
 in
 pkgs.stdenv.mkDerivation {
   name = "distribution.nix";

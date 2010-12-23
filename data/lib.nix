@@ -1,3 +1,27 @@
+{nixpkgs, pkgs}:
+
+let
+  /* Defines all variants of Nixpkgs */
+  pkgs_i686_linux = import nixpkgs { system = "i686-linux"; };
+  pkgs_x86_64_linux = import nixpkgs { system = "x86_64-linux"; };
+  pkgs_i686_darwin = import nixpkgs { system = "i686-darwin"; };
+  pkgs_x86_64_darwin = import nixpkgs { system = "x86_64-darwin"; };
+  pkgs_i686_freebsd = import nixpkgs { system = "i686-freebsd"; };
+  pkgs_x86_64_freebsd = import nixpkgs { system = "x86_64-freebsd"; };
+  pkgs_i686_cygwin = import nixpkgs { system = "i686-cygwin"; };
+  
+  /* Determines the right pkgs collection from the system identifier */
+  
+  selectPkgs = system:
+    if system == "i686-linux" then pkgs_i686_linux
+    else if system == "x86_64-linux" then pkgs_x86_64_linux
+    else if system == "i686-darwin" then pkgs_i686_darwin
+    else if system == "x86_64-darwin" then pkgs_x86_64_darwin
+    else if system == "i686-freebsd" then pkgs_i686_freebsd
+    else if system == "x86_64-freebsd" then pkgs_x86_64_freebsd
+    else if system == "i686-cygwin" then pkgs_i686_cygwin
+    else abort "unsupported system type: ${system}";
+in
 rec {
   inherit (builtins) attrNames getAttr listToAttrs head tail unsafeDiscardOutputDependency;
   
@@ -76,7 +100,7 @@ rec {
 	  distribution = map (target:
 	    let
 	      system = if target ? system then target.system else builtins.currentSystem;
-	      pkg = (getAttr serviceName (servicesFun { inherit distribution; inherit system; })).pkg;
+	      pkg = (getAttr serviceName (servicesFun { inherit distribution; inherit system; pkgs = selectPkgs system; })).pkg;
 	    in
 	    { service = 
 	        if serviceProperty == "outPath" then
@@ -241,7 +265,7 @@ rec {
   generateManifest = pkgs: servicesFun: infrastructure: distributionFun: targetProperty:
     let
       distribution = distributionFun { inherit infrastructure; };
-      initialServices = servicesFun { inherit distribution; system = null; };
+      initialServices = servicesFun { inherit distribution; system = null; inherit pkgs; };
       servicesWithTargets = augumentTargetsInDependsOn distribution initialServices;
       servicesWithDistribution = evaluatePkgFunctions distribution servicesWithTargets servicesFun "outPath";
       serviceActivationMapping = generateServiceActivationMapping (attrNames servicesWithDistribution) servicesWithDistribution targetProperty;
@@ -269,7 +293,7 @@ rec {
   generateDistributedDerivation = servicesFun: infrastructure: distributionFun: targetProperty:
     let
       distribution = distributionFun { inherit infrastructure; };
-      initialServices = servicesFun { inherit distribution; system = null; };
+      initialServices = servicesFun { inherit distribution; system = null; inherit pkgs; };
       servicesWithTargets = augumentTargetsInDependsOn distribution initialServices;
       servicesWithDistribution = evaluatePkgFunctions distribution servicesWithTargets servicesFun "drvPath";
       serviceActivationMapping = generateServiceActivationMapping (attrNames servicesWithDistribution) servicesWithDistribution targetProperty;
@@ -311,7 +335,7 @@ rec {
    */
   generateDistributionModelRoundRobin = servicesFun: infrastructure:
     let
-      services = servicesFun { distribution = null; system = null; };
+      services = servicesFun { distribution = null; system = null; inherit pkgs; };
     in
     ''
       {infrastructure}:
