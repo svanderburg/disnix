@@ -10,7 +10,19 @@ let
   pkgs_x86_64_freebsd = import nixpkgs { system = "x86_64-freebsd"; };
   pkgs_i686_cygwin = import nixpkgs { system = "i686-cygwin"; };
   
-  /* Determines the right pkgs collection from the system identifier */
+in
+rec {
+  inherit (builtins) attrNames getAttr listToAttrs head tail unsafeDiscardOutputDependency;
+
+  /* 
+   * Determines the right pkgs collection from the system identifier.
+   *
+   * Parameters:
+   * system: System identifier
+   *
+   * Returns:
+   * Packages collection for the given system identifier
+   */
   
   selectPkgs = system:
     if system == "i686-linux" then pkgs_i686_linux
@@ -21,9 +33,6 @@ let
     else if system == "x86_64-freebsd" then pkgs_x86_64_freebsd
     else if system == "i686-cygwin" then pkgs_i686_cygwin
     else abort "unsupported system type: ${system}";
-in
-rec {
-  inherit (builtins) attrNames getAttr listToAttrs head tail unsafeDiscardOutputDependency;
   
   /*
    * Iterates over each service in the distribution attributeset, adds the according service
