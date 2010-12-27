@@ -20,7 +20,12 @@
 	          <service><xsl:value-of select="attr[@name='service']/string/@value" /></service>
 		  <target>
 		    <xsl:for-each select="attr[@name='target']/attrs/attr">
-	              <xsl:element name="{@name}"><xsl:value-of select="*/@value" /></xsl:element>
+	              <xsl:element name="{@name}">
+			<xsl:value-of select="*/@value" />
+			<xsl:for-each select="list/*">
+			  <xsl:value-of select="@value" /><xsl:text>&#x20;</xsl:text>
+			</xsl:for-each>
+		      </xsl:element>
 	            </xsl:for-each>
 		  </target>
 		</dependency>
@@ -29,7 +34,12 @@
 	    <service><xsl:value-of select="attr[@name='service']/string/@value" /></service>
 	    <target>
 	      <xsl:for-each select="attr[@name='target']/attrs/attr">
-	        <xsl:element name="{@name}"><xsl:value-of select="*/@value" /></xsl:element>
+	        <xsl:element name="{@name}">
+		  <xsl:value-of select="*/@value" />
+		  <xsl:for-each select="list/*">
+		    <xsl:value-of select="@value" /><xsl:text>&#x20;</xsl:text>
+		  </xsl:for-each>
+		</xsl:element>
 	      </xsl:for-each>
 	    </target>
 	    <targetProperty><xsl:value-of select="attr[@name='targetProperty']/string/@value" /></targetProperty>

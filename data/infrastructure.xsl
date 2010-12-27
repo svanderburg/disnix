@@ -6,7 +6,12 @@
       <xsl:for-each select="attr">
         <target name="{@name}">
 	  <xsl:for-each select="attrs/attr">
-	    <xsl:element name="{@name}"><xsl:value-of select="*/@value" /></xsl:element>
+	    <xsl:element name="{@name}">
+	      <xsl:value-of select="*/@value" />
+	      <xsl:for-each select="list/*">
+		<xsl:value-of select="@value" /><xsl:text>&#x20;</xsl:text>
+	      </xsl:for-each>
+	    </xsl:element>  
 	  </xsl:for-each>
 	</target>
       </xsl:for-each>
