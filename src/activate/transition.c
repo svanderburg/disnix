@@ -255,9 +255,9 @@ int transition(gchar *interface, GArray *new_activation_mappings, GArray *old_ac
     {
 	g_print("Executing activation:\n");
 
-	/* Activate each mapping closure that is new in the new configuration */
+	/* Activate each mapping closure in the new configuration */
     
-	for(i = 0; i < activation_array->len; i++)
+	for(i = 0; i < new_activation_mappings->len; i++)
 	{
     	    ActivationMapping *mapping = g_array_index(activation_array, ActivationMapping*, i);
 	    int status = activate(interface, union_array, mapping);
