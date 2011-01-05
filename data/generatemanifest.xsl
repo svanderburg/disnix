@@ -31,6 +31,7 @@
 		</dependency>
 	      </xsl:for-each>
 	    </dependsOn>
+	    <name><xsl:value-of select="attr[@name='name']/string/@value" /></name>
 	    <service><xsl:value-of select="attr[@name='service']/string/@value" /></service>
 	    <target>
 	      <xsl:for-each select="attr[@name='target']/attrs/attr">

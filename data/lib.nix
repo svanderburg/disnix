@@ -167,7 +167,7 @@ rec {
       service = getAttr (head serviceNames) services;
       mappingItem = map (distributionItem:
         { inherit (distributionItem) service target;
-	  inherit (service) type;
+	  inherit (service) name type;
 	  inherit targetProperty;
 	  dependsOn = generateDependencyMapping (attrNames (service.dependsOn)) (service.dependsOn) services; 
 	}
