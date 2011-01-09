@@ -148,7 +148,10 @@ static int deactivate(gchar *interface, GArray *union_array, ActivationMapping *
 	    status = wait_to_finish(exec_deactivate(interface, target_property, actual_mapping->type, arguments, arguments_size, actual_mapping->service));
 	}
 	else
+	{
 	    g_print("Skip deactivation of service: %s through: %s\n", actual_mapping->service, target_property);
+	    status = 0;
+	}
 	
 	/* Cleanup */
 	g_free(arguments);
