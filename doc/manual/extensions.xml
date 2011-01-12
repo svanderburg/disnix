@@ -22,7 +22,7 @@
 	</section>
 
 	<section>
-		<title>NixOS integration</title>
+		<title>DisnixOS</title>
 		
 		<para>
 			Although Disnix manages the distributable components (services) of which a

@@ -384,10 +384,8 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 			<title>Intra-dependency composition for the <code>StaffTracker</code></title>
 			
 <programlisting>
-{system ? builtins.currentSystem}:
+{system, pkgs}:
 
-let pkgs = import (builtins.getEnv "NIXPKGS_ALL") { inherit system; }; <co xml:id='co-1-importPkgs' />
-in
 with pkgs; <co xml:id='co-2-withPkgs' />
 
 rec { <co xml:id='co-3-rec' />
@@ -432,14 +430,6 @@ rec { <co xml:id='co-3-rec' />
 		</para>
 		
 		<calloutlist>
-			<callout arearefs='co-1-importPkgs'>
-				<para>
-					This line imports all the packages from Nixpkgs. This allows us to use various packages
-					from the Nixpkgs repository such as the Java compiler and other compilers and libraries
-					to build the components.
-				</para>
-			</callout>
-			
 			<callout arearefs='co-2-withPkgs'>
 				<para>
 					This statement will make it easier to refer to packages defined in Nixpkgs.
@@ -479,15 +469,15 @@ rec { <co xml:id='co-3-rec' />
 			<title>Services model for the <code>StaffTracker</code></title>
 			
 <programlisting>
-{distribution, system}: <co xml:id='co-1-servicesHeader' />
+{distribution, system, pkgs}: <co xml:id='co-1-servicesHeader' />
 
-let pkgs = import ../top-level/all-packages.nix { inherit system; }; <co xml:id='co-2-importIntra' />
+let customPkgs = import ../top-level/all-packages.nix { inherit system; }; <co xml:id='co-2-importIntra' />
 in
 rec { <co xml:id='co-3-rec2' />
 ### Databases
   zipcodes = { 
     name = "zipcodes"; 
-    pkg = pkgs.zipcodes; 
+    pkg = customPkgs.zipcodes; 
     dependsOn = {};
     type = "mysql-database";
   };
@@ -497,7 +487,7 @@ rec { <co xml:id='co-3-rec2' />
 
   ZipcodeService = { <co xml:id='co-4-service' />
     name = "ZipcodeService"; <co xml:id='co-5-serviceName' />
-    pkg = pkgs.ZipcodeService; <co xml:id='co-6-pkg' />
+    pkg = customPkgs.ZipcodeService; <co xml:id='co-6-pkg' />
     dependsOn = { <co xml:id='co-7-dependsOn' />
       inherit zipcodes;
     };
@@ -509,7 +499,7 @@ rec { <co xml:id='co-3-rec2' />
 
   StaffTracker = {
     name = "StaffTracker";
-    pkg = pkgs.StaffTracker;
+    pkg = customPkgs.StaffTracker;
     dependsOn = {
       inherit GeolocationService RoomService StaffService ZipcodeService;
     };
@@ -536,6 +526,8 @@ rec { <co xml:id='co-3-rec2' />
 					location of each service. The <varname>system</varname> parameter is an identifier
 					for the system architecture on which services must be built. An examples of an
 					identifier is: <code>i686-linux</code> representing a 32-bit <code>x86</code> Linux machine.
+					The <varname>pkgs</varname> parameter represents the collection of Nixpkgs for
+					the given system identifier.
 				</para>
 			</callout>
 			
