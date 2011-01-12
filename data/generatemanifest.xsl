@@ -48,6 +48,11 @@
 	  </mapping>
         </xsl:for-each>
       </activation>
+      <targets>
+	<xsl:for-each select="attr[@name='targets']/list/string">
+	  <target><xsl:value-of select="@value" /></target>
+	</xsl:for-each>
+      </targets>
     </manifest>
   </xsl:template>
 </xsl:stylesheet>

@@ -31,15 +31,13 @@
  * which is released after the process is completed.
  *
  * @param interface Path to the client interface executable
- * @param infrastructure Path to the infrastructure expression
  * @param new_manifest Manifest file representing the new deployment configuration
  * @param new_manifest Manifest file representing the old deployment configuration
  * @param coordinator_profile_path Path where the current deployment state is stored for future reference
  * @param profile Name of the distributed profile
- * @param target_property Property in the infrastructure model which specifies how to connect to the Disnix service
  * @param no_coordinator_profile Do not create a coordinator profile
  * @return 0 if the process suceeds, else a non-zero exit value
  */
-int activate_system(gchar *interface, gchar *infrastructure, gchar *new_manifest, gchar *old_manifest, gchar *coordinator_profile_path, gchar *profile, gchar *target_property, gboolean no_coordinator_profile);
+int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, gchar *coordinator_profile_path, gchar *profile, gboolean no_coordinator_profile);
 
 #endif

@@ -17,25 +17,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __INFRASTRUCTURE_H
-#define __INFRASTRUCTURE_H
+#ifndef __TARGETS_H
+#define __TARGETS_H
 #include <glib.h>
 
-/**
- * Creates an array with target properties from an infrastructure Nix expression
- *
- * @param infrastructure_expr Path to the infrastructure Nix expression
- * @param target_property Idenifier of the property that specifies how to
- *                        connect to the remote disnix service
- * @return GArray with target properties
- */
-GArray *create_target_array(char *infrastructure_expr, char *target_property);
+GArray *generate_target_array(gchar *manifest_file);
 
-/**
- * Deletes an array with target properties
- *
- * @param target_array Array to delete
- */
 void delete_target_array(GArray *target_array);
+
+int target_index(GArray *target_array, gchar *target);
 
 #endif

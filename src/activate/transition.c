@@ -20,7 +20,6 @@
 #include "transition.h"
 #include <activationmapping.h>
 #include <client-interface.h>
-#include <infrastructure.h>
 
 static int activate(gchar *interface, GArray *union_array, ActivationMapping *mapping)
 {

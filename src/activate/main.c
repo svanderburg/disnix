@@ -26,7 +26,7 @@
 static void print_usage(char *command)
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "%s [options] --infrastructure infrastructure_expr manifest\n\n", command);
+    fprintf(stderr, "%s [options] manifest\n\n", command);
     fprintf(stderr, "Options:\n");
     fprintf(stderr, "--interface interface\n");
     fprintf(stderr, "--profile profile\n");
@@ -45,32 +45,25 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-	{"infrastructure", required_argument, 0, 'i'},
 	{"interface", required_argument, 0, 'I'},
 	{"old-manifest", required_argument, 0, 'o'},
 	{"coordinator-profile-path", required_argument, 0, 'P'},
 	{"profile", required_argument, 0, 'p'},
-	{"target-property", required_argument, 0, 't'},
 	{"no-coordinator-profile", no_argument, 0, 'c'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
-    char *infrastructure = NULL;
     char *interface = NULL;
     char *old_manifest = NULL;
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
-    char *target_property = NULL;
     int no_coordinator_profile = FALSE;
     
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "i:o:p:h", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "o:p:h", long_options, &option_index)) != -1)
     {
 	switch(c)
 	{
-	    case 'i':
-		infrastructure = optarg;
-		break;
 	    case 'I':
 		interface = optarg;
 		break;
@@ -82,9 +75,6 @@ int main(int argc, char *argv[])
 		break;
 	    case 'P':
 	        coordinator_profile_path = optarg;
-		break;
-	    case 't':
-		target_property = optarg;
 		break;
 	    case 'c':
 		no_coordinator_profile = TRUE;
@@ -99,19 +89,12 @@ int main(int argc, char *argv[])
     
     interface = check_interface_option(interface);
     profile = check_profile_option(profile);
-    target_property = check_target_property_option(target_property);
     
-    if(infrastructure == NULL)
-    {
-	fprintf(stderr, "An infrastructure expression has to be specified!\n");
-	return 1;
-    }
-
     if(optind >= argc)
     {
 	fprintf(stderr, "A manifest file has to be specified!\n");
 	return 1;
     }
     else
-	return activate_system(interface, infrastructure, argv[optind], old_manifest, coordinator_profile_path, profile, target_property, no_coordinator_profile); /* Execute activation operation */
+	return activate_system(interface, argv[optind], old_manifest, coordinator_profile_path, profile, no_coordinator_profile); /* Execute activation operation */
 }

@@ -29,9 +29,9 @@
 
 #include <distributionmapping.h>
 #include <activationmapping.h>
-#include <infrastructure.h>
+#include <targets.h>
 
-int activate_system(gchar *interface, gchar *infrastructure, gchar *new_manifest, gchar *old_manifest, gchar *coordinator_profile_path, gchar *profile, gchar *target_property, gboolean no_coordinator_profile)
+int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, gchar *coordinator_profile_path, gchar *profile, gboolean no_coordinator_profile)
 {
     gchar *old_manifest_file;
     GArray *old_activation_mappings;
@@ -45,7 +45,7 @@ int activate_system(gchar *interface, gchar *infrastructure, gchar *new_manifest
     GArray *new_activation_mappings = create_activation_array(new_manifest);
     
     /* Get all target properties from the infrastructure model */
-    GArray *target_array = create_target_array(infrastructure, target_property);
+    GArray *target_array = generate_target_array(new_manifest);
     
     /* Get current username */
     char *username = (getpwuid(geteuid()))->pw_name;

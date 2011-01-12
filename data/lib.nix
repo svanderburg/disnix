@@ -255,6 +255,25 @@ rec {
     else [ mappingItem ] ++ generateProfilesMapping pkgs infrastructure (tail targetNames) targetProperty serviceActivationMapping
   ;
   
+  /**
+   * Generates a list of target properties from an infrastructure model.
+   *
+   * Parameters:
+   * infrastructure: The infrastructure model, which is an attributeset containing targets in the network
+   * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
+   *
+   * Returns:
+   * List of target properties
+   */
+   
+  generateTargetPropertyList = infrastructure: targetProperty:
+    map (targetName:
+      let target = getAttr targetName infrastructure;
+      in
+      getAttr targetProperty target
+    ) (attrNames infrastructure)
+  ;
+  
   /*
    * Generates a manifest file constisting of a profile mapping and
    * service activation mapping from the 3 Disnix models.
@@ -281,6 +300,7 @@ rec {
     in
     { profiles = generateProfilesMapping pkgs infrastructure (attrNames infrastructure) targetProperty serviceActivationMapping;
       activation = serviceActivationMapping;
+      targets = generateTargetPropertyList infrastructure targetProperty;
     }
   ;
   
