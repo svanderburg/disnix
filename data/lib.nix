@@ -44,10 +44,10 @@ rec {
    * services: Initial services attributeset
    *
    * Returns:
-   * Attributeset with service declarations augumented with targets in the dependsOn attribute
+   * Attributeset with service declarations augmented with targets in the dependsOn attribute
    */
    
-  augumentTargetsInDependsOn = distribution: services:
+  augmentTargetsInDependsOn = distribution: services:
     listToAttrs (map (serviceName:
       let service = getAttr serviceName services;
       in
@@ -95,7 +95,7 @@ rec {
    * serviceProperty: Defines which property we need of a derivation (either "outPath" or "drvPath")
    *
    * Returns:
-   * Service attributeset augumented with a distribution mapping property 
+   * Service attributeset augmented with a distribution mapping property 
    */
    
   evaluatePkgFunctions = distribution: services: servicesFun: serviceProperty:
@@ -134,7 +134,7 @@ rec {
    * Parameters:
    * argNames: argument names of the dependsOn attributeset
    * dependsOn: dependsOn attributeset from a service declaration
-   * services: Services attributeset, augumented with distributions
+   * services: Services attributeset, augmented with distributions
    *
    * Returns:
    * List of derivation, target pairs
@@ -294,7 +294,7 @@ rec {
     let
       distribution = distributionFun { inherit infrastructure; };
       initialServices = servicesFun { inherit distribution; system = null; inherit pkgs; };
-      servicesWithTargets = augumentTargetsInDependsOn distribution initialServices;
+      servicesWithTargets = augmentTargetsInDependsOn distribution initialServices;
       servicesWithDistribution = evaluatePkgFunctions distribution servicesWithTargets servicesFun "outPath";
       serviceActivationMapping = generateServiceActivationMapping (attrNames servicesWithDistribution) servicesWithDistribution targetProperty;
     in
@@ -323,7 +323,7 @@ rec {
     let
       distribution = distributionFun { inherit infrastructure; };
       initialServices = servicesFun { inherit distribution; system = null; inherit pkgs; };
-      servicesWithTargets = augumentTargetsInDependsOn distribution initialServices;
+      servicesWithTargets = augmentTargetsInDependsOn distribution initialServices;
       servicesWithDistribution = evaluatePkgFunctions distribution servicesWithTargets servicesFun "drvPath";
       serviceActivationMapping = generateServiceActivationMapping (attrNames servicesWithDistribution) servicesWithDistribution targetProperty;
     in
