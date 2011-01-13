@@ -21,10 +21,29 @@
 #define __TARGETS_H
 #include <glib.h>
 
+/**
+ * Creates a new array with targets from a manifest file
+ *
+ * @param manifest_file Path to the manifest XML file
+ * @return GArray with targets
+ */
 GArray *generate_target_array(gchar *manifest_file);
 
+/**
+ * Deletes an array with distribution items.
+ *
+ * @param distribution_array Array with distribution items
+ */
 void delete_target_array(GArray *target_array);
 
+/**
+ * Returns the index of the given target in the target array
+ * or -1 if the target does not exists.
+ *
+ * @param target_array Array of possible targets
+ * @param target Target to lookup
+ * @return Index of target in the array, or -1 if not found
+ */
 int target_index(GArray *target_array, gchar *target);
 
 #endif

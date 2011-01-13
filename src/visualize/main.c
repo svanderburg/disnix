@@ -58,7 +58,6 @@ int main(int argc, char *argv[])
     else
     {
 	/* Execute operation */
-	generate_graph(argv[optind]);
-	return 0;
+	return generate_graph(argv[optind]);
     }
 }

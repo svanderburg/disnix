@@ -26,7 +26,8 @@
  * the standard output.
  *
  * @param manifest_file Manifest file to visualize
+ * @return 0 in case of success, otherwise a non-zero exit value
  */
-void generate_graph(gchar *manifest_file);
+int generate_graph(gchar *manifest_file);
 
 #endif

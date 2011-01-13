@@ -28,7 +28,12 @@ int distribute(gchar *interface, gchar *manifest_file)
     /* Generate a distribution array from the manifest file */
     GArray *distribution_array = generate_distribution_array(manifest_file);
 	
-    if(distribution_array != NULL)
+    if(distribution_array == NULL)
+    {
+	g_printerr("Error with opening manifest file!\n");
+	exit_status = 1;
+    }
+    else
     {
 	unsigned int i;
 	

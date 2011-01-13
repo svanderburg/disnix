@@ -47,88 +47,102 @@ int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, 
     /* Get all target properties from the infrastructure model */
     GArray *target_array = generate_target_array(new_manifest);
     
-    /* Get current username */
-    char *username = (getpwuid(geteuid()))->pw_name;
-
-    /* If no previous configuration is given, check whether we have one in the coordinator profile */
-    if(old_manifest == NULL)
+    if(distribution_array == NULL || new_activation_mappings == NULL || target_array == NULL)
     {
-        FILE *file;
-	    
-        if(coordinator_profile_path == NULL)
-    	    old_manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);	    
-	else
-	    old_manifest_file = g_strconcat(coordinator_profile_path, "/", profile, NULL);
-	    
-	/* Try to open file => if it succeeds we have a previous configuration */
-	file = fopen(old_manifest_file, "r");
-	    
-	if(file == NULL)
+	g_printerr("Error opening manifest_file!\n");
+	exit_status = 1;
+    }
+    else
+    {
+	/* Get current username */
+	char *username = (getpwuid(geteuid()))->pw_name;
+
+	/* If no previous configuration is given, check whether we have one in the coordinator profile */
+	if(old_manifest == NULL)
 	{
-	    g_free(old_manifest_file);
-	    old_manifest_file = NULL;
-	}
-	else
-	    fclose(file);
-    }
-    else
-        old_manifest_file = g_strdup(old_manifest);
-
-    /* If we have an old configuration -> open it */
-    if(old_manifest_file != NULL)
-    {	    	    
-        g_print("Using previous manifest: %s\n", old_manifest_file);
-        old_activation_mappings = create_activation_array(old_manifest_file);
-        
-	/* Free the variable because it's not needed anymore */
-	g_free(old_manifest_file);
-    }
-    else
-        old_activation_mappings = NULL;
-
-    /* Try to acquire a lock */
-    
-    status = lock(interface, distribution_array, profile);
-    
-    if(status == 0)
-    {
-	/* Execute transition */
-	status = transition(interface, new_activation_mappings, old_activation_mappings, target_array);
-	
-	if(status == 0)
-	{	    	    
-	    /* Set the new profiles on the target machines */
-	    g_print("Setting the new profiles on the target machines:\n");
-	    status = set_target_profiles(distribution_array, interface, profile);
+    	    FILE *file;
 	    
-	    /* Try to release the lock */
-	    unlock(interface, distribution_array, profile);
+    	    if(coordinator_profile_path == NULL)
+    		old_manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);	    
+	    else
+		old_manifest_file = g_strconcat(coordinator_profile_path, "/", profile, NULL);
 	    
-	    /* If setting the profiles succeeds -> set the coordinator profile */
-	    if(status == 0 && !no_coordinator_profile)
+	    /* Try to open file => if it succeeds we have a previous configuration */
+	    file = fopen(old_manifest_file, "r");
+	    
+	    if(file == NULL)
 	    {
-		status = set_coordinator_profile(coordinator_profile_path, new_manifest, profile, username);
-		
-		if(status != 0)
-		    exit_status = status; /* if settings the coordinator profile fails -> change exit status */
+		g_free(old_manifest_file);
+		old_manifest_file = NULL;
 	    }
 	    else
-		exit_status = status; /* else change exit status */
+		fclose(file);
 	}
 	else
-	{
-	    /* Try to release the lock */
-	    unlock(interface, distribution_array, profile); 
-	    exit_status = status;
-	}
-    }
-    else
-	exit_status = status;
+    	    old_manifest_file = g_strdup(old_manifest);
 
+	/* If we have an old configuration -> open it */
+	if(old_manifest_file != NULL)
+	{	    	    
+    	    g_print("Using previous manifest: %s\n", old_manifest_file);
+    	    old_activation_mappings = create_activation_array(old_manifest_file);
+        
+	    /* Free the variable because it's not needed anymore */
+	    g_free(old_manifest_file);	    
+	}
+	else
+    	    old_activation_mappings = NULL;
+
+	/* Try to acquire a lock */
+    
+	status = lock(interface, distribution_array, profile);
+    
+	if(status == 0)
+	{
+	    /* Execute transition */
+	    status = transition(interface, new_activation_mappings, old_activation_mappings, target_array);
+	
+	    if(status == 0)
+	    {	    	    
+		/* Set the new profiles on the target machines */
+	        g_print("Setting the new profiles on the target machines:\n");
+		status = set_target_profiles(distribution_array, interface, profile);
+	    
+		/* Try to release the lock */
+		unlock(interface, distribution_array, profile);
+	    
+		/* If setting the profiles succeeds -> set the coordinator profile */
+		if(status == 0 && !no_coordinator_profile)
+		{
+		    status = set_coordinator_profile(coordinator_profile_path, new_manifest, profile, username);
+		
+		    if(status != 0)
+			exit_status = status; /* if settings the coordinator profile fails -> change exit status */
+		}
+		else
+		    exit_status = status; /* else change exit status */
+	    }
+	    else
+	    {
+		/* Try to release the lock */
+		unlock(interface, distribution_array, profile); 
+		exit_status = status;
+	    }
+	}
+	else
+	    exit_status = status;
+    }
+    
     /* Cleanup */
-    delete_target_array(target_array);
-    delete_distribution_array(distribution_array);
-    delete_activation_array(new_activation_mappings);
+    
+    if(target_array != NULL)    
+	delete_target_array(target_array);
+	
+    if(distribution_array != NULL)
+	delete_distribution_array(distribution_array);
+
+    if(new_activation_mappings != NULL)
+	delete_activation_array(new_activation_mappings);
     
     if(old_activation_mappings != NULL)
 	delete_activation_array(old_activation_mappings);
