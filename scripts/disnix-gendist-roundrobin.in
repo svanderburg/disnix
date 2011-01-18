@@ -25,6 +25,8 @@ showUsage()
     echo
     echo "-s,--services       Services Nix expression which describes all components of the distributed system"
     echo "-i,--infrastructure Infrastructure Nix expression which captures properties of machines in the network"
+    echo "--no-out-link       Do not create a 'result' symlink"
+    echo "--show-trace        Shows a trace of the output"
     echo "-h,--help           Shows the usage of this command to the user"
 }
 
@@ -38,7 +40,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Parse valid argument options
 
-PARAMS=`getopt -n $0 -o s:i:h -l services:,infrastructure:,help -- "$@"`
+PARAMS=`getopt -n $0 -o s:i:h -l services:,infrastructure:,no-out-link,show-trace,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -59,6 +61,12 @@ do
 	-i|--infrastructure)
 	    infrastructureFile=`readlink -f $2`
 	    ;;
+	--no-out-link)
+	    noOutLink=1
+	    ;;
+	--show-trace)
+	    showTrace=1
+	    ;;
 	-h|--help)
 	    showUsage
 	    exit 0
@@ -72,9 +80,14 @@ done
 
 checkServicesFile
 checkInfrastructureFile
+checkNoOutLink
+checkShowTrace
 
 # Build the distribution model
 
 nix-build --argstr servicesFile "$(readlink -f $servicesFile)" \
           --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
-	  "$(readlink -f @datadir@/@PACKAGE@/gendist-roundrobin.nix)"
+	  "$(readlink -f @datadir@/@PACKAGE@/gendist-roundrobin.nix)" \
+	  $noOutLinkArg \
+	  $showTraceArg
+

@@ -54,13 +54,29 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>--no-out-link</option></term>
+				<listitem>
+					<para>
+						Do not create a 'result' symlink
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--show-trace</option></term>
+				<listitem>
+					<para>
+						Shows a trace of the output.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>-h</option>, <option>--help</option></term>
 				<listitem>
 					<para>
 						Shows the usage of this command to the user.
 					</para>
 				</listitem>
-			</varlistentry>	
+			</varlistentry>
 		</variablelist>
 	</refsection>
 </refentry>
