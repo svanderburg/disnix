@@ -91,6 +91,32 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>-no-coordinator-profile</option></term>
+				<listitem>
+					<para>
+						By enabling this option Disnix does not store the deployment state for further use, such as upgrading.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--no-target-profiles</option></term>
+				<listitem>
+					<para>
+						By enabling this option Disnix does not create profiles on the target machines containing the
+						services.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>--no-upgrade</option></term>
+				<listitem>
+					<para>
+						By enabling this option Disnix will not perform an upgrade, but only activates services in the
+						new configuration.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>-h</option>, <option>--help</option></term>
 				<listitem>
 					<para>

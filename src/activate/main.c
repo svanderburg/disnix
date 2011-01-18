@@ -34,6 +34,7 @@ static void print_usage(char *command)
     fprintf(stderr, "--old-manifest manifest\n");
     fprintf(stderr, "--target-property targetProperty\n");
     fprintf(stderr, "--no-coordinator-profile\n");
+    fprintf(stderr, "--no-target-profiles\n");
     fprintf(stderr, "\n");
     
     fprintf(stderr, "%s {-h | --help}\n", command);
@@ -50,6 +51,8 @@ int main(int argc, char *argv[])
 	{"coordinator-profile-path", required_argument, 0, 'P'},
 	{"profile", required_argument, 0, 'p'},
 	{"no-coordinator-profile", no_argument, 0, 'c'},
+	{"no-target-profiles", no_argument, 0, 'C'},
+	{"no-upgrade", no_argument, 0, 'u'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
@@ -58,6 +61,8 @@ int main(int argc, char *argv[])
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
     int no_coordinator_profile = FALSE;
+    int no_target_profiles = FALSE;
+    int no_upgrade = FALSE;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "o:p:h", long_options, &option_index)) != -1)
@@ -79,6 +84,12 @@ int main(int argc, char *argv[])
 	    case 'c':
 		no_coordinator_profile = TRUE;
 		break;
+	    case 'C':
+		no_target_profiles = TRUE;
+		break;
+	    case 'u':
+		no_upgrade = TRUE;
+		break;
 	    case 'h':
 		print_usage(argv[0]);
 		return 0;
@@ -96,5 +107,5 @@ int main(int argc, char *argv[])
 	return 1;
     }
     else
-	return activate_system(interface, argv[optind], old_manifest, coordinator_profile_path, profile, no_coordinator_profile); /* Execute activation operation */
+	return activate_system(interface, argv[optind], old_manifest, coordinator_profile_path, profile, no_coordinator_profile, no_target_profiles, no_upgrade); /* Execute activation operation */
 }

@@ -31,7 +31,7 @@
 #include <activationmapping.h>
 #include <targets.h>
 
-int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, gchar *coordinator_profile_path, gchar *profile, gboolean no_coordinator_profile)
+int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, gchar *coordinator_profile_path, gchar *profile, gboolean no_coordinator_profile, gboolean no_target_profiles, gboolean no_upgrade)
 {
     gchar *old_manifest_file;
     GArray *old_activation_mappings;
@@ -82,7 +82,7 @@ int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, 
     	    old_manifest_file = g_strdup(old_manifest);
 
 	/* If we have an old configuration -> open it */
-	if(old_manifest_file != NULL)
+	if(!no_upgrade && old_manifest_file != NULL)
 	{	    	    
     	    g_print("Using previous manifest: %s\n", old_manifest_file);
     	    old_activation_mappings = create_activation_array(old_manifest_file);
@@ -94,7 +94,6 @@ int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, 
     	    old_activation_mappings = NULL;
 
 	/* Try to acquire a lock */
-    
 	status = lock(interface, distribution_array, profile);
     
 	if(status == 0)
@@ -103,11 +102,14 @@ int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, 
 	    status = transition(interface, new_activation_mappings, old_activation_mappings, target_array);
 	
 	    if(status == 0)
-	    {	    	    
-		/* Set the new profiles on the target machines */
-	        g_print("Setting the new profiles on the target machines:\n");
-		status = set_target_profiles(distribution_array, interface, profile);
-	    
+	    {
+		if(!no_target_profiles)
+		{
+		    /* Set the new profiles on the target machines */
+	    	    g_print("Setting the new profiles on the target machines:\n");
+		    status = set_target_profiles(distribution_array, interface, profile);
+		}
+		
 		/* Try to release the lock */
 		unlock(interface, distribution_array, profile);
 	    

@@ -36,8 +36,10 @@
  * @param coordinator_profile_path Path where the current deployment state is stored for future reference
  * @param profile Name of the distributed profile
  * @param no_coordinator_profile Do not create a coordinator profile
+ * @param no_target_profiles Do not create Disnix profiles on the target machines
+ * @param no_upgrade Force Disnix to not look at the previous configuration
  * @return 0 if the process suceeds, else a non-zero exit value
  */
-int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, gchar *coordinator_profile_path, gchar *profile, gboolean no_coordinator_profile);
+int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, gchar *coordinator_profile_path, gchar *profile, gboolean no_coordinator_profile, gboolean no_target_profiles, gboolean no_upgrade);
 
 #endif
