@@ -111,7 +111,7 @@ $ nix-env -i disnix
 			A copy of
 			<link xlink:href="http://nixos.org/nixpkgs">Nixpkgs</link> is required
 			and an environment variable <code>NIXPKGS_ALL</code> must point to the path where
-			it is installed, so that Disnix is able to find it. On NixOS a copy is 
+			it is installed, so that Disnix is able to find it. In NixOS, a copy is 
 			already present and this environment variable has already been configured.
 			On other systems this variable can be configured by adding the following lines to your
 			<filename>~/.bash_profile</filename> configuration (or another configuration
