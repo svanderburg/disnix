@@ -1,0 +1,25 @@
+Version 0.2
+===========
+- Added disnix-visualize tool
+
+- Fixed bug with zombie processes
+
+- Major code cleanups (boilerplate and separated shared stuff in libraries)
+
+- Implemented some features for integration with a virtualisation extension
+
+- Added user manual
+
+- Manual pages are in docbook now
+
+- Fixed memory leaks in disnix-activate
+
+- Larger test suite
+
+- Public library interface for extensions
+
+- Copes with machines that disappear
+
+- Services model provides pkgs argument. Does not have to be imported manually.
+
+- Doxygen API documentation
