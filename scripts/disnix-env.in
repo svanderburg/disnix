@@ -114,6 +114,6 @@ then
     disnix-build --interface $interface $distributedDerivation
 fi
 
-distributionExport=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link $showTraceArg`
-disnix-distribute --interface $interface $distributionExport
-disnix-activate --interface $interface $profileArg $coordinatorProfilePathArg $distributionExport
+manifest=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link $showTraceArg`
+disnix-distribute --interface $interface $manifest
+disnix-activate --interface $interface $profileArg $coordinatorProfilePathArg $manifest
