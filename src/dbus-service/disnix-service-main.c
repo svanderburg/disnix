@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
 		session_bus = TRUE;
 		break;
 	    case 'h':
+	    case '?':
 		print_usage(argv[0]);
 		return 0;
 	}

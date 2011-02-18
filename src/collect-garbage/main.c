@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
 	        delete_old = TRUE;
 	        break;
 	    case 'h':
+	    case '?':
 		print_usage(argv[0]);
 		return 0;
 	}

@@ -91,6 +91,7 @@ int main(int argc, char *argv[])
 		no_upgrade = TRUE;
 		break;
 	    case 'h':
+	    case '?':
 		print_usage(argv[0]);
 		return 0;
 	}

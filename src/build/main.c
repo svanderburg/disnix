@@ -50,6 +50,7 @@ int main(int argc, char *argv[])
 		interface = optarg;
 		break;
 	    case 'h':
+	    case '?':
 		print_usage(argv[0]);
 		return 0;
 	}
