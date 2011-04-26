@@ -207,7 +207,11 @@ GArray *create_activation_array(gchar *manifest_file)
 			if(xmlStrcmp(target_children->name, (xmlChar*) "text") != 0) /* It seems that a text node is added when the manifest is pretty printed */
 			{
 			    property->name = g_strdup(target_children->name);
-			    property->value = g_strdup(target_children->children->content);
+			    
+			    if(target_children->children == NULL)
+				property->value = NULL;
+			    else			    
+				property->value = g_strdup(target_children->children->content);			    
 			
 			    g_array_append_val(target, property);
 			}
@@ -250,7 +254,11 @@ GArray *create_activation_array(gchar *manifest_file)
 					if(xmlStrcmp(target_children->name, (xmlChar*) "text") != 0) /* It seems that a text node is added when the manifest is pretty printed */
 					{
 					    property->name = g_strdup(target_children->name);
-					    property->value = g_strdup(target_children->children->content);
+					    
+					    if(target_children->children == NULL)
+						property->value = NULL;
+					    else
+						property->value = g_strdup(target_children->children->content);
 			
 					    g_array_append_val(target, property);
 					}
