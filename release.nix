@@ -120,7 +120,7 @@ let
 	    environment.systemPackages = [ pkgs.stdenv disnix ];
 	  };	
       in
-      with import "${nixos}/lib/testing.nix" { inherit nixpkgs; system = "x86_64-linux"; services = null; };
+      with import "${nixos}/lib/testing.nix" { inherit nixpkgs; system = "x86_64-linux"; };
       
       {
         install = simpleTest {
