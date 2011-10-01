@@ -66,5 +66,5 @@ int main(int argc, char *argv[])
 	return 1;
     }
     else
-	build(interface, argv[optind]); /* Perform distributed build operation */
+	return build(interface, argv[optind]); /* Perform distributed build operation */
 }
