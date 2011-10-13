@@ -491,7 +491,7 @@ let
 	      # generated distribution model to build the system.
 	      # This test should succeed.
 	      
-	      my $result = $client->mustSucceed("disnix-gendist-roundrobin -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix");
+	      my $result = $client->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' disnix-gendist-roundrobin -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix");
 	      my $result = $client->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d $result");
 	      
 	      #### Test disnix-visualize
