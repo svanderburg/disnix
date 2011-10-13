@@ -40,9 +40,6 @@ PKG_CHECK_MODULES(LIBXSLT, libxslt >= $LIBXSLT_REQUIRED)
 AC_SUBST(LIBXSLT_CFLAGS)
 AC_SUBST(LIBXSLT_LIBS)	
 
-# Checks for Nixpkgs
-AC_SUBST(NIXPKGS_ALL)
-
 # Checks for Docbook stuff
 AC_ARG_WITH(docbook-rng, AC_HELP_STRING([--with-docbook-rng=PATH],
   [path of the DocBook RelaxNG schema]),

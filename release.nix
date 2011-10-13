@@ -1,4 +1,4 @@
-{ nixpkgs ? /etc/nixos/nixpkgs }:
+{ nixpkgs ? <nixpkgs> }:
 
 let
   jobs = rec {
@@ -53,7 +53,7 @@ let
 
     build =
       { tarball ? jobs.tarball {}
-      , system ? "x86_64-linux"
+      , system ? "i686-linux"
       }:
 
       with import nixpkgs { inherit system; };
@@ -73,7 +73,7 @@ let
       }:
       
       let
-        disnix = build { system = "x86_64-linux"; };
+        disnix = build { system = "i686-linux"; };
 	manifestTests = ./tests/manifest;
 	machine =
 	  {config, pkgs, ...}:
@@ -120,7 +120,7 @@ let
 	    environment.systemPackages = [ pkgs.stdenv disnix ];
 	  };	
       in
-      with import "${nixos}/lib/testing.nix" { inherit nixpkgs; system = "x86_64-linux"; };
+      with import "${nixos}/lib/testing.nix" { inherit nixpkgs; system = "i686-linux"; };
       
       {
         install = simpleTest {
@@ -137,7 +137,7 @@ let
 	      # Generates a distributed derivation file. The closure should be
 	      # contain store derivation files. This test should succeed.
 	      
-	      my $result = $client->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-instantiate -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+	      my $result = $client->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' disnix-instantiate -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
 	      my @closure = split('\n', $client->mustSucceed("nix-store -qR $result"));
 	      my @derivations = grep(/\.drv/, @closure);
 	      
@@ -153,13 +153,13 @@ let
 	      # which both the inter-dependency specifications and distribution 
 	      # is correct and complete. This test should succeed.
 	      
-	      $client->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+	      $client->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
 	      
 	      # Incomplete inter-dependency test. Here we have a services model
 	      # in which an inter-dependency is not specified in the dependsOn
 	      # attribute. This test should trigger an error.
 	      
-	      $client->mustFail("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-incomplete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+	      $client->mustFail("NIX_PATH='nixpkgs=${nixpkgs}' disnix-manifest -s ${manifestTests}/services-incomplete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
 	      	      	      
 	      # Load balancing test. Here we distribute testService1 and
 	      # testService2 to machines testtarget1 and testtarget2.
@@ -167,7 +167,7 @@ let
 	      # and testService2 are in the closure of the testtarget1 and
 	      # testtarget2 profiles. This test should succeed.
 	      
-	      my $manifest = $client->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-loadbalancing.nix");
+	      my $manifest = $client->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-loadbalancing.nix");
 	      my @closure = split('\n', $client->mustSucceed("nix-store -qR $manifest"));
 	      
 	      my @target1Profile = grep(/\-testtarget1/, @closure);
@@ -217,7 +217,7 @@ let
 	      # We verify this by checking whether this service is the closure
 	      # of the manifest. This test should succeed.
 	      
-	      my $manifest = $client->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-composition.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-composition.nix");
+	      my $manifest = $client->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' disnix-manifest -s ${manifestTests}/services-composition.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-composition.nix");
 	      my $closure = $client->mustSucceed("nix-store -qR $manifest");
 	      
 	      if($closure =~ /\-testService2B/) {
@@ -231,7 +231,7 @@ let
 	      # do not distribute the service to any target.
 	      # This test should trigger an error.
 	      
-	      $client->mustFail("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-incomplete.nix");
+	      $client->mustFail("NIX_PATH='nixpkgs=${nixpkgs}' disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-incomplete.nix");
 	      
 	      #### Test disnix-client / disnix-service
 	      
@@ -491,8 +491,8 @@ let
 	      # generated distribution model to build the system.
 	      # This test should succeed.
 	      
-	      my $result = $client->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-gendist-roundrobin -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix");
-	      my $result = $client->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d $result");
+	      my $result = $client->mustSucceed("disnix-gendist-roundrobin -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix");
+	      my $result = $client->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d $result");
 	      
 	      #### Test disnix-visualize
 	      
@@ -529,7 +529,7 @@ let
 	      
 	      # Use disnix-env to perform a new installation.
 	      # This test should succeed.
-	      $coordinator->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+	      $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
 	      
 	      # Use disnix-query to see if the right services are installed on
 	      # the right target platforms. This test should succeed.
@@ -573,7 +573,7 @@ let
 	      # We now perform an upgrade. In this case testService2 is replaced
 	      # by testService2B. This test should succeed.
 	      
-	      $coordinator->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-composition.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-composition.nix");
+	      $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-composition.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-composition.nix");
 	      
 	      # Use disnix-query to see if the right services are installed on
 	      # the right target platforms. This test should succeed.
@@ -612,7 +612,7 @@ let
 	      # should not be deactivated on testTarget2. This test should
 	      # succeed.
 	      
-	      $coordinator->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-single.nix > result");
+	      $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-single.nix > result");
 	      $coordinator->mustSucceed("[ \"\$(grep \"Skip deactivation\" result | grep \"testService2B\" | grep \"testtarget2\")\" != \"\" ]");
 	      $coordinator->mustSucceed("[ \"\$(grep \"Skip deactivation\" result | grep \"testService3\" | grep \"testtarget2\")\" != \"\" ]");
 	      
@@ -687,7 +687,7 @@ let
 	      
 	      # Deploy the complete environment and build all the services on
 	      # the target machines. This test should succeed.
-	      my $result = $coordinator->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env --build-on-targets -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+	      my $result = $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env --build-on-targets -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
 	      
 	      # Checks whether the testService1 has been actually built on the
 	      # targets by checking the logfiles. This test should succeed.
@@ -698,7 +698,7 @@ let
 	      # coordinator machine. This test should fail, since the build
 	      # is performed on a target machine.
 	      
-	      my $manifest = $coordinator->mustSucceed("NIXPKGS_ALL=${nixpkgs}/pkgs/top-level/all-packages.nix disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+	      my $manifest = $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
 	      my @closure = split('\n', $coordinator->mustSucceed("nix-store -qR result"));
 	      my @testService1 = grep(/\-testService1/, @closure);
 	      	      

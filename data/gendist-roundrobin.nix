@@ -1,6 +1,6 @@
 { servicesFile
 , infrastructureFile
-, nixpkgs ? builtins.getEnv "NIXPKGS_ALL"
+, nixpkgs ? <nixpkgs>
 }:
 
 let 

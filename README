@@ -58,9 +58,12 @@ For more information about running the Disnix service, have a look at the
 disnix-service manual page or refer to the Disnix manual.
 
 On every client machine, a Nix installation is required and a copy of Nixpkgs.
-In order to find the location of Nixpkgs, the environment variable NIXPKGS_ALL
+In order to find the location of Nixpkgs, the environment variable NIX_PATH
 has to be set which points to the pkgs/top-level/all-packages.nix file included
 in the Nixpkgs tarball (this is already done automatically on NixOS).
+This can be done by the following command-line instruction:
+
+$ export NIX_PATH="nixpkgs=/path/to/nixpkgs"
 
 In order to deploy a distributed system a developer has to write a Nix
 expression that captures the services of a distributed machine, the network
