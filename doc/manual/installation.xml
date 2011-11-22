@@ -297,7 +297,7 @@ esac
 				</para>
 				
 <screen>
-cygrunsrv -I dbus -p /usr/sbin/dbus-daemon.exe -a '--system --nofork'
+$ cygrunsrv -I dbus -p /usr/sbin/dbus-daemon.exe -a '--system --nofork'
 </screen>
 
 				<para>
@@ -305,7 +305,7 @@ cygrunsrv -I dbus -p /usr/sbin/dbus-daemon.exe -a '--system --nofork'
 				</para>
 				
 <screen>
-cygrunsrv -I disnix -p /usr/local/bin/disnix-service.exe -a \
+$ cygrunsrv -I disnix -p /usr/local/bin/disnix-service.exe -a \
   '--activation-modules-dir /usr/local/libexec/disnix/activation-scripts' \
   -e 'PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin' \
   -y dbus
