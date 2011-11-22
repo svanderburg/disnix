@@ -246,7 +246,7 @@ $ ./configure --help
 			</section>
 			
 			<section>
-				<title>Configuring boot scripts</title>
+				<title>Configuring boot scripts on regular Linux distributions</title>
 				
 				<para>
 					The host system must configured to start the Disnix D-Bus service automatically. 
@@ -280,6 +280,63 @@ esac
 					Refer to your distribution's <code>init.d</code> script style to see how services
 					are configured and launched.
 				</para>
+			</section>
+			
+			<section>
+				<title>Configuring system services on Windows (Cygwin)</title>
+				
+				<para>
+					Cygwin does not use boot scripts for starting and stopping system services,
+					but instead it provides the <command>cygrunsrv</command> command, to run Cygwin
+					programs as Windows system services.
+				</para>
+				
+				<para>
+					Since the core Disnix daemon is a D-Bus service, we need to run the D-Bus system daemon,
+					which can be configured by typing:
+				</para>
+				
+<screen>
+cygrunsrv -I dbus -p /usr/sbin/dbus-daemon.exe -a '--system --nofork'
+</screen>
+
+				<para>
+					The Disnix service can be configured by typing:
+				</para>
+				
+<screen>
+cygrunsrv -I disnix -p /usr/local/bin/disnix-service.exe -a \
+  '--activation-modules-dir /usr/local/libexec/disnix/activation-scripts' \
+  -e 'PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin' \
+  -y dbus
+</screen>
+
+				<para>
+					Disnix also needs to be remotely connectible. In order to connect through SSH, you also need to configure a SSH server.
+					This can be done by executing the following script on Cygwin:
+				</para>
+				
+<screen>
+$ ssh-host-config
+</screen>
+				
+				<para>
+					After configuring the services, you probably need to activate them for the fist time,
+					which can be done by the Windows service manager (Control Panel -> System and Security
+					-> Administrative Tools -> Services).
+					You need to pick the Disnix service and select the start option.
+					If you want to use the SSH server, you need to pick and start the 'CYGWIN sshd' service as well.
+					A screenshot of this is shown in <xref linkend="fig-2-disnixwinservice" />.
+				</para>
+				
+				<figure xml:id="fig-2-disnixwinservice">
+					<title>Architecture of the <code>StaffTracker</code></title>
+					<mediaobject>
+						<imageobject>
+							<imagedata fileref="disnixwinservice.png" format="PNG"/>
+						</imageobject>
+					</mediaobject>
+				</figure>
 			</section>
 			
 			<section>

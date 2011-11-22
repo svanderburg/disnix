@@ -14,7 +14,7 @@ dblatex_opts = \
  -P doc.collab.show=0 \
  -P latex.output.revhistory=0
 
-FIGURES = model.png stafftracker.png
+FIGURES = model.png stafftracker.png disnixwinservice.png
 
 man1_MANS = disnix-activate.1 disnix-build.1 disnix-client.1 disnix-copy-closure.1 disnix-distribute.1 disnix-env.1 \
   disnix-gendist-roundrobin.1 disnix-instantiate.1 disnix-manifest.1 disnix-ssh-client.1 disnix-visualize.1

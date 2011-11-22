@@ -23,3 +23,7 @@ Version 0.2
 - Services model provides pkgs argument. Does not have to be imported manually.
 
 - Doxygen API documentation
+
+Version 0.3
+===========
+- Added Cygwin installation instructions
