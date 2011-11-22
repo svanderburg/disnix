@@ -386,38 +386,36 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 <programlisting>
 {system, pkgs}:
 
-with pkgs; <co xml:id='co-2-withPkgs' />
-
 rec { <co xml:id='co-3-rec' />
 ### Databases
 
   rooms = import ../pkgs/databases/rooms {
-    inherit stdenv;
+    inherit (pkgs) stdenv;
   };
   
   staff = import ../pkgs/databases/staff {
-    inherit stdenv;
+    inherit (pkgs) stdenv;
   };
   
   zipcodes = import ../pkgs/databases/zipcodes {
-    inherit stdenv;
+    inherit (pkgs) stdenv;
   };
 
 ### Web services + Clients
     
   ZipcodeService = import ../pkgs/webservices/ZipcodeService { <co xml:id='co-4-composition' />
-    inherit stdenv apacheAnt axis2;
+    inherit (pkgs) stdenv apacheAnt axis2;
   };
   
   ZipcodeServiceClient = import ../pkgs/webservices/ZipcodeServiceClient {
-    inherit stdenv apacheAnt axis2;
+    inherit (pkgs) stdenv apacheAnt axis2;
   };
   ...
   
 ### Web applications
 
   StaffTracker = import ../pkgs/webapplications/StaffTracker {
-    inherit stdenv apacheAnt axis2;
+    inherit (pkgs) stdenv apacheAnt axis2;
     inherit GeolocationServiceClient RoomServiceClient StaffServiceClient ZipcodeServiceClient;
   };
 }
@@ -430,13 +428,6 @@ rec { <co xml:id='co-3-rec' />
 		</para>
 		
 		<calloutlist>
-			<callout arearefs='co-2-withPkgs'>
-				<para>
-					This statement will make it easier to refer to packages defined in Nixpkgs.
-					Otherwise you have to refer them by <code>pkgs.axis2</code> and so on.
-				</para>
-			</callout>
-			
 			<callout arearefs='co-3-rec'>
 				 <para>
 					Like the <code>pkgs/top-level/all-packages.nix</code> file in Nixpkgs, this composition expression
