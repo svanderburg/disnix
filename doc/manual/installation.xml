@@ -330,7 +330,7 @@ $ ssh-host-config
 				</para>
 				
 				<figure xml:id="fig-2-disnixwinservice">
-					<title>Architecture of the <code>StaffTracker</code></title>
+					<title>Starting the Disnix Windows system service</title>
 					<mediaobject>
 						<imageobject>
 							<imagedata fileref="disnixwinservice.png" format="PNG"/>
