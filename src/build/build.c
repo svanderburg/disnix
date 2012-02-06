@@ -25,7 +25,7 @@
 
 #define BUFFER_SIZE 4096
 
-static int distribute_derivations(gchar *interface, GArray *derivation_array)
+static int distribute_derivations(gchar *interface, const GArray *derivation_array)
 {
     int status = 0;
     unsigned int i;
@@ -162,9 +162,9 @@ static void delete_result_array(GArray *result_array)
     g_array_free(result_array, TRUE);
 }
 
-int build(gchar *interface, gchar *distributed_derivation_file)
+int build(gchar *interface, const gchar *distributed_derivation_file)
 {
-    GArray *derivation_array = create_derivation_array(distributed_derivation_file);        
+    GArray *derivation_array = create_derivation_array(distributed_derivation_file);
     int exit_status = 0;
     
     /* Distribute derivations to target machines */

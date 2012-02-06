@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __PROFILES_H
-#define __PROFILES_H
+#ifndef __DISNIX_PROFILES_H
+#define __DISNIX_PROFILES_H
 #include <glib.h>
 
 /**
@@ -30,7 +30,7 @@
  * @param profile Name of the distributed profile
  * @return 0 if everything succeeds, else a non-zero exit status
  */
-int set_target_profiles(GArray *distribution_array, gchar *interface, gchar *profile);
+int set_target_profiles(const GArray *distribution_array, gchar *interface, gchar *profile);
 
 /**
  * Sets the Disnix coordinator profile, so that the current configuration is 
@@ -42,6 +42,6 @@ int set_target_profiles(GArray *distribution_array, gchar *interface, gchar *pro
  * @param username Username of the current user invoking the activation
  * @return 0 if everything succeeds, else a non-zero exit status
  */
-int set_coordinator_profile(gchar *coordinator_profile_path, gchar *manifest_file, gchar *profile, gchar *username);
+int set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *manifest_file, const gchar *profile, const gchar *username);
 
 #endif

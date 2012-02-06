@@ -20,9 +20,9 @@
 #include "derivationmapping.h"
 #include <xmlutil.h>
 
-GArray *create_derivation_array(gchar *distributed_derivation_file)
+GArray *create_derivation_array(const gchar *distributed_derivation_file)
 {
-    /* Declarations */    
+    /* Declarations */
     xmlDocPtr doc;
     xmlNodePtr node_root;
     xmlXPathObjectPtr result;

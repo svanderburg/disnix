@@ -1,4 +1,4 @@
-AM_CPPFLAGS = -ggdb -DDATADIR="\"$(prefix)/share/disnix\""
+AM_CPPFLAGS = -DDATADIR="\"$(prefix)/share/disnix\""
 
 pkglib_LTLIBRARIES = libinfrastructure.la
 pkginclude_HEADERS = infrastructure.h

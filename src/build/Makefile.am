@@ -1,5 +1,3 @@
-AM_CPPFLAGS = -ggdb
-
 bin_PROGRAMS = disnix-build
 noinst_HEADERS = build.h
 

@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __XMLUTIL_H
-#define __XMLUTIL_H
+#ifndef __DISNIX_XMLUTIL_H
+#define __DISNIX_XMLUTIL_H
 
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
@@ -31,6 +31,6 @@
  * @param xpath String containing the XPath query
  * @return XML XPath object pointer
  */
-xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, char *xpath);
+xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, const char *xpath);
 
 #endif

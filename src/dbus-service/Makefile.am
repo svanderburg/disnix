@@ -1,4 +1,4 @@
-AM_CPPFLAGS=-ggdb -DLOCALSTATEDIR=\"$(localstatedir)\"
+AM_CPPFLAGS=-DLOCALSTATEDIR=\"$(localstatedir)\"
 
 bin_PROGRAMS = disnix-service disnix-client
 noinst_HEADERS = methods.h signals.h disnix-gtype-def.h disnix-instance.h operation.h disnix-client-operation.h

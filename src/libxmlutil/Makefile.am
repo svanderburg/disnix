@@ -1,5 +1,3 @@
-AM_CPPFLAGS=-ggdb
-
 pkglib_LTLIBRARIES = libxmlutil.la
 pkginclude_HEADERS = xmlutil.h
 

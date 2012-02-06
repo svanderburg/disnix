@@ -17,14 +17,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DERIVATIONMAPPING_H
-#define __DERIVATIONMAPPING_H
+#ifndef __DISNIX_DERIVATIONMAPPING_H
+#define __DISNIX_DERIVATIONMAPPING_H
 #include <glib.h>
 
 /**
- * Contains a mapping of a Nix store derivation to a Disnix Service target
+ * @brief Contains a mapping of a Nix store derivation to a Disnix Service target
  */
- 
 typedef struct
 {
     /** Nix store derivation path */
@@ -41,7 +40,7 @@ DerivationItem;
  * @param distributed_derivation_file Path to the distributed derivation XML file
  * @return GArray with DerivationItems
  */ 
-GArray *create_derivation_array(gchar *distributed_derivation_file);
+GArray *create_derivation_array(const gchar *distributed_derivation_file);
 
 /**
  * Deletes an array with derivation items

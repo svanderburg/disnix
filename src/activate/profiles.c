@@ -26,7 +26,7 @@
 #include <sys/stat.h>
 #include <string.h>
 
-int set_target_profiles(GArray *distribution_array, gchar *interface, gchar *profile)
+int set_target_profiles(const GArray *distribution_array, gchar *interface, gchar *profile)
 {
     unsigned int i;
     int exit_status = 0;
@@ -50,7 +50,7 @@ int set_target_profiles(GArray *distribution_array, gchar *interface, gchar *pro
     return exit_status;
 }
 
-int set_coordinator_profile(gchar *coordinator_profile_path, gchar *manifest_file, gchar *profile, gchar *username)
+int set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *manifest_file, const gchar *profile, const gchar *username)
 {
     gchar *profile_path, *manifest_file_path;
     int status;
@@ -94,7 +94,7 @@ int set_coordinator_profile(gchar *coordinator_profile_path, gchar *manifest_fil
     
     if(status == 0)
     {
-	char *args[] = {"nix-env", "-p", profile_path, "--set", manifest_file_path, NULL};
+	char *const args[] = {"nix-env", "-p", profile_path, "--set", manifest_file_path, NULL};
 	execvp("nix-env", args);
 	_exit(1);
     }

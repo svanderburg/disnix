@@ -1,5 +1,3 @@
-AM_CPPFLAGS=-ggdb
-
 pkglib_LTLIBRARIES = libdistderivation.la
 pkginclude_HEADERS = derivationmapping.h
 

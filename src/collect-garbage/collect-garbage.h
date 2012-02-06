@@ -16,8 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef __COLLECT_GARBAGE_H
-#define __COLLECT_GARBAGE_H
+#ifndef __DISNIX_COLLECT_GARBAGE_H
+#define __DISNIX_COLLECT_GARBAGE_H
 #include <glib.h>
 
 /**
@@ -31,6 +31,6 @@
  * @param delete_old Indicates whether to delete old profile generations
  * @return 0 if everything succeeds, else a non-zero exit value
  */
-int collect_garbage(gchar *interface, gchar *target_property, gchar *infrastructure_expr, gboolean delete_old);
+int collect_garbage(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, const gboolean delete_old);
 
 #endif

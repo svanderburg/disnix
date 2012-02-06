@@ -21,7 +21,7 @@
 #include <activationmapping.h>
 #include <client-interface.h>
 
-static int activate(gchar *interface, GArray *union_array, ActivationMapping *mapping)
+static int activate(gchar *interface, GArray *union_array, const ActivationMapping *mapping)
 {
     /* Search for the location of the mapping in the union array */
     gint actual_mapping_index = activation_mapping_index(union_array, mapping);
@@ -89,7 +89,7 @@ static int activate(gchar *interface, GArray *union_array, ActivationMapping *ma
     return 0; /* The activation of the closure succeeded */
 }
 
-static int deactivate(gchar *interface, GArray *union_array, ActivationMapping *mapping, GArray *target_array)
+static int deactivate(gchar *interface, GArray *union_array, const ActivationMapping *mapping, GArray *target_array)
 {
     /* Search for the location of the mapping in the union array */
     gint actual_mapping_index = activation_mapping_index(union_array, mapping);

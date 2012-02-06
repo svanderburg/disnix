@@ -1,5 +1,3 @@
-AM_CPPFLAGS=-ggdb
-
 pkglib_LTLIBRARIES = libmanifest.la
 pkginclude_HEADERS = activationmapping.h distributionmapping.h targets.h
 

@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __LOCKING_H
-#define __LOCKING_H
+#ifndef __DISNIX_LOCKING_H
+#define __DISNIX_LOCKING_H
 #include <glib.h>
 
 /**

@@ -20,7 +20,7 @@
 #include "edgestable.h"
 #include <activationmapping.h>
 
-GHashTable *generate_edges_table(GArray *activation_array)
+GHashTable *generate_edges_table(const GArray *activation_array)
 {    
     unsigned int i;
     

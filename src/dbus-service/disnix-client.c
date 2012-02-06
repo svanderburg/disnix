@@ -18,13 +18,12 @@
  */
 
 #include <stdio.h>
-#define _GNU_SOURCE
 #include <getopt.h>
 #include <glib.h>
 #include "operation.h"
 #include "disnix-client-operation.h"
 
-static void print_usage(char *command)
+static void print_usage(const char *command)
 {
     /* Print the usage */
     fprintf(stderr, "Usage:\n");

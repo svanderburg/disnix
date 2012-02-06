@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __SIGNALS_H
-#define __SIGNALS_H
+#ifndef __DISNIX_SIGNALS_H
+#define __DISNIX_SIGNALS_H
 #include <glib.h>
 #include "disnix-instance.h"
 

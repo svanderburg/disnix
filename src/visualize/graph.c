@@ -22,7 +22,7 @@
 #include "clustertable.h"
 #include <activationmapping.h>
 
-int generate_graph(gchar *manifest_file)
+int generate_graph(const gchar *manifest_file)
 {
     /* Creates an array with activation items from the manifest */
     GArray *activation_array = create_activation_array(manifest_file);

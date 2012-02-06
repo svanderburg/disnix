@@ -17,13 +17,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __ACTIVATE_H
-#define __ACTIVATE_H
+#ifndef __DISNIX_ACTIVATE_H
+#define __DISNIX_ACTIVATE_H
 #include <glib.h>
 
 /**
  * Activates a distributed system deployment state defined in a manifest file.
- * In this process all the obsolete services from the previous deployment
+ * In this process, all the obsolete services from the previous deployment
  * configuration are deactivated and new services from the desired configuration
  * are activated, without breaking inter-dependencies and taking the right
  * order of activation into account. Moreover, before the activation
@@ -38,8 +38,8 @@
  * @param no_coordinator_profile Do not create a coordinator profile
  * @param no_target_profiles Do not create Disnix profiles on the target machines
  * @param no_upgrade Force Disnix to not look at the previous configuration
- * @return 0 if the process suceeds, else a non-zero exit value
+ * @return 0 if the process succeeds, else a non-zero exit value
  */
-int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, gchar *coordinator_profile_path, gchar *profile, gboolean no_coordinator_profile, gboolean no_target_profiles, gboolean no_upgrade);
+int activate_system(gchar *interface, const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_coordinator_profile, const gboolean no_target_profiles, const gboolean no_upgrade);
 
 #endif

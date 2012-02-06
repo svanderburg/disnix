@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __INFRASTRUCTURE_H
-#define __INFRASTRUCTURE_H
+#ifndef __DISNIX_INFRASTRUCTURE_H
+#define __DISNIX_INFRASTRUCTURE_H
 #include <glib.h>
 
 /**
@@ -29,7 +29,7 @@
  *                        connect to the remote disnix service
  * @return GArray with target properties
  */
-GArray *create_target_array(char *infrastructure_expr, char *target_property);
+GArray *create_target_array(char *infrastructure_expr, const char *target_property);
 
 /**
  * Deletes an array with target properties

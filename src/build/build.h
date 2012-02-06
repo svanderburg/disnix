@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __BUILD_H
-#define __BUILD_H
+#ifndef __DISNIX_BUILD_H
+#define __DISNIX_BUILD_H
 #include <glib.h>
 
 /**
@@ -30,6 +30,6 @@
  * @param distributed_derivation_file Path to the distributed derivation file
  * @return 0 if everything succeeds, or else a non-zero exit value
  */
-int build(gchar *interface, gchar *distributed_derivation_file);
+int build(gchar *interface, const gchar *distributed_derivation_file);
 
 #endif

@@ -20,7 +20,7 @@
 #include "distributionmapping.h"
 #include <xmlutil.h>
 
-GArray *generate_distribution_array(gchar *manifest_file)
+GArray *generate_distribution_array(const gchar *manifest_file)
 {
     /* Declarations */
     xmlDocPtr doc;

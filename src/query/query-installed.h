@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __QUERY_INSTALLED_H
-#define __QUERY_INSTALLED_H
+#ifndef __DISNIX_QUERY_INSTALLED_H
+#define __DISNIX_QUERY_INSTALLED_H
 #include <glib.h>
 
 /**
@@ -32,6 +32,6 @@
  * @param profile Name of the distributed profile
  * @return 0 if all the operations succeed, else a non-zero value
  */
-int query_installed(gchar *interface, gchar *target_property, gchar *infrastructure_expr, gchar *profile);
+int query_installed(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile);
 
 #endif

@@ -1,5 +1,3 @@
-AM_CPPFLAGS = -ggdb
-
 bin_PROGRAMS = disnix-query
 noinst_HEADERS = query-installed.h
 

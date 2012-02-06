@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISTRIBUTIONMAPPING_H
-#define __DISTRIBUTIONMAPPING_H
+#ifndef __DISNIX_DISTRIBUTIONMAPPING_H
+#define __DISNIX_DISTRIBUTIONMAPPING_H
 #include <glib.h>
 
 /**
@@ -39,7 +39,7 @@ DistributionItem;
  * @param manifest_file Path to the manifest XML file
  * @return GArray with DistributionItems
  */
-GArray *generate_distribution_array(gchar *manifest_file);
+GArray *generate_distribution_array(const gchar *manifest_file);
 
 /**
  * Deletes an array with distribution items.

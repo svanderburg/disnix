@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISTRIBUTE_H
-#define __DISTRIBUTE_H
+#ifndef __DISNIX_DISTRIBUTE_H
+#define __DISNIX_DISTRIBUTE_H
 #include <glib.h>
 
 /**
@@ -29,6 +29,6 @@
  * @param manifest_file Path to the manifest file which maps services to machines
  * @return 0 if everything succeeds, else a non-zero exit status
  */
-int distribute(gchar *interface, gchar *manifest_file);
+int distribute(gchar *interface, const gchar *manifest_file);
 
 #endif

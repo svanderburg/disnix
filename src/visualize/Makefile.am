@@ -1,5 +1,3 @@
-AM_CPPFLAGS = -ggdb
-
 bin_PROGRAMS = disnix-visualize
 noinst_HEADERS = clustertable.h edgestable.h graph.h
 

@@ -44,7 +44,7 @@ GHashTable *generate_cluster_table(GArray *activation_array)
 	 * of services and add it to a new entry in the hash table
 	 */
 	if(services_array == NULL)
-	{	
+	{
 	    services_array = g_array_new(FALSE, FALSE, sizeof(gchar*));  
 	    g_hash_table_insert(cluster_table, target, services_array);
 	}

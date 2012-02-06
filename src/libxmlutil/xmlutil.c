@@ -19,7 +19,7 @@
 
 #include "xmlutil.h"
 
-xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, char *xpath)
+xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, const char *xpath)
 {
     xmlXPathContextPtr context;
     xmlXPathObjectPtr result;

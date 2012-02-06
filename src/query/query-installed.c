@@ -20,7 +20,7 @@
 #include <infrastructure.h>
 #include <client-interface.h>
 
-int query_installed(gchar *interface, gchar *target_property, gchar *infrastructure_expr, gchar *profile)
+int query_installed(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile)
 {
     int exit_status = 0;
     
@@ -40,7 +40,7 @@ int query_installed(gchar *interface, gchar *target_property, gchar *infrastruct
 	    g_print("\nServices on: %s\n\n", target);
 		
 	    status = wait_to_finish(exec_query_installed(interface, target, profile));
-						
+		
 	    if(status != 0)
 	    {
 		g_printerr("Failed executing the query operation!\n");

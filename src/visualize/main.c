@@ -18,11 +18,10 @@
  */
 
 #include <stdio.h>
-#define _GNU_SOURCE
 #include <getopt.h>
 #include "graph.h"
 
-static void print_usage(char *command)
+static void print_usage(const char *command)
 {
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "%s manifest\n", command);

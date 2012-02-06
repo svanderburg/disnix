@@ -21,7 +21,7 @@
 #include <infrastructure.h>
 #include <client-interface.h> 
 
-int collect_garbage(gchar *interface, gchar *target_property, gchar *infrastructure_expr, gboolean delete_old)
+int collect_garbage(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, const gboolean delete_old)
 {
     int exit_status = 0;
     

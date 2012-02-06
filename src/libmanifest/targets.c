@@ -20,7 +20,7 @@
 #include "targets.h"
 #include <xmlutil.h>
 
-GArray *generate_target_array(gchar *manifest_file)
+GArray *generate_target_array(const gchar *manifest_file)
 {
     /* Declarations */
     xmlDocPtr doc;
@@ -98,7 +98,7 @@ void delete_target_array(GArray *target_array)
     g_array_free(target_array, TRUE);
 }
 
-int target_index(GArray *target_array, gchar *target)
+int target_index(const GArray *target_array, const gchar *target)
 {
     gint left = 0;
     gint right = target_array->len - 1;

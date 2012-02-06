@@ -21,7 +21,7 @@
 #include <distributionmapping.h>
 #include <client-interface.h>
 
-int distribute(gchar *interface, gchar *manifest_file)
+int distribute(gchar *interface, const gchar *manifest_file)
 {
     int exit_status = 0;
     

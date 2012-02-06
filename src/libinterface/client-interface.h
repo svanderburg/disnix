@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __CLIENT_INTERFACE_H
-#define __CLIENT_INTERFACE_H
+#ifndef __DISNIX_CLIENT_INTERFACE_H
+#define __DISNIX_CLIENT_INTERFACE_H
 
 #include <unistd.h>
 #include <glib.h>
@@ -29,7 +29,7 @@
  * @param pid PID of a process
  * @return Non-zero value in case of a failure
  */
-int wait_to_finish(pid_t pid);
+int wait_to_finish(const pid_t pid);
 
 /**
  * Invokes the activate operation through a Disnix client interface
@@ -42,7 +42,7 @@ int wait_to_finish(pid_t pid);
  * @param service Service to activate
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_activate(gchar *interface, gchar *target, gchar *type, gchar **arguments, unsigned int arguments_size, gchar *service);
+pid_t exec_activate(gchar *interface, gchar *target, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
 
 /**
  * Invokes the deactivate operation through a Disnix client interface
@@ -55,7 +55,7 @@ pid_t exec_activate(gchar *interface, gchar *target, gchar *type, gchar **argume
  * @param service Service to deactivate
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_deactivate(gchar *interface, gchar *target, gchar *type, gchar **arguments, unsigned int arguments_size, gchar *service);
+pid_t exec_deactivate(gchar *interface, gchar *target, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
 
 /**
  * Invokes the lock operation through a Disnix client interface
@@ -85,7 +85,7 @@ pid_t exec_unlock(gchar *interface, gchar *target, gchar *profile);
  * @param delete_old Indicates whether old profile generations must be removed
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_collect_garbage(gchar *interface, gchar *target, gboolean delete_old);
+pid_t exec_collect_garbage(gchar *interface, gchar *target, const gboolean delete_old);
 
 /**
  * Invokes the set operation through a Disnix client interface

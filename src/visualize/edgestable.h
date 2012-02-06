@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __EDGESTABLE_H
-#define __EDGESTABLE_H
+#ifndef __DISNIX_EDGESTABLE_H
+#define __DISNIX_EDGESTABLE_H
 #include <glib.h>
 
 /**
@@ -28,7 +28,7 @@
  * @param activation_array
  * @return Generated edges table
  */
-GHashTable *generate_edges_table(GArray *activation_array);
+GHashTable *generate_edges_table(const GArray *activation_array);
 
 /**
  * Removes an edges table including all its contents from memory.

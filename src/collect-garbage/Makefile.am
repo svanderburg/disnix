@@ -1,5 +1,3 @@
-AM_CPPFLAGS = -ggdb
-
 bin_PROGRAMS = disnix-collect-garbage
 noinst_HEADERS = collect-garbage.h
 

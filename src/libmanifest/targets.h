@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __TARGETS_H
-#define __TARGETS_H
+#ifndef __DISNIX_TARGETS_H
+#define __DISNIX_TARGETS_H
 #include <glib.h>
 
 /**
@@ -27,7 +27,7 @@
  * @param manifest_file Path to the manifest XML file
  * @return GArray with targets
  */
-GArray *generate_target_array(gchar *manifest_file);
+GArray *generate_target_array(const gchar *manifest_file);
 
 /**
  * Deletes an array with distribution items.
@@ -44,6 +44,6 @@ void delete_target_array(GArray *target_array);
  * @param target Target to lookup
  * @return Index of target in the array, or -1 if not found
  */
-int target_index(GArray *target_array, gchar *target);
+int target_index(const GArray *target_array, const gchar *target);
 
 #endif

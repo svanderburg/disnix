@@ -86,12 +86,12 @@ static gchar *create_infrastructure_xml(gchar *infrastructure_expr)
 	{
 	    g_printerr("Error with forking nix-instantiate process!\n");
 	    close(pipefd[0]);
-	    close(pipefd[1]);	
+	    close(pipefd[1]);
 	    return NULL;
 	}
 	else if(status == 0)
 	{
-	    char *args[] = {"nix-instantiate", "--eval-only", "--strict", "--xml", infrastructure_expr, NULL};
+	    char *const args[] = {"nix-instantiate", "--eval-only", "--strict", "--xml", infrastructure_expr, NULL};
 	    close(pipefd[0]); /* Close read-end of pipe */
 	    dup2(pipefd[1], 1); /* Attach write-end to stdout */
 	    execvp("nix-instantiate", args);
@@ -136,7 +136,7 @@ static gchar *create_infrastructure_xml(gchar *infrastructure_expr)
     }    
 }
 
-GArray *create_target_array(char *infrastructure_expr, char *target_property)
+GArray *create_target_array(char *infrastructure_expr, const char *target_property)
 {
     /* Declarations */
     gchar *infrastructureXML, *query;
@@ -144,7 +144,7 @@ GArray *create_target_array(char *infrastructure_expr, char *target_property)
     xmlXPathObjectPtr result;
     GArray *target_array = NULL;
     
-    /* Open the XML output of nix-instantiate */    
+    /* Open the XML output of nix-instantiate */
     infrastructureXML = create_infrastructure_xml(infrastructure_expr);
     
     if(infrastructureXML == NULL)
@@ -153,13 +153,13 @@ GArray *create_target_array(char *infrastructure_expr, char *target_property)
         return NULL;
     }
     
-    /* Parse the infrastructure XML file */    
+    /* Parse the infrastructure XML file */
     doc = create_infrastructure_doc(infrastructureXML);
     g_free(infrastructureXML);
 	
     if(doc == NULL)
     {
-        g_printerr("Error with parsing infrastructure XML file!\n");    
+        g_printerr("Error with parsing infrastructure XML file!\n");
         return NULL;
     }
 

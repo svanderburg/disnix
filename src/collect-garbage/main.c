@@ -19,11 +19,10 @@
 
 #include <stdio.h>
 #include <getopt.h>
-#define _GNU_SOURCE
 #include <defaultoptions.h>
 #include "collect-garbage.h"
 
-static void print_usage(char *command)
+static void print_usage(const char *command)
 {
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "%s [--interface interface] [--target-property targetProperty] [-d|--delete-old] infrastructure_expr\n", command);

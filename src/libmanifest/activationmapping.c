@@ -68,7 +68,7 @@ static gint compare_activation_mapping(const ActivationMapping **l, const Activa
 	return status;
 }
 
-gint activation_mapping_index(GArray *activation_array, ActivationMapping *keys)
+gint activation_mapping_index(const GArray *activation_array, const ActivationMapping *keys)
 {
     gint left = 0;
     gint right = activation_array->len - 1;
@@ -76,8 +76,8 @@ gint activation_mapping_index(GArray *activation_array, ActivationMapping *keys)
     while(left <= right)
     {
 	gint mid = (left + right) / 2;
-	ActivationMapping *mid_mapping = g_array_index(activation_array, ActivationMapping*, mid);
-        gint status = compare_activation_mapping((const ActivationMapping**) &mid_mapping, (const ActivationMapping**) &keys);
+	const ActivationMapping *mid_mapping = g_array_index(activation_array, ActivationMapping*, mid);
+        gint status = compare_activation_mapping(&mid_mapping, &keys);
 	
 	if(status == 0)
             return mid; /* Return index of the found activation mapping */
@@ -90,7 +90,7 @@ gint activation_mapping_index(GArray *activation_array, ActivationMapping *keys)
     return -1; /* Activation mapping not found */
 }
 
-void print_activation_array(GArray *activation_array)
+void print_activation_array(const GArray *activation_array)
 {
     unsigned int i;
     
@@ -131,7 +131,7 @@ void print_activation_array(GArray *activation_array)
     }
 }
 
-GArray *create_activation_array(gchar *manifest_file)
+GArray *create_activation_array(const gchar *manifest_file)
 {
     xmlDocPtr doc;
     xmlNodePtr node_root;
@@ -445,7 +445,7 @@ GArray *substract_activation_array(GArray *left, GArray *right)
 
 }
 
-gchar **generate_activation_arguments(GArray *target)
+gchar **generate_activation_arguments(const GArray *target)
 {
     unsigned int i;
     gchar **arguments = (gchar**)g_malloc((target->len + 1) * sizeof(gchar*));
@@ -453,7 +453,7 @@ gchar **generate_activation_arguments(GArray *target)
     for(i = 0; i < target->len; i++)
     {
 	TargetProperty *target_property = g_array_index(target, TargetProperty*, i);
-	arguments[i] = g_strconcat(target_property->name, "=", target_property->value, NULL);	
+	arguments[i] = g_strconcat(target_property->name, "=", target_property->value, NULL);
     }
     
     arguments[i] = NULL;
@@ -461,7 +461,7 @@ gchar **generate_activation_arguments(GArray *target)
     return arguments;
 }
 
-gchar *get_target_property(ActivationMapping *mapping)
+gchar *get_target_property(const ActivationMapping *mapping)
 {
     unsigned int i;
     
@@ -476,7 +476,7 @@ gchar *get_target_property(ActivationMapping *mapping)
     return NULL;
 }
 
-GArray *find_interdependent_mappings(GArray *activation_array, ActivationMapping *mapping)
+GArray *find_interdependent_mappings(GArray *activation_array, const ActivationMapping *mapping)
 {
     unsigned int i;
     GArray *return_array = g_array_new(FALSE, FALSE, sizeof(ActivationMapping*));
@@ -489,14 +489,14 @@ GArray *find_interdependent_mappings(GArray *activation_array, ActivationMapping
 	for(j = 0; j < current_mapping->depends_on->len; j++)
 	{
 	    Dependency *dependency = g_array_index(current_mapping->depends_on, Dependency*, j);
-	    ActivationMapping compare_mapping, *compare_mapping_ptr;
+	    ActivationMapping compare_mapping;
+	    const ActivationMapping *compare_mapping_ptr = &compare_mapping;
 
 	    compare_mapping.service = dependency->service;
 	    compare_mapping.target = dependency->target;
-	    compare_mapping_ptr = &compare_mapping;
 	
-	    if(compare_activation_mapping((const ActivationMapping**) &mapping, (const ActivationMapping**) &compare_mapping_ptr) == 0)
-		g_array_append_val(return_array, current_mapping);	    
+	    if(compare_activation_mapping(&mapping, &compare_mapping_ptr) == 0)
+		g_array_append_val(return_array, current_mapping);
 	}
     }
         

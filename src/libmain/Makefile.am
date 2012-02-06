@@ -1,5 +1,3 @@
-AM_CPPFLAGS=-ggdb
-
 pkglib_LTLIBRARIES = libmain.la
 pkginclude_HEADERS = defaultoptions.h
 

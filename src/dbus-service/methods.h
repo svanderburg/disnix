@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __METHODS_H
-#define __METHODS_H
+#ifndef __DISNIX_METHODS_H
+#define __DISNIX_METHODS_H
 #include <glib.h>
 #include "disnix-instance.h"
 

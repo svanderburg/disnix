@@ -24,7 +24,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-int wait_to_finish(pid_t pid)
+int wait_to_finish(const pid_t pid)
 {
     if(pid == -1)
     {
@@ -39,14 +39,14 @@ int wait_to_finish(pid_t pid)
     }    
 }
 
-static pid_t exec_activate_or_deactivate(gchar *operation, gchar *interface, gchar *target, gchar *type, gchar **arguments, unsigned int arguments_size, gchar *service)
+static pid_t exec_activate_or_deactivate(gchar *operation, gchar *interface, gchar *target, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
 {
     pid_t pid = fork();
 	
     if(pid == 0)
     {
 	unsigned int i;
-	char **args = (char**)g_malloc((8 + 2 * arguments_size) * sizeof(gchar*));
+	char **args = (char**)g_malloc((8 + 2 * arguments_size) * sizeof(char*));
 	    
 	args[0] = interface;
 	args[1] = operation;
@@ -65,18 +65,18 @@ static pid_t exec_activate_or_deactivate(gchar *operation, gchar *interface, gch
         args[i + 7] = NULL;
 	    
         execvp(interface, args);
-        _exit(1);	    
+        _exit(1);
     }
     else
 	return pid;
 }
 
-pid_t exec_activate(gchar *interface, gchar *target, gchar *type, gchar **arguments, unsigned int arguments_size, gchar *service)
+pid_t exec_activate(gchar *interface, gchar *target, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
 {
     return exec_activate_or_deactivate("--activate", interface, target, type, arguments, arguments_size, service);
 }
 
-pid_t exec_deactivate(gchar *interface, gchar *target, gchar *type, gchar **arguments, unsigned int arguments_size, gchar *service)
+pid_t exec_deactivate(gchar *interface, gchar *target, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
 {
     return exec_activate_or_deactivate("--deactivate", interface, target, type, arguments, arguments_size, service);
 }
@@ -87,7 +87,7 @@ static pid_t exec_lock_or_unlock(gchar *operation, gchar *interface, gchar *targ
     
     if(pid == 0)
     {
-	char *args[] = {interface, operation, "--target", target, "--profile", profile, NULL};
+	char *const args[] = {interface, operation, "--target", target, "--profile", profile, NULL};
 	execvp(interface, args);
 	_exit(1);
     }
@@ -105,7 +105,7 @@ pid_t exec_unlock(gchar *interface, gchar *target, gchar *profile)
     return exec_lock_or_unlock("--unlock", interface, target, profile);
 }
 
-pid_t exec_collect_garbage(gchar *interface, gchar *target, gboolean delete_old)
+pid_t exec_collect_garbage(gchar *interface, gchar *target, const gboolean delete_old)
 {
     /* Declarations */
     pid_t pid;
@@ -121,8 +121,8 @@ pid_t exec_collect_garbage(gchar *interface, gchar *target, gboolean delete_old)
     pid = fork();
     
     if(pid == 0)
-    {	
-	char *args[] = {interface, "--target", target, "--collect-garbage", delete_old_arg, NULL};
+    {
+	char *const args[] = {interface, "--target", target, "--collect-garbage", delete_old_arg, NULL};
 	execvp(interface, args);
 	_exit(1);
     }
@@ -136,7 +136,7 @@ pid_t exec_set(gchar *interface, gchar *target, gchar *profile, gchar *component
     
     if(pid == 0)
     {
-        char *args[] = {interface, "--target", target, "--profile", profile, "--set", component, NULL};
+        char *const args[] = {interface, "--target", target, "--profile", profile, "--set", component, NULL};
         execvp(interface, args);
         _exit(1);
     }
@@ -150,7 +150,7 @@ pid_t exec_query_installed(gchar *interface, gchar *target, gchar *profile)
     
     if(pid == 0)
     {
-	char *args[] = {interface, "--target", target, "--profile", profile, "--query-installed", NULL};
+	char *const args[] = {interface, "--target", target, "--profile", profile, "--query-installed", NULL};
 	execvp(interface, args);
 	_exit(1);
     }
@@ -164,7 +164,7 @@ static pid_t exec_copy_closure(gchar *operation, gchar *interface, gchar *target
     
     if(pid == 0)
     {
-	char *args[] = {"disnix-copy-closure", operation, "--target", target, "--interface", interface, component, NULL};
+	char *const args[] = {"disnix-copy-closure", operation, "--target", target, "--interface", interface, component, NULL};
 	execvp("disnix-copy-closure", args);
 	_exit(1);
     }
@@ -190,9 +190,9 @@ pid_t exec_realise(gchar *interface, gchar *target, gchar *derivation, int pipef
 	
 	if(pid == 0)
 	{
-	    char *args[] = {interface, "--realise", "--target", target, derivation, NULL};
+	    char *const args[] = {interface, "--realise", "--target", target, derivation, NULL};
 	    close(pipefd[0]); /* Close read-end */
-	    dup2(pipefd[1], 1); /* Attach pipe to the stdout */						
+	    dup2(pipefd[1], 1); /* Attach pipe to the stdout */
 	    execvp(interface, args); /* Run process */
 	    _exit(1);
 	}

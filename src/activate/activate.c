@@ -31,7 +31,7 @@
 #include <activationmapping.h>
 #include <targets.h>
 
-int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, gchar *coordinator_profile_path, gchar *profile, gboolean no_coordinator_profile, gboolean no_target_profiles, gboolean no_upgrade)
+int activate_system(gchar *interface, const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_coordinator_profile, const gboolean no_target_profiles, const gboolean no_upgrade)
 {
     gchar *old_manifest_file;
     GArray *old_activation_mappings;
@@ -63,7 +63,7 @@ int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, 
     	    FILE *file;
 	    
     	    if(coordinator_profile_path == NULL)
-    		old_manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);	    
+    		old_manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
 	    else
 		old_manifest_file = g_strconcat(coordinator_profile_path, "/", profile, NULL);
 	    
@@ -83,12 +83,12 @@ int activate_system(gchar *interface, gchar *new_manifest, gchar *old_manifest, 
 
 	/* If we have an old configuration -> open it */
 	if(!no_upgrade && old_manifest_file != NULL)
-	{	    	    
+	{
     	    g_print("Using previous manifest: %s\n", old_manifest_file);
     	    old_activation_mappings = create_activation_array(old_manifest_file);
         
 	    /* Free the variable because it's not needed anymore */
-	    g_free(old_manifest_file);	    
+	    g_free(old_manifest_file);
 	}
 	else
     	    old_activation_mappings = NULL;

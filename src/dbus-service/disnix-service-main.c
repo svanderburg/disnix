@@ -19,11 +19,10 @@
 
 #include <stdio.h>
 #include <getopt.h>
-#define _GNU_SOURCE
 #define TRUE 1
 #define FALSE 0
 
-static void print_usage(char *command)
+static void print_usage(const char *command)
 {
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "%s [options]\n\n", command);

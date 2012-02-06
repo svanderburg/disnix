@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __TRANSITION_H
-#define __TRANSITION_H
+#ifndef __DISNIX_TRANSITION_H
+#define __DISNIX_TRANSITION_H
 #include <glib.h>
 
 /**

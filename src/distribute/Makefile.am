@@ -1,5 +1,3 @@
-AM_CPPFLAGS = -ggdb
-
 bin_PROGRAMS = disnix-distribute
 noinst_HEADERS = distribute.h
 

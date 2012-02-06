@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __GRAPH_H
-#define __GRAPH_H
+#ifndef __DISNIX_GRAPH_H
+#define __DISNIX_GRAPH_H
 #include <glib.h>
 
 /**
@@ -28,6 +28,6 @@
  * @param manifest_file Manifest file to visualize
  * @return 0 in case of success, otherwise a non-zero exit value
  */
-int generate_graph(gchar *manifest_file);
+int generate_graph(const gchar *manifest_file);
 
 #endif

@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __OPERATION_H
-#define __OPERATION_H
+#ifndef __DISNIX_OPERATION_H
+#define __DISNIX_OPERATION_H
 
 /**
  * Enumeration of possible Disnix service operations

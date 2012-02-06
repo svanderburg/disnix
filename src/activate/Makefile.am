@@ -1,4 +1,4 @@
-AM_CPPFLAGS = -ggdb -DLOCALSTATEDIR=\"$(localstatedir)\"
+AM_CPPFLAGS = -DLOCALSTATEDIR=\"$(localstatedir)\"
 
 bin_PROGRAMS = disnix-activate
 noinst_HEADERS = transition.h locking.h profiles.h activate.h

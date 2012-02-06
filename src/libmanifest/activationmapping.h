@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __ACTIVATIONMAPPING_H
-#define __ACTIVATIONMAPPING_H
+#ifndef __DISNIX_ACTIVATIONMAPPING_H
+#define __DISNIX_ACTIVATIONMAPPING_H
 #include <glib.h>
 
 /**
@@ -73,7 +73,7 @@ ActivationMapping;
  * @param manifest_file Path to the manifest XML file
  * @return GArray containing activation mappings
  */
-GArray *create_activation_array(gchar *manifest_file);
+GArray *create_activation_array(const gchar *manifest_file);
 
 /**
  * Deletes an array with activation mappings including its contents.
@@ -86,9 +86,11 @@ void delete_activation_array(GArray *activation_array);
  * Returns the index of the activation mapping with the given keys
  * in the activation array.
  *
+ * @param activation_array Activation array
+ * @param keys Activation array containing key attributes
  * @return Index of the activation mapping or -1 if not found
  */
-gint activation_mapping_index(GArray *activation_array, ActivationMapping *keys);
+gint activation_mapping_index(const GArray *activation_array, const ActivationMapping *keys);
 
 /**
  * Returns the intersection of the two given arrays.
@@ -134,7 +136,7 @@ GArray *union_activation_array(GArray *left, GArray *right, GArray *intersect);
  * @param target Array with target properties
  * @return String with environment variable settings
  */
-gchar **generate_activation_arguments(GArray *target);
+gchar **generate_activation_arguments(const GArray *target);
 
 /**
  * Returns the target interface property from the given
@@ -143,7 +145,7 @@ gchar **generate_activation_arguments(GArray *target);
  * @param mapping Activation mapping
  * @return The target interface value
  */
-gchar *get_target_property(ActivationMapping *mapping);
+gchar *get_target_property(const ActivationMapping *mapping);
 
 /**
  * Searches for all the mappings in an array that have an inter-dependency
@@ -154,13 +156,13 @@ gchar *get_target_property(ActivationMapping *mapping);
  *                interdependent mapping
  * @return Array with interdependent activation mappings
  */
-GArray *find_interdependent_mappings(GArray *activation_array, ActivationMapping *mapping);
+GArray *find_interdependent_mappings(GArray *activation_array, const ActivationMapping *mapping);
 
 /**
  * Prints the given activation array.
  *
  * @param activation_array Activation array to print
  */
-void print_activation_array(GArray *activation_array);
+void print_activation_array(const GArray *activation_array);
 
 #endif
