@@ -56,6 +56,8 @@ typedef struct
     gchar *service;
     /** Array with properties of the target machine */
     GArray *target;
+    /* Name of the service */
+    gchar *name;
     /** Property used to connect to the disnix service */
     gchar *targetProperty;
     /** Activation type */    

@@ -178,6 +178,7 @@ GArray *create_activation_array(const gchar *manifest_file)
 	    gchar *service = NULL;
 	    GArray *target = NULL;
 	    gchar *targetProperty = NULL;
+	    gchar *name = NULL;
 	    gchar *type = NULL;
 	    GArray *depends_on = NULL;
 	    ActivationMapping *mapping = (ActivationMapping*)g_malloc(sizeof(ActivationMapping));
@@ -190,6 +191,8 @@ GArray *create_activation_array(const gchar *manifest_file)
 		    service = g_strdup(mapping_children->children->content);
 		else if(xmlStrcmp(mapping_children->name, "targetProperty") == 0)
 		    targetProperty = g_strdup(mapping_children->children->content);
+		else if(xmlStrcmp(mapping_children->name, "name") == 0)
+		    name = g_strdup(mapping_children->children->content);
 		else if(xmlStrcmp(mapping_children->name, "type") == 0)
 		    type = g_strdup(mapping_children->children->content);
 		else if(xmlStrcmp(mapping_children->name, "target") == 0)
@@ -285,6 +288,7 @@ GArray *create_activation_array(const gchar *manifest_file)
 	    mapping->service = service;
 	    mapping->target = target;
 	    mapping->targetProperty = targetProperty;
+	    mapping->name = name;
 	    mapping->type = type;
 	    mapping->depends_on = depends_on;
 		
@@ -335,6 +339,7 @@ void delete_activation_array(GArray *activation_array)
 	g_free(mapping->service);
 	delete_target_array(mapping->target);
 	g_free(mapping->targetProperty);
+	g_free(mapping->name);
 	g_free(mapping->type);
 	
 	if(mapping->depends_on != NULL)
