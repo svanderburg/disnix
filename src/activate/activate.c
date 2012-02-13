@@ -31,7 +31,7 @@
 #include <activationmapping.h>
 #include <targets.h>
 
-int activate_system(gchar *interface, const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_coordinator_profile, const gboolean no_target_profiles, const gboolean no_upgrade)
+int activate_system(gchar *interface, const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_coordinator_profile, const gboolean no_target_profiles, const gboolean no_upgrade, const gboolean no_lock)
 {
     gchar *old_manifest_file;
     GArray *old_activation_mappings;
@@ -94,7 +94,11 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
     	    old_activation_mappings = NULL;
 
 	/* Try to acquire a lock */
-	status = lock(interface, distribution_array, profile);
+	
+	if(no_lock)
+	    status = 0;
+	else
+	    status = lock(interface, distribution_array, profile);
     
 	if(status == 0)
 	{
@@ -111,7 +115,9 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
 		}
 		
 		/* Try to release the lock */
-		unlock(interface, distribution_array, profile);
+		
+		if(!no_lock)
+		    unlock(interface, distribution_array, profile);
 	    
 		/* If setting the profiles succeeds -> set the coordinator profile */
 		if(status == 0 && !no_coordinator_profile)
@@ -127,12 +133,20 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
 	    else
 	    {
 		/* Try to release the lock */
-		unlock(interface, distribution_array, profile); 
+		
+		if(!no_lock)
+		    unlock(interface, distribution_array, profile);
+		    
 		exit_status = status;
 	    }
 	}
 	else
+	{
 	    exit_status = status;
+	    
+	    if(!no_lock)
+		unlock(interface, distribution_array, profile); /* Try to release the lock */
+	}
     }
     
     /* Cleanup */

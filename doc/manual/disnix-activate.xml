@@ -117,6 +117,16 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>--no-lock</option></term>
+				<listitem>
+					<para>
+						By enabling this option Disnix will not acquire any locks, which is not recommended.
+					</para>
+				</listitem>
+			</varlistentry>
+			
+
+			<varlistentry>
 				<term><option>-h</option>, <option>--help</option></term>
 				<listitem>
 					<para>
