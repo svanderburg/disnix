@@ -566,9 +566,9 @@ let
               # the services in the distribution model. This test should
               # succeed.
               
-              $testtarget1->mustSucceed("[ \"\$(grep \"@lines[3]\" /var/log/upstart/disnix)\" != \"\" ]");
-              $testtarget2->mustSucceed("[ \"\$(grep \"@lines[7]\" /var/log/upstart/disnix)\" != \"\" ]");
-              $testtarget2->mustSucceed("[ \"\$(grep \"@lines[8]\" /var/log/upstart/disnix)\" != \"\" ]");
+              $testtarget1->mustSucceed("[ \"\$(journalctl --no-pager --full _SYSTEMD_UNIT=disnix.service | grep \"Activate: @lines[3]\")\" != \"\" ]");
+              $testtarget2->mustSucceed("[ \"\$(journalctl --no-pager --full _SYSTEMD_UNIT=disnix.service | grep \"Activate: @lines[7]\")\" != \"\" ]");
+              $testtarget2->mustSucceed("[ \"\$(journalctl --no-pager --full _SYSTEMD_UNIT=disnix.service | grep \"Activate: @lines[8]\")\" != \"\" ]");
               
               # We now perform an upgrade. In this case testService2 is replaced
               # by testService2B. This test should succeed.
@@ -692,7 +692,7 @@ let
               # Checks whether the testService1 has been actually built on the
               # targets by checking the logfiles. This test should succeed.
               
-              $testtarget1->mustSucceed("[ \"\$(grep \"\\-testService1.drv\" /var/log/upstart/disnix)\" != \"\" ]");
+              $testtarget1->mustSucceed("[ \"\$(journalctl --no-pager --full _SYSTEMD_UNIT=disnix.service | grep \"\\-testService1.drv\")\" != \"\" ]");
               
               # Checks whether the build log of testService1 is available on the
               # coordinator machine. This test should fail, since the build
