@@ -63,70 +63,70 @@ while [ "$1" != "--" ]
 do
     case "$1" in
         --import)
-	    operation="import";
-	    ;;
-	--export)
-	    operation="export";
-	    ;;
-	--print-invalid)
-	    operation="print-invalid";
-	    ;;
-	-r|--realise)
-	    operation="realise";
-	    ;;
-	--set)
-	    operation="set";
-	    ;;
-	-q|--query-installed)
-	    operation="query-installed";
-	    ;;
-	--query-requisites)
-	    operation="query-requisites";
-	    ;;
-	--collect-garbage)
-	    operation="collect-garbage";
-	    ;;
-	--activate)
-	    operation="activate";
-	    path=$2
-	    ;;
-	--deactivate)
-	    operation="deactivate";
-	    path=$2
-	    ;;
-	--lock)
-	    operation="lock";
-	    path=$2
-	    ;;
-	--unlock)
-	    operation="unlock";
-	    path=$2
-	    ;;
-	--target)
-	    target=$2
-	    ;;
-	--localfile)
-	    localfile=1
-	    ;;
-	--remotefile)
-	    remotefile=1
-	    ;;
-	-p|--profile)
-	    profileArg="--profile $2"
-	    ;;
-	-d|--delete-old)
-	    deleteOldArg="-d"
-	    ;;
-	--type)
-	    type=$2
-	    ;;
-	--arguments)
-	    argsArg="$argsArg --arguments \"$2\""
-	    ;;
-	-h|--help)
-	    showUsage
-	    exit 0
-	    ;;
+            operation="import";
+            ;;
+        --export)
+            operation="export";
+            ;;
+        --print-invalid)
+            operation="print-invalid";
+            ;;
+        -r|--realise)
+            operation="realise";
+            ;;
+        --set)
+            operation="set";
+            ;;
+        -q|--query-installed)
+            operation="query-installed";
+            ;;
+        --query-requisites)
+            operation="query-requisites";
+            ;;
+        --collect-garbage)
+            operation="collect-garbage";
+            ;;
+        --activate)
+            operation="activate";
+            path=$2
+            ;;
+        --deactivate)
+            operation="deactivate";
+            path=$2
+            ;;
+        --lock)
+            operation="lock";
+            path=$2
+            ;;
+        --unlock)
+            operation="unlock";
+            path=$2
+            ;;
+        --target)
+            target=$2
+            ;;
+        --localfile)
+            localfile=1
+            ;;
+        --remotefile)
+            remotefile=1
+            ;;
+        -p|--profile)
+            profileArg="--profile $2"
+            ;;
+        -d|--delete-old)
+            deleteOldArg="-d"
+            ;;
+        --type)
+            type=$2
+            ;;
+        --arguments)
+            argsArg="$argsArg --arguments \"$2\""
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
     esac
     
     shift
@@ -152,42 +152,42 @@ checkTmpDir
 
 case "$operation" in
     import)
-	if [ "$localfile" != "1" ] && [ "$remotefile" != "1" ]
-	then
-	    echo "ERROR: Either a remote or a localfile must be specified!" >&2
-	    exit 1
-	fi
-	
-	# A localfile must first be transferred
-	if [ "$localfile" != "" ]
-	then
-	    remotefile=`ssh -p $targetPort $SSH_OPTS $targetHostname mktemp -p $TMPDIR`
-	    scp -P $targetPort $SSH_OPTS "$@" $targetHostname:$remotefile
-	fi
-	
-	# Import the closure into the Nix store
-	ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --import $remotefile
-	;;
+        if [ "$localfile" != "1" ] && [ "$remotefile" != "1" ]
+        then
+            echo "ERROR: Either a remote or a localfile must be specified!" >&2
+            exit 1
+        fi
+        
+        # A localfile must first be transferred
+        if [ "$localfile" != "" ]
+        then
+            remotefile=`ssh -p $targetPort $SSH_OPTS $targetHostname mktemp -p $TMPDIR`
+            scp -P $targetPort $SSH_OPTS "$@" $targetHostname:$remotefile
+        fi
+        
+        # Import the closure into the Nix store
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --import $remotefile
+        ;;
     export)
-	if [ "$localfile" != "1" ] && [ "$remotefile" != "1" ]
-	then
-	    echo "ERROR: Either a remote or a localfile must be specified!" >&2
-	    exit 1
-	fi
+        if [ "$localfile" != "1" ] && [ "$remotefile" != "1" ]
+        then
+            echo "ERROR: Either a remote or a localfile must be specified!" >&2
+            exit 1
+        fi
 
-	closure=`ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --export $@`
-	
-	# A remote file must be downloaded afterwards
-	if [ "$remotefile" = "1" ]
-	then
-	    localClosure=`mktemp -p $TMPDIR`
-	    scp -P $targetPort $SSH_OPTS $targetHostname:$closure $localClosure
-	    echo $localClosure
-	fi
+        closure=`ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --export $@`
+        
+        # A remote file must be downloaded afterwards
+        if [ "$remotefile" = "1" ]
+        then
+            localClosure=`mktemp -p $TMPDIR`
+            scp -P $targetPort $SSH_OPTS $targetHostname:$closure $localClosure > /dev/null
+            echo $localClosure
+        fi
         ;;
     print-invalid)
-	ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --print-invalid "$@"
-	;;
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --print-invalid "$@"
+        ;;
     realise)
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --realise "$@"
         ;;
@@ -204,23 +204,23 @@ case "$operation" in
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --collect-garbage $deleteOldArg "$@"
         ;;
     activate)
-	if [ "$type" = "" ]
-	then
-	    echo "ERROR: A type must be specified!" >&2
-	    exit 1
-	fi
-	
-	ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --activate "$@"
-	;;
+        if [ "$type" = "" ]
+        then
+            echo "ERROR: A type must be specified!" >&2
+            exit 1
+        fi
+        
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --activate "$@"
+        ;;
     deactivate)
-	if [ "$type" = "" ]
-	then
-	    echo "ERROR: A type must be specified!" >&2
-	    exit 1
-	fi
-	
-	ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --deactivate "$@"
-	;;
+        if [ "$type" = "" ]
+        then
+            echo "ERROR: A type must be specified!" >&2
+            exit 1
+        fi
+        
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --deactivate "$@"
+        ;;
     lock)
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --lock $profileArg
         ;;
