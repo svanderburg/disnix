@@ -500,7 +500,7 @@ let
               # is produced as a Hydra report. This test should succeed.
               
               $client->mustSucceed("(disnix-visualize $result) > visualize.dot");
-              $client->mustSucceed("${pkgs.graphviz}/bin/dot -Tpng visualize.dot > /hostfs/$ENV{out}/visualize.png");
+              $client->mustSucceed("${pkgs.graphviz}/bin/dot -Tpng visualize.dot > /tmp/xchg/visualize.png");
             '';
         };
         
