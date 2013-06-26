@@ -29,7 +29,7 @@
 #include "signals.h"
 #define BUFFER_SIZE 1024
 
-extern char *activation_modules_dir;
+extern char *dysnomia_modules_dir;
 
 extern char *tmpdir;
 
@@ -795,7 +795,7 @@ static void disnix_activate_thread_func(DisnixObject *object, const gint pid, gc
     if(status == 0)
     {
 	unsigned int i;
-	gchar *cmd = g_strconcat(activation_modules_dir, "/", type, NULL);
+	gchar *cmd = g_strconcat(dysnomia_modules_dir, "/", type, NULL);
 	char *args[] = {cmd, "activate", derivation, NULL};
 	
 	for(i = 0; i < g_strv_length(arguments); i++)
@@ -861,7 +861,7 @@ static void disnix_deactivate_thread_func(DisnixObject *object, const gint pid, 
     if(status == 0)
     {
 	unsigned int i;
-	gchar *cmd = g_strconcat(activation_modules_dir, "/", type, NULL);
+	gchar *cmd = g_strconcat(dysnomia_modules_dir, "/", type, NULL);
 	char *args[] = {cmd, "deactivate", derivation, NULL};
 	
 	for(i = 0; i < g_strv_length(arguments); i++)
@@ -924,7 +924,7 @@ static int unlock_services(gchar **derivation, unsigned int derivation_size, gch
 	    
 	if(status == 0)
 	{
-	    gchar *cmd = g_strconcat(activation_modules_dir, "/", type[i], NULL);
+	    gchar *cmd = g_strconcat(dysnomia_modules_dir, "/", type[i], NULL);
 	    char *args[] = {cmd, "unlock", derivation[i], NULL};
 	    execvp(cmd, args);
 	    _exit(1);
@@ -1025,7 +1025,7 @@ static void disnix_lock_thread_func(DisnixObject *object, const gint pid, const 
 	    
 	    if(status == 0)
 	    {
-		gchar *cmd = g_strconcat(activation_modules_dir, "/", type[i], NULL);
+		gchar *cmd = g_strconcat(dysnomia_modules_dir, "/", type[i], NULL);
 		char *args[] = {cmd, "lock", derivation[i], NULL};
 		execvp(cmd, args);
 		_exit(1);

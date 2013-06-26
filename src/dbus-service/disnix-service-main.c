@@ -28,7 +28,7 @@ static void print_usage(const char *command)
     fprintf(stderr, "%s [options]\n\n", command);
     
     fprintf(stderr, "Options:\n");
-    fprintf(stderr, "--activation-modules-dir  Directory where the activation modules can be found\n");
+    fprintf(stderr, "--dysnomia-modules-dir    Directory where the Dysnomia modules can be found\n");
     fprintf(stderr, "--session-bus             Register the Disnix service on the session bus instead of the system bus (useful for testing)\n");
     fprintf(stderr, "--help                    Shows the usage of this command to the user\n");
 }
@@ -39,13 +39,13 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-	{"activation-modules-dir", required_argument, 0, 'a'},
+	{"dysnomia-modules-dir", required_argument, 0, 'a'},
 	{"session-bus", no_argument, 0, 's'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
     
-    char *activation_modules_dir = NULL;
+    char *dysnomia_modules_dir = NULL;
     int session_bus = FALSE;
     
     /* Parse command-line options */
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 	switch(c)
 	{
 	    case 'a':
-		activation_modules_dir = optarg;
+		dysnomia_modules_dir = optarg;
 		break;
 	    case 's':
 		session_bus = TRUE;
@@ -68,12 +68,12 @@ int main(int argc, char *argv[])
     
     /* Validate options */
     
-    if(activation_modules_dir == NULL)
+    if(dysnomia_modules_dir == NULL)
     {
-	fprintf(stderr, "A path to the activation modules directory must be specified!\n");
+	fprintf(stderr, "A path to the Dysnomia modules directory must be specified!\n");
 	return 1;
     }
 
     /* Start the program with the given options */
-    return start_disnix_service(activation_modules_dir, session_bus);
+    return start_disnix_service(dysnomia_modules_dir, session_bus);
 }

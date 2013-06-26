@@ -63,13 +63,12 @@ let
         src = tarball;
 
         buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable ]
-                      ++ lib.optional (!stdenv.isLinux) libiconv
-                      ++ lib.optional (!stdenv.isLinux) gettext;
+          ++ lib.optionals (!stdenv.isLinux) [ libiconv gettext ];
       };
       
     tests = 
       { nixos ? <nixos>
-      , disnix_activation_scripts ? (import ../../disnix-activation-scripts/trunk/release.nix {}).build {}
+      , dysnomia ? (import ../dysnomia/release.nix {}).build {}
       }:
       
       let
@@ -106,18 +105,19 @@ let
             jobs.disnix =
               { description = "Disnix server";
 
-                startOn = "started dbus";
+                wantedBy = [ "multi-user.target" ];
+                after = [ "dbus.service" ];
+                
+                path = [ pkgs.nix disnix ];
 
                 script =
                   ''
-                    export PATH=/var/run/current-system/sw/bin:/var/run/current-system/sw/sbin
                     export HOME=/root
-                    
-                    ${disnix}/bin/disnix-service --activation-modules-dir=${disnix_activation_scripts}/libexec/disnix/activation-scripts
+                    disnix-service --dysnomia-modules-dir=${dysnomia}/libexec/dysnomia
                   '';
                };
               
-            environment.systemPackages = [ pkgs.stdenv disnix ];
+            environment.systemPackages = [ pkgs.stdenv pkgs.nix disnix ];
           };
       in
       with import "${nixos}/lib/testing.nix" { system = "x86_64-linux"; };

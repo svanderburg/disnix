@@ -24,8 +24,8 @@
 
 /* Server settings variables */
 
-/** Directory in which the activation modules can be found */
-char *activation_modules_dir;
+/** Directory in which the Dysnomia modules can be found */
+char *dysnomia_modules_dir;
 
 /** Path to the temp directory */
 char *tmpdir;
@@ -126,10 +126,10 @@ static void handle_sigchild(int signum)
 /**
  * Starts the Disnix D-Bus service
  *
- * @param activation_modules_dir_arg Directory in which the activation modules can be found
+ * @param dysnomia_modules_dir_arg Directory in which the Dysnomia modules can be found
  * @param session_bus Indicates whether the daemon should be registered on the session bus or system bus
  */
-int start_disnix_service(char *activation_modules_dir_arg, int session_bus)
+int start_disnix_service(char *dysnomia_modules_dir_arg, int session_bus)
 {
     /* The D-Bus connection object provided by dbus_glib */
     DBusGConnection *bus;
@@ -157,7 +157,7 @@ int start_disnix_service(char *activation_modules_dir_arg, int session_bus)
     g_type_init();
 
     /* Add the server parameters to the global variables */
-    activation_modules_dir = activation_modules_dir_arg;
+    dysnomia_modules_dir = dysnomia_modules_dir_arg;
     
     /* Determine the temp directory */
     tmpdir = getenv("TMPDIR");
