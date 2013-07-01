@@ -49,7 +49,7 @@ GArray *generate_target_array(const gchar *manifest_file)
     }
     
     /* Query the targets elements */
-    result = executeXPathQuery(doc, "/manifest/targets");
+    result = executeXPathQuery(doc, "/manifest/targets/target");
     
     /* Iterate over all the targets elements and add them to the array */
     

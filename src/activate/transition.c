@@ -141,16 +141,13 @@ static int deactivate(gchar *interface, GArray *union_array, const ActivationMap
 	
 	g_print("\n");
 	
-	if(target_index(target_array, target_property) >= 0) /* Only deactivate services on machines that are available */
-	{
-	    /* Execute the deactivation operation */	    
-	    status = wait_to_finish(exec_deactivate(interface, target_property, actual_mapping->type, arguments, arguments_size, actual_mapping->service));
-	}
-	else
+	if(target_index(target_array, target_property) == -1) /* Only deactivate services on machines that are available */
 	{
 	    g_print("Skip deactivation of service: %s through: %s\n", actual_mapping->service, target_property);
 	    status = 0;
 	}
+	else
+	    status = wait_to_finish(exec_deactivate(interface, target_property, actual_mapping->type, arguments, arguments_size, actual_mapping->service)); /* Execute the deactivation operation */
 	
 	/* Cleanup */
 	g_free(arguments);
@@ -187,12 +184,12 @@ int transition(gchar *interface, GArray *new_activation_mappings, GArray *old_ac
         g_print("Intersection between old and new mappings:\n");
         intersection_array = intersect_activation_array(new_activation_mappings, old_activation_mappings);
         print_activation_array(intersection_array);
-		    	    
+	
         g_print("Mapping closures to deactivate:\n");
         deactivation_array = substract_activation_array(old_activation_mappings, intersection_array);
         print_activation_array(deactivation_array);
-	    
-        g_print("Mapping closures to activate:\n");
+	
+	g_print("Mapping closures to activate:\n");
         activation_array = substract_activation_array(new_activation_mappings, intersection_array);
         print_activation_array(activation_array);
 
@@ -233,7 +230,7 @@ int transition(gchar *interface, GArray *new_activation_mappings, GArray *old_ac
 	    if(status != 0)
 	    {
 		/* If the deactivation fails, perform a rollback */
-				
+		
 		unsigned int j;
 		g_print("Deactivation failed! Doing a rollback...\n");
 		
@@ -242,8 +239,8 @@ int transition(gchar *interface, GArray *new_activation_mappings, GArray *old_ac
 		    ActivationMapping *mapping = g_array_index(union_array, ActivationMapping*, j);
 		    
 		    if(activate(interface, union_array, mapping) != 0)
-			g_print("Rollback failed!\n");		    		    
-		}		
+			g_print("Rollback failed!\n");
+		}
 		
 		exit_status = status;
 		break;
