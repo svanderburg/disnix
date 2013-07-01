@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <errno.h>
 #include <string.h>
 
 int set_target_profiles(const GArray *distribution_array, gchar *interface, gchar *profile)
@@ -65,8 +66,11 @@ int set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *
     
     /* Create the profile directory */
     if(mkdir(profile_path, 0755) == -1)
-	g_printerr("Cannot create profile directory: %s\n", profile_path);
-
+    {
+	if(errno != EEXIST)
+	    g_printerr("Cannot create profile directory: %s\n", profile_path);
+    }
+    
     /* Profile path is not needed anymore */
     g_free(profile_path);
     
