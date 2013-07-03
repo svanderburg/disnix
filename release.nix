@@ -72,7 +72,7 @@ let
       }:
       
       let
-        disnix = build { system = "x86_64-linux"; };
+        disnix = build { system = builtins.currentSystem; };
         manifestTests = ./tests/manifest;
         machine =
           {config, pkgs, ...}:
@@ -120,7 +120,7 @@ let
             environment.systemPackages = [ pkgs.stdenv pkgs.nix disnix ];
           };
       in
-      with import "${nixos}/lib/testing.nix" { system = "x86_64-linux"; };
+      with import "${nixos}/lib/testing.nix" { system = builtins.currentSystem; };
       
       {
         install = simpleTest {
