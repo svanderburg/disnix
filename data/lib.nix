@@ -54,21 +54,21 @@ rec {
       { name = serviceName;
         value = service // {
           dependsOn = if service ? dependsOn && service.dependsOn != {} then
-	    listToAttrs (map (argName: 
-	      let
-	        dependencyName = (getAttr argName (service.dependsOn)).name;
-		dependency = getAttr dependencyName services;
-	        targets = getAttr dependencyName distribution;
-	      in
-	      { name = argName;
-	        value = dependency // {
-	          inherit targets;
-	          target = head targets;
-	        };        
-	      }
-	    ) (attrNames (service.dependsOn)))
-	  else {};
-	};
+            listToAttrs (map (argName:
+              let
+                dependencyName = (getAttr argName (service.dependsOn)).name;
+                dependency = getAttr dependencyName services;
+                targets = getAttr dependencyName distribution;
+              in
+              { name = argName;
+                value = dependency // {
+                  inherit targets;
+                  target = head targets;
+                };
+              }
+            ) (attrNames (service.dependsOn)))
+          else {};
+        };
       }
     ) (attrNames distribution))
   ;
@@ -102,28 +102,28 @@ rec {
     listToAttrs (map (serviceName: 
       let
         targets = getAttr serviceName distribution;
-	service = getAttr serviceName services;
+        service = getAttr serviceName services;
       in
       { name = serviceName;
         value = service // {
-	  distribution = map (target:
-	    let
-	      system = if target ? system then target.system else builtins.currentSystem;
-	      pkg = (getAttr serviceName (servicesFun { inherit distribution; inherit system; pkgs = selectPkgs system; })).pkg;
-	    in
-	    { service = 
-	        if serviceProperty == "outPath" then
-	          if service.dependsOn == {} then pkg.outPath
-	          else (pkg (service.dependsOn)).outPath
-		else
-		  if service.dependsOn == {} then unsafeDiscardOutputDependency (pkg.drvPath)
-		  else unsafeDiscardOutputDependency ((pkg (service.dependsOn)).drvPath)
-		;
-	      inherit target;
-	    }
-	  ) targets;
-	};
-      }	
+          distribution = map (target:
+            let
+              system = if target ? system then target.system else builtins.currentSystem;
+              pkg = (getAttr serviceName (servicesFun { inherit distribution; inherit system; pkgs = selectPkgs system; })).pkg;
+            in
+            { service = 
+                if serviceProperty == "outPath" then
+                  if service.dependsOn == {} then pkg.outPath
+                  else (pkg (service.dependsOn)).outPath
+                else
+                  if service.dependsOn == {} then unsafeDiscardOutputDependency (pkg.drvPath)
+                  else unsafeDiscardOutputDependency ((pkg (service.dependsOn)).drvPath)
+                ;
+              inherit target;
+            }
+          ) targets;
+        };
+      } 
     ) (attrNames distribution))
   ;
 
@@ -162,15 +162,15 @@ rec {
    * List of mappings
    */
 
-  generateServiceActivationMapping = serviceNames: services: targetProperty:     
+  generateServiceActivationMapping = serviceNames: services: targetProperty:
     let
       service = getAttr (head serviceNames) services;
       mappingItem = map (distributionItem:
         { inherit (distributionItem) service target;
-	  inherit (service) name type;
-	  inherit targetProperty;
-	  dependsOn = generateDependencyMapping (attrNames (service.dependsOn)) (service.dependsOn) services; 
-	}
+          inherit (service) name type;
+          inherit targetProperty;
+          dependsOn = generateDependencyMapping (attrNames (service.dependsOn)) (service.dependsOn) services; 
+        }
       ) (service.distribution);
     in
     if serviceNames == [] then [] else mappingItem ++ (generateServiceActivationMapping (tail serviceNames) services targetProperty)
@@ -240,15 +240,15 @@ rec {
       profileManifest = generateProfileManifest serviceActivationMapping (head targetNames) infrastructure;
       mappingItem = {
         profile = (pkgs.buildEnv {
-	  name = head targetNames;
-	  paths = servicesPerTarget;
-	  manifest = pkgs.writeTextFile {
-	    name = "manifest";
-	    text = "${pkgs.lib.concatMapStrings (manifestItem: "${manifestItem}\n") profileManifest}";
-	  };
-	  ignoreCollisions = true;
-	}).outPath;
-	target = getAttr targetProperty target;
+          name = head targetNames;
+          paths = servicesPerTarget;
+          manifest = pkgs.writeTextFile {
+            name = "manifest";
+            text = "${pkgs.lib.concatMapStrings (manifestItem: "${manifestItem}\n") profileManifest}";
+          };
+          ignoreCollisions = true;
+        }).outPath;
+        target = getAttr targetProperty target;
       };
     in
     if targetNames == [] then []
@@ -345,7 +345,7 @@ rec {
    
   generateDistributionModelBody = serviceNames: targetNames: allTargetNames:
     if serviceNames == [] then ""
-    else      
+    else
       "  ${head serviceNames} = [ infrastructure.${head targetNames} ];\n" +
       (if (tail targetNames) == [] then generateDistributionModelBody (tail serviceNames) allTargetNames allTargetNames
       else generateDistributionModelBody (tail serviceNames) (tail targetNames) allTargetNames)
