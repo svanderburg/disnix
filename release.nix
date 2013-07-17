@@ -570,6 +570,54 @@ let
               $testtarget2->mustSucceed("[ \"\$(journalctl --no-pager --full _SYSTEMD_UNIT=disnix.service | grep \"Activate: @lines[7]\")\" != \"\" ]");
               $testtarget2->mustSucceed("[ \"\$(journalctl --no-pager --full _SYSTEMD_UNIT=disnix.service | grep \"Activate: @lines[8]\")\" != \"\" ]");
               
+              # We now perform an upgrade by moving testService2 to another machine.
+              # This test should succeed.
+              $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-reverse.nix");
+              
+              my @lines = split('\n', $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-query ${manifestTests}/infrastructure.nix"));
+              
+              if(@lines[3] =~ /\-testService1/) {
+                  print "Found testService1 on disnix-query output line 3\n";
+              } else {
+                  die "disnix-query output line 3 does not contain testService1!\n";
+              }
+              
+              if(@lines[4] =~ /\-testService2/) {
+                  print "Found testService2 on disnix-query output line 4\n";
+              } else {
+                  die "disnix-query output line 4 does not contain testService2!\n";
+              }
+              
+              if(@lines[8] =~ /\-testService3/) {
+                  print "Found testService3 on disnix-query output line 8\n";
+              } else {
+                  die "disnix-query output line 8 does not contain testService3!\n";
+              }
+              
+              # Now we undo the upgrade again by moving testService2 back.
+              # This test should succeed.
+              $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+              
+              my @lines = split('\n', $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-query ${manifestTests}/infrastructure.nix"));
+              
+              if(@lines[3] =~ /\-testService1/) {
+                  die "Found testService1 on disnix-query output line 3\n";
+              } else {
+                  print "disnix-query output line 3 does not contain testService1!\n";
+              }
+              
+              if(@lines[7] =~ /\-testService2/) {
+                  die "Found testService2 on disnix-query output line 7\n";
+              } else {
+                  print "disnix-query output line 7 does not contain testService2!\n";
+              }
+              
+              if(@lines[8] =~ /\-testService3/) {
+                  die "Found testService3 on disnix-query output line 8\n";
+              } else {
+                  print "disnix-query output line 8 does not contain testService3!\n";
+              }
+              
               # We now perform an upgrade. In this case testService2 is replaced
               # by testService2B. This test should succeed.
               

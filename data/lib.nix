@@ -275,7 +275,7 @@ rec {
   ;
   
   /*
-   * Generates a manifest file constisting of a profile mapping and
+   * Generates a manifest file consisting of a profile mapping and
    * service activation mapping from the 3 Disnix models.
    *
    * Parameters:
