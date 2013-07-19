@@ -23,7 +23,7 @@ For running Disnix additional packages have to be installed:
 - Nix (http://www.nixos.org)
 - Nixpkgs (http://www.nixos.org)
 - OpenSSH (for using the disnix-ssh-client)
-- Disnix activation modules
+- Dysnomia
 
 Refer to the manuals of these packages to install the requisites or install them
 by using the package manager of your system.
