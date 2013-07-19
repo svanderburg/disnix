@@ -21,7 +21,7 @@ man1_MANS = disnix-activate.1 disnix-build.1 disnix-client.1 disnix-copy-closure
 
 man8_MANS = disnix-service.8
 
-MANUAL_SRCS = index.xml introduction.xml overview.xml installation.xml models.xml activation-scripts.xml usage.xml advanced-options.xml images style.css \
+MANUAL_SRCS = index.xml introduction.xml overview.xml installation.xml models.xml dysnomia-modules.xml usage.xml advanced-options.xml images style.css \
   $(man1_MANS:.1=.xml) $(man8_MANS:.8=.xml)
 
 version.txt:

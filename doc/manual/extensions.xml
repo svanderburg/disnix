@@ -28,9 +28,7 @@
 			Although Disnix manages the distributable components (services) of which a
 			distributed system is composed and the inter-dependencies, Disnix does
 			not manage the system configurations of the actual machines on which services are activated.
-			NixOS provides the command <command>nixos-deploy-network</command> to manage
-			a network of NixOS configurations.
-			This package conbines the Disnix tooling and NixOS tooling to manage distributed
+			The DisnixOS package cmnbines the Disnix tooling and NixOS tooling to manage distributed
 			system components <emphasis>and</emphasis> the underlying infrastructure based on
 			<link xlink:href="http://nixos.org/nixos">NixOS</link>
 			system configurations, and an extension to automatically

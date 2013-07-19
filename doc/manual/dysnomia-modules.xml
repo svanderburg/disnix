@@ -1,21 +1,21 @@
 <chapter xmlns="http://docbook.org/ns/docbook"
          xmlns:xlink="http://www.w3.org/1999/xlink"
-         xml:id="chap-activation-scripts">
+         xml:id="chap-dysnomia-modules">
 
-	<title>Activation scripts</title>
+	<title>Dysnomia modules</title>
 
 	<para>
 		As explained in <xref linkend="chap-models" /> a type is assigned to each service, which
 		is used for tasks such as activating and deactivating the service. Each type is mapped
-		onto an activation script which performs the actual activation or deactivation procedure.
-		In this chapter we explain how activation scripts work.
+		onto a Dysnomia module which performs the actual activation or deactivation procedure.
+		In this chapter we explain how Dysnomia modules work.
 	</para>
 	
 	<section>
 		<title>Structure</title>
 		
 		<para>
-			Basically, every activation script is a process, which takes 2 arguments. The first argument is
+			Basically, every module is a process, which takes 2 arguments. The first argument is
 			one of the following:
 		</para>
 		
@@ -28,7 +28,7 @@
 		
 		<para>
 			The second parameter is the path to the Nix store. Moreover, all the properties defined in the infrastructure
-			model are passed as environment variables. A package called <filename>disnix-activation-scripts</filename>
+			model are passed as environment variables. A package called <filename>dysnomia</filename>
 			is available which contains a collection of activation scripts for commonly found services, such as:
 			<varname>tomcat-webapplication</varname>, which activates a web application on Apache Tomcat,
 			<varname>mysql-database</varname>, which activates a MySQL database and <varname>process</varname>, which
@@ -37,7 +37,7 @@
 	</section>
 	
 	<section>
-		<title>Activation script for the <code>mysql-database</code> type</title>
+		<title>Dysnomia module for the <code>mysql-database</code> type</title>
 		
 		<example xml:id="ex-8-mysql-database">
 			<title>MySQL database activation script</title>
@@ -68,7 +68,7 @@ esac
 		</example>
 		
 		<para>
-			<xref linkend="ex-8-mysql-database" /> shows the activation script used for the <code>mysql-database</code> type:
+			<xref linkend="ex-8-mysql-database" /> shows the Dysnomia module used for the <code>mysql-database</code> type:
 		</para>
 		
 		<calloutlist>
@@ -95,7 +95,7 @@ esac
 		<title>Implementing a custom activation interface</title>
 		
 		<para>
-			Although the <filename>disnix-activation-scripts</filename> package contains activation
+			Although the <filename>dysnomia</filename> package contains activation
 			scripts for commonly found services, there may be reasons to perform the activation and deactivation
 			yourself, because there is no activation type available or the service requires a specialized
 			procedure.

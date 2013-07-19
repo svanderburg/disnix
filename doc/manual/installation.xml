@@ -194,14 +194,14 @@ services.openssh.enable = true;
 			</para>
 			
 			<section>
-				<title>Installing activation scripts</title>
+				<title>Installing Dysnomia</title>
 				
 				<para>
-					Disnix has to activate and deactivate various types of components,
-					such as a web application, web service, process or database.
-					These procedures are part of the <filename>disnix-activation-scripts</filename>
+					Disnix has to activate and deactivate various types of components
+					in containers, such as a web application, web service, process or database.
+					These procedures are part of the <filename>dysnomia</filename>
 					package, which is a required dependency of the Disnix service. 
-					The <filename>disnix-activation-scripts</filename> package is autotools based,
+					The <filename>dysnomia</filename> package is autotools based,
 					which must be installed by executing the following commands:
 				</para>
 			
@@ -223,7 +223,7 @@ $ make install
 				<para>
 					Additionally, it may be possible that not every capability can be detected automatically
 					or some activation types may need some manual configuration. Consult the
-					documentation of the <code>disnix-activation-scripts</code> or invoke the command:
+					documentation of the <code>dysnomia</code> or invoke the command:
 
 <screen>
 $ ./configure --help
@@ -262,7 +262,7 @@ source /etc/init.d/functions
 
 case "$1":
     start)
-        loadproc disnix-service --activation-scripts-dir=/path/to/activation/scripts
+        loadproc disnix-service --dysnomia-modules-dir=/usr/local/libexec/dysnomia
         ;;
 
     stop)
@@ -306,7 +306,7 @@ $ cygrunsrv -I dbus -p /usr/sbin/dbus-daemon.exe -a '--system --nofork'
 				
 <screen>
 $ cygrunsrv -I disnix -p /usr/local/bin/disnix-service.exe -a \
-  '--activation-modules-dir /usr/local/libexec/disnix/activation-scripts' \
+  '--activation-modules-dir /usr/local/libexec/dysnomia' \
   -e 'PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin' \
   -y dbus
 </screen>
