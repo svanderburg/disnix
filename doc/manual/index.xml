@@ -62,6 +62,7 @@
       <xi:include href="disnix-service.xml" />
       <xi:include href="disnix-ssh-client.xml" />
       <xi:include href="disnix-visualize.xml" />
+      <xi:include href="disnix-query.xml" />
     </section>
   </appendix>
 </book>
