@@ -88,9 +88,6 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 	return 1;
     }
     
-    /* Initialize the GType/GObject system. */
-    g_type_init();
-
     /* Create main loop */
     mainloop = g_main_loop_new(NULL, FALSE);
     if(mainloop == NULL)

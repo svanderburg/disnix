@@ -153,9 +153,6 @@ int start_disnix_service(char *dysnomia_modules_dir_arg, int session_bus)
     /* Specifies the new action for a SIGCHLD signal */
     struct sigaction act;
     
-    /* Initialize the GType/GObject system */
-    g_type_init();
-
     /* Add the server parameters to the global variables */
     dysnomia_modules_dir = dysnomia_modules_dir_arg;
     
