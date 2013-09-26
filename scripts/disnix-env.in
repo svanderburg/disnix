@@ -32,6 +32,7 @@ showUsage()
     echo "-p,--profile                Name of the profile that is used for this system. Defaults to: default"
     echo "--build-on-targets          Build the services on the target machines in the network instead of managing the build by the coordinator"
     echo "--coordinator-profile-path  Path where to store the coordinator profile generations"
+    echo "--no-upgrade                Do not perform an upgrade, but activate all services of the new configuration"
     echo "--show-trace                Shows a trace of the output"
     echo "-h,--help                   Shows the usage of this command"
 }
@@ -46,7 +47,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Parse valid argument options
 
-PARAMS=`getopt -n $0 -o s:i:d:p:h -l services:,infrastructure:,distribution:,interface:,target-property:,profile:,build-on-targets,coordinator-profile-path:,show-trace,help -- "$@"`
+PARAMS=`getopt -n $0 -o s:i:d:p:h -l services:,infrastructure:,distribution:,interface:,target-property:,profile:,build-on-targets,coordinator-profile-path:,no-upgrade,show-trace,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -88,6 +89,9 @@ do
 	--target-property)
 	    targetProperty=$2
 	    ;;
+	--no-upgrade)
+	    noUpgradeArg="--no-upgrade"
+	    ;;
 	-h|--help)
 	    showUsage
 	    exit 0
@@ -116,4 +120,4 @@ fi
 
 manifest=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link $showTraceArg`
 disnix-distribute --interface $interface $manifest
-disnix-activate --interface $interface $profileArg $coordinatorProfilePathArg $manifest
+disnix-activate --interface $interface $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest

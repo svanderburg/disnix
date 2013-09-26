@@ -34,6 +34,7 @@ static void print_usage(const char *command)
     fprintf(stderr, "--target-property targetProperty\n");
     fprintf(stderr, "--no-coordinator-profile\n");
     fprintf(stderr, "--no-target-profiles\n");
+    fprintf(stderr, "--no-upgrade\n");
     fprintf(stderr, "--no-lock\n");
     fprintf(stderr, "\n");
     

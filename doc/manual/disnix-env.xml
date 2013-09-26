@@ -128,6 +128,15 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>--no-upgrade</option></term>
+				<listitem>
+					<para>
+						By enabling this option Disnix will not perform an upgrade, but only activates services in the
+						new configuration.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>--show-trace</option></term>
 				<listitem>
 					<para>
