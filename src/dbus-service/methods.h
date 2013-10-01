@@ -40,9 +40,9 @@ gboolean disnix_query_requisites(DisnixObject *object, const gint pid, gchar **d
 
 gboolean disnix_collect_garbage(DisnixObject *object, const gint pid, const gboolean delete_old, GError **error);
 
-gboolean disnix_activate(DisnixObject *object, const gint pid, gchar *derivation, const gchar *type, gchar **arguments, GError **error);
+gboolean disnix_activate(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments, GError **error);
 
-gboolean disnix_deactivate(DisnixObject *object, const gint pid, gchar *derivation, const gchar *type, gchar **arguments, GError **error);
+gboolean disnix_deactivate(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments, GError **error);
 
 gboolean disnix_lock(DisnixObject *object, const gint pid, const gchar *profile, GError **error);
 

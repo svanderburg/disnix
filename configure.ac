@@ -21,6 +21,7 @@ PKG_PROG_PKG_CONFIG
 NEED_PROG(bash, bash)
 NEED_PROG(getopt, getopt)
 NEED_PROG(nix_store, nix-store)
+NEED_PROG(dysnomia, dysnomia)
 AC_PATH_PROG(xmllint, xmllint, false)
 AC_PATH_PROG(xsltproc, xsltproc, false)
 AC_PATH_PROG(dblatex, dblatex)
@@ -32,13 +33,13 @@ PKG_CHECK_MODULES(GLIB_DBUS, [dbus-1 dbus-glib-1])
 LIBXML2_REQUIRED=2.5.10
 PKG_CHECK_MODULES(LIBXML2, libxml-2.0 >= $LIBXML2_REQUIRED)
 AC_SUBST(LIBXML2_CFLAGS)
-AC_SUBST(LIBXML2_LIBS)	
+AC_SUBST(LIBXML2_LIBS)
 
 # Checks for libxslt libraries
 LIBXSLT_REQUIRED=1.1.10
 PKG_CHECK_MODULES(LIBXSLT, libxslt >= $LIBXSLT_REQUIRED)
 AC_SUBST(LIBXSLT_CFLAGS)
-AC_SUBST(LIBXSLT_LIBS)	
+AC_SUBST(LIBXSLT_LIBS)
 
 # Checks for Docbook stuff
 AC_ARG_WITH(docbook-rng, AC_HELP_STRING([--with-docbook-rng=PATH],

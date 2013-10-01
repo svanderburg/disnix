@@ -29,8 +29,6 @@
 #include "signals.h"
 #define BUFFER_SIZE 1024
 
-extern char *dysnomia_modules_dir;
-
 extern char *tmpdir;
 
 extern struct sigact oldact;
@@ -778,7 +776,7 @@ gboolean disnix_collect_garbage(DisnixObject *object, const gint pid, const gboo
 
 /* Activate method */
 
-static void disnix_activate_thread_func(DisnixObject *object, const gint pid, gchar *derivation, const gchar *type, gchar **arguments)
+static void disnix_activate_thread_func(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments)
 {
     /* Declarations */
     int status;
@@ -795,12 +793,12 @@ static void disnix_activate_thread_func(DisnixObject *object, const gint pid, gc
     if(status == 0)
     {
 	unsigned int i;
-	gchar *cmd = g_strconcat(dysnomia_modules_dir, "/", type, NULL);
-	char *args[] = {cmd, "activate", derivation, NULL};
+	char *cmd = "dysnomia";
+	char *args[] = {cmd, "--type", type, "--operation", "activate", "--component", derivation, "--environment", NULL};
 	
 	for(i = 0; i < g_strv_length(arguments); i++)
 	{
-	    gchar **name_value_pair = g_strsplit(arguments[i], "=", 2);	    
+	    gchar **name_value_pair = g_strsplit(arguments[i], "=", 2);
 	    setenv(name_value_pair[0], name_value_pair[1], FALSE);
 	    g_strfreev(name_value_pair);
 	}
@@ -827,7 +825,7 @@ static void disnix_activate_thread_func(DisnixObject *object, const gint pid, gc
     _exit(0);
 }
 
-gboolean disnix_activate(DisnixObject *object, const gint pid, gchar *derivation, const gchar *type, gchar **arguments, GError **error)
+gboolean disnix_activate(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments, GError **error)
 {
     /* State object should not be NULL */
     g_assert(object != NULL);
@@ -839,12 +837,12 @@ gboolean disnix_activate(DisnixObject *object, const gint pid, gchar *derivation
 	disnix_activate_thread_func(object, pid, derivation, type, arguments);
     }
     
-    return TRUE;    
+    return TRUE;
 }
 
 /* Deactivate method */
 
-static void disnix_deactivate_thread_func(DisnixObject *object, const gint pid, gchar *derivation, const gchar *type, gchar **arguments)
+static void disnix_deactivate_thread_func(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments)
 {
     /* Declarations */
     int status;
@@ -861,12 +859,12 @@ static void disnix_deactivate_thread_func(DisnixObject *object, const gint pid, 
     if(status == 0)
     {
 	unsigned int i;
-	gchar *cmd = g_strconcat(dysnomia_modules_dir, "/", type, NULL);
-	char *args[] = {cmd, "deactivate", derivation, NULL};
+	char *cmd = "dysnomia";
+	char *args[] = {cmd, "--type", type, "--operation", "deactivate", "--component", derivation, "--environment", NULL};
 	
 	for(i = 0; i < g_strv_length(arguments); i++)
 	{
-	    gchar **name_value_pair = g_strsplit(arguments[i], "=", 2);	    
+	    gchar **name_value_pair = g_strsplit(arguments[i], "=", 2);
 	    setenv(name_value_pair[0], name_value_pair[1], FALSE);
 	    g_strfreev(name_value_pair);
 	}
@@ -893,7 +891,7 @@ static void disnix_deactivate_thread_func(DisnixObject *object, const gint pid, 
     _exit(0);
 }
 
-gboolean disnix_deactivate(DisnixObject *object, const gint pid, gchar *derivation, const gchar *type, gchar **arguments, GError **error)
+gboolean disnix_deactivate(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments, GError **error)
 {
     /* State object should not be NULL */
     g_assert(object != NULL);
@@ -905,7 +903,7 @@ gboolean disnix_deactivate(DisnixObject *object, const gint pid, gchar *derivati
 	disnix_deactivate_thread_func(object, pid, derivation, type, arguments);
     }
     
-    return TRUE;    
+    return TRUE;
 }
 
 /* Lock method */
@@ -924,8 +922,8 @@ static int unlock_services(gchar **derivation, unsigned int derivation_size, gch
 	    
 	if(status == 0)
 	{
-	    gchar *cmd = g_strconcat(dysnomia_modules_dir, "/", type[i], NULL);
-	    char *args[] = {cmd, "unlock", derivation[i], NULL};
+	    char *cmd = "dysnomia";
+	    char *args[] = {cmd, "--type", type[i], "--operation", "unlock", "--component", derivation[i], "--environment", NULL};
 	    execvp(cmd, args);
 	    _exit(1);
 	}
@@ -987,14 +985,14 @@ static void disnix_lock_thread_func(DisnixObject *object, const gint pid, const 
 	    if(is_component)
 	    {
 		derivation = (gchar**)g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
-		derivation[derivation_size] = g_strdup(line);	    
+		derivation[derivation_size] = g_strdup(line);
 		derivation_size++;
 		is_component = FALSE;
 	    }
 	    else
 	    {
 		type = (gchar**)g_realloc(type, (type_size + 1) * sizeof(gchar*));
-		type[type_size] = g_strdup(line);	    
+		type[type_size] = g_strdup(line);
 		type_size++;
 		is_component = TRUE;
 	    }
@@ -1004,7 +1002,7 @@ static void disnix_lock_thread_func(DisnixObject *object, const gint pid, const 
 	derivation = (gchar**)g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
 	derivation[derivation_size] = NULL;
 	type = (gchar**)g_realloc(type, (type_size + 1) * sizeof(gchar*));
-	type[type_size] = NULL;	
+	type[type_size] = NULL;
 	
 	fclose(fp);
     }
@@ -1025,8 +1023,8 @@ static void disnix_lock_thread_func(DisnixObject *object, const gint pid, const 
 	    
 	    if(status == 0)
 	    {
-		gchar *cmd = g_strconcat(dysnomia_modules_dir, "/", type[i], NULL);
-		char *args[] = {cmd, "lock", derivation[i], NULL};
+		char *cmd = "dysnomia";
+		char *args[] = {cmd, "--type", type[i], "--operation", "lock", "--component", derivation[i], "--environment", NULL};
 		execvp(cmd, args);
 		_exit(1);
 	    }
@@ -1098,10 +1096,10 @@ gboolean disnix_lock(DisnixObject *object, const gint pid, const gchar *profile,
     if(fork() == 0)
     {
 	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
-	disnix_lock_thread_func(object, pid, profile);    
+	disnix_lock_thread_func(object, pid, profile);
     }
     
-    return TRUE;    
+    return TRUE;
 }
 
 /* Unlock method */

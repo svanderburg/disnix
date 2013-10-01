@@ -39,13 +39,11 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-	{"dysnomia-modules-dir", required_argument, 0, 'a'},
 	{"session-bus", no_argument, 0, 's'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
     
-    char *dysnomia_modules_dir = NULL;
     int session_bus = FALSE;
     
     /* Parse command-line options */
@@ -53,9 +51,6 @@ int main(int argc, char *argv[])
     {
 	switch(c)
 	{
-	    case 'a':
-		dysnomia_modules_dir = optarg;
-		break;
 	    case 's':
 		session_bus = TRUE;
 		break;
@@ -65,15 +60,7 @@ int main(int argc, char *argv[])
 		return 0;
 	}
     }
-    
-    /* Validate options */
-    
-    if(dysnomia_modules_dir == NULL)
-    {
-	fprintf(stderr, "A path to the Dysnomia modules directory must be specified!\n");
-	return 1;
-    }
 
     /* Start the program with the given options */
-    return start_disnix_service(dysnomia_modules_dir, session_bus);
+    return start_disnix_service(session_bus);
 }

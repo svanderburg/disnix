@@ -24,9 +24,6 @@
 
 /* Server settings variables */
 
-/** Directory in which the Dysnomia modules can be found */
-char *dysnomia_modules_dir;
-
 /** Path to the temp directory */
 char *tmpdir;
 
@@ -126,10 +123,9 @@ static void handle_sigchild(int signum)
 /**
  * Starts the Disnix D-Bus service
  *
- * @param dysnomia_modules_dir_arg Directory in which the Dysnomia modules can be found
  * @param session_bus Indicates whether the daemon should be registered on the session bus or system bus
  */
-int start_disnix_service(char *dysnomia_modules_dir_arg, int session_bus)
+int start_disnix_service(int session_bus)
 {
     /* The D-Bus connection object provided by dbus_glib */
     DBusGConnection *bus;
@@ -152,9 +148,6 @@ int start_disnix_service(char *dysnomia_modules_dir_arg, int session_bus)
 
     /* Specifies the new action for a SIGCHLD signal */
     struct sigaction act;
-    
-    /* Add the server parameters to the global variables */
-    dysnomia_modules_dir = dysnomia_modules_dir_arg;
     
     /* Determine the temp directory */
     tmpdir = getenv("TMPDIR");

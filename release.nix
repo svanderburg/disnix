@@ -1,13 +1,18 @@
-{ nixpkgs ? <nixpkgs> }:
+{ nixpkgs ? <nixpkgs>
+, systems ? [ "i686-linux" "x86_64-linux" ]
+}:
 
 let
+  pkgs = import nixpkgs {};
+  
   jobs = rec {
     tarball =
       { disnix ? {outPath = ./.; rev = 1234;}
+      , dysnomia ? builtins.getAttr (builtins.currentSystem) ((import ../dysnomia/release.nix {}).build {})
       , officialRelease ? false
       }:
 
-      with import nixpkgs {};
+      with pkgs;
 
       releaseTools.sourceTarball {
         name = "disnix-tarball";
@@ -15,7 +20,7 @@ let
         src = disnix;
         inherit officialRelease;
 
-        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable dblatex tetex doxygen nukeReferences ];
+        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable dblatex tetex doxygen nukeReferences dysnomia ];
         
         # Add documentation in the tarball
         configureFlags = ''
@@ -53,26 +58,29 @@ let
 
     build =
       { tarball ? jobs.tarball {}
-      , system ? builtins.currentSystem
+      , dysnomia ? builtins.getAttr (builtins.currentSystem) ((import ../dysnomia/release.nix {}).build {})
       }:
+      
+      pkgs.lib.genAttrs systems (system:
 
-      with import nixpkgs { inherit system; };
+        with import nixpkgs { inherit system; };
 
-      releaseTools.nixBuild {
-        name = "disnix";
-        src = tarball;
+        releaseTools.nixBuild {
+          name = "disnix";
+          src = tarball;
 
-        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable ]
-          ++ lib.optionals (!stdenv.isLinux) [ libiconv gettext ];
-      };
+          buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable dysnomia ]
+            ++ lib.optionals (!stdenv.isLinux) [ libiconv gettext ];
+        }
+      );
       
     tests = 
       { nixos ? <nixos>
-      , dysnomia ? (import ../dysnomia/release.nix {}).build {}
+      , dysnomia ? builtins.getAttr (builtins.currentSystem) ((import ../dysnomia/release.nix {}).build {})
       }:
       
       let
-        disnix = build { system = builtins.currentSystem; };
+        disnix = builtins.getAttr (builtins.currentSystem) (build {});
         manifestTests = ./tests/manifest;
         machine =
           {config, pkgs, ...}:
@@ -108,12 +116,12 @@ let
                 wantedBy = [ "multi-user.target" ];
                 after = [ "dbus.service" ];
                 
-                path = [ pkgs.nix disnix ];
+                path = [ pkgs.nix pkgs.getopt disnix dysnomia ];
 
                 script =
                   ''
                     export HOME=/root
-                    disnix-service --dysnomia-modules-dir=${dysnomia}/libexec/dysnomia
+                    disnix-service
                   '';
                };
               
@@ -160,7 +168,7 @@ let
               # attribute. This test should trigger an error.
               
               $client->mustFail("NIX_PATH='nixpkgs=${nixpkgs}' disnix-manifest -s ${manifestTests}/services-incomplete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
-                              
+              
               # Load balancing test. Here we distribute testService1 and
               # testService2 to machines testtarget1 and testtarget2.
               # We verify this by checking whether the services testService1
@@ -327,7 +335,7 @@ let
               $client->mustSucceed("disnix-client --unlock");
               
               # Unlock test. This test should fail as the lock has already been released
-              $client->mustFail("disnix-client --unlock");                    
+              $client->mustFail("disnix-client --unlock");
               
               # Use the echo type to activate a service.
               # We use the testService1 service defined in the manifest earlier
