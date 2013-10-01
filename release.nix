@@ -57,12 +57,11 @@ let
       };
 
     build =
-      { tarball ? jobs.tarball {}
-      , dysnomia ? builtins.getAttr (builtins.currentSystem) ((import ../dysnomia/release.nix {}).build {})
-      }:
+      { tarball ? jobs.tarball {} }:
       
       pkgs.lib.genAttrs systems (system:
-
+        { dysnomia ? builtins.getAttr system ((import ../dysnomia/release.nix {}).build {}) }:
+        
         with import nixpkgs { inherit system; };
 
         releaseTools.nixBuild {
