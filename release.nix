@@ -79,7 +79,7 @@ let
       }:
       
       let
-        disnix = builtins.getAttr (builtins.currentSystem) (build {});
+        disnix = builtins.getAttr (builtins.currentSystem) (jobs.build {}) {};
         manifestTests = ./tests/manifest;
         machine =
           {config, pkgs, ...}:
@@ -116,12 +116,11 @@ let
                 after = [ "dbus.service" ];
                 
                 path = [ pkgs.nix pkgs.getopt disnix dysnomia ];
+                environment = {
+                  HOME = "/root";
+                };
 
-                script =
-                  ''
-                    export HOME=/root
-                    disnix-service
-                  '';
+                exec = "disnix-service";
                };
               
             environment.systemPackages = [ pkgs.stdenv pkgs.nix disnix ];
