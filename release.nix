@@ -6,7 +6,6 @@ let
   jobs = rec {
     tarball =
       { disnix ? {outPath = ./.; rev = 1234;}
-      , dysnomia ? (import ../dysnomia/release.nix {}).build {}
       , officialRelease ? false
       }:
 
@@ -56,7 +55,6 @@ let
 
     build =
       { tarball ? jobs.tarball {}
-      , dysnomia ? (import ../dysnomia/release.nix {}).build {}
       , system ? builtins.currentSystem
       }:
       
