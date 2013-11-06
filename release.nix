@@ -69,8 +69,6 @@ let
       };
       
     tests = 
-      { dysnomia ? (import ../dysnomia/release.nix {}).build {} }:
-      
       let
         disnix = jobs.build {};
         manifestTests = ./tests/manifest;
@@ -108,7 +106,7 @@ let
                 wantedBy = [ "multi-user.target" ];
                 after = [ "dbus.service" ];
                 
-                path = [ pkgs.nix pkgs.getopt disnix dysnomia ];
+                path = [ pkgs.nix pkgs.getopt disnix pkgs.dysnomia ];
                 environment = {
                   HOME = "/root";
                 };
