@@ -1,6 +1,4 @@
-{ nixpkgs ? <nixpkgs>
-, systems ? [ "i686-linux" "x86_64-linux" ]
-}:
+{ nixpkgs ? <nixpkgs> }:
 
 let
   pkgs = import nixpkgs {};
@@ -8,7 +6,7 @@ let
   jobs = rec {
     tarball =
       { disnix ? {outPath = ./.; rev = 1234;}
-      , dysnomia ? builtins.getAttr (builtins.currentSystem) ((import ../dysnomia/release.nix {}).build {})
+      , dysnomia ? (import ../dysnomia/release.nix {}).build {}
       , officialRelease ? false
       }:
 
@@ -57,29 +55,26 @@ let
       };
 
     build =
-      { tarball ? jobs.tarball {} }:
-      
-      pkgs.lib.genAttrs systems (system:
-        { dysnomia ? builtins.getAttr system ((import ../dysnomia/release.nix {}).build {}) }:
-        
-        with import nixpkgs { inherit system; };
-
-        releaseTools.nixBuild {
-          name = "disnix";
-          src = tarball;
-
-          buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable dysnomia ]
-            ++ lib.optionals (!stdenv.isLinux) [ libiconv gettext ];
-        }
-      );
-      
-    tests = 
-      { nixos ? <nixos>
-      , dysnomia ? builtins.getAttr (builtins.currentSystem) ((import ../dysnomia/release.nix {}).build {})
+      { tarball ? jobs.tarball {}
+      , dysnomia ? (import ../dysnomia/release.nix {}).build {}
+      , system ? builtins.currentSystem
       }:
       
+      with import nixpkgs { inherit system; };
+
+      releaseTools.nixBuild {
+        name = "disnix";
+        src = tarball;
+
+        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable dysnomia ]
+          ++ lib.optionals (!stdenv.isLinux) [ libiconv gettext ];
+      };
+      
+    tests = 
+      { dysnomia ? (import ../dysnomia/release.nix {}).build {} }:
+      
       let
-        disnix = builtins.getAttr (builtins.currentSystem) (jobs.build {}) {};
+        disnix = jobs.build {};
         manifestTests = ./tests/manifest;
         machine =
           {config, pkgs, ...}:
@@ -126,7 +121,7 @@ let
             environment.systemPackages = [ pkgs.stdenv pkgs.nix disnix ];
           };
       in
-      with import "${nixos}/lib/testing.nix" { system = builtins.currentSystem; };
+      with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem; };
       
       {
         install = simpleTest {
