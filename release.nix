@@ -70,13 +70,13 @@ let
         in
         with import nixpkgs { inherit system; };
 
-      releaseTools.nixBuild {
-        name = "disnix";
-        src = tarball;
+        releaseTools.nixBuild {
+          name = "disnix";
+          src = tarball;
 
-        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable dysnomia ]
-          ++ lib.optionals (!stdenv.isLinux) [ libiconv gettext ];
-      };
+          buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable dysnomia ]
+            ++ lib.optionals (!stdenv.isLinux) [ libiconv gettext ];
+        });
       
     tests = 
       let
