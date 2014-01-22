@@ -1,4 +1,7 @@
-{ nixpkgs ? <nixpkgs> }:
+{ nixpkgs ? <nixpkgs>
+, systems ? [ "i686-linux" "x86_64-linux" ]
+, dysnomiaJobset ? import ../dysnomia/release.nix { inherit nixpkgs systems; }
+}:
 
 let
   pkgs = import nixpkgs {};
@@ -11,6 +14,9 @@ let
 
       with pkgs;
 
+      let
+        dysnomia = builtins.getAttr (builtins.currentSystem) (dysnomiaJobset.build {});
+      in
       releaseTools.sourceTarball {
         name = "disnix-tarball";
         version = builtins.readFile ./version;
@@ -58,7 +64,11 @@ let
       , system ? builtins.currentSystem
       }:
       
-      with import nixpkgs { inherit system; };
+      pkgs.lib.genAttrs systems (system:
+        let
+          dysnomia = builtins.getAttr system (dysnomiaJobset.build {});
+        in
+        with import nixpkgs { inherit system; };
 
       releaseTools.nixBuild {
         name = "disnix";
@@ -70,7 +80,10 @@ let
       
     tests = 
       let
-        disnix = jobs.build {};
+        dysnomia = builtins.getAttr (builtins.currentSystem) (dysnomiaJobset.build {});
+      
+        disnix = builtins.getAttr (builtins.currentSystem) (jobs.build {});
+
         manifestTests = ./tests/manifest;
         machine =
           {config, pkgs, ...}:
