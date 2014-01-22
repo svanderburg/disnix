@@ -1,6 +1,5 @@
 { nixpkgs ? <nixpkgs>
 , systems ? [ "i686-linux" "x86_64-linux" ]
-, dysnomiaJobset ? import ../dysnomia/release.nix { inherit nixpkgs systems; }
 }:
 
 let
@@ -10,13 +9,11 @@ let
     tarball =
       { disnix ? {outPath = ./.; rev = 1234;}
       , officialRelease ? false
+      , dysnomia ? builtins.getAttr (builtins.currentSystem) ((import ../dysnomia/release.nix { inherit nixpkgs systems; }).build {})
       }:
 
       with pkgs;
 
-      let
-        dysnomia = builtins.getAttr (builtins.currentSystem) (dysnomiaJobset.build {});
-      in
       releaseTools.sourceTarball {
         name = "disnix-tarball";
         version = builtins.readFile ./version;
@@ -66,7 +63,7 @@ let
       
       pkgs.lib.genAttrs systems (system:
         let
-          dysnomia = builtins.getAttr system (dysnomiaJobset.build {});
+          dysnomia = builtins.getAttr system ((import ../dysnomia/release.nix { inherit nixpkgs systems; }).build {});
         in
         with import nixpkgs { inherit system; };
 
@@ -78,10 +75,8 @@ let
             ++ lib.optionals (!stdenv.isLinux) [ libiconv gettext ];
         });
       
-    tests = 
+    tests = { dysnomia ? builtins.getAttr (builtins.currentSystem) ((import ../dysnomia/release.nix { inherit nixpkgs systems; }).build {}) }:
       let
-        dysnomia = builtins.getAttr (builtins.currentSystem) (dysnomiaJobset.build {});
-      
         disnix = builtins.getAttr (builtins.currentSystem) (jobs.build {});
 
         manifestTests = ./tests/manifest;
