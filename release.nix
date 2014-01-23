@@ -1,5 +1,6 @@
 { nixpkgs ? <nixpkgs>
 , systems ? [ "i686-linux" "x86_64-linux" ]
+, dysnomiaJobset ? import ../dysnomia/release.nix { inherit nixpkgs systems; }
 }:
 
 let
@@ -9,11 +10,15 @@ let
     tarball =
       { disnix ? {outPath = ./.; rev = 1234;}
       , officialRelease ? false
-      , dysnomia ? builtins.getAttr (builtins.currentSystem) ((import ../dysnomia/release.nix { inherit nixpkgs systems; }).build {})
       }:
 
       with pkgs;
 
+      let
+        dysnomiaAttr = dysnomiaJobset.build;
+        dysnomiaBuild = if builtins.isFunction dysnomiaAttr then dysnomiaAttr {} else dysnomiaAttr;
+        dysnomia = builtins.getAttr (builtins.currentSystem) dysnomiaBuild;
+      in
       releaseTools.sourceTarball {
         name = "disnix-tarball";
         version = builtins.readFile ./version;
@@ -57,13 +62,13 @@ let
       };
 
     build =
-      { tarball ? jobs.tarball {}
-      , system ? builtins.currentSystem
-      }:
+      { tarball ? jobs.tarball {} }:
       
       pkgs.lib.genAttrs systems (system:
         let
-          dysnomia = builtins.getAttr system ((import ../dysnomia/release.nix { inherit nixpkgs systems; }).build {});
+          dysnomiaAttr = dysnomiaJobset.build;
+          dysnomiaBuild = if builtins.isFunction dysnomiaAttr then dysnomiaAttr {} else dysnomiaAttr;
+          dysnomia = builtins.getAttr system dysnomiaBuild;
         in
         with import nixpkgs { inherit system; };
 
@@ -75,8 +80,12 @@ let
             ++ lib.optionals (!stdenv.isLinux) [ libiconv gettext ];
         });
       
-    tests = { dysnomia ? builtins.getAttr (builtins.currentSystem) ((import ../dysnomia/release.nix { inherit nixpkgs systems; }).build {}) }:
+    tests =
       let
+        dysnomiaAttr = dysnomiaJobset.build;
+        dysnomiaBuild = if builtins.isFunction dysnomiaAttr then dysnomiaAttr {} else dysnomiaAttr;
+        dysnomia = builtins.getAttr (builtins.currentSystem) dysnomiaBuild;
+        
         disnix = builtins.getAttr (builtins.currentSystem) (jobs.build {});
 
         manifestTests = ./tests/manifest;
