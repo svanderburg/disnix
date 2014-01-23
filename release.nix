@@ -1,6 +1,8 @@
 { nixpkgs ? <nixpkgs>
 , systems ? [ "i686-linux" "x86_64-linux" ]
-, dysnomiaJobset ? import ../dysnomia/release.nix { inherit nixpkgs systems; }
+, dysnomiaJobset ? import ../dysnomia/release.nix { inherit nixpkgs systems officialRelease; }
+, disnix ? { outPath = ./.; rev = 1234; }
+, officialRelease ? false
 }:
 
 let
@@ -8,16 +10,10 @@ let
   
   jobs = rec {
     tarball =
-      { disnix ? {outPath = ./.; rev = 1234;}
-      , officialRelease ? false
-      }:
-
       with pkgs;
 
       let
-        dysnomiaAttr = dysnomiaJobset.build;
-        dysnomiaBuild = if builtins.isFunction dysnomiaAttr then dysnomiaAttr {} else dysnomiaAttr;
-        dysnomia = builtins.getAttr (builtins.currentSystem) dysnomiaBuild;
+        dysnomia = builtins.getAttr (builtins.currentSystem) (dysnomiaJobset.build);
       in
       releaseTools.sourceTarball {
         name = "disnix-tarball";
@@ -62,13 +58,9 @@ let
       };
 
     build =
-      { tarball ? jobs.tarball {} }:
-      
       pkgs.lib.genAttrs systems (system:
         let
-          dysnomiaAttr = dysnomiaJobset.build;
-          dysnomiaBuild = if builtins.isFunction dysnomiaAttr then dysnomiaAttr {} else dysnomiaAttr;
-          dysnomia = builtins.getAttr system dysnomiaBuild;
+          dysnomia = builtins.getAttr system (dysnomiaJobset.build);
         in
         with import nixpkgs { inherit system; };
 
@@ -82,9 +74,7 @@ let
       
     tests =
       let
-        dysnomiaAttr = dysnomiaJobset.build;
-        dysnomiaBuild = if builtins.isFunction dysnomiaAttr then dysnomiaAttr {} else dysnomiaAttr;
-        dysnomia = builtins.getAttr (builtins.currentSystem) dysnomiaBuild;
+        dysnomia = builtins.getAttr (builtins.currentSystem) (dysnomiaJobset.build);
         
         disnix = builtins.getAttr (builtins.currentSystem) (jobs.build {});
 
