@@ -76,7 +76,7 @@ let
       let
         dysnomia = builtins.getAttr (builtins.currentSystem) (dysnomiaJobset.build);
         
-        disnix = builtins.getAttr (builtins.currentSystem) (jobs.build {});
+        disnix = builtins.getAttr (builtins.currentSystem) (jobs.build);
 
         manifestTests = ./tests/manifest;
         machine =
