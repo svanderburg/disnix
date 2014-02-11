@@ -89,13 +89,15 @@ let
             users.extraGroups = [ { gid = 200; name = "disnix"; } ];
             
             users.extraUsers = [
-              { name = "unprivileged";
+              { uid = 1000;
+                name = "unprivileged";
                 group = "users";
                 shell = "/bin/sh";
                 description = "Unprivileged user for the disnix-service";
               }
               
-              { name = "privileged";
+              { uid = 1001;
+                name = "privileged";
                 group = "users";
                 shell = "/bin/sh";
                 extraGroups = [ "disnix" ];
