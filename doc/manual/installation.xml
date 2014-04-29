@@ -5,19 +5,24 @@
 	<title>Installation</title>
 
 	<para>
-		This chapter explains how Disnix can be installed. Basically, the coordinator machine needs the Disnix
-		client tools. Every target machine needs a Disnix service instance running so that the coordinator
-		machine can perform remote deployment steps. Disnix can be used on various platforms.
+		This chapter explains how Disnix can be installed. Basically, the coordinator machine only needs the Disnix
+		client tools. Every target machine needs a both the client utilities and a Disnix service instance running,
+		so that the coordinator machine can perform remote deployment steps.
+	</para>
+	<para>
+		Disnix can be used on various operating systems and system distributions.
 		The most convenient platform to use is
 		<link xlink:href="http://nixos.org">NixOS</link>,
 		which only requires a little configuration effort.
 		Disnix can also be used on other Linux distributions, other Unix-like systems such as FreeBSD and
 		on Windows through Cygwin. 
-		On those platforms more configuration steps have to be performed.
-		Moreover, Disnix can be installed on various systems by using the
+		To make Disnix work on these platforms more configuration steps have to be performed.
+	</para>
+	<para>
+		Moreover, Disnix can be installed using the
 		<link xlink:href="http://nixos.org/nix">Nix package manager</link> or
-		by compiling it from source code. Instructions on how to install Nix can be found
-		<link xlink:href="http://nixos.org/nix/docs.html">here</link>.
+		by compiling it from source code. Instructions on how to install the Nix package manager can be found
+		in the <link xlink:href="http://nixos.org/nix/docs.html">Nix manual</link>.
 	</para>
 	
 	<section>
@@ -25,7 +30,7 @@
 
 		<para>
 			This section explains how to compile Disnix from source code.
-			Usually, this is only needed in special circumstances such as for 
+			Usually, compiling from source is only needed in special circumstances such as for 
 			development, or trying a new platform. A more convenient way to install
 			Disnix is to use the Nix package manager.
 		</para>
@@ -71,7 +76,7 @@ $ make install
 			</para>
 
 			<para>
-				When building from the Subversion repository, these should be
+				When building from the Git repository, these should be
 				preceded by the command:
 
 <screen>
@@ -84,7 +89,7 @@ $ ./bootstrap
 				<option>--prefix=<replaceable>prefix</replaceable></option> to
 				<command>configure</command>. The default installation directory is
 				<filename>/usr/local</filename>. You can change this to any location
-				you like.  You must have write permission to the
+				you like.  You must have write permissions to the
 				<replaceable>prefix</replaceable> path.
 			</para>
 		</section>
@@ -94,10 +99,10 @@ $ ./bootstrap
 		<title>Installing the coordinator machine</title>
 
 		<para>
-			The easiest way to use Disnix is by installing the Disnix package with
-			the Nix package manager from the
-			<link xlink:href="http://nixos.org/nixpkgs">Nixpkgs</link>
-			repository by typing:
+			The easiest way to use Disnix is by installing it with
+			the Nix package manager. The
+			<link xlink:href="http://nixos.org/nixpkgs">Nixpkgs</link> collection
+			has a Disnix package and can be installed by typing:
 
 <screen>
 $ nix-env -i disnix
@@ -108,13 +113,16 @@ $ nix-env -i disnix
 		</para>
 
 		<para>
-			A copy of
-			<link xlink:href="http://nixos.org/nixpkgs">Nixpkgs</link> is required
-			and an environment variable <code>NIX_PATH</code> must point to the path where
-			it is installed, so that Disnix is able to find it. In NixOS, a copy is 
+			To allow distributed system configurations to be built, a copy of
+			<link xlink:href="http://nixos.org/nixpkgs">Nixpkgs</link> is required.
+			An environment variable named <code>NIX_PATH</code> must point to the path where
+			it is installed, so that Disnix (and other Nix utilities) can find it.
+		</para>
+		<para>
+			In NixOS, a copy is 
 			already present and this environment variable has already been configured.
 			On other systems this variable can be configured by adding the following lines to your
-			<filename>~/.bash_profile</filename> configuration (or another configuration
+			<filename>~/.bash_profile</filename> configuration (or a similar configuration
 			file, if you use a different shell):
 		</para>
 		

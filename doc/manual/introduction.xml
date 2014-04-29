@@ -37,8 +37,9 @@
 		such as <filename>/usr/lib</filename>, we have stricter guarantees that its dependencies are
 		correct and complete. With conventional package managers 
 		the fact that a package builds successfully does not guarantee that the
-		dependency specification is correct, since dependencies are stored in global locations.
-		In Nix, all packages reside in the Nix store and must therefore
+		dependency specification is correct, since dependencies are stored in global locations and
+		can still be implicitly found as a consequence.
+		In Nix, all packages reside in isolated folders the Nix store and must therefore
 		be explicitly specified.  This guarantees that if a package builds
 		correctly on one machine,
 		it will build on other machines of the same type as well.
@@ -48,8 +49,8 @@
 		Nix supports atomic upgrades and rollbacks, because components are stored
 		safely next to each other and are never overwritten or automatically removed. Thus 
 		there is no time window in which a package has some files from the old version and some
-		files from the new version (which would be bad because a program may crash if 
-		it is started during that period).
+		files from the new version (which would be bad because a program might crash if 
+		it is started within such a period).
 	</para>
 
 	<para>
@@ -60,12 +61,12 @@
 
 	<para>
 		Because of these features, Nix is a very good basis to build
-		a distributed deployment tool to make the deployment process of a distributed system
+		a distributed deployment tool to make the deployment process of distributed service-oriented systems
 		efficient, reliable and atomic.
-		However, Nix only deals with <emphasis>intra-dependencies</emphasis>, which are either run-time or
+		However, Nix only handles <emphasis>intra-dependencies</emphasis>, which are either run-time or
 		build-time dependencies residing on the same machine.
-		In order to deploy a distributed system into a network of machines additional features 
-		are provided by Disnix.  Most importantly, these include models to describe machines in the
+		In order to deploy a distributed service-oriented system into a network of machines, additional features 
+		are required which are provided by Disnix.  Most importantly, these include models to describe machines in the
 		network, and 
 		management of <emphasis>inter-dependencies</emphasis> -- the run-time dependencies between components
 		residing on different machines.
@@ -83,7 +84,7 @@
 				systems.
 			</para>
 			<para>
-				Disnix requires three models, each capturing a specific concern
+				Disnix requires three kinds of models, each capturing a specific concern
 				in deploying a distributed system. The <emphasis>services model</emphasis> is used
 				for specifying the components of a distributed system and
 				its inter-dependencies.
@@ -98,25 +99,23 @@
 			<title>Complete dependencies</title>
 			<para>
 				The standard Nix package manager ensures that package dependency
-				specifications are complete on a single system, i.e. intra-dependencies.
-				Components of a distributed system may have dependencies on components
-				running on different machines in the network, i.e. inter-dependencies.
+				specifications are complete on a single system, i.e. <emphasis>intra-dependencies</emphasis>.
+				Components of a distributed service-oriented system may have dependencies on components
+				running on different machines in a network, i.e. <emphasis>inter-dependencies</emphasis>.
 			</para>
 
 			<para>
-				Disnix also allows you to specify inter-dependencies of distributed system
+				Disnix allows someone to specify inter-dependencies of distributed system
 				components, which can be used to compose distributed system components
-				into a complete system. If a certain service has an inter-dependency on a
-				particular service, and the dependency is missing, Disnix will notice this
-				before deploying the system.
+				into a complete system. If a certain service is deployed, Disnix ensures tha
+				their inter-dependencies are deployed first so that we never have a failing
+				system due to missing dependencies.
 			</para>
 
 			<para>
 				Moreover, Disnix uses inter-dependency specifcations for the installation
 				or upgrade process of a distributed system to ensure that every service
-				is activated or deactivated in the right order and that the system will
-				not fail due to a missing inter-dependency or a broken inter-dependency
-				relationship.
+				is activated or deactivated in the right order.
 			</para>
 		</simplesect>
 
@@ -129,7 +128,7 @@
 				operations to upgrade a distributed system atomically.
 				Since the Nix package manager always stores components next to each
 				other in a Nix store and never overwrites existing files,
-				upgrading a distributed system is also very safe and we can almost
+				upgrading a distributed system is very safe and we can almost
 				always perform a rollback.
 			</para>
 
@@ -139,7 +138,7 @@
 				users may observe that the system is changing. To make this process truly
 				atomic, Disnix has an extension mechanism that can be used to temporary
 				queue/block incoming connections until the transition is finished.
-				We developed a simple example with stateful TCP connections to demonstrate
+				We have developed a simple example with stateful TCP connections to demonstrate
 				this.
 			</para>
 		</simplesect>
@@ -164,11 +163,11 @@
 			</para>
 
 			<para>
-				Except for the portability of Disnix itself, Disnix also allows a user to deploy
+				Apart from the portability of Disnix itself, Disnix also allows a user to deploy
 				a distributed system into a heterogeneous network (i.e. a network consisting
 				of various types of machines, running various operating systems). Disnix reuses
-				Nix to automatically build a component for the given target platform.
-				Optionally, it can also perform builds on target machines in the network.
+				Nix's delegation mechanism to build a component for an alien target platform.
+				Optionally, it can also delegate builds itself to target machines in the network.
 			</para>
 		</simplesect>
 
@@ -178,13 +177,14 @@
 			<para>
 				Since distributed systems can be deployed in heterogeneous networks
 				consisting of various platforms and using various communication protocols,
-				and distributed system components can have basically any form,
+				and their components can have basically any form,
 				not all operations can be solved in a generic manner. 
-				The architecture of Disnix is therefore very modular and provides
-				a plugin architecture which can be used to integrate
-				custom developed components used for the activation and deactivation of services,
-				and a custom plugin that provides access to deployment operations through
-				specific interfaces.
+			</para>
+			<para>
+				The architecture of the Disnix toolset is very modular and uses
+				a plugin system can be used to integrate
+				customly developed modules used for the activation and deactivation of services,
+				and a plugin system that provides remote access through various RPC protocols.
 			</para>
 
 			<para>
