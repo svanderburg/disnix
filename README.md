@@ -34,8 +34,8 @@ These dependencies can be acquired with the Nix package manager, your host
 system's package manager or be compiled from sources. Consult the documentation
 of your distribution or the corresponding packages for more information.
 
-Installation:
-=============
+Installation
+============
 Disnix is a typical autotools based package which can be compiled and installed
 by running the following commands in a shell session:
 
@@ -64,7 +64,7 @@ Nixpkgs, the `NIX_PATH` environment variable must be refer to the location where
 Nixpkgs is stored. This can be done by running the following command-line
 instruction:
 
-$ export NIX_PATH="nixpkgs=/path/to/nixpkgs"
+    $ export NIX_PATH="nixpkgs=/path/to/nixpkgs"
 
 On NixOS, this environment variable has already been configured.
 
@@ -76,7 +76,7 @@ the *infrastructure* that descibes the machines in a network (including their
 properties) and a *distribution* of service components to machines in the
 network.
 
-By invoking 'disnix-env' with these Nix expressions as parameters, services are
+By invoking `disnix-env` with these Nix expressions as parameters, services are
 automatically built from source code (including all its intra-dependencies),
 distributed to the target machines and activated in the right order. In case of a
 failure a rollback is performed:
@@ -100,7 +100,7 @@ License
 =======
 Disnix is free software; you can redistribute it and/or modify it under the terms
 of the [GNU Lesser General Public License](http://www.gnu.org/licenses/lgpl.html)
-as published by the Free Software Foundation](http://www.fsf.org) either version
+as published by the [Free Software Foundation](http://www.fsf.org) either version
 2.1 of the License, or (at your option) any later version. Disnix is distributed
 in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
 implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
