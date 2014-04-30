@@ -1,6 +1,7 @@
 #!/bin/sh
 
-rm -f config.cache config.log acconfig.h aclocal.m4
+rm -f config.cache config.log acconfig.h aclocal.m4 README
 
+ln -s README.md README
 mkdir -p config
 autoreconf -fvi
