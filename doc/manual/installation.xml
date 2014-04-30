@@ -15,7 +15,7 @@
 		<link xlink:href="http://nixos.org">NixOS</link>,
 		which only requires a little configuration effort.
 		Disnix can also be used on other Linux distributions, other Unix-like systems such as FreeBSD and
-		on Windows through Cygwin. 
+		on Windows through Cygwin.
 		To make Disnix work on these platforms more configuration steps have to be performed.
 	</para>
 	<para>
@@ -26,10 +26,10 @@
 	</para>
 	
 	<section>
-		<title>Compiling Disnix from source</title>
+		<title>Installing Disnix from source</title>
 
 		<para>
-			This section explains how to compile Disnix from source code.
+			This section explains how to install Disnix from source code.
 			Usually, compiling from source is only needed in special circumstances such as for 
 			development, or trying a new platform. A more convenient way to install
 			Disnix is to use the Nix package manager.
@@ -94,12 +94,13 @@ $ ./bootstrap
 			</para>
 		</section>
 	</section>
-
+	
+	
 	<section>
-		<title>Installing the coordinator machine</title>
-
+		<title>Installing Disnix with the Nix package manager</title>
+		
 		<para>
-			The easiest way to use Disnix is by installing it with
+			A more convenient way to install Disnix by using
 			the Nix package manager. The
 			<link xlink:href="http://nixos.org/nixpkgs">Nixpkgs</link> collection
 			has a Disnix package and can be installed by typing:
@@ -139,27 +140,34 @@ EOF
 	</section>
 
 	<section>
+		<title>Installing the coordinator machine</title>
+
+		<para>
+			A coordinator machine simply requires the presence of the Disnix client utilities,
+			and a copy of Nixpkgs so that services can be built.
+		</para>
+	</section>
+
+	<section>
 		<title>Installing a target machine</title>
 
 		<para>
 			In order to deploy a distributed system in a network of machines, every
-			machine needs to be reachable by the coordinator in order to perform deployment
+			machine needs to be reachable by the coordinator machine in order to perform deployment
 			steps remotely.
 			The Disnix service is a service that provides access to these operations
-			through a RPC protocol.
+			through a RPC protocol, that must be installed on every target machine first.
 		</para>
 
 		<para>
-			The Disnix service consists of two parts. A core Disnix component which actually performs
-			the deployment operations and a wrapper which exposes the operations to remote users
-			through a RPC protocol (such as the SSH wrapper which is included in the
-			Disnix distribution).
+			The Disnix service consists of two parts. The <emphasis>core</emphasis> actually performs
+			the deployment operations and a <emphasis>wrapper</emphasis> exposes the operations to remote users
+			through a RPC protocol. The default wrapper is the SSH wrapper, which is included in the
+			Disnix distribution but other wrappers can also be used.
 		</para>
 
 		<para>
-			By default, Disnix includes a SSH client and wrapper that can be used
-			to execute remote deployment operations. If you want to use SSH as a 
-			communication protocol, an
+			If you want to use SSH as a communication protocol, an
 			<link xlink:href="http://www.openssh.org">OpenSSH</link>
 			server must be running on each target machine and a client machine
 			requires a OpenSSH client.
@@ -169,7 +177,7 @@ EOF
 			<title>Installing a target machine running NixOS</title>
 			
 			<para>
-				Installing Disnix on NixOS is quite trivial. Follow the instructions
+				Installing Disnix on NixOS is straight forward. Follow the instructions
 				explained in the
 				<link xlink:href="http://nixos.org/nixos/docs.html">NixOS manual</link>
 				to install a NixOS machine.
@@ -186,6 +194,21 @@ services.disnix.enable = true;
 <screen>
 services.openssh.enable = true;
 </screen>
+				Disnix is also responsible for activating and deactivating services. However,
+				this can not be done generically since services can have basically any form.
+				Dysnomia is a tool that is consulted by Disnix to take care of the activation and deactivation steps
+				and exposes various activation processes as plugins.
+			</para>
+			<para>
+				To allow Disnix to activate or deactiate a certain service type through Dysnomia,
+				simply enabling a container suffices in a NixOS configuration.
+				For example, by enabling MySQL and Apache Tomcat in NixOS,
+				the NixOS module system automatically configures Dysnomia to install the corresponding plugins
+				so that Disnix can activate services that in these containers:
+<screen>
+services.mysql.enable = true;
+services.tomcat.enable = true;
+</screen>
 			</para>
 		</section>
 
@@ -193,12 +216,9 @@ services.openssh.enable = true;
 			<title>Installing a target machine manually</title>
 			
 			<para>
-				NixOS has a modular configuration
-				system, which automatically configures the activation scripts package with the right
-				options depending on the configuration settings. For instance, if the MySQL module is
-				enabled on NixOS, the activation scripts package is automatically configured to
-				use the MySQL instance. On other types of systems this must be done
-				by the user.
+				In order to use Disnix on non-NixOS platforms, more steps need to be performed.
+				We must install Dynsomia manually and properly configure the Disnix service
+				so that remote deployment operations can be executed.
 			</para>
 			
 			<section>
@@ -207,8 +227,10 @@ services.openssh.enable = true;
 				<para>
 					Disnix has to activate and deactivate various types of components
 					in containers, such as a web application, web service, process or database.
-					These procedures are part of the <filename>dysnomia</filename>
-					package, which is a required dependency of the Disnix service. 
+					Modules that implement these processes are provided by the <filename>dysnomia</filename>
+					package, which is a required dependency of the Disnix service.
+				</para>
+				<para>
 					The <filename>dysnomia</filename> package is autotools based,
 					which must be installed by executing the following commands:
 				</para>
@@ -220,23 +242,24 @@ $ make install
 </screen>
 			
 				<para>
-					The configure script tries to detect which activation scripts can be
+					The configure script tries to detect which Dysnomia modules can be
 					used on the system. For example, if the configure script is able to detect
 					the <command>mysql</command> command on the host system, then the <code>mysql-database</code>
-					activation script is configured and installed and thus a MySQL database can
+					module is configured and installed and thus a MySQL database can
 					be deployed on this system (this requires you to manually install MySQL
 					first).
 				</para>
 			
 				<para>
 					Additionally, it may be possible that not every capability can be detected automatically
-					or some activation types may need some manual configuration. Consult the
+					or some modules may need some manual configuration. Consult the
 					documentation of the <code>dysnomia</code> or invoke the command:
 
 <screen>
 $ ./configure --help
 </screen>
-					for more information about parameters which can be used to configure activation scripts.
+					for more information about parameters which can be used to configure Dysnomia you consult
+					Dysnomia's README.md file.
 				</para>
 			</section>
 			
@@ -270,7 +293,7 @@ source /etc/init.d/functions
 
 case "$1":
     start)
-        loadproc disnix-service --dysnomia-modules-dir=/usr/local/libexec/dysnomia
+        loadproc disnix-service
         ;;
 
     stop)
@@ -287,6 +310,13 @@ esac
 				<para>
 					Refer to your distribution's <code>init.d</code> script style to see how services
 					are configured and launched.
+				</para>
+				<para>
+					One important aspect to keep in mind is that <command>dysnomia</command> should be in the <code>PATH</code>
+					of the <code>init.d</code> script so that the service can invoke it for activation or deactivation of
+					services.
+					Another important thing is that the Disnix service should be started after the DBus system service and stopped
+					in exactly the opposite order.
 				</para>
 			</section>
 			
@@ -314,7 +344,6 @@ $ cygrunsrv -I dbus -p /usr/sbin/dbus-daemon.exe -a '--system --nofork'
 				
 <screen>
 $ cygrunsrv -I disnix -p /usr/local/bin/disnix-service.exe -a \
-  '--activation-modules-dir /usr/local/libexec/dysnomia' \
   -e 'PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin' \
   -y dbus
 </screen>
@@ -354,7 +383,7 @@ $ ssh-host-config
 					Except for the core Disnix service, a protocol wrapper is required that provides remote
 					access to the core service operations through a RPC protocol. A SSH wrapper is included
 					which only requires a OpenSSH server running on the same machine. For other protocols,
-					you have to read the documentation that is included with the extension.
+					you have to read the documentation that is included with the extension package.
 				</para>
 			</section>
 		</section>

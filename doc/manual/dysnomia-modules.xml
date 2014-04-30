@@ -6,8 +6,8 @@
 
 	<para>
 		As explained in <xref linkend="chap-models" /> a type is assigned to each service, which
-		is used for tasks such as activating and deactivating the service. Each type is mapped
-		onto a Dysnomia module which performs the actual activation or deactivation procedure.
+		is used to determine how to perform the activation and deactivation procedure od a service.
+		Each type is mapped onto a Dysnomia module which performs the actual activation or deactivation procedure.
 		In this chapter we explain how Dysnomia modules work.
 	</para>
 	
@@ -27,12 +27,8 @@
 		</itemizedlist>
 		
 		<para>
-			The second parameter is the path to the Nix store. Moreover, all the properties defined in the infrastructure
-			model are passed as environment variables. A package called <filename>dysnomia</filename>
-			is available which contains a collection of activation scripts for commonly found services, such as:
-			<varname>tomcat-webapplication</varname>, which activates a web application on Apache Tomcat,
-			<varname>mysql-database</varname>, which activates a MySQL database and <varname>process</varname>, which
-			activates a generic UNIX process. Many more types can be found in this package.
+			The second parameter is a Nix path referring to a service. Moreover, all the properties defined in the infrastructure
+			model are passed as environment variables.
 		</para>
 	</section>
 	
@@ -95,8 +91,8 @@ esac
 		<title>Implementing a custom activation interface</title>
 		
 		<para>
-			Although the <filename>dysnomia</filename> package contains activation
-			scripts for commonly found services, there may be reasons to perform the activation and deactivation
+			Although the <filename>dysnomia</filename> package contains plugins
+			for commonly found services, there may be reasons to perform the activation and deactivation
 			yourself, because there is no activation type available or the service requires a specialized
 			procedure.
 		</para>
@@ -149,8 +145,9 @@ esac
 		</example>
 		
 		<para>
-			<xref linkend="ex-9-tcp-proxy-wrapper" /> shows an example of a wrapper script used for the TCP proxy example
-			available from our Subversion repository. As you may notice the structure is very
+			<xref linkend="ex-9-tcp-proxy-wrapper" /> shows an example of a wrapper script used for the
+			<link xlink:href="https://github.com/svanderburg/disnix-proxy-example">TCP proxy example</link>
+			available from my Github page. As you may notice, the structure is very
 			similar to an activation script, since it also contains a <code>activate</code> and <code>deactivate</code> step.
 		</para>
 		

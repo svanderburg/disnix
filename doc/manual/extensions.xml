@@ -6,7 +6,7 @@
 
         <para>
 		Although Disnix makes the deployment of a distributed system more convenient and
-		offers features to make this process reiable and efficient, some extensions have been
+		offers features to make this process reliable and efficient, some extensions have been
 		developed to make this process more convenient.
         </para>
         
@@ -28,11 +28,27 @@
 			Although Disnix manages the distributable components (services) of which a
 			distributed system is composed and the inter-dependencies, Disnix does
 			not manage the system configurations of the actual machines on which services are activated.
-			The DisnixOS package cmnbines the Disnix tooling and NixOS tooling to manage distributed
+			The DisnixOS package comnbines the Disnix tooling and NixOS tooling to manage distributed
 			system components <emphasis>and</emphasis> the underlying infrastructure based on
 			<link xlink:href="http://nixos.org/nixos">NixOS</link>
 			system configurations, and an extension to automatically
 			create virtual machine instances from the network configuration for testing.
+		</para>
+	</section>
+	
+	<section>
+		<title>Dynamic Disnix</title>
+		
+		<para>
+			Disnix implements a static deployment model -- to make it work it requires a infrastructure
+			model and distribution model to be manually specified every time something in the configuration changes.
+		</para>
+		<para>
+			Dynamic Disnix is an extended toolset providing a discovery service to capture machine configurations in a
+			network, as well as a distribution generation framework that can be used to
+			generate a distribution model from technical and non-functional attributes of services and machines.
+			These tools can be used to develop a framework enabling self adaptive (re)deployment of service-oriented
+			systems.
 		</para>
 	</section>
 </chapter>

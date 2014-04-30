@@ -5,16 +5,19 @@
 	<title>Writing Disnix models</title>
 
         <para>
-		In this section we explain how to write models that Disnix can use to
-		automatically deploy a distributed system into a network of machines.
-		We use the <code>StaffTracker</code> system as an example for this,
-		which is a distributed system consisting of MySQL databases,
+		In this section, we explain how to write models that Disnix can use to
+		automatically deploy a distributed service-oriented system into a network of machines.
+		We use the <link xlink:href="https://github.com/svanderburg/disnix-stafftracker-java-example">StaffTracker</link>
+		system as an example for this, which is a distributed system consisting of MySQL databases,
 		Java web services and Java web applications. Other types of distributed
-		systems, with different types of components can be deployed with Disnix as well, such
-		as PHP applications and UNIX processes. Some examples (including the
+		systems, with different types of components, can be deployed with Disnix as well, such
+		as PHP applications and UNIX processes.
+	</para>
+	<para>
+		Some examples (including the
 		<code>StaffTracker</code>)
-		can be found in our Subversion repository:
-		<link xlink:href="https://svn.nixos.org/repos/nix/disnix/examples">https://svn.nixos.org/repos/nix/disnix/examples</link>.
+		can be found in on my Github page:
+		<link xlink:href="https://github.com/svanderburg?tab=repositories">https://github.com/svanderburg?tab=repositories</link>.
         </para>
         
 	<section>
@@ -24,9 +27,10 @@
 			The example used in this section is a system which is used to manage staff of a
 			university. This system stores various records about staff members, such as their
 			names, room numbers and IP addresses.
-			
+		</para>
+		<para>
 			The system can determine
-			a zipcode from the staff members' room number.
+			a zipcode from the staff member's room number.
 			From the zipcode it can determine the address of the
 			building. From the IP address of a staff member, the system can determine
 			the current location of the staff member.
@@ -52,7 +56,7 @@
 			<code>StaffTracker</code> system. Basically, the
 			architecture consists of three layers: 
 			a <emphasis>data layer</emphasis>, <emphasis>service layer</emphasis> and <emphasis>presentation layer</emphasis>.
-			The database layer contains MySQL database components,
+			The database layer contains MySQL databases,
 			which store records such as zipcodes and staff members.
 			The web service layer contains web service components, which expose
 			operations to access data in the databases and to update records
@@ -79,7 +83,7 @@
 		<para>
 			The Nix package manager builds components from specifications called
 			Nix expressions, written in the Nix expression language.
-			Disnix also uses this concept. In this section we first show how an
+			Disnix also uses this concept. In this section, we first show how an
 			ordinary Nix expression is written and then we show how this concept
 			is used in a distributed setting.
 		</para>
@@ -131,37 +135,38 @@ stdenv.mkDerivation { <co xml:id='co-2-mkDerivation' />
 				<callout arearefs='co-2-mkDerivation'>
 					<para>
 						Here, we call the <code>stdenv.mkDerivation</code> function which performs
-						a build. We have not specified in the arguments how to build this component,
-						and by default it will then assume that this package is a GNU Autotools based
-						package and performs the following instructions:
+						a build. We have not specified in the arguments how to build this component.
+						By default, the builder assumes that this package is a GNU Autotools based
+						package and basically executes the following instructions:
 						<code>./configure; make; make install</code>.
 					</para>
 				</callout>
 				
 				<callout arearefs='co-3-name'>
 					<para>
-						Every package has a human readable name. This filename becomes part
-						of the filename of the component in the Nix store and also gives a user
+						Every package has requires a name. This name becomes part
+						of the filename of the resulting package in the Nix store and also gives a user
 						the option to look it up after it has been installed.
 					</para>
 				</callout>
 				
 				<callout arearefs='co-4-src'>
 					<para>
-						This attribute specifies the source code that we have to compile and
-						is bound to the result of the <varname>fetchurl</varname>
-						function, which downloads the GNU Hello source tarball from the GNU FTP
-						site and uses the MD5 hash to verify whether the source tarball is the
-						expected one.
+						This attribute specifies the source code that we want to compile. In our example,
+						it is bound to the result of the <varname>fetchurl</varname>
+						function invocation, which downloads the GNU Hello source tarball from the GNU FTP
+						site and uses the MD5 hash to verify whether the source tarball matches what
+						we expect.
 					</para>
 				</callout>
 				
 				<callout arearefs='co-5-buildInputs'>
 					<para>
-						This attribute is used to specify which packages must be found
-						in the build environment. In this case, the location of the <command>perl</command>
-						command is put into the <varname>PATH</varname> environment variable and thus
-						can be found by the build script.
+						This attribute is used to specify which packages must be used
+						in the build environment. In our example, <command>perl</command> has been provided
+						as a build input. The builder automatically sets the <varname>PATH</varname>
+						and <varname>PERL5LIB</varname> environment vairables, so that Perl can be found by
+						build process that is executed in the builder environment.
 					</para>
 				</callout>
 				
@@ -179,7 +184,7 @@ stdenv.mkDerivation { <co xml:id='co-2-mkDerivation' />
 				and its dependencies, we cannot use this expression to build the package directly because we do not
 				know which version/variant of Perl we must use and which compiler and so on.
 				Therefore, we have to <emphasis>compose</emphasis> the package in a seperate expression, in which we call
-				the function with the required parameters.
+				the function shown ealier with its required parameters.
 			</para>
 		
 			<example xml:id="ex-2-all-packages">
@@ -206,8 +211,8 @@ rec { <co xml:id='co-1-rec' />
 		
 			<para>
 				<xref linkend="ex-2-all-packages" /> shows a partial composition expression, in which the GNU Hello component
-				build function is called with the right parameters. Moreover, all the other components where GNU Hello dependends
-				on are also defined in this expression.
+				build function is called with the its required parameters. Moreover, all the other packages where GNU Hello dependends
+				on are also composed in this expression.
 			</para>
 		
 			<calloutlist>
@@ -222,7 +227,13 @@ rec { <co xml:id='co-1-rec' />
 				<callout arearefs='co-3-importHello'>
 					<para>
 						Here, the expression defined in <xref linkend="ex-1-hello" /> is imported and called
-						with the arguments it requires.
+						with the its requires function parameters. The corresponding dependencies are
+						composed in the same expression as well.
+					</para>
+					<para>
+						We can also use the function parameters to make different kinds of compositions of the same package.
+						For example, by replacing <code>inherit perl;</code> with <code>perl = perl54;</code> we
+						can build GNU Hello using a different version of Perl.
 					</para>
 				</callout>
 				
@@ -240,7 +251,7 @@ rec { <co xml:id='co-1-rec' />
 			
 			<para>
 				Similar to writing a Nix expression for an arbitrary package,
-				every service managed by Disnix also requires a expression which describes how to
+				every service deployed by Disnix also requires a expression which describes how to
 				build it from source code and its dependencies. A Disnix expression is
 				nearly identical to an ordinary Nix expression, except that it also
 				takes inter-dependencies into account to configure and build a component.
@@ -286,18 +297,17 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 				a particular web service component of the <code>StaffTracker</code>
 				system, called <code>ZipcodeService</code>, which provides access
 				to records in the <code>zipcode</code> database.
-				Basically, a Disnix expression is nearly identical to an ordinary
-				Nix expression, except that it is a nested function (which has two
+				Basically, a Disnix expression is a nested function (which has two
 				function headers instead of one). The headers represent 
 				intra-dependencies and inter-dependencies respectively,
-				which are both used to build and configure the service.
+				which are both used to build and configure a service.
 			</para>
 		
 			<calloutlist>
 				<callout arearefs='co-1-outerFunctionHeader'>
 					<para>
 						This is the outer function header, which specifies all the local dependencies,
-						or <emphasis>intra-dependencies</emphasis> of the service.
+						or <emphasis>intra-dependencies</emphasis>.
 						Intra-dependencies are all build-time and run-time dependencies
 						located on the same system. In order to build the <code>ZipcodeService</code>
 						a <varname>stdenv</varname> component is needed which is the standard
@@ -314,7 +324,7 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 						This is the inner function header, which specifies all the <emphasis>inter-dependencies</emphasis>.
 						The <varname>zipcodes</varname> argument refers to a database in which all the
 						zipcodes are stored. The database may be running on a different machine as the
-						<code>ZipcodeService</code>.
+						<code>ZipcodeService</code> and is consulted by the web service with a TCP connection.
 					  </para>
 				</callout>
 				
@@ -323,7 +333,7 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 						This string contains a so-called context XML file. This is a configuration
 						file used by Apache Tomcat in order to configure web application specific settings.
 						One of these configuration settings are database settings.
-						In this string we use the inter-dependency parameter: <varname>zipcodes</varname>
+						To compose this string, we use the inter-dependency parameter: <varname>zipcodes</varname>
 						to generate a JDBC connection string that can be used to connect to the
 						remote database. The <varname>zipcodes</varname> argument is an attribute set,
 						containing service and infrastructure properties, which can be used
@@ -359,7 +369,7 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 		
 			<para>
 				<xref linkend="ex-3-zipcode-service" /> shows you how to build and configure an Apache Axis2 web service.
-				A different type of component has different configuration steps, however. The only thing Disnix
+				Different types of components have different kinds configuration steps, however. The only thing Disnix
 				takes care of is that the locations of the inter-dependencies and the properties of
 				the services and machines are provided in the build environment of the component.
 				These properties must then be used by the developer to properly configure and build the
@@ -375,7 +385,7 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 		<para>
 			Like ordinary Nix expressions, we cannot use the expression in <xref linkend="ex-3-zipcode-service" /> directly to build the
 			service. We need to <emphasis>compose</emphasis> it by calling the function with the right arguments.
-			In the case of Disnix, we need to call this function twice. First, we have to compose this expression locally,
+			With Disnix, we need to call this function twice. First, we have to compose this expression locally,
 			by calling it with the required intra-dependency arguments. Later on, we have to compose it
 			by using the inter-dependency arguments.
 		</para>
@@ -424,7 +434,7 @@ rec { <co xml:id='co-3-rec' />
 		
 		<para>
 			<xref linkend="ex-4-intra-dependency-composition" /> shows a Nix expression in which
-			services all are called with the right intra-dependency arguments.
+			services are composed locally by calling the expressions with its required intra-dependency arguments.
 		</para>
 		
 		<calloutlist>
@@ -451,7 +461,7 @@ rec { <co xml:id='co-3-rec' />
 		<title>Services model</title>
 		
 		<para>
-			Except for specifiying how to build a package from source code and what its local (intra) dependencies
+			Apart from specifiying how to build a package from source code and what its local (intra) dependencies
 			are, we also need to know what components are distributable, what their inter-dependencies are and
 			how to activate or deactivate them. This is information captured in the services model.
 		</para>
@@ -503,22 +513,23 @@ rec { <co xml:id='co-3-rec2' />
 		<para>
 			<xref linkend="ex-5-services-model" /> represents the services model of the <code>StaffTracker</code>
 			system. Here all the distributable components are shown, their inter-dependencies and other relevant
-			properties. All the services and inter-dependency relationships are the same as illustrated
-			in <xref linkend="fig-1-stafftracker" />.
+			properties. As might be observed, the structure of this file (i.e. the services and inter-dependency relationships)
+			are the same as in the architecture diagram, shown in <xref linkend="fig-1-stafftracker" />.
 		</para>
 		
 		<calloutlist>
 			<callout arearefs='co-1-servicesHeader'>
 				<para>
-					The services expression is a function, which takes 2 arguments.
+					The services expression is a function, which takes three arguments.
 					The <varname>distribution</varname> parameter represents the distribution model,
 					in which services are mapped onto machines in the network (this model is explained
 					later). This model can be used by services to configure themselves based on the
 					location of each service. The <varname>system</varname> parameter is an identifier
 					for the system architecture on which services must be built. An examples of an
 					identifier is: <code>i686-linux</code> representing a 32-bit <code>x86</code> Linux machine.
-					The <varname>pkgs</varname> parameter represents the collection of Nixpkgs for
-					the given system identifier.
+					The <varname>pkgs</varname> parameter represents the Nixpkgs collection for
+					the corresponding system, containing a large collection of free and open source packages
+					(including some proprietary ones).
 				</para>
 			</callout>
 			
@@ -565,7 +576,7 @@ rec { <co xml:id='co-3-rec2' />
 			<callout arearefs='co-7-dependsOn'>
 				<para>
 					We also need to know for each service what the inter-dependencies are. In this
-					case we specify that the attribute <varname>zipcodes</varname> (a service also
+					case, we specify that the attribute <varname>zipcodes</varname> (a service also
 					defined in the services model) is an inter-dependency
 					of the <code>ZipcodeService</code>. 
 					By using Nix expression language constructs, you can also create different inter-dependency
@@ -579,10 +590,12 @@ rec { <co xml:id='co-3-rec2' />
 			<callout arearefs='co-8-type'>
 				<para>
 					Finally, we must know how to activate and deactive a service. Since services can represent
-					many things such as a database or web application, we cannot perform this step generically.
-					This attribute specifies the type of the service, which will invoke a activation script
+					nearly anything, such as a database or web application, we cannot perform this step generically.
+					This attribute specifies the type of the service, which is used by Disnix to consult Dysnomia
 					on the target machine performing the actual activation or deactivation process. 
-					Various types are supported such as: <code>tomcat-webapplication</code> which will activate
+				</para>
+				<para>
+					Various types of services are supported by Dysnomiasuch as: <code>tomcat-webapplication</code> which will activate
 					a web application on Apache Tomcat, <code>mysql-database</code> which will import
 					a MySQL database schema on first startup and <code>process</code> which activates a generic
 					UNIX process. Moreover, a <code>wrapper</code> type exists, which allows the developer to include
@@ -596,8 +609,8 @@ rec { <co xml:id='co-3-rec2' />
 		<title>Infrastructure model</title>
 		
 		<para>
-			Except for the services and their relevant properties, we also need to know what machines are
-			available and their relevant properties and capabilities, which is captured in the
+			Apart from the services and their relevant configuration properties, we also need to know what machines are
+			available and their relevant properties and capabilities. These attributes are captured in the
 			infrastructure model.
 		</para>
 		
@@ -625,47 +638,51 @@ rec { <co xml:id='co-3-rec2' />
 		</example>
 		
 		<para>
-			<xref linkend="ex-6-infrastructure-model" /> shows an infrastructure model capturing 2 machines, which can be used to
+			<xref linkend="ex-6-infrastructure-model" /> shows an infrastructure model describing 2 machines, which can be used to
 			deploy the <code>StaffTracker</code> services on.
 		</para>
 		
 		<calloutlist>
 			  <callout arearefs='co-1-target'>
-				  <para>
+				<para>
 					The infrastructure model is an attribute set in which each attribute represents a 
 					machine in the network. This attribute refers to the properties of a machine called
 					<code>test2</code>.
-				  </para>
+				</para>
 			  </callout>
 			  
 			  <callout arearefs='co-2-hostname'>
 				  <para>
 					In order to perform deployment steps remotely, we need to know how to connect
-					to the machine. Normally, the <code>hostname</code> attribute is used for this, but
-					Disnix can be configured to use a different property as well.
+					to the machine. By default, the <code>hostname</code> attribute is used for this.
+					Disnix can be configured to use a different property as well through a command-line
+					parameter or environment variable.
 				  </para>
 			  </callout>
 			  
 			  <callout arearefs='co-3-system'>
-				  <para>
-					A machine in the network may have a different architecture as the coordinator machine.
-					This attribute can be used to specify the architecture of the machine. By specifying
-					an architecture the coordinator will invoke Nix to build the service for that particular
-					platform. In some cases Nix may not be able to do that, because it is incapable
+				<para>
+					A machine in the network may have a different system architecture as the coordinator machine.
+					The <code>system</code> attribute can be used to specify the actual architecture of a target machine. By specifying
+					an architecture. the coordinator will invoke Nix to build the service for that particular
+					platform.
+				</para>
+				<para>
+					In some cases Nix may not be able to build a service directly, because it is incapable
 					to run a compiler for that platform or it has no dedicated build machine with the
 					right architecture to delegate the build to.
 					In such cases you can either build the service on a target machine in the network.
 					By omitting the <code>system</code> attribute, Disnix will build the service for
 					the same architecture as the coordinator machine.
-				  </para>
+				</para>
 			  </callout>
 			  
 			  <callout arearefs='co-4-mysqlPort'>
 				  <para>
 					The other properties of a machine can be freely chosen and are used by the
-					activation scripts to activate a particular service. For instance, the
+					Dysnomia modules to activate a particular service. For instance, the
 					<code>mysqlPort</code> specifies on which port the MySQL can be reached.
-					The MySQL properties in this model are used by the MySQL activation script.
+					The MySQL properties in this model are used by the MySQL Dysnomia module.
 				  </para>
 			  </callout>
 		</calloutlist>
@@ -673,8 +690,8 @@ rec { <co xml:id='co-3-rec2' />
 		<para>
 			Although you can specify what a network configuration looks like in an infrastructure model,
 			you as a developer or system administrator must make sure that the machines in the
-			network match this configuration. There are some tools which can assist in this job, 
-			for instance if only NixOS machines are used, an infrastructure model can be generated
+			network match this configuration. There are some tools which can assist in this job. 
+			For instance. if only NixOS machines are used, an infrastructure model can be generated
 			from a network of NixOS configurations.
 		</para>
 	</section>
@@ -683,8 +700,8 @@ rec { <co xml:id='co-3-rec2' />
 		<title>Distribution model</title>
 		
 		<para>
-			We also have to specify for each service on which machine it must be deployed,
-			which can be done in the distribution model.
+			Disnix also needs to know for each service on which machine it must be deployed. A distribution
+			model needs to be provided to make this possible.
 		</para>
 		
 		<example xml:id="ex-7-distribution-model">
