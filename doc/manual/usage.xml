@@ -5,15 +5,15 @@
 	<title>Usage</title>
 
         <para>
-		The models specified in the previous chapter can be used to perform the complete
-		deployment process of a distributed system or certain steps of the process
+		The models described in the previous chapter can be used to perform the <emphasis>complete</emphasis>
+		deployment process of a service-oriented system or certain steps of the process
 		seperately. Moreover, the models can also be used for some other purposes.
         </para>
         
 	<section>
 		<title>Deploying a system</title>
 		<para>
-			To deploy a complete system the following instruction can be used:
+			To deploy a complete system the following instruction can be run from the command-line:
 		</para>
 		
 <screen>
@@ -21,11 +21,12 @@ $ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
 </screen>
 
 		<para>
-			By executing the command above, first all the services and their dependencies are compiled from source code
+			By executing the command above, all the services and their dependencies are compiled from source code
 			on the coordinator machine, then the services and their intra-dependencies are transferred to the target machines
 			in the network. Finally, the obsolete services from the previous configuration are deactivated and the
 			new services are activated.
-
+		</para>
+		<para>
 			It may be possible that the coordinator machine is not able build services for every machine in the network
 			(e.g. if a target is a <code>i686-freebsd</code> and the coordinator is a <code>i686-linux</code> machine).
 			In such cases it is also possible to perform builds on machines in the network and then copy the build results
@@ -51,17 +52,16 @@ $ disnix-manifest -s services.nix -i infrastructure.nix -d distribution.nix
 		<para>
 			This command produces a <emphasis>manifest</emphasis> file, which is basically
 			a more concrete version of the distribution model. This file contains references
-			to the Nix store paths of all the build results, types and connection settings and dependent
-			mappings which can be used to distribute services and to activate them. 
+			to the actual Nix store paths of all the build results. 
 			As a side effect, all the services that are specified in the distribution model
 			are built from source code.
-			The manifest is produced in the Nix store
-			and the current directory contains a symlink called <filename>result</filename> pointing
+			The manifest is also a Nix package residing in the Nix store.
+			For convenience, this tool creates a symlink called <filename>result</filename> pointing
 			to it.
 		</para>
 		
 		<para>
-			For instance by querying the runtime dependencies of the generated manifest file,
+			For instance, by querying the runtime dependencies of the generated manifest file,
 			all the services including their runtime dependencies can be retrieved:
 		</para>
 		
@@ -87,7 +87,7 @@ $ disnix-instantiate -s services.nix -i infrastructure.nix -d distribution.nix
 </screen>
 		
 		<para>
-			Like the manifest file, the distributed derivation file is also produced
+			Like the manifest file, the distributed derivation file is also stored
 			in the Nix store and a <filename>result</filename> symlink is stored in the
 			current directory pointing to it.
 		</para>
@@ -112,7 +112,7 @@ $ disnix-build ./result
 		
 		<para>
 			This command distributes the store derivation file of each service and its
-			dependencies to the machines in the network, then it performs the build on each
+			dependencies to the machines in the network, then it builds them on each
 			machine and finally copies the build results back into the Nix store of the 
 			coordinator machine.
 		</para>
@@ -122,7 +122,7 @@ $ disnix-build ./result
 		<title>Distributing services to target machines</title>
 		
 		<para>
-			After services have been built by invoking <command>disnix-manifest</command>,
+			After all services have been built by invoking <command>disnix-manifest</command>,
 			then the services including their runtime dependencies can be distributed
 			to machines in the network by calling:
 		</para>
@@ -149,9 +149,9 @@ $ disnix-activate ./result
 		<title>Collecting garbage</title>
 		
 		<para>
-			Like the standard Nix, Disnix also offers an option to safely remove components
+			Like the standard Nix, Disnix also offers an option to safely remove packages
 			and their intra-dependencies that are no longer in use. The following command
-			will remove garbage from every machine defined in the infrastructure model:
+			removes garbage from every machine defined in the infrastructure model:
 		</para>
 		
 <screen>

@@ -6,18 +6,18 @@
 
         <para>
 		Although Disnix makes the deployment of a distributed system more convenient and
-		offers features to make this process reliable and efficient, some extensions have been
-		developed to make this process more convenient.
+		offers various kinds of features to make this process reliable and efficient, some extensions have been
+		developed to make deployment processes more convenient.
         </para>
         
 	<section>
 		<title>DisnixWebService</title> 
 		
 		<para>
-			In some cases other communication protocols are desired to use in order to
-			connect to remote machines, except SSH. The <code>DisnixWebService</code>
-			is a package that contains a SOAP interface for deployment operations and
-			a <command>disnix-soap-client</command> utility to connect to it.
+			In some cases other communication kinds of communication protocols are needed to
+			connect to remote machines besides SSH. The <code>DisnixWebService</code>
+			is a package that implements a SOAP interface for deployment operations and
+			a client interface named <command>disnix-soap-client</command> to connect to it.
 		</para>
 	</section>
 
@@ -27,7 +27,7 @@
 		<para>
 			Although Disnix manages the distributable components (services) of which a
 			distributed system is composed and the inter-dependencies, Disnix does
-			not manage the system configurations of the actual machines on which services are activated.
+			not manage the underlying system configurations of the actual machines to which services are deployed.
 			The DisnixOS package comnbines the Disnix tooling and NixOS tooling to manage distributed
 			system components <emphasis>and</emphasis> the underlying infrastructure based on
 			<link xlink:href="http://nixos.org/nixos">NixOS</link>

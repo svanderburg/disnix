@@ -5,14 +5,15 @@
 	<title>Introduction</title>
 
 	<para>
-		Disnix is a toolset used to perform distributed deployment tasks
+		Disnix is a toolset used to perform distributed service deployment tasks
 		and is built on top of Nix; a package manager which has some distinct
 		features compared to conventional package
 		managers to make deployment safe and reliable.
 	</para>
 
 	<para>
-		Nix stores packages in isolation from each other in a directory
+		Most of Nix's unique features stem from the way packages are stored. In Nix,
+		every pacakge is stored in isolation from each other in a special purpose directory
 		called the <emphasis>Nix store</emphasis>. Every package has a special file
 		name such as:
 	</para>
@@ -25,11 +26,11 @@
 		The first part <filename>h3ybhij06f3lhjx0p9axfcbyg9z9bljj</filename> is a cryptographic hash
 		derived from all the inputs
 		(e.g. libraries, compilers, build scripts)
-		used to build the component. If a user decides to build the component
+		used to build a package. If a user decides to build the component
 		with, say, a different
-		compiler, this will result in a different hash and thus a different filename in
-		the Nix store. This approach makes it safe to store multiple versions and variants next
-		to each other, because no components share the same name.
+		compiler, a different hash being computed and thus a different filename.
+		Hashing makes it safe to store multiple versions and variants next
+		to each other, because no component share the same name.
 	</para>
 
 	<para>
@@ -37,10 +38,10 @@
 		such as <filename>/usr/lib</filename>, we have stricter guarantees that its dependencies are
 		correct and complete. With conventional package managers 
 		the fact that a package builds successfully does not guarantee that the
-		dependency specification is correct, since dependencies are stored in global locations and
-		can still be implicitly found as a consequence.
+		dependency specification are correct, since dependencies residing in global locations and
+		can still be implicitly found.
 		In Nix, all packages reside in isolated folders the Nix store and must therefore
-		be explicitly specified.  This guarantees that if a package builds
+		be explicitly specified.  Isolation guarantees that if a package builds
 		correctly on one machine,
 		it will build on other machines of the same type as well.
 	</para>
@@ -55,20 +56,20 @@
 
 	<para>
 		Moreover, Nix uses a purely functional domain-specific language called the Nix expression language
-		to specify build actions. This makes building a package deterministic and reproducable.
+		to specify build actions. Using a purely functional language makes builds deterministic and reproducable.
 		A garbage collector is included to safely remove packages that are no longer in use.
 	</para>
 
 	<para>
 		Because of these features, Nix is a very good basis to build
-		a distributed deployment tool to make the deployment process of distributed service-oriented systems
+		a distributed service deployment tool to make the deployment process of service-oriented systems
 		efficient, reliable and atomic.
-		However, Nix only handles <emphasis>intra-dependencies</emphasis>, which are either run-time or
+		However, Nix has a few limitations -- it only handles <emphasis>intra-dependencies</emphasis>, which are either run-time or
 		build-time dependencies residing on the same machine.
 		In order to deploy a distributed service-oriented system into a network of machines, additional features 
-		are required which are provided by Disnix.  Most importantly, these include models to describe machines in the
+		are required, which are provided by Disnix.  Most importantly, Disnix supports models to describe machines in the
 		network, and 
-		management of <emphasis>inter-dependencies</emphasis> -- the run-time dependencies between components
+		manages of <emphasis>inter-dependencies</emphasis> -- the run-time dependencies between components
 		residing on different machines.
 	</para>
 
@@ -107,8 +108,8 @@
 			<para>
 				Disnix allows someone to specify inter-dependencies of distributed system
 				components, which can be used to compose distributed system components
-				into a complete system. If a certain service is deployed, Disnix ensures tha
-				their inter-dependencies are deployed first so that we never have a failing
+				into a complete system. If a certain service is deployed, Disnix ensures that
+				its inter-dependencies are deployed first so that we never have a failing
 				system due to missing dependencies.
 			</para>
 
@@ -124,7 +125,8 @@
 
 			<para>
 				Like the standard Nix package manager, which support atomic upgrades,
-				Disnix uses a two-phase commit variant mapped onto Nix deployment
+				Disnix extends this concept to service-oriented systems by using a
+				two-phase commit implementation mapped onto Nix deployment
 				operations to upgrade a distributed system atomically.
 				Since the Nix package manager always stores components next to each
 				other in a Nix store and never overwrites existing files,
@@ -167,7 +169,7 @@
 				a distributed system into a heterogeneous network (i.e. a network consisting
 				of various types of machines, running various operating systems). Disnix reuses
 				Nix's delegation mechanism to build a component for an alien target platform.
-				Optionally, it can also delegate builds itself to target machines in the network.
+				Optionally, it can also delegate builds to target machines in the network.
 			</para>
 		</simplesect>
 
@@ -175,14 +177,14 @@
 			<title>Extensibility</title>
 
 			<para>
-				Since distributed systems can be deployed in heterogeneous networks
+				Since service-oriented systems can be deployed in heterogeneous networks
 				consisting of various platforms and using various communication protocols,
 				and their components can have basically any form,
 				not all operations can be solved in a generic manner. 
 			</para>
 			<para>
 				The architecture of the Disnix toolset is very modular and uses
-				a plugin system can be used to integrate
+				a plugin system called Dysnomia to integrate
 				customly developed modules used for the activation and deactivation of services,
 				and a plugin system that provides remote access through various RPC protocols.
 			</para>
@@ -190,7 +192,8 @@
 			<para>
 				Currently, Disnix includes a SSH wrapper which can be used to access
 				remote machines through a SSH connection. A seperate extension that uses
-				SOAP + MTOM is also available. A custom extension can be developed trivially.
+				SOAP + MTOM is also available. A custom extension can be developed in a straight
+				forward manner.
 			</para>
 		</simplesect>
 	</section>

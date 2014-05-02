@@ -9,13 +9,13 @@
 		
 		<para>
 			As mentioned before, the Disnix service consists of a core service and a protocol wrapper.
-			By default a SSH connection is used, but other types of connections can be used as well,
+			By default, an SSH wrapper is used, but other types of wrappers can be used as well,
 			such as SOAP, provided by the external <code>DisnixWebService</code> package.  
 		</para>
 		
 		<para>
 			The coordinator machine invokes an external process which performs communication with
-			the Disnix service. By default <command>disnix-ssh-client</command> is used. A different
+			the Disnix service. By default <command>disnix-ssh-client</command> is consulted. A different
 			client can be used by either setting the <varname>DISNIX_CLIENT_INTERFACE</varname>
 			environment variable with the path to the executable or by using the
 			<option>--interface</option> command-line option, for commands such as
@@ -35,25 +35,27 @@ $ export DISNIX_CLIENT_INTERFACE=disnix-soap-client
 		</para>
 		
 		<para>
-			Except for configuring the coordinator machine, each target machine must also run the
+			Apart from configuring the coordinator machine, each target machine must also run the
 			connection wrapper so that it can use the given protocol. Refer to the documentation
 			of the extension for specific instructions.
 		</para>
 		
 		<para>
-			Another usecase is setting the client interface to <command>disnix-client</command>.
-			This client interface connects directly to the D-Bus system bus to invoke the disnix 
-			service operations. This is useful for debugging purposes, but you cannot use this client
+			Another wrapper is  <command>disnix-client</command> that 
+			connects directly to the D-Bus system bus to invoke Disnix 
+			service operations. This wrapper is useful for debugging purposes, but you cannot use this client
 			for remote connections.
 		</para>
 		
 		<para>
-			In some cases, also the target property must be configured. By default Disnix uses the
-			<varname>hostname</varname> property defined in the infrastructure model, to determine
+			In some cases, also the target property must be configured. By default, Disnix uses the
+			<varname>hostname</varname> property in the infrastructure model, to determine
 			how to connect to the remote Disnix service in order to perform remote deployment steps.
 			This property is not always sufficient for every protocol. A web service interface may require a URL
 			or a connection string may also need a port number specification.
-			This property can be changed by either setting the <varname>DISNIX_TARGET_PROPERTY</varname>
+		</para>
+		<para>
+			The connection attribute can be changed by either setting the <varname>DISNIX_TARGET_PROPERTY</varname>
 			environment variable with the attribute name that contains the address of the remote
 			Disnix service or by using the <option>--target-property</option> command-line option.
 		</para>

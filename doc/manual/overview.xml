@@ -30,14 +30,14 @@
 		in the services model to machines defined in the infrastructure model.
 	</para>
 	<para>
-		The service model has a reference to the file <filename>all-packages.nix</filename>,
+		The service model has a reference to the file named <filename>all-packages.nix</filename>,
 		which captures all the intra-dependencies of every service,
 		such as libraries, configuration files and compilers.
 	</para>
 	<para>
 		On the right side of the figure, the network is shown in which the system
 		has to be deployed. Every machine in the network requires a
-		<emphasis>DisnixService</emphasis> instance installed, so that
+		<emphasis>DisnixService</emphasis> instance to be installed, so that
 		remote deployment steps can be performed from the coordinator machine.
 	</para>
 
@@ -61,7 +61,7 @@ $ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
 	</para>
 	<para>
 		By adapting one of the models and by running <command>disnix-env</command> again,
-		an upgrade is performed. In this case only services that have changed are built from
+		an upgrade is performed. In case of an upgrade, only services that have changed are built from
 		source code, only components that have to be upgraded are transferred to target
 		machines and only changed services are deactivated and activated (also in the right
 		order), making this phase efficient and reliable.

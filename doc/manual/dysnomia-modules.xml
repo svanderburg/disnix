@@ -6,7 +6,7 @@
 
 	<para>
 		As explained in <xref linkend="chap-models" /> a type is assigned to each service, which
-		is used to determine how to perform the activation and deactivation procedure od a service.
+		are used to determine how to activate or deactivate a service.
 		Each type is mapped onto a Dysnomia module which performs the actual activation or deactivation procedure.
 		In this chapter we explain how Dysnomia modules work.
 	</para>
@@ -15,7 +15,7 @@
 		<title>Structure</title>
 		
 		<para>
-			Basically, every module is a process, which takes 2 arguments. The first argument is
+			Basically, every Dysnomia module implements a process, which takes 2 command-line parameters. The first argument is
 			one of the following:
 		</para>
 		
@@ -28,7 +28,7 @@
 		
 		<para>
 			The second parameter is a Nix path referring to a service. Moreover, all the properties defined in the infrastructure
-			model are passed as environment variables.
+			model are passed as environment variables so that they can be while running activation or deactivation steps.
 		</para>
 	</section>
 	
@@ -36,7 +36,7 @@
 		<title>Dysnomia module for the <code>mysql-database</code> type</title>
 		
 		<example xml:id="ex-8-mysql-database">
-			<title>MySQL database activation script</title>
+			<title>MySQL database Dysnomia module</title>
 			
 			<programlisting>
 #!/bin/bash -e
@@ -92,14 +92,14 @@ esac
 		
 		<para>
 			Although the <filename>dysnomia</filename> package contains plugins
-			for commonly found services, there may be reasons to perform the activation and deactivation
-			yourself, because there is no activation type available or the service requires a specialized
-			procedure.
+			for commonly found services, there may be special cases where the activation and deactivation procedure have to be executed
+			directly by the services. For example, because there is no activation type available or the service requires a specialized
+			activation procedure.
 		</para>
 		
 		<para>
-			In these cases the <code>wrapper</code> type can be used. Basically the wrapper invokes
-			the <filename>bin/wrapper</filename> executable in the Nix store component with the first
+			For these purposes, the <code>wrapper</code> type can be used. Basically, the wrapper module invokes
+			the <filename>bin/wrapper</filename> executable in the Nix package with the first
 			parameter passed to the activation script (which is <varname>activate</varname>, <varname>deactivate</varname> etc.).
 			Then this process performs all the steps to activate the component and so on.
 		</para>
@@ -148,7 +148,7 @@ esac
 			<xref linkend="ex-9-tcp-proxy-wrapper" /> shows an example of a wrapper script used for the
 			<link xlink:href="https://github.com/svanderburg/disnix-proxy-example">TCP proxy example</link>
 			available from my Github page. As you may notice, the structure is very
-			similar to an activation script, since it also contains a <code>activate</code> and <code>deactivate</code> step.
+			similar to an activation script, since it also contains the <code>activate</code> and <code>deactivate</code> steps.
 		</para>
 		
 		<para>

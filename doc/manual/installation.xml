@@ -6,7 +6,7 @@
 
 	<para>
 		This chapter explains how Disnix can be installed. Basically, the coordinator machine only needs the Disnix
-		client tools. Every target machine needs a both the client utilities and a Disnix service instance running,
+		client utilities. Every target machine needs a both the client utilities and a Disnix service instance running,
 		so that the coordinator machine can perform remote deployment steps.
 	</para>
 	<para>
@@ -103,26 +103,23 @@ $ ./bootstrap
 			A more convenient way to install Disnix by using
 			the Nix package manager. The
 			<link xlink:href="http://nixos.org/nixpkgs">Nixpkgs</link> collection
-			has a Disnix package and can be installed by typing:
+			contains Disnix. It can be deployed by typing:
 
 <screen>
 $ nix-env -i disnix
 </screen>
-
-			Another way is downloading the Disnix source distribution
-			and to compile it manually. 
 		</para>
 
 		<para>
 			To allow distributed system configurations to be built, a copy of
 			<link xlink:href="http://nixos.org/nixpkgs">Nixpkgs</link> is required.
 			An environment variable named <code>NIX_PATH</code> must point to the path where
-			it is installed, so that Disnix (and other Nix utilities) can find it.
+			it has been installed, so that Disnix (and other Nix utilities) can find it.
 		</para>
 		<para>
-			In NixOS, a copy is 
+			On NixOS, a copy of Nixpkgs is 
 			already present and this environment variable has already been configured.
-			On other systems this variable can be configured by adding the following lines to your
+			On other systems, this variable can be configured by adding the following lines to your
 			<filename>~/.bash_profile</filename> configuration (or a similar configuration
 			file, if you use a different shell):
 		</para>
@@ -182,14 +179,14 @@ EOF
 				<link xlink:href="http://nixos.org/nixos/docs.html">NixOS manual</link>
 				to install a NixOS machine.
 				To enable the Disnix core service on NixOS the following property
-				must be defined in the <filename>/etc/nixos/configuration.nix</filename> file:
+				must be added to the <filename>/etc/nixos/configuration.nix</filename> file:
 				
 <screen>
 services.disnix.enable = true;
 </screen>
 				
 				In order to use the OpenSSH wrapper, also the OpenSSH service must
-				be activated in the <filename>/etc/nixos/configuration.nix</filename> file:
+				be added to the <filename>/etc/nixos/configuration.nix</filename> file:
 				
 <screen>
 services.openssh.enable = true;
@@ -201,7 +198,7 @@ services.openssh.enable = true;
 			</para>
 			<para>
 				To allow Disnix to activate or deactiate a certain service type through Dysnomia,
-				simply enabling a container suffices in a NixOS configuration.
+				simply enabling a container service suffices in a NixOS configuration.
 				For example, by enabling MySQL and Apache Tomcat in NixOS,
 				the NixOS module system automatically configures Dysnomia to install the corresponding plugins
 				so that Disnix can activate services that in these containers:
@@ -404,7 +401,7 @@ $ ssh-host-config
 			
 			<para>
 				On NixOS the <code>disnix</code> user group is automatically added. For other systems this
-				must be done by the system adminstrator.
+				must be done by the system administrator.
 				On most systems this user group can be added by typing:
 			</para>
 			
@@ -427,9 +424,10 @@ $ usermod -G disnix someuser
 			<title>Additional settings for the SSH wrapper</title>
 			
 			<para>
-				If a SSH connection is used, normally it will ask for user credentials for each operation.
+				If a SSH connection is used, it may ask you to provide user credentials for each operation.
 				This is not a bug, but an implication of using SSH. In order to make this process non-interactive
-				a SSH keypair must be generated. Refer to the <command>ssh-agent</command> manual page for this.
+				you must either generate an SSH keypair through <command>ssh-keygen</command> or use
+				<command>ssh-agent</command> to remember the authentication settings.
 			</para>
 		</section>
 	</section>
