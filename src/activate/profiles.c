@@ -34,18 +34,18 @@ int set_target_profiles(const GArray *distribution_array, gchar *interface, gcha
     
     for(i = 0; i < distribution_array->len; i++)
     {
-	int status;
-	DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
-		
-	g_print("Setting profile: %s on target: %s\n", item->profile, item->target);
-	
-	status = wait_to_finish(exec_set(interface, item->target, profile, item->profile));
-	
-	if(status != 0)
-	{
-	    g_printerr("Cannot set profile!\n");
-	    exit_status = status;
-	}
+        int status;
+        DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
+        
+        g_print("[target: %s]: Setting Disnix profile: %s\n", item->target, item->profile);
+        
+        status = wait_to_finish(exec_set(interface, item->target, profile, item->profile));
+        
+        if(status != 0)
+        {
+            g_printerr("[target: %s]: Cannot set profile!\n", item->target);
+            exit_status = status;
+        }
     }
 
     return exit_status;
@@ -55,20 +55,20 @@ int set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *
 {
     gchar *profile_path, *manifest_file_path;
     int status;
-	    
-    g_print("Setting the coordinator profile:\n");
 
     /* Determine which profile path to use, if a coordinator profile path is given use this value otherwise the default */
     if(coordinator_profile_path == NULL)
-	profile_path = g_strconcat(LOCALSTATEDIR, "/nix/profiles/per-user/", username, "/disnix-coordinator", NULL);
+        profile_path = g_strconcat(LOCALSTATEDIR, "/nix/profiles/per-user/", username, "/disnix-coordinator", NULL);
     else
-	profile_path = g_strdup(coordinator_profile_path);
+        profile_path = g_strdup(coordinator_profile_path);
+    
+    g_print("[coordinator]: Setting the coordinator profile: %s\n", profile_path);
     
     /* Create the profile directory */
     if(mkdir(profile_path, 0755) == -1)
     {
-	if(errno != EEXIST)
-	    g_printerr("Cannot create profile directory: %s\n", profile_path);
+        if(errno != EEXIST)
+            g_printerr("[coordinator]: Cannot create profile directory: %s\n", profile_path);
     }
     
     /* Profile path is not needed anymore */
@@ -82,13 +82,13 @@ int set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *
        (strlen(manifest_file) >= 2 && manifest_file[0] == '.' || manifest_file[1] == '/'))
         manifest_file_path = g_strdup(manifest_file);
     else
-	manifest_file_path = g_strconcat("./", manifest_file, NULL); /* Otherwise add ./ in front of the path */
+        manifest_file_path = g_strconcat("./", manifest_file, NULL); /* Otherwise add ./ in front of the path */
     
     /* Determine the path to the profile */
     if(coordinator_profile_path == NULL)
-	profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
+        profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
     else
-	profile_path = g_strconcat(coordinator_profile_path, "/", profile, NULL);
+        profile_path = g_strconcat(coordinator_profile_path, "/", profile, NULL);
     
     /* Execute nix-env --set operation to change the coordinator profile so
      * that the new configuration is known
@@ -98,9 +98,9 @@ int set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *
     
     if(status == 0)
     {
-	char *const args[] = {"nix-env", "-p", profile_path, "--set", manifest_file_path, NULL};
-	execvp("nix-env", args);
-	_exit(1);
+        char *const args[] = {"nix-env", "-p", profile_path, "--set", manifest_file_path, NULL};
+        execvp("nix-env", args);
+        _exit(1);
     }
     
     /* Cleanup */
@@ -109,14 +109,14 @@ int set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *
     
     /* If the process suceeds the the operation succeeded */
     if(status == -1)
-	return -1;
+        return -1;
     else
     {
-	wait(&status);
+        wait(&status);
     
-	if(WEXITSTATUS(status) == 0)
-	    return 0;
-	else
-	    return WEXITSTATUS(status);
+        if(WEXITSTATUS(status) == 0)
+            return 0;
+        else
+            return WEXITSTATUS(status);
     }
 }

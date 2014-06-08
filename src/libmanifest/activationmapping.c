@@ -31,7 +31,7 @@ static gint compare_activation_mapping(const ActivationMapping **l, const Activa
     /* Compare the service names */
     gint status = g_strcmp0(left->service, right->service);
 
-    /* If services are equal then compare the targets */    
+    /* If services are equal then compare the targets */
     if(status == 0)
     {
 	unsigned int i;

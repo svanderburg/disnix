@@ -62,40 +62,40 @@ eval set -- "$PARAMS"
 while [ "$1" != "--" ]
 do
     case "$1" in
-        -s|--services)	    
-	    servicesFile=`readlink -f $2`
-	    ;;
-	-i|--infrastructure)
-	    infrastructureFile=`readlink -f $2`
-	    ;;
-	-d|--distribution)
-	    distributionFile=`readlink -f $2`
-	    ;;
-	--build-on-targets)
-	    buildOnTargets=1
-	    ;;
-	--show-trace)
-	    showTrace=1
-	    ;;
-	--interface)
-	    interface=$2
-	    ;;
-	-p|--profile)
-	    profileArg="--profile $2"
-	    ;;
-	--coordinator-profile-path)
-	    coordinatorProfilePathArg="--coordinator-profile-path $2"
-	    ;;
-	--target-property)
-	    targetProperty=$2
-	    ;;
-	--no-upgrade)
-	    noUpgradeArg="--no-upgrade"
-	    ;;
-	-h|--help)
-	    showUsage
-	    exit 0
-	    ;;
+        -s|--services)
+            servicesFile=`readlink -f $2`
+            ;;
+        -i|--infrastructure)
+            infrastructureFile=`readlink -f $2`
+            ;;
+        -d|--distribution)
+            distributionFile=`readlink -f $2`
+            ;;
+        --build-on-targets)
+            buildOnTargets=1
+            ;;
+        --show-trace)
+            showTrace=1
+            ;;
+        --interface)
+            interface=$2
+            ;;
+        -p|--profile)
+            profileArg="--profile $2"
+            ;;
+        --coordinator-profile-path)
+            coordinatorProfilePathArg="--coordinator-profile-path $2"
+            ;;
+        --target-property)
+            targetProperty=$2
+            ;;
+        --no-upgrade)
+            noUpgradeArg="--no-upgrade"
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
     esac
     
     shift
@@ -114,10 +114,15 @@ checkShowTrace
 
 if [ "$buildOnTargets" = "1" ]
 then
+    echo "[coordinator]: Instantiating store derivations..."
     distributedDerivation=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link $showTraceArg`
+    echo "[coordinator]: Building store derivations..."
     disnix-build --interface $interface $distributedDerivation
 fi
 
+echo "[coordinator]: Building manifest..."
 manifest=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link $showTraceArg`
+echo "[coordinator]: Distributing intra-dependency closures..."
 disnix-distribute --interface $interface $manifest
+echo "[coordinator]: Activating new configuration..."
 disnix-activate --interface $interface $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest

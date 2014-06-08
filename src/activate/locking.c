@@ -30,30 +30,31 @@ int unlock(gchar *interface, GArray *distribution_array, gchar *profile)
     /* For each locked machine, release the lock */
     for(i = 0; i < distribution_array->len; i++)
     {
-	DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
-	
-	status = exec_unlock(interface, item->target, profile);
-	
-	if(status == -1)
-	{
-	    g_printerr("Error with forking unlock process!\n");
-	    exit_status = -1;
-	}
-	else
-	    running_processes++;
+        DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
+        
+        g_print("[target: %s]: Releasing a lock!\n", item->target);
+        status = exec_unlock(interface, item->target, profile);
+        
+        if(status == -1)
+        {
+            g_printerr("[target: %s]: Error with forking unlock process!\n", item->target);
+            exit_status = -1;
+        }
+        else
+            running_processes++;
     }
     
     /* Wait until every lock is released */
     for(i = 0; i < running_processes; i++)
     {
-	status = wait_to_finish(0);
-	
-	/* If a process fails, change the exit status */
-	if(status != 0)
-	{
-	    g_printerr("Failed to release the lock!\n");
-	    exit_status = status;
-	}
+        status = wait_to_finish(0);
+        
+        /* If a process fails, change the exit status */
+        if(status != 0)
+        {
+            g_printerr("Failed to release the lock!\n");
+            exit_status = status;
+        }
     }
     
     /* Return exit status, which is 0 if everything succeeds */
@@ -71,36 +72,37 @@ int lock(gchar *interface, GArray *distribution_array, gchar *profile)
     /* For each machine acquire a lock */
     for(i = 0; i < distribution_array->len; i++)
     {
-	DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
-	
-	status = exec_lock(interface, item->target, profile);
-	
-	/* If a process fails, change the exit status */
-	if(status == -1)
-	{
-	    g_printerr("Error with forking lock process!\n");
-	    exit_status = -1;
-	}
-	else
-	    g_array_append_val(try_array, item);
+        DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
+        
+        g_print("[target: %s]: Acquiring a lock", item->target);
+        status = exec_lock(interface, item->target, profile);
+        
+        /* If a process fails, change the exit status */
+        if(status == -1)
+        {
+            g_printerr("[target: %s]: Error with forking lock process!\n", item->target);
+            exit_status = -1;
+        }
+        else
+            g_array_append_val(try_array, item);
     }    
     
     /* Wait until every lock is acquired */
     for(i = 0; i < try_array->len; i++)
     {
-	status = wait_to_finish(0);
-	
-	/* If a process fails, change the exit status */
-	if(status != 0)
-	{
-	    g_printerr("Failed to acquire a lock!\n");
-	    exit_status = status;
-	}
+        status = wait_to_finish(0);
+        
+        /* If a process fails, change the exit status */
+        if(status != 0)
+        {
+            g_printerr("Failed to acquire a lock!\n");
+            exit_status = status;
+        }
     }
     
     /* If a lock fails then unlock every machine that is locked */
     if(!exit_status)
-	unlock(interface, lock_array, profile);
+        unlock(interface, lock_array, profile);
     
     /* Cleanup */
     g_array_free(try_array, TRUE);

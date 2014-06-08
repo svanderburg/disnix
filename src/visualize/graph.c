@@ -29,71 +29,71 @@ int generate_graph(const gchar *manifest_file)
     
     if(activation_array == NULL)
     {
-	g_printerr("Error with opening manifest file!\n");
-	return 1;
+        g_printerr("Error with opening manifest file!\n");
+        return 1;
     }
     else
     {
-	/* Creates a table which maps each target onto a list of mappings */
-	GHashTable *cluster_table = generate_cluster_table(activation_array);
+        /* Creates a table which maps each target onto a list of mappings */
+        GHashTable *cluster_table = generate_cluster_table(activation_array);
     
-	/* Creates a table which associates each mapping to its dependencies */
-	GHashTable *edges_table = generate_edges_table(activation_array);
+        /* Creates a table which associates each mapping to its dependencies */
+        GHashTable *edges_table = generate_edges_table(activation_array);
     
-	GHashTableIter iter;
-	gpointer *key;
-	gpointer *value;    
-	int count = 0;
+        GHashTableIter iter;
+        gpointer *key;
+        gpointer *value;
+        int count = 0;
 
-	g_print("digraph G {\n");
+        g_print("digraph G {\n");
         
-	/* Generate clusters with nodes from the cluster table */
+        /* Generate clusters with nodes from the cluster table */
         
-	g_hash_table_iter_init(&iter, cluster_table);
-	while(g_hash_table_iter_next(&iter, (gpointer*)&key, (gpointer*)&value)) 
-	{
-	    unsigned int i;
-	    GArray *cluster_array = (GArray*)value;
-	    gchar *target = (gchar*)key;
-	
-	    g_print("subgraph cluster_%d {\n", count);
-	    g_print("style=filled;\n");
-	    g_print("node [style=filled,fillcolor=white,color=black];\n");
-	
-	    for(i = 0; i < cluster_array->len; i++)	
-	    {
-		gchar *service = g_array_index(cluster_array, gchar*, i);
-		g_print("\"%s:%s\" [ label = \"%s\" ];\n", service, target, service+44);	    
-	    }
-	
-	    g_print("label = \"%s\"\n", target);
-	    g_print("}\n");
-	
-	    count++;
-	}
+        g_hash_table_iter_init(&iter, cluster_table);
+        while(g_hash_table_iter_next(&iter, (gpointer*)&key, (gpointer*)&value)) 
+        {
+            unsigned int i;
+            GArray *cluster_array = (GArray*)value;
+            gchar *target = (gchar*)key;
+        
+            g_print("subgraph cluster_%d {\n", count);
+            g_print("style=filled;\n");
+            g_print("node [style=filled,fillcolor=white,color=black];\n");
+        
+            for(i = 0; i < cluster_array->len; i++)
+            {
+                gchar *service = g_array_index(cluster_array, gchar*, i);
+                g_print("\"%s:%s\" [ label = \"%s\" ];\n", service, target, service+44);
+            }
+        
+            g_print("label = \"%s\"\n", target);
+            g_print("}\n");
+        
+            count++;
+        }
     
-	/* Generate edges from the edges table */
+        /* Generate edges from the edges table */
+        
+        g_hash_table_iter_init(&iter, edges_table);
+        while(g_hash_table_iter_next(&iter, (gpointer*)&key, (gpointer*)&value))
+        {
+            unsigned int i;
+            GArray *dependency_array = (GArray*)value;
+        
+            for(i = 0; i < dependency_array->len; i++)
+            {
+                gchar *dep = g_array_index(dependency_array, gchar*, i);
+                g_print("\"%s\" -> \"%s\"\n", (gchar*)key, dep);
+            }
+        }
     
-	g_hash_table_iter_init(&iter, edges_table);
-	while(g_hash_table_iter_next(&iter, (gpointer*)&key, (gpointer*)&value)) 
-	{
-	    unsigned int i;
-	    GArray *dependency_array = (GArray*)value;
-	
-	    for(i = 0; i < dependency_array->len; i++)
-	    {
-		gchar *dep = g_array_index(dependency_array, gchar*, i);
-		g_print("\"%s\" -> \"%s\"\n", (gchar*)key, dep);
-	    }
-	}
+        g_print("}\n");
     
-	g_print("}\n");
-    
-	/* Cleanup */
-	destroy_cluster_table(cluster_table);
-	destroy_edges_table(edges_table);
-	delete_activation_array(activation_array);
-	
-	return 0;
+        /* Cleanup */
+        destroy_cluster_table(cluster_table);
+        destroy_edges_table(edges_table);
+        delete_activation_array(activation_array);
+        
+        return 0;
     }
 }

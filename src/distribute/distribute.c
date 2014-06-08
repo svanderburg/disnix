@@ -27,39 +27,39 @@ int distribute(gchar *interface, const gchar *manifest_file)
     
     /* Generate a distribution array from the manifest file */
     GArray *distribution_array = generate_distribution_array(manifest_file);
-	
+    
     if(distribution_array == NULL)
     {
-	g_printerr("Error with opening manifest file!\n");
-	exit_status = 1;
+        g_print("[coordinator]: Error while opening manifest file!\n");
+        exit_status = 1;
     }
     else
     {
-	unsigned int i;
-	
+        unsigned int i;
+        
         /* Iterate over the distribution array and distribute the profiles to the target machines */
         for(i = 0; i < distribution_array->len; i++)
         {
-    	    DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
-	    int status;
-	    
-	    /* Invoke copy closure operation */
-	    g_printerr("Distributing intra-dependency closure of profile: %s to target: %s\n", item->profile, item->target);		
-	    status = wait_to_finish(exec_copy_closure_to(interface, item->target, item->profile));
-		
-	    /* On error stop the distribute process */
-	    if(status != 0)
-	    {
-		g_printerr("Distribution operation failed!\n");
-	        exit_status = status;
-	        break;
-	    }
-	}
-	
-	/* Delete distribution array from memory */
-	delete_distribution_array(distribution_array);
+            DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
+            int status;
+            
+            /* Invoke copy closure operation */
+            g_print("[target: %s]: Receiving intra-dependency closure of profile: %s\n", item->target, item->profile);
+            status = wait_to_finish(exec_copy_closure_to(interface, item->target, item->profile));
+                
+            /* On error, stop the distribute process */
+            if(status != 0)
+            {
+                g_print("[target: %s]: Cannot receive intra-dependency closure\n", item->target);
+                exit_status = status;
+                break;
+            }
+        }
+        
+        /* Delete distribution array from memory */
+        delete_distribution_array(distribution_array);
     }
-	
+    
     /* Return the exit status, which is 0 if everything succeeds */
     return exit_status;
 }

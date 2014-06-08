@@ -34,25 +34,25 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-	{"interface", required_argument, 0, 'i'},
-	{"help", no_argument, 0, 'h'},
-	{0, 0, 0, 0}
+        {"interface", required_argument, 0, 'i'},
+        {"help", no_argument, 0, 'h'},
+        {0, 0, 0, 0}
     };
     char *interface = NULL;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "h", long_options, &option_index)) != -1)
     {
-	switch(c)
-	{
-	    case 'i':
-		interface = optarg;
-		break;
-	    case 'h':
-	    case '?':
-		print_usage(argv[0]);
-		return 0;
-	}
+        switch(c)
+        {
+            case 'i':
+                interface = optarg;
+                break;
+            case 'h':
+            case '?':
+                print_usage(argv[0]);
+                return 0;
+        }
     }
 
     /* Validate options */
@@ -61,9 +61,9 @@ int main(int argc, char *argv[])
     
     if(optind >= argc)
     {
-	fprintf(stderr, "ERROR: No manifest specified!\n");
-	return 1;
+        fprintf(stderr, "ERROR: No manifest specified!\n");
+        return 1;
     }
     else
-	return distribute(interface, argv[optind]); /* Execute distribute operation */
+        return distribute(interface, argv[optind]); /* Execute distribute operation */
 }

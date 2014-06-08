@@ -27,7 +27,7 @@
 typedef struct
 {
     /** Target property name */
-    gchar *name;    
+    gchar *name;
     /** Target property value */
     gchar *value;
 }
@@ -60,7 +60,7 @@ typedef struct
     gchar *name;
     /** Property used to connect to the disnix service */
     gchar *targetProperty;
-    /** Activation type */    
+    /** Activation type */
     gchar *type;
     /** Array with inter-dependencies */
     GArray *depends_on;

@@ -115,13 +115,13 @@ let
                 wantedBy = [ "multi-user.target" ];
                 after = [ "dbus.service" ];
                 
-                path = [ pkgs.nix pkgs.getopt disnix pkgs.dysnomia ];
+                path = [ pkgs.nix pkgs.getopt disnix dysnomia ];
                 environment = {
                   HOME = "/root";
                 };
 
                 exec = "disnix-service";
-               };
+              };
               
             environment.systemPackages = [ pkgs.stdenv pkgs.nix disnix ];
           };

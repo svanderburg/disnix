@@ -34,30 +34,30 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-	{"help", no_argument, 0, 'h'},
-	{0, 0, 0, 0}
+        {"help", no_argument, 0, 'h'},
+        {0, 0, 0, 0}
     };
 
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "h", long_options, &option_index)) != -1)
     {
-	switch(c)
-	{
-	    case 'h':
-	    case '?':
-		print_usage(argv[0]);
-		return 0;
-	}
+        switch(c)
+        {
+            case 'h':
+            case '?':
+                print_usage(argv[0]);
+                return 0;
+        }
     }
 
     if(optind >= argc)
     {
-	fprintf(stderr, "ERROR: No manifest specified!\n");
-	return 1;
+        fprintf(stderr, "ERROR: No manifest specified!\n");
+        return 1;
     }
     else
     {
-	/* Execute operation */
-	return generate_graph(argv[optind]);
+        /* Execute operation */
+        return generate_graph(argv[optind]);
     }
 }

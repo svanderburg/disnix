@@ -57,20 +57,20 @@ do
     case "$1" in
         --to)
             to=1
-	    ;;
-	--from)
-	    from=1
-	    ;;
+            ;;
+        --from)
+            from=1
+            ;;
         -t|--target)
-	    target=$2
-	    ;;
+            target=$2
+            ;;
         --interface)
-	    interface=$2
-	    ;;
-	-h|--help)
-	    showUsage
-	    exit 0
-	    ;;
+            interface=$2
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
     esac
     
     shift
@@ -117,7 +117,7 @@ then
     if [ "$invalidPaths" != "" ]
     then
         # Serialise all the missing parts of the closure
-        tmpfilename=`mktemp -p $TMPDIR`    
+        tmpfilename=`mktemp -p $TMPDIR`
         nix-store --export $invalidPaths > $tmpfilename
     
         # Import the serialisation of the target by using the Disnix interface
@@ -136,10 +136,10 @@ else
     
     if [ "$invalidPaths" != "" ]
     then
-	# Export the closure all the invalid paths
-	closure=`$interface --target $target --export --remotefile $invalidPaths`
+        # Export the closure all the invalid paths
+        closure=`$interface --target $target --export --remotefile $invalidPaths`
     
-	# Import the closure
-	cat $closure | nix-store --import
+        # Import the closure
+        cat $closure | nix-store --import
     fi
 fi

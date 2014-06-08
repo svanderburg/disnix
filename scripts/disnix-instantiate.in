@@ -58,28 +58,28 @@ eval set -- "$PARAMS"
 while [ "$1" != "--" ]
 do
     case "$1" in
-        -s|--services)	    
-	    servicesFile=`readlink -f $2`
-	    ;;
-	-i|--infrastructure)
-	    infrastructureFile=`readlink -f $2`
-	    ;;
-	-d|--distribution)
-	    distributionFile=`readlink -f $2`
-	    ;;
-	--target-property)
-	    targetProperty=$2;
-	    ;;
-	--no-out-link)
-	    noOutLink=1
-	    ;;
-	--show-trace)
-	    showTrace=1
-	    ;;
-	-h|--help)
-	    showUsage
-	    exit 0
-	    ;;
+        -s|--services)
+            servicesFile=`readlink -f $2`
+            ;;
+        -i|--infrastructure)
+            infrastructureFile=`readlink -f $2`
+            ;;
+        -d|--distribution)
+            distributionFile=`readlink -f $2`
+            ;;
+        --target-property)
+            targetProperty=$2
+            ;;
+        --no-out-link)
+            noOutLink=1
+            ;;
+        --show-trace)
+            showTrace=1
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
     esac
     
     shift
@@ -98,8 +98,8 @@ checkShowTrace
 
 nix-build --argstr servicesFile "$(readlink -f $servicesFile)" \
           --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
-	  --argstr distributionFile "$(readlink -f $distributionFile)" \
+          --argstr distributionFile "$(readlink -f $distributionFile)" \
           --argstr targetProperty $targetProperty \
-	  $noOutLinkArg \
-	  $showTraceArg \
-	  "$(readlink -f @datadir@/@PACKAGE@/instantiate.nix)"
+          $noOutLinkArg \
+          $showTraceArg \
+          "$(readlink -f @datadir@/@PACKAGE@/instantiate.nix)"
