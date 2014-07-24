@@ -8,6 +8,8 @@ Version 0.3
 
 - Added manual page for disnix-query
 
+- Implemented SIGINT handler for disnix-activate, that allows the process to interrupt gracefully.
+
 Version 0.2
 ===========
 - Added disnix-visualize tool
