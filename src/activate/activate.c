@@ -26,10 +26,18 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <stdio.h>
+#include <signal.h>
 
 #include <distributionmapping.h>
 #include <activationmapping.h>
 #include <targets.h>
+
+volatile int interrupted = FALSE;
+
+static void handle_sigint(int signum)
+{
+    interrupted = TRUE;
+}
 
 int activate_system(gchar *interface, const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_coordinator_profile, const gboolean no_target_profiles, const gboolean no_upgrade, const gboolean no_lock)
 {
@@ -54,6 +62,8 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
     }
     else
     {
+        struct sigaction act;
+        
         /* Get current username */
         char *username = (getpwuid(geteuid()))->pw_name;
 
@@ -93,6 +103,12 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
         else
             old_activation_mappings = NULL;
 
+        /* Override SIGINT's behaviour to allow stuff to be rollbacked in case of an interruption */
+        act.sa_handler = handle_sigint;
+        act.sa_flags = 0;
+        
+        sigaction(SIGINT, &act, NULL);
+        
         /* Try to acquire a lock */
         
         if(no_lock)

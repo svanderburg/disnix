@@ -18,8 +18,11 @@
  */
 
 #include "transition.h"
+#include <signal.h>
 #include <activationmapping.h>
 #include <client-interface.h>
+
+extern volatile int interrupted;
 
 static int activate(gchar *interface, GArray *union_array, const ActivationMapping *mapping)
 {
@@ -28,6 +31,13 @@ static int activate(gchar *interface, GArray *union_array, const ActivationMappi
     
     /* Retrieve the mapping from the union array */
     ActivationMapping *actual_mapping = g_array_index(union_array, ActivationMapping*, actual_mapping_index);
+    
+    /* Check for an interruption */
+    if(interrupted)
+    {
+        g_print("The activation process has been interrupted!\n");
+        return 1;
+    }
     
     /* First, activate all inter-dependency mappings */
     if(actual_mapping->depends_on != NULL)

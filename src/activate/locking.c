@@ -21,6 +21,8 @@
 #include <distributionmapping.h>
 #include <client-interface.h>
 
+extern volatile int interrupted;
+
 int unlock(gchar *interface, GArray *distribution_array, gchar *profile)
 {
     unsigned int i, running_processes = 0;
@@ -85,7 +87,7 @@ int lock(gchar *interface, GArray *distribution_array, gchar *profile)
         }
         else
             g_array_append_val(try_array, item);
-    }    
+    }
     
     /* Wait until every lock is acquired */
     for(i = 0; i < try_array->len; i++)
@@ -97,6 +99,11 @@ int lock(gchar *interface, GArray *distribution_array, gchar *profile)
         {
             g_printerr("Failed to acquire a lock!\n");
             exit_status = status;
+        }
+        else if(interrupted)
+        {
+            g_printerr("The lock phase has been interrupted! Releasing the locks...\n");
+            exit_status = 1;
         }
     }
     
