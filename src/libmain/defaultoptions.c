@@ -33,12 +33,12 @@ char *check_interface_option(char *interface)
 {
     if(interface == NULL)
     {
-	char *interface_env = getenv("DISNIX_CLIENT_INTERFACE");
-	
-	if(interface_env == NULL)
-	    interface = default_interface;
-	else
-	    interface = interface_env;
+        char *interface_env = getenv("DISNIX_CLIENT_INTERFACE");
+        
+        if(interface_env == NULL)
+            interface = default_interface;
+        else
+            interface = interface_env;
     }
     
     return interface;
@@ -47,7 +47,7 @@ char *check_interface_option(char *interface)
 char *check_target_property_option(char *target_property)
 {
     char *target_property_env = getenv("DISNIX_TARGET_PROPERTY");
-	
+    
     if(target_property_env == NULL)
         target_property = default_target_property;
     else
@@ -59,7 +59,14 @@ char *check_target_property_option(char *target_property)
 char *check_profile_option(char *profile)
 {
     if(profile == NULL)
-        profile = default_profile;
-
+    {
+        char *profile_env = getenv("DISNIX_PROFILE");
+        
+        if(profile_env == NULL)
+            profile = default_profile;
+        else
+            profile = profile_env;
+    }
+    
     return profile;
 }

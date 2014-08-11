@@ -94,7 +94,7 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
         /* If we have an old configuration -> open it */
         if(!no_upgrade && old_manifest_file != NULL)
         {
-            g_print("[coordinator]: Using previous manifest: %s\n", old_manifest_file);
+            g_print("[coordinator]: Doing an upgrade using previous manifest: %s\n", old_manifest_file);
             old_activation_mappings = create_activation_array(old_manifest_file);
         
             /* Free the variable because it's not needed anymore */

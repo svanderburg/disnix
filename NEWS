@@ -4,11 +4,13 @@ Version 0.3
 
 - Disnix uses Dysnomia for activation, deactivation, lock and unlock operations instead of adhoc activation scripts
 
-- Many additional testcases and bugfixes
-
 - Added manual page for disnix-query
 
 - Implemented SIGINT handler for disnix-activate, that allows the process to interrupt gracefully.
+
+- Implemented DISNIX_PROFILE environment variable
+
+- Many additional testcases and bugfixes
 
 Version 0.2
 ===========

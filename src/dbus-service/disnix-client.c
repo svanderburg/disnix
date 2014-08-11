@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <glib.h>
+#include <defaultoptions.h>
 #include "operation.h"
 #include "disnix-client-operation.h"
 
@@ -77,7 +78,7 @@ int main(int argc, char *argv[])
 
     /* Option value declarations */
     Operation operation = OP_NONE;
-    char *target, *profile = "default", *type = NULL;
+    char *target, *profile = NULL, *type = NULL;
     gchar **derivation = NULL, **arguments = NULL;
     unsigned int derivation_size = 0, arguments_size = 0;
     int localfile = FALSE, remotefile = TRUE;
@@ -92,10 +93,10 @@ int main(int argc, char *argv[])
 		operation = OP_IMPORT;
 		break;
 	    case 'E':
-		operation = OP_EXPORT;		
+		operation = OP_EXPORT;
 		break;
 	    case 'P':
-		operation = OP_PRINT_INVALID;		
+		operation = OP_PRINT_INVALID;
 		break;
 	    case 'r':
 		operation = OP_REALISE;
@@ -159,12 +160,15 @@ int main(int argc, char *argv[])
 	}
     }
     
+    /* Validate options */
+    profile = check_profile_option(profile);
+    
     /* Validate non-options */
     while(optind < argc)
     {
 	derivation = g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
 	derivation[derivation_size] = g_strdup(argv[optind]);
-	derivation_size++;	
+	derivation_size++;
 	optind++;
     }
     

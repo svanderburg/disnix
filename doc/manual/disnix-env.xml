@@ -177,6 +177,15 @@
 					</para>
 				</listitem>
 			</varlistentry>
+			<varlistentry>
+				<term><option>DISNIX_PROFILE</option></term>
+				<listitem>
+					<para>
+						Sets the name of the profile that stores the manifest on the coordinator machine and the deployed
+						services per machine on each target (Defaults to: default).
+					</para>
+				</listitem>
+			</varlistentry>
 		</variablelist>
 	</refsection>
 </refentry>
