@@ -213,8 +213,8 @@ GArray *create_activation_array(const gchar *manifest_file)
 			    
 			    if(target_children->children == NULL)
 				property->value = NULL;
-			    else			    
-				property->value = g_strdup(target_children->children->content);			    
+			    else
+				property->value = g_strdup(target_children->children->content);
 			
 			    g_array_append_val(target, property);
 			}
@@ -225,7 +225,7 @@ GArray *create_activation_array(const gchar *manifest_file)
 		else if(xmlStrcmp(mapping_children->name, "dependsOn") == 0)
 		{
 		    xmlNodePtr depends_on_children = mapping_children->children;
-		    depends_on = g_array_new(FALSE, FALSE, sizeof(Dependency*));	    
+		    depends_on = g_array_new(FALSE, FALSE, sizeof(Dependency*));
 		    
 		    /* Iterate over all services in dependsOn (dependency element) */
 		    while(depends_on_children != NULL)
@@ -239,7 +239,7 @@ GArray *create_activation_array(const gchar *manifest_file)
 			{
 			    /* Iterate over all dependency properties */
 			    while(dependency_children != NULL)
-			    {			    
+			    {
 				if(xmlStrcmp(dependency_children->name, (xmlChar*) "service") == 0)
 				    service = g_strdup(dependency_children->children->content);
 				else if(xmlStrcmp(dependency_children->name, (xmlChar*) "target") == 0)
@@ -271,7 +271,7 @@ GArray *create_activation_array(const gchar *manifest_file)
 				}
 
 				dependency_children = dependency_children->next;
-			    }			
+			    }
 			
 			    dependency->service = service;
 			    dependency->target = target;
@@ -281,7 +281,7 @@ GArray *create_activation_array(const gchar *manifest_file)
 			depends_on_children = depends_on_children->next;
 		    }
 		}
-						
+		
 		mapping_children = mapping_children->next;
 	    }
 	    

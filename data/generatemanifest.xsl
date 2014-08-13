@@ -49,8 +49,11 @@
         </xsl:for-each>
       </activation>
       <targets>
-	<xsl:for-each select="attr[@name='targets']/list/string">
-	  <target><xsl:value-of select="@value" /></target>
+	<xsl:for-each select="attr[@name='targets']/list/attrs">
+	  <target>
+	    <targetProperty><xsl:value-of select="attr[@name='targetProperty']/string/@value" /></targetProperty>
+	    <numOfCores><xsl:value-of select="attr[@name='numOfCores']/int/@value" /></numOfCores>
+	  </target>
 	</xsl:for-each>
       </targets>
     </manifest>

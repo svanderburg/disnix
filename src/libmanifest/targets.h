@@ -21,6 +21,13 @@
 #define __DISNIX_TARGETS_H
 #include <glib.h>
 
+typedef struct
+{
+    gchar *targetProperty;
+    unsigned int numOfCores;
+}
+TargetItem;
+
 /**
  * Creates a new array with targets from a manifest file
  *

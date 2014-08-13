@@ -270,7 +270,9 @@ rec {
     map (targetName:
       let target = getAttr targetName infrastructure;
       in
-      getAttr targetProperty target
+      { targetProperty = getAttr targetProperty target;
+        numOfCores = if target ? "numOfCores" then target.numOfCores else 1;
+      }
     ) (attrNames infrastructure)
   ;
   

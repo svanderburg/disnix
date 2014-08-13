@@ -18,6 +18,7 @@
  */
 
 #include "targets.h"
+#include <stdlib.h>
 #include <xmlutil.h>
 
 GArray *generate_target_array(const gchar *manifest_file)
@@ -59,16 +60,31 @@ GArray *generate_target_array(const gchar *manifest_file)
 	xmlNodeSetPtr nodeset = result->nodesetval;
 	
 	/* Create a targets array */
-        targets_array = g_array_new(FALSE, FALSE, sizeof(gchar*));
+        targets_array = g_array_new(FALSE, FALSE, sizeof(TargetItem*));
 	
 	/* Iterate over all the mapping elements */
 	for(i = 0; i < nodeset->nodeNr; i++)
         {
 	    xmlNodePtr targets_children = nodeset->nodeTab[i]->children;
-	    gchar *target = g_strdup(targets_children->content);
+	    TargetItem *targetItem = (TargetItem*)g_malloc(sizeof(TargetItem));
+	    gchar *targetProperty = NULL;
+	    unsigned int numOfCores = 1;
 	    
-	    /* Add target to the targets array */
-	    g_array_append_val(targets_array, target);
+	    while(targets_children != NULL)
+	    {
+	        if(xmlStrcmp(targets_children->name, "targetProperty") == 0)
+	            targetProperty = g_strdup(targets_children->children->content);
+	        else if(xmlStrcmp(targets_children->name, "numOfCores") == 0)
+	            numOfCores = atoi(targets_children->children->content);
+	        
+	        targets_children = targets_children->next;
+	    }
+	    
+	    targetItem->targetProperty = targetProperty;
+	    targetItem->numOfCores = numOfCores;
+	    
+	    /* Add target item to the targets array */
+	    g_array_append_val(targets_array, targetItem);
 	}
 	
 	xmlXPathFreeObject(result);
@@ -91,8 +107,9 @@ void delete_target_array(GArray *target_array)
     
     for(i = 0; i < target_array->len; i++)
     {
-	gchar *target = g_array_index(target_array, gchar*, i);
-	g_free(target);
+	TargetItem *targetItem = g_array_index(target_array, TargetItem*, i);
+	g_free(targetItem->targetProperty);
+	g_free(targetItem);
     }
     
     g_array_free(target_array, TRUE);
@@ -106,8 +123,8 @@ int target_index(const GArray *target_array, const gchar *target)
     while(left <= right)
     {
 	gint mid = (left + right) / 2;
-	gchar *mid_target = g_array_index(target_array, gchar*, mid);
-        gint status = g_strcmp0(mid_target, target);
+	TargetItem *mid_target = g_array_index(target_array, TargetItem*, mid);
+        gint status = g_strcmp0(mid_target->targetProperty, target);
 	
 	if(status == 0)
             return mid; /* Return index of the found target */
