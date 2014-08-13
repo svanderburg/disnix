@@ -21,9 +21,15 @@
 #define __DISNIX_TARGETS_H
 #include <glib.h>
 
+/**
+ * Contains global activation properties of a specific machine.
+ */
 typedef struct
 {
+    /** The target address under which the machine is reachable */
     gchar *targetProperty;
+    
+    /** The number of cores that the machine has */
     unsigned int numOfCores;
 }
 TargetItem;
