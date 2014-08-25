@@ -9,6 +9,7 @@ let
   pkgs_i686_freebsd = import nixpkgs { system = "i686-freebsd"; };
   pkgs_x86_64_freebsd = import nixpkgs { system = "x86_64-freebsd"; };
   pkgs_i686_cygwin = import nixpkgs { system = "i686-cygwin"; };
+  pkgs_x86_64-solaris = import nixpkgs { system = "x86_64-solaris"; };
   
 in
 rec {
@@ -32,6 +33,7 @@ rec {
     else if system == "i686-freebsd" then pkgs_i686_freebsd
     else if system == "x86_64-freebsd" then pkgs_x86_64_freebsd
     else if system == "i686-cygwin" then pkgs_i686_cygwin
+    else if system == "x86_64-solaris" then pkgs_x86_64-solaris
     else abort "unsupported system type: ${system}";
   
   /*
