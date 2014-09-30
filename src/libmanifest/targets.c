@@ -21,6 +21,14 @@
 #include <stdlib.h>
 #include <xmlutil.h>
 
+static gint compare_target_item(const TargetItem **l, const TargetItem **r)
+{
+    const TargetItem *left = *l;
+    const TargetItem *right = *r;
+    
+    return g_strcmp0(left->targetProperty, right->targetProperty);
+}
+
 GArray *generate_target_array(const gchar *manifest_file)
 {
     /* Declarations */
@@ -95,7 +103,7 @@ GArray *generate_target_array(const gchar *manifest_file)
     xmlCleanupParser();
 
     /* Sort the array */
-    g_array_sort(targets_array, (GCompareFunc)g_strcmp0);
+    g_array_sort(targets_array, (GCompareFunc)compare_target_item);
     
     /* Return the distribution array */
     return targets_array;
