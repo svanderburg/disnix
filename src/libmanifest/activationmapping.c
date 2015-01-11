@@ -90,6 +90,20 @@ gint activation_mapping_index(const GArray *activation_array, const ActivationMa
     return -1; /* Activation mapping not found */
 }
 
+ActivationMapping *get_activation_mapping(const GArray *activation_array, const ActivationMapping *keys)
+{
+    /* Search for the location of the mapping in the union array */
+    gint actual_mapping_index = activation_mapping_index(activation_array, keys);
+    
+    if(actual_mapping_index == -1)
+        return NULL;
+    else
+    {
+        /* Retrieve the mapping from the union array */
+        return g_array_index(activation_array, ActivationMapping*, actual_mapping_index);
+    }
+}
+
 void print_activation_array(const GArray *activation_array)
 {
     unsigned int i;

@@ -95,6 +95,15 @@ void delete_activation_array(GArray *activation_array);
 gint activation_mapping_index(const GArray *activation_array, const ActivationMapping *keys);
 
 /**
+ * Returns the activation mapping with the given keys in the activation array.
+ *
+ * @param activation_array Activation array
+ * @param keys Activation array containing key attributes
+ * @return The activation array with the specified keys, or NULL if cannot be found
+ */
+ActivationMapping *get_activation_mapping(const GArray *activation_array, const ActivationMapping *keys);
+
+/**
  * Returns the intersection of the two given arrays.
  * The array that is returned contains pointers to elements in
  * both left and right, so it should be free with g_array_free().

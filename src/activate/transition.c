@@ -26,12 +26,9 @@ extern volatile int interrupted;
 
 static int activate(gchar *interface, GArray *union_array, const ActivationMapping *mapping)
 {
-    /* Search for the location of the mapping in the union array */
-    gint actual_mapping_index = activation_mapping_index(union_array, mapping);
-    
     /* Retrieve the mapping from the union array */
-    ActivationMapping *actual_mapping = g_array_index(union_array, ActivationMapping*, actual_mapping_index);
-    
+    ActivationMapping *actual_mapping = get_activation_mapping(union_array, mapping);
+
     /* Check for an interruption */
     if(interrupted)
     {
@@ -48,11 +45,11 @@ static int activate(gchar *interface, GArray *union_array, const ActivationMappi
         for(i = 0; i < actual_mapping->depends_on->len; i++)
         {
             Dependency *dependency = g_array_index(actual_mapping->depends_on, Dependency*, i);
-            
+
             ActivationMapping lookup;
             lookup.service = dependency->service;
             lookup.target = dependency->target;
-            
+
             status = activate(interface, union_array, &lookup);
             
             if(status != 0)
@@ -100,11 +97,8 @@ static int activate(gchar *interface, GArray *union_array, const ActivationMappi
 
 static int deactivate(gchar *interface, GArray *union_array, const ActivationMapping *mapping, GArray *target_array)
 {
-    /* Search for the location of the mapping in the union array */
-    gint actual_mapping_index = activation_mapping_index(union_array, mapping);
-    
     /* Retrieve the mapping from the union array */
-    ActivationMapping *actual_mapping = g_array_index(union_array, ActivationMapping*, actual_mapping_index);
+    ActivationMapping *actual_mapping = get_activation_mapping(union_array, mapping);
     
     /* Find all interdependent mapping on this mapping */
     GArray *interdependent_mappings = find_interdependent_mappings(union_array, actual_mapping);
