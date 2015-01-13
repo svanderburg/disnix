@@ -23,19 +23,18 @@
 
 int distribute(gchar *interface, const gchar *manifest_file)
 {
-    int exit_status = 0;
-    
     /* Generate a distribution array from the manifest file */
     GArray *distribution_array = generate_distribution_array(manifest_file);
     
     if(distribution_array == NULL)
     {
         g_print("[coordinator]: Error while opening manifest file!\n");
-        exit_status = 1;
+        return 1;
     }
     else
     {
         unsigned int i;
+        int exit_status = 0;
         
         /* Iterate over the distribution array and distribute the profiles to the target machines */
         for(i = 0; i < distribution_array->len; i++)
@@ -47,7 +46,7 @@ int distribute(gchar *interface, const gchar *manifest_file)
             g_print("[target: %s]: Receiving intra-dependency closure of profile: %s\n", item->target, item->profile);
             status = wait_to_finish(exec_copy_closure_to(interface, item->target, item->profile));
                 
-            /* On error, stop the distribute process */
+            /* On error, change the exit status to indicate an error */
             if(status != 0)
             {
                 g_print("[target: %s]: Cannot receive intra-dependency closure\n", item->target);
@@ -58,8 +57,8 @@ int distribute(gchar *interface, const gchar *manifest_file)
         
         /* Delete distribution array from memory */
         delete_distribution_array(distribution_array);
+        
+        /* Return the exit status, which is 0 if everything succeeds */
+        return exit_status;
     }
-    
-    /* Return the exit status, which is 0 if everything succeeds */
-    return exit_status;
 }
