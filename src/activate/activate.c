@@ -39,13 +39,41 @@ static void handle_sigint(int signum)
     interrupted = TRUE;
 }
 
-int activate_system(gchar *interface, const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_coordinator_profile, const gboolean no_target_profiles, const gboolean no_upgrade, const gboolean no_lock)
+static gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, const char *username, const gchar *profile)
 {
     gchar *old_manifest_file;
-    GArray *old_activation_mappings;
-    int status;
-    int exit_status = 0;
+    FILE *file;
     
+    if(coordinator_profile_path == NULL)
+        old_manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
+    else
+        old_manifest_file = g_strconcat(coordinator_profile_path, "/", profile, NULL);
+    
+    /* Try to open file => if it succeeds we have a previous configuration */
+    file = fopen(old_manifest_file, "r");
+    
+    if(file == NULL)
+    {
+        g_free(old_manifest_file);
+        old_manifest_file = NULL;
+    }
+    else
+        fclose(file);
+    
+    return old_manifest_file;
+}
+
+static void set_flag_on_interrupt(void)
+{
+    struct sigaction act;
+    act.sa_handler = handle_sigint;
+    act.sa_flags = 0;
+    
+    sigaction(SIGINT, &act, NULL);
+}
+
+int activate_system(gchar *interface, const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_coordinator_profile, const gboolean no_target_profiles, const gboolean no_upgrade, const gboolean no_lock)
+{
     /* Get all the distribution items of the new configuration */
     GArray *distribution_array = generate_distribution_array(new_manifest);
 
@@ -58,36 +86,20 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
     if(distribution_array == NULL || new_activation_mappings == NULL || target_array == NULL)
     {
         g_printerr("[coordinator]: Error opening manifest_file!\n");
-        exit_status = 1;
+        return 1;
     }
     else
     {
-        struct sigaction act;
+        int exit_status = 0, status;
+        gchar *old_manifest_file;
+        GArray *old_activation_mappings;
         
         /* Get current username */
         char *username = (getpwuid(geteuid()))->pw_name;
 
-        /* If no previous configuration is given, check whether we have one in the coordinator profile */
+        /* If no previous configuration is given, check whether we have one in the coordinator profile, otherwise use the given one */
         if(old_manifest == NULL)
-        {
-            FILE *file;
-            
-            if(coordinator_profile_path == NULL)
-                old_manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
-            else
-                old_manifest_file = g_strconcat(coordinator_profile_path, "/", profile, NULL);
-            
-            /* Try to open file => if it succeeds we have a previous configuration */
-            file = fopen(old_manifest_file, "r");
-            
-            if(file == NULL)
-            {
-                g_free(old_manifest_file);
-                old_manifest_file = NULL;
-            }
-            else
-                fclose(file);
-        }
+            old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, username, profile);
         else
             old_manifest_file = g_strdup(old_manifest);
 
@@ -96,18 +108,15 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
         {
             g_print("[coordinator]: Doing an upgrade using previous manifest: %s\n", old_manifest_file);
             old_activation_mappings = create_activation_array(old_manifest_file);
-        
-            /* Free the variable because it's not needed anymore */
-            g_free(old_manifest_file);
         }
         else
+        {
+            g_print("[coordinator]: Doing an installation from scratch\n");
             old_activation_mappings = NULL;
+        }
 
         /* Override SIGINT's behaviour to allow stuff to be rollbacked in case of an interruption */
-        act.sa_handler = handle_sigint;
-        act.sa_flags = 0;
-        
-        sigaction(SIGINT, &act, NULL);
+        set_flag_on_interrupt();
         
         /* Try to acquire a lock */
         
@@ -163,22 +172,24 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
             if(!no_lock)
                 unlock(interface, distribution_array, profile); /* Try to release the lock */
         }
-    }
-    
-    /* Cleanup */
-    
-    if(target_array != NULL)
-        delete_target_array(target_array);
         
-    if(distribution_array != NULL)
-        delete_distribution_array(distribution_array);
+        /* Cleanup */
+    
+        g_free(old_manifest_file);
+    
+        if(target_array != NULL)
+            delete_target_array(target_array);
+        
+        if(distribution_array != NULL)
+            delete_distribution_array(distribution_array);
 
-    if(new_activation_mappings != NULL)
-        delete_activation_array(new_activation_mappings);
+        if(new_activation_mappings != NULL)
+            delete_activation_array(new_activation_mappings);
     
-    if(old_activation_mappings != NULL)
-        delete_activation_array(old_activation_mappings);
+        if(old_activation_mappings != NULL)
+            delete_activation_array(old_activation_mappings);
     
-    /* Return the exit status, which is 0 if everything succeeded */
-    return exit_status;
+        /* Return the exit status, which is 0 if everything succeeded */
+        return exit_status;
+    }
 }
