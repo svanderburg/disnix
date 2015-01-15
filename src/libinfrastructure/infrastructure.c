@@ -198,13 +198,16 @@ GArray *create_target_array(char *infrastructure_expr, const char *target_proper
 
 void delete_target_array(GArray *target_array)
 {
-    unsigned int i;
-    
-    for(i = 0; i < target_array->len; i++)
+    if(target_array != NULL)
     {
-	gchar *target = g_array_index(target_array, gchar*, i);
-	g_free(target);
-    }
+        unsigned int i;
+    
+        for(i = 0; i < target_array->len; i++)
+        {
+            gchar *target = g_array_index(target_array, gchar*, i);
+            g_free(target);
+        }
 
-    g_array_free(target_array, TRUE);
+        g_array_free(target_array, TRUE);
+    }
 }

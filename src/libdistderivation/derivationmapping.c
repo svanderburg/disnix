@@ -87,7 +87,7 @@ GArray *create_derivation_array(const gchar *distributed_derivation_file)
         }
     }
     
-    /* Cleanup */    
+    /* Cleanup */
     xmlXPathFreeObject(result);
     xmlFreeDoc(doc);
     xmlCleanupParser();
@@ -98,15 +98,18 @@ GArray *create_derivation_array(const gchar *distributed_derivation_file)
 
 void delete_derivation_array(GArray *derivation_array)
 {
-    unsigned int i;
-    
-    for(i = 0; i < derivation_array->len; i++)
+    if(derivation_array != NULL)
     {
-	DerivationItem *item = g_array_index(derivation_array, DerivationItem*, i);
-	g_free(item->derivation);
-	g_free(item->target);
-	g_free(item);
-    }
+        unsigned int i;
     
-    g_array_free(derivation_array, TRUE);
+        for(i = 0; i < derivation_array->len; i++)
+        {
+            DerivationItem *item = g_array_index(derivation_array, DerivationItem*, i);
+            free(item->derivation);
+            g_free(item->target);
+            g_free(item);
+        }
+    
+        g_array_free(derivation_array, TRUE);
+    }
 }

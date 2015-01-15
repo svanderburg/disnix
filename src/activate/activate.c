@@ -86,18 +86,10 @@ static void release_locks(const gboolean no_lock, gchar *interface, GArray *dist
 static void cleanup(gchar *old_manifest_file, GArray *target_array, GArray *distribution_array, GArray *new_activation_mappings, GArray *old_activation_mappings)
 {
     g_free(old_manifest_file);
-    
-    if(target_array != NULL)
-        delete_target_array(target_array);
-    
-    if(distribution_array != NULL)
-        delete_distribution_array(distribution_array);
-
-    if(new_activation_mappings != NULL)
-        delete_activation_array(new_activation_mappings);
-    
-    if(old_activation_mappings != NULL)
-        delete_activation_array(old_activation_mappings);
+    delete_target_array(target_array);
+    delete_distribution_array(distribution_array);
+    delete_activation_array(new_activation_mappings);
+    delete_activation_array(old_activation_mappings);
 }
 
 int activate_system(gchar *interface, const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_coordinator_profile, const gboolean no_target_profiles, const gboolean no_upgrade, const gboolean no_lock)

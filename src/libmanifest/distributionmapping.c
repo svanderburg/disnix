@@ -99,16 +99,19 @@ GArray *generate_distribution_array(const gchar *manifest_file)
 
 void delete_distribution_array(GArray *distribution_array)
 {
-    unsigned int i;
-    
-    for(i = 0; i < distribution_array->len; i++)
+    if(distribution_array != NULL)
     {
-	DistributionItem* item = g_array_index(distribution_array, DistributionItem*, i);
+        unsigned int i;
     
-	g_free(item->profile);
-	g_free(item->target);
-	g_free(item);
+        for(i = 0; i < distribution_array->len; i++)
+        {
+            DistributionItem* item = g_array_index(distribution_array, DistributionItem*, i);
+    
+            g_free(item->profile);
+            g_free(item->target);
+            g_free(item);
+        }
+    
+        g_array_free(distribution_array, TRUE);
     }
-    
-    g_array_free(distribution_array, TRUE);
 }

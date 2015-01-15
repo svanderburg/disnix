@@ -151,15 +151,18 @@ static int retrieve_results(gchar *interface, GArray *derivation_array, GArray *
 
 static void delete_result_array(GArray *result_array)
 {
-    unsigned int i;
-    
-    for(i = 0; i < result_array->len; i++)
+    if(result_array != NULL)
     {
-        gchar *result = g_array_index(result_array, gchar*, i);
-        g_free(result);
-    }
+        unsigned int i;
+        
+        for(i = 0; i < result_array->len; i++)
+        {
+            gchar *result = g_array_index(result_array, gchar*, i);
+            g_free(result);
+        }
     
-    g_array_free(result_array, TRUE);
+        g_array_free(result_array, TRUE);
+    }
 }
 
 int build(gchar *interface, const gchar *distributed_derivation_file)

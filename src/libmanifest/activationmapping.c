@@ -324,51 +324,54 @@ static void delete_target_array(GArray *target)
 {
     if(target != NULL)
     {
-	unsigned int i;
-    
-	for(i = 0; i < target->len; i++)
-	{
-    	    TargetProperty *target_property = g_array_index(target, TargetProperty*, i);
-    	    g_free(target_property->name);
-    	    g_free(target_property->value);
-    	    g_free(target_property);
-	}
-	
-	g_array_free(target, TRUE);
+        unsigned int i;
+        
+        for(i = 0; i < target->len; i++)
+        {
+            TargetProperty *target_property = g_array_index(target, TargetProperty*, i);
+            g_free(target_property->name);
+            g_free(target_property->value);
+            g_free(target_property);
+       }
+       
+        g_array_free(target, TRUE);
     }
 }
 
 void delete_activation_array(GArray *activation_array)
 {
-    unsigned int i;
-    
-    for(i = 0; i < activation_array->len; i++)
+    if(activation_array != NULL)
     {
-	ActivationMapping *mapping = g_array_index(activation_array, ActivationMapping*, i);
-	unsigned int j;
-	
-	g_free(mapping->service);
-	delete_target_array(mapping->target);
-	g_free(mapping->targetProperty);
-	g_free(mapping->name);
-	g_free(mapping->type);
-	
-	if(mapping->depends_on != NULL)
-	{
-	    for(j = 0; j < mapping->depends_on->len; j++)
-	    {
-		Dependency *dependency = g_array_index(mapping->depends_on, Dependency*, j);
-		g_free(dependency->service);
-		delete_target_array(dependency->target);
-		g_free(dependency);
-	    }
-	}
-	
-	g_array_free(mapping->depends_on, TRUE);
-	g_free(mapping);
-    }
+        unsigned int i;
     
-    g_array_free(activation_array, TRUE);
+        for(i = 0; i < activation_array->len; i++)
+        {
+            ActivationMapping *mapping = g_array_index(activation_array, ActivationMapping*, i);
+            unsigned int j;
+            
+            g_free(mapping->service);
+            delete_target_array(mapping->target);
+            g_free(mapping->targetProperty);
+            g_free(mapping->name);
+            g_free(mapping->type);
+
+            if(mapping->depends_on != NULL)
+            {
+                for(j = 0; j < mapping->depends_on->len; j++)
+                {
+                    Dependency *dependency = g_array_index(mapping->depends_on, Dependency*, j);
+                    g_free(dependency->service);
+                    delete_target_array(dependency->target);
+                    g_free(dependency);
+                }
+            }
+            
+            g_array_free(mapping->depends_on, TRUE);
+            g_free(mapping);
+        }
+    
+        g_array_free(activation_array, TRUE);
+    }
 }
 
 GArray *intersect_activation_array(GArray *left, GArray *right)

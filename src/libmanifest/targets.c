@@ -111,16 +111,19 @@ GArray *generate_target_array(const gchar *manifest_file)
 
 void delete_target_array(GArray *target_array)
 {
-    unsigned int i;
-    
-    for(i = 0; i < target_array->len; i++)
+    if(target_array != NULL)
     {
-	TargetItem *targetItem = g_array_index(target_array, TargetItem*, i);
-	g_free(targetItem->targetProperty);
-	g_free(targetItem);
-    }
+        unsigned int i;
+        
+        for(i = 0; i < target_array->len; i++)
+        {
+            TargetItem *targetItem = g_array_index(target_array, TargetItem*, i);
+            g_free(targetItem->targetProperty);
+            g_free(targetItem);
+        }
     
-    g_array_free(target_array, TRUE);
+        g_array_free(target_array, TRUE);
+    }
 }
 
 int target_index(const GArray *target_array, const gchar *target)
