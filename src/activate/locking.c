@@ -102,7 +102,7 @@ int lock(gchar *interface, GArray *distribution_array, gchar *profile)
         }
         else if(interrupted)
         {
-            g_printerr("The lock phase has been interrupted! Releasing the locks...\n");
+            g_printerr("[coordinator]: The lock phase has been interrupted!\n");
             exit_status = 1;
         }
     }

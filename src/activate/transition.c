@@ -24,6 +24,25 @@
 
 extern volatile int interrupted;
 
+static void print_activation_step(int activate, gchar **arguments, unsigned int arguments_size, gchar *target_property, ActivationMapping *mapping)
+{
+    unsigned int i;
+    
+    g_print("[target: %s]: ");
+    
+    if(activate)
+        g_print("Activating");
+    else
+        g_print("Deactivating");
+    
+    g_print(" service: %s of type: %s, arguments: ", target_property, mapping->service, mapping->type);
+    
+    for(i = 0; i < arguments_size; i++)
+        g_print("%s ", arguments[i]);
+    
+    g_print("\n");
+}
+
 static int activate(gchar *interface, GArray *union_array, const ActivationMapping *mapping)
 {
     /* Retrieve the mapping from the union array */
@@ -73,12 +92,7 @@ static int activate(gchar *interface, GArray *union_array, const ActivationMappi
         gchar *target_property = get_target_property(actual_mapping);
         
         /* Print debug message */
-        g_print("[target: %s]: Activating service: %s of type: %s, arguments: ", target_property, actual_mapping->service, actual_mapping->type);
-        
-        for(i = 0; i < arguments_size; i++)
-            g_print("%s ", arguments[i]);
-        
-        g_print("\n");
+        print_activation_step(TRUE, arguments, arguments_size, target_property, actual_mapping);
 
         /* Execute the activation operation */
         status = wait_to_finish(exec_activate(interface, target_property, actual_mapping->type, arguments, arguments_size, actual_mapping->service));
@@ -136,12 +150,7 @@ static int deactivate(gchar *interface, GArray *union_array, const ActivationMap
         gchar *target_property = get_target_property(actual_mapping);
         
         /* Print debug message */
-        g_print("[target: %s]: Deactivating service: %s of type: %s, arguments: ", target_property, actual_mapping->service, actual_mapping->type);
-        
-        for(i = 0; i < arguments_size; i++)
-            g_print("%s ", arguments[i]);
-        
-        g_print("\n");
+        print_activation_step(FALSE, arguments, arguments_size, target_property, actual_mapping);
         
         if(target_index(target_array, target_property) == -1) /* Only deactivate services on machines that are available */
         {
