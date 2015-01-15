@@ -28,9 +28,8 @@
 #include <stdio.h>
 #include <signal.h>
 
-#include <distributionmapping.h>
+#include <manifest.h>
 #include <activationmapping.h>
-#include <targets.h>
 
 volatile int interrupted = FALSE;
 
@@ -83,30 +82,20 @@ static void release_locks(const gboolean no_lock, gchar *interface, GArray *dist
     }
 }
 
-static void cleanup(gchar *old_manifest_file, GArray *target_array, GArray *distribution_array, GArray *new_activation_mappings, GArray *old_activation_mappings)
+static void cleanup(gchar *old_manifest_file, Manifest *manifest, GArray *old_activation_mappings)
 {
     g_free(old_manifest_file);
-    delete_target_array(target_array);
-    delete_distribution_array(distribution_array);
-    delete_activation_array(new_activation_mappings);
+    delete_manifest(manifest);
     delete_activation_array(old_activation_mappings);
 }
 
 int activate_system(gchar *interface, const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_coordinator_profile, const gboolean no_target_profiles, const gboolean no_upgrade, const gboolean no_lock)
 {
-    /* Get all the distribution items of the new configuration */
-    GArray *distribution_array = generate_distribution_array(new_manifest);
-
-    /* Get all the activation items of the new configuration */
-    GArray *new_activation_mappings = create_activation_array(new_manifest);
+    Manifest *manifest = create_manifest(new_manifest);
     
-    /* Get all target properties from the infrastructure model */
-    GArray *target_array = generate_target_array(new_manifest);
-    
-    if(distribution_array == NULL || new_activation_mappings == NULL || target_array == NULL)
+    if(manifest == NULL)
     {
         g_printerr("[coordinator]: Error opening manifest_file!\n");
-        cleanup(NULL, target_array, distribution_array, new_activation_mappings, NULL);
         return 1;
     }
     else
@@ -146,10 +135,10 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
         {
             g_print("[coordinator]: Acquiring locks on each target\n");
             
-            if((status = lock(interface, distribution_array, profile)) != 0)
+            if((status = lock(interface, manifest->distribution_array, profile)) != 0)
             {
-                release_locks(no_lock, interface, distribution_array, profile);
-                cleanup(old_manifest_file, target_array, distribution_array, new_activation_mappings, old_activation_mappings);
+                release_locks(no_lock, interface, manifest->distribution_array, profile);
+                cleanup(old_manifest_file, manifest, old_activation_mappings);
                 return status;
             }
         }
@@ -157,10 +146,10 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
         /* Execute transition */
         g_print("[coordinator]: Execute the transition to the new deployment state\n");
         
-        if((status = transition(interface, new_activation_mappings, old_activation_mappings, target_array)) != 0)
+        if((status = transition(interface, manifest->activation_array, old_activation_mappings, manifest->target_array)) != 0)
         {
-            release_locks(no_lock, interface, distribution_array, profile);
-            cleanup(old_manifest_file, target_array, distribution_array, new_activation_mappings, old_activation_mappings);
+            release_locks(no_lock, interface, manifest->distribution_array, profile);
+            cleanup(old_manifest_file, manifest, old_activation_mappings);
             return status;
         }
         
@@ -172,16 +161,16 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
         {
             g_print("[coordinator]: Setting the profiles on the target machines\n");
         
-            if((status = set_target_profiles(distribution_array, interface, profile)) != 0)
+            if((status = set_target_profiles(manifest->distribution_array, interface, profile)) != 0)
             {
-                release_locks(no_lock, interface, distribution_array, profile);
-                cleanup(old_manifest_file, target_array, distribution_array, new_activation_mappings, old_activation_mappings);
+                release_locks(no_lock, interface, manifest->distribution_array, profile);
+                cleanup(old_manifest_file, manifest, old_activation_mappings);
                 return status;
             }
         }
         
         /* Release the locks */
-        release_locks(no_lock, interface, distribution_array, profile);
+        release_locks(no_lock, interface, manifest->distribution_array, profile);
         
         /* Set the coordinator profile */
         if(no_coordinator_profile)
@@ -192,13 +181,13 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
             
             if((status = set_coordinator_profile(coordinator_profile_path, new_manifest, profile, username)) != 0)
             {
-                cleanup(old_manifest_file, target_array, distribution_array, new_activation_mappings, old_activation_mappings);
+                cleanup(old_manifest_file, manifest, old_activation_mappings);
                 return status;
             }
         }
         
         /* Cleanup */
-        cleanup(old_manifest_file, target_array, distribution_array, new_activation_mappings, old_activation_mappings);
+        cleanup(old_manifest_file, manifest, old_activation_mappings);
         
         /* Everything succeeded */
         return 0;
