@@ -22,36 +22,40 @@
 
 int query_installed(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile)
 {
-    int exit_status = 0;
-    
     /* Retrieve an array of all target machines from the infrastructure expression */
     GArray *target_array = create_target_array(infrastructure_expr, target_property);
 
-    if(target_array != NULL)
+    if(target_array == NULL)
     {
+        g_printerr("[coordinator]: Error retrieving targets from infrastructure model!\n");
+        return 1;
+    }
+    else
+    {
+        int exit_status = 0;
         unsigned int i;
-	    
-	/* For each target execute the query operation and display the results */
+        
+        /* For each target execute the query operation and display the results */
         for(i = 0; i < target_array->len; i++)
         {
-    	    gchar *target = g_array_index(target_array, gchar*, i);
-	    int status;
-		
-	    g_print("\nServices on: %s\n\n", target);
-		
-	    status = wait_to_finish(exec_query_installed(interface, target, profile));
-		
-	    if(status != 0)
-	    {
-		g_printerr("Failed executing the query operation!\n");
-	        exit_status = status;
-	    }
-	}
-	
-	/* Delete the target array from memory */
-	delete_target_array(target_array);
+            gchar *target = g_array_index(target_array, gchar*, i);
+            int status;
+            
+            g_print("\nServices on: %s\n\n", target);
+            
+            status = wait_to_finish(exec_query_installed(interface, target, profile));
+            
+            if(status != 0)
+            {
+                g_printerr("[target: %s]: Failed executing the query operation!\n", target);
+                exit_status = status;
+            }
+        }
+        
+        /* Delete the target array from memory */
+        delete_target_array(target_array);
+        
+        /* Return the exit status, which is 0 if everything succeeds */
+        return exit_status;
     }
-
-    /* Return the exit status, which is 0 if everything succeeds */
-    return exit_status;
 }

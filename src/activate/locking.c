@@ -76,7 +76,7 @@ int lock(gchar *interface, GArray *distribution_array, gchar *profile)
     {
         DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
         
-        g_print("[target: %s]: Acquiring a lock", item->target);
+        g_print("[target: %s]: Acquiring a lock\n", item->target);
         status = exec_lock(interface, item->target, profile);
         
         /* If a process fails, change the exit status */

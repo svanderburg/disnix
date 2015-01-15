@@ -64,12 +64,12 @@ static int realise(gchar *interface, GArray *derivation_array, GArray *result_ar
         int pipefd[2];
         DerivationItem *item = g_array_index(derivation_array, DerivationItem*, i);
         
-        g_print("[target: %s] Realising derivation: %s\n", item->target, item->derivation);
+        g_print("[target: %s]: Realising derivation: %s\n", item->target, item->derivation);
         status = exec_realise(interface, item->target, item->derivation, pipefd);
         
         if(status == -1)
         {
-            g_printerr("Error with forking realise process!\n");
+            g_printerr("[target: %s]: Error with forking realise process!\n", item->target);
             exit_status = -1;
         }
         else
@@ -78,7 +78,7 @@ static int realise(gchar *interface, GArray *derivation_array, GArray *result_ar
             running_processes++;
         }
     }
-        
+    
     /* Capture the output (Nix store components) of every realise process */
     
     for(i = 0; i < output_array->len; i++)
@@ -137,7 +137,7 @@ static int retrieve_results(gchar *interface, GArray *derivation_array, GArray *
         result = g_array_index(result_array, gchar*, i);
         item = g_array_index(derivation_array, DerivationItem*, i);
         
-        g_print("[target: %s] Sending build result to coordinator: %s\n", item->target, result);
+        g_print("[target: %s]: Sending build result to coordinator: %s\n", item->target, result);
         
         status = wait_to_finish(exec_copy_closure_from(interface, item->target, result));
         

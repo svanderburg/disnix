@@ -45,7 +45,7 @@ int distribute(gchar *interface, const gchar *manifest_file)
             /* Invoke copy closure operation */
             g_print("[target: %s]: Receiving intra-dependency closure of profile: %s\n", item->target, item->profile);
             status = wait_to_finish(exec_copy_closure_to(interface, item->target, item->profile));
-                
+            
             /* On error, change the exit status to indicate an error */
             if(status != 0)
             {
