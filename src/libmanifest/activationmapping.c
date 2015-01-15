@@ -98,10 +98,7 @@ ActivationMapping *get_activation_mapping(const GArray *activation_array, const 
     if(actual_mapping_index == -1)
         return NULL;
     else
-    {
-        /* Retrieve the mapping from the union array */
         return g_array_index(activation_array, ActivationMapping*, actual_mapping_index);
-    }
 }
 
 void print_activation_array(const GArray *activation_array)

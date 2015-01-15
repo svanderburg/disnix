@@ -41,5 +41,5 @@
       exec = "disnix-service";
     };
     
-    environment.systemPackages = [ pkgs.stdenv pkgs.nix disnix ];
+    environment.systemPackages = [ pkgs.stdenv pkgs.paxctl pkgs.busybox pkgs.gnumake pkgs.patchelf pkgs.gcc pkgs.nix disnix ];
 }
