@@ -61,6 +61,12 @@ static void disnix_failure_signal_handler(DBusGProxy *proxy, const gint pid, gpo
 	exit(1);
 }
 
+static void cleanup(gchar **derivation, gchar **arguments)
+{
+    g_strfreev(derivation);
+    g_strfreev(arguments);
+}
+
 int run_disnix_client(Operation operation, gchar **derivation, gboolean session_bus, char *profile, gboolean delete_old, gchar **arguments, char *type)
 {
     /* The GObject representing a D-Bus connection. */
@@ -73,7 +79,7 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
     GMainLoop *mainloop;
     
     /* Captures the results of D-Bus operations */
-    GError *error = NULL;    
+    GError *error = NULL;
     gint reply;
     
     /* Other declarations */
@@ -83,8 +89,7 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
     if(operation == OP_NONE)
     {
 	g_printerr("No operation is specified!\n");
-	g_strfreev(derivation);
-	g_strfreev(arguments);
+	cleanup(derivation, arguments);
 	return 1;
     }
     
@@ -93,8 +98,7 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
     if(mainloop == NULL)
     {
 	g_printerr("Cannot create main loop.\n");
-	g_strfreev(derivation);
-	g_strfreev(arguments);
+	cleanup(derivation, arguments);
 	return 1;
     }
 
@@ -103,19 +107,17 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
     if(session_bus)
     {
 	g_printerr("Connecting to the session bus.\n");
-	bus = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
+	bus = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
     }
     else
     {
 	g_printerr("Connecting to the system bus.\n");
-	bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+	bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
     }
     
     if(!bus)
     {
         g_printerr("Cannot connect to session/system bus! Reason: %s\n", error->message);
-	g_strfreev(derivation);
-	g_strfreev(arguments);
         return 1;
     }
     
@@ -129,8 +131,7 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
     if(remote_object == NULL)
     {
         g_printerr("Cannot create the proxy object! Reason: %s\n", error->message);
-	g_strfreev(derivation);
-	g_strfreev(arguments);
+        cleanup(derivation, arguments);
         return 1;
     }
 
@@ -194,15 +195,13 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 	    if(type == NULL)
 	    {
 		g_printerr("ERROR: A type must be specified!\n");
-		g_strfreev(derivation);
-		g_strfreev(arguments);
+		cleanup(derivation, arguments);
 		return 1;
 	    }
 	    else if(derivation[0] == NULL)
 	    {
 		g_printerr("ERROR: A Nix store component has to be specified!\n");
-		g_strfreev(derivation);
-		g_strfreev(arguments);
+		cleanup(derivation, arguments);
 		return 1;
 	    }
 	    else
@@ -212,15 +211,13 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 	    if(type == NULL)
 	    {
 		g_printerr("ERROR: A type must be specified!\n");
-		g_strfreev(derivation);
-		g_strfreev(arguments);
+		cleanup(derivation, arguments);
 		return 1;
 	    }
 	    else if(derivation[0] == NULL)
 	    {
 		g_printerr("ERROR: A Nix store component has to be specified!\n");
-		g_strfreev(derivation);
-		g_strfreev(arguments);
+		cleanup(derivation, arguments);
 		return 1;
 	    }
 	    else
@@ -233,26 +230,23 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 	    org_nixos_disnix_Disnix_unlock(remote_object, pid, profile, &error);
 	    break;
 	case OP_NONE:
-	    g_printerr("ERROR: No operation specified!\n");	    
-	    g_strfreev(derivation);
-	    g_strfreev(arguments);
+	    g_printerr("ERROR: No operation specified!\n");
+	    cleanup(derivation, arguments);
 	    return 1;
     }
 
     if(error != NULL) 
     {
         g_printerr("Error while executing the operation! Reason: %s\n", error->message);
-	g_strfreev(derivation);
-	g_strfreev(arguments);
-	return 1;
+        cleanup(derivation, arguments);
+        return 1;
     }
     
     /* Run loop and wait for signals */
     g_main_loop_run(mainloop);
     
     /* Operation is finished */
-    g_strfreev(derivation);
-    g_strfreev(arguments);
+    cleanup(derivation, arguments);
     
     return EXIT_FAILURE;
 }
