@@ -139,6 +139,7 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
             {
                 release_locks(no_lock, interface, manifest->distribution_array, profile);
                 cleanup(old_manifest_file, manifest, old_activation_mappings);
+                g_printerr("[coordinator]: ERROR: Lock phase execution failed!\n");
                 return status;
             }
         }
@@ -150,6 +151,7 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
         {
             release_locks(no_lock, interface, manifest->distribution_array, profile);
             cleanup(old_manifest_file, manifest, old_activation_mappings);
+            g_printerr("[coordinator]: ERROR: Transition phase execution failed!\n");
             return status;
         }
         
@@ -165,6 +167,7 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
             {
                 release_locks(no_lock, interface, manifest->distribution_array, profile);
                 cleanup(old_manifest_file, manifest, old_activation_mappings);
+                g_printerr("[coordinator]: ERROR: Cannot set profiles on the target machines!\n");
                 return status;
             }
         }
@@ -182,6 +185,7 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
             if((status = set_coordinator_profile(coordinator_profile_path, new_manifest, profile, username)) != 0)
             {
                 cleanup(old_manifest_file, manifest, old_activation_mappings);
+                g_printerr("[coordinator]: ERROR: Cannot update the coordinator profile!\n");
                 return status;
             }
         }
@@ -190,6 +194,7 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
         cleanup(old_manifest_file, manifest, old_activation_mappings);
         
         /* Everything succeeded */
+        g_printerr("[coordinator]: The new configuration has been successfully activated!\n");
         return 0;
     }
 }

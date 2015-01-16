@@ -62,8 +62,6 @@ int set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *
     else
         profile_path = g_strdup(coordinator_profile_path);
     
-    g_print("[coordinator]: Setting the coordinator profile: %s\n", profile_path);
-    
     /* Create the profile directory */
     if(mkdir(profile_path, 0755) == -1)
     {
