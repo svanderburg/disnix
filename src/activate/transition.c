@@ -28,14 +28,14 @@ static void print_activation_step(int activate, gchar **arguments, unsigned int 
 {
     unsigned int i;
     
-    g_print("[target: %s]: ");
+    g_print("[target: %s]: ", target_property);
     
     if(activate)
         g_print("Activating");
     else
         g_print("Deactivating");
     
-    g_print(" service: %s of type: %s, arguments: ", target_property, mapping->service, mapping->type);
+    g_print(" service: %s of type: %s, arguments: ", mapping->service, mapping->type);
     
     for(i = 0; i < arguments_size; i++)
         g_print("%s ", arguments[i]);
@@ -51,7 +51,7 @@ static int activate(gchar *interface, GArray *union_array, const ActivationMappi
     /* Check for an interruption */
     if(interrupted)
     {
-        g_print("The activation process has been interrupted!\n");
+        g_printerr("[coordinator]: The activation process has been interrupted!\n");
         return 1;
     }
     
@@ -193,7 +193,7 @@ static int deactivate_obsolete_mappings(GArray *deactivation_array, GArray *unio
                 /* If the deactivation fails, perform a rollback */
                 
                 unsigned int j;
-                g_print("Deactivation failed! Doing a rollback...\n");
+                g_print("[coordinator]: Deactivation failed! Doing a rollback...\n");
                 
                 for(j = 0; j < old_activation_mappings->len; j++)
                 {
@@ -215,7 +215,7 @@ static int activate_new_mappings(GArray *activation_array, GArray *union_array, 
 {
     unsigned int i;
     
-    g_print("Executing activation:\n");
+    g_print("[coordinator]: Executing activation of services:\n");
 
     /* Activate each mapping closure in the new configuration */
     
@@ -229,7 +229,7 @@ static int activate_new_mappings(GArray *activation_array, GArray *union_array, 
             /* If the activation fails, perform a rollback */
             
             unsigned int j;
-            g_printerr("Activation failed! Doing a rollback...\n");
+            g_printerr("[coordinator]: Activation failed! Doing a rollback...\n");
             
             /* Deactivate the newly activated services */
             for(j = 0; j < activation_array->len; j++)
@@ -259,20 +259,44 @@ static int activate_new_mappings(GArray *activation_array, GArray *union_array, 
     return 0;
 }
 
+static void cleanup(GArray *old_activation_mappings, GArray *deactivation_array, GArray *activation_array, GArray *union_array)
+{
+    if(old_activation_mappings != NULL)
+    {
+        g_array_free(deactivation_array, TRUE);
+        g_array_free(activation_array, TRUE);
+        g_array_free(union_array, TRUE);
+    }
+}
+
 int transition(gchar *interface, GArray *new_activation_mappings, GArray *old_activation_mappings, GArray *target_array)
 {
     GArray *union_array;
     GArray *deactivation_array;
     GArray *activation_array;
-    unsigned int i;
-    int exit_status = 0;
+    int status;
     
     /* Print configurations */
     
     g_print("New configuration mappings:\n");
     print_activation_array(new_activation_mappings);
     
-    if(old_activation_mappings != NULL)
+    if(old_activation_mappings == NULL)
+    {
+        unsigned int i;
+        
+        union_array = new_activation_mappings;
+        
+        for(i = 0; i < union_array->len; i++)
+        {
+            ActivationMapping *mapping = g_array_index(union_array, ActivationMapping*, i);
+            mapping->activated = FALSE;
+        }
+        
+        deactivation_array = NULL;
+        activation_array = new_activation_mappings;
+    }
+    else
     {
         GArray *intersection_array;
         
@@ -297,37 +321,25 @@ int transition(gchar *interface, GArray *new_activation_mappings, GArray *old_ac
         
         /* Remove obsolete intersection array */
         g_array_free(intersection_array, TRUE);
-    }   
-    else
-    {
-        union_array = new_activation_mappings;
-        
-        for(i = 0; i < union_array->len; i++)
-        {
-            ActivationMapping *mapping = g_array_index(union_array, ActivationMapping*, i);
-            mapping->activated = FALSE;
-        }
-        
-        deactivation_array = NULL;
-        activation_array = new_activation_mappings;
     }
 
     /* Execute deactivation process */
-    exit_status = deactivate_obsolete_mappings(deactivation_array, union_array, interface, target_array, old_activation_mappings);
+    if((status = deactivate_obsolete_mappings(deactivation_array, union_array, interface, target_array, old_activation_mappings)) != 0)
+    {
+        cleanup(old_activation_mappings, deactivation_array, activation_array, union_array);
+        return status;
+    }
 
     /* Execute activation process (if deactivation process did not fail) */
-    if(exit_status == 0)
-        exit_status = activate_new_mappings(activation_array, union_array, interface, target_array, old_activation_mappings, new_activation_mappings);
-    
-    /* Cleanup */
-    
-    if(old_activation_mappings != NULL)
+    if((status = activate_new_mappings(activation_array, union_array, interface, target_array, old_activation_mappings, new_activation_mappings)) != 0)
     {
-        g_array_free(deactivation_array, TRUE);
-        g_array_free(activation_array, TRUE);
-        g_array_free(union_array, TRUE);
+        cleanup(old_activation_mappings, deactivation_array, activation_array, union_array);
+        return status;
     }
     
+    /* Cleanup */
+    cleanup(old_activation_mappings, deactivation_array, activation_array, union_array);
+    
     /* Returns the exit status, which is 0 if everything succeeded */
-    return exit_status;
+    return 0;
 }

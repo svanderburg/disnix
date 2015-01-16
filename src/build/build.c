@@ -165,30 +165,51 @@ static void delete_result_array(GArray *result_array)
     }
 }
 
+static void cleanup(GArray *result_array, GArray *derivation_array)
+{
+    delete_result_array(result_array);
+    delete_derivation_array(derivation_array);
+}
+
 int build(gchar *interface, const gchar *distributed_derivation_file)
 {
     GArray *derivation_array = create_derivation_array(distributed_derivation_file);
-    int exit_status = 0;
     
-    /* Distribute derivations to target machines */
-    if((exit_status = distribute_derivations(interface, derivation_array)) == 0)
+    if(derivation_array == NULL)
     {
+        g_printerr("[coordinator]: Cannot find any derivation mappings!\n");
+        return 1;
+    }
+    else
+    {
+        int status;
         GArray *result_array = g_array_new(FALSE, FALSE, sizeof(gchar*));
         
-        /* Realise derivations on target machines */
-        if((exit_status = realise(interface, derivation_array, result_array)) == 0)
+        /* Distribute derivations to target machines */
+        if((status = distribute_derivations(interface, derivation_array)) != 0)
         {
-            /* Retrieve back the build results */
-            exit_status = retrieve_results(interface, derivation_array, result_array);
+             cleanup(result_array, derivation_array);
+             return status;
+        }
+        
+        /* Realise derivations on target machines */
+        if((status = realise(interface, derivation_array, result_array)) != 0)
+        {
+            cleanup(result_array, derivation_array);
+            return status;
+        }
+        
+        /* Retrieve back the build results */
+        if((status = retrieve_results(interface, derivation_array, result_array)) != 0)
+        {
+            cleanup(result_array, derivation_array);
+            return status;
         }
         
         /* Cleanup */
-        delete_result_array(result_array);
+        cleanup(result_array, derivation_array);
+        
+        /* Return the exit status, which is 0 if everything succeeds */
+        return 0;
     }
-    
-    /* Cleanup */
-    delete_derivation_array(derivation_array);
-    
-    /* Return the exit status, which is 0 if everything succeeds */
-    return exit_status;
 }
