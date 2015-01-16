@@ -174,7 +174,7 @@ static int deactivate(gchar *interface, GArray *union_array, const ActivationMap
 
 static int deactivate_obsolete_mappings(GArray *deactivation_array, GArray *union_array, gchar *interface, GArray *target_array, GArray *old_activation_mappings)
 {
-    g_print("Executing deactivation:\n");
+    g_print("[coordinator]: Executing deactivation of services:\n");
 
     if(deactivation_array == NULL)
         return 0;
