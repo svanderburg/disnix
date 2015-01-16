@@ -35,7 +35,7 @@ extern struct sigact oldact;
 
 static int job_counter = 0;
 
-gchar **update_lines_vector(gchar **lines, char *buf)
+static gchar **update_lines_vector(gchar **lines, char *buf)
 {
     unsigned int i;
     unsigned int start_offset = 0;
@@ -121,6 +121,17 @@ static void print_derivations(gchar **derivation)
 	g_print("%s ", derivation[i]);
 }
 
+/* Get job id method */
+
+gboolean disnix_get_job_id(DisnixObject *object, gint *pid, GError **error)
+{
+    g_printerr("Assigned job id: %d\n", job_counter);
+    *pid = job_counter;
+    job_counter++;
+    
+    return TRUE;
+}
+
 /* Import method */
 
 static void disnix_import_thread_func(DisnixObject *object, const gint pid, gchar *closure)
@@ -142,19 +153,18 @@ static void disnix_import_thread_func(DisnixObject *object, const gint pid, gcha
     else
     {
 	int status = fork();
-    
-	if(status == 0)
+
+	if(status == -1)
+	{
+	    g_printerr("Error with forking nix-store process!\n");
+	    disnix_emit_failure_signal(object, pid);
+	}
+	else if(status == 0)
 	{
 	    char *args[] = {"nix-store", "--import", NULL};
 	    dup2(closure_fd, 0);
 	    execvp("nix-store", args);
 	    _exit(1);
-	}
-    
-	if(status == -1)
-	{
-	    g_printerr("Error with forking nix-store process!\n");
-	    disnix_emit_failure_signal(object, pid);
 	}
 	else
 	{
@@ -202,7 +212,7 @@ static void disnix_export_thread_func(DisnixObject *object, const gint pid, gcha
     g_print("\n");
     
     /* Execute command */
-        
+    
     closure_fd = mkstemp(tempfilename);
     
     if(closure_fd == -1)
@@ -213,8 +223,13 @@ static void disnix_export_thread_func(DisnixObject *object, const gint pid, gcha
     else
     {
 	int status = fork();
-    
-	if(status == 0)
+	
+	if(status == -1)
+	{
+	    g_printerr("Error with forking nix-store process!\n");
+	    disnix_emit_failure_signal(object, pid);
+	}
+	else if(status == 0)
 	{
 	    unsigned int i, derivation_length = g_strv_length(derivation);
 	    char **args = (char**)g_malloc((3 + derivation_length) * sizeof(char*));
@@ -230,12 +245,6 @@ static void disnix_export_thread_func(DisnixObject *object, const gint pid, gcha
 	    dup2(closure_fd, 1);
 	    execvp("nix-store", args);
 	    _exit(1);
-	}
-	
-	if(status == -1)
-	{
-	    g_printerr("Error with forking nix-store process!\n");
-	    disnix_emit_failure_signal(object, pid);
 	}
 	else
 	{
@@ -294,7 +303,14 @@ static void disnix_print_invalid_thread_func(DisnixObject *object, const gint pi
     {
 	int status = fork();
 	
-	if(status == 0)
+	if(status == -1)
+	{
+	    g_printerr("Error with forking nix-store process!\n");
+	    close(pipefd[0]);
+	    close(pipefd[1]);
+	    disnix_emit_failure_signal(object, pid);
+	}
+	else if(status == 0)
 	{
 	    unsigned int i, derivation_length = g_strv_length(derivation);
 	    char **args = (char**)g_malloc((4 + derivation_length) * sizeof(char*));
@@ -314,14 +330,6 @@ static void disnix_print_invalid_thread_func(DisnixObject *object, const gint pi
 	    execvp("nix-store", args);
 	    _exit(1);
 	}
-    
-	if(status == -1)
-	{
-	    g_printerr("Error with forking nix-store process!\n");
-	    close(pipefd[0]);
-	    close(pipefd[1]);
-	    disnix_emit_failure_signal(object, pid);
-	}
 	else
 	{
 	    char line[BUFFER_SIZE];
@@ -330,13 +338,13 @@ static void disnix_print_invalid_thread_func(DisnixObject *object, const gint pi
 	    unsigned int missing_paths_size = 0;
 	    
 	    close(pipefd[1]); /* Close write-end of the pipe */
-	    	
+	    
 	    while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
 	    {
 	        line[line_size] = '\0';
 	        g_print("%s", line);
-				
-		missing_paths = update_lines_vector(missing_paths, line);		
+		
+		missing_paths = update_lines_vector(missing_paths, line);
 	    }
 	
 	    g_print("\n");
@@ -395,7 +403,12 @@ static void disnix_realise_thread_func(DisnixObject *object, const gint pid, gch
     {
 	int status = fork();
 	
-	if(status == 0)
+	if(status == -1)
+	{
+	    g_printerr("Error with forking nix-store process!\n");
+	    disnix_emit_failure_signal(object, pid);
+	}
+	else if(status == 0)
 	{
 	    unsigned int i, derivation_size = g_strv_length(derivation);
 	    char **args = (char**)g_malloc((3 + derivation_size) * sizeof(char*));
@@ -413,12 +426,6 @@ static void disnix_realise_thread_func(DisnixObject *object, const gint pid, gch
 	    dup2(pipefd[1], 1);
 	    execvp("nix-store", args);
 	    _exit(1);
-	}
-	
-	if(status == -1)
-	{
-	    g_printerr("Error with forking nix-store process!\n");
-	    disnix_emit_failure_signal(object, pid);
 	}
 	else
 	{
@@ -627,7 +634,14 @@ static void disnix_query_requisites_thread_func(DisnixObject *object, const gint
     {
 	int status = fork();
 	
-	if(status == 0)
+	if(status == -1)
+	{
+	    fprintf(stderr, "Error with forking nix-store process!\n");
+	    close(pipefd[0]);
+	    close(pipefd[1]);
+	    disnix_emit_failure_signal(object, pid);
+	}
+	else if(status == 0)
 	{
 	    unsigned int i, derivation_size = g_strv_length(derivation);
 	    char **args = (char**)g_malloc((3 + derivation_size) * sizeof(char*));
@@ -645,14 +659,6 @@ static void disnix_query_requisites_thread_func(DisnixObject *object, const gint
 	    dup2(pipefd[1], 1);
 	    execvp("nix-store", args);
 	    _exit(1);
-	}
-	
-	if(status == -1)
-	{
-	    fprintf(stderr, "Error with forking nix-store process!\n");
-	    close(pipefd[0]);
-	    close(pipefd[1]);
-	    disnix_emit_failure_signal(object, pid);
 	}
 	else
 	{
@@ -790,7 +796,12 @@ static void disnix_activate_thread_func(DisnixObject *object, const gint pid, gc
 
     status = fork();
     
-    if(status == 0)
+    if(status == -1)
+    {
+	g_printerr("Error forking activation process!\n");
+	disnix_emit_failure_signal(object, pid);
+    }
+    else if(status == 0)
     {
 	unsigned int i;
 	char *cmd = "dysnomia";
@@ -805,12 +816,6 @@ static void disnix_activate_thread_func(DisnixObject *object, const gint pid, gc
 	
 	execvp(cmd, args);
 	_exit(1);
-    }
-    
-    if(status == -1)
-    {
-	g_printerr("Error forking activation process!\n");
-	disnix_emit_failure_signal(object, pid);
     }
     else
     {
@@ -856,7 +861,12 @@ static void disnix_deactivate_thread_func(DisnixObject *object, const gint pid, 
 
     status = fork();
     
-    if(status == 0)
+    if(status == -1)
+    {
+	g_printerr("Error forking deactivation process!\n");
+	disnix_emit_failure_signal(object, pid);
+    }
+    else if(status == 0)
     {
 	unsigned int i;
 	char *cmd = "dysnomia";
@@ -871,12 +881,6 @@ static void disnix_deactivate_thread_func(DisnixObject *object, const gint pid, 
 	
 	execvp(cmd, args);
 	_exit(1);
-    }
-    
-    if(status == -1)
-    {
-	g_printerr("Error forking deactivation process!\n");
-	disnix_emit_failure_signal(object, pid);
     }
     else
     {
@@ -916,22 +920,21 @@ static int unlock_services(gchar **derivation, unsigned int derivation_size, gch
     for(i = 0; i < derivation_size; i++)
     {
 	int status; 
-	    
+	
 	g_print("Notifying unlock on %s: of type: %s\n", derivation[i], type[i]);
 	status = fork();
-	    
-	if(status == 0)
+	
+	if(status == -1)
+	{
+	    g_printerr("Error forking unlock process!\n");
+	    exit_status = FALSE;
+	}
+	else if(status == 0)
 	{
 	    char *cmd = "dysnomia";
 	    char *args[] = {cmd, "--type", type[i], "--operation", "unlock", "--component", derivation[i], "--environment", NULL};
 	    execvp(cmd, args);
 	    _exit(1);
-	}
-	    
-	if(status == -1)
-	{
-	    g_printerr("Error forking unlock process!\n");
-	    exit_status = FALSE;
 	}
 	else
 	{
@@ -1021,18 +1024,17 @@ static void disnix_lock_thread_func(DisnixObject *object, const gint pid, const 
 	    g_print("Notifying lock on %s: of type: %s\n", derivation[i], type[i]);
 	    status = fork();
 	    
-	    if(status == 0)
+	    if(status == -1)
+	    {
+		g_printerr("Error forking lock process!\n");
+		exit_status = -1;
+	    }
+	    else if(status == 0)
 	    {
 		char *cmd = "dysnomia";
 		char *args[] = {cmd, "--type", type[i], "--operation", "lock", "--component", derivation[i], "--environment", NULL};
 		execvp(cmd, args);
 		_exit(1);
-	    }
-	    
-	    if(status == -1)
-	    {
-		g_printerr("Error forking lock process!\n");
-		exit_status = -1;
 	    }
 	    else
 	    {
@@ -1143,14 +1145,14 @@ static void disnix_unlock_thread_func(DisnixObject *object, const gint pid, cons
 	    if(is_component)
 	    {
 		derivation = (gchar**)g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
-		derivation[derivation_size] = g_strdup(line);	    
+		derivation[derivation_size] = g_strdup(line);
 		derivation_size++;
 		is_component = FALSE;
 	    }
 	    else
 	    {
 		type = (gchar**)g_realloc(type, (type_size + 1) * sizeof(gchar*));
-		type[type_size] = g_strdup(line);	    
+		type[type_size] = g_strdup(line);
 		type_size++;
 		is_component = TRUE;
 	    }
@@ -1160,7 +1162,7 @@ static void disnix_unlock_thread_func(DisnixObject *object, const gint pid, cons
 	derivation = (gchar**)g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
 	derivation[derivation_size] = NULL;
 	type = (gchar**)g_realloc(type, (type_size + 1) * sizeof(gchar*));
-	type[type_size] = NULL;	
+	type[type_size] = NULL;
 	
 	fclose(fp);
     }
@@ -1209,15 +1211,5 @@ gboolean disnix_unlock(DisnixObject *object, const gint pid, const gchar *profil
 	disnix_unlock_thread_func(object, pid, profile);
     }
     
-    return TRUE;
-}
-
-/* Get job id method */
-
-gboolean disnix_get_job_id(DisnixObject *object, gint *pid, GError **error)
-{
-    g_printerr("Assigned job id: %d\n", job_counter);
-    *pid = job_counter;
-    job_counter++;
     return TRUE;
 }
