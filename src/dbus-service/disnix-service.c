@@ -227,7 +227,7 @@ int start_disnix_service(int session_bus)
     /* Create one single instance */
     g_print("Creating a single Disnix instance\n");
      
-    object = g_object_new(DISNIX_TYPE_OBJECT, NULL);    
+    object = g_object_new(DISNIX_TYPE_OBJECT, NULL);
     if(!object)
     {
         g_printerr("Failed to create one Disnix instance.\n");

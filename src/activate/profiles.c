@@ -30,20 +30,35 @@
 int set_target_profiles(const GArray *distribution_array, gchar *interface, gchar *profile)
 {
     unsigned int i;
-    int exit_status = 0;
+    int exit_status = 0, running_processes = 0;
     
     for(i = 0; i < distribution_array->len; i++)
     {
-        int status;
+        pid_t pid;
         DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
         
         g_print("[target: %s]: Setting Disnix profile: %s\n", item->target, item->profile);
         
-        status = wait_to_finish(exec_set(interface, item->target, profile, item->profile));
+        pid = exec_set(interface, item->target, profile, item->profile);
         
+        if(pid == -1)
+        {
+            g_print("[target: %s]: Error forking nix-env --set process!\n", item->target);
+            exit_status = -1;
+        }
+        else
+            running_processes++;
+    }
+    
+    /* Check statusses of the running processes */
+    for(i = 0; i < running_processes; i++)
+    {
+        int status = wait_to_finish(0);
+
+        /* If one of the processes fail, change the exit status */
         if(status != 0)
         {
-            g_printerr("[target: %s]: Cannot set profile!\n", item->target);
+            g_printerr("Cannot set profile!\n");
             exit_status = status;
         }
     }
@@ -63,11 +78,8 @@ int set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *
         profile_path = g_strdup(coordinator_profile_path);
     
     /* Create the profile directory */
-    if(mkdir(profile_path, 0755) == -1)
-    {
-        if(errno != EEXIST)
-            g_printerr("[coordinator]: Cannot create profile directory: %s\n", profile_path);
-    }
+    if(mkdir(profile_path, 0755) == -1 && errno != EEXIST)
+        g_printerr("[coordinator]: Cannot create profile directory: %s\n", profile_path);
     
     /* Profile path is not needed anymore */
     g_free(profile_path);
@@ -111,10 +123,6 @@ int set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *
     else
     {
         wait(&status);
-    
-        if(WEXITSTATUS(status) == 0)
-            return 0;
-        else
-            return WEXITSTATUS(status);
+        return WEXITSTATUS(status);
     }
 }

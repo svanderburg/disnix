@@ -163,8 +163,7 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 	    if(derivation[0] == NULL)
 	    {
 		g_printerr("ERROR: A Nix store component has to be specified!\n");
-		g_strfreev(derivation);
-		g_strfreev(arguments);
+		cleanup(derivation, arguments);
 		return 1;
 	    }
 	    else
