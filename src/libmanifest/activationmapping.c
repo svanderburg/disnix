@@ -115,7 +115,7 @@ void print_activation_array(const GArray *activation_array)
 	
 	for(j = 0; j < mapping->target->len; j++)
 	{
-	    TargetProperty *property = g_array_index(mapping->target, TargetProperty*, j);	    
+	    TargetProperty *property = g_array_index(mapping->target, TargetProperty*, j);
 	    g_print("  name: %s, value: %s\n", property->name, property->value);
 	}
 	

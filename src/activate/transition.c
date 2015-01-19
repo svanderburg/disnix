@@ -45,131 +45,142 @@ static void print_activation_step(int activate, gchar **arguments, unsigned int 
 
 static int activate(gchar *interface, GArray *union_array, const ActivationMapping *mapping)
 {
-    /* Retrieve the mapping from the union array */
-    ActivationMapping *actual_mapping = get_activation_mapping(union_array, mapping);
-
     /* Check for an interruption */
     if(interrupted)
     {
         g_printerr("[coordinator]: The activation process has been interrupted!\n");
         return 1;
     }
-    
-    /* First, activate all inter-dependency mappings */
-    if(actual_mapping->depends_on != NULL)
+    else
     {
-        unsigned int i;
-        int status;
+        /* Retrieve the mapping from the union array */
+        ActivationMapping *actual_mapping = get_activation_mapping(union_array, mapping);
         
-        for(i = 0; i < actual_mapping->depends_on->len; i++)
+        /* First, activate all inter-dependency mappings */
+        if(actual_mapping->depends_on != NULL)
         {
-            Dependency *dependency = g_array_index(actual_mapping->depends_on, Dependency*, i);
-
-            ActivationMapping lookup;
-            lookup.service = dependency->service;
-            lookup.target = dependency->target;
-
-            status = activate(interface, union_array, &lookup);
+            unsigned int i;
+            int status;
             
-            if(status != 0)
-                return status; /* If the activation of an inter-dependency fails, abort */
-        }
-    }
+            for(i = 0; i < actual_mapping->depends_on->len; i++)
+            {
+                Dependency *dependency = g_array_index(actual_mapping->depends_on, Dependency*, i);
     
-    /* Finally, activate the mapping itself if it is not activated yet */
-    if(!actual_mapping->activated)
-    {
-        unsigned int i;
-        int status;
-        
-        /* Generate an array of key=value pairs from infrastructure properties */
-        gchar **arguments = generate_activation_arguments(actual_mapping->target);
-        
-        /* Determine length of the activation arguments array */
-        unsigned int arguments_size = g_strv_length(arguments);
-        
-        /* Get the target interface property from the mapping */
-        gchar *target_property = get_target_property(actual_mapping);
-        
-        /* Print debug message */
-        print_activation_step(TRUE, arguments, arguments_size, target_property, actual_mapping);
+                ActivationMapping lookup;
+                lookup.service = dependency->service;
+                lookup.target = dependency->target;
 
-        /* Execute the activation operation */
-        status = wait_to_finish(exec_activate(interface, target_property, actual_mapping->type, arguments, arguments_size, actual_mapping->service));
-        
-        /* Cleanup */
-        g_strfreev(arguments);
-        
-        if(status != 0)
-            return status; /* If the activation fails, abort */
-        else
-            actual_mapping->activated = TRUE; /* Mark activation mapping as activated */
-    }
+                status = activate(interface, union_array, &lookup);
+                
+                if(status != 0)
+                    return status; /* If the activation of an inter-dependency fails, abort */
+            }
+        }
     
-    return 0; /* The activation of the closure succeeded */
+        /* Finally, activate the mapping itself if it is not activated yet */
+        if(!actual_mapping->activated)
+        {
+            unsigned int i;
+            int status;
+            
+            /* Generate an array of key=value pairs from infrastructure properties */
+            gchar **arguments = generate_activation_arguments(actual_mapping->target);
+            
+            /* Determine length of the activation arguments array */
+            unsigned int arguments_size = g_strv_length(arguments);
+            
+            /* Get the target interface property from the mapping */
+            gchar *target_property = get_target_property(actual_mapping);
+            
+            /* Print debug message */
+            print_activation_step(TRUE, arguments, arguments_size, target_property, actual_mapping);
+    
+            /* Execute the activation operation */
+            status = wait_to_finish(exec_activate(interface, target_property, actual_mapping->type, arguments, arguments_size, actual_mapping->service));
+            
+            /* Cleanup */
+            g_strfreev(arguments);
+        
+            if(status != 0)
+                return status; /* If the activation fails, abort */
+            else
+                actual_mapping->activated = TRUE; /* Mark activation mapping as activated */
+        }
+    
+        return 0; /* The activation of the closure succeeded */
+    }
 }
 
 static int deactivate(gchar *interface, GArray *union_array, const ActivationMapping *mapping, GArray *target_array)
 {
-    /* Retrieve the mapping from the union array */
-    ActivationMapping *actual_mapping = get_activation_mapping(union_array, mapping);
-    
-    /* Find all interdependent mapping on this mapping */
-    GArray *interdependent_mappings = find_interdependent_mappings(union_array, actual_mapping);
-    
-    /* First deactivate all mappings which have an inter-dependency on this mapping */
-    
-    unsigned int i;
-    
-    for(i = 0; i < interdependent_mappings->len; i++)
+    /* Check for an interruption */
+    if(interrupted)
     {
-        ActivationMapping *dependency_mapping = g_array_index(interdependent_mappings, ActivationMapping*, i);
-        int status = deactivate(interface, union_array, dependency_mapping, target_array);
-        
-        if(status != 0)
-        {
-            g_array_free(interdependent_mappings, TRUE);
-            return status; /* If the deactivation of an inter-dependency fails, abort */
-        }
+        g_printerr("[coordinator]: The deactivation process has been interrupted!\n");
+        return 1;
     }
-    
-    g_array_free(interdependent_mappings, TRUE);
-    
-    /* Finally deactivate the mapping itself */
-    if(actual_mapping->activated)
+    else
     {
-        int status;
-        
-        /* Generate an array of key=value pairs from infrastructure properties */
-        gchar **arguments = generate_activation_arguments(actual_mapping->target);
-        
-        /* Determine length of the activation arguments array */
-        unsigned int arguments_size = g_strv_length(arguments);
-        
-        /* Get the target interface property from the mapping */
-        gchar *target_property = get_target_property(actual_mapping);
-        
-        /* Print debug message */
-        print_activation_step(FALSE, arguments, arguments_size, target_property, actual_mapping);
-        
-        if(target_index(target_array, target_property) == -1) /* Only deactivate services on machines that are available */
+        /* Retrieve the mapping from the union array */
+        ActivationMapping *actual_mapping = get_activation_mapping(union_array, mapping);
+    
+        /* Find all interdependent mapping on this mapping */
+        GArray *interdependent_mappings = find_interdependent_mappings(union_array, actual_mapping);
+    
+        /* First deactivate all mappings which have an inter-dependency on this mapping */
+    
+        unsigned int i;
+    
+        for(i = 0; i < interdependent_mappings->len; i++)
         {
-            g_print("[target: %s]: Skip deactivation of service: %s since machine is not present!\n", target_property, actual_mapping->service);
-            status = 0;
-        }
-        else
-            status = wait_to_finish(exec_deactivate(interface, target_property, actual_mapping->type, arguments, arguments_size, actual_mapping->service)); /* Execute the deactivation operation */
+            ActivationMapping *dependency_mapping = g_array_index(interdependent_mappings, ActivationMapping*, i);
+            int status = deactivate(interface, union_array, dependency_mapping, target_array);
         
-        /* Cleanup */
-        g_free(arguments);
+            if(status != 0)
+            {
+                g_array_free(interdependent_mappings, TRUE);
+                return status; /* If the deactivation of an inter-dependency fails, abort */
+            }
+        }
+    
+        g_array_free(interdependent_mappings, TRUE);
+    
+        /* Finally deactivate the mapping itself */
+        if(actual_mapping->activated)
+        {
+            int status;
+        
+            /* Generate an array of key=value pairs from infrastructure properties */
+            gchar **arguments = generate_activation_arguments(actual_mapping->target);
+        
+            /* Determine length of the activation arguments array */
+            unsigned int arguments_size = g_strv_length(arguments);
+        
+            /* Get the target interface property from the mapping */
+            gchar *target_property = get_target_property(actual_mapping);
+        
+            /* Print debug message */
+            print_activation_step(FALSE, arguments, arguments_size, target_property, actual_mapping);
+        
+            if(target_index(target_array, target_property) == -1) /* Only deactivate services on machines that are available */
+            {
+                g_print("[target: %s]: Skip deactivation of service: %s since machine is not present!\n", target_property, actual_mapping->service);
+                status = 0;
+            }
+            else
+                status = wait_to_finish(exec_deactivate(interface, target_property, actual_mapping->type, arguments, arguments_size, actual_mapping->service)); /* Execute the deactivation operation */
+        
+            /* Cleanup */
+            g_free(arguments);
 
-        if(status != 0)
-            return status; /* If the deactivation fails, abort */
-        else
-            actual_mapping->activated = FALSE; /* Mark activation mapping as deactivated */
-    }
+            if(status != 0)
+                return status; /* If the deactivation fails, abort */
+            else
+                actual_mapping->activated = FALSE; /* Mark activation mapping as deactivated */
+        }
     
-    return 0; /* The deactivation of the closure succeeded */
+        return 0; /* The deactivation of the closure succeeded */
+    }
 }
 
 static void rollback_to_old_mappings(GArray *union_array, gchar *interface, GArray *old_activation_mappings)
