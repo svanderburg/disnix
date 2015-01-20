@@ -9,6 +9,7 @@ let
   pkgs_i686_freebsd = import nixpkgs { system = "i686-freebsd"; };
   pkgs_x86_64_freebsd = import nixpkgs { system = "x86_64-freebsd"; };
   pkgs_i686_cygwin = import nixpkgs { system = "i686-cygwin"; };
+  pkgs_x86_64_cygwin = import nixpkgs { system = "x86_64-cygwin"; };
   pkgs_x86_64-solaris = import nixpkgs { system = "x86_64-solaris"; };
   
 in
@@ -33,11 +34,12 @@ rec {
     else if system == "i686-freebsd" then pkgs_i686_freebsd
     else if system == "x86_64-freebsd" then pkgs_x86_64_freebsd
     else if system == "i686-cygwin" then pkgs_i686_cygwin
+    else if system == "x86_64-cygwin" then pkgs_x86_64_cygwin
     else if system == "x86_64-solaris" then pkgs_x86_64-solaris
     else abort "unsupported system type: ${system}";
   
   /*
-   * Iterates over each service in the distribution attributeset, adds the according service
+   * Iterates over each service in the distribution attributeset, adds the corresponding service
    * declaration in the attributeset and augements the targets of every inter-dependency
    * in the dependsOn attributeset
    * 
@@ -95,12 +97,13 @@ rec {
    * services: Services attribute set, augemented with targets in dependsOn
    * servicesFun: Function that returns a services attributeset (defined in the services.nix file)
    * serviceProperty: Defines which property we need of a derivation (either "outPath" or "drvPath")
+   * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
    *
    * Returns:
    * Service attributeset augmented with a distribution mapping property 
    */
    
-  evaluatePkgFunctions = distribution: services: servicesFun: serviceProperty:
+  evaluatePkgFunctions = distribution: services: servicesFun: serviceProperty: targetProperty:
     listToAttrs (map (serviceName: 
       let
         targets = getAttr serviceName distribution;
@@ -121,7 +124,7 @@ rec {
                   if service.dependsOn == {} then unsafeDiscardOutputDependency (pkg.drvPath)
                   else unsafeDiscardOutputDependency ((pkg (service.dependsOn)).drvPath)
                 ;
-              inherit target;
+              target = getAttr targetProperty target;
             }
           ) targets;
         };
@@ -130,8 +133,8 @@ rec {
   ;
 
   /*
-   * Maps a list of inter-dependency declarations to a list of inter-dependency
-   * distributions.
+   * Maps a list of inter-dependency declarations to a list of attribute sets
+   * containing the Nix store path of the service and the targetProperty.
    *
    * Parameters:
    * argNames: argument names of the dependsOn attributeset
@@ -171,7 +174,7 @@ rec {
         { inherit (distributionItem) service target;
           inherit (service) name type;
           inherit targetProperty;
-          dependsOn = generateDependencyMapping (attrNames (service.dependsOn)) (service.dependsOn) services; 
+          dependsOn = generateDependencyMapping (attrNames (service.dependsOn)) (service.dependsOn) services;
         }
       ) (service.distribution);
     in
@@ -207,7 +210,7 @@ rec {
    * serviceActivationMapping: List of activation mappings
    * targetName: Name of the target in the infrastructure model to filter on 
    * infrastructure: Infrastructure attributeset
-   *   
+   * 
    * Returns:
    * List of services and types that are distributed to the given target name
    */
@@ -270,11 +273,10 @@ rec {
    
   generateTargetPropertyList = infrastructure: targetProperty:
     map (targetName:
-      let target = getAttr targetName infrastructure;
+      let
+        target = getAttr targetName infrastructure;
       in
-      { targetProperty = getAttr targetProperty target;
-        numOfCores = if target ? "numOfCores" then target.numOfCores else 1;
-      }
+      target // { numOfCores = if target ? numOfCores then target.numOfCores else 1; }
     ) (attrNames infrastructure)
   ;
   
@@ -299,7 +301,7 @@ rec {
       distribution = distributionFun { inherit infrastructure; };
       initialServices = servicesFun { inherit distribution; system = null; inherit pkgs; };
       servicesWithTargets = augmentTargetsInDependsOn distribution initialServices;
-      servicesWithDistribution = evaluatePkgFunctions distribution servicesWithTargets servicesFun "outPath";
+      servicesWithDistribution = evaluatePkgFunctions distribution servicesWithTargets servicesFun "outPath" targetProperty;
       serviceActivationMapping = generateServiceActivationMapping (attrNames servicesWithDistribution) servicesWithDistribution targetProperty;
     in
     { profiles = generateProfilesMapping pkgs infrastructure (attrNames infrastructure) targetProperty serviceActivationMapping;
@@ -328,7 +330,7 @@ rec {
       distribution = distributionFun { inherit infrastructure; };
       initialServices = servicesFun { inherit distribution; system = null; inherit pkgs; };
       servicesWithTargets = augmentTargetsInDependsOn distribution initialServices;
-      servicesWithDistribution = evaluatePkgFunctions distribution servicesWithTargets servicesFun "drvPath";
+      servicesWithDistribution = evaluatePkgFunctions distribution servicesWithTargets servicesFun "drvPath" targetProperty;
       serviceActivationMapping = generateServiceActivationMapping (attrNames servicesWithDistribution) servicesWithDistribution targetProperty;
     in
     map (mappingItem: { derivation = mappingItem.service; target = getAttr targetProperty (mappingItem.target); }) serviceActivationMapping

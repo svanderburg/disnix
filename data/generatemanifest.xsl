@@ -16,33 +16,15 @@
 	  <mapping>
             <dependsOn>
 	      <xsl:for-each select="attr[@name='dependsOn']/list/attrs">
-	        <dependency>
-	          <service><xsl:value-of select="attr[@name='service']/string/@value" /></service>
-		  <target>
-		    <xsl:for-each select="attr[@name='target']/attrs/attr">
-	              <xsl:element name="{@name}">
-			<xsl:value-of select="*/@value" />
-			<xsl:for-each select="list/*">
-			  <xsl:value-of select="@value" /><xsl:text>&#x20;</xsl:text>
-			</xsl:for-each>
-		      </xsl:element>
-	            </xsl:for-each>
-		  </target>
+		<dependency>
+		  <service><xsl:value-of select="attr[@name='service']/string/@value" /></service>
+		  <target><xsl:value-of select="attr[@name='target']/string/@value" /></target>
 		</dependency>
 	      </xsl:for-each>
 	    </dependsOn>
 	    <name><xsl:value-of select="attr[@name='name']/string/@value" /></name>
 	    <service><xsl:value-of select="attr[@name='service']/string/@value" /></service>
-	    <target>
-	      <xsl:for-each select="attr[@name='target']/attrs/attr">
-	        <xsl:element name="{@name}">
-		  <xsl:value-of select="*/@value" />
-		  <xsl:for-each select="list/*">
-		    <xsl:value-of select="@value" /><xsl:text>&#x20;</xsl:text>
-		  </xsl:for-each>
-		</xsl:element>
-	      </xsl:for-each>
-	    </target>
+	    <target><xsl:value-of select="attr[@name='target']/string/@value" /></target>
 	    <targetProperty><xsl:value-of select="attr[@name='targetProperty']/string/@value" /></targetProperty>
 	    <type><xsl:value-of select="attr[@name='type']/string/@value" /></type>
 	  </mapping>
@@ -51,8 +33,14 @@
       <targets>
 	<xsl:for-each select="attr[@name='targets']/list/attrs">
 	  <target>
-	    <targetProperty><xsl:value-of select="attr[@name='targetProperty']/string/@value" /></targetProperty>
-	    <numOfCores><xsl:value-of select="attr[@name='numOfCores']/int/@value" /></numOfCores>
+	    <xsl:for-each select="attr">
+	      <xsl:element name="{@name}">
+		<xsl:value-of select="*/@value" />
+		  <xsl:for-each select="list/*">
+		  <xsl:value-of select="@value" /><xsl:text>&#x20;</xsl:text>
+		</xsl:for-each>
+	      </xsl:element>
+	    </xsl:for-each>
 	  </target>
 	</xsl:for-each>
       </targets>
