@@ -22,26 +22,14 @@
 #include <glib.h>
 
 /**
- * Maps a target property onto a value
- */
-typedef struct
-{
-    /** Target property name */
-    gchar *name;
-    /** Target property value */
-    gchar *value;
-}
-TargetProperty;
-
-/**
  * Contains properties of an inter-dependency
  */
 typedef struct
 {
     /** Nix store path to the service */
     gchar *service;
-    /** Array with properties of the target machine */
-    GArray *target;
+    /** Target property referring to the target machine to which the service is deployed */
+    gchar *target;
 }
 Dependency;
 
@@ -54,8 +42,8 @@ typedef struct
 {
     /** Nix store path to the service */
     gchar *service;
-    /** Array with properties of the target machine */
-    GArray *target;
+    /** Target property referring to the target machine to which the service is deployed */
+    gchar *target;
     /* Name of the service */
     gchar *name;
     /** Property used to connect to the disnix service */
@@ -138,25 +126,6 @@ GArray *substract_activation_array(GArray *left, GArray *right);
  *         marked as active and inactive
  */
 GArray *union_activation_array(GArray *left, GArray *right, GArray *intersect);
-
-/**
- * Generates a string vector with: 'name=value' pairs from the
- * target properties, which are passed to the activation module as
- * environment variables.
- *
- * @param target Array with target properties
- * @return String with environment variable settings
- */
-gchar **generate_activation_arguments(const GArray *target);
-
-/**
- * Returns the target interface property from the given
- * activation mapping.
- *
- * @param mapping Activation mapping
- * @return The target interface value
- */
-gchar *get_target_property(const ActivationMapping *mapping);
 
 /**
  * Searches for all the mappings in an array that have an inter-dependency

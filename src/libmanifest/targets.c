@@ -21,12 +21,23 @@
 #include <stdlib.h>
 #include <xmlutil.h>
 
-static gint compare_target_item(const TargetItem **l, const TargetItem **r)
+static gint compare_target_property(const TargetProperty **l, const TargetProperty **r)
 {
-    const TargetItem *left = *l;
-    const TargetItem *right = *r;
+    const TargetProperty *left = *l;
+    const TargetProperty *right = *r;
     
-    return g_strcmp0(left->targetProperty, right->targetProperty);
+    return g_strcmp0(left->name, right->name);
+}
+
+static gint compare_target(const GArray **l, const GArray **r)
+{
+    const GArray *left = *l;
+    const GArray *right = *r;
+    
+    gchar *left_target_property = get_target_key(left);
+    gchar *right_target_property = get_target_key(right);
+    
+    return g_strcmp0(left_target_property, right_target_property);
 }
 
 GArray *generate_target_array(const gchar *manifest_file)
@@ -51,7 +62,7 @@ GArray *generate_target_array(const gchar *manifest_file)
     
     if(node_root == NULL)
     {
-        g_printerr("The manifest XML file is empty!\n");
+	g_printerr("The manifest XML file is empty!\n");
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
 	return NULL;
@@ -68,32 +79,34 @@ GArray *generate_target_array(const gchar *manifest_file)
 	xmlNodeSetPtr nodeset = result->nodesetval;
 	
 	/* Create a targets array */
-        targets_array = g_array_new(FALSE, FALSE, sizeof(TargetItem*));
+	targets_array = g_array_new(FALSE, FALSE, sizeof(GArray*));
 	
-	/* Iterate over all the mapping elements */
+	/* Iterate over all the target elements */
 	for(i = 0; i < nodeset->nodeNr; i++)
-        {
+	{
 	    xmlNodePtr targets_children = nodeset->nodeTab[i]->children;
-	    TargetItem *targetItem = (TargetItem*)g_malloc(sizeof(TargetItem));
-	    gchar *targetProperty = NULL;
-	    unsigned int numOfCores = 1;
+	    GArray *target = g_array_new(FALSE, FALSE, sizeof(GArray*));
 	    
 	    while(targets_children != NULL)
 	    {
-	        if(xmlStrcmp(targets_children->name, "targetProperty") == 0)
-	            targetProperty = g_strdup(targets_children->children->content);
-	        else if(xmlStrcmp(targets_children->name, "numOfCores") == 0)
-	            numOfCores = atoi(targets_children->children->content);
+	        TargetProperty *targetProperty = (TargetProperty*)g_malloc(sizeof(TargetProperty));
+	        targetProperty->name = g_strdup(targets_children->name);
+	        targetProperty->value = g_strdup(targets_children->children->content);
+	        
+	        g_array_append_val(target, targetProperty);
 	        
 	        targets_children = targets_children->next;
 	    }
 	    
-	    targetItem->targetProperty = targetProperty;
-	    targetItem->numOfCores = numOfCores;
+	    /* Sort the target properties */
+	    g_array_sort(target, (GCompareFunc)compare_target_property);
 	    
 	    /* Add target item to the targets array */
-	    g_array_append_val(targets_array, targetItem);
+	    g_array_append_val(targets_array, target);
 	}
+	
+	/* Sort the targets array */
+	g_array_sort(targets_array, (GCompareFunc)compare_target);
 	
 	xmlXPathFreeObject(result);
     }
@@ -101,9 +114,6 @@ GArray *generate_target_array(const gchar *manifest_file)
     /* Cleanup */
     xmlFreeDoc(doc);
     xmlCleanupParser();
-
-    /* Sort the array */
-    g_array_sort(targets_array, (GCompareFunc)compare_target_item);
     
     /* Return the distribution array */
     return targets_array;
@@ -117,16 +127,26 @@ void delete_target_array(GArray *target_array)
         
         for(i = 0; i < target_array->len; i++)
         {
-            TargetItem *targetItem = g_array_index(target_array, TargetItem*, i);
-            g_free(targetItem->targetProperty);
-            g_free(targetItem);
+            GArray *target = g_array_index(target_array, GArray*, i);
+            unsigned int j;
+            
+            for(j = 0; j < target->len; j++)
+            {
+                TargetProperty *targetProperty = g_array_index(target_array, TargetProperty*, j);
+                
+                g_free(targetProperty->name);
+                g_free(targetProperty->value);
+                g_free(targetProperty);
+            }
+            
+            g_array_free(target, TRUE);
         }
     
         g_array_free(target_array, TRUE);
     }
 }
 
-int target_index(const GArray *target_array, const gchar *target)
+int target_index(const GArray *target_array, const gchar *key)
 {
     gint left = 0;
     gint right = target_array->len - 1;
@@ -134,8 +154,31 @@ int target_index(const GArray *target_array, const gchar *target)
     while(left <= right)
     {
 	gint mid = (left + right) / 2;
-	TargetItem *mid_target = g_array_index(target_array, TargetItem*, mid);
-        gint status = g_strcmp0(mid_target->targetProperty, target);
+	GArray *mid_target = g_array_index(target_array, GArray*, mid);
+	gchar *target_key = get_target_key(mid_target);
+	gint status = g_strcmp0(target_key, key);
+	
+	if(status == 0)
+	    return mid; /* Return index of the found target */
+	else if(status > 0)
+	    right = mid - 1;
+	else if(status < 0)
+	    left = mid + 1;
+    }
+    
+    return -1; /* Target not found */
+}
+
+int target_property_index(const GArray *target, const gchar *name)
+{
+    gint left = 0;
+    gint right = target->len - 1;
+    
+    while(left <= right)
+    {
+	gint mid = (left + right) / 2;
+	TargetProperty *mid_target_property = g_array_index(target, TargetProperty*, mid);
+	gint status = g_strcmp0(mid_target_property->name, name);
 	
 	if(status == 0)
             return mid; /* Return index of the found target */
@@ -146,4 +189,39 @@ int target_index(const GArray *target_array, const gchar *target)
     }
     
     return -1; /* Target not found */
+}
+
+gchar *get_target_property(const GArray *target, const gchar *name)
+{
+    int index = target_property_index(target, name);
+    
+    if(index == -1)
+        return NULL;
+    else
+    {
+        TargetProperty *targetProperty = g_array_index(target, TargetProperty*, index);
+        return targetProperty->value;
+    }
+}
+
+gchar *get_target_key(const GArray *target)
+{
+    gchar *target_property_name = get_target_property(target, "targetProperty");
+    return get_target_property(target, target_property_name);
+}
+
+gchar **generate_activation_arguments(const GArray *target)
+{
+    unsigned int i;
+    gchar **arguments = (gchar**)g_malloc((target->len + 1) * sizeof(gchar*));
+    
+    for(i = 0; i < target->len; i++)
+    {
+	TargetProperty *target_property = g_array_index(target, TargetProperty*, i);
+	arguments[i] = g_strconcat(target_property->name, "=", target_property->value, NULL);
+    }
+    
+    arguments[i] = NULL;
+    
+    return arguments;
 }

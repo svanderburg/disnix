@@ -22,17 +22,17 @@
 #include <glib.h>
 
 /**
- * Contains global activation properties of a specific machine.
+ * Contains a property of a specific target machine.
  */
 typedef struct
 {
-    /** The target address under which the machine is reachable */
-    gchar *targetProperty;
+    /** Name of the property */
+    gchar *name;
     
-    /** The number of cores that the machine has */
-    unsigned int numOfCores;
+    /** Value of the property */
+    gchar *value;
 }
-TargetItem;
+TargetProperty;
 
 /**
  * Creates a new array with targets from a manifest file
@@ -50,13 +50,50 @@ GArray *generate_target_array(const gchar *manifest_file);
 void delete_target_array(GArray *target_array);
 
 /**
- * Returns the index of the given target in the target array
- * or -1 if the target does not exists.
+ * Returns the index of a target with a given key in the
+ * target array.
  *
- * @param target_array Array of possible targets
- * @param target Target to lookup
- * @return Index of target in the array, or -1 if not found
+ * @param target_array Array of arrays representing target machines with properties
+ * @param key Value of a target property serving as the key to look the machine up
+ * @return The index of the target or -1 if the target cannot be found
  */
-int target_index(const GArray *target_array, const gchar *target);
+int target_index(const GArray *target_array, const gchar *key);
+
+/**
+ * Returns the index of a target property of a target machine.
+ *
+ * @param target Array containing properties of a target machine
+ * @param name Name of the property to retrieve
+ * @return The index of the target property or -1 if the target property cannot be found
+ */
+int target_property_index(const GArray *target, const gchar *name);
+
+/**
+ * Retrieves the value of a target property with the given name.
+ *
+ * @param target Array containing properties of a target machine
+ * @param name Name of the property to retrieve
+ * @return The value of the target property or NULL if it does not exists
+ */
+gchar *get_target_property(const GArray *target, const gchar *name);
+
+/**
+ * Retrieves the value of the target property that serves as the key to identify
+ * the machine.
+ *
+ * @param target Array containing properties of a target machine
+ * @return The key value of identifying the machine or NULL if it does not exists
+ */
+gchar *get_target_key(const GArray *target);
+
+/**
+ * Generates a string vector with: 'name=value' pairs from the
+ * target properties, which are passed to the activation module as
+ * environment variables.
+ *
+ * @param target Array with target properties
+ * @return String with environment variable settings
+ */
+gchar **generate_activation_arguments(const GArray *target);
 
 #endif

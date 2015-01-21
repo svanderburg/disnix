@@ -30,42 +30,11 @@ static gint compare_activation_mapping(const ActivationMapping **l, const Activa
     
     /* Compare the service names */
     gint status = g_strcmp0(left->service, right->service);
-
-    /* If services are equal then compare the targets */
+    
     if(status == 0)
-    {
-	unsigned int i;
-		
-	for(i = 0; i < min(left->target->len, right->target->len); i++)
-	{
-	    TargetProperty *left_property = g_array_index(left->target, TargetProperty*, i);
-	    TargetProperty *right_property = g_array_index(right->target, TargetProperty*, i);
-	    
-	    /* Compare the target property names */
-	    status = g_strcmp0(left_property->name, right_property->name);
-	    
-	    /* If names are equal then compare the values */
-	    if(status == 0)
-	    {
-		status = g_strcmp0(left_property->value, right_property->value);
-		
-		if(status != 0)
-		    return status;
-	    }
-	    else
-		return status;
-	}
-	
-	/* The shortest property array takes precendence in case if the other target properties match */
-	if(left->target->len < right->target->len)
-	    return -1;
-	else if(left->target->len > right->target->len)
-	    return 1;
-	else
-	    return 0; /* Seems that both property arrays are identical */
-    }
+        return g_strcmp0(left->target, right->target); /* If services are equal then compare the targets */
     else
-	return status;
+        return status;
 }
 
 gint activation_mapping_index(const GArray *activation_array, const ActivationMapping *keys)
@@ -107,35 +76,21 @@ void print_activation_array(const GArray *activation_array)
     
     for(i = 0; i < activation_array->len; i++)
     {
-	unsigned int j;
 	ActivationMapping *mapping = g_array_index(activation_array, ActivationMapping*, i);
+	unsigned int j;
 	
 	g_print("service: %s\n", mapping->service);
-	g_print("target:\n");
-	
-	for(j = 0; j < mapping->target->len; j++)
-	{
-	    TargetProperty *property = g_array_index(mapping->target, TargetProperty*, j);
-	    g_print("  name: %s, value: %s\n", property->name, property->value);
-	}
-	
+	g_print("target: %s\n", mapping->target);
 	g_print("targetProperty: %s\n", mapping->targetProperty);
 	g_print("type: %s\n", mapping->type);
 	g_print("dependsOn:\n");
 	
 	for(j = 0; j < mapping->depends_on->len; j++)
 	{
-	    unsigned int k;
 	    Dependency *dependency = g_array_index(mapping->depends_on, Dependency*, j);
 	    
 	    g_print("  service: %s\n", dependency->service);
-	    g_print("  target:\n");
-	    
-	    for(k = 0; k < dependency->target->len; k++)
-	    {
-		TargetProperty *property = g_array_index(dependency->target, TargetProperty*, k);
-		g_print("    name: %s, value: %s\n", property->name, property->value);
-	    }	    
+	    g_print("  target: %s\n", mapping->target);
 	}
 	
 	g_print("\n");
@@ -187,7 +142,7 @@ GArray *create_activation_array(const gchar *manifest_file)
         {
 	    xmlNodePtr mapping_children = nodeset->nodeTab[i]->children;
 	    gchar *service = NULL;
-	    GArray *target = NULL;
+	    gchar *target = NULL;
 	    gchar *targetProperty = NULL;
 	    gchar *name = NULL;
 	    gchar *type = NULL;
@@ -207,32 +162,7 @@ GArray *create_activation_array(const gchar *manifest_file)
 		else if(xmlStrcmp(mapping_children->name, "type") == 0)
 		    type = g_strdup(mapping_children->children->content);
 		else if(xmlStrcmp(mapping_children->name, "target") == 0)
-		{
-		    xmlNodePtr target_children = mapping_children->children;
-		    
-		    target = g_array_new(FALSE, FALSE, sizeof(TargetProperty*));
-		    
-		    /* Iterate over the target children (target properties) */
-		    
-		    while(target_children != NULL)
-		    {
-			TargetProperty *property = (TargetProperty*)g_malloc(sizeof(TargetProperty));
-			
-			if(xmlStrcmp(target_children->name, (xmlChar*) "text") != 0) /* It seems that a text node is added when the manifest is pretty printed */
-			{
-			    property->name = g_strdup(target_children->name);
-			    
-			    if(target_children->children == NULL)
-				property->value = NULL;
-			    else
-				property->value = g_strdup(target_children->children->content);
-			
-			    g_array_append_val(target, property);
-			}
-			
-			target_children = target_children->next;
-		    }
-		}
+		    target = g_strdup(mapping_children->children->content);
 		else if(xmlStrcmp(mapping_children->name, "dependsOn") == 0)
 		{
 		    xmlNodePtr depends_on_children = mapping_children->children;
@@ -242,8 +172,8 @@ GArray *create_activation_array(const gchar *manifest_file)
 		    while(depends_on_children != NULL)
 		    {
 			xmlNodePtr dependency_children = depends_on_children->children;
-			gchar *service;
-			GArray *target;
+			gchar *service = NULL;
+			gchar *target = NULL;
 			Dependency *dependency = (Dependency*)g_malloc(sizeof(Dependency));
 			
 			if(xmlStrcmp(depends_on_children->name, "dependency") == 0) /* Only iterate over dependency nodes */
@@ -254,33 +184,8 @@ GArray *create_activation_array(const gchar *manifest_file)
 				if(xmlStrcmp(dependency_children->name, (xmlChar*) "service") == 0)
 				    service = g_strdup(dependency_children->children->content);
 				else if(xmlStrcmp(dependency_children->name, (xmlChar*) "target") == 0)
-				{
-				    xmlNodePtr target_children = dependency_children->children;
-		    
-				    target = g_array_new(FALSE, FALSE, sizeof(TargetProperty*));
-		    
-				    /* Iterate over the target children (target properties) */
-		    
-				    while(target_children != NULL)
-				    {
-					TargetProperty *property = (TargetProperty*)g_malloc(sizeof(TargetProperty));
-			
-					if(xmlStrcmp(target_children->name, (xmlChar*) "text") != 0) /* It seems that a text node is added when the manifest is pretty printed */
-					{
-					    property->name = g_strdup(target_children->name);
-					    
-					    if(target_children->children == NULL)
-						property->value = NULL;
-					    else
-						property->value = g_strdup(target_children->children->content);
-			
-					    g_array_append_val(target, property);
-					}
+				    target = g_strdup(dependency_children->children->content);
 				    
-					target_children = target_children->next;
-				    }
-				}
-
 				dependency_children = dependency_children->next;
 			    }
 			
@@ -320,24 +225,6 @@ GArray *create_activation_array(const gchar *manifest_file)
     return activation_array;
 }
 
-static void delete_target_array(GArray *target)
-{
-    if(target != NULL)
-    {
-        unsigned int i;
-        
-        for(i = 0; i < target->len; i++)
-        {
-            TargetProperty *target_property = g_array_index(target, TargetProperty*, i);
-            g_free(target_property->name);
-            g_free(target_property->value);
-            g_free(target_property);
-       }
-       
-        g_array_free(target, TRUE);
-    }
-}
-
 void delete_activation_array(GArray *activation_array)
 {
     if(activation_array != NULL)
@@ -350,7 +237,7 @@ void delete_activation_array(GArray *activation_array)
             unsigned int j;
             
             g_free(mapping->service);
-            delete_target_array(mapping->target);
+            g_free(mapping->target);
             g_free(mapping->targetProperty);
             g_free(mapping->name);
             g_free(mapping->type);
@@ -361,7 +248,7 @@ void delete_activation_array(GArray *activation_array)
                 {
                     Dependency *dependency = g_array_index(mapping->depends_on, Dependency*, j);
                     g_free(dependency->service);
-                    delete_target_array(dependency->target);
+                    g_free(dependency->target);
                     g_free(dependency);
                 }
             }
@@ -462,37 +349,6 @@ GArray *substract_activation_array(GArray *left, GArray *right)
     /* Return the activation array */
     return return_array;
 
-}
-
-gchar **generate_activation_arguments(const GArray *target)
-{
-    unsigned int i;
-    gchar **arguments = (gchar**)g_malloc((target->len + 1) * sizeof(gchar*));
-    
-    for(i = 0; i < target->len; i++)
-    {
-	TargetProperty *target_property = g_array_index(target, TargetProperty*, i);
-	arguments[i] = g_strconcat(target_property->name, "=", target_property->value, NULL);
-    }
-    
-    arguments[i] = NULL;
-    
-    return arguments;
-}
-
-gchar *get_target_property(const ActivationMapping *mapping)
-{
-    unsigned int i;
-    
-    for(i = 0; i < mapping->target->len; i++)
-    {
-	TargetProperty *target_property = g_array_index(mapping->target, TargetProperty*, i);
-	
-	if(g_strcmp0(target_property->name, mapping->targetProperty) == 0)
-	    return target_property->value;
-    }
-    
-    return NULL;
 }
 
 GArray *find_interdependent_mappings(GArray *activation_array, const ActivationMapping *mapping)
