@@ -336,7 +336,7 @@ rec {
       servicesWithDistribution = evaluatePkgFunctions distribution servicesWithTargets servicesFun "drvPath" targetProperty;
       serviceActivationMapping = generateServiceActivationMapping (attrNames servicesWithDistribution) servicesWithDistribution targetProperty;
     in
-    map (mappingItem: { derivation = mappingItem.service; target = getAttr targetProperty (mappingItem.target); }) serviceActivationMapping
+    map (mappingItem: { derivation = mappingItem.service; target = mappingItem.target; }) serviceActivationMapping
   ;
   
   /**
