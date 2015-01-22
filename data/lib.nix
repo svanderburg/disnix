@@ -276,7 +276,10 @@ rec {
       let
         target = getAttr targetName infrastructure;
       in
-      target // { numOfCores = if target ? numOfCores then target.numOfCores else 1; }
+      target // {
+        targetProperty = if target ? targetProperty then target.targetProperty else targetProperty;
+        numOfCores = if target ? numOfCores then target.numOfCores else 1;
+      }
     ) (attrNames infrastructure)
   ;
   

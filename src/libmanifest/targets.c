@@ -132,7 +132,7 @@ void delete_target_array(GArray *target_array)
             
             for(j = 0; j < target->len; j++)
             {
-                TargetProperty *targetProperty = g_array_index(target_array, TargetProperty*, j);
+                TargetProperty *targetProperty = g_array_index(target, TargetProperty*, j);
                 
                 g_free(targetProperty->name);
                 g_free(targetProperty->value);
@@ -143,6 +143,27 @@ void delete_target_array(GArray *target_array)
         }
     
         g_array_free(target_array, TRUE);
+    }
+}
+
+void print_target_array(const GArray *target_array)
+{
+    unsigned int i;
+    
+    for(i = 0; i < target_array->len; i++)
+    {
+        GArray *target = g_array_index(target_array, GArray*, i);
+        unsigned int j;
+        
+        g_print("Target:\n");
+        
+        for(j = 0; j < target->len; j++)
+        {
+            TargetProperty* targetProperty = g_array_index(target, TargetProperty*, j);
+            g_print("  %s = %s;\n", targetProperty->name, targetProperty->value);
+        }
+        
+        g_print("\n");
     }
 }
 
@@ -167,6 +188,16 @@ int target_index(const GArray *target_array, const gchar *key)
     }
     
     return -1; /* Target not found */
+}
+
+GArray *get_target(const GArray *target_array, const gchar *key)
+{
+    int index = target_index(target_array, key);
+    
+    if(index == -1)
+        return NULL;
+    else
+        return g_array_index(target_array, GArray*, index);
 }
 
 int target_property_index(const GArray *target, const gchar *name)
@@ -207,7 +238,11 @@ gchar *get_target_property(const GArray *target, const gchar *name)
 gchar *get_target_key(const GArray *target)
 {
     gchar *target_property_name = get_target_property(target, "targetProperty");
-    return get_target_property(target, target_property_name);
+    
+    if(target_property_name == NULL)
+        return NULL;
+    else
+        return get_target_property(target, target_property_name);
 }
 
 gchar **generate_activation_arguments(const GArray *target)

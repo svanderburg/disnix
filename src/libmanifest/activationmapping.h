@@ -77,19 +77,21 @@ void delete_activation_array(GArray *activation_array);
  * in the activation array.
  *
  * @param activation_array Activation array
- * @param keys Activation array containing key attributes
+ * @param service Nix store path to the service
+ * @param target Target property referring to the target machine to which the service is deployed
  * @return Index of the activation mapping or -1 if not found
  */
-gint activation_mapping_index(const GArray *activation_array, const ActivationMapping *keys);
+gint activation_mapping_index(const GArray *activation_array, gchar *service, gchar *target);
 
 /**
  * Returns the activation mapping with the given keys in the activation array.
  *
  * @param activation_array Activation array
- * @param keys Activation array containing key attributes
+ * @param service Nix store path to the service
+ * @param target Target property referring to the target machine to which the service is deployed
  * @return The activation array with the specified keys, or NULL if cannot be found
  */
-ActivationMapping *get_activation_mapping(const GArray *activation_array, const ActivationMapping *keys);
+ActivationMapping *get_activation_mapping(const GArray *activation_array, gchar *service, gchar *target);
 
 /**
  * Returns the intersection of the two given arrays.

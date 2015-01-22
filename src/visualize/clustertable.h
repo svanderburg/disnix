@@ -26,9 +26,10 @@
  * of a machine the deployed services.
  *
  * @param activation_array Array with activation mappings
+ * @param target_array Array with targets
  * @return Generated cluster table
  */ 
-GHashTable *generate_cluster_table(GArray *activation_array);
+GHashTable *generate_cluster_table(GArray *activation_array, GArray *target_array);
 
 /**
  * Removes a clustered table including all its contents from memory

@@ -25,10 +25,11 @@
  * Generates a table which associates each activation mapping of
  * a manifest to a list of its inter-dependencies
  *
- * @param activation_array
+ * @param activation_array Array with activation mappings
+ * @param target_array Array with targets
  * @return Generated edges table
  */
-GHashTable *generate_edges_table(const GArray *activation_array);
+GHashTable *generate_edges_table(const GArray *activation_array, GArray *targets_array);
 
 /**
  * Removes an edges table including all its contents from memory.

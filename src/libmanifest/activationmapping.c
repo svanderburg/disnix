@@ -37,7 +37,7 @@ static gint compare_activation_mapping(const ActivationMapping **l, const Activa
         return status;
 }
 
-gint activation_mapping_index(const GArray *activation_array, const ActivationMapping *keys)
+gint activation_mapping_index(const GArray *activation_array, gchar *service, gchar *target)
 {
     gint left = 0;
     gint right = activation_array->len - 1;
@@ -46,7 +46,14 @@ gint activation_mapping_index(const GArray *activation_array, const ActivationMa
     {
 	gint mid = (left + right) / 2;
 	const ActivationMapping *mid_mapping = g_array_index(activation_array, ActivationMapping*, mid);
-        gint status = compare_activation_mapping(&mid_mapping, &keys);
+	ActivationMapping keys;
+	const ActivationMapping *keys_ptr = &keys;
+	gint status;
+	
+	keys.service = service;
+	keys.target = target;
+	
+        status = compare_activation_mapping(&mid_mapping, &keys_ptr);
 	
 	if(status == 0)
             return mid; /* Return index of the found activation mapping */
@@ -59,10 +66,10 @@ gint activation_mapping_index(const GArray *activation_array, const ActivationMa
     return -1; /* Activation mapping not found */
 }
 
-ActivationMapping *get_activation_mapping(const GArray *activation_array, const ActivationMapping *keys)
+ActivationMapping *get_activation_mapping(const GArray *activation_array, gchar *service, gchar *target)
 {
     /* Search for the location of the mapping in the union array */
-    gint actual_mapping_index = activation_mapping_index(activation_array, keys);
+    gint actual_mapping_index = activation_mapping_index(activation_array, service, target);
     
     if(actual_mapping_index == -1)
         return NULL;
@@ -272,8 +279,8 @@ GArray *intersect_activation_array(GArray *left, GArray *right)
 	{
 	    ActivationMapping *left_mapping = g_array_index(left, ActivationMapping*, i);
 	    
-	    if(activation_mapping_index(right, left_mapping) != -1)
-		g_array_append_val(return_array, left_mapping);	    
+	    if(activation_mapping_index(right, left_mapping->service, left_mapping->target) != -1)
+		g_array_append_val(return_array, left_mapping);
 	}
     }
     else
@@ -282,9 +289,9 @@ GArray *intersect_activation_array(GArray *left, GArray *right)
 	{
 	    ActivationMapping *right_mapping = g_array_index(right, ActivationMapping*, i);
 
-	    if(activation_mapping_index(left, right_mapping) != -1)
-		g_array_append_val(return_array, right_mapping);	    
-	}    
+	    if(activation_mapping_index(left, right_mapping->service, right_mapping->target) != -1)
+		g_array_append_val(return_array, right_mapping);
+	}
     }
     
     return return_array;
@@ -311,7 +318,7 @@ GArray *union_activation_array(GArray *left, GArray *right, GArray *intersect)
 	ActivationMapping *mapping = g_array_index(right, ActivationMapping*, i);
 	mapping->activated = FALSE;
 	
-	if(activation_mapping_index(intersect, mapping) == -1)
+	if(activation_mapping_index(intersect, mapping->service, mapping->target) == -1)
 	    g_array_append_val(return_array, mapping);
     }
     
@@ -340,7 +347,7 @@ GArray *substract_activation_array(GArray *left, GArray *right)
     for(i = 0; i < right->len; i++)
     {
 	ActivationMapping *mapping = g_array_index(right, ActivationMapping*, i);
-	gint index = activation_mapping_index(return_array, mapping);
+	gint index = activation_mapping_index(return_array, mapping->service, mapping->target);
 	
 	if(index != -1)
 	    g_array_remove_index(return_array, index);

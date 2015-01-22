@@ -20,14 +20,14 @@
 #include "graph.h"
 #include "edgestable.h"
 #include "clustertable.h"
-#include <activationmapping.h>
+#include <manifest.h>
 
 int generate_graph(const gchar *manifest_file)
 {
-    /* Creates an array with activation items from the manifest */
-    GArray *activation_array = create_activation_array(manifest_file);
+    /* Creates a manifest object */
+    Manifest *manifest = create_manifest(manifest_file);
     
-    if(activation_array == NULL)
+    if(manifest == NULL)
     {
         g_printerr("Error with opening manifest file!\n");
         return 1;
@@ -35,10 +35,10 @@ int generate_graph(const gchar *manifest_file)
     else
     {
         /* Creates a table which maps each target onto a list of mappings */
-        GHashTable *cluster_table = generate_cluster_table(activation_array);
+        GHashTable *cluster_table = generate_cluster_table(manifest->activation_array, manifest->target_array);
     
         /* Creates a table which associates each mapping to its dependencies */
-        GHashTable *edges_table = generate_edges_table(activation_array);
+        GHashTable *edges_table = generate_edges_table(manifest->activation_array, manifest->target_array);
     
         GHashTableIter iter;
         gpointer *key;
@@ -92,7 +92,7 @@ int generate_graph(const gchar *manifest_file)
         /* Cleanup */
         destroy_cluster_table(cluster_table);
         destroy_edges_table(edges_table);
-        delete_activation_array(activation_array);
+        delete_manifest(manifest);
         
         return 0;
     }

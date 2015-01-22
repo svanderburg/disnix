@@ -19,8 +19,9 @@
 
 #include "clustertable.h"
 #include <activationmapping.h>
+#include <targets.h>
 
-GHashTable *generate_cluster_table(GArray *activation_array)
+GHashTable *generate_cluster_table(GArray *activation_array, GArray *target_array)
 {
     unsigned int i;
     
@@ -34,10 +35,11 @@ GHashTable *generate_cluster_table(GArray *activation_array)
 	ActivationMapping *mapping = g_array_index(activation_array, ActivationMapping*, i);
 	
 	/* Get target property of the current mapping item */
-	gchar *target = get_target_property(mapping);
-		
+	GArray *target = get_target(target_array, mapping->target);
+	gchar *target_key = get_target_key(target);
+	
 	/* See whether the target already exists in the table */
-	GArray *services_array = g_hash_table_lookup(cluster_table, target);
+	GArray *services_array = g_hash_table_lookup(cluster_table, target_key);
 	
 	/*
 	 * If the target is not yet in the table, create a new empty array
@@ -45,11 +47,11 @@ GHashTable *generate_cluster_table(GArray *activation_array)
 	 */
 	if(services_array == NULL)
 	{
-	    services_array = g_array_new(FALSE, FALSE, sizeof(gchar*));  
-	    g_hash_table_insert(cluster_table, target, services_array);
+	    services_array = g_array_new(FALSE, FALSE, sizeof(gchar*));
+	    g_hash_table_insert(cluster_table, target_key, services_array);
 	}
 	
-	/* Append service to the array */	
+	/* Append service to the array */
 	g_array_append_val(services_array, mapping->service);
     }
     
@@ -61,7 +63,7 @@ void destroy_cluster_table(GHashTable *cluster_table)
 {
     GHashTableIter iter;
     gpointer *key;
-    gpointer *value;    
+    gpointer *value;
 
     g_hash_table_iter_init(&iter, cluster_table);
     while(g_hash_table_iter_next(&iter, (gpointer*)&key, (gpointer*)&value)) 

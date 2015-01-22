@@ -49,6 +49,8 @@ GArray *generate_target_array(const gchar *manifest_file);
  */
 void delete_target_array(GArray *target_array);
 
+void print_target_array(const GArray *target_array);
+
 /**
  * Returns the index of a target with a given key in the
  * target array.
@@ -58,6 +60,8 @@ void delete_target_array(GArray *target_array);
  * @return The index of the target or -1 if the target cannot be found
  */
 int target_index(const GArray *target_array, const gchar *key);
+
+GArray *get_target(const GArray *target_array, const gchar *key);
 
 /**
  * Returns the index of a target property of a target machine.

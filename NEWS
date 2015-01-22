@@ -10,6 +10,8 @@ Version 0.3
 
 - Implemented DISNIX_PROFILE environment variable
 
+- Simplified manifest format
+
 - Many additional testcases and bugfixes
 
 Version 0.2
