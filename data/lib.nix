@@ -189,17 +189,18 @@ rec {
    * serviceActivationMapping: List of activation mappings
    * targetName: Name of the target in the infrastructure model to filter on 
    * infrastructure: Infrastructure attributeset
-   *   
+   * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
+   *
    * Returns:
    * List of services that are distributed to the given target name
    */
    
-  queryServicesByTargetName = serviceActivationMapping: targetName: infrastructure:
+  queryServicesByTargetName = serviceActivationMapping: targetName: infrastructure: targetProperty:
     if serviceActivationMapping == [] then []
     else
-      if (head serviceActivationMapping).target == getAttr targetName infrastructure
-      then [ (head serviceActivationMapping).service ] ++ (queryServicesByTargetName (tail serviceActivationMapping) targetName infrastructure)
-      else queryServicesByTargetName (tail serviceActivationMapping) targetName infrastructure
+      if (head serviceActivationMapping).target == getAttr targetProperty (getAttr targetName infrastructure)
+      then [ (head serviceActivationMapping).service ] ++ (queryServicesByTargetName (tail serviceActivationMapping) targetName infrastructure targetProperty)
+      else queryServicesByTargetName (tail serviceActivationMapping) targetName infrastructure targetProperty
   ;
 
   /*
@@ -210,17 +211,18 @@ rec {
    * serviceActivationMapping: List of activation mappings
    * targetName: Name of the target in the infrastructure model to filter on 
    * infrastructure: Infrastructure attributeset
+   * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
    * 
    * Returns:
    * List of services and types that are distributed to the given target name
    */
   
-  generateProfileManifest = serviceActivationMapping: targetName: infrastructure:
+  generateProfileManifest = serviceActivationMapping: targetName: infrastructure: targetProperty:
     if serviceActivationMapping == [] then []
     else
-      if (head serviceActivationMapping).target == getAttr targetName infrastructure
-      then [ (head serviceActivationMapping).service (head serviceActivationMapping).type ] ++ (generateProfileManifest (tail serviceActivationMapping) targetName infrastructure)
-      else generateProfileManifest (tail serviceActivationMapping) targetName infrastructure
+      if (head serviceActivationMapping).target == getAttr targetProperty (getAttr targetName infrastructure)
+      then [ (head serviceActivationMapping).service (head serviceActivationMapping).type ] ++ (generateProfileManifest (tail serviceActivationMapping) targetName infrastructure targetProperty)
+      else generateProfileManifest (tail serviceActivationMapping) targetName infrastructure targetProperty
   ;
   
   /*
@@ -241,8 +243,8 @@ rec {
   generateProfilesMapping = pkgs: infrastructure: targetNames: targetProperty: serviceActivationMapping:
     let
       target = getAttr (head targetNames) infrastructure;
-      servicesPerTarget = queryServicesByTargetName serviceActivationMapping (head targetNames) infrastructure;
-      profileManifest = generateProfileManifest serviceActivationMapping (head targetNames) infrastructure;
+      servicesPerTarget = queryServicesByTargetName serviceActivationMapping (head targetNames) infrastructure targetProperty;
+      profileManifest = generateProfileManifest serviceActivationMapping (head targetNames) infrastructure targetProperty;
       mappingItem = {
         profile = (pkgs.buildEnv {
           name = head targetNames;
