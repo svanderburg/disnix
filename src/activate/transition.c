@@ -25,11 +25,11 @@
 
 extern volatile int interrupted;
 
-static void print_activation_step(int activate, gchar **arguments, unsigned int arguments_size, gchar *target_property, ActivationMapping *mapping)
+static void print_activation_step(int activate, gchar **arguments, unsigned int arguments_size, ActivationMapping *mapping)
 {
     unsigned int i;
     
-    g_print("[target: %s]: ", target_property);
+    g_print("[target: %s]: ", mapping->target);
     
     if(activate)
         g_print("Activating");
@@ -82,10 +82,9 @@ static int activate(gchar *interface, GArray *union_array, gchar *service, gchar
             GArray *target = get_target(target_array, actual_mapping->target);
             gchar **arguments = generate_activation_arguments(target); /* Generate an array of key=value pairs from infrastructure properties */
             unsigned int arguments_size = g_strv_length(arguments); /* Determine length of the activation arguments array */
-            gchar *target_property = get_target_key(target); /* Get the target interface property from the mapping */
             
-            print_activation_step(TRUE, arguments, arguments_size, target_property, actual_mapping); /* Print debug message */
-            status = wait_to_finish(exec_activate(interface, target_property, actual_mapping->type, arguments, arguments_size, actual_mapping->service)); /* Execute the activation operation */
+            print_activation_step(TRUE, arguments, arguments_size, actual_mapping); /* Print debug message */
+            status = wait_to_finish(exec_activate(interface, actual_mapping->target, actual_mapping->type, arguments, arguments_size, actual_mapping->service)); /* Execute the activation operation */
             
             /* Cleanup */
             g_strfreev(arguments);
@@ -150,11 +149,10 @@ static int deactivate(gchar *interface, GArray *union_array, gchar *service, gch
             {
                 gchar **arguments = generate_activation_arguments(target); /* Generate an array of key=value pairs from infrastructure properties */
                 unsigned int arguments_size = g_strv_length(arguments); /* Determine length of the activation arguments array */
-                gchar *target_property = get_target_key(target); /* Get the target interface property from the mapping */
                 
-                print_activation_step(FALSE, arguments, arguments_size, target_property, actual_mapping); /* Print debug message */
+                print_activation_step(FALSE, arguments, arguments_size, actual_mapping); /* Print debug message */
         
-                status = wait_to_finish(exec_deactivate(interface, target_property, actual_mapping->type, arguments, arguments_size, actual_mapping->service)); /* Execute the deactivation operation */
+                status = wait_to_finish(exec_deactivate(interface, actual_mapping->target, actual_mapping->type, arguments, arguments_size, actual_mapping->service)); /* Execute the deactivation operation */
                 
                 /* Cleanup */
                 g_free(arguments);
