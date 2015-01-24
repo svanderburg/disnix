@@ -91,7 +91,11 @@ GArray *generate_target_array(const gchar *manifest_file)
 	    {
 	        TargetProperty *targetProperty = (TargetProperty*)g_malloc(sizeof(TargetProperty));
 	        targetProperty->name = g_strdup(targets_children->name);
-	        targetProperty->value = g_strdup(targets_children->children->content);
+	        
+	        if(targets_children->children == NULL)
+	            targetProperty->value = NULL;
+	        else
+	            targetProperty->value = g_strdup(targets_children->children->content);
 	        
 	        g_array_append_val(target, targetProperty);
 	        
