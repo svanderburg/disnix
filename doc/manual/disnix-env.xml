@@ -137,6 +137,15 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>--dry-run</option></term>
+				<listitem>
+					<para>
+						By enabling this option Disnix displays what deactivation and activation steps it intends to perform but does not actually
+						run them.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>--show-trace</option></term>
 				<listitem>
 					<para>

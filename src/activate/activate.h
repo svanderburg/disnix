@@ -39,8 +39,9 @@
  * @param no_target_profiles Do not create Disnix profiles on the target machines
  * @param no_upgrade Force Disnix to not look at the previous configuration
  * @param no_lock Force Disnix to not acquire locks
+ * @param dry_run Only prints the steps to be executed but does not actually perform them
  * @return 0 if the process succeeds, else a non-zero exit value
  */
-int activate_system(gchar *interface, const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_coordinator_profile, const gboolean no_target_profiles, const gboolean no_upgrade, const gboolean no_lock);
+int activate_system(gchar *interface, const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_coordinator_profile, const gboolean no_target_profiles, const gboolean no_upgrade, const gboolean no_lock, const gboolean dry_run);
 
 #endif

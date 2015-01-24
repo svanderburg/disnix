@@ -36,6 +36,7 @@ static void print_usage(const char *command)
     fprintf(stderr, "--no-target-profiles\n");
     fprintf(stderr, "--no-upgrade\n");
     fprintf(stderr, "--no-lock\n");
+    fprintf(stderr, "--dry-run\n");
     fprintf(stderr, "\n");
     
     fprintf(stderr, "%s {-h | --help}\n", command);
@@ -55,6 +56,7 @@ int main(int argc, char *argv[])
 	{"no-target-profiles", no_argument, 0, 'C'},
 	{"no-upgrade", no_argument, 0, 'u'},
 	{"no-lock", no_argument, 0, 'l'},
+	{"dry-run", no_argument, 0, 'd'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
@@ -66,6 +68,7 @@ int main(int argc, char *argv[])
     int no_target_profiles = FALSE;
     int no_upgrade = FALSE;
     int no_lock = FALSE;
+    int dry_run = FALSE;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "o:p:h", long_options, &option_index)) != -1)
@@ -96,6 +99,9 @@ int main(int argc, char *argv[])
 	    case 'l':
 		no_lock = TRUE;
 		break;
+	    case 'd':
+		dry_run = TRUE;
+		break;
 	    case 'h':
 	    case '?':
 		print_usage(argv[0]);
@@ -114,5 +120,5 @@ int main(int argc, char *argv[])
 	return 1;
     }
     else
-	return activate_system(interface, argv[optind], old_manifest, coordinator_profile_path, profile, no_coordinator_profile, no_target_profiles, no_upgrade, no_lock); /* Execute activation operation */
+	return activate_system(interface, argv[optind], old_manifest, coordinator_profile_path, profile, no_coordinator_profile, no_target_profiles, no_upgrade, no_lock, dry_run); /* Execute activation operation */
 }

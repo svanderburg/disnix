@@ -71,9 +71,9 @@ static void set_flag_on_interrupt(void)
     sigaction(SIGINT, &act, NULL);
 }
 
-static void release_locks(const gboolean no_lock, gchar *interface, GArray *distribution_array, gchar *profile)
+static void release_locks(const gboolean no_lock, const gboolean dry_run, gchar *interface, GArray *distribution_array, gchar *profile)
 {
-    if(no_lock)
+    if(no_lock || dry_run)
         g_print("[coordinator]: Not releasing any locks, because they have been disabled\n");
     else
     {
@@ -89,7 +89,7 @@ static void cleanup(gchar *old_manifest_file, Manifest *manifest, GArray *old_ac
     delete_activation_array(old_activation_mappings);
 }
 
-int activate_system(gchar *interface, const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_coordinator_profile, const gboolean no_target_profiles, const gboolean no_upgrade, const gboolean no_lock)
+int activate_system(gchar *interface, const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_coordinator_profile, const gboolean no_target_profiles, const gboolean no_upgrade, const gboolean no_lock, const gboolean dry_run)
 {
     Manifest *manifest = create_manifest(new_manifest);
     
@@ -129,7 +129,7 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
         set_flag_on_interrupt();
         
         /* Try to acquire locks */
-        if(no_lock)
+        if(no_lock || dry_run)
             g_print("[coordinator]: Not acquiring any locks, because they have been disabled\n");
         else
         {
@@ -137,7 +137,7 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
             
             if((status = lock(interface, manifest->distribution_array, profile)) != 0)
             {
-                release_locks(no_lock, interface, manifest->distribution_array, profile);
+                release_locks(no_lock, dry_run, interface, manifest->distribution_array, profile);
                 cleanup(old_manifest_file, manifest, old_activation_mappings);
                 g_printerr("[coordinator]: ERROR: Lock phase execution failed!\n");
                 return status;
@@ -145,11 +145,11 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
         }
         
         /* Execute transition */
-        g_print("[coordinator]: Execute the transition to the new deployment state\n");
+        g_print("[coordinator]: Executing the transition to the new deployment state\n");
         
-        if((status = transition(interface, manifest->activation_array, old_activation_mappings, manifest->target_array)) != 0)
+        if((status = transition(interface, manifest->activation_array, old_activation_mappings, manifest->target_array, dry_run)) != 0)
         {
-            release_locks(no_lock, interface, manifest->distribution_array, profile);
+            release_locks(no_lock, dry_run, interface, manifest->distribution_array, profile);
             cleanup(old_manifest_file, manifest, old_activation_mappings);
             g_printerr("[coordinator]: ERROR: Transition phase execution failed!\n");
             return status;
@@ -157,7 +157,7 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
         
         /* Set the new profiles on the target machines */
         
-        if(no_target_profiles)
+        if(no_target_profiles || dry_run)
             g_print("[coordinator]: Setting target profiles has been disabled\n");
         else
         {
@@ -165,7 +165,7 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
         
             if((status = set_target_profiles(manifest->distribution_array, interface, profile)) != 0)
             {
-                release_locks(no_lock, interface, manifest->distribution_array, profile);
+                release_locks(no_lock, dry_run, interface, manifest->distribution_array, profile);
                 cleanup(old_manifest_file, manifest, old_activation_mappings);
                 g_printerr("[coordinator]: ERROR: Cannot set profiles on the target machines!\n");
                 return status;
@@ -173,10 +173,10 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
         }
         
         /* Release the locks */
-        release_locks(no_lock, interface, manifest->distribution_array, profile);
+        release_locks(no_lock, dry_run, interface, manifest->distribution_array, profile);
         
         /* Set the coordinator profile */
-        if(no_coordinator_profile)
+        if(no_coordinator_profile || dry_run)
             g_print("[coordinator]: Not setting the coordinator profile\n");
         else
         {
