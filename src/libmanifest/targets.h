@@ -49,6 +49,11 @@ GArray *generate_target_array(const gchar *manifest_file);
  */
 void delete_target_array(GArray *target_array);
 
+/**
+ * Prints the given target array.
+ *
+ * @param target_array Target array to print
+ */
 void print_target_array(const GArray *target_array);
 
 /**
@@ -61,6 +66,12 @@ void print_target_array(const GArray *target_array);
  */
 int target_index(const GArray *target_array, const gchar *key);
 
+/**
+ * Retrieves a target with a specific key from the target array.
+ *
+ * @param target_array Array of arrays representing target machines with properties
+ * @return An array containing the properties of the machine with the given key or NULL if it cannot be found
+ */
 GArray *get_target(const GArray *target_array, const gchar *key);
 
 /**

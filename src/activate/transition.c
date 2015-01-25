@@ -294,18 +294,18 @@ int transition(gchar *interface, GArray *new_activation_mappings, GArray *old_ac
         deactivation_array = NULL;
         activation_array = new_activation_mappings;
         
-        g_print("Mapping closures to activate:\n");
+        g_print("[coordinator]: Mapping closures to activate:\n");
         print_activation_array(activation_array);
     }
     else
     {
         GArray *intersection_array = intersect_activation_array(new_activation_mappings, old_activation_mappings);
         
-        g_print("Mapping closures to deactivate:\n");
+        g_print("[coordinator]: Mapping closures to deactivate:\n");
         deactivation_array = substract_activation_array(old_activation_mappings, intersection_array);
         print_activation_array(deactivation_array);
         
-        g_print("Mapping closures to activate:\n");
+        g_print("[coordinator]: Mapping closures to activate:\n");
         activation_array = substract_activation_array(new_activation_mappings, intersection_array);
         print_activation_array(activation_array);
 
