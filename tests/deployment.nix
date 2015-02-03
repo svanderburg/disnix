@@ -209,5 +209,10 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         } else {
             die "disnix-query output line 10 does not contain testService1!\n";
         }
+        
+        # Another upgrade with transitive dependency
+        
+        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-transitivecomposition.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-transitivecomposition.nix 2>&1 | tee result");
+        $coordinator->mustSucceed("(cat result) >&2");
       '';
   }
