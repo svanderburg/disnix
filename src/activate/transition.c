@@ -36,7 +36,7 @@ static void print_activation_step(int activate, gchar **arguments, unsigned int 
     else
         g_print("Deactivating");
     
-    g_print(" service: %s of type: %s, arguments: ", mapping->service, mapping->type);
+    g_print(" service with key: %s and package: %s of type: %s, arguments: ", mapping->key, mapping->service, mapping->type);
     
     for(i = 0; i < arguments_size; i++)
         g_print("%s ", arguments[i]);
@@ -44,7 +44,7 @@ static void print_activation_step(int activate, gchar **arguments, unsigned int 
     g_print("\n");
 }
 
-static int activate(gchar *interface, GArray *union_array, gchar *service, gchar *target, GArray *target_array, const gboolean dry_run)
+static int activate(gchar *interface, GArray *union_array, gchar *key, gchar *target, GArray *target_array, const gboolean dry_run)
 {
     /* Check for an interruption */
     if(interrupted)
@@ -55,7 +55,7 @@ static int activate(gchar *interface, GArray *union_array, gchar *service, gchar
     else
     {
         /* Retrieve the mapping from the union array */
-        ActivationMapping *actual_mapping = get_activation_mapping(union_array, service, target);
+        ActivationMapping *actual_mapping = get_activation_mapping(union_array, key, target);
         
         /* First, activate all inter-dependency mappings */
         if(actual_mapping->depends_on != NULL)
@@ -66,7 +66,7 @@ static int activate(gchar *interface, GArray *union_array, gchar *service, gchar
             for(i = 0; i < actual_mapping->depends_on->len; i++)
             {
                 Dependency *dependency = g_array_index(actual_mapping->depends_on, Dependency*, i);
-                status = activate(interface, union_array, dependency->service, dependency->target, target_array, dry_run);
+                status = activate(interface, union_array, dependency->key, dependency->target, target_array, dry_run);
                 
                 if(status != 0)
                     return status; /* If the activation of an inter-dependency fails, abort */
@@ -103,7 +103,7 @@ static int activate(gchar *interface, GArray *union_array, gchar *service, gchar
     }
 }
 
-static int deactivate(gchar *interface, GArray *union_array, gchar *service, gchar *target, GArray *target_array, const gboolean dry_run)
+static int deactivate(gchar *interface, GArray *union_array, gchar *key, gchar *target, GArray *target_array, const gboolean dry_run)
 {
     /* Check for an interruption */
     if(interrupted)
@@ -114,7 +114,7 @@ static int deactivate(gchar *interface, GArray *union_array, gchar *service, gch
     else
     {
         /* Retrieve the mapping from the union array */
-        ActivationMapping *actual_mapping = get_activation_mapping(union_array, service, target);
+        ActivationMapping *actual_mapping = get_activation_mapping(union_array, key, target);
     
         /* Find all interdependent mapping on this mapping */
         GArray *interdependent_mappings = find_interdependent_mappings(union_array, actual_mapping);
@@ -126,7 +126,7 @@ static int deactivate(gchar *interface, GArray *union_array, gchar *service, gch
         for(i = 0; i < interdependent_mappings->len; i++)
         {
             ActivationMapping *dependency_mapping = g_array_index(interdependent_mappings, ActivationMapping*, i);
-            int status = deactivate(interface, union_array, dependency_mapping->service, dependency_mapping->target, target_array, dry_run);
+            int status = deactivate(interface, union_array, dependency_mapping->key, dependency_mapping->target, target_array, dry_run);
         
             if(status != 0)
             {
@@ -146,7 +146,7 @@ static int deactivate(gchar *interface, GArray *union_array, gchar *service, gch
             
             if(target == NULL)
             {
-                g_print("[target: %s]: Skip deactivation of service: %s since machine is not present!\n", actual_mapping->target, actual_mapping->service);
+                g_print("[target: %s]: Skip deactivation of service with key: %s deploying package: %s since machine is not present!\n", actual_mapping->key, actual_mapping->target, actual_mapping->service);
                 status = 0;
             }
             else
@@ -183,7 +183,7 @@ static void rollback_to_old_mappings(GArray *union_array, gchar *interface, GArr
     {
         ActivationMapping *mapping = g_array_index(union_array, ActivationMapping*, i);
         
-        if(activate(interface, union_array, mapping->service, mapping->target, target_array, dry_run) != 0)
+        if(activate(interface, union_array, mapping->key, mapping->target, target_array, dry_run) != 0)
             g_print("Rollback failed!\n");
     }
 }
@@ -202,7 +202,7 @@ static int deactivate_obsolete_mappings(GArray *deactivation_array, GArray *unio
         for(i = 0; i < deactivation_array->len; i++)
         {
             ActivationMapping *mapping = g_array_index(deactivation_array, ActivationMapping*, i);
-            int status = deactivate(interface, union_array, mapping->service, mapping->target, target_array, dry_run);
+            int status = deactivate(interface, union_array, mapping->key, mapping->target, target_array, dry_run);
             
             if(status != 0)
             {
@@ -225,7 +225,7 @@ static void rollback_new_mappings(GArray *activation_array, GArray *union_array,
     {
         ActivationMapping *mapping = g_array_index(activation_array, ActivationMapping*, i);
         
-        if(deactivate(interface, union_array, mapping->service, mapping->target, target_array, dry_run) != 0)
+        if(deactivate(interface, union_array, mapping->key, mapping->target, target_array, dry_run) != 0)
             g_print("Rollback failed!\n");
     }
 }
@@ -241,7 +241,7 @@ static int activate_new_mappings(GArray *activation_array, GArray *union_array, 
     for(i = 0; i < activation_array->len; i++)
     {
         ActivationMapping *mapping = g_array_index(activation_array, ActivationMapping*, i);
-        int status = activate(interface, union_array, mapping->service, mapping->target, target_array, dry_run);
+        int status = activate(interface, union_array, mapping->key, mapping->target, target_array, dry_run);
         
         if(status != 0)
         {

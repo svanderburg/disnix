@@ -52,7 +52,7 @@ GHashTable *generate_cluster_table(GArray *activation_array, GArray *target_arra
 	}
 	
 	/* Append service to the array */
-	g_array_append_val(services_array, mapping->service);
+	g_array_append_val(services_array, mapping->key);
     }
     
     /* Return the generated cluster table */

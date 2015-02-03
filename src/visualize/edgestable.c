@@ -38,7 +38,7 @@ GHashTable *generate_edges_table(const GArray *activation_array, GArray *targets
 	gchar *target_key = get_target_key(target);
 	
 	/* Generate an edge table key, which consist of Nix store component:targetProperty */
-	gchar *mapping_key = g_strconcat(mapping->service, ":", target_key, NULL);
+	gchar *mapping_key = g_strconcat(mapping->key, ":", target_key, NULL);
 	
 	/* Retrieve the dependency array of the mapping from the edges table */
 	GArray *dependency_array = g_hash_table_lookup(edges_table, mapping_key);
@@ -64,7 +64,7 @@ GHashTable *generate_edges_table(const GArray *activation_array, GArray *targets
 		Dependency *dependency = g_array_index(depends_on, Dependency*, j);
 		
 		/* Find the activation mapping in the activation array */
-		actual_mapping_index = activation_mapping_index(activation_array, dependency->service, dependency->target);
+		actual_mapping_index = activation_mapping_index(activation_array, dependency->key, dependency->target);
 		
 		/* Retrieve the actual mapping */
 		actual_mapping = g_array_index(activation_array, ActivationMapping*, actual_mapping_index);
@@ -73,8 +73,8 @@ GHashTable *generate_edges_table(const GArray *activation_array, GArray *targets
 		target = get_target(targets_array, actual_mapping->target);
 		target_key = get_target_key(target);
 		
-		/* Generate mapping value from the service and target property */
-		mapping_value = g_strconcat(actual_mapping->service, ":", target_key, NULL);
+		/* Generate mapping value from the service key and target property */
+		mapping_value = g_strconcat(actual_mapping->key, ":", target_key, NULL);
 		    
 		/* Add mapping value to the dependency array */
 	    	g_array_append_val(dependency_array, mapping_value);

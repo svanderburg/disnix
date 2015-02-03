@@ -14,7 +14,7 @@ let
   
 in
 rec {
-  inherit (builtins) attrNames getAttr listToAttrs head tail unsafeDiscardOutputDependency;
+  inherit (builtins) attrNames getAttr listToAttrs head tail unsafeDiscardOutputDependency hashString;
 
   /* 
    * Determines the right pkgs collection from the system identifier.
@@ -149,9 +149,17 @@ rec {
     let
       serviceName = (getAttr (head argNames) dependsOn).name;
       service = getAttr serviceName services;
-      inherit (service) distribution;
+      dependencyMappingItems = map (distributionItem:
+        { _key = hashString "sha256" (builtins.toXML {
+            inherit (distributionItem) service;
+            inherit (service) name type;
+            dependsOn = generateDependencyMapping (attrNames (service.dependsOn)) (service.dependsOn) services;
+          });
+          inherit (distributionItem) target;
+        }
+      ) (service.distribution);
     in
-    if argNames == [] then [] else distribution ++ generateDependencyMapping (tail argNames) dependsOn services
+    if argNames == [] then [] else dependencyMappingItems ++ generateDependencyMapping (tail argNames) dependsOn services
   ;
 
   /*
@@ -170,11 +178,16 @@ rec {
   generateServiceActivationMapping = serviceNames: services: targetProperty:
     let
       service = getAttr (head serviceNames) services;
+      dependsOn = generateDependencyMapping (attrNames (service.dependsOn)) (service.dependsOn) services;
       mappingItem = map (distributionItem:
         { inherit (distributionItem) service target;
           inherit (service) name type;
-          inherit targetProperty;
-          dependsOn = generateDependencyMapping (attrNames (service.dependsOn)) (service.dependsOn) services;
+          inherit targetProperty dependsOn;
+          _key = hashString "sha256" (builtins.toXML {
+            inherit (distributionItem) service;
+            inherit (service) name type;
+            inherit dependsOn;
+          });
         }
       ) (service.distribution);
     in

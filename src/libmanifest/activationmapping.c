@@ -28,8 +28,8 @@ static gint compare_activation_mapping(const ActivationMapping **l, const Activa
     const ActivationMapping *left = *l;
     const ActivationMapping *right = *r;
     
-    /* Compare the service names */
-    gint status = g_strcmp0(left->service, right->service);
+    /* Compare the service keys */
+    gint status = g_strcmp0(left->key, right->key);
     
     if(status == 0)
         return g_strcmp0(left->target, right->target); /* If services are equal then compare the targets */
@@ -42,8 +42,8 @@ static gint compare_dependency(const Dependency **l, const Dependency **r)
     const Dependency *left = *l;
     const Dependency *right = *r;
     
-    /* Compare the service names */
-    gint status = g_strcmp0(left->service, right->service);
+    /* Compare the service keys */
+    gint status = g_strcmp0(left->key, right->key);
     
     if(status == 0)
         return g_strcmp0(left->target, right->target); /* If services are equal then compare the targets */
@@ -51,7 +51,7 @@ static gint compare_dependency(const Dependency **l, const Dependency **r)
         return status;
 }
 
-gint activation_mapping_index(const GArray *activation_array, gchar *service, gchar *target)
+gint activation_mapping_index(const GArray *activation_array, gchar *key, gchar *target)
 {
     gint left = 0;
     gint right = activation_array->len - 1;
@@ -64,7 +64,7 @@ gint activation_mapping_index(const GArray *activation_array, gchar *service, gc
 	const ActivationMapping *keys_ptr = &keys;
 	gint status;
 	
-	keys.service = service;
+	keys.key = key;
 	keys.target = target;
 	
         status = compare_activation_mapping(&mid_mapping, &keys_ptr);
@@ -80,10 +80,10 @@ gint activation_mapping_index(const GArray *activation_array, gchar *service, gc
     return -1; /* Activation mapping not found */
 }
 
-ActivationMapping *get_activation_mapping(const GArray *activation_array, gchar *service, gchar *target)
+ActivationMapping *get_activation_mapping(const GArray *activation_array, gchar *key, gchar *target)
 {
     /* Search for the location of the mapping in the union array */
-    gint actual_mapping_index = activation_mapping_index(activation_array, service, target);
+    gint actual_mapping_index = activation_mapping_index(activation_array, key, target);
     
     if(actual_mapping_index == -1)
         return NULL;
@@ -91,7 +91,7 @@ ActivationMapping *get_activation_mapping(const GArray *activation_array, gchar 
         return g_array_index(activation_array, ActivationMapping*, actual_mapping_index);
 }
 
-gint dependency_index(const GArray *depends_on, gchar *service, gchar *target)
+gint dependency_index(const GArray *depends_on, gchar *key, gchar *target)
 {
     gint left = 0;
     gint right = depends_on->len - 1;
@@ -104,7 +104,7 @@ gint dependency_index(const GArray *depends_on, gchar *service, gchar *target)
 	const Dependency *keys_ptr = &keys;
 	gint status;
 	
-	keys.service = service;
+	keys.key = key;
 	keys.target = target;
 	
         status = compare_dependency(&mid_dependency, &keys_ptr);
@@ -120,10 +120,10 @@ gint dependency_index(const GArray *depends_on, gchar *service, gchar *target)
     return -1; /* Activation mapping not found */
 }
 
-Dependency *get_dependency(const GArray *depends_on, gchar *service, gchar *target)
+Dependency *get_dependency(const GArray *depends_on, gchar *key, gchar *target)
 {
     /* Search for the location of the mapping in the union array */
-    gint actual_dependency_index = dependency_index(depends_on, service, target);
+    gint actual_dependency_index = dependency_index(depends_on, key, target);
     
     if(actual_dependency_index == -1)
         return NULL;
@@ -140,8 +140,9 @@ void print_activation_array(const GArray *activation_array)
 	ActivationMapping *mapping = g_array_index(activation_array, ActivationMapping*, i);
 	unsigned int j;
 	
-	g_print("service: %s\n", mapping->service);
+	g_print("key: %s\n", mapping->key);
 	g_print("target: %s\n", mapping->target);
+	g_print("service: %s\n", mapping->service);
 	g_print("targetProperty: %s\n", mapping->targetProperty);
 	g_print("type: %s\n", mapping->type);
 	g_print("dependsOn:\n");
@@ -150,7 +151,7 @@ void print_activation_array(const GArray *activation_array)
 	{
 	    Dependency *dependency = g_array_index(mapping->depends_on, Dependency*, j);
 	    
-	    g_print("  service: %s\n", dependency->service);
+	    g_print("  key: %s\n", dependency->key);
 	    g_print("  target: %s\n", mapping->target);
 	}
 	
@@ -202,8 +203,9 @@ GArray *create_activation_array(const gchar *manifest_file)
 	for(i = 0; i < nodeset->nodeNr; i++)
         {
 	    xmlNodePtr mapping_children = nodeset->nodeTab[i]->children;
-	    gchar *service = NULL;
+	    gchar *key = NULL;
 	    gchar *target = NULL;
+	    gchar *service = NULL;
 	    gchar *targetProperty = NULL;
 	    gchar *name = NULL;
 	    gchar *type = NULL;
@@ -214,7 +216,9 @@ GArray *create_activation_array(const gchar *manifest_file)
 	    
 	    while(mapping_children != NULL)
 	    {
-		if(xmlStrcmp(mapping_children->name, "service") == 0)
+		if(xmlStrcmp(mapping_children->name, "key") == 0)
+		    key = g_strdup(mapping_children->children->content);
+		else if(xmlStrcmp(mapping_children->name, "service") == 0)
 		    service = g_strdup(mapping_children->children->content);
 		else if(xmlStrcmp(mapping_children->name, "targetProperty") == 0)
 		    targetProperty = g_strdup(mapping_children->children->content);
@@ -233,7 +237,7 @@ GArray *create_activation_array(const gchar *manifest_file)
 		    while(depends_on_children != NULL)
 		    {
 			xmlNodePtr dependency_children = depends_on_children->children;
-			gchar *service = NULL;
+			gchar *key = NULL;
 			gchar *target = NULL;
 			Dependency *dependency = (Dependency*)g_malloc(sizeof(Dependency));
 			
@@ -242,15 +246,15 @@ GArray *create_activation_array(const gchar *manifest_file)
 			    /* Iterate over all dependency properties */
 			    while(dependency_children != NULL)
 			    {
-				if(xmlStrcmp(dependency_children->name, (xmlChar*) "service") == 0)
-				    service = g_strdup(dependency_children->children->content);
+				if(xmlStrcmp(dependency_children->name, (xmlChar*) "key") == 0)
+				    key = g_strdup(dependency_children->children->content);
 				else if(xmlStrcmp(dependency_children->name, (xmlChar*) "target") == 0)
 				    target = g_strdup(dependency_children->children->content);
 				    
 				dependency_children = dependency_children->next;
 			    }
 			
-			    dependency->service = service;
+			    dependency->key = key;
 			    dependency->target = target;
 			    g_array_append_val(depends_on, dependency);
 			}
@@ -265,8 +269,9 @@ GArray *create_activation_array(const gchar *manifest_file)
 		mapping_children = mapping_children->next;
 	    }
 	    
-	    mapping->service = service;
+	    mapping->key = key;
 	    mapping->target = target;
+	    mapping->service = service;
 	    mapping->targetProperty = targetProperty;
 	    mapping->name = name;
 	    mapping->type = type;
@@ -300,8 +305,9 @@ void delete_activation_array(GArray *activation_array)
             ActivationMapping *mapping = g_array_index(activation_array, ActivationMapping*, i);
             unsigned int j;
             
-            g_free(mapping->service);
+            g_free(mapping->key);
             g_free(mapping->target);
+            g_free(mapping->service);
             g_free(mapping->targetProperty);
             g_free(mapping->name);
             g_free(mapping->type);
@@ -311,7 +317,7 @@ void delete_activation_array(GArray *activation_array)
                 for(j = 0; j < mapping->depends_on->len; j++)
                 {
                     Dependency *dependency = g_array_index(mapping->depends_on, Dependency*, j);
-                    g_free(dependency->service);
+                    g_free(dependency->key);
                     g_free(dependency->target);
                     g_free(dependency);
                 }
@@ -336,7 +342,7 @@ GArray *intersect_activation_array(GArray *left, GArray *right)
 	{
 	    ActivationMapping *left_mapping = g_array_index(left, ActivationMapping*, i);
 	    
-	    if(activation_mapping_index(right, left_mapping->service, left_mapping->target) != -1)
+	    if(activation_mapping_index(right, left_mapping->key, left_mapping->target) != -1)
 		g_array_append_val(return_array, left_mapping);
 	}
     }
@@ -346,7 +352,7 @@ GArray *intersect_activation_array(GArray *left, GArray *right)
 	{
 	    ActivationMapping *right_mapping = g_array_index(right, ActivationMapping*, i);
 
-	    if(activation_mapping_index(left, right_mapping->service, right_mapping->target) != -1)
+	    if(activation_mapping_index(left, right_mapping->key, right_mapping->target) != -1)
 		g_array_append_val(return_array, right_mapping);
 	}
     }
@@ -375,7 +381,7 @@ GArray *union_activation_array(GArray *left, GArray *right, GArray *intersect)
 	ActivationMapping *mapping = g_array_index(right, ActivationMapping*, i);
 	mapping->activated = FALSE;
 	
-	if(activation_mapping_index(intersect, mapping->service, mapping->target) == -1)
+	if(activation_mapping_index(intersect, mapping->key, mapping->target) == -1)
 	    g_array_append_val(return_array, mapping);
     }
     
@@ -404,7 +410,7 @@ GArray *substract_activation_array(GArray *left, GArray *right)
     for(i = 0; i < right->len; i++)
     {
 	ActivationMapping *mapping = g_array_index(right, ActivationMapping*, i);
-	gint index = activation_mapping_index(return_array, mapping->service, mapping->target);
+	gint index = activation_mapping_index(return_array, mapping->key, mapping->target);
 	
 	if(index != -1)
 	    g_array_remove_index(return_array, index);
@@ -423,7 +429,7 @@ GArray *find_interdependent_mappings(GArray *activation_array, const ActivationM
     {
 	unsigned int j;
 	ActivationMapping *current_mapping = g_array_index(activation_array, ActivationMapping*, i);
-	Dependency *found_dependency = get_dependency(current_mapping->depends_on, mapping->service, mapping->target);
+	Dependency *found_dependency = get_dependency(current_mapping->depends_on, mapping->key, mapping->target);
 	
 	if(found_dependency != NULL)
 	    g_array_append_val(return_array, current_mapping);

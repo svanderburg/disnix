@@ -26,8 +26,8 @@
  */
 typedef struct
 {
-    /** Nix store path to the service */
-    gchar *service;
+    /** Hash code that uniquely defines a service */
+    gchar *key;
     /** Target property referring to the target machine to which the service is deployed */
     gchar *target;
 }
@@ -40,10 +40,12 @@ Dependency;
  */
 typedef struct
 {
-    /** Nix store path to the service */
-    gchar *service;
+    /** Hash code that uniquely defines a service */
+    gchar *key;
     /** Target property referring to the target machine to which the service is deployed */
     gchar *target;
+    /** Nix store path to the service */
+    gchar *service;
     /* Name of the service */
     gchar *name;
     /** Property used to connect to the disnix service */
@@ -77,11 +79,11 @@ void delete_activation_array(GArray *activation_array);
  * in the activation array.
  *
  * @param activation_array Activation array
- * @param service Nix store path to the service
+ * @param key Hash code that uniquely defines a service
  * @param target Target property referring to the target machine to which the service is deployed
  * @return Index of the activation mapping or -1 if not found
  */
-gint activation_mapping_index(const GArray *activation_array, gchar *service, gchar *target);
+gint activation_mapping_index(const GArray *activation_array, gchar *key, gchar *target);
 
 /**
  * Returns the activation mapping with the given keys in the activation array.
@@ -93,7 +95,9 @@ gint activation_mapping_index(const GArray *activation_array, gchar *service, gc
  */
 ActivationMapping *get_activation_mapping(const GArray *activation_array, gchar *service, gchar *target);
 
-gint dependency_index(const GArray *depends_on, gchar *service, gchar *target);
+gint dependency_index(const GArray *depends_on, gchar *key, gchar *target);
+
+Dependency *get_dependency(const GArray *depends_on, gchar *key, gchar *target);
 
 /**
  * Returns the intersection of the two given arrays.

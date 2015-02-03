@@ -17,8 +17,8 @@
             <dependsOn>
 	      <xsl:for-each select="attr[@name='dependsOn']/list/attrs">
 		<dependency>
-		  <service><xsl:value-of select="attr[@name='service']/string/@value" /></service>
 		  <target><xsl:value-of select="attr[@name='target']/string/@value" /></target>
+		  <key><xsl:value-of select="attr[@name='_key']/string/@value" /></key>
 		</dependency>
 	      </xsl:for-each>
 	    </dependsOn>
@@ -27,6 +27,7 @@
 	    <target><xsl:value-of select="attr[@name='target']/string/@value" /></target>
 	    <targetProperty><xsl:value-of select="attr[@name='targetProperty']/string/@value" /></targetProperty>
 	    <type><xsl:value-of select="attr[@name='type']/string/@value" /></type>
+	    <key><xsl:value-of select="attr[@name='_key']/string/@value" /></key>
 	  </mapping>
         </xsl:for-each>
       </activation>
