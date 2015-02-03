@@ -93,6 +93,8 @@ gint activation_mapping_index(const GArray *activation_array, gchar *service, gc
  */
 ActivationMapping *get_activation_mapping(const GArray *activation_array, gchar *service, gchar *target);
 
+gint dependency_index(const GArray *depends_on, gchar *service, gchar *target);
+
 /**
  * Returns the intersection of the two given arrays.
  * The array that is returned contains pointers to elements in

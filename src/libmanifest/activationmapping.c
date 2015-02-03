@@ -37,6 +37,20 @@ static gint compare_activation_mapping(const ActivationMapping **l, const Activa
         return status;
 }
 
+static gint compare_dependency(const Dependency **l, const Dependency **r)
+{
+    const Dependency *left = *l;
+    const Dependency *right = *r;
+    
+    /* Compare the service names */
+    gint status = g_strcmp0(left->service, right->service);
+    
+    if(status == 0)
+        return g_strcmp0(left->target, right->target); /* If services are equal then compare the targets */
+    else
+        return status;
+}
+
 gint activation_mapping_index(const GArray *activation_array, gchar *service, gchar *target)
 {
     gint left = 0;
@@ -75,6 +89,46 @@ ActivationMapping *get_activation_mapping(const GArray *activation_array, gchar 
         return NULL;
     else
         return g_array_index(activation_array, ActivationMapping*, actual_mapping_index);
+}
+
+gint dependency_index(const GArray *depends_on, gchar *service, gchar *target)
+{
+    gint left = 0;
+    gint right = depends_on->len - 1;
+    
+    while(left <= right)
+    {
+	gint mid = (left + right) / 2;
+	const Dependency *mid_dependency = g_array_index(depends_on, Dependency*, mid);
+	Dependency keys;
+	const Dependency *keys_ptr = &keys;
+	gint status;
+	
+	keys.service = service;
+	keys.target = target;
+	
+        status = compare_dependency(&mid_dependency, &keys_ptr);
+	
+	if(status == 0)
+            return mid; /* Return index of the found activation mapping */
+	else if(status > 0)
+	    right = mid - 1;
+	else if(status < 0)
+	    left = mid + 1;
+    }
+    
+    return -1; /* Activation mapping not found */
+}
+
+Dependency *get_dependency(const GArray *depends_on, gchar *service, gchar *target)
+{
+    /* Search for the location of the mapping in the union array */
+    gint actual_dependency_index = dependency_index(depends_on, service, target);
+    
+    if(actual_dependency_index == -1)
+        return NULL;
+    else
+        return g_array_index(depends_on, Dependency*, actual_dependency_index);
 }
 
 void print_activation_array(const GArray *activation_array)
@@ -203,6 +257,9 @@ GArray *create_activation_array(const gchar *manifest_file)
 			
 			depends_on_children = depends_on_children->next;
 		    }
+		    
+		    /* Sort the dependency array */
+		    g_array_sort(depends_on, (GCompareFunc)compare_dependency);
 		}
 		
 		mapping_children = mapping_children->next;
@@ -355,32 +412,22 @@ GArray *substract_activation_array(GArray *left, GArray *right)
     
     /* Return the activation array */
     return return_array;
-
 }
 
 GArray *find_interdependent_mappings(GArray *activation_array, const ActivationMapping *mapping)
 {
-    unsigned int i;
     GArray *return_array = g_array_new(FALSE, FALSE, sizeof(ActivationMapping*));
+    unsigned int i;
     
     for(i = 0; i < activation_array->len; i++)
     {
 	unsigned int j;
 	ActivationMapping *current_mapping = g_array_index(activation_array, ActivationMapping*, i);
+	Dependency *found_dependency = get_dependency(current_mapping->depends_on, mapping->service, mapping->target);
 	
-	for(j = 0; j < current_mapping->depends_on->len; j++)
-	{
-	    Dependency *dependency = g_array_index(current_mapping->depends_on, Dependency*, j);
-	    ActivationMapping compare_mapping;
-	    const ActivationMapping *compare_mapping_ptr = &compare_mapping;
-
-	    compare_mapping.service = dependency->service;
-	    compare_mapping.target = dependency->target;
-	
-	    if(compare_activation_mapping(&mapping, &compare_mapping_ptr) == 0)
-		g_array_append_val(return_array, current_mapping);
-	}
+	if(found_dependency != NULL)
+	    g_array_append_val(return_array, current_mapping);
     }
-        
+    
     return return_array;
 }
