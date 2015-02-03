@@ -210,9 +210,45 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
             die "disnix-query output line 10 does not contain testService1!\n";
         }
         
-        # Another upgrade with transitive dependency
+        # Do an upgrade with a transitive dependency. In this test we change the
+        # binding of testService3 to a testService2 instance that changes its
+        # interdependency from testService1 to testService1B. As a result, both
+        # testService2 and testService3 must be redeployed.
+        # This test should succeed.
         
-        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-transitivecomposition.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-transitivecomposition.nix 2>&1 | tee result");
-        $coordinator->mustSucceed("(cat result) >&2");
+        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-transitivecomposition.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-transitivecomposition.nix > result");
+        
+        # Use disnix-query to check whether testService{1,1B,2,3} are
+        # available on testtarget1. This test should succeed.
+        
+        @lines = split('\n', $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-query ${manifestTests}/infrastructure.nix"));
+        
+        if($lines[1] ne "Services on: testtarget1") {
+            die "disnix-query output line 1 does not match what we expect!\n";
+        }
+        
+        if($lines[3] =~ /\-testService1/) {
+            print "Found testService1 on disnix-query output line 3\n";
+        } else {
+            die "disnix-query output line 3 does not contain testService1!\n";
+        }
+        
+        if($lines[4] =~ /\-testService1B/) {
+            print "Found testService1B on disnix-query output line 4\n";
+        } else {
+            die "disnix-query output line 3 does not contain testService1B!\n";
+        }
+        
+        if($lines[5] =~ /\-testService2/) {
+            print "Found testService1 on disnix-query output line 5\n";
+        } else {
+            die "disnix-query output line 5 does not contain testService1!\n";
+        }
+        
+        if($lines[6] =~ /\-testService3/) {
+            print "Found testService1 on disnix-query output line 6\n";
+        } else {
+            die "disnix-query output line 6 does not contain testService1!\n";
+        }
       '';
   }
