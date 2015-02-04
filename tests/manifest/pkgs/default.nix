@@ -20,4 +20,8 @@ rec {
   testService3 = import ./testService3.nix {
     inherit (pkgs) stdenv;
   };
+  
+  process = import ./process.nix {
+    inherit (pkgs) stdenv;
+  };
 }

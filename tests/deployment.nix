@@ -250,5 +250,17 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         } else {
             die "disnix-query output line 6 does not contain testService1!\n";
         }
+        
+        # Do an upgrade to an environment containing only one service that's a running process.
+        # This test should succeed.
+        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-echo.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-process.nix > result");
+        
+        # Do a type upgrade. We change the type of the process from 'echo' to
+        # 'wrapper', triggering a redeployment. This test should succeed.
+        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-process.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-process.nix > result");
+        
+        # Check if the 'process' has written the tmp file.
+        # This test should succeed.
+        $testtarget1->mustSucceed("sleep 10 && [ -f /tmp/process_out ]");
       '';
   }
