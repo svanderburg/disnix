@@ -47,12 +47,12 @@ GHashTable *generate_cluster_table(GArray *activation_array, GArray *target_arra
 	 */
 	if(services_array == NULL)
 	{
-	    services_array = g_array_new(FALSE, FALSE, sizeof(gchar*));
+	    services_array = g_array_new(FALSE, FALSE, sizeof(ActivationMapping*));
 	    g_hash_table_insert(cluster_table, target_key, services_array);
 	}
 	
 	/* Append service to the array */
-	g_array_append_val(services_array, mapping->key);
+	g_array_append_val(services_array, mapping);
     }
     
     /* Return the generated cluster table */

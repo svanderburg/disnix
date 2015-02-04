@@ -21,6 +21,7 @@
 #include "edgestable.h"
 #include "clustertable.h"
 #include <manifest.h>
+#include <activationmapping.h>
 
 int generate_graph(const gchar *manifest_file)
 {
@@ -62,8 +63,8 @@ int generate_graph(const gchar *manifest_file)
         
             for(i = 0; i < cluster_array->len; i++)
             {
-                gchar *key = g_array_index(cluster_array, gchar*, i);
-                g_print("\"%s:%s\" [ label = \"%s\" ];\n", key, target, key /*TODO: display names service+44*/);
+                ActivationMapping *mapping = g_array_index(cluster_array, ActivationMapping*, i);
+                g_print("\"%s:%s\" [ label = \"%s\" ];\n", mapping->key, target, mapping->name);
             }
         
             g_print("label = \"%s\"\n", target);
