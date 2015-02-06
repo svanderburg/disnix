@@ -133,6 +133,26 @@ rec {
   ;
 
   /*
+   * Composes a unique hash key for a service based on its properties that affect
+   * deployment.
+   *
+   * Parameters:
+   * services: The list of all services to deploy
+   * service: The service for which a hash code must be generated
+   * distributionItem: A mapping of build instance of this service to a machine
+   *
+   * Returns:
+   * A SHA256 hash code
+   */
+  generateServiceHashKey = services: service: distributionItem:
+    hashString "sha256" (builtins.toXML {
+      inherit (distributionItem) service;
+      inherit (service) name type;
+      dependsOn = generateDependencyMapping (attrNames (service.dependsOn)) (service.dependsOn) services;
+    })
+  ;
+
+  /*
    * Maps a list of inter-dependency declarations to a list of attribute sets
    * containing the Nix store path of the service and the targetProperty.
    *
@@ -150,11 +170,7 @@ rec {
       serviceName = (getAttr (head argNames) dependsOn).name;
       service = getAttr serviceName services;
       dependencyMappingItems = map (distributionItem:
-        { _key = hashString "sha256" (builtins.toXML {
-            inherit (distributionItem) service;
-            inherit (service) name type;
-            dependsOn = generateDependencyMapping (attrNames (service.dependsOn)) (service.dependsOn) services;
-          });
+        { _key = generateServiceHashKey services service distributionItem;
           inherit (distributionItem) target;
         }
       ) (service.distribution);
@@ -183,11 +199,7 @@ rec {
         { inherit (distributionItem) service target;
           inherit (service) name type;
           inherit targetProperty dependsOn;
-          _key = hashString "sha256" (builtins.toXML {
-            inherit (distributionItem) service;
-            inherit (service) name type;
-            inherit dependsOn;
-          });
+          _key = generateServiceHashKey services service distributionItem;
         }
       ) (service.distribution);
     in
