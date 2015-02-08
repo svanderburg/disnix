@@ -31,7 +31,7 @@ typedef struct
     /** Target property referring to the target machine to which the service is deployed */
     gchar *target;
 }
-Dependency;
+ActivationMappingKey;
 
 /**
  * Contains all properties to activate a specific service on
@@ -52,7 +52,7 @@ typedef struct
     gchar *targetProperty;
     /** Activation type */
     gchar *type;
-    /** Array with inter-dependencies */
+    /** Array of ActivationMappingKey items representing the inter-dependencies */
     GArray *depends_on;
     /** Indicated whether the service is activated or not */
     gboolean activated;
@@ -113,7 +113,7 @@ gint dependency_index(const GArray *depends_on, gchar *key, gchar *target);
  * @param target Target property referring to the target machine to which the service is deployed
  * @return The dependency mapping with the specified keys, or NULL if it cannot be found
  */
-Dependency *get_dependency(const GArray *depends_on, gchar *key, gchar *target);
+ActivationMappingKey *get_dependency(const GArray *depends_on, gchar *key, gchar *target);
 
 /**
  * Returns the intersection of the two given arrays.

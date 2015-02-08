@@ -65,7 +65,7 @@ static int activate(gchar *interface, GArray *union_array, gchar *key, gchar *ta
             
             for(i = 0; i < actual_mapping->depends_on->len; i++)
             {
-                Dependency *dependency = g_array_index(actual_mapping->depends_on, Dependency*, i);
+                ActivationMappingKey *dependency = g_array_index(actual_mapping->depends_on, ActivationMappingKey*, i);
                 status = activate(interface, union_array, dependency->key, dependency->target, target_array, dry_run);
                 
                 if(status != 0)

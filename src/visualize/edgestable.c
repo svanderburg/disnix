@@ -61,7 +61,7 @@ GHashTable *generate_edges_table(const GArray *activation_array, GArray *targets
 		GArray *target;
 		
 		/* Retrieve current dependency from the array */
-		Dependency *dependency = g_array_index(depends_on, Dependency*, j);
+		ActivationMappingKey *dependency = g_array_index(depends_on, ActivationMappingKey*, j);
 		
 		/* Find the activation mapping in the activation array */
 		actual_mapping_index = activation_mapping_index(activation_array, dependency->key, dependency->target);

@@ -23,10 +23,10 @@
 #include <xmlutil.h>
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
-static gint compare_activation_mapping(const ActivationMapping **l, const ActivationMapping **r)
+static gint compare_activation_mapping_keys(const ActivationMappingKey **l, const ActivationMappingKey **r)
 {
-    const ActivationMapping *left = *l;
-    const ActivationMapping *right = *r;
+    const ActivationMappingKey *left = *l;
+    const ActivationMappingKey *right = *r;
     
     /* Compare the service keys */
     gint status = g_strcmp0(left->key, right->key);
@@ -37,44 +37,35 @@ static gint compare_activation_mapping(const ActivationMapping **l, const Activa
         return status;
 }
 
-static gint compare_dependency(const Dependency **l, const Dependency **r)
+static gint compare_activation_mapping(const ActivationMapping **l, const ActivationMapping **r)
 {
-    const Dependency *left = *l;
-    const Dependency *right = *r;
-    
-    /* Compare the service keys */
-    gint status = g_strcmp0(left->key, right->key);
-    
-    if(status == 0)
-        return g_strcmp0(left->target, right->target); /* If services are equal then compare the targets */
-    else
-        return status;
+    return compare_activation_mapping_keys((const ActivationMappingKey **)l, (const ActivationMappingKey **)r);
 }
 
 gint activation_mapping_index(const GArray *activation_array, gchar *key, gchar *target)
 {
     gint left = 0;
     gint right = activation_array->len - 1;
-    
+     
     while(left <= right)
     {
-	gint mid = (left + right) / 2;
-	const ActivationMapping *mid_mapping = g_array_index(activation_array, ActivationMapping*, mid);
-	ActivationMapping keys;
-	const ActivationMapping *keys_ptr = &keys;
-	gint status;
-	
-	keys.key = key;
-	keys.target = target;
-	
+       gint mid = (left + right) / 2;
+       const ActivationMapping *mid_mapping = g_array_index(activation_array, ActivationMapping*, mid);
+       ActivationMapping keys;
+       const ActivationMapping *keys_ptr = &keys;
+       gint status;
+       
+       keys.key = key;
+       keys.target = target;
+       
         status = compare_activation_mapping(&mid_mapping, &keys_ptr);
-	
-	if(status == 0)
+       
+       if(status == 0)
             return mid; /* Return index of the found activation mapping */
-	else if(status > 0)
-	    right = mid - 1;
-	else if(status < 0)
-	    left = mid + 1;
+       else if(status > 0)
+           right = mid - 1;
+       else if(status < 0)
+           left = mid + 1;
     }
     
     return -1; /* Activation mapping not found */
@@ -99,15 +90,15 @@ gint dependency_index(const GArray *depends_on, gchar *key, gchar *target)
     while(left <= right)
     {
 	gint mid = (left + right) / 2;
-	const Dependency *mid_dependency = g_array_index(depends_on, Dependency*, mid);
-	Dependency keys;
-	const Dependency *keys_ptr = &keys;
+	const ActivationMappingKey *mid_dependency = g_array_index(depends_on, ActivationMappingKey*, mid);
+	ActivationMappingKey keys;
+	const ActivationMappingKey *key_ptr = &keys;
 	gint status;
 	
 	keys.key = key;
 	keys.target = target;
 	
-        status = compare_dependency(&mid_dependency, &keys_ptr);
+        status = compare_activation_mapping_keys(&mid_dependency, &key_ptr);
 	
 	if(status == 0)
             return mid; /* Return index of the found activation mapping */
@@ -120,7 +111,7 @@ gint dependency_index(const GArray *depends_on, gchar *key, gchar *target)
     return -1; /* Activation mapping not found */
 }
 
-Dependency *get_dependency(const GArray *depends_on, gchar *key, gchar *target)
+ActivationMappingKey *get_dependency(const GArray *depends_on, gchar *key, gchar *target)
 {
     /* Search for the location of the mapping in the union array */
     gint actual_dependency_index = dependency_index(depends_on, key, target);
@@ -128,7 +119,7 @@ Dependency *get_dependency(const GArray *depends_on, gchar *key, gchar *target)
     if(actual_dependency_index == -1)
         return NULL;
     else
-        return g_array_index(depends_on, Dependency*, actual_dependency_index);
+        return g_array_index(depends_on, ActivationMappingKey*, actual_dependency_index);
 }
 
 void print_activation_array(const GArray *activation_array)
@@ -149,7 +140,7 @@ void print_activation_array(const GArray *activation_array)
 	
 	for(j = 0; j < mapping->depends_on->len; j++)
 	{
-	    Dependency *dependency = g_array_index(mapping->depends_on, Dependency*, j);
+	    ActivationMappingKey *dependency = g_array_index(mapping->depends_on, ActivationMappingKey*, j);
 	    
 	    g_print("  key: %s\n", dependency->key);
 	    g_print("  target: %s\n", mapping->target);
@@ -231,7 +222,7 @@ GArray *create_activation_array(const gchar *manifest_file)
 		else if(xmlStrcmp(mapping_children->name, "dependsOn") == 0)
 		{
 		    xmlNodePtr depends_on_children = mapping_children->children;
-		    depends_on = g_array_new(FALSE, FALSE, sizeof(Dependency*));
+		    depends_on = g_array_new(FALSE, FALSE, sizeof(ActivationMappingKey*));
 		    
 		    /* Iterate over all services in dependsOn (dependency element) */
 		    while(depends_on_children != NULL)
@@ -239,7 +230,7 @@ GArray *create_activation_array(const gchar *manifest_file)
 			xmlNodePtr dependency_children = depends_on_children->children;
 			gchar *key = NULL;
 			gchar *target = NULL;
-			Dependency *dependency = (Dependency*)g_malloc(sizeof(Dependency));
+			ActivationMappingKey *dependency = (ActivationMappingKey*)g_malloc(sizeof(ActivationMappingKey));
 			
 			if(xmlStrcmp(depends_on_children->name, "dependency") == 0) /* Only iterate over dependency nodes */
 			{
@@ -263,7 +254,7 @@ GArray *create_activation_array(const gchar *manifest_file)
 		    }
 		    
 		    /* Sort the dependency array */
-		    g_array_sort(depends_on, (GCompareFunc)compare_dependency);
+		    g_array_sort(depends_on, (GCompareFunc)compare_activation_mapping_keys);
 		}
 		
 		mapping_children = mapping_children->next;
@@ -316,7 +307,7 @@ void delete_activation_array(GArray *activation_array)
             {
                 for(j = 0; j < mapping->depends_on->len; j++)
                 {
-                    Dependency *dependency = g_array_index(mapping->depends_on, Dependency*, j);
+                    ActivationMappingKey *dependency = g_array_index(mapping->depends_on, ActivationMappingKey*, j);
                     g_free(dependency->key);
                     g_free(dependency->target);
                     g_free(dependency);
@@ -429,7 +420,7 @@ GArray *find_interdependent_mappings(GArray *activation_array, const ActivationM
     {
 	unsigned int j;
 	ActivationMapping *current_mapping = g_array_index(activation_array, ActivationMapping*, i);
-	Dependency *found_dependency = get_dependency(current_mapping->depends_on, mapping->key, mapping->target);
+	ActivationMappingKey *found_dependency = get_dependency(current_mapping->depends_on, mapping->key, mapping->target);
 	
 	if(found_dependency != NULL)
 	    g_array_append_val(return_array, current_mapping);
