@@ -43,15 +43,16 @@ static gint compare_activation_mapping(const ActivationMapping **l, const Activa
     return compare_activation_mapping_keys((const ActivationMappingKey **)l, (const ActivationMappingKey **)r);
 }
 
-ActivationMapping *get_activation_mapping(const GPtrArray *activation_array, gchar *key, gchar *target)
+ActivationMapping *find_activation_mapping(const GPtrArray *activation_array, gchar *key, gchar *target)
 {
     ActivationMapping keys;
     const ActivationMapping *keys_ptr = &keys;
+    ActivationMapping **ret;
     
     keys.key = key;
     keys.target = target;
     
-    ActivationMapping **ret = bsearch(&keys_ptr, activation_array->pdata, activation_array->len, sizeof(gpointer), compare_activation_mapping);
+    ret = bsearch(&keys_ptr, activation_array->pdata, activation_array->len, sizeof(gpointer), compare_activation_mapping);
     
     if(ret == NULL)
         return NULL;
@@ -59,15 +60,16 @@ ActivationMapping *get_activation_mapping(const GPtrArray *activation_array, gch
         return *ret;
 }
 
-ActivationMappingKey *get_dependency(const GPtrArray *depends_on, gchar *key, gchar *target)
+ActivationMappingKey *find_dependency(const GPtrArray *depends_on, gchar *key, gchar *target)
 {
     ActivationMappingKey keys;
     const ActivationMappingKey *keys_ptr = &keys;
+    ActivationMappingKey **ret;
     
     keys.key = key;
     keys.target = target;
     
-    ActivationMappingKey **ret = bsearch(&keys_ptr, depends_on->pdata, depends_on->len, sizeof(gpointer), compare_activation_mapping_keys);
+    ret = bsearch(&keys_ptr, depends_on->pdata, depends_on->len, sizeof(gpointer), compare_activation_mapping_keys);
     
     if(ret == NULL)
         return NULL;
@@ -286,7 +288,7 @@ GPtrArray *intersect_activation_array(GPtrArray *left, GPtrArray *right)
 	{
 	    ActivationMapping *left_mapping = g_ptr_array_index(left, i);
 	    
-	    if(get_activation_mapping(right, left_mapping->key, left_mapping->target) != NULL)
+	    if(find_activation_mapping(right, left_mapping->key, left_mapping->target) != NULL)
 		g_ptr_array_insert(return_array, -1, left_mapping);
 	}
     }
@@ -296,7 +298,7 @@ GPtrArray *intersect_activation_array(GPtrArray *left, GPtrArray *right)
 	{
 	    ActivationMapping *right_mapping = g_ptr_array_index(right, i);
 
-	    if(get_activation_mapping(left, right_mapping->key, right_mapping->target) != NULL)
+	    if(find_activation_mapping(left, right_mapping->key, right_mapping->target) != NULL)
 		g_ptr_array_insert(return_array, -1, right_mapping);
 	}
     }
@@ -325,7 +327,7 @@ GPtrArray *union_activation_array(GPtrArray *left, GPtrArray *right, GPtrArray *
 	ActivationMapping *mapping = g_ptr_array_index(right, i);
 	mapping->activated = FALSE;
 	
-	if(get_activation_mapping(intersect, mapping->key, mapping->target) == NULL)
+	if(find_activation_mapping(intersect, mapping->key, mapping->target) == NULL)
 	    g_ptr_array_insert(return_array, -1, mapping);
     }
     
@@ -347,7 +349,7 @@ GPtrArray *substract_activation_array(GPtrArray *left, GPtrArray *right)
     {
 	ActivationMapping *mapping = g_ptr_array_index(left, i);
 	
-	if(get_activation_mapping(right, mapping->key, mapping->target) == NULL)
+	if(find_activation_mapping(right, mapping->key, mapping->target) == NULL)
 	    g_ptr_array_insert(return_array, -1, mapping);
     }
     
@@ -364,7 +366,7 @@ GPtrArray *find_interdependent_mappings(GPtrArray *activation_array, const Activ
     {
 	unsigned int j;
 	ActivationMapping *current_mapping = g_ptr_array_index(activation_array, i);
-	ActivationMappingKey *found_dependency = get_dependency(current_mapping->depends_on, mapping->key, mapping->target);
+	ActivationMappingKey *found_dependency = find_dependency(current_mapping->depends_on, mapping->key, mapping->target);
 	
 	if(found_dependency != NULL)
 	    g_ptr_array_insert(return_array, -1, current_mapping);

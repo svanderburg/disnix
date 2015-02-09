@@ -55,7 +55,7 @@ static int activate(gchar *interface, GPtrArray *union_array, gchar *key, gchar 
     else
     {
         /* Retrieve the mapping from the union array */
-        ActivationMapping *actual_mapping = get_activation_mapping(union_array, key, target);
+        ActivationMapping *actual_mapping = find_activation_mapping(union_array, key, target);
         
         /* First, activate all inter-dependency mappings */
         if(actual_mapping->depends_on != NULL)
@@ -79,7 +79,7 @@ static int activate(gchar *interface, GPtrArray *union_array, gchar *key, gchar 
             unsigned int i;
             int status;
             
-            GPtrArray *target = get_target(target_array, actual_mapping->target);
+            GPtrArray *target = find_target(target_array, actual_mapping->target);
             gchar **arguments = generate_activation_arguments(target); /* Generate an array of key=value pairs from infrastructure properties */
             unsigned int arguments_size = g_strv_length(arguments); /* Determine length of the activation arguments array */
             
@@ -114,7 +114,7 @@ static int deactivate(gchar *interface, GPtrArray *union_array, gchar *key, gcha
     else
     {
         /* Retrieve the mapping from the union array */
-        ActivationMapping *actual_mapping = get_activation_mapping(union_array, key, target);
+        ActivationMapping *actual_mapping = find_activation_mapping(union_array, key, target);
     
         /* Find all interdependent mapping on this mapping */
         GPtrArray *interdependent_mappings = find_interdependent_mappings(union_array, actual_mapping);
@@ -142,7 +142,7 @@ static int deactivate(gchar *interface, GPtrArray *union_array, gchar *key, gcha
         {
             int status;
             
-            GPtrArray *target = get_target(target_array, actual_mapping->target);
+            GPtrArray *target = find_target(target_array, actual_mapping->target);
             
             if(target == NULL)
             {

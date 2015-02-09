@@ -36,7 +36,7 @@ int set_target_profiles(const GPtrArray *distribution_array, gchar *interface, g
  * Sets the Disnix coordinator profile, so that the current configuration is 
  * known, which we can use for efficient future upgrades.
  *
- * @param coordinator_profile Path where the current deployment configuration must be stored
+ * @param coordinator_profile_path Path where the current deployment configuration must be stored
  * @param manifest_file Path to the manifest file representing the deployment state
  * @param profile Name of the distributed profile
  * @param username Username of the current user invoking the activation

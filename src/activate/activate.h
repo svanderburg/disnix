@@ -32,7 +32,7 @@
  *
  * @param interface Path to the client interface executable
  * @param new_manifest Manifest file representing the new deployment configuration
- * @param new_manifest Manifest file representing the old deployment configuration
+ * @param old_manifest Manifest file representing the old deployment configuration
  * @param coordinator_profile_path Path where the current deployment state is stored for future reference
  * @param profile Name of the distributed profile
  * @param no_coordinator_profile Do not create a coordinator profile

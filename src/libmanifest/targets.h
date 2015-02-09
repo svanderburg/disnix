@@ -43,9 +43,9 @@ TargetProperty;
 GPtrArray *generate_target_array(const gchar *manifest_file);
 
 /**
- * Deletes an array with distribution items.
+ * Deletes an array with targets.
  *
- * @param distribution_array Array with distribution items
+ * @param target_array Array with distribution items
  */
 void delete_target_array(GPtrArray *target_array);
 
@@ -60,9 +60,10 @@ void print_target_array(const GPtrArray *target_array);
  * Retrieves a target with a specific key from the target array.
  *
  * @param target_array Array of arrays representing target machines with properties
+ * @param key String referring to a target property serving as the key of the target
  * @return An array containing the properties of the machine with the given key or NULL if it cannot be found
  */
-GPtrArray *get_target(const GPtrArray *target_array, const gchar *key);
+GPtrArray *find_target(const GPtrArray *target_array, const gchar *key);
 
 /**
  * Retrieves the value of a target property with the given name.
@@ -71,7 +72,7 @@ GPtrArray *get_target(const GPtrArray *target_array, const gchar *key);
  * @param name Name of the property to retrieve
  * @return The value of the target property or NULL if it does not exists
  */
-gchar *get_target_property(const GPtrArray *target, const gchar *name);
+gchar *find_target_property(const GPtrArray *target, const gchar *name);
 
 /**
  * Retrieves the value of the target property that serves as the key to identify
@@ -80,7 +81,7 @@ gchar *get_target_property(const GPtrArray *target, const gchar *name);
  * @param target Array containing properties of a target machine
  * @return The key value of identifying the machine or NULL if it does not exists
  */
-gchar *get_target_key(const GPtrArray *target);
+gchar *find_target_key(const GPtrArray *target);
 
 /**
  * Generates a string vector with: 'name=value' pairs from the

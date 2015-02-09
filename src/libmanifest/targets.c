@@ -34,8 +34,8 @@ static gint compare_target(const GPtrArray **l, const GPtrArray **r)
     const GPtrArray *left = *l;
     const GPtrArray *right = *r;
     
-    gchar *left_target_property = get_target_key(left);
-    gchar *right_target_property = get_target_key(right);
+    gchar *left_target_property = find_target_key(left);
+    gchar *right_target_property = find_target_key(right);
     
     return g_strcmp0(left_target_property, right_target_property);
 }
@@ -43,7 +43,7 @@ static gint compare_target(const GPtrArray **l, const GPtrArray **r)
 static int compare_target_keys(const char *key, const GPtrArray **r)
 {
     const GPtrArray *right = *r;
-    gchar *right_target_property = get_target_key(right);
+    gchar *right_target_property = find_target_key(right);
     
     return g_strcmp0(key, right_target_property);
 }
@@ -179,7 +179,7 @@ void print_target_array(const GPtrArray *target_array)
     }
 }
 
-GPtrArray *get_target(const GPtrArray *target_array, const gchar *key)
+GPtrArray *find_target(const GPtrArray *target_array, const gchar *key)
 {
     GPtrArray **ret = bsearch(key, target_array->pdata, target_array->len, sizeof(gpointer), compare_target_keys);
     
@@ -189,7 +189,7 @@ GPtrArray *get_target(const GPtrArray *target_array, const gchar *key)
         return *ret;
 }
 
-gchar *get_target_property(const GPtrArray *target, const gchar *name)
+gchar *find_target_property(const GPtrArray *target, const gchar *name)
 {
     TargetProperty key;
     const TargetProperty *key_ptr = &key;
@@ -205,14 +205,14 @@ gchar *get_target_property(const GPtrArray *target, const gchar *name)
         return (*ret)->value;
 }
 
-gchar *get_target_key(const GPtrArray *target)
+gchar *find_target_key(const GPtrArray *target)
 {
-    gchar *target_property_name = get_target_property(target, "targetProperty");
+    gchar *target_property_name = find_target_property(target, "targetProperty");
     
     if(target_property_name == NULL)
         return NULL;
     else
-        return get_target_property(target, target_property_name);
+        return find_target_property(target, target_property_name);
 }
 
 gchar **generate_activation_arguments(const GPtrArray *target)

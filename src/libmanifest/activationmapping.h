@@ -82,7 +82,7 @@ void delete_activation_array(GPtrArray *activation_array);
  * @param target Target property referring to the target machine to which the service is deployed
  * @return The activation mapping with the specified keys, or NULL if it cannot be found
  */
-ActivationMapping *get_activation_mapping(const GPtrArray *activation_array, gchar *key, gchar *target);
+ActivationMapping *find_activation_mapping(const GPtrArray *activation_array, gchar *key, gchar *target);
 
 /**
  * Returns the dependency with the given keys in the dependsOn array.
@@ -92,7 +92,7 @@ ActivationMapping *get_activation_mapping(const GPtrArray *activation_array, gch
  * @param target Target property referring to the target machine to which the service is deployed
  * @return The dependency mapping with the specified keys, or NULL if it cannot be found
  */
-ActivationMappingKey *get_dependency(const GPtrArray *depends_on, gchar *key, gchar *target);
+ActivationMappingKey *find_dependency(const GPtrArray *depends_on, gchar *key, gchar *target);
 
 /**
  * Returns the intersection of the two given arrays.
