@@ -136,13 +136,13 @@ static gchar *create_infrastructure_xml(gchar *infrastructure_expr)
     }    
 }
 
-GArray *create_target_array(char *infrastructure_expr, const char *target_property)
+GPtrArray *create_target_array(char *infrastructure_expr, const char *target_property)
 {
     /* Declarations */
     gchar *infrastructureXML, *query;
     xmlDocPtr doc;
     xmlXPathObjectPtr result;
-    GArray *target_array = NULL;
+    GPtrArray *target_array = NULL;
     
     /* Open the XML output of nix-instantiate */
     infrastructureXML = create_infrastructure_xml(infrastructure_expr);
@@ -174,13 +174,13 @@ GArray *create_target_array(char *infrastructure_expr, const char *target_proper
     {
         unsigned int i;
         xmlNodeSetPtr nodeset = result->nodesetval;
-	target_array = g_array_new(FALSE, FALSE, sizeof(gchar*));
+	target_array = g_ptr_array_new();
 	
         for(i = 0; i < nodeset->nodeNr; i++)
         {
     	    xmlChar *target_value = nodeset->nodeTab[i]->children->content;
 	    gchar *target = g_strdup(target_value);
-	    g_array_append_val(target_array, target);
+	    g_ptr_array_insert(target_array, -1, target);
 	}
 	
 	xmlXPathFreeObject(result);
@@ -196,7 +196,7 @@ GArray *create_target_array(char *infrastructure_expr, const char *target_proper
     return target_array;
 }
 
-void delete_target_array(GArray *target_array)
+void delete_target_array(GPtrArray *target_array)
 {
     if(target_array != NULL)
     {
@@ -204,10 +204,10 @@ void delete_target_array(GArray *target_array)
     
         for(i = 0; i < target_array->len; i++)
         {
-            gchar *target = g_array_index(target_array, gchar*, i);
+            gchar *target = g_ptr_array_index(target_array, i);
             g_free(target);
         }
 
-        g_array_free(target_array, TRUE);
+        g_ptr_array_free(target_array, TRUE);
     }
 }

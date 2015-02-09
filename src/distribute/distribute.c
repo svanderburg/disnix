@@ -24,7 +24,7 @@
 int distribute(gchar *interface, const gchar *manifest_file)
 {
     /* Generate a distribution array from the manifest file */
-    GArray *distribution_array = generate_distribution_array(manifest_file);
+    GPtrArray *distribution_array = generate_distribution_array(manifest_file);
     
     if(distribution_array == NULL)
     {
@@ -39,7 +39,7 @@ int distribute(gchar *interface, const gchar *manifest_file)
         /* Iterate over the distribution array and distribute the profiles to the target machines */
         for(i = 0; i < distribution_array->len; i++)
         {
-            DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
+            DistributionItem *item = g_ptr_array_index(distribution_array, i);
             int status;
             
             /* Invoke copy closure operation */

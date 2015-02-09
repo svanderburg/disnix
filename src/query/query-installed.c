@@ -23,7 +23,7 @@
 int query_installed(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
-    GArray *target_array = create_target_array(infrastructure_expr, target_property);
+    GPtrArray *target_array = create_target_array(infrastructure_expr, target_property);
 
     if(target_array == NULL)
     {
@@ -38,7 +38,7 @@ int query_installed(gchar *interface, const gchar *target_property, gchar *infra
         /* For each target execute the query operation and display the results */
         for(i = 0; i < target_array->len; i++)
         {
-            gchar *target = g_array_index(target_array, gchar*, i);
+            gchar *target = g_ptr_array_index(target_array, i);
             int status;
             
             g_print("\nServices on: %s\n\n", target);

@@ -29,7 +29,7 @@
  * @param profile Identifier of the distributed profile
  * @return 0 if the unlocking phase succeeds, else a non-zero exit status
  */
-int unlock(gchar *interface, GArray *distribution_array, gchar *profile);
+int unlock(gchar *interface, GPtrArray *distribution_array, gchar *profile);
 
 /**
  * Locks the given profile on each machine defined in the distribution array.
@@ -40,6 +40,6 @@ int unlock(gchar *interface, GArray *distribution_array, gchar *profile);
  * @param profile Identifier of the distributed profile
  * @return 0 if the unlocking phase succeeds, else a non-zero exit status
  */
-int lock(gchar *interface, GArray *distribution_array, gchar *profile);
+int lock(gchar *interface, GPtrArray *distribution_array, gchar *profile);
 
 #endif

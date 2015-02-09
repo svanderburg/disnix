@@ -29,13 +29,13 @@
 typedef struct
 {
     /** Array mapping intra-dependency closures to machines */
-    GArray *distribution_array;
+    GPtrArray *distribution_array;
     
     /** Array of services to be activated on a target machine */
-    GArray *activation_array;
+    GPtrArray *activation_array;
     
     /** Array containing the available target machines */
-    GArray *target_array;
+    GPtrArray *target_array;
 }
 Manifest;
 

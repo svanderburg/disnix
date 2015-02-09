@@ -37,15 +37,15 @@ DistributionItem;
  * Creates a new array with distribution items from a manifest file.
  *
  * @param manifest_file Path to the manifest XML file
- * @return GArray with DistributionItems
+ * @return GPtrArray with DistributionItems
  */
-GArray *generate_distribution_array(const gchar *manifest_file);
+GPtrArray *generate_distribution_array(const gchar *manifest_file);
 
 /**
  * Deletes an array with distribution items.
  *
  * @param distribution_array Array with distribution items
  */
-void delete_distribution_array(GArray *distribution_array);
+void delete_distribution_array(GPtrArray *distribution_array);
 
 #endif

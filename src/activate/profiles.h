@@ -30,7 +30,7 @@
  * @param profile Name of the distributed profile
  * @return 0 if everything succeeds, else a non-zero exit status
  */
-int set_target_profiles(const GArray *distribution_array, gchar *interface, gchar *profile);
+int set_target_profiles(const GPtrArray *distribution_array, gchar *interface, gchar *profile);
 
 /**
  * Sets the Disnix coordinator profile, so that the current configuration is 

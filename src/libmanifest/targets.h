@@ -38,33 +38,23 @@ TargetProperty;
  * Creates a new array with targets from a manifest file
  *
  * @param manifest_file Path to the manifest XML file
- * @return GArray with targets
+ * @return GPtrArray with targets
  */
-GArray *generate_target_array(const gchar *manifest_file);
+GPtrArray *generate_target_array(const gchar *manifest_file);
 
 /**
  * Deletes an array with distribution items.
  *
  * @param distribution_array Array with distribution items
  */
-void delete_target_array(GArray *target_array);
+void delete_target_array(GPtrArray *target_array);
 
 /**
  * Prints the given target array.
  *
  * @param target_array Target array to print
  */
-void print_target_array(const GArray *target_array);
-
-/**
- * Returns the index of a target with a given key in the
- * target array.
- *
- * @param target_array Array of arrays representing target machines with properties
- * @param key Value of a target property serving as the key to look the machine up
- * @return The index of the target or -1 if the target cannot be found
- */
-int target_index(const GArray *target_array, const gchar *key);
+void print_target_array(const GPtrArray *target_array);
 
 /**
  * Retrieves a target with a specific key from the target array.
@@ -72,16 +62,7 @@ int target_index(const GArray *target_array, const gchar *key);
  * @param target_array Array of arrays representing target machines with properties
  * @return An array containing the properties of the machine with the given key or NULL if it cannot be found
  */
-GArray *get_target(const GArray *target_array, const gchar *key);
-
-/**
- * Returns the index of a target property of a target machine.
- *
- * @param target Array containing properties of a target machine
- * @param name Name of the property to retrieve
- * @return The index of the target property or -1 if the target property cannot be found
- */
-int target_property_index(const GArray *target, const gchar *name);
+GPtrArray *get_target(const GPtrArray *target_array, const gchar *key);
 
 /**
  * Retrieves the value of a target property with the given name.
@@ -90,7 +71,7 @@ int target_property_index(const GArray *target, const gchar *name);
  * @param name Name of the property to retrieve
  * @return The value of the target property or NULL if it does not exists
  */
-gchar *get_target_property(const GArray *target, const gchar *name);
+gchar *get_target_property(const GPtrArray *target, const gchar *name);
 
 /**
  * Retrieves the value of the target property that serves as the key to identify
@@ -99,7 +80,7 @@ gchar *get_target_property(const GArray *target, const gchar *name);
  * @param target Array containing properties of a target machine
  * @return The key value of identifying the machine or NULL if it does not exists
  */
-gchar *get_target_key(const GArray *target);
+gchar *get_target_key(const GPtrArray *target);
 
 /**
  * Generates a string vector with: 'name=value' pairs from the
@@ -109,6 +90,6 @@ gchar *get_target_key(const GArray *target);
  * @param target Array with target properties
  * @return String with environment variable settings
  */
-gchar **generate_activation_arguments(const GArray *target);
+gchar **generate_activation_arguments(const GPtrArray *target);
 
 #endif

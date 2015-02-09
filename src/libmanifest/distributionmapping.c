@@ -20,13 +20,13 @@
 #include "distributionmapping.h"
 #include <xmlutil.h>
 
-GArray *generate_distribution_array(const gchar *manifest_file)
+GPtrArray *generate_distribution_array(const gchar *manifest_file)
 {
     /* Declarations */
     xmlDocPtr doc;
     xmlNodePtr node_root;
     xmlXPathObjectPtr result;
-    GArray *distribution_array = NULL;
+    GPtrArray *distribution_array = NULL;
     
     /* Parse the XML document */
     
@@ -59,7 +59,7 @@ GArray *generate_distribution_array(const gchar *manifest_file)
 	xmlNodeSetPtr nodeset = result->nodesetval;
 	
 	/* Create a distribution array */
-        distribution_array = g_array_new(FALSE, FALSE, sizeof(DistributionItem*));
+	distribution_array = g_ptr_array_new();
     
 	/* Iterate over all the mapping elements */
 	for(i = 0; i < nodeset->nodeNr; i++)
@@ -83,7 +83,7 @@ GArray *generate_distribution_array(const gchar *manifest_file)
 	    /* Add the mapping to the array */
 	    item->profile = profile;
 	    item->target = target;
-	    g_array_append_val(distribution_array, item);
+	    g_ptr_array_insert(distribution_array, -1, item);
         }
 	
 	xmlXPathFreeObject(result);
@@ -97,7 +97,7 @@ GArray *generate_distribution_array(const gchar *manifest_file)
     return distribution_array;
 }
 
-void delete_distribution_array(GArray *distribution_array)
+void delete_distribution_array(GPtrArray *distribution_array)
 {
     if(distribution_array != NULL)
     {
@@ -105,13 +105,13 @@ void delete_distribution_array(GArray *distribution_array)
     
         for(i = 0; i < distribution_array->len; i++)
         {
-            DistributionItem* item = g_array_index(distribution_array, DistributionItem*, i);
+            DistributionItem* item = g_ptr_array_index(distribution_array, i);
     
             g_free(item->profile);
             g_free(item->target);
             g_free(item);
         }
     
-        g_array_free(distribution_array, TRUE);
+        g_ptr_array_free(distribution_array, TRUE);
     }
 }

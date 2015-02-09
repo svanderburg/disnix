@@ -29,7 +29,7 @@
  * @param target_array Array with targets
  * @return Generated cluster table
  */ 
-GHashTable *generate_cluster_table(GArray *activation_array, GArray *target_array);
+GHashTable *generate_cluster_table(GPtrArray *activation_array, GPtrArray *target_array);
 
 /**
  * Removes a clustered table including all its contents from memory

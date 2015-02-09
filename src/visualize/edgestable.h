@@ -29,7 +29,7 @@
  * @param target_array Array with targets
  * @return Generated edges table
  */
-GHashTable *generate_edges_table(const GArray *activation_array, GArray *targets_array);
+GHashTable *generate_edges_table(const GPtrArray *activation_array, GPtrArray *targets_array);
 
 /**
  * Removes an edges table including all its contents from memory.

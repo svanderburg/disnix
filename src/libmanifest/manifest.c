@@ -24,7 +24,7 @@
 
 Manifest *create_manifest(const gchar *manifest_file)
 {
-    GArray *distribution_array, *activation_array, *target_array;
+    GPtrArray *distribution_array, *activation_array, *target_array;
     Manifest *manifest;
     
     distribution_array = generate_distribution_array(manifest_file);

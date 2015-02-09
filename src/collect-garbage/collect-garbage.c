@@ -24,7 +24,7 @@
 int collect_garbage(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, const gboolean delete_old)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
-    GArray *target_array = create_target_array(infrastructure_expr, target_property);
+    GPtrArray *target_array = create_target_array(infrastructure_expr, target_property);
     
     if(target_array == NULL)
     {
@@ -39,7 +39,7 @@ int collect_garbage(gchar *interface, const gchar *target_property, gchar *infra
         /* Spawn garbage collection processes */
         for(i = 0; i < target_array->len; i++)
         {
-            gchar *target = g_array_index(target_array, gchar*, i);
+            gchar *target = g_ptr_array_index(target_array, i);
             int pid;
             
             g_print("[target: %s]: Running garbage collector\n", target);

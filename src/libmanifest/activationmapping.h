@@ -53,7 +53,7 @@ typedef struct
     /** Activation type */
     gchar *type;
     /** Array of ActivationMappingKey items representing the inter-dependencies */
-    GArray *depends_on;
+    GPtrArray *depends_on;
     /** Indicated whether the service is activated or not */
     gboolean activated;
 }
@@ -63,27 +63,16 @@ ActivationMapping;
  * Creates an array with activation mappings from a manifest XML file.
  *
  * @param manifest_file Path to the manifest XML file
- * @return GArray containing activation mappings
+ * @return GPtrArray containing activation mappings
  */
-GArray *create_activation_array(const gchar *manifest_file);
+GPtrArray *create_activation_array(const gchar *manifest_file);
 
 /**
  * Deletes an array with activation mappings including its contents.
  *
  * @param activation_array Activation array to delete
  */
-void delete_activation_array(GArray *activation_array);
-
-/**
- * Returns the index of the activation mapping with the given keys
- * in the activation array.
- *
- * @param activation_array Activation array
- * @param key Hash code that uniquely defines a service
- * @param target Target property referring to the target machine to which the service is deployed
- * @return Index of the activation mapping or -1 if not found
- */
-gint activation_mapping_index(const GArray *activation_array, gchar *key, gchar *target);
+void delete_activation_array(GPtrArray *activation_array);
 
 /**
  * Returns the activation mapping with the given keys in the activation array.
@@ -93,17 +82,7 @@ gint activation_mapping_index(const GArray *activation_array, gchar *key, gchar 
  * @param target Target property referring to the target machine to which the service is deployed
  * @return The activation mapping with the specified keys, or NULL if it cannot be found
  */
-ActivationMapping *get_activation_mapping(const GArray *activation_array, gchar *key, gchar *target);
-
-/**
- * Returns the index of a dependency with the given keys in the dependsOn array.
- *
- * @param depends_on dependsOn array
- * @param key Hash code that uniquely defines a service
- * @param target Target property referring to the target machine to which the service is deployed
- * @return Index of the dependency or -1 if not found
- */
-gint dependency_index(const GArray *depends_on, gchar *key, gchar *target);
+ActivationMapping *get_activation_mapping(const GPtrArray *activation_array, gchar *key, gchar *target);
 
 /**
  * Returns the dependency with the given keys in the dependsOn array.
@@ -113,30 +92,30 @@ gint dependency_index(const GArray *depends_on, gchar *key, gchar *target);
  * @param target Target property referring to the target machine to which the service is deployed
  * @return The dependency mapping with the specified keys, or NULL if it cannot be found
  */
-ActivationMappingKey *get_dependency(const GArray *depends_on, gchar *key, gchar *target);
+ActivationMappingKey *get_dependency(const GPtrArray *depends_on, gchar *key, gchar *target);
 
 /**
  * Returns the intersection of the two given arrays.
  * The array that is returned contains pointers to elements in
- * both left and right, so it should be free with g_array_free().
+ * both left and right, so it should be free with g_ptr_array_free().
  *
  * @param left Array with activation mappings
  * @param right Array with activation mappings
  * @return Array with activation mappings both in left and right
  */
-GArray *intersect_activation_array(GArray *left, GArray *right);
+GPtrArray *intersect_activation_array(GPtrArray *left, GPtrArray *right);
 
 /**
  * Returns a new array in which the activation mappings in
  * right and substracted from left.
  * The array that is returned contains pointers to elements in
- * left, so it should be free with g_array_free().
+ * left, so it should be free with g_ptr_array_free().
  *
  * @param left Array with activation mappings
  * @param right Array with activation mappings
  * @return Array with right substracted from left.
  */
-GArray *substract_activation_array(GArray *left, GArray *right);
+GPtrArray *substract_activation_array(GPtrArray *left, GPtrArray *right);
 
 /**
  * Returns the union of left and right using the intersection,
@@ -149,7 +128,7 @@ GArray *substract_activation_array(GArray *left, GArray *right);
  * @return Array with activation mappings in both left and right,
  *         marked as active and inactive
  */
-GArray *union_activation_array(GArray *left, GArray *right, GArray *intersect);
+GPtrArray *union_activation_array(GPtrArray *left, GPtrArray *right, GPtrArray *intersect);
 
 /**
  * Searches for all the mappings in an array that have an inter-dependency
@@ -160,13 +139,13 @@ GArray *union_activation_array(GArray *left, GArray *right, GArray *intersect);
  *                interdependent mapping
  * @return Array with interdependent activation mappings
  */
-GArray *find_interdependent_mappings(GArray *activation_array, const ActivationMapping *mapping);
+GPtrArray *find_interdependent_mappings(GPtrArray *activation_array, const ActivationMapping *mapping);
 
 /**
  * Prints the given activation array.
  *
  * @param activation_array Activation array to print
  */
-void print_activation_array(const GArray *activation_array);
+void print_activation_array(const GPtrArray *activation_array);
 
 #endif

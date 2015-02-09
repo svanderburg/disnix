@@ -38,15 +38,15 @@ DerivationItem;
  * XML file.
  *
  * @param distributed_derivation_file Path to the distributed derivation XML file
- * @return GArray with DerivationItems
+ * @return GPtrArray with DerivationItems
  */ 
-GArray *create_derivation_array(const gchar *distributed_derivation_file);
+GPtrArray *create_derivation_array(const gchar *distributed_derivation_file);
 
 /**
  * Deletes an array with derivation items
  *
  * @param derivation_array Derivation array to delete
  */
-void delete_derivation_array(GArray *derivation_array);
+void delete_derivation_array(GPtrArray *derivation_array);
 
 #endif

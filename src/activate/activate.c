@@ -71,7 +71,7 @@ static void set_flag_on_interrupt(void)
     sigaction(SIGINT, &act, NULL);
 }
 
-static void release_locks(const gboolean no_lock, const gboolean dry_run, gchar *interface, GArray *distribution_array, gchar *profile)
+static void release_locks(const gboolean no_lock, const gboolean dry_run, gchar *interface, GPtrArray *distribution_array, gchar *profile)
 {
     if(no_lock || dry_run)
         g_print("[coordinator]: Not releasing any locks, because they have been disabled\n");
@@ -82,7 +82,7 @@ static void release_locks(const gboolean no_lock, const gboolean dry_run, gchar 
     }
 }
 
-static void cleanup(gchar *old_manifest_file, Manifest *manifest, GArray *old_activation_mappings)
+static void cleanup(gchar *old_manifest_file, Manifest *manifest, GPtrArray *old_activation_mappings)
 {
     g_free(old_manifest_file);
     delete_manifest(manifest);
@@ -102,7 +102,7 @@ int activate_system(gchar *interface, const gchar *new_manifest, const gchar *ol
     {
         int status;
         gchar *old_manifest_file;
-        GArray *old_activation_mappings;
+        GPtrArray *old_activation_mappings;
         
         /* Get current username */
         char *username = (getpwuid(geteuid()))->pw_name;

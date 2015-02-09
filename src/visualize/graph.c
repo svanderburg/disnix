@@ -54,7 +54,7 @@ int generate_graph(const gchar *manifest_file)
         while(g_hash_table_iter_next(&iter, (gpointer*)&key, (gpointer*)&value)) 
         {
             unsigned int i;
-            GArray *cluster_array = (GArray*)value;
+            GPtrArray *cluster_array = (GPtrArray*)value;
             gchar *target = (gchar*)key;
         
             g_print("subgraph cluster_%d {\n", count);
@@ -63,7 +63,7 @@ int generate_graph(const gchar *manifest_file)
         
             for(i = 0; i < cluster_array->len; i++)
             {
-                ActivationMapping *mapping = g_array_index(cluster_array, ActivationMapping*, i);
+                ActivationMapping *mapping = g_ptr_array_index(cluster_array, i);
                 g_print("\"%s:%s\" [ label = \"%s\" ];\n", mapping->key, target, mapping->name);
             }
         
@@ -79,11 +79,11 @@ int generate_graph(const gchar *manifest_file)
         while(g_hash_table_iter_next(&iter, (gpointer*)&key, (gpointer*)&value))
         {
             unsigned int i;
-            GArray *dependency_array = (GArray*)value;
+            GPtrArray *dependency_array = (GPtrArray*)value;
         
             for(i = 0; i < dependency_array->len; i++)
             {
-                gchar *dep = g_array_index(dependency_array, gchar*, i);
+                gchar *dep = g_ptr_array_index(dependency_array, i);
                 g_print("\"%s\" -> \"%s\"\n", (gchar*)key, dep);
             }
         }

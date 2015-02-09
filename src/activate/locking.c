@@ -23,7 +23,7 @@
 
 extern volatile int interrupted;
 
-int unlock(gchar *interface, GArray *distribution_array, gchar *profile)
+int unlock(gchar *interface, GPtrArray *distribution_array, gchar *profile)
 {
     unsigned int i, running_processes = 0;
     int exit_status = 0;
@@ -32,7 +32,7 @@ int unlock(gchar *interface, GArray *distribution_array, gchar *profile)
     /* For each locked machine, release the lock */
     for(i = 0; i < distribution_array->len; i++)
     {
-        DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
+        DistributionItem *item = g_ptr_array_index(distribution_array, i);
         
         g_print("[target: %s]: Releasing a lock!\n", item->target);
         status = exec_unlock(interface, item->target, profile);
@@ -63,18 +63,18 @@ int unlock(gchar *interface, GArray *distribution_array, gchar *profile)
     return exit_status;
 }
 
-int lock(gchar *interface, GArray *distribution_array, gchar *profile)
+int lock(gchar *interface, GPtrArray *distribution_array, gchar *profile)
 {
     unsigned int i;
-    GArray *try_array = g_array_new(FALSE, FALSE, sizeof(DistributionItem*));
-    GArray *lock_array = g_array_new(FALSE, FALSE, sizeof(DistributionItem*));
+    GPtrArray *try_array = g_ptr_array_new();
+    GPtrArray *lock_array = g_ptr_array_new();
     int exit_status = 0;
     int status;
     
     /* For each machine acquire a lock */
     for(i = 0; i < distribution_array->len; i++)
     {
-        DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
+        DistributionItem *item = g_ptr_array_index(distribution_array, i);
         
         g_print("[target: %s]: Acquiring a lock\n", item->target);
         status = exec_lock(interface, item->target, profile);
@@ -86,7 +86,7 @@ int lock(gchar *interface, GArray *distribution_array, gchar *profile)
             exit_status = -1;
         }
         else
-            g_array_append_val(try_array, item);
+            g_ptr_array_insert(try_array, -1, item);
     }
     
     /* Wait until every lock is acquired */
@@ -112,8 +112,8 @@ int lock(gchar *interface, GArray *distribution_array, gchar *profile)
         unlock(interface, lock_array, profile);
     
     /* Cleanup */
-    g_array_free(try_array, TRUE);
-    g_array_free(lock_array, TRUE);
+    g_ptr_array_free(try_array, TRUE);
+    g_ptr_array_free(lock_array, TRUE);
     
     /* Return exit status, which is 0 if everything succeeds */
     return exit_status;

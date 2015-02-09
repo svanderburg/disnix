@@ -21,7 +21,7 @@
 #include <activationmapping.h>
 #include <targets.h>
 
-GHashTable *generate_cluster_table(GArray *activation_array, GArray *target_array)
+GHashTable *generate_cluster_table(GPtrArray *activation_array, GPtrArray *target_array)
 {
     unsigned int i;
     
@@ -32,14 +32,14 @@ GHashTable *generate_cluster_table(GArray *activation_array, GArray *target_arra
     for(i = 0; i < activation_array->len; i++)
     {
 	/* Get current mapping item */
-	ActivationMapping *mapping = g_array_index(activation_array, ActivationMapping*, i);
+	ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
 	
 	/* Get target property of the current mapping item */
-	GArray *target = get_target(target_array, mapping->target);
+	GPtrArray *target = get_target(target_array, mapping->target);
 	gchar *target_key = get_target_key(target);
 	
 	/* See whether the target already exists in the table */
-	GArray *services_array = g_hash_table_lookup(cluster_table, target_key);
+	GPtrArray *services_array = g_hash_table_lookup(cluster_table, target_key);
 	
 	/*
 	 * If the target is not yet in the table, create a new empty array
@@ -47,12 +47,12 @@ GHashTable *generate_cluster_table(GArray *activation_array, GArray *target_arra
 	 */
 	if(services_array == NULL)
 	{
-	    services_array = g_array_new(FALSE, FALSE, sizeof(ActivationMapping*));
+	    services_array = g_ptr_array_new();
 	    g_hash_table_insert(cluster_table, target_key, services_array);
 	}
 	
 	/* Append service to the array */
-	g_array_append_val(services_array, mapping);
+	g_ptr_array_insert(services_array, -1, mapping);
     }
     
     /* Return the generated cluster table */
@@ -68,8 +68,8 @@ void destroy_cluster_table(GHashTable *cluster_table)
     g_hash_table_iter_init(&iter, cluster_table);
     while(g_hash_table_iter_next(&iter, (gpointer*)&key, (gpointer*)&value)) 
     {
-	GArray *services_array = (GArray*)value;
-	g_array_free(services_array, TRUE);
+	GPtrArray *services_array = (GPtrArray*)value;
+	g_ptr_array_free(services_array, TRUE);
     }
     
     g_hash_table_destroy(cluster_table);

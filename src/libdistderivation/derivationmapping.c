@@ -20,13 +20,13 @@
 #include "derivationmapping.h"
 #include <xmlutil.h>
 
-GArray *create_derivation_array(const gchar *distributed_derivation_file)
+GPtrArray *create_derivation_array(const gchar *distributed_derivation_file)
 {
     /* Declarations */
     xmlDocPtr doc;
     xmlNodePtr node_root;
     xmlXPathObjectPtr result;
-    GArray *derivation_array = NULL;
+    GPtrArray *derivation_array = NULL;
     
     /* Parse the XML document */
     
@@ -59,7 +59,7 @@ GArray *create_derivation_array(const gchar *distributed_derivation_file)
 	unsigned int i;
 	
 	/* Create a derivation array */
-        derivation_array = g_array_new(FALSE, FALSE, sizeof(DerivationItem*));
+        derivation_array = g_ptr_array_new();
 	
 	/* Iterate over all the mapping elements */
 	for(i = 0; i < nodeset->nodeNr; i++)
@@ -83,7 +83,7 @@ GArray *create_derivation_array(const gchar *distributed_derivation_file)
 	    /* Added the mapping to the array */
 	    item->derivation = derivation;
 	    item->target = target;
-	    g_array_append_val(derivation_array, item);
+	    g_ptr_array_insert(derivation_array, -1, item);
         }
     }
     
@@ -96,7 +96,7 @@ GArray *create_derivation_array(const gchar *distributed_derivation_file)
     return derivation_array;
 }
 
-void delete_derivation_array(GArray *derivation_array)
+void delete_derivation_array(GPtrArray *derivation_array)
 {
     if(derivation_array != NULL)
     {
@@ -104,12 +104,12 @@ void delete_derivation_array(GArray *derivation_array)
     
         for(i = 0; i < derivation_array->len; i++)
         {
-            DerivationItem *item = g_array_index(derivation_array, DerivationItem*, i);
+            DerivationItem *item = g_ptr_array_index(derivation_array, i);
             free(item->derivation);
             g_free(item->target);
             g_free(item);
         }
     
-        g_array_free(derivation_array, TRUE);
+        g_ptr_array_free(derivation_array, TRUE);
     }
 }

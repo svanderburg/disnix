@@ -25,7 +25,7 @@
 
 #define BUFFER_SIZE 4096
 
-static int distribute_derivations(gchar *interface, const GArray *derivation_array)
+static int distribute_derivations(gchar *interface, const GPtrArray *derivation_array)
 {
     int status = 0;
     unsigned int i;
@@ -33,7 +33,7 @@ static int distribute_derivations(gchar *interface, const GArray *derivation_arr
     for(i = 0; i < derivation_array->len; i++)
     {   
         /* Retrieve derivation item from array */
-        DerivationItem *item = g_array_index(derivation_array, DerivationItem*, i);
+        DerivationItem *item = g_ptr_array_index(derivation_array, i);
         
         /* Execute copy closure process */
         g_print("[target: %s]: Receiving intra-dependency closure of store derivation: %s\n", item->target, item->derivation);
@@ -47,7 +47,7 @@ static int distribute_derivations(gchar *interface, const GArray *derivation_arr
     return status;
 }
 
-static int realise(gchar *interface, GArray *derivation_array, GArray *result_array)
+static int realise(gchar *interface, GPtrArray *derivation_array, GPtrArray *result_array)
 {
     /* Declarations */
     
@@ -62,7 +62,7 @@ static int realise(gchar *interface, GArray *derivation_array, GArray *result_ar
     for(i = 0; i < derivation_array->len; i++)
     {
         int pipefd[2];
-        DerivationItem *item = g_array_index(derivation_array, DerivationItem*, i);
+        DerivationItem *item = g_ptr_array_index(derivation_array, i);
         
         g_print("[target: %s]: Realising derivation: %s\n", item->target, item->derivation);
         status = exec_realise(interface, item->target, item->derivation, pipefd);
@@ -96,7 +96,7 @@ static int realise(gchar *interface, GArray *derivation_array, GArray *result_ar
             {
                 gchar *result;
                 result = g_strdup(line);
-                g_array_append_val(result_array, result);
+                g_ptr_array_insert(result_array, -1, result);
             }
         }
         
@@ -123,7 +123,7 @@ static int realise(gchar *interface, GArray *derivation_array, GArray *result_ar
     return exit_status;
 }
 
-static int retrieve_results(gchar *interface, GArray *derivation_array, GArray *result_array)
+static int retrieve_results(gchar *interface, GPtrArray *derivation_array, GPtrArray *result_array)
 {
     unsigned int i;
     int status = 0;
@@ -134,8 +134,8 @@ static int retrieve_results(gchar *interface, GArray *derivation_array, GArray *
         gchar *result;
         DerivationItem *item;
         
-        result = g_array_index(result_array, gchar*, i);
-        item = g_array_index(derivation_array, DerivationItem*, i);
+        result = g_ptr_array_index(result_array, i);
+        item = g_ptr_array_index(derivation_array, i);
         
         g_print("[target: %s]: Sending build result to coordinator: %s\n", item->target, result);
         
@@ -149,7 +149,7 @@ static int retrieve_results(gchar *interface, GArray *derivation_array, GArray *
     return status;
 }
 
-static void delete_result_array(GArray *result_array)
+static void delete_result_array(GPtrArray *result_array)
 {
     if(result_array != NULL)
     {
@@ -157,15 +157,15 @@ static void delete_result_array(GArray *result_array)
         
         for(i = 0; i < result_array->len; i++)
         {
-            gchar *result = g_array_index(result_array, gchar*, i);
+            gchar *result = g_ptr_array_index(result_array, i);
             g_free(result);
         }
     
-        g_array_free(result_array, TRUE);
+        g_ptr_array_free(result_array, TRUE);
     }
 }
 
-static void cleanup(GArray *result_array, GArray *derivation_array)
+static void cleanup(GPtrArray *result_array, GPtrArray *derivation_array)
 {
     delete_result_array(result_array);
     delete_derivation_array(derivation_array);
@@ -173,7 +173,7 @@ static void cleanup(GArray *result_array, GArray *derivation_array)
 
 int build(gchar *interface, const gchar *distributed_derivation_file)
 {
-    GArray *derivation_array = create_derivation_array(distributed_derivation_file);
+    GPtrArray *derivation_array = create_derivation_array(distributed_derivation_file);
     
     if(derivation_array == NULL)
     {
@@ -183,7 +183,7 @@ int build(gchar *interface, const gchar *distributed_derivation_file)
     else
     {
         int status;
-        GArray *result_array = g_array_new(FALSE, FALSE, sizeof(gchar*));
+        GPtrArray *result_array = g_ptr_array_new();
         
         /* Distribute derivations to target machines */
         if((status = distribute_derivations(interface, derivation_array)) != 0)

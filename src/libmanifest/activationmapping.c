@@ -18,6 +18,7 @@
  */
 
 #include "activationmapping.h"
+#include <stdlib.h>
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <xmlutil.h>
@@ -42,93 +43,45 @@ static gint compare_activation_mapping(const ActivationMapping **l, const Activa
     return compare_activation_mapping_keys((const ActivationMappingKey **)l, (const ActivationMappingKey **)r);
 }
 
-gint activation_mapping_index(const GArray *activation_array, gchar *key, gchar *target)
+ActivationMapping *get_activation_mapping(const GPtrArray *activation_array, gchar *key, gchar *target)
 {
-    gint left = 0;
-    gint right = activation_array->len - 1;
-     
-    while(left <= right)
-    {
-       gint mid = (left + right) / 2;
-       const ActivationMapping *mid_mapping = g_array_index(activation_array, ActivationMapping*, mid);
-       ActivationMapping keys;
-       const ActivationMapping *keys_ptr = &keys;
-       gint status;
-       
-       keys.key = key;
-       keys.target = target;
-       
-        status = compare_activation_mapping(&mid_mapping, &keys_ptr);
-       
-       if(status == 0)
-            return mid; /* Return index of the found activation mapping */
-       else if(status > 0)
-           right = mid - 1;
-       else if(status < 0)
-           left = mid + 1;
-    }
+    ActivationMapping keys;
+    const ActivationMapping *keys_ptr = &keys;
     
-    return -1; /* Activation mapping not found */
-}
-
-ActivationMapping *get_activation_mapping(const GArray *activation_array, gchar *key, gchar *target)
-{
-    /* Search for the location of the mapping in the union array */
-    gint actual_mapping_index = activation_mapping_index(activation_array, key, target);
+    keys.key = key;
+    keys.target = target;
     
-    if(actual_mapping_index == -1)
+    ActivationMapping **ret = bsearch(&keys_ptr, activation_array->pdata, activation_array->len, sizeof(gpointer), compare_activation_mapping);
+    
+    if(ret == NULL)
         return NULL;
     else
-        return g_array_index(activation_array, ActivationMapping*, actual_mapping_index);
+        return *ret;
 }
 
-gint dependency_index(const GArray *depends_on, gchar *key, gchar *target)
+ActivationMappingKey *get_dependency(const GPtrArray *depends_on, gchar *key, gchar *target)
 {
-    gint left = 0;
-    gint right = depends_on->len - 1;
+    ActivationMappingKey keys;
+    const ActivationMappingKey *keys_ptr = &keys;
     
-    while(left <= right)
-    {
-	gint mid = (left + right) / 2;
-	const ActivationMappingKey *mid_dependency = g_array_index(depends_on, ActivationMappingKey*, mid);
-	ActivationMappingKey keys;
-	const ActivationMappingKey *key_ptr = &keys;
-	gint status;
-	
-	keys.key = key;
-	keys.target = target;
-	
-        status = compare_activation_mapping_keys(&mid_dependency, &key_ptr);
-	
-	if(status == 0)
-            return mid; /* Return index of the found activation mapping */
-	else if(status > 0)
-	    right = mid - 1;
-	else if(status < 0)
-	    left = mid + 1;
-    }
+    keys.key = key;
+    keys.target = target;
     
-    return -1; /* Activation mapping not found */
-}
-
-ActivationMappingKey *get_dependency(const GArray *depends_on, gchar *key, gchar *target)
-{
-    /* Search for the location of the mapping in the union array */
-    gint actual_dependency_index = dependency_index(depends_on, key, target);
+    ActivationMappingKey **ret = bsearch(&keys_ptr, depends_on->pdata, depends_on->len, sizeof(gpointer), compare_activation_mapping_keys);
     
-    if(actual_dependency_index == -1)
+    if(ret == NULL)
         return NULL;
     else
-        return g_array_index(depends_on, ActivationMappingKey*, actual_dependency_index);
+        return *ret;
 }
 
-void print_activation_array(const GArray *activation_array)
+void print_activation_array(const GPtrArray *activation_array)
 {
     unsigned int i;
     
     for(i = 0; i < activation_array->len; i++)
     {
-	ActivationMapping *mapping = g_array_index(activation_array, ActivationMapping*, i);
+	ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
 	unsigned int j;
 	
 	g_print("key: %s\n", mapping->key);
@@ -140,7 +93,7 @@ void print_activation_array(const GArray *activation_array)
 	
 	for(j = 0; j < mapping->depends_on->len; j++)
 	{
-	    ActivationMappingKey *dependency = g_array_index(mapping->depends_on, ActivationMappingKey*, j);
+	    ActivationMappingKey *dependency = g_ptr_array_index(mapping->depends_on, j);
 	    
 	    g_print("  key: %s\n", dependency->key);
 	    g_print("  target: %s\n", mapping->target);
@@ -150,12 +103,12 @@ void print_activation_array(const GArray *activation_array)
     }
 }
 
-GArray *create_activation_array(const gchar *manifest_file)
+GPtrArray *create_activation_array(const gchar *manifest_file)
 {
     xmlDocPtr doc;
     xmlNodePtr node_root;
     xmlXPathObjectPtr result;
-    GArray *activation_array;
+    GPtrArray *activation_array;
     
     /* Parse the XML document */
     
@@ -181,7 +134,7 @@ GArray *create_activation_array(const gchar *manifest_file)
     result = executeXPathQuery(doc, "/manifest/activation/mapping");
     
     /* Initialize activation array */
-    activation_array = g_array_new(FALSE, FALSE, sizeof(ActivationMapping*));
+    activation_array = g_ptr_array_new();
     
     /* Iterate over all the distribution elements and add them to the array */
     
@@ -200,7 +153,7 @@ GArray *create_activation_array(const gchar *manifest_file)
 	    gchar *targetProperty = NULL;
 	    gchar *name = NULL;
 	    gchar *type = NULL;
-	    GArray *depends_on = NULL;
+	    GPtrArray *depends_on = NULL;
 	    ActivationMapping *mapping = (ActivationMapping*)g_malloc(sizeof(ActivationMapping));
 	    
 	    /* Iterate over all the mapping item children (service,target,targetProperty,type,dependsOn elements) */
@@ -222,7 +175,7 @@ GArray *create_activation_array(const gchar *manifest_file)
 		else if(xmlStrcmp(mapping_children->name, "dependsOn") == 0)
 		{
 		    xmlNodePtr depends_on_children = mapping_children->children;
-		    depends_on = g_array_new(FALSE, FALSE, sizeof(ActivationMappingKey*));
+		    depends_on = g_ptr_array_new();
 		    
 		    /* Iterate over all services in dependsOn (dependency element) */
 		    while(depends_on_children != NULL)
@@ -247,14 +200,14 @@ GArray *create_activation_array(const gchar *manifest_file)
 			
 			    dependency->key = key;
 			    dependency->target = target;
-			    g_array_append_val(depends_on, dependency);
+			    g_ptr_array_insert(depends_on, -1, dependency);
 			}
 			
 			depends_on_children = depends_on_children->next;
 		    }
 		    
 		    /* Sort the dependency array */
-		    g_array_sort(depends_on, (GCompareFunc)compare_activation_mapping_keys);
+		    g_ptr_array_sort(depends_on, (GCompareFunc)compare_activation_mapping_keys);
 		}
 		
 		mapping_children = mapping_children->next;
@@ -269,7 +222,7 @@ GArray *create_activation_array(const gchar *manifest_file)
 	    mapping->depends_on = depends_on;
 		
 	    /* Add the mapping to the array */
-	    g_array_append_val(activation_array, mapping);
+	    g_ptr_array_insert(activation_array, -1, mapping);
 	}
     }
 
@@ -279,13 +232,13 @@ GArray *create_activation_array(const gchar *manifest_file)
     xmlCleanupParser();
 
     /* Sort the activation array */
-    g_array_sort(activation_array, (GCompareFunc)compare_activation_mapping);
+    g_ptr_array_sort(activation_array, (GCompareFunc)compare_activation_mapping);
     
     /* Return the activation array */
     return activation_array;
 }
 
-void delete_activation_array(GArray *activation_array)
+void delete_activation_array(GPtrArray *activation_array)
 {
     if(activation_array != NULL)
     {
@@ -293,7 +246,7 @@ void delete_activation_array(GArray *activation_array)
     
         for(i = 0; i < activation_array->len; i++)
         {
-            ActivationMapping *mapping = g_array_index(activation_array, ActivationMapping*, i);
+            ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
             unsigned int j;
             
             g_free(mapping->key);
@@ -307,123 +260,114 @@ void delete_activation_array(GArray *activation_array)
             {
                 for(j = 0; j < mapping->depends_on->len; j++)
                 {
-                    ActivationMappingKey *dependency = g_array_index(mapping->depends_on, ActivationMappingKey*, j);
+                    ActivationMappingKey *dependency = g_ptr_array_index(mapping->depends_on, j);
                     g_free(dependency->key);
                     g_free(dependency->target);
                     g_free(dependency);
                 }
             }
             
-            g_array_free(mapping->depends_on, TRUE);
+            g_ptr_array_free(mapping->depends_on, TRUE);
             g_free(mapping);
         }
     
-        g_array_free(activation_array, TRUE);
+        g_ptr_array_free(activation_array, TRUE);
     }
 }
 
-GArray *intersect_activation_array(GArray *left, GArray *right)
+GPtrArray *intersect_activation_array(GPtrArray *left, GPtrArray *right)
 {
     unsigned int i;
-    GArray *return_array = g_array_new(FALSE, FALSE, sizeof(ActivationMapping*));
+    GPtrArray *return_array = g_ptr_array_new();
     
     if(left->len < right->len)
     {
 	for(i = 0; i < left->len; i++)
 	{
-	    ActivationMapping *left_mapping = g_array_index(left, ActivationMapping*, i);
+	    ActivationMapping *left_mapping = g_ptr_array_index(left, i);
 	    
-	    if(activation_mapping_index(right, left_mapping->key, left_mapping->target) != -1)
-		g_array_append_val(return_array, left_mapping);
+	    if(get_activation_mapping(right, left_mapping->key, left_mapping->target) != NULL)
+		g_ptr_array_insert(return_array, -1, left_mapping);
 	}
     }
     else
     {
 	for(i = 0; i < right->len; i++)
 	{
-	    ActivationMapping *right_mapping = g_array_index(right, ActivationMapping*, i);
+	    ActivationMapping *right_mapping = g_ptr_array_index(right, i);
 
-	    if(activation_mapping_index(left, right_mapping->key, right_mapping->target) != -1)
-		g_array_append_val(return_array, right_mapping);
+	    if(get_activation_mapping(left, right_mapping->key, right_mapping->target) != NULL)
+		g_ptr_array_insert(return_array, -1, right_mapping);
 	}
     }
     
     return return_array;
 }
 
-GArray *union_activation_array(GArray *left, GArray *right, GArray *intersect)
+GPtrArray *union_activation_array(GPtrArray *left, GPtrArray *right, GPtrArray *intersect)
 {    
     unsigned int i;
-    GArray *return_array = g_array_new(FALSE, FALSE, sizeof(ActivationMapping*));
+    GPtrArray *return_array = g_ptr_array_new();
     
     /* Create a clone of the left array and mark mappings as activated */
     
     for(i = 0; i < left->len; i++)
     {
-	ActivationMapping *mapping = g_array_index(left, ActivationMapping*, i);
+	ActivationMapping *mapping = g_ptr_array_index(left, i);
 	mapping->activated = TRUE;
-	g_array_append_val(return_array, mapping);
+	g_ptr_array_insert(return_array, -1, mapping);
     }
     
     /* Append all mappings from the right array which are not in the intersection and mark them as deactivated */
     
     for(i = 0; i < right->len; i++)
     {
-	ActivationMapping *mapping = g_array_index(right, ActivationMapping*, i);
+	ActivationMapping *mapping = g_ptr_array_index(right, i);
 	mapping->activated = FALSE;
 	
-	if(activation_mapping_index(intersect, mapping->key, mapping->target) == -1)
-	    g_array_append_val(return_array, mapping);
+	if(get_activation_mapping(intersect, mapping->key, mapping->target) == NULL)
+	    g_ptr_array_insert(return_array, -1, mapping);
     }
     
     /* Sort the activation array */
-    g_array_sort(return_array, (GCompareFunc)compare_activation_mapping);
+    g_ptr_array_sort(return_array, (GCompareFunc)compare_activation_mapping);
     
     /* Return the activation array */
     return return_array;
 }
 
-GArray *substract_activation_array(GArray *left, GArray *right)
+GPtrArray *substract_activation_array(GPtrArray *left, GPtrArray *right)
 {
     unsigned int i;
-    GArray *return_array = g_array_new(FALSE, FALSE, sizeof(ActivationMapping*));
+    GPtrArray *return_array = g_ptr_array_new();
     
-    /* Create a clone of the left array */
+    /* Add all elements of the left array that are not in the right array */
     
     for(i = 0; i < left->len; i++)
     {
-	ActivationMapping *mapping = g_array_index(left, ActivationMapping*, i);
-	g_array_append_val(return_array, mapping);
-    }
-    
-    /* Remove all mappings from the right array */
-    
-    for(i = 0; i < right->len; i++)
-    {
-	ActivationMapping *mapping = g_array_index(right, ActivationMapping*, i);
-	gint index = activation_mapping_index(return_array, mapping->key, mapping->target);
+	ActivationMapping *mapping = g_ptr_array_index(left, i);
 	
-	if(index != -1)
-	    g_array_remove_index(return_array, index);
+	if(get_activation_mapping(right, mapping->key, mapping->target) == NULL)
+	    g_ptr_array_insert(return_array, -1, mapping);
     }
     
     /* Return the activation array */
     return return_array;
 }
 
-GArray *find_interdependent_mappings(GArray *activation_array, const ActivationMapping *mapping)
+GPtrArray *find_interdependent_mappings(GPtrArray *activation_array, const ActivationMapping *mapping)
 {
-    GArray *return_array = g_array_new(FALSE, FALSE, sizeof(ActivationMapping*));
+    GPtrArray *return_array = g_ptr_array_new();
     unsigned int i;
     
     for(i = 0; i < activation_array->len; i++)
     {
 	unsigned int j;
-	ActivationMapping *current_mapping = g_array_index(activation_array, ActivationMapping*, i);
+	ActivationMapping *current_mapping = g_ptr_array_index(activation_array, i);
 	ActivationMappingKey *found_dependency = get_dependency(current_mapping->depends_on, mapping->key, mapping->target);
 	
 	if(found_dependency != NULL)
-	    g_array_append_val(return_array, current_mapping);
+	    g_ptr_array_insert(return_array, -1, current_mapping);
     }
     
     return return_array;

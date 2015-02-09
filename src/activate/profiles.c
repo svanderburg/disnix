@@ -27,7 +27,7 @@
 #include <errno.h>
 #include <string.h>
 
-int set_target_profiles(const GArray *distribution_array, gchar *interface, gchar *profile)
+int set_target_profiles(const GPtrArray *distribution_array, gchar *interface, gchar *profile)
 {
     unsigned int i;
     int exit_status = 0, running_processes = 0;
@@ -35,7 +35,7 @@ int set_target_profiles(const GArray *distribution_array, gchar *interface, gcha
     for(i = 0; i < distribution_array->len; i++)
     {
         pid_t pid;
-        DistributionItem *item = g_array_index(distribution_array, DistributionItem*, i);
+        DistributionItem *item = g_ptr_array_index(distribution_array, i);
         
         g_print("[target: %s]: Setting Disnix profile: %s\n", item->target, item->profile);
         
