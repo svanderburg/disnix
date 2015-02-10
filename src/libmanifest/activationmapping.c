@@ -52,7 +52,7 @@ ActivationMapping *find_activation_mapping(const GPtrArray *activation_array, gc
     keys.key = key;
     keys.target = target;
     
-    ret = bsearch(&keys_ptr, activation_array->pdata, activation_array->len, sizeof(gpointer), compare_activation_mapping);
+    ret = bsearch(&keys_ptr, activation_array->pdata, activation_array->len, sizeof(gpointer), (int (*)(const void*, const void*)) compare_activation_mapping);
     
     if(ret == NULL)
         return NULL;
@@ -69,7 +69,7 @@ ActivationMappingKey *find_dependency(const GPtrArray *depends_on, gchar *key, g
     keys.key = key;
     keys.target = target;
     
-    ret = bsearch(&keys_ptr, depends_on->pdata, depends_on->len, sizeof(gpointer), compare_activation_mapping_keys);
+    ret = bsearch(&keys_ptr, depends_on->pdata, depends_on->len, sizeof(gpointer), (int (*)(const void*, const void*)) compare_activation_mapping_keys);
     
     if(ret == NULL)
         return NULL;

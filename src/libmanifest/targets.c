@@ -181,7 +181,7 @@ void print_target_array(const GPtrArray *target_array)
 
 GPtrArray *find_target(const GPtrArray *target_array, const gchar *key)
 {
-    GPtrArray **ret = bsearch(key, target_array->pdata, target_array->len, sizeof(gpointer), compare_target_keys);
+    GPtrArray **ret = bsearch(key, target_array->pdata, target_array->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_target_keys);
     
     if(ret == NULL)
         return NULL;
@@ -197,7 +197,7 @@ gchar *find_target_property(const GPtrArray *target, const gchar *name)
     
     key.name = name;
     
-    ret = bsearch(&key_ptr, target->pdata, target->len, sizeof(gpointer), compare_target_property);
+    ret = bsearch(&key_ptr, target->pdata, target->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_target_property);
     
     if(ret == NULL)
         return NULL;

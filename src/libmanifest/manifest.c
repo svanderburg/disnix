@@ -33,11 +33,18 @@ Manifest *create_manifest(const gchar *manifest_file)
     
     activation_array = create_activation_array(manifest_file);
     if(activation_array == NULL)
+    {
+        delete_distribution_array(distribution_array);
         return NULL;
+    }
     
     target_array = generate_target_array(manifest_file);
     if(target_array == NULL)
+    {
+        delete_distribution_array(distribution_array);
+        delete_activation_array(activation_array);
         return NULL;
+    }
     
     manifest = (Manifest*)g_malloc(sizeof(Manifest));
     manifest->distribution_array = distribution_array;
