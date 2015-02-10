@@ -70,6 +70,8 @@ let
 
           buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable dysnomia ]
             ++ lib.optionals (!stdenv.isLinux) [ libiconv gettext ];
+            
+          CFLAGS = "-Wall";
         });
       
     tests =

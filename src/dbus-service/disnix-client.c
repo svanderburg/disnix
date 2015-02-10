@@ -78,10 +78,9 @@ int main(int argc, char *argv[])
 
     /* Option value declarations */
     Operation operation = OP_NONE;
-    char *target, *profile = NULL, *type = NULL;
+    char *profile = NULL, *type = NULL;
     gchar **derivation = NULL, **arguments = NULL;
     unsigned int derivation_size = 0, arguments_size = 0;
-    int localfile = FALSE, remotefile = TRUE;
     int delete_old = FALSE, session_bus = FALSE;
     
     /* Parse command-line options */
@@ -126,15 +125,10 @@ int main(int argc, char *argv[])
 		operation = OP_UNLOCK;
 		break;
 	    case 't':
-		target = optarg;
 		break;
 	    case 'l':
-		localfile = TRUE;
-		remotefile = FALSE;
 		break;
 	    case 'R':
-		localfile = FALSE;
-		remotefile = TRUE;
 		break;
 	    case 'p':
 		profile = optarg;

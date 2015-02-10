@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <defaultoptions.h>
+#include "distribute.h"
 
 static void print_usage(const char *command)
 {

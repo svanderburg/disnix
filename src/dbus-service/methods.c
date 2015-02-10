@@ -18,6 +18,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
@@ -202,7 +203,6 @@ gboolean disnix_import(DisnixObject *object, const gint pid, gchar *closure, GEr
 static void disnix_export_thread_func(DisnixObject *object, const gint pid, gchar **derivation)
 {
     /* Declarations */
-    char line[BUFFER_SIZE];
     char *tempfilename = g_strconcat(tmpdir, "/disnix.XXXXXX", NULL);
     int closure_fd;
     
@@ -335,7 +335,6 @@ static void disnix_print_invalid_thread_func(DisnixObject *object, const gint pi
 	    char line[BUFFER_SIZE];
 	    ssize_t line_size;
 	    gchar **missing_paths = NULL;
-	    unsigned int missing_paths_size = 0;
 	    
 	    close(pipefd[1]); /* Close write-end of the pipe */
 	    
@@ -432,7 +431,6 @@ static void disnix_realise_thread_func(DisnixObject *object, const gint pid, gch
 	    char line[BUFFER_SIZE];
 	    ssize_t line_size;
 	    gchar **realised = NULL;
-	    unsigned int realised_size = 0;
 	
 	    close(pipefd[1]); /* Close write-end of pipe */
 	    
@@ -488,7 +486,6 @@ static void disnix_set_thread_func(DisnixObject *object, const gint pid, const g
     /* Declarations */
     gchar *profile_path;
     int status;
-    char line[BUFFER_SIZE];
     
     /* Print log entry */
     g_print("Set profile: %s with derivation: %s\n", profile, derivation);
@@ -564,7 +561,6 @@ static void disnix_query_installed_thread_func(DisnixObject *object, const gint 
 	disnix_emit_failure_signal(object, pid); /* Something went wrong with forking the process */
     else
     {
-	int status;
 	char line[BUFFER_SIZE];
 	gchar **derivation = NULL;
 	unsigned int derivation_size = 0;
@@ -579,7 +575,7 @@ static void disnix_query_installed_thread_func(DisnixObject *object, const gint 
 	    if(is_component)
 	    {
 		derivation = (gchar**)g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
-		derivation[derivation_size] = g_strdup(line);	    
+		derivation[derivation_size] = g_strdup(line);
 		derivation_size++;
 		is_component = FALSE;
 	    }
@@ -665,10 +661,9 @@ static void disnix_query_requisites_thread_func(DisnixObject *object, const gint
 	    char line[BUFFER_SIZE];
 	    ssize_t line_size;
 	    gchar **requisites = NULL;
-	    unsigned int requisites_size = 0;
 
 	    close(pipefd[1]); /* Close write-end of pipe */
-	    	
+	    
 	    while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
 	    {
 	        line[line_size] = '\0';
@@ -969,7 +964,6 @@ static void disnix_lock_thread_func(DisnixObject *object, const gint pid, const 
     fp = fopen(cmd, "r");
     if(fp != NULL)
     {
-	int status;
 	char line[BUFFER_SIZE];
 	int is_component = TRUE;
 	
@@ -1126,7 +1120,6 @@ static void disnix_unlock_thread_func(DisnixObject *object, const gint pid, cons
     fp = fopen(cmd, "r");
     if(fp != NULL)
     {
-	int status;
 	char line[BUFFER_SIZE];
 	int is_component = TRUE;
 	

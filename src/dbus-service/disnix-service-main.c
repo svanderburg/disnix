@@ -19,6 +19,8 @@
 
 #include <stdio.h>
 #include <getopt.h>
+#include "disnix-service-main.h"
+
 #define TRUE 1
 #define FALSE 0
 

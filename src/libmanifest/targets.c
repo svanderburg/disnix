@@ -98,12 +98,12 @@ GPtrArray *generate_target_array(const gchar *manifest_file)
 	    while(targets_children != NULL)
 	    {
 	        TargetProperty *targetProperty = (TargetProperty*)g_malloc(sizeof(TargetProperty));
-	        targetProperty->name = g_strdup(targets_children->name);
+	        targetProperty->name = g_strdup((gchar*)targets_children->name);
 	        
 	        if(targets_children->children == NULL)
 	            targetProperty->value = NULL;
 	        else
-	            targetProperty->value = g_strdup(targets_children->children->content);
+	            targetProperty->value = g_strdup((gchar*)targets_children->children->content);
 	        
 	        g_ptr_array_insert(target, -1, targetProperty);
 	        

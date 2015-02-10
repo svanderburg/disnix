@@ -1,7 +1,7 @@
 AM_CPPFLAGS=-DLOCALSTATEDIR=\"$(localstatedir)\"
 
 bin_PROGRAMS = disnix-service disnix-client
-noinst_HEADERS = methods.h signals.h disnix-gtype-def.h disnix-instance.h operation.h disnix-client-operation.h
+noinst_HEADERS = methods.h signals.h disnix-gtype-def.h disnix-instance.h operation.h disnix-client-operation.h disnix-service-main.h
 
 disnix_service_SOURCES = methods.c signals.c disnix-service.c disnix-service-main.c 
 

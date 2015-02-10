@@ -73,9 +73,9 @@ GPtrArray *generate_distribution_array(const gchar *manifest_file)
 	    while(mapping_children != NULL)
 	    {
 		if(xmlStrcmp(mapping_children->name, (xmlChar*) "profile") == 0)
-		    profile = g_strdup(mapping_children->children->content);
+		    profile = g_strdup((gchar*)mapping_children->children->content);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "target") == 0)
-		    target = g_strdup(mapping_children->children->content);
+		    target = g_strdup((gchar*)mapping_children->children->content);
 		
 		mapping_children = mapping_children->next;
 	    }

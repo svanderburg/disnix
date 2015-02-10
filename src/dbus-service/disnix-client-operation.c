@@ -80,7 +80,6 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
     
     /* Captures the results of D-Bus operations */
     GError *error = NULL;
-    gint reply;
     
     /* Other declarations */
     gint pid;

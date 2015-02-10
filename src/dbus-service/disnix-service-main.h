@@ -17,22 +17,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "xmlutil.h"
+#ifndef __DISNIX_SERVICE_MAIN_H
+#define __DISNIX_SERVICE_MAIN_H
 
-xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, const char *xpath)
-{
-    xmlXPathContextPtr context;
-    xmlXPathObjectPtr result;
-    
-    context = xmlXPathNewContext(doc);
-    result = xmlXPathEvalExpression((xmlChar *)xpath, context);
-    xmlXPathFreeContext(context);
-    
-    if(xmlXPathNodeSetIsEmpty(result->nodesetval))
-    {
-        xmlXPathFreeObject(result);
-        return NULL;
-    }
-    else
-	return result;
-}
+/**
+ * Starts the Disnix D-Bus service
+ *
+ * @param session_bus Indicates whether the daemon should be registered on the session bus or system bus
+ */
+int start_disnix_service(int session_bus);
+
+#endif

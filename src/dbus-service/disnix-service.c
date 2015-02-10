@@ -19,6 +19,8 @@
 
 #include <stdlib.h>
 #include <signal.h>
+#include <sys/wait.h>
+#include <sys/types.h>
 #include <dbus/dbus-glib.h>
 #include <glib.h>
 
@@ -116,15 +118,9 @@ static void disnix_object_class_init (DisnixObjectClass *klass)
 static void handle_sigchild(int signum)
 {
     int status;
-    
     wait(&status);
 }
 
-/**
- * Starts the Disnix D-Bus service
- *
- * @param session_bus Indicates whether the daemon should be registered on the session bus or system bus
- */
 int start_disnix_service(int session_bus)
 {
     /* The D-Bus connection object provided by dbus_glib */

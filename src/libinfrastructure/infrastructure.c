@@ -179,7 +179,7 @@ GPtrArray *create_target_array(char *infrastructure_expr, const char *target_pro
         for(i = 0; i < nodeset->nodeNr; i++)
         {
     	    xmlChar *target_value = nodeset->nodeTab[i]->children->content;
-	    gchar *target = g_strdup(target_value);
+	    gchar *target = g_strdup((gchar*)target_value);
 	    g_ptr_array_insert(target_array, -1, target);
 	}
 	

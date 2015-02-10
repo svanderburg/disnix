@@ -18,7 +18,6 @@
  */
 
 #include "profiles.h"
-#include <distributionmapping.h>
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -26,6 +25,9 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <string.h>
+
+#include <distributionmapping.h>
+#include <client-interface.h>
 
 int set_target_profiles(const GPtrArray *distribution_array, gchar *interface, gchar *profile)
 {
@@ -89,7 +91,7 @@ int set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *
      */
      
     if((strlen(manifest_file) >= 1 && manifest_file[0] == '/') ||
-       (strlen(manifest_file) >= 2 && manifest_file[0] == '.' || manifest_file[1] == '/'))
+       (strlen(manifest_file) >= 2 && (manifest_file[0] == '.' || manifest_file[1] == '/')))
         manifest_file_path = g_strdup(manifest_file);
     else
         manifest_file_path = g_strconcat("./", manifest_file, NULL); /* Otherwise add ./ in front of the path */

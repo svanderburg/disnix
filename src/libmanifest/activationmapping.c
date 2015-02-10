@@ -94,25 +94,26 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 	    gchar *name = NULL;
 	    gchar *type = NULL;
 	    GPtrArray *depends_on = NULL;
+	    gboolean activated = FALSE;
 	    ActivationMapping *mapping = (ActivationMapping*)g_malloc(sizeof(ActivationMapping));
 	    
 	    /* Iterate over all the mapping item children (service,target,targetProperty,type,dependsOn elements) */
 	    
 	    while(mapping_children != NULL)
 	    {
-		if(xmlStrcmp(mapping_children->name, "key") == 0)
-		    key = g_strdup(mapping_children->children->content);
-		else if(xmlStrcmp(mapping_children->name, "service") == 0)
-		    service = g_strdup(mapping_children->children->content);
-		else if(xmlStrcmp(mapping_children->name, "targetProperty") == 0)
-		    targetProperty = g_strdup(mapping_children->children->content);
-		else if(xmlStrcmp(mapping_children->name, "name") == 0)
-		    name = g_strdup(mapping_children->children->content);
-		else if(xmlStrcmp(mapping_children->name, "type") == 0)
-		    type = g_strdup(mapping_children->children->content);
-		else if(xmlStrcmp(mapping_children->name, "target") == 0)
-		    target = g_strdup(mapping_children->children->content);
-		else if(xmlStrcmp(mapping_children->name, "dependsOn") == 0)
+		if(xmlStrcmp(mapping_children->name, (xmlChar*) "key") == 0)
+		    key = g_strdup((gchar*)mapping_children->children->content);
+		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "service") == 0)
+		    service = g_strdup((gchar*)mapping_children->children->content);
+		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "targetProperty") == 0)
+		    targetProperty = g_strdup((gchar*)mapping_children->children->content);
+		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "name") == 0)
+		    name = g_strdup((gchar*)mapping_children->children->content);
+		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "type") == 0)
+		    type = g_strdup((gchar*)mapping_children->children->content);
+		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "target") == 0)
+		    target = g_strdup((gchar*)mapping_children->children->content);
+		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "dependsOn") == 0)
 		{
 		    xmlNodePtr depends_on_children = mapping_children->children;
 		    depends_on = g_ptr_array_new();
@@ -125,15 +126,15 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 			gchar *target = NULL;
 			ActivationMappingKey *dependency = (ActivationMappingKey*)g_malloc(sizeof(ActivationMappingKey));
 			
-			if(xmlStrcmp(depends_on_children->name, "dependency") == 0) /* Only iterate over dependency nodes */
+			if(xmlStrcmp(depends_on_children->name, (xmlChar*) "dependency") == 0) /* Only iterate over dependency nodes */
 			{
 			    /* Iterate over all dependency properties */
 			    while(dependency_children != NULL)
 			    {
 				if(xmlStrcmp(dependency_children->name, (xmlChar*) "key") == 0)
-				    key = g_strdup(dependency_children->children->content);
+				    key = g_strdup((gchar*)dependency_children->children->content);
 				else if(xmlStrcmp(dependency_children->name, (xmlChar*) "target") == 0)
-				    target = g_strdup(dependency_children->children->content);
+				    target = g_strdup((gchar*)dependency_children->children->content);
 				    
 				dependency_children = dependency_children->next;
 			    }
@@ -160,7 +161,8 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 	    mapping->name = name;
 	    mapping->type = type;
 	    mapping->depends_on = depends_on;
-		
+	    mapping->activated = activated;
+	    
 	    /* Add the mapping to the array */
 	    g_ptr_array_insert(activation_array, -1, mapping);
 	}
@@ -273,20 +275,20 @@ GPtrArray *union_activation_array(GPtrArray *left, GPtrArray *right, const GPtrA
     
     for(i = 0; i < left->len; i++)
     {
-	ActivationMapping *mapping = g_ptr_array_index(left, i);
-	mapping->activated = TRUE;
-	g_ptr_array_insert(return_array, -1, mapping);
+        ActivationMapping *mapping = g_ptr_array_index(left, i);
+        mapping->activated = TRUE;
+        g_ptr_array_insert(return_array, -1, mapping);
     }
     
     /* Append all mappings from the right array which are not in the intersection and mark them as deactivated */
     
     for(i = 0; i < right->len; i++)
     {
-	ActivationMapping *mapping = g_ptr_array_index(right, i);
-	mapping->activated = FALSE;
-	
-	if(find_activation_mapping(intersect, (ActivationMappingKey*)mapping) == NULL)
-	    g_ptr_array_insert(return_array, -1, mapping);
+        ActivationMapping *mapping = g_ptr_array_index(right, i);
+        mapping->activated = FALSE;
+        
+        if(find_activation_mapping(intersect, (ActivationMappingKey*)mapping) == NULL)
+            g_ptr_array_insert(return_array, -1, mapping);
     }
     
     /* Sort the activation array */
@@ -322,7 +324,6 @@ GPtrArray *find_interdependent_mappings(const GPtrArray *activation_array, const
     /* For each activation mapping, check whether there is a inter-dependency on the requested mapping */
     for(i = 0; i < activation_array->len; i++)
     {
-	unsigned int j;
 	ActivationMapping *current_mapping = g_ptr_array_index(activation_array, i);
 	ActivationMappingKey *found_dependency = find_dependency(current_mapping->depends_on, (ActivationMappingKey*)mapping);
 	

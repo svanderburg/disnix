@@ -76,9 +76,7 @@ static int activate(gchar *interface, GPtrArray *union_array, const ActivationMa
         /* Finally, activate the mapping itself if it is not activated yet */
         if(!actual_mapping->activated)
         {
-            unsigned int i;
             int status;
-            
             GPtrArray *target = find_target(target_array, actual_mapping->target);
             gchar **arguments = generate_activation_arguments(target); /* Generate an array of key=value pairs from infrastructure properties */
             unsigned int arguments_size = g_strv_length(arguments); /* Determine length of the activation arguments array */
@@ -280,16 +278,7 @@ int transition(gchar *interface, GPtrArray *new_activation_mappings, GPtrArray *
     
     if(old_activation_mappings == NULL)
     {
-        unsigned int i;
-        
         union_array = new_activation_mappings;
-        
-        for(i = 0; i < union_array->len; i++)
-        {
-            ActivationMapping *mapping = g_ptr_array_index(union_array, i);
-            mapping->activated = FALSE;
-        }
-        
         deactivation_array = NULL;
         activation_array = new_activation_mappings;
         
