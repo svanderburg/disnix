@@ -86,7 +86,8 @@ gchar *find_target_key(const GPtrArray *target);
 /**
  * Generates a string vector with: 'name=value' pairs from the
  * target properties, which are passed to the activation module as
- * environment variables.
+ * environment variables. The resulting string must be eventually be removed
+ * from memory with g_strfreev()
  *
  * @param target Array with target properties
  * @return String with environment variable settings

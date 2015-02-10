@@ -195,7 +195,7 @@ gchar *find_target_property(const GPtrArray *target, const gchar *name)
     const TargetProperty *key_ptr = &key;
     TargetProperty **ret;
     
-    key.name = name;
+    key.name = (gchar*)name;
     
     ret = bsearch(&key_ptr, target->pdata, target->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_target_property);
     

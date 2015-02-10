@@ -63,7 +63,7 @@ GHashTable *generate_edges_table(const GPtrArray *activation_array, GPtrArray *t
 		ActivationMappingKey *dependency = g_ptr_array_index(depends_on, j);
 		
 		/* Find the activation mapping in the activation array */
-		actual_mapping = find_activation_mapping(activation_array, dependency->key, dependency->target);
+		actual_mapping = find_activation_mapping(activation_array, dependency);
 		
 		/* Get the target interface */
 		target = find_target(targets_array, actual_mapping->target);
