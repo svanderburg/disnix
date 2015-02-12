@@ -16,6 +16,8 @@ Version 0.3
 
 - Improved logging
 
+- Parallelised transition process
+
 Version 0.2
 ===========
 - Added disnix-visualize tool

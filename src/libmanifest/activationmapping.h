@@ -35,6 +35,17 @@ typedef struct
 ActivationMappingKey;
 
 /**
+ * Enumeration of possible states for an activation mapping.
+ */
+typedef enum
+{
+    ACTIVATIONMAPPING_DEACTIVATED,
+    ACTIVATIONMAPPING_IN_PROGRESS,
+    ACTIVATIONMAPPING_ACTIVATED
+}
+ActivationMappingStatus;
+
+/**
  * Contains all properties to activate a specific service on
  * a specific machine. This struct maps (key,target) ->
  * (service,name,targetProperty,type,depends_on,activated)
@@ -55,8 +66,8 @@ typedef struct
     gchar *type;
     /** Array of ActivationMappingKey items representing the inter-dependencies */
     GPtrArray *depends_on;
-    /** Indicated whether the service is activated or not */
-    gboolean activated;
+    /** Indicates the status of the activation mapping */
+    ActivationMappingStatus status;
 }
 ActivationMapping;
 

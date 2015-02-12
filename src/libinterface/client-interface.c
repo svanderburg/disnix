@@ -211,3 +211,17 @@ pid_t exec_realise(gchar *interface, gchar *target, gchar *derivation, int pipef
     else
 	return -1;
 }
+
+pid_t exec_true(void)
+{
+    pid_t pid = fork();
+    
+    if(pid == 0)
+    {
+	char *const args[] = {"true", NULL};
+	execvp("true", args);
+	_exit(1);
+    }
+    else
+	return pid;
+}

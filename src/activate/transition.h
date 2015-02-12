@@ -32,6 +32,6 @@
  * @param dry_run Only prints the steps to be executed but does not actually perform them
  * @return 0 if the phase succeeds, else a non-zero exit status
  */
-int transition(gchar *interface, GPtrArray *new_activation_mappings, GPtrArray *old_activation_mappings, const GPtrArray *target_array, const gboolean dry_run);
+int transition(gchar *interface, GPtrArray *new_activation_mappings, GPtrArray *old_activation_mappings, GPtrArray *target_array, const gboolean dry_run);
 
 #endif

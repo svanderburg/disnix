@@ -29,10 +29,10 @@ static gint compare_target_property(const TargetProperty **l, const TargetProper
     return g_strcmp0(left->name, right->name);
 }
 
-static gint compare_target(const GPtrArray **l, const GPtrArray **r)
+static gint compare_target(const Target **l, const Target **r)
 {
-    const GPtrArray *left = *l;
-    const GPtrArray *right = *r;
+    const Target *left = *l;
+    const Target *right = *r;
     
     gchar *left_target_property = find_target_key(left);
     gchar *right_target_property = find_target_key(right);
@@ -40,12 +40,21 @@ static gint compare_target(const GPtrArray **l, const GPtrArray **r)
     return g_strcmp0(left_target_property, right_target_property);
 }
 
-static int compare_target_keys(const char *key, const GPtrArray **r)
+static int compare_target_keys(const char *key, const Target **r)
 {
-    const GPtrArray *right = *r;
+    const Target *right = *r;
     gchar *right_target_property = find_target_key(right);
     
     return g_strcmp0(key, right_target_property);
+}
+
+static Target *create_target(void)
+{
+    Target *target = (Target*)g_malloc(sizeof(Target));
+    target->properties = g_ptr_array_new();
+    target->numOfCores = 1;
+    target->availableCores = target->numOfCores;
+    return target;
 }
 
 GPtrArray *generate_target_array(const gchar *manifest_file)
@@ -93,7 +102,7 @@ GPtrArray *generate_target_array(const gchar *manifest_file)
 	for(i = 0; i < nodeset->nodeNr; i++)
 	{
 	    xmlNodePtr targets_children = nodeset->nodeTab[i]->children;
-	    GPtrArray *target = g_ptr_array_new();
+	    Target *target = create_target();
 	    
 	    while(targets_children != NULL)
 	    {
@@ -105,13 +114,20 @@ GPtrArray *generate_target_array(const gchar *manifest_file)
 	        else
 	            targetProperty->value = g_strdup((gchar*)targets_children->children->content);
 	        
-	        g_ptr_array_insert(target, -1, targetProperty);
+	        g_ptr_array_insert(target->properties, -1, targetProperty);
+	        
+	        /* If the numOfCores properties has been encountered, set the value accordingly */
+	        if(g_strcmp0(targetProperty->name, "numOfCores") == 0)
+	        {
+	            target->numOfCores = atoi(targetProperty->value);
+	            target->availableCores = target->numOfCores;
+	        }
 	        
 	        targets_children = targets_children->next;
 	    }
 	    
 	    /* Sort the target properties */
-	    g_ptr_array_sort(target, (GCompareFunc)compare_target_property);
+	    g_ptr_array_sort(target->properties, (GCompareFunc)compare_target_property);
 	    
 	    /* Add target item to the targets array */
 	    g_ptr_array_insert(targets_array, -1, target);
@@ -120,6 +136,7 @@ GPtrArray *generate_target_array(const gchar *manifest_file)
 	/* Sort the targets array */
 	g_ptr_array_sort(targets_array, (GCompareFunc)compare_target);
 	
+	/* Cleanup */
 	xmlXPathFreeObject(result);
     }
     
@@ -131,6 +148,23 @@ GPtrArray *generate_target_array(const gchar *manifest_file)
     return targets_array;
 }
 
+static void delete_target(Target *target)
+{
+    unsigned int i;
+    
+    for(i = 0; i < target->properties->len; i++)
+    {
+        TargetProperty *targetProperty = g_ptr_array_index(target->properties, i);
+        
+        g_free(targetProperty->name);
+        g_free(targetProperty->value);
+        g_free(targetProperty);
+    }
+    
+    g_ptr_array_free(target->properties, TRUE);
+    g_free(target);
+}
+
 void delete_target_array(GPtrArray *target_array)
 {
     if(target_array != NULL)
@@ -139,19 +173,8 @@ void delete_target_array(GPtrArray *target_array)
         
         for(i = 0; i < target_array->len; i++)
         {
-            GPtrArray *target = g_ptr_array_index(target_array, i);
-            unsigned int j;
-            
-            for(j = 0; j < target->len; j++)
-            {
-                TargetProperty *targetProperty = g_ptr_array_index(target, j);
-                
-                g_free(targetProperty->name);
-                g_free(targetProperty->value);
-                g_free(targetProperty);
-            }
-            
-            g_ptr_array_free(target, TRUE);
+            Target *target = g_ptr_array_index(target_array, i);
+            delete_target(target);
         }
     
         g_ptr_array_free(target_array, TRUE);
@@ -164,14 +187,14 @@ void print_target_array(const GPtrArray *target_array)
     
     for(i = 0; i < target_array->len; i++)
     {
-        GPtrArray *target = g_ptr_array_index(target_array, i);
+        Target *target = g_ptr_array_index(target_array, i);
         unsigned int j;
         
         g_print("Target:\n");
         
-        for(j = 0; j < target->len; j++)
+        for(j = 0; j < target->properties->len; j++)
         {
-            TargetProperty* targetProperty = g_ptr_array_index(target, j);
+            TargetProperty* targetProperty = g_ptr_array_index(target->properties, j);
             g_print("  %s = %s;\n", targetProperty->name, targetProperty->value);
         }
         
@@ -179,9 +202,9 @@ void print_target_array(const GPtrArray *target_array)
     }
 }
 
-GPtrArray *find_target(const GPtrArray *target_array, const gchar *key)
+Target *find_target(const GPtrArray *target_array, const gchar *key)
 {
-    GPtrArray **ret = bsearch(key, target_array->pdata, target_array->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_target_keys);
+    Target **ret = bsearch(key, target_array->pdata, target_array->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_target_keys);
     
     if(ret == NULL)
         return NULL;
@@ -189,7 +212,7 @@ GPtrArray *find_target(const GPtrArray *target_array, const gchar *key)
         return *ret;
 }
 
-gchar *find_target_property(const GPtrArray *target, const gchar *name)
+gchar *find_target_property(const Target *target, const gchar *name)
 {
     TargetProperty key;
     const TargetProperty *key_ptr = &key;
@@ -197,7 +220,7 @@ gchar *find_target_property(const GPtrArray *target, const gchar *name)
     
     key.name = (gchar*)name;
     
-    ret = bsearch(&key_ptr, target->pdata, target->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_target_property);
+    ret = bsearch(&key_ptr, target->properties->pdata, target->properties->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_target_property);
     
     if(ret == NULL)
         return NULL;
@@ -205,7 +228,7 @@ gchar *find_target_property(const GPtrArray *target, const gchar *name)
         return (*ret)->value;
 }
 
-gchar *find_target_key(const GPtrArray *target)
+gchar *find_target_key(const Target *target)
 {
     gchar *target_property_name = find_target_property(target, "targetProperty");
     
@@ -215,18 +238,34 @@ gchar *find_target_key(const GPtrArray *target)
         return find_target_property(target, target_property_name);
 }
 
-gchar **generate_activation_arguments(const GPtrArray *target)
+gchar **generate_activation_arguments(const Target *target)
 {
     unsigned int i;
-    gchar **arguments = (gchar**)g_malloc((target->len + 1) * sizeof(gchar*));
+    gchar **arguments = (gchar**)g_malloc((target->properties->len + 1) * sizeof(gchar*));
     
-    for(i = 0; i < target->len; i++)
+    for(i = 0; i < target->properties->len; i++)
     {
-	TargetProperty *target_property = g_ptr_array_index(target, i);
+	TargetProperty *target_property = g_ptr_array_index(target->properties, i);
 	arguments[i] = g_strconcat(target_property->name, "=", target_property->value, NULL);
     }
     
     arguments[i] = NULL;
     
     return arguments;
+}
+
+int request_available_target_core(Target *target)
+{
+    if(target->availableCores > 0)
+    {
+        target->availableCores--;
+        return TRUE;
+    }
+    else
+        return FALSE;
+}
+
+void signal_available_target_core(Target *target)
+{
+    target->availableCores++;
 }

@@ -19,6 +19,8 @@
 
 #include "transition.h"
 #include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <activationmapping.h>
 #include <targets.h>
 #include <client-interface.h>
@@ -44,148 +46,237 @@ static void print_activation_step(const int activate, const ActivationMapping *m
     g_print("\n");
 }
 
-static int activate(gchar *interface, GPtrArray *union_array, const ActivationMappingKey *key, const GPtrArray *target_array, const gboolean dry_run)
+typedef enum
 {
-    /* Check for an interruption */
-    if(interrupted)
-    {
-        g_printerr("[coordinator]: The activation process has been interrupted!\n");
-        return 1;
-    }
-    else
-    {
-        /* Retrieve the mapping from the union array */
-        ActivationMapping *actual_mapping = find_activation_mapping(union_array, key);
-        
-        /* First, activate all inter-dependency mappings */
-        if(actual_mapping->depends_on != NULL)
-        {
-            unsigned int i;
-            int status;
-            
-            for(i = 0; i < actual_mapping->depends_on->len; i++)
-            {
-                ActivationMappingKey *dependency = g_ptr_array_index(actual_mapping->depends_on, i);
-                status = activate(interface, union_array, dependency, target_array, dry_run);
-                
-                if(status != 0)
-                    return status; /* If the activation of an inter-dependency fails, abort */
-            }
-        }
-    
-        /* Finally, activate the mapping itself if it is not activated yet */
-        if(!actual_mapping->activated)
-        {
-            int status;
-            GPtrArray *target = find_target(target_array, actual_mapping->target);
-            gchar **arguments = generate_activation_arguments(target); /* Generate an array of key=value pairs from infrastructure properties */
-            unsigned int arguments_size = g_strv_length(arguments); /* Determine length of the activation arguments array */
-            
-            print_activation_step(TRUE, actual_mapping, arguments, arguments_size); /* Print debug message */
-            
-            if(dry_run)
-                status = 0;
-            else
-                status = wait_to_finish(exec_activate(interface, actual_mapping->target, actual_mapping->type, arguments, arguments_size, actual_mapping->service)); /* Execute the activation operation */
-            
-            /* Cleanup */
-            g_strfreev(arguments);
-        
-            if(status != 0)
-                return status; /* If the activation fails, abort */
-            else
-                actual_mapping->activated = TRUE; /* Mark activation mapping as activated */
-        }
-    
-        return 0; /* The activation of the closure succeeded */
-    }
+    ACTIVATION_ERROR,
+    ACTIVATION_IN_PROGRESS,
+    ACTIVATION_WAIT,
+    ACTIVATION_DONE,
+    ACTIVATION_FORK_ERROR
 }
+ActivationStatus;
 
-static int deactivate(gchar *interface, GPtrArray *union_array, const ActivationMappingKey *key, const GPtrArray *target_array, const gboolean dry_run)
+static ActivationStatus activate(gchar *interface, GPtrArray *union_array, const ActivationMappingKey *key, GPtrArray *target_array, const gboolean dry_run, GHashTable *pids)
 {
-    /* Check for an interruption */
-    if(interrupted)
+    /* Retrieve the mapping from the union array */
+    ActivationMapping *actual_mapping = find_activation_mapping(union_array, key);
+    
+    /* First, activate all inter-dependency mappings */
+    if(actual_mapping->depends_on != NULL)
     {
-        g_printerr("[coordinator]: The deactivation process has been interrupted!\n");
-        return 1;
-    }
-    else
-    {
-        /* Retrieve the mapping from the union array */
-        ActivationMapping *actual_mapping = find_activation_mapping(union_array, key);
-    
-        /* Find all interdependent mapping on this mapping */
-        GPtrArray *interdependent_mappings = find_interdependent_mappings(union_array, actual_mapping);
-    
-        /* First deactivate all mappings which have an inter-dependency on this mapping */
-    
         unsigned int i;
-    
-        for(i = 0; i < interdependent_mappings->len; i++)
-        {
-            ActivationMapping *dependency_mapping = g_ptr_array_index(interdependent_mappings, i);
-            int status = deactivate(interface, union_array, (ActivationMappingKey*)dependency_mapping, target_array, dry_run);
+        ActivationStatus status;
         
-            if(status != 0)
-            {
-                g_ptr_array_free(interdependent_mappings, TRUE);
-                return status; /* If the deactivation of an inter-dependency fails, abort */
-            }
-        }
-    
-        g_ptr_array_free(interdependent_mappings, TRUE);
-    
-        /* Finally deactivate the mapping itself */
-        if(actual_mapping->activated)
+        for(i = 0; i < actual_mapping->depends_on->len; i++)
         {
-            int status;
-            GPtrArray *target = find_target(target_array, actual_mapping->target);
+            ActivationMappingKey *dependency = g_ptr_array_index(actual_mapping->depends_on, i);
+            status = activate(interface, union_array, dependency, target_array, dry_run, pids);
             
-            if(target == NULL)
-            {
-                g_print("[target: %s]: Skip deactivation of service with key: %s deploying package: %s since machine is not present!\n", actual_mapping->key, actual_mapping->target, actual_mapping->service);
-                status = 0;
-            }
-            else
-            {
-                gchar **arguments = generate_activation_arguments(target); /* Generate an array of key=value pairs from infrastructure properties */
-                unsigned int arguments_size = g_strv_length(arguments); /* Determine length of the activation arguments array */
-                
-                print_activation_step(FALSE, actual_mapping, arguments, arguments_size); /* Print debug message */
-                
-                if(dry_run)
-                    status = 0;
-                else
-                    status = wait_to_finish(exec_deactivate(interface, actual_mapping->target, actual_mapping->type, arguments, arguments_size, actual_mapping->service)); /* Execute the deactivation operation */
-                
-                /* Cleanup */
-                g_free(arguments);
-            }
-
-            if(status != 0)
-                return status; /* If the deactivation fails, abort */
-            else
-                actual_mapping->activated = FALSE; /* Mark activation mapping as deactivated */
+            if(status != ACTIVATION_DONE)
+                return status; /* If any of the inter-dependencies has not been activated yet, relay its status */
         }
-    
-        return 0; /* The deactivation of the closure succeeded */
+    }
+
+    /* Finally, activate the mapping itself if it is not activated yet */
+    switch(actual_mapping->status)
+    {
+        case ACTIVATIONMAPPING_DEACTIVATED:
+            {
+                Target *target = find_target(target_array, actual_mapping->target);
+        
+                if(request_available_target_core(target)) /* Check if machine has any cores available, if not wait and try again later */
+                {
+                    gchar **arguments = generate_activation_arguments(target); /* Generate an array of key=value pairs from infrastructure properties */
+                    unsigned int arguments_size = g_strv_length(arguments); /* Determine length of the activation arguments array */
+                    pid_t pid;
+                    
+                    print_activation_step(TRUE, actual_mapping, arguments, arguments_size); /* Print debug message */
+        
+                    if(dry_run)
+                        pid = exec_true(); /* Execute dummy process */
+                    else
+                        pid = exec_activate(interface, actual_mapping->target, actual_mapping->type, arguments, arguments_size, actual_mapping->service); /* Execute the activation operation asynchronously */
+                    
+                    /* Cleanup */
+                    g_strfreev(arguments);
+            
+                    if(pid == -1)
+                        return ACTIVATION_FORK_ERROR;
+                    else
+                    {
+                        gint *pidKey = g_malloc(sizeof(gint));
+                        *pidKey = pid;
+                        
+                        actual_mapping->status = ACTIVATIONMAPPING_IN_PROGRESS; /* Mark activation mapping as in progress */
+                        g_hash_table_insert(pids, pidKey, actual_mapping); /* Add mapping to the pids table so that we can retrieve its status later */
+                        return ACTIVATION_IN_PROGRESS;
+                    }
+                }
+                else
+                    return ACTIVATION_WAIT;
+             }
+        case ACTIVATIONMAPPING_ACTIVATED:
+            return ACTIVATION_DONE;
+        case ACTIVATIONMAPPING_IN_PROGRESS:
+            return ACTIVATION_IN_PROGRESS;
+        default:
+            return ACTIVATION_ERROR; /* Should never happen */
     }
 }
 
-static void rollback_to_old_mappings(GPtrArray *union_array, gchar *interface, GPtrArray *old_activation_mappings, const GPtrArray *target_array, const gboolean dry_run)
+static int deactivate(gchar *interface, GPtrArray *union_array, const ActivationMappingKey *key, GPtrArray *target_array, const gboolean dry_run, GHashTable *pids)
 {
+    /* Retrieve the mapping from the union array */
+    ActivationMapping *actual_mapping = find_activation_mapping(union_array, key);
+    
+    /* Find all interdependent mapping on this mapping */
+    GPtrArray *interdependent_mappings = find_interdependent_mappings(union_array, actual_mapping);
+    
+    /* First deactivate all mappings which have an inter-dependency on this mapping */
     unsigned int i;
     
-    for(i = 0; i < old_activation_mappings->len; i++)
+    for(i = 0; i < interdependent_mappings->len; i++)
     {
-        ActivationMapping *mapping = g_ptr_array_index(union_array, i);
+        ActivationMapping *dependency_mapping = g_ptr_array_index(interdependent_mappings, i);
+        ActivationStatus status = deactivate(interface, union_array, (ActivationMappingKey*)dependency_mapping, target_array, dry_run, pids);
+    
+        if(status != ACTIVATION_DONE)
+        {
+            g_ptr_array_free(interdependent_mappings, TRUE);
+            return status; /* If any inter-dependency is not deactivated, relay its status */
+        }
+    }
+    
+    g_ptr_array_free(interdependent_mappings, TRUE);
+    
+    /* Finally deactivate the mapping itself if it has not been deactivated yet */
+    switch(actual_mapping->status)
+    {
+        case ACTIVATIONMAPPING_ACTIVATED:
+            {
+                Target *target = find_target(target_array, actual_mapping->target);
         
-        if(activate(interface, union_array, (ActivationMappingKey*)mapping, target_array, dry_run) != 0)
-            g_print("Rollback failed!\n");
+                if(target == NULL)
+                {
+                    g_print("[target: %s]: Skip deactivation of service with key: %s deploying package: %s since machine is not present!\n", actual_mapping->key, actual_mapping->target, actual_mapping->service);
+                    actual_mapping->status = ACTIVATIONMAPPING_DEACTIVATED;
+                    return ACTIVATION_DONE;
+                }
+                else if(request_available_target_core(target))
+                {
+                    gchar **arguments = generate_activation_arguments(target); /* Generate an array of key=value pairs from infrastructure properties */
+                    unsigned int arguments_size = g_strv_length(arguments); /* Determine length of the activation arguments array */
+                    pid_t pid;
+                    
+                    print_activation_step(FALSE, actual_mapping, arguments, arguments_size); /* Print debug message */
+            
+                    if(dry_run)
+                        pid = exec_true(); /* Execute dummy process */
+                    else
+                        pid = exec_deactivate(interface, actual_mapping->target, actual_mapping->type, arguments, arguments_size, actual_mapping->service); /* Execute the deactivation operation asynchronously */
+                    
+                    /* Cleanup */
+                    g_free(arguments);
+            
+                    if(pid == -1)
+                        return ACTIVATION_FORK_ERROR;
+                    else
+                    {
+                        gint *pidKey = g_malloc(sizeof(gint));
+                        *pidKey = pid;
+                        
+                        actual_mapping->status = ACTIVATIONMAPPING_IN_PROGRESS; /* Mark activation mapping as in progress */
+                        g_hash_table_insert(pids, pidKey, actual_mapping); /* Add mapping to the pids table so that we can retrieve its status later */
+                        return ACTIVATION_IN_PROGRESS;
+                    }
+                }
+                else
+                    return ACTIVATION_WAIT;
+           }
+        case ACTIVATIONMAPPING_DEACTIVATED:
+            return ACTIVATION_DONE;
+        case ACTIVATIONMAPPING_IN_PROGRESS:
+            return ACTIVATION_IN_PROGRESS;
+        default:
+            return ACTIVATION_ERROR; /* Should never happen */
     }
 }
 
-static int deactivate_obsolete_mappings(GPtrArray *deactivation_array, GPtrArray *union_array, gchar *interface, const GPtrArray *target_array, GPtrArray *old_activation_mappings, const gboolean dry_run)
+static int wait_for_activation_or_deactivation(const int activate, GHashTable *pids, GPtrArray *target_array)
+{
+    int status;
+    Target *target;
+    
+    /* Wait for an activation/deactivation process to finish */
+    pid_t pid = wait(&status);
+    
+    /* Find the corresponding activation mapping and remove it from the pids table */
+    ActivationMapping *mapping = g_hash_table_lookup(pids, &pid);
+    g_hash_table_remove(pids, &pid);
+    
+    /* Change the status of the mapping */
+    if(status == 0)
+    {
+        if(activate)
+            mapping->status = ACTIVATIONMAPPING_ACTIVATED;
+        else
+            mapping->status = ACTIVATIONMAPPING_DEACTIVATED;
+    }
+    
+    /* Signal the target to make the CPU core available again */
+    target = find_target(target_array, mapping->target);
+    signal_available_target_core(target);
+    
+    /* Return the status */
+    return status;
+}
+
+static void destroy_pids_key(gpointer data)
+{
+    gint *key = (gint*)data;
+    g_free(key);
+}
+
+static void rollback_to_old_mappings(GPtrArray *union_array, gchar *interface, GPtrArray *old_activation_mappings, GPtrArray *target_array, const gboolean dry_run)
+{
+    GHashTable *pids = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
+    int success = TRUE;
+    unsigned int numDone = 0;
+    
+    do
+    {
+        unsigned int i;
+        
+        for(i = 0; i < old_activation_mappings->len; i++)
+        {
+            ActivationMapping *mapping = g_ptr_array_index(union_array, i);
+            ActivationStatus status = activate(interface, union_array, (ActivationMappingKey*)mapping, target_array, dry_run, pids);
+            
+            if(status == ACTIVATION_ERROR)
+            {
+                g_printerr("[target: %s]: Activation failed of service: %s!\n", mapping->target, mapping->key);
+                success = FALSE;
+            }
+            else if(status == ACTIVATION_FORK_ERROR)
+            {
+                g_printerr("[target: %s]: Cannot fork activation process of service: %s!\n", mapping->target, mapping->key);
+                success = FALSE;
+                numDone++;
+            }
+        }
+        
+        wait_for_activation_or_deactivation(TRUE, pids, target_array);
+        numDone++;
+    }
+    while(numDone < old_activation_mappings->len);
+    
+    if(!success)
+        g_print("Rollback failed!\n");
+    
+    g_hash_table_destroy(pids);
+}
+
+static int deactivate_obsolete_mappings(GPtrArray *deactivation_array, GPtrArray *union_array, gchar *interface, GPtrArray *target_array, GPtrArray *old_activation_mappings, const gboolean dry_run)
 {
     g_print("[coordinator]: Executing deactivation of services:\n");
 
@@ -193,68 +284,143 @@ static int deactivate_obsolete_mappings(GPtrArray *deactivation_array, GPtrArray
         return 0;
     else
     {
+        GHashTable *pids = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
+        int success = TRUE;
+        unsigned int numDone = 0;
+        
+        do
+        {
+            unsigned int i;
+            
+            /* Deactivate each mapping closure that is not in the new configuration */
+            for(i = 0; i < deactivation_array->len; i++)
+            {
+                ActivationMapping *mapping = g_ptr_array_index(deactivation_array, i);
+                ActivationStatus status = deactivate(interface, union_array, (ActivationMappingKey*)mapping, target_array, dry_run, pids);
+                
+                if(status == ACTIVATION_ERROR)
+                {
+                    g_printerr("[target: %s]: Deactivation failed of service: %s!\n", mapping->target, mapping->key);
+                    success = FALSE;
+                }
+                else if(status == ACTIVATION_FORK_ERROR)
+                {
+                    g_printerr("[target: %s]: Cannot fork deactivation process of service: %s!\n", mapping->target, mapping->key);
+                    success = FALSE;
+                    numDone++;
+                }
+            }
+            
+            wait_for_activation_or_deactivation(FALSE, pids, target_array);
+            numDone++;
+        }
+        while(numDone < deactivation_array->len);
+        
+        g_hash_table_destroy(pids);
+        
+        if(!success)
+        {
+            /* If the deactivation fails, perform a rollback */
+            g_print("[coordinator]: Deactivation failed! Doing a rollback...\n");
+            rollback_to_old_mappings(union_array, interface, old_activation_mappings, target_array, dry_run);
+            return 1;
+        }
+        else
+            return 0;
+    }
+}
+
+static void rollback_new_mappings(GPtrArray *activation_array, GPtrArray *union_array, GPtrArray *target_array, gchar *interface, const gboolean dry_run)
+{
+    GHashTable *pids = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
+    int success = TRUE;
+    unsigned int numDone = 0;
+    
+    do
+    {
         unsigned int i;
         
-        /* Deactivate each mapping closure that is not in the new configuration */
-        for(i = 0; i < deactivation_array->len; i++)
+        for(i = 0; i < activation_array->len; i++)
         {
-            ActivationMapping *mapping = g_ptr_array_index(deactivation_array, i);
-            int status = deactivate(interface, union_array, (ActivationMappingKey*)mapping, target_array, dry_run);
+            ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
+            ActivationStatus status = deactivate(interface, union_array, (ActivationMappingKey*)mapping, target_array, dry_run, pids);
             
-            if(status != 0)
+            if(status == ACTIVATION_ERROR)
             {
-                /* If the deactivation fails, perform a rollback */
-                g_print("[coordinator]: Deactivation failed! Doing a rollback...\n");
-                rollback_to_old_mappings(union_array, interface, old_activation_mappings, target_array, dry_run);
-                return status;
+                g_printerr("[target: %s]: Deactivation failed of service: %s!\n", mapping->target, mapping->key);
+                success = FALSE;
+            }
+            else if(status == ACTIVATION_FORK_ERROR)
+            {
+                g_printerr("[target: %s]: Cannot fork deactivation process of service: %s!\n", mapping->target, mapping->key);
+                success = FALSE;
+                numDone++;
             }
         }
         
-        return 0;
+        wait_for_activation_or_deactivation(FALSE, pids, target_array);
+        numDone++;
     }
-}
-
-static void rollback_new_mappings(GPtrArray *activation_array, GPtrArray *union_array, const GPtrArray *target_array, gchar *interface, const gboolean dry_run)
-{
-    unsigned int i;
+    while(numDone < activation_array->len);
     
-    for(i = 0; i < activation_array->len; i++)
-    {
-        ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
-        
-        if(deactivate(interface, union_array, (ActivationMappingKey*)mapping, target_array, dry_run) != 0)
-            g_print("Rollback failed!\n");
-    }
+    if(!success)
+        g_printerr("Rollback failed!\n");
+    
+    g_hash_table_destroy(pids);
 }
 
-static int activate_new_mappings(GPtrArray *activation_array, GPtrArray *union_array, gchar *interface, const GPtrArray *target_array, GPtrArray *old_activation_mappings, const gboolean dry_run)
+static int activate_new_mappings(GPtrArray *activation_array, GPtrArray *union_array, gchar *interface, GPtrArray *target_array, GPtrArray *old_activation_mappings, const gboolean dry_run)
 {
-    unsigned int i;
+    GHashTable *pids = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
+    int success = TRUE;
+    unsigned int numDone = 0;
     
     g_print("[coordinator]: Executing activation of services:\n");
-
-    /* Activate each mapping closure in the new configuration */
     
-    for(i = 0; i < activation_array->len; i++)
+    do
     {
-        ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
-        int status = activate(interface, union_array, (ActivationMappingKey*)mapping, target_array, dry_run);
+        unsigned int i;
         
-        if(status != 0)
+        /* Activate each mapping closure in the new configuration */
+        for(i = 0; i < activation_array->len; i++)
         {
-            /* If the activation fails, perform a rollback */
-            g_printerr("[coordinator]: Activation failed! Doing a rollback...\n");
+            ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
+            ActivationStatus status = activate(interface, union_array, (ActivationMappingKey*)mapping, target_array, dry_run, pids);
             
-            rollback_new_mappings(activation_array, union_array, target_array, interface, dry_run);
-            
-            if(old_activation_mappings != NULL)
-                rollback_to_old_mappings(union_array, interface, old_activation_mappings, target_array, dry_run);
-        
-            return status;
+            if(status == ACTIVATION_ERROR)
+            {
+                g_printerr("[target: %s]: Activation failed of service: %s!\n", mapping->target, mapping->key);
+                success = FALSE;
+            }
+            else if(status == ACTIVATION_FORK_ERROR)
+            {
+                g_printerr("[target: %s]: Cannot fork activation process of service: %s!\n", mapping->target, mapping->key);
+                success = FALSE;
+                numDone++;
+            }
         }
+        
+        wait_for_activation_or_deactivation(TRUE, pids, target_array);
+        numDone++;
     }
+    while(numDone < activation_array->len);
     
-    return 0;
+    g_hash_table_destroy(pids);
+
+    if(success)
+        return 0;
+    else
+    {
+        /* If the activation fails, perform a rollback */
+        g_printerr("[coordinator]: Activation failed! Doing a rollback...\n");
+        
+        rollback_new_mappings(activation_array, union_array, target_array, interface, dry_run);
+        
+        if(old_activation_mappings != NULL)
+            rollback_to_old_mappings(union_array, interface, old_activation_mappings, target_array, dry_run);
+        
+        return 1;
+    }
 }
 
 static void cleanup(const GPtrArray *old_activation_mappings, GPtrArray *deactivation_array, GPtrArray *activation_array, GPtrArray *union_array)
@@ -267,7 +433,7 @@ static void cleanup(const GPtrArray *old_activation_mappings, GPtrArray *deactiv
     }
 }
 
-int transition(gchar *interface, GPtrArray *new_activation_mappings, GPtrArray *old_activation_mappings, const GPtrArray *target_array, const gboolean dry_run)
+int transition(gchar *interface, GPtrArray *new_activation_mappings, GPtrArray *old_activation_mappings, GPtrArray *target_array, const gboolean dry_run)
 {
     GPtrArray *union_array;
     GPtrArray *deactivation_array;

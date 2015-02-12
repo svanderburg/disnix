@@ -34,6 +34,19 @@ typedef struct
 }
 TargetProperty;
 
+typedef struct
+{
+    /* Contains arbitrary target machine properties */
+    GPtrArray *properties;
+    
+    /* Contains the amount CPU cores this machine has */
+    int numOfCores;
+    
+    /* Contains the amount of CPU cores that are currently available */
+    int availableCores;
+}
+Target;
+
 /**
  * Creates a new array with targets from a manifest file
  *
@@ -61,27 +74,27 @@ void print_target_array(const GPtrArray *target_array);
  *
  * @param target_array Array of arrays representing target machines with properties
  * @param key String referring to a target property serving as the key of the target
- * @return An array containing the properties of the machine with the given key or NULL if it cannot be found
+ * @return An target struct containing the properties of the machine with the given key or NULL if it cannot be found
  */
-GPtrArray *find_target(const GPtrArray *target_array, const gchar *key);
+Target *find_target(const GPtrArray *target_array, const gchar *key);
 
 /**
  * Retrieves the value of a target property with the given name.
  *
- * @param target Array containing properties of a target machine
+ * @param target Target struct containing properties of a target machine
  * @param name Name of the property to retrieve
  * @return The value of the target property or NULL if it does not exists
  */
-gchar *find_target_property(const GPtrArray *target, const gchar *name);
+gchar *find_target_property(const Target *target, const gchar *name);
 
 /**
  * Retrieves the value of the target property that serves as the key to identify
  * the machine.
  *
- * @param target Array containing properties of a target machine
+ * @param target A target struct containing properties of a target machine
  * @return The key value of identifying the machine or NULL if it does not exists
  */
-gchar *find_target_key(const GPtrArray *target);
+gchar *find_target_key(const Target *target);
 
 /**
  * Generates a string vector with: 'name=value' pairs from the
@@ -89,9 +102,24 @@ gchar *find_target_key(const GPtrArray *target);
  * environment variables. The resulting string must be eventually be removed
  * from memory with g_strfreev()
  *
- * @param target Array with target properties
+ * @param target Struct with target properties
  * @return String with environment variable settings
  */
-gchar **generate_activation_arguments(const GPtrArray *target);
+gchar **generate_activation_arguments(const Target *target);
+
+/**
+ * Requests a CPU core for deployment utilisation.
+ *
+ * @param target A target struct containing properties of a target machine
+ * @return TRUE if a CPU core is allocated, FALSE if none is available
+ */
+int request_available_target_core(Target *target);
+
+/**
+ * Signals the availability of an adiitional CPU core for deployment utilisation.
+ *
+ * @param target A target struct containing properties of a target machine
+ */
+void signal_available_target_core(Target *target);
 
 #endif

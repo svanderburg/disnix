@@ -94,7 +94,7 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 	    gchar *name = NULL;
 	    gchar *type = NULL;
 	    GPtrArray *depends_on = NULL;
-	    gboolean activated = FALSE;
+	    ActivationMappingStatus status = ACTIVATIONMAPPING_DEACTIVATED;
 	    ActivationMapping *mapping = (ActivationMapping*)g_malloc(sizeof(ActivationMapping));
 	    
 	    /* Iterate over all the mapping item children (service,target,targetProperty,type,dependsOn elements) */
@@ -161,7 +161,7 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 	    mapping->name = name;
 	    mapping->type = type;
 	    mapping->depends_on = depends_on;
-	    mapping->activated = activated;
+	    mapping->status = status;
 	    
 	    /* Add the mapping to the array */
 	    g_ptr_array_insert(activation_array, -1, mapping);
@@ -276,7 +276,7 @@ GPtrArray *union_activation_array(GPtrArray *left, GPtrArray *right, const GPtrA
     for(i = 0; i < left->len; i++)
     {
         ActivationMapping *mapping = g_ptr_array_index(left, i);
-        mapping->activated = TRUE;
+        mapping->status = ACTIVATIONMAPPING_ACTIVATED;
         g_ptr_array_insert(return_array, -1, mapping);
     }
     
@@ -285,7 +285,7 @@ GPtrArray *union_activation_array(GPtrArray *left, GPtrArray *right, const GPtrA
     for(i = 0; i < right->len; i++)
     {
         ActivationMapping *mapping = g_ptr_array_index(right, i);
-        mapping->activated = FALSE;
+        mapping->status = ACTIVATIONMAPPING_DEACTIVATED;
         
         if(find_activation_mapping(intersect, (ActivationMappingKey*)mapping) == NULL)
             g_ptr_array_insert(return_array, -1, mapping);

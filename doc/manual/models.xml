@@ -630,8 +630,9 @@ rec { <co xml:id='co-3-rec2' />
   test2 = { <co xml:id='co-1-target' />
     hostname = "test2.example.org"; <co xml:id='co-2-hostname' />
     system = "x86_64-linux"; <co xml:id='co-3-system' />
+    numOfCores = 1; <co xml:id='co-4-numOfCores' />
     tomcatPort = 8080;
-    mysqlPort = 3306; <co xml:id='co-4-mysqlPort' />
+    mysqlPort = 3306; <co xml:id='co-5-mysqlPort' />
     mysqlUsername = "root";
     mysqlPassword = "admin";
   }; 
@@ -679,7 +680,19 @@ rec { <co xml:id='co-3-rec2' />
 				</para>
 			  </callout>
 			  
-			  <callout arearefs='co-4-mysqlPort'>
+			  <callout arearefs='co-4-numOfCores'>
+				<para>
+					In the activation phase, Disnix tries to concurrently activate as many services possible.
+					The <code>numOfCores</code> attribute can be used to indicate the amount of CPU cores available on
+					the target machine. If, for example, this value is set to 2, Disnix tries to activate two services
+					concurrently on this machine when possible.
+				</para>
+				<para>
+					If this attribute is omitted, it will default to 1.
+				</para>
+			  </callout>
+			  
+			  <callout arearefs='co-5-mysqlPort'>
 				  <para>
 					The other properties of a machine can be freely chosen and are used by the
 					Dysnomia modules to activate a particular service. For instance, the
