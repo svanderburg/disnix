@@ -24,4 +24,8 @@ rec {
   process = import ./process.nix {
     inherit (pkgs) stdenv;
   };
+  
+  fail = import ./fail.nix {
+    inherit (pkgs) stdenv;
+  };
 }

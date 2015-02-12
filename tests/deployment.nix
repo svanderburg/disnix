@@ -261,6 +261,14 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         
         # Check if the 'process' has written the tmp file.
         # This test should succeed.
+        $testtarget1->mustSucceed("sleep 10 && [ -f /tmp/process_out ] && rm /tmp/process_out");
+        
+        # Do an upgrade that intentionally fails.
+        # This test should fail.
+        $coordinator->mustFail("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-fail.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-fail.nix > result");
+        
+        # Check if the 'process' has written the tmp file again.
+        # This test should succeed.
         $testtarget1->mustSucceed("sleep 10 && [ -f /tmp/process_out ]");
       '';
   }
