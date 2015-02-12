@@ -51,8 +51,7 @@ typedef enum
     ACTIVATION_ERROR,
     ACTIVATION_IN_PROGRESS,
     ACTIVATION_WAIT,
-    ACTIVATION_DONE,
-    ACTIVATION_FORK_ERROR
+    ACTIVATION_DONE
 }
 ActivationStatus;
 
@@ -101,7 +100,10 @@ static ActivationStatus activate(gchar *interface, GPtrArray *union_array, const
                     g_strfreev(arguments);
             
                     if(pid == -1)
-                        return ACTIVATION_FORK_ERROR;
+                    {
+                        g_printerr("[target: %s]: Cannot fork activation process of service: %s!\n", actual_mapping->target, actual_mapping->key);
+                        return ACTIVATION_ERROR;
+                    }
                     else
                     {
                         gint *pidKey = g_malloc(sizeof(gint));
@@ -179,7 +181,10 @@ static int deactivate(gchar *interface, GPtrArray *union_array, const Activation
                     g_free(arguments);
             
                     if(pid == -1)
-                        return ACTIVATION_FORK_ERROR;
+                    {
+                        g_printerr("[target: %s]: Cannot fork deactivation process of service: %s!\n", actual_mapping->target, actual_mapping->key);
+                        return ACTIVATION_ERROR;
+                    }
                     else
                     {
                         gint *pidKey = g_malloc(sizeof(gint));
@@ -202,7 +207,7 @@ static int deactivate(gchar *interface, GPtrArray *union_array, const Activation
     }
 }
 
-static int wait_for_activation_or_deactivation(const int activate, GHashTable *pids, GPtrArray *target_array)
+static void wait_for_activation_or_deactivation(const int activate, GHashTable *pids, GPtrArray *target_array)
 {
     int status;
     Target *target;
@@ -210,25 +215,34 @@ static int wait_for_activation_or_deactivation(const int activate, GHashTable *p
     /* Wait for an activation/deactivation process to finish */
     pid_t pid = wait(&status);
     
-    /* Find the corresponding activation mapping and remove it from the pids table */
-    ActivationMapping *mapping = g_hash_table_lookup(pids, &pid);
-    g_hash_table_remove(pids, &pid);
-    
-    /* Change the status of the mapping */
-    if(status == 0)
+    if(pid != -1)
     {
-        if(activate)
-            mapping->status = ACTIVATIONMAPPING_ACTIVATED;
+        /* Find the corresponding activation mapping and remove it from the pids table */
+        ActivationMapping *mapping = g_hash_table_lookup(pids, &pid);
+        g_hash_table_remove(pids, &pid);
+    
+        /* Change the status of the mapping, if the process returns success */
+        if(WEXITSTATUS(status) == 0)
+        {
+            if(activate)
+                mapping->status = ACTIVATIONMAPPING_ACTIVATED;
+            else
+                mapping->status = ACTIVATIONMAPPING_DEACTIVATED;
+        }
         else
-            mapping->status = ACTIVATIONMAPPING_DEACTIVATED;
+        {
+            mapping->status = ACTIVATIONMAPPING_ERROR;
+        
+            if(activate)
+                g_printerr("[target: %s]: Activation failed of service: %s\n", mapping->target, mapping->key);
+            else
+                g_printerr("[target: %s]: Deactivation failed of service: %s\n", mapping->target, mapping->key);
+        }
+    
+        /* Signal the target to make the CPU core available again */
+        target = find_target(target_array, mapping->target);
+        signal_available_target_core(target);
     }
-    
-    /* Signal the target to make the CPU core available again */
-    target = find_target(target_array, mapping->target);
-    signal_available_target_core(target);
-    
-    /* Return the status */
-    return status;
 }
 
 static void destroy_pids_key(gpointer data)
@@ -241,11 +255,13 @@ static void rollback_to_old_mappings(GPtrArray *union_array, gchar *interface, G
 {
     GHashTable *pids = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
     int success = TRUE;
-    unsigned int numDone = 0;
+    unsigned int numDone;
     
     do
     {
         unsigned int i;
+        
+        numDone = 0;
         
         for(i = 0; i < old_activation_mappings->len; i++)
         {
@@ -254,19 +270,14 @@ static void rollback_to_old_mappings(GPtrArray *union_array, gchar *interface, G
             
             if(status == ACTIVATION_ERROR)
             {
-                g_printerr("[target: %s]: Activation failed of service: %s!\n", mapping->target, mapping->key);
-                success = FALSE;
-            }
-            else if(status == ACTIVATION_FORK_ERROR)
-            {
-                g_printerr("[target: %s]: Cannot fork activation process of service: %s!\n", mapping->target, mapping->key);
                 success = FALSE;
                 numDone++;
             }
+            else if(status == ACTIVATION_DONE)
+                numDone++;
         }
         
         wait_for_activation_or_deactivation(TRUE, pids, target_array);
-        numDone++;
     }
     while(numDone < old_activation_mappings->len);
     
@@ -286,11 +297,13 @@ static int deactivate_obsolete_mappings(GPtrArray *deactivation_array, GPtrArray
     {
         GHashTable *pids = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
         int success = TRUE;
-        unsigned int numDone = 0;
+        unsigned int numDone;
         
         do
         {
             unsigned int i;
+            
+            numDone = 0;
             
             /* Deactivate each mapping closure that is not in the new configuration */
             for(i = 0; i < deactivation_array->len; i++)
@@ -300,19 +313,14 @@ static int deactivate_obsolete_mappings(GPtrArray *deactivation_array, GPtrArray
                 
                 if(status == ACTIVATION_ERROR)
                 {
-                    g_printerr("[target: %s]: Deactivation failed of service: %s!\n", mapping->target, mapping->key);
-                    success = FALSE;
-                }
-                else if(status == ACTIVATION_FORK_ERROR)
-                {
-                    g_printerr("[target: %s]: Cannot fork deactivation process of service: %s!\n", mapping->target, mapping->key);
                     success = FALSE;
                     numDone++;
                 }
+                else if(status == ACTIVATION_DONE)
+                    numDone++;
             }
             
             wait_for_activation_or_deactivation(FALSE, pids, target_array);
-            numDone++;
         }
         while(numDone < deactivation_array->len);
         
@@ -334,11 +342,13 @@ static void rollback_new_mappings(GPtrArray *activation_array, GPtrArray *union_
 {
     GHashTable *pids = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
     int success = TRUE;
-    unsigned int numDone = 0;
+    unsigned int numDone;
     
     do
     {
         unsigned int i;
+        
+        numDone = 0;
         
         for(i = 0; i < activation_array->len; i++)
         {
@@ -347,24 +357,19 @@ static void rollback_new_mappings(GPtrArray *activation_array, GPtrArray *union_
             
             if(status == ACTIVATION_ERROR)
             {
-                g_printerr("[target: %s]: Deactivation failed of service: %s!\n", mapping->target, mapping->key);
-                success = FALSE;
-            }
-            else if(status == ACTIVATION_FORK_ERROR)
-            {
-                g_printerr("[target: %s]: Cannot fork deactivation process of service: %s!\n", mapping->target, mapping->key);
                 success = FALSE;
                 numDone++;
             }
+            else if(status == ACTIVATION_DONE)
+                numDone++;
         }
         
         wait_for_activation_or_deactivation(FALSE, pids, target_array);
-        numDone++;
     }
     while(numDone < activation_array->len);
     
     if(!success)
-        g_printerr("Rollback failed!\n");
+        g_printerr("[coordinator]: Rollback failed!\n");
     
     g_hash_table_destroy(pids);
 }
@@ -373,13 +378,15 @@ static int activate_new_mappings(GPtrArray *activation_array, GPtrArray *union_a
 {
     GHashTable *pids = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
     int success = TRUE;
-    unsigned int numDone = 0;
+    unsigned int numDone;
     
     g_print("[coordinator]: Executing activation of services:\n");
     
     do
     {
         unsigned int i;
+        
+        numDone = 0;
         
         /* Activate each mapping closure in the new configuration */
         for(i = 0; i < activation_array->len; i++)
@@ -389,19 +396,14 @@ static int activate_new_mappings(GPtrArray *activation_array, GPtrArray *union_a
             
             if(status == ACTIVATION_ERROR)
             {
-                g_printerr("[target: %s]: Activation failed of service: %s!\n", mapping->target, mapping->key);
-                success = FALSE;
-            }
-            else if(status == ACTIVATION_FORK_ERROR)
-            {
-                g_printerr("[target: %s]: Cannot fork activation process of service: %s!\n", mapping->target, mapping->key);
                 success = FALSE;
                 numDone++;
             }
+            else if(status == ACTIVATION_DONE)
+                numDone++;
         }
         
         wait_for_activation_or_deactivation(TRUE, pids, target_array);
-        numDone++;
     }
     while(numDone < activation_array->len);
     
