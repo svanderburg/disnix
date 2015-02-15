@@ -34,6 +34,9 @@ typedef struct
 }
 TargetProperty;
 
+/**
+ * Contains properties of a target machine.
+ */
 typedef struct
 {
     /* Contains arbitrary target machine properties */
@@ -95,6 +98,15 @@ gchar *find_target_property(const Target *target, const gchar *name);
  * @return The key value of identifying the machine or NULL if it does not exists
  */
 gchar *find_target_key(const Target *target);
+
+/**
+ * Retrieves the client interface property that is an executable used to connect
+ * to a target machine.
+ *
+ * @param target A target struct containing properties of a target machine
+ * @return The path to the client executable, or NULL if none has been defined
+ */
+gchar *find_target_client_interface(const Target *target);
 
 /**
  * Generates a string vector with: 'name=value' pairs from the

@@ -26,10 +26,9 @@
  * to target machines in the network. Then the remote builds are performed
  * and finally the build results are copied back to the coordinator machine.
  * 
- * @param interface Path to the client interface executable
  * @param distributed_derivation_file Path to the distributed derivation file
  * @return 0 if everything succeeds, or else a non-zero exit value
  */
-int build(gchar *interface, const gchar *distributed_derivation_file);
+int build(const gchar *distributed_derivation_file);
 
 #endif

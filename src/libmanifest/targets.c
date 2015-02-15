@@ -238,6 +238,11 @@ gchar *find_target_key(const Target *target)
         return find_target_property(target, target_property_name);
 }
 
+gchar *find_target_client_interface(const Target *target)
+{
+    return find_target_property(target, "clientInterface");
+}
+
 gchar **generate_activation_arguments(const Target *target)
 {
     unsigned int i;

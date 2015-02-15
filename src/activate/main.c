@@ -27,7 +27,6 @@ static void print_usage(const char *command)
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "%s [options] manifest\n\n", command);
     fprintf(stderr, "Options:\n");
-    fprintf(stderr, "--interface interface\n");
     fprintf(stderr, "--profile profile\n");
     fprintf(stderr, "--coordinator-profile-path path\n");
     fprintf(stderr, "--old-manifest manifest\n");
@@ -48,7 +47,6 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-	{"interface", required_argument, 0, 'I'},
 	{"old-manifest", required_argument, 0, 'o'},
 	{"coordinator-profile-path", required_argument, 0, 'P'},
 	{"profile", required_argument, 0, 'p'},
@@ -60,7 +58,6 @@ int main(int argc, char *argv[])
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
-    char *interface = NULL;
     char *old_manifest = NULL;
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
@@ -75,9 +72,6 @@ int main(int argc, char *argv[])
     {
 	switch(c)
 	{
-	    case 'I':
-		interface = optarg;
-		break;
 	    case 'o':
 	        old_manifest = optarg;
 	        break;
@@ -111,7 +105,6 @@ int main(int argc, char *argv[])
 
     /* Validate options */
     
-    interface = check_interface_option(interface);
     profile = check_profile_option(profile);
     
     if(optind >= argc)
@@ -120,5 +113,5 @@ int main(int argc, char *argv[])
 	return 1;
     }
     else
-	return activate_system(interface, argv[optind], old_manifest, coordinator_profile_path, profile, no_coordinator_profile, no_target_profiles, no_upgrade, no_lock, dry_run); /* Execute activation operation */
+	return activate_system(argv[optind], old_manifest, coordinator_profile_path, profile, no_coordinator_profile, no_target_profiles, no_upgrade, no_lock, dry_run); /* Execute activation operation */
 }

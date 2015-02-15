@@ -27,9 +27,10 @@
 #include <string.h>
 
 #include <distributionmapping.h>
+#include <targets.h>
 #include <client-interface.h>
 
-int set_target_profiles(const GPtrArray *distribution_array, gchar *interface, gchar *profile)
+int set_target_profiles(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
 {
     unsigned int i;
     int exit_status = 0, running_processes = 0;
@@ -38,6 +39,8 @@ int set_target_profiles(const GPtrArray *distribution_array, gchar *interface, g
     {
         pid_t pid;
         DistributionItem *item = g_ptr_array_index(distribution_array, i);
+        Target *target = find_target(target_array, item->target);
+        gchar *interface = find_target_client_interface(target);
         
         g_print("[target: %s]: Setting Disnix profile: %s\n", item->target, item->profile);
         

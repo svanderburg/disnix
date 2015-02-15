@@ -30,7 +30,6 @@
  * all services receive a lock request which they can use for e.g. blocking,
  * which is released after the process is completed.
  *
- * @param interface Path to the client interface executable
  * @param new_manifest Manifest file representing the new deployment configuration
  * @param old_manifest Manifest file representing the old deployment configuration
  * @param coordinator_profile_path Path where the current deployment state is stored for future reference
@@ -42,6 +41,6 @@
  * @param dry_run Only prints the steps to be executed but does not actually perform them
  * @return 0 if the process succeeds, else a non-zero exit value
  */
-int activate_system(gchar *interface, const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_coordinator_profile, const gboolean no_target_profiles, const gboolean no_upgrade, const gboolean no_lock, const gboolean dry_run);
+int activate_system(const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_coordinator_profile, const gboolean no_target_profiles, const gboolean no_upgrade, const gboolean no_lock, const gboolean dry_run);
 
 #endif

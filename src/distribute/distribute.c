@@ -18,15 +18,17 @@
  */
 
 #include "distribute.h"
-#include <distributionmapping.h>
 #include <client-interface.h>
+#include <manifest.h>
+#include <distributionmapping.h>
+#include <targets.h>
 
-int distribute(gchar *interface, const gchar *manifest_file)
+int distribute(const gchar *manifest_file)
 {
     /* Generate a distribution array from the manifest file */
-    GPtrArray *distribution_array = generate_distribution_array(manifest_file);
+    Manifest *manifest = create_manifest(manifest_file);
     
-    if(distribution_array == NULL)
+    if(manifest == NULL)
     {
         g_print("[coordinator]: Error while opening manifest file!\n");
         return 1;
@@ -37,9 +39,11 @@ int distribute(gchar *interface, const gchar *manifest_file)
         int exit_status = 0;
         
         /* Iterate over the distribution array and distribute the profiles to the target machines */
-        for(i = 0; i < distribution_array->len; i++)
+        for(i = 0; i < manifest->distribution_array->len; i++)
         {
-            DistributionItem *item = g_ptr_array_index(distribution_array, i);
+            DistributionItem *item = g_ptr_array_index(manifest->distribution_array, i);
+            Target *target = find_target(manifest->target_array, item->target);
+            gchar *interface = find_target_client_interface(target);
             int status;
             
             /* Invoke copy closure operation */
@@ -55,8 +59,8 @@ int distribute(gchar *interface, const gchar *manifest_file)
             }
         }
         
-        /* Delete distribution array from memory */
-        delete_distribution_array(distribution_array);
+        /* Delete manifest from memory */
+        delete_manifest(manifest);
         
         /* Return the exit status, which is 0 if everything succeeds */
         return exit_status;

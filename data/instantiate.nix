@@ -2,6 +2,7 @@
 , infrastructureFile
 , distributionFile
 , targetProperty
+, clientInterface
 , nixpkgs ? <nixpkgs>
 }:
 
@@ -12,7 +13,7 @@ let
   
   pkgs = import nixpkgs {};
   lib = import ./lib.nix { inherit nixpkgs pkgs; };
-  distributedDerivation = lib.generateDistributedDerivation servicesFun infrastructure distributionFun targetProperty;
+  distributedDerivation = lib.generateDistributedDerivation servicesFun infrastructure distributionFun targetProperty clientInterface;
   
   generateDistributedDerivationXSL = ./generatedistributedderivation.xsl;
 in

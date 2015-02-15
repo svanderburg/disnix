@@ -25,7 +25,7 @@
 static void print_usage(const char *command)
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "%s [--interface interface] distributed_derivation\n", command);
+    fprintf(stderr, "%s distributed_derivation\n", command);
     fprintf(stderr, "%s {-h | --help}\n", command);
 }
 
@@ -35,20 +35,15 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-	{"interface", required_argument, 0, 'i'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
-    char *interface = NULL;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "h", long_options, &option_index)) != -1)
     {
 	switch(c)
 	{
-	    case 'i':
-		interface = optarg;
-		break;
 	    case 'h':
 	    case '?':
 		print_usage(argv[0]);
@@ -58,13 +53,11 @@ int main(int argc, char *argv[])
 
     /* Validate options */
 
-    interface = check_interface_option(interface);
-    
     if(optind >= argc)
     {
 	fprintf(stderr, "ERROR: No distributed derivation file specified!\n");
 	return 1;
     }
     else
-	return build(interface, argv[optind]); /* Perform distributed build operation */
+	return build(argv[optind]); /* Perform distributed build operation */
 }

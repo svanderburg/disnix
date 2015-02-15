@@ -25,10 +25,9 @@
  * Distributes all services defined in the manifest file to target machines
  * in the network.
  *
- * @param interface Path to the client interface executable
  * @param manifest_file Path to the manifest file which maps services to machines
  * @return 0 if everything succeeds, else a non-zero exit status
  */
-int distribute(gchar *interface, const gchar *manifest_file);
+int distribute(const gchar *manifest_file);
 
 #endif

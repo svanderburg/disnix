@@ -49,7 +49,7 @@ GPtrArray *create_derivation_array(const gchar *distributed_derivation_file)
     }
 
     /* Query the mapping elements */
-    result = executeXPathQuery(doc, "/distributedderivation/mapping");
+    result = executeXPathQuery(doc, "/distributedderivation/build/mapping");
     
     /* Iterate over all the mapping elements and add them to the array */
     

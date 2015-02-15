@@ -115,14 +115,14 @@ checkShowTrace
 if [ "$buildOnTargets" = "1" ]
 then
     echo "[coordinator]: Instantiating store derivations..."
-    distributedDerivation=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link $showTraceArg`
+    distributedDerivation=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --interface $interface --no-out-link $showTraceArg`
     echo "[coordinator]: Building store derivations..."
-    disnix-build --interface $interface $distributedDerivation
+    disnix-build $distributedDerivation
 fi
 
 echo "[coordinator]: Building manifest..."
-manifest=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link $showTraceArg`
+manifest=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link --interface $interface $showTraceArg`
 echo "[coordinator]: Distributing intra-dependency closures..."
-disnix-distribute --interface $interface $manifest
+disnix-distribute $manifest
 echo "[coordinator]: Activating new configuration..."
-disnix-activate --interface $interface $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest
+disnix-activate $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest

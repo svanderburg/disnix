@@ -76,7 +76,12 @@ rec {
       }
     ) (attrNames distribution))
   ;
-
+  
+  getTargetProperty = targetProperty: target:
+    if target ? targetProperty then getAttr (target.targetProperty) target
+    else getAttr targetProperty target
+  ;
+  
   /*
    * Iterates over all services in the distribution attributeset. For every
    * service, the attribute 'distribution' is added to the service declaration
@@ -124,7 +129,7 @@ rec {
                   if service.dependsOn == {} then unsafeDiscardOutputDependency (pkg.drvPath)
                   else unsafeDiscardOutputDependency ((pkg (service.dependsOn)).drvPath)
                 ;
-              target = getAttr targetProperty target;
+              target = getTargetProperty targetProperty target;
             }
           ) targets;
         };
@@ -280,7 +285,7 @@ rec {
           };
           ignoreCollisions = true;
         }).outPath;
-        target = getAttr targetProperty target;
+        target = getTargetProperty targetProperty target;
       };
     in
     if targetNames == [] then []
@@ -293,18 +298,20 @@ rec {
    * Parameters:
    * infrastructure: The infrastructure model, which is an attributeset containing targets in the network
    * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
+   * clientInterface:
    *
    * Returns:
    * List of target properties
    */
    
-  generateTargetPropertyList = infrastructure: targetProperty:
+  generateTargetPropertyList = infrastructure: targetProperty: clientInterface:
     map (targetName:
       let
         target = getAttr targetName infrastructure;
       in
       target // {
         targetProperty = if target ? targetProperty then target.targetProperty else targetProperty;
+        clientInterface = if target ? clientInterface then target.clientInterface else clientInterface;
         numOfCores = if target ? numOfCores then target.numOfCores else 1;
       }
     ) (attrNames infrastructure)
@@ -318,15 +325,15 @@ rec {
    * pkgs: Nixpkgs top-level expression which contains the buildEnv function
    * servicesFun: The services model, which is a function that returns an attributeset of service declarations
    * infrastructure: The infrastructure model, which is an attributeset containing targets in the network
-   * distributionFun: The distribution model, which is a function that returns an attributeset of
-   * services mapping to targets in the infrastructure model.
+   * distributionFun: The distribution model, which is a function that returns an attributeset of services mapping to targets in the infrastructure model.
    * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
+   * clientInterface:
    *
-   * Returns: 
+   * Returns:
    * An attributeset which should be exported to XML representing the manifest
    */
    
-  generateManifest = pkgs: servicesFun: infrastructure: distributionFun: targetProperty:
+  generateManifest = pkgs: servicesFun: infrastructure: distributionFun: targetProperty: clientInterface:
     let
       distribution = distributionFun { inherit infrastructure; };
       initialServices = servicesFun { inherit distribution; system = null; inherit pkgs; };
@@ -336,7 +343,7 @@ rec {
     in
     { profiles = generateProfilesMapping pkgs infrastructure (attrNames infrastructure) targetProperty serviceActivationMapping;
       activation = serviceActivationMapping;
-      targets = generateTargetPropertyList infrastructure targetProperty;
+      targets = generateTargetPropertyList infrastructure targetProperty clientInterface;
     }
   ;
   
@@ -350,20 +357,25 @@ rec {
    * distributionFun: The distribution model, which is a function that returns an attributeset of
    * services mapping to targets in the infrastructure model.
    * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
+   * clientInterface: 
    *
    * Returns: 
    * An attributeset which should be exported to XML representing the distributed derivation
    */
 
-  generateDistributedDerivation = servicesFun: infrastructure: distributionFun: targetProperty:
+  generateDistributedDerivation = servicesFun: infrastructure: distributionFun: targetProperty: clientInterface:
     let
       distribution = distributionFun { inherit infrastructure; };
       initialServices = servicesFun { inherit distribution; system = null; inherit pkgs; };
       servicesWithTargets = augmentTargetsInDependsOn distribution initialServices;
       servicesWithDistribution = evaluatePkgFunctions distribution servicesWithTargets servicesFun "drvPath" targetProperty;
       serviceActivationMapping = generateServiceActivationMapping (attrNames servicesWithDistribution) servicesWithDistribution targetProperty;
+      targets = generateTargetPropertyList infrastructure targetProperty clientInterface;
     in
-    map (mappingItem: { derivation = mappingItem.service; target = mappingItem.target; }) serviceActivationMapping
+    {
+      build = map (mappingItem: { derivation = mappingItem.service; target = mappingItem.target; }) serviceActivationMapping;
+      interfaces = map (target: { target = getTargetProperty targetProperty target; clientInterface = target.clientInterface; } ) targets;
+    }
   ;
   
   /**

@@ -19,11 +19,12 @@
 
 #include "locking.h"
 #include <distributionmapping.h>
+#include <targets.h>
 #include <client-interface.h>
 
 extern volatile int interrupted;
 
-int unlock(gchar *interface, GPtrArray *distribution_array, gchar *profile)
+int unlock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
 {
     unsigned int i, running_processes = 0;
     int exit_status = 0;
@@ -33,6 +34,8 @@ int unlock(gchar *interface, GPtrArray *distribution_array, gchar *profile)
     for(i = 0; i < distribution_array->len; i++)
     {
         DistributionItem *item = g_ptr_array_index(distribution_array, i);
+        Target *target = find_target(target_array, item->target);
+        gchar *interface = find_target_client_interface(target);
         
         g_print("[target: %s]: Releasing a lock!\n", item->target);
         status = exec_unlock(interface, item->target, profile);
@@ -63,7 +66,7 @@ int unlock(gchar *interface, GPtrArray *distribution_array, gchar *profile)
     return exit_status;
 }
 
-int lock(gchar *interface, GPtrArray *distribution_array, gchar *profile)
+int lock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
 {
     unsigned int i;
     GPtrArray *try_array = g_ptr_array_new();
@@ -75,6 +78,8 @@ int lock(gchar *interface, GPtrArray *distribution_array, gchar *profile)
     for(i = 0; i < distribution_array->len; i++)
     {
         DistributionItem *item = g_ptr_array_index(distribution_array, i);
+        Target *target = find_target(target_array, item->target);
+        gchar *interface = find_target_client_interface(target);
         
         g_print("[target: %s]: Acquiring a lock\n", item->target);
         status = exec_lock(interface, item->target, profile);
@@ -109,7 +114,7 @@ int lock(gchar *interface, GPtrArray *distribution_array, gchar *profile)
     
     /* If a lock fails then unlock every machine that is locked */
     if(!exit_status)
-        unlock(interface, lock_array, profile);
+        unlock(lock_array, target_array, profile);
     
     /* Cleanup */
     g_ptr_array_free(try_array, TRUE);

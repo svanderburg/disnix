@@ -28,6 +28,7 @@ showUsage()
     echo "-d,--distribution   Distribution Nix expression which maps services to machines in the network"
     echo "--target-property   The target property of an infrastructure model, that specifies how to "
     echo "                    connect to the remote Disnix interface. (Defaults to hostname)"
+    echo "--interface         Path to executable that communicates with a Disnix interface. Defaults to disnix-ssh-client"
     echo "--no-out-link       Do not create a 'result' symlink"
     echo "--show-trace        Shows a trace of the output"
     echo "-h,--help           Shows the usage of this command to the user"
@@ -43,7 +44,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:h -l services:,infrastructure:,distribution:,target-property:,no-out-link,show-trace,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:h -l services:,infrastructure:,distribution:,target-property:,interface:,no-out-link,show-trace,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -70,6 +71,9 @@ do
         --target-property)
             targetProperty=$2
             ;;
+        --interface)
+            interface=$2
+            ;;
         --no-out-link)
             noOutLink=1
             ;;
@@ -91,6 +95,7 @@ checkServicesFile
 checkInfrastructureFile
 checkDistributionFile
 checkTargetProperty
+checkClientInterface
 checkNoOutLink
 checkShowTrace
 
@@ -100,6 +105,7 @@ nix-build --argstr servicesFile "$(readlink -f $servicesFile)" \
           --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
           --argstr distributionFile "$(readlink -f $distributionFile)" \
           --argstr targetProperty $targetProperty \
+          --argstr clientInterface $interface \
           $noOutLinkArg \
           $showTraceArg \
           "$(readlink -f @datadir@/@PACKAGE@/manifest.nix)"

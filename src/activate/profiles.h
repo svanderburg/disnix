@@ -26,11 +26,11 @@
  * no longer garbage to the Nix package manager.
  *
  * @param distribution_array Array with Nix profiles containing installed services for each machine
- * @param interface Path to the client interface executable
+ * @param target_array Array with target machine property structs
  * @param profile Name of the distributed profile
  * @return 0 if everything succeeds, else a non-zero exit status
  */
-int set_target_profiles(const GPtrArray *distribution_array, gchar *interface, gchar *profile);
+int set_target_profiles(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile);
 
 /**
  * Sets the Disnix coordinator profile, so that the current configuration is 

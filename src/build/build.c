@@ -22,12 +22,14 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include <distributedderivation.h>
 #include <derivationmapping.h>
+#include <interfaces.h>
 #include <client-interface.h>
 
 #define BUFFER_SIZE 4096
 
-static int distribute_derivations(gchar *interface, const GPtrArray *derivation_array)
+static int distribute_derivations(const GPtrArray *derivation_array, const GPtrArray *interface_array)
 {
     int status = 0;
     unsigned int i;
@@ -36,10 +38,11 @@ static int distribute_derivations(gchar *interface, const GPtrArray *derivation_
     {   
         /* Retrieve derivation item from array */
         DerivationItem *item = g_ptr_array_index(derivation_array, i);
+        Interface *interface = find_interface(interface_array, item->target);
         
         /* Execute copy closure process */
         g_print("[target: %s]: Receiving intra-dependency closure of store derivation: %s\n", item->target, item->derivation);
-        status = wait_to_finish(exec_copy_closure_to(interface, item->target, item->derivation));
+        status = wait_to_finish(exec_copy_closure_to(interface->clientInterface, item->target, item->derivation));
         
         /* On error stop the distribution process */
         if(status != 0)
@@ -49,7 +52,7 @@ static int distribute_derivations(gchar *interface, const GPtrArray *derivation_
     return status;
 }
 
-static int realise(gchar *interface, GPtrArray *derivation_array, GPtrArray *result_array)
+static int realise(const GPtrArray *derivation_array, const GPtrArray *interface_array, GPtrArray *result_array)
 {
     /* Declarations */
     
@@ -65,9 +68,10 @@ static int realise(gchar *interface, GPtrArray *derivation_array, GPtrArray *res
     {
         int pipefd[2];
         DerivationItem *item = g_ptr_array_index(derivation_array, i);
+        Interface *interface = find_interface(interface_array, item->target);
         
         g_print("[target: %s]: Realising derivation: %s\n", item->target, item->derivation);
-        status = exec_realise(interface, item->target, item->derivation, pipefd);
+        status = exec_realise(interface->clientInterface, item->target, item->derivation, pipefd);
         
         if(status == -1)
         {
@@ -125,7 +129,7 @@ static int realise(gchar *interface, GPtrArray *derivation_array, GPtrArray *res
     return exit_status;
 }
 
-static int retrieve_results(gchar *interface, GPtrArray *derivation_array, GPtrArray *result_array)
+static int retrieve_results(const GPtrArray *derivation_array, const GPtrArray *interface_array, GPtrArray *result_array)
 {
     unsigned int i;
     int status = 0;
@@ -133,15 +137,13 @@ static int retrieve_results(gchar *interface, GPtrArray *derivation_array, GPtrA
     /* Iterate over the derivation array and copy the build results back */
     for(i = 0; i < derivation_array->len; i++)
     {
-        gchar *result;
-        DerivationItem *item;
-        
-        result = g_ptr_array_index(result_array, i);
-        item = g_ptr_array_index(derivation_array, i);
+        gchar *result = g_ptr_array_index(result_array, i);
+        DerivationItem *item = g_ptr_array_index(derivation_array, i);
+        Interface *interface = find_interface(interface_array, item->target);
         
         g_print("[target: %s]: Sending build result to coordinator: %s\n", item->target, result);
         
-        status = wait_to_finish(exec_copy_closure_from(interface, item->target, result));
+        status = wait_to_finish(exec_copy_closure_from(interface->clientInterface, item->target, result));
         
         /* On error stop build process */
         if(status != 0)
@@ -167,19 +169,19 @@ static void delete_result_array(GPtrArray *result_array)
     }
 }
 
-static void cleanup(GPtrArray *result_array, GPtrArray *derivation_array)
+static void cleanup(GPtrArray *result_array, DistributedDerivation *distributed_derivation)
 {
     delete_result_array(result_array);
-    delete_derivation_array(derivation_array);
+    delete_distributed_derivation(distributed_derivation);
 }
 
-int build(gchar *interface, const gchar *distributed_derivation_file)
+int build(const gchar *distributed_derivation_file)
 {
-    GPtrArray *derivation_array = create_derivation_array(distributed_derivation_file);
+    DistributedDerivation *distributed_derivation = create_distributed_derivation(distributed_derivation_file);
     
-    if(derivation_array == NULL)
+    if(distributed_derivation == NULL)
     {
-        g_printerr("[coordinator]: Cannot find any derivation mappings!\n");
+        g_printerr("[coordinator]: Cannot open distributed derivation file!\n");
         return 1;
     }
     else
@@ -188,28 +190,28 @@ int build(gchar *interface, const gchar *distributed_derivation_file)
         GPtrArray *result_array = g_ptr_array_new();
         
         /* Distribute derivations to target machines */
-        if((status = distribute_derivations(interface, derivation_array)) != 0)
+        if((status = distribute_derivations(distributed_derivation->derivation_array, distributed_derivation->interface_array)) != 0)
         {
-             cleanup(result_array, derivation_array);
+             cleanup(result_array, distributed_derivation);
              return status;
         }
         
         /* Realise derivations on target machines */
-        if((status = realise(interface, derivation_array, result_array)) != 0)
+        if((status = realise(distributed_derivation->derivation_array, distributed_derivation->interface_array, result_array)) != 0)
         {
-            cleanup(result_array, derivation_array);
+            cleanup(result_array, distributed_derivation);
             return status;
         }
         
         /* Retrieve back the build results */
-        if((status = retrieve_results(interface, derivation_array, result_array)) != 0)
+        if((status = retrieve_results(distributed_derivation->derivation_array, distributed_derivation->interface_array, result_array)) != 0)
         {
-            cleanup(result_array, derivation_array);
+            cleanup(result_array, distributed_derivation);
             return status;
         }
         
         /* Cleanup */
-        cleanup(result_array, derivation_array);
+        cleanup(result_array, distributed_derivation);
         
         /* Return the exit status, which is 0 if everything succeeds */
         return 0;

@@ -24,22 +24,22 @@
 /**
  * Unlocks the given profile on each machine defined in the distribution array.
  *
- * @param interface Path to the client interface executable
  * @param distribution_array Array with profiles distributed to the target machines
+ * @param target_array Array with target machine property structs
  * @param profile Identifier of the distributed profile
  * @return 0 if the unlocking phase succeeds, else a non-zero exit status
  */
-int unlock(gchar *interface, GPtrArray *distribution_array, gchar *profile);
+int unlock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile);
 
 /**
  * Locks the given profile on each machine defined in the distribution array.
  * In case of a failure the lock is released again.
  *
- * @param interface Path to the client interface executable
  * @param distribution_array Array with profiles distributed to the target machines
+ * @param target_array Array with target machine property structs
  * @param profile Identifier of the distributed profile
  * @return 0 if the unlocking phase succeeds, else a non-zero exit status
  */
-int lock(gchar *interface, GPtrArray *distribution_array, gchar *profile);
+int lock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile);
 
 #endif

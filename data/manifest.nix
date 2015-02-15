@@ -2,6 +2,7 @@
 , infrastructureFile
 , distributionFile
 , targetProperty
+, clientInterface
 , nixpkgs ? <nixpkgs>
 }:
 
@@ -12,7 +13,7 @@ let
   
   pkgs = import nixpkgs {};
   lib = import ./lib.nix { inherit nixpkgs pkgs; };
-  manifest = lib.generateManifest pkgs servicesFun infrastructure distributionFun targetProperty;
+  manifest = lib.generateManifest pkgs servicesFun infrastructure distributionFun targetProperty clientInterface;
   
   generateManifestXSL = ./generatemanifest.xsl;
 in
