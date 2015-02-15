@@ -18,6 +18,8 @@ Version 0.3
 
 - Parallelised transition process
 
+- Multi connection protocol support
+
 Version 0.2
 ===========
 - Added disnix-visualize tool

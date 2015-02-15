@@ -21,15 +21,20 @@
 #define __DISNIX_INFRASTRUCTURE_H
 #include <glib.h>
 
+typedef struct
+{
+    gchar *name;
+    gchar *value;
+}
+TargetProperty;
+
 /**
  * Creates an array with target properties from an infrastructure Nix expression
  *
  * @param infrastructure_expr Path to the infrastructure Nix expression
- * @param target_property Idenifier of the property that specifies how to
- *                        connect to the remote disnix service
  * @return GPtrArray with target properties
  */
-GPtrArray *create_target_array(char *infrastructure_expr, const char *target_property);
+GPtrArray *create_target_array(char *infrastructure_expr);
 
 /**
  * Deletes an array with target properties
@@ -37,5 +42,23 @@ GPtrArray *create_target_array(char *infrastructure_expr, const char *target_pro
  * @param target_array Array to delete
  */
 void delete_target_array(GPtrArray *target_array);
+
+/**
+ * Retrieves the value of the target property that serves as the key to identify
+ * the machine.
+ *
+ * @param target A target array containing properties of a target machine
+ * @param global_target_property Global key that is used if no target property is defined by the target machine
+ * @return The key value of identifying the machine or NULL if it does not exists
+ */
+gchar *find_target_key(const GPtrArray *target, const gchar *global_target_property);
+
+/**
+ * Retrieves the client interface property of a target machine.
+ *
+ * @param target A target array containing properties of a target machine
+ * @return The client interface property or NULL if it does not exists
+ */
+gchar *find_client_interface(const GPtrArray *target);
 
 #endif

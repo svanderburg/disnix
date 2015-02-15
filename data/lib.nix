@@ -298,7 +298,7 @@ rec {
    * Parameters:
    * infrastructure: The infrastructure model, which is an attributeset containing targets in the network
    * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
-   * clientInterface:
+   * clientInterface: Path to the executable used to connect to the Disnix interface
    *
    * Returns:
    * List of target properties
@@ -327,7 +327,7 @@ rec {
    * infrastructure: The infrastructure model, which is an attributeset containing targets in the network
    * distributionFun: The distribution model, which is a function that returns an attributeset of services mapping to targets in the infrastructure model.
    * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
-   * clientInterface:
+   * clientInterface: Path to the executable used to connect to the Disnix interface
    *
    * Returns:
    * An attributeset which should be exported to XML representing the manifest
@@ -357,7 +357,7 @@ rec {
    * distributionFun: The distribution model, which is a function that returns an attributeset of
    * services mapping to targets in the infrastructure model.
    * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
-   * clientInterface: 
+   * clientInterface: Path to the executable used to connect to the Disnix interface
    *
    * Returns: 
    * An attributeset which should be exported to XML representing the distributed derivation

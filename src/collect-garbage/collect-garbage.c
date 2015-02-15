@@ -24,7 +24,7 @@
 int collect_garbage(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, const gboolean delete_old)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
-    GPtrArray *target_array = create_target_array(infrastructure_expr, target_property);
+    GPtrArray *target_array = create_target_array(infrastructure_expr);
     
     if(target_array == NULL)
     {
@@ -39,16 +39,22 @@ int collect_garbage(gchar *interface, const gchar *target_property, gchar *infra
         /* Spawn garbage collection processes */
         for(i = 0; i < target_array->len; i++)
         {
-            gchar *target = g_ptr_array_index(target_array, i);
+            GPtrArray *target = g_ptr_array_index(target_array, i);
+            gchar *client_interface = find_client_interface(target);
+            gchar *target_key = find_target_key(target, target_property);
             int pid;
             
-            g_print("[target: %s]: Running garbage collector\n", target);
-            pid = exec_collect_garbage(interface, target, delete_old);
+            /* If no client interface is provided by the infrastructure model, use global one */
+            if(client_interface == NULL)
+                client_interface = interface;
+            
+            g_print("[target: %s]: Running garbage collector\n", target_key);
+            pid = exec_collect_garbage(client_interface, target_key, delete_old);
         
             /* If an operation failed, change the exit status */
             if(pid == -1)
             {
-                g_printerr("[target: %s]: Error forking garbage collection operation!\n", target);
+                g_printerr("[target: %s]: Error forking garbage collection operation!\n", target_key);
                 exit_status = -1;
             }
             else

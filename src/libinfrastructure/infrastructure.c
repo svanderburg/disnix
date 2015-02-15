@@ -29,6 +29,41 @@
 #include <libxslt/transform.h>
 #define BUFFER_SIZE 4096
 
+static gint compare_target_property(const TargetProperty **l, const TargetProperty **r)
+{
+    const TargetProperty *left = *l;
+    const TargetProperty *right = *r;
+    
+    return g_strcmp0(left->name, right->name);
+}
+
+static gchar *find_target_property(const GPtrArray *target, const gchar *name)
+{
+    TargetProperty key;
+    const TargetProperty *key_ptr = &key;
+    TargetProperty **ret;
+    
+    key.name = (gchar*)name;
+    
+    ret = bsearch(&key_ptr, target->pdata, target->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_target_property);
+    
+    if(ret == NULL)
+        return NULL;
+    else
+        return (*ret)->value;
+}
+
+static gint compare_target(const GPtrArray **l, const GPtrArray **r)
+{
+    const GPtrArray *left = *l;
+    const GPtrArray *right = *r;
+    
+    gchar *left_target_property = find_target_key(left, NULL);
+    gchar *right_target_property = find_target_key(right, NULL);
+    
+    return g_strcmp0(left_target_property, right_target_property);
+}
+
 static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
 {
     /* Declarations */
@@ -133,13 +168,13 @@ static gchar *create_infrastructure_xml(gchar *infrastructure_expr)
     {
 	g_printerr("Error with creating pipe!\n");
 	return NULL;
-    }    
+    }
 }
 
-GPtrArray *create_target_array(char *infrastructure_expr, const char *target_property)
+GPtrArray *create_target_array(char *infrastructure_expr)
 {
     /* Declarations */
-    gchar *infrastructureXML, *query;
+    gchar *infrastructureXML;
     xmlDocPtr doc;
     xmlXPathObjectPtr result;
     GPtrArray *target_array = NULL;
@@ -156,7 +191,7 @@ GPtrArray *create_target_array(char *infrastructure_expr, const char *target_pro
     /* Parse the infrastructure XML file */
     doc = create_infrastructure_doc(infrastructureXML);
     g_free(infrastructureXML);
-	
+    
     if(doc == NULL)
     {
         g_printerr("Error with parsing infrastructure XML file!\n");
@@ -164,24 +199,47 @@ GPtrArray *create_target_array(char *infrastructure_expr, const char *target_pro
     }
 
     /* Query all the target properties from the XML document */
-    query = g_strconcat("/infrastructure/target/", target_property, NULL);
-    result = executeXPathQuery(doc, query);
-    g_free(query);
+    result = executeXPathQuery(doc, "/infrastructure/target");
 
     /* Iterate over all targets and add them to the array */
-            
+    
     if(result)
     {
         unsigned int i;
         xmlNodeSetPtr nodeset = result->nodesetval;
 	target_array = g_ptr_array_new();
 	
+	/* Iterate over all target elements */
         for(i = 0; i < nodeset->nodeNr; i++)
         {
-    	    xmlChar *target_value = nodeset->nodeTab[i]->children->content;
-	    gchar *target = g_strdup((gchar*)target_value);
-	    g_ptr_array_insert(target_array, -1, target);
+	    xmlNodePtr targets_children = nodeset->nodeTab[i]->children;
+	    GPtrArray *target_properties = g_ptr_array_new();
+	    
+	    while(targets_children != NULL)
+	    {
+	        TargetProperty *targetProperty = (TargetProperty*)g_malloc(sizeof(TargetProperty));
+	        targetProperty->name = g_strdup((gchar*)targets_children->name);
+	        
+	        if(targets_children->children == NULL)
+	            targetProperty->value = NULL;
+	        else
+	            targetProperty->value = g_strdup((gchar*)targets_children->children->content);
+	        
+	        /* Add the property to the target properties array */
+	        g_ptr_array_insert(target_properties, -1, targetProperty);
+	        
+	        targets_children = targets_children->next;
+	    }
+	    
+	    /* Sort the target properties */
+	    g_ptr_array_sort(target_properties, (GCompareFunc)compare_target_property);
+	    
+	    /* Add the property to the targets array */
+	    g_ptr_array_insert(target_array, -1, target_properties);
 	}
+	
+	/* Sort the targets array */
+	g_ptr_array_sort(target_array, (GCompareFunc)compare_target);
 	
 	xmlXPathFreeObject(result);
     }
@@ -204,10 +262,35 @@ void delete_target_array(GPtrArray *target_array)
     
         for(i = 0; i < target_array->len; i++)
         {
-            gchar *target = g_ptr_array_index(target_array, i);
-            g_free(target);
+            GPtrArray *target_properties = g_ptr_array_index(target_array, i);
+            unsigned int j;
+            
+            for(j = 0; j < target_properties->len; j++)
+            {
+                TargetProperty *target_property = g_ptr_array_index(target_properties, j);
+                g_free(target_property->name);
+                g_free(target_property->value);
+                g_free(target_property);
+            }
+            
+            g_ptr_array_free(target_properties, TRUE);
         }
 
         g_ptr_array_free(target_array, TRUE);
     }
+}
+
+gchar *find_target_key(const GPtrArray *target, const gchar *global_target_property)
+{
+    gchar *target_property_name = find_target_property(target, "targetProperty");
+    
+    if(target_property_name == NULL)
+        return find_target_property(target, global_target_property);
+    else
+        return find_target_property(target, target_property_name);
+}
+
+gchar *find_client_interface(const GPtrArray *target)
+{
+    return find_target_property(target, "clientInterface");
 }

@@ -23,7 +23,7 @@
 int query_installed(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
-    GPtrArray *target_array = create_target_array(infrastructure_expr, target_property);
+    GPtrArray *target_array = create_target_array(infrastructure_expr);
 
     if(target_array == NULL)
     {
@@ -38,16 +38,22 @@ int query_installed(gchar *interface, const gchar *target_property, gchar *infra
         /* For each target execute the query operation and display the results */
         for(i = 0; i < target_array->len; i++)
         {
-            gchar *target = g_ptr_array_index(target_array, i);
+            GPtrArray *target = g_ptr_array_index(target_array, i);
+            gchar *client_interface = find_client_interface(target);
+            gchar *target_key = find_target_key(target, target_property);
             int status;
             
-            g_print("\nServices on: %s\n\n", target);
+            /* If no client interface is provided by the infrastructure model, use global one */
+            if(client_interface == NULL)
+                client_interface = interface;
             
-            status = wait_to_finish(exec_query_installed(interface, target, profile));
+            g_print("\nServices on: %s\n\n", target_key);
+            
+            status = wait_to_finish(exec_query_installed(client_interface, target_key, profile));
             
             if(status != 0)
             {
-                g_printerr("[target: %s]: Failed executing the query operation!\n", target);
+                g_printerr("[target: %s]: Failed executing the query operation!\n", target_key);
                 exit_status = status;
             }
         }
