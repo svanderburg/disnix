@@ -79,6 +79,15 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term><option>--interface</option></term>
+				<listitem>
+					<para>
+						Path to executable that communicates with a Disnix interface.
+						Defaults to <link linkend="sec-disnix-ssh-client"><command>disnix-ssh-client</command></link>.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>--no-out-link</option></term>
 				<listitem>
 					<para>
@@ -115,6 +124,15 @@
 					<para>
 						Sets the target property of an infrastructure model,
 						that specifies how to connect to the remote Disnix interface. (Defaults to hostname)
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><option>DISNIX_CLIENT_INTERFACE</option></term>
+				<listitem>
+					<para>
+						Sets the client interface (which defaults to
+						<link linkend="sec-disnix-ssh-client"><command>disnix-ssh-client</command></link>)
 					</para>
 				</listitem>
 			</varlistentry>

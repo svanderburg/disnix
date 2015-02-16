@@ -53,15 +53,6 @@
 		
 		<variablelist>
 			<varlistentry>
-				<term><option>--interface</option></term>
-				<listitem>
-					<para>
-						Path to executable that communicates with a Disnix interface. Defaults to
-						<link linkend="sec-disnix-ssh-client"><command>disnix-ssh-client</command></link>
-					</para>
-				</listitem>
-			</varlistentry>
-			<varlistentry>
 				<term><option>-p</option>, <option>--profile</option></term>
 				<listitem>
 					<para>
@@ -125,7 +116,6 @@
 				</listitem>
 			</varlistentry>
 			
-
 			<varlistentry>
 				<term><option>-h</option>, <option>--help</option></term>
 				<listitem>
@@ -141,15 +131,6 @@
 		<title>Environment variables</title>
 		
 		<variablelist>
-			<varlistentry>
-				<term><option>DISNIX_CLIENT_INTERFACE</option></term>
-				<listitem>
-					<para>
-						Sets the client interface (which defaults to
-						<link linkend="sec-disnix-ssh-client"><command>disnix-ssh-client</command></link>)
-					</para>
-				</listitem>
-			</varlistentry>
 			<varlistentry>
 				<term><option>DISNIX_PROFILE</option></term>
 				<listitem>
