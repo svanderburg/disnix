@@ -77,6 +77,19 @@ rec {
     ) (attrNames distribution))
   ;
   
+  /**
+   * Fetches the key value that is used to refer to a target machine.
+   * If a target defines a 'targetProperty' then the corresponding attribute
+   * is used. If no targetProperty is provided by the target, then the global
+   * targetProperty is used.
+   *
+   * Parameters:
+   * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
+   * target: An attributeset containing properties of a target machine
+   *
+   * Returns
+   * A string containing the key value
+   */
   getTargetProperty = targetProperty: target:
     if target ? targetProperty then getAttr (target.targetProperty) target
     else getAttr targetProperty target
@@ -228,7 +241,10 @@ rec {
   queryServicesByTargetName = serviceActivationMapping: targetName: infrastructure: targetProperty:
     if serviceActivationMapping == [] then []
     else
-      if (head serviceActivationMapping).target == getAttr targetProperty (getAttr targetName infrastructure)
+      let
+        target = getAttr targetName infrastructure;
+      in
+      if (head serviceActivationMapping).target == getTargetProperty targetProperty target
       then [ (head serviceActivationMapping).service ] ++ (queryServicesByTargetName (tail serviceActivationMapping) targetName infrastructure targetProperty)
       else queryServicesByTargetName (tail serviceActivationMapping) targetName infrastructure targetProperty
   ;
@@ -250,7 +266,10 @@ rec {
   generateProfileManifest = serviceActivationMapping: targetName: infrastructure: targetProperty:
     if serviceActivationMapping == [] then []
     else
-      if (head serviceActivationMapping).target == getAttr targetProperty (getAttr targetName infrastructure)
+      let
+        target = getAttr targetName infrastructure;
+      in
+      if (head serviceActivationMapping).target == getTargetProperty targetProperty target
       then [ (head serviceActivationMapping).service (head serviceActivationMapping).type ] ++ (generateProfileManifest (tail serviceActivationMapping) targetName infrastructure targetProperty)
       else generateProfileManifest (tail serviceActivationMapping) targetName infrastructure targetProperty
   ;
