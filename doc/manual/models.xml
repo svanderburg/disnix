@@ -635,6 +635,8 @@ rec { <co xml:id='co-3-rec2' />
     mysqlPort = 3306; <co xml:id='co-5-mysqlPort' />
     mysqlUsername = "root";
     mysqlPassword = "admin";
+    targetProperty = "hostname"; <co xml:id='co-6-targetProperty' />
+    clientInterface = "disnix-ssh-client"; <co xml:id='co-7-clientInterface' />
   }; 
 }
 </programlisting>
@@ -698,6 +700,33 @@ rec { <co xml:id='co-3-rec2' />
 					Dysnomia modules to activate a particular service. For instance, the
 					<code>mysqlPort</code> specifies on which port the MySQL can be reached.
 					The MySQL properties in this model are used by the MySQL Dysnomia module.
+				  </para>
+			  </callout>
+			  
+			  <callout arearefs='co-6-targetProperty'>
+				  <para>
+					This is a reserved property defining which attribute in this attribute set
+					specifies how to connect to this machine. If this attribute is not specified
+					then the value provided by the <code>--interface</code> parameter, or
+					<code>DISNIX_TARGET_PROPERTY</code> environment variable is used, which
+					defaults to <code>hostname</code>.
+				  </para>
+				  <para>
+					This is an advanced property that should only be used in special circumstances.
+					See <xref linkend="chap-advanced-options" /> for more information.
+				  </para>
+			  </callout>
+			  
+			  <callout arearefs='co-7-clientInterface'>
+				  <para>
+					This reserved property specifies which executable needs to be run to connect
+					to the target machine. If this attribute is not specified then the value provided
+					by the <code>--interface</code> parameter, or the <code>DISNIX_CLIENT_INTERFACE</code>
+					environment variable is used, which defaults to <code>disnix-ssh-client</code>.
+				  </para>
+				  <para>
+					This is an advanced property that should only be used in special circumstances.
+					See <xref linkend="chap-advanced-options" /> for more information.
 				  </para>
 			  </callout>
 		</calloutlist>

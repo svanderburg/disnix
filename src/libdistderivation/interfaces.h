@@ -37,7 +37,7 @@ Interface;
 /**
  * Creates a new array with interfaces from a distributed derivation file
  *
- * @param manifest_file Path to the distributed derivation XML file
+ * @param distributed_derivation_file Path to the distributed derivation XML file
  * @return GPtrArray with targets
  */
 GPtrArray *create_interface_array(const gchar *distributed_derivation_file);
