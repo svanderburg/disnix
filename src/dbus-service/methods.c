@@ -255,6 +255,10 @@ static void disnix_export_thread_func(DisnixObject *object, const gint pid, gcha
 		gchar *tempfilepaths[2];
 		tempfilepaths[0] = tempfilename;
 		tempfilepaths[1] = NULL;
+		
+		if(fchmod(closure_fd, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) == 1)
+		    g_printerr("Cannot change permissions on exported closure: %s\n", tempfilename);
+		    
 		disnix_emit_success_signal(object, pid, tempfilepaths);
 	    }
 	    else
