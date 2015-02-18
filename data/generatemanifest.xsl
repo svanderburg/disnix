@@ -25,7 +25,6 @@
 	    <name><xsl:value-of select="attr[@name='name']/string/@value" /></name>
 	    <service><xsl:value-of select="attr[@name='service']/string/@value" /></service>
 	    <target><xsl:value-of select="attr[@name='target']/string/@value" /></target>
-	    <targetProperty><xsl:value-of select="attr[@name='targetProperty']/string/@value" /></targetProperty>
 	    <type><xsl:value-of select="attr[@name='type']/string/@value" /></type>
 	    <key><xsl:value-of select="attr[@name='_key']/string/@value" /></key>
 	  </mapping>

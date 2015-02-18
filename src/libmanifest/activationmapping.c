@@ -90,7 +90,6 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 	    gchar *key = NULL;
 	    gchar *target = NULL;
 	    gchar *service = NULL;
-	    gchar *targetProperty = NULL;
 	    gchar *name = NULL;
 	    gchar *type = NULL;
 	    GPtrArray *depends_on = NULL;
@@ -105,8 +104,6 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 		    key = g_strdup((gchar*)mapping_children->children->content);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "service") == 0)
 		    service = g_strdup((gchar*)mapping_children->children->content);
-		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "targetProperty") == 0)
-		    targetProperty = g_strdup((gchar*)mapping_children->children->content);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "name") == 0)
 		    name = g_strdup((gchar*)mapping_children->children->content);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "type") == 0)
@@ -157,7 +154,6 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 	    mapping->key = key;
 	    mapping->target = target;
 	    mapping->service = service;
-	    mapping->targetProperty = targetProperty;
 	    mapping->name = name;
 	    mapping->type = type;
 	    mapping->depends_on = depends_on;
@@ -194,7 +190,6 @@ void delete_activation_array(GPtrArray *activation_array)
             g_free(mapping->key);
             g_free(mapping->target);
             g_free(mapping->service);
-            g_free(mapping->targetProperty);
             g_free(mapping->name);
             g_free(mapping->type);
 
@@ -346,7 +341,6 @@ void print_activation_array(const GPtrArray *activation_array)
 	g_print("key: %s\n", mapping->key);
 	g_print("target: %s\n", mapping->target);
 	g_print("service: %s\n", mapping->service);
-	g_print("targetProperty: %s\n", mapping->targetProperty);
 	g_print("type: %s\n", mapping->type);
 	g_print("dependsOn:\n");
 	

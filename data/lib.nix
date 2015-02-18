@@ -216,7 +216,7 @@ rec {
       mappingItem = map (distributionItem:
         { inherit (distributionItem) service target;
           inherit (service) name type;
-          inherit targetProperty dependsOn;
+          inherit dependsOn;
           _key = generateServiceHashKey services service distributionItem;
         }
       ) (service.distribution);

@@ -49,7 +49,7 @@ ActivationMappingStatus;
 /**
  * Contains all properties to activate a specific service on
  * a specific machine. This struct maps (key,target) ->
- * (service,name,targetProperty,type,depends_on,activated)
+ * (service,name,type,depends_on,activated)
  */
 typedef struct
 {
@@ -61,8 +61,6 @@ typedef struct
     gchar *service;
     /* Name of the service */
     gchar *name;
-    /** Property used to connect to the disnix service */
-    gchar *targetProperty;
     /** Activation type */
     gchar *type;
     /** Array of ActivationMappingKey items representing the inter-dependencies */
