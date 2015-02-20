@@ -22,7 +22,7 @@
 #include <glib.h>
 
 /**
- * Contains properties to interface with a target machine for building
+ * @brief Contains properties to interface with a target machine for building
  */
 typedef struct
 {

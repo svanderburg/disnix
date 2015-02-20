@@ -22,7 +22,7 @@
 #include <glib.h>
 
 /**
- * Contains a mapping of a Nix profile to a disnix service target
+ * @brief Contains a mapping of a Nix profile to a disnix service target
  */
 typedef struct
 {

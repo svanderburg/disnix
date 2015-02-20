@@ -20,13 +20,13 @@
 #include "defaultoptions.h"
 #include <stdlib.h>
 
-/** Default interface value */
+/* Default interface value */
 static char *default_interface = "disnix-ssh-client";
 
-/** Default target property value */ 
+/* Default target property value */ 
 static char *default_target_property = "hostname";
 
-/** Default profile value */
+/* Default profile value */
 static char *default_profile = "default";
 
 char *check_interface_option(char *interface)

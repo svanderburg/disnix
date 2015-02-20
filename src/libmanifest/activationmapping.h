@@ -22,8 +22,7 @@
 #include <glib.h>
 
 /**
- * Contains the values that constitute a key uniquely referring to an activation
- * mapping.
+ * @brief Contains the values that constitute a key uniquely referring to an activation mapping.
  */
 typedef struct
 {
@@ -47,9 +46,8 @@ typedef enum
 ActivationMappingStatus;
 
 /**
- * Contains all properties to activate a specific service on
- * a specific machine. This struct maps (key,target) ->
- * (service,name,type,depends_on,activated)
+ * @brief Contains all properties to activate a specific service on a specific machine.
+ * This struct maps (key,target) -> (service,name,type,depends_on,activated)
  */
 typedef struct
 {

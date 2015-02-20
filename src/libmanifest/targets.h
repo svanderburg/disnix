@@ -22,7 +22,7 @@
 #include <glib.h>
 
 /**
- * Contains a property of a specific target machine.
+ * @brief Contains a property of a specific target machine.
  */
 typedef struct
 {
@@ -35,7 +35,7 @@ typedef struct
 TargetProperty;
 
 /**
- * Contains properties of a target machine.
+ * @brief Contains properties of a target machine.
  */
 typedef struct
 {

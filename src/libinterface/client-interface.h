@@ -138,6 +138,9 @@ pid_t exec_copy_closure_to(gchar *interface, gchar *target, gchar *component);
  */
 pid_t exec_realise(gchar *interface, gchar *target, gchar *derivation, int pipefd[2]);
 
+/**
+ * Invokes the true command for testing purposes.
+ */
 pid_t exec_true(void);
 
 #endif

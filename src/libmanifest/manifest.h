@@ -22,6 +22,8 @@
 #include <glib.h>
 
 /**
+ * @brief Contains all properties of a manifest file that is used for distribution and activation
+ *
  * A deployment manifest consists of an array mapping intra-dependency closures
  * to targets, an array of services that need to be activated on a specific
  * target and array of available target machines

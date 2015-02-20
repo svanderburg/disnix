@@ -21,9 +21,15 @@
 #define __DISNIX_INFRASTRUCTURE_H
 #include <glib.h>
 
+/**
+ * @brief Encapsulates a property of a machine
+ */
 typedef struct
 {
+    /** Name of the machine property */
     gchar *name;
+    
+    /** Value of the machine property */
     gchar *value;
 }
 TargetProperty;

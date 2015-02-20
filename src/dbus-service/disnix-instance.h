@@ -32,7 +32,9 @@ typedef enum
 }
 DisnixSignalNumber;
 
-/** Captures the state of a D-Bus instance */
+/**
+ * @brief Captures the state of a D-Bus instance
+ */
 typedef struct
 {
     /** Represents the parent class object state */
@@ -43,7 +45,9 @@ typedef struct
 }
 DisnixObject;
 
-/** Captures the state of the class of the D-Bus object */
+/**
+ * @brief Captures the state of the class of the D-Bus object
+ */
 typedef struct 
 {
     /** Represents the state of the parent class */

@@ -22,6 +22,8 @@
 #include <glib.h>
 
 /**
+ * @brief Contains all properties of a distributed derivation file that maps store derivation closures to machines
+ *
  * A distributed derivation consists of an array mapping intra-dependency closures
  * of store derivations to interfaces and an array of interfaces used to connect
  * to the remote machines.
