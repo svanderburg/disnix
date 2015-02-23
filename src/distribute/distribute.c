@@ -18,12 +18,14 @@
  */
 
 #include "distribute.h"
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <client-interface.h>
 #include <manifest.h>
 #include <distributionmapping.h>
 #include <targets.h>
 
-int distribute(const gchar *manifest_file)
+int distribute(const gchar *manifest_file, const unsigned int max_concurrent_transfers)
 {
     /* Generate a distribution array from the manifest file */
     Manifest *manifest = create_manifest(manifest_file);
@@ -37,6 +39,7 @@ int distribute(const gchar *manifest_file)
     {
         unsigned int i;
         int exit_status = 0;
+        unsigned int running_processes = 0;
         
         /* Iterate over the distribution array and distribute the profiles to the target machines */
         for(i = 0; i < manifest->distribution_array->len; i++)
@@ -44,17 +47,40 @@ int distribute(const gchar *manifest_file)
             DistributionItem *item = g_ptr_array_index(manifest->distribution_array, i);
             Target *target = find_target(manifest->target_array, item->target);
             gchar *interface = find_target_client_interface(target);
-            int status;
+            pid_t pid;
             
             /* Invoke copy closure operation */
             g_print("[target: %s]: Receiving intra-dependency closure of profile: %s\n", item->target, item->profile);
-            status = wait_to_finish(exec_copy_closure_to(interface, item->target, item->profile));
+            pid = exec_copy_closure_to(interface, item->target, item->profile);
+            running_processes++;
             
-            /* On error, change the exit status to indicate an error */
-            if(status != 0)
+            /* If limit has been reached, wait until one of the transfers finishes */
+            if(running_processes >= max_concurrent_transfers)
             {
-                g_print("[target: %s]: Cannot receive intra-dependency closure\n", item->target);
-                exit_status = status;
+                int status;
+                pid = wait(&status);
+                
+                if(pid == -1 || WEXITSTATUS(status) != 0)
+                {
+                    g_printerr("Cannot transfer intra-dependency closure!\n");
+                    exit_status = 1;
+                    break;
+                }
+                else
+                    running_processes--;
+            }
+        }
+        
+        /* Wait for remaining transfers to finish */
+        for(i = 0; i < running_processes; i++)
+        {
+            int status;
+            pid_t pid = wait(&status);
+            
+            if(pid == -1 || WEXITSTATUS(status) != 0)
+            {
+                g_printerr("Cannot transfer intra-dependency closure!\n");
+                exit_status = 1;
                 break;
             }
         }

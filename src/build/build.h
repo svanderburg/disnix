@@ -27,8 +27,9 @@
  * and finally the build results are copied back to the coordinator machine.
  * 
  * @param distributed_derivation_file Path to the distributed derivation file
+ * @param max_concurrent_transfers Specifies the maximum amount of concurrent transfers
  * @return 0 if everything succeeds, or else a non-zero exit value
  */
-int build(const gchar *distributed_derivation_file);
+int build(const gchar *distributed_derivation_file, const unsigned int max_concurrent_transfers);
 
 #endif

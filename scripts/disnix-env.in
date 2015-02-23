@@ -23,18 +23,19 @@ showUsage()
     echo "Usage: $0 -s services_expr -i infrastructure_expr -d distribution_expr [options]"
     echo "Options:"
     echo
-    echo "-s,--services               Services Nix expression which describes all components of the distributed system"
-    echo "-i,--infrastructure         Infrastructure Nix expression which captures properties of machines in the network"
-    echo "-d,--distribution           Distribution Nix expression which maps services to machines in the network"
-    echo "--target-property           The target property of an infrastructure model, that specifies how to "
-    echo "                            connect to the remote Disnix interface. (Defaults to hostname)"
-    echo "--interface                 Process that communicates with the remote disnix service. Defaults to disnix-ssh-client"
-    echo "-p,--profile                Name of the profile that is used for this system. Defaults to: default"
-    echo "--build-on-targets          Build the services on the target machines in the network instead of managing the build by the coordinator"
-    echo "--coordinator-profile-path  Path where to store the coordinator profile generations"
-    echo "--no-upgrade                Do not perform an upgrade, but activate all services of the new configuration"
-    echo "--show-trace                Shows a trace of the output"
-    echo "-h,--help                   Shows the usage of this command"
+    echo "-s,--services                 Services Nix expression which describes all components of the distributed system"
+    echo "-i,--infrastructure           Infrastructure Nix expression which captures properties of machines in the network"
+    echo "-d,--distribution             Distribution Nix expression which maps services to machines in the network"
+    echo "--target-property             The target property of an infrastructure model, that specifies how to "
+    echo "                              connect to the remote Disnix interface. (Defaults to hostname)"
+    echo "--interface                   Process that communicates with the remote disnix service. Defaults to disnix-ssh-client"
+    echo "-p,--profile                  Name of the profile that is used for this system. Defaults to: default"
+    echo "-m,--max-concurrent-transfers Maximum amount of concurrent closure transfers. Defauls to: 2"
+    echo "--build-on-targets            Build the services on the target machines in the network instead of managing the build by the coordinator"
+    echo "--coordinator-profile-path    Path where to store the coordinator profile generations"
+    echo "--no-upgrade                  Do not perform an upgrade, but activate all services of the new configuration"
+    echo "--show-trace                  Shows a trace of the output"
+    echo "-h,--help                     Shows the usage of this command"
 }
 
 # Autoconf settings
@@ -47,7 +48,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:p:h -l services:,infrastructure:,distribution:,interface:,target-property:,profile:,build-on-targets,coordinator-profile-path:,no-upgrade,show-trace,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:p:h -l services:,infrastructure:,distribution:,interface:,target-property:,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,show-trace,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -70,6 +71,9 @@ do
             ;;
         -d|--distribution)
             distributionFile=`readlink -f $2`
+            ;;
+        -m|--max-concurrent-transfers)
+            maxConcurrentTransfersArg="-m $2"
             ;;
         --build-on-targets)
             buildOnTargets=1
@@ -117,12 +121,12 @@ then
     echo "[coordinator]: Instantiating store derivations..."
     distributedDerivation=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --interface $interface --no-out-link $showTraceArg`
     echo "[coordinator]: Building store derivations..."
-    disnix-build $distributedDerivation
+    disnix-build $maxConcurrentTransfersArg $distributedDerivation
 fi
 
 echo "[coordinator]: Building manifest..."
 manifest=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link --interface $interface $showTraceArg`
 echo "[coordinator]: Distributing intra-dependency closures..."
-disnix-distribute $manifest
+disnix-distribute $maxConcurrentTransfersArg $manifest
 echo "[coordinator]: Activating new configuration..."
 disnix-activate $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest

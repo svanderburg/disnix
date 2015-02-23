@@ -18,6 +18,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <getopt.h>
 #include <defaultoptions.h>
 #include "distribute.h"
@@ -26,7 +27,9 @@ static void print_usage(const char *command)
 {
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "%s manifest\n", command);
-    fprintf(stderr, "%s {-h | --help}\n", command);
+    fprintf(stderr, "\nOptions:\n");
+    fprintf(stderr, "-m | --max-concurrent-transfers\n");
+    fprintf(stderr, "-h | --help\n");
 }
 
 int main(int argc, char *argv[])
@@ -35,15 +38,21 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
+        {"max-concurrent-transfers", required_argument, 0, 'm'},
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}
     };
     
+    unsigned int max_concurrent_transfers = 2;
+    
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "h", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "m:h", long_options, &option_index)) != -1)
     {
         switch(c)
         {
+            case 'm':
+                max_concurrent_transfers = atoi(optarg);
+                break;
             case 'h':
             case '?':
                 print_usage(argv[0]);
@@ -59,5 +68,5 @@ int main(int argc, char *argv[])
         return 1;
     }
     else
-        return distribute(argv[optind]); /* Execute distribute operation */
+        return distribute(argv[optind], max_concurrent_transfers); /* Execute distribute operation */
 }

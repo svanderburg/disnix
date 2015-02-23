@@ -16,6 +16,8 @@ Version 0.3
 
 - Improved logging
 
+- Concurrent closure transfers
+
 - Parallelised transition process
 
 - Multi connection protocol support

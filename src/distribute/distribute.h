@@ -26,8 +26,9 @@
  * in the network.
  *
  * @param manifest_file Path to the manifest file which maps services to machines
+ * @param max_concurrent_transfers Specifies the maximum amount of concurrent transfers
  * @return 0 if everything succeeds, else a non-zero exit status
  */
-int distribute(const gchar *manifest_file);
+int distribute(const gchar *manifest_file, const unsigned int max_concurrent_transfers);
 
 #endif

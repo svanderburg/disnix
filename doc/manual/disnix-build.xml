@@ -43,6 +43,14 @@
 		
 		<variablelist>
 			<varlistentry>
+				<term><option>-m</option>, <option>--max-concurrent-transfers</option></term>
+				<listitem>
+					<para>
+						Maximum amount of concurrent closure transfers. Defauls to: 2
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term><option>-h</option>, <option>--help</option></term>
 				<listitem>
 					<para>

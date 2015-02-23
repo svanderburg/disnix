@@ -21,6 +21,8 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include <distributedderivation.h>
 #include <derivationmapping.h>
@@ -29,27 +31,55 @@
 
 #define BUFFER_SIZE 4096
 
-static int distribute_derivations(const GPtrArray *derivation_array, const GPtrArray *interface_array)
+static int distribute_derivations(const GPtrArray *derivation_array, const GPtrArray *interface_array, const unsigned int max_concurrent_transfers)
 {
-    int status = 0;
-    unsigned int i;
+    unsigned int i, running_processes = 0;
+    int exit_status = 0;
     
     for(i = 0; i < derivation_array->len; i++)
-    {   
+    {
         /* Retrieve derivation item from array */
         DerivationItem *item = g_ptr_array_index(derivation_array, i);
         Interface *interface = find_interface(interface_array, item->target);
+        pid_t pid;
         
         /* Execute copy closure process */
         g_print("[target: %s]: Receiving intra-dependency closure of store derivation: %s\n", item->target, item->derivation);
-        status = wait_to_finish(exec_copy_closure_to(interface->clientInterface, item->target, item->derivation));
+        pid = exec_copy_closure_to(interface->clientInterface, item->target, item->derivation);
+        running_processes++;
         
-        /* On error stop the distribution process */
-        if(status != 0)
-            return status;
+        /* If limit has been reached, wait until one of the transfers finishes */
+        if(running_processes >= max_concurrent_transfers)
+        {
+            int status;
+            pid = wait(&status);
+            
+            if(pid == -1 || WEXITSTATUS(status) != 0)
+            {
+                g_printerr("Cannot transfer intra-dependency closure!\n");
+                exit_status = 1;
+                break;
+            }
+            else
+                running_processes--;
+        }
     }
     
-    return status;
+    /* Wait for remaining transfers to finish */
+    for(i = 0; i < running_processes; i++)
+    {
+        int status;
+        pid_t pid = wait(&status);
+        
+        if(pid == -1 || WEXITSTATUS(status) != 0)
+        {
+            g_printerr("Cannot transfer intra-dependency closure!\n");
+            exit_status = 1;
+            break;
+        }
+    }
+    
+    return exit_status;
 }
 
 static int realise(const GPtrArray *derivation_array, const GPtrArray *interface_array, GPtrArray *result_array)
@@ -175,7 +205,7 @@ static void cleanup(GPtrArray *result_array, DistributedDerivation *distributed_
     delete_distributed_derivation(distributed_derivation);
 }
 
-int build(const gchar *distributed_derivation_file)
+int build(const gchar *distributed_derivation_file, const unsigned int max_concurrent_transfers)
 {
     DistributedDerivation *distributed_derivation = create_distributed_derivation(distributed_derivation_file);
     
@@ -190,7 +220,7 @@ int build(const gchar *distributed_derivation_file)
         GPtrArray *result_array = g_ptr_array_new();
         
         /* Distribute derivations to target machines */
-        if((status = distribute_derivations(distributed_derivation->derivation_array, distributed_derivation->interface_array)) != 0)
+        if((status = distribute_derivations(distributed_derivation->derivation_array, distributed_derivation->interface_array, max_concurrent_transfers)) != 0)
         {
              cleanup(result_array, distributed_derivation);
              return status;
