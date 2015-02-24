@@ -31,10 +31,24 @@
 
 #define BUFFER_SIZE 4096
 
+static int wait_to_complete(void)
+{
+    int status;
+    pid_t pid = wait(&status);
+    
+    if(pid == -1 || WEXITSTATUS(status) != 0)
+    {
+        g_printerr("Cannot transfer intra-dependency closure!\n");
+        return 1;
+    }
+    else
+        return 0;
+}
+
 static int distribute_derivations(const GPtrArray *derivation_array, const GPtrArray *interface_array, const unsigned int max_concurrent_transfers)
 {
     unsigned int i, running_processes = 0;
-    int exit_status = 0;
+    int exit_status;
     
     for(i = 0; i < derivation_array->len; i++)
     {
@@ -51,32 +65,20 @@ static int distribute_derivations(const GPtrArray *derivation_array, const GPtrA
         /* If limit has been reached, wait until one of the transfers finishes */
         if(running_processes >= max_concurrent_transfers)
         {
-            int status;
-            pid = wait(&status);
+            exit_status = wait_to_complete();
+            running_processes--;
             
-            if(pid == -1 || WEXITSTATUS(status) != 0)
-            {
-                g_printerr("Cannot transfer intra-dependency closure!\n");
-                exit_status = 1;
+            if(exit_status != 0)
                 break;
-            }
-            else
-                running_processes--;
         }
     }
     
     /* Wait for remaining transfers to finish */
     for(i = 0; i < running_processes; i++)
     {
-        int status;
-        pid_t pid = wait(&status);
-        
-        if(pid == -1 || WEXITSTATUS(status) != 0)
-        {
-            g_printerr("Cannot transfer intra-dependency closure!\n");
-            exit_status = 1;
+        exit_status = wait_to_complete();
+        if(exit_status != 0)
             break;
-        }
     }
     
     return exit_status;

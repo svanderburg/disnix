@@ -25,6 +25,20 @@
 #include <distributionmapping.h>
 #include <targets.h>
 
+static int wait_to_complete(void)
+{
+    int status;
+    pid_t pid = wait(&status);
+    
+    if(pid == -1 || WEXITSTATUS(status) != 0)
+    {
+        g_printerr("Cannot transfer intra-dependency closure!\n");
+        return 1;
+    }
+    else
+        return 0;
+}
+
 int distribute(const gchar *manifest_file, const unsigned int max_concurrent_transfers)
 {
     /* Generate a distribution array from the manifest file */
@@ -38,7 +52,7 @@ int distribute(const gchar *manifest_file, const unsigned int max_concurrent_tra
     else
     {
         unsigned int i;
-        int exit_status = 0;
+        int exit_status;
         unsigned int running_processes = 0;
         
         /* Iterate over the distribution array and distribute the profiles to the target machines */
@@ -57,32 +71,20 @@ int distribute(const gchar *manifest_file, const unsigned int max_concurrent_tra
             /* If limit has been reached, wait until one of the transfers finishes */
             if(running_processes >= max_concurrent_transfers)
             {
-                int status;
-                pid = wait(&status);
+                exit_status = wait_to_complete();
+                running_processes--;
                 
-                if(pid == -1 || WEXITSTATUS(status) != 0)
-                {
-                    g_printerr("Cannot transfer intra-dependency closure!\n");
-                    exit_status = 1;
+                if(exit_status != 0)
                     break;
-                }
-                else
-                    running_processes--;
             }
         }
         
         /* Wait for remaining transfers to finish */
         for(i = 0; i < running_processes; i++)
         {
-            int status;
-            pid_t pid = wait(&status);
-            
-            if(pid == -1 || WEXITSTATUS(status) != 0)
-            {
-                g_printerr("Cannot transfer intra-dependency closure!\n");
-                exit_status = 1;
+            exit_status = wait_to_complete();
+            if(exit_status != 0)
                 break;
-            }
         }
         
         /* Delete manifest from memory */
