@@ -91,7 +91,7 @@ int lock(const GPtrArray *distribution_array, const GPtrArray *target_array, gch
             exit_status = -1;
         }
         else
-            g_ptr_array_insert(try_array, -1, item);
+            g_ptr_array_add(try_array, item);
     }
     
     /* Wait until every lock is acquired */

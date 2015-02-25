@@ -98,7 +98,7 @@ GPtrArray *create_interface_array(const gchar *distributed_derivation_file)
 	    interface->clientInterface = clientInterface;
 	    
 	    /* Add interface item to the interface array */
-	    g_ptr_array_insert(interface_array, -1, interface);
+	    g_ptr_array_add(interface_array, interface);
 	}
 	
 	/* Sort the interface array */

@@ -83,7 +83,7 @@ GPtrArray *create_derivation_array(const gchar *distributed_derivation_file)
 	    /* Added the mapping to the array */
 	    item->derivation = derivation;
 	    item->target = target;
-	    g_ptr_array_insert(derivation_array, -1, item);
+	    g_ptr_array_add(derivation_array, item);
         }
     }
     

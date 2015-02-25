@@ -83,7 +83,7 @@ GPtrArray *generate_distribution_array(const gchar *manifest_file)
 	    /* Add the mapping to the array */
 	    item->profile = profile;
 	    item->target = target;
-	    g_ptr_array_insert(distribution_array, -1, item);
+	    g_ptr_array_add(distribution_array, item);
         }
 	
 	xmlXPathFreeObject(result);

@@ -114,7 +114,7 @@ GPtrArray *generate_target_array(const gchar *manifest_file)
 	        else
 	            targetProperty->value = g_strdup((gchar*)targets_children->children->content);
 	        
-	        g_ptr_array_insert(target->properties, -1, targetProperty);
+	        g_ptr_array_add(target->properties, targetProperty);
 	        
 	        /* If the numOfCores properties has been encountered, set the value accordingly */
 	        if(g_strcmp0(targetProperty->name, "numOfCores") == 0)
@@ -130,7 +130,7 @@ GPtrArray *generate_target_array(const gchar *manifest_file)
 	    g_ptr_array_sort(target->properties, (GCompareFunc)compare_target_property);
 	    
 	    /* Add target item to the targets array */
-	    g_ptr_array_insert(targets_array, -1, target);
+	    g_ptr_array_add(targets_array, target);
 	}
 	
 	/* Sort the targets array */

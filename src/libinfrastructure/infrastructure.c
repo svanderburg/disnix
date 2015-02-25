@@ -226,7 +226,7 @@ GPtrArray *create_target_array(char *infrastructure_expr)
 	            targetProperty->value = g_strdup((gchar*)targets_children->children->content);
 	        
 	        /* Add the property to the target properties array */
-	        g_ptr_array_insert(target_properties, -1, targetProperty);
+	        g_ptr_array_add(target_properties, targetProperty);
 	        
 	        targets_children = targets_children->next;
 	    }
@@ -235,7 +235,7 @@ GPtrArray *create_target_array(char *infrastructure_expr)
 	    g_ptr_array_sort(target_properties, (GCompareFunc)compare_target_property);
 	    
 	    /* Add the property to the targets array */
-	    g_ptr_array_insert(target_array, -1, target_properties);
+	    g_ptr_array_add(target_array, target_properties);
 	}
 	
 	/* Sort the targets array */

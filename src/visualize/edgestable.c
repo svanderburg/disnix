@@ -73,7 +73,7 @@ GHashTable *generate_edges_table(const GPtrArray *activation_array, GPtrArray *t
 		mapping_value = g_strconcat(actual_mapping->key, ":", target_key, NULL);
 		    
 		/* Add mapping value to the dependency array */
-	    	g_ptr_array_insert(dependency_array, -1, mapping_value);
+	    	g_ptr_array_add(dependency_array, mapping_value);
 	    }
 	    
 	    /* Associate the dependency array to the given mapping */

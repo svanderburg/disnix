@@ -133,7 +133,7 @@ static int realise(const GPtrArray *derivation_array, const GPtrArray *interface
             {
                 gchar *result;
                 result = g_strdup(line);
-                g_ptr_array_insert(result_array, -1, result);
+                g_ptr_array_add(result_array, result);
             }
         }
         
