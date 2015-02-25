@@ -55,11 +55,10 @@ static int distribute_derivations(const GPtrArray *derivation_array, const GPtrA
         /* Retrieve derivation item from array */
         DerivationItem *item = g_ptr_array_index(derivation_array, i);
         Interface *interface = find_interface(interface_array, item->target);
-        pid_t pid;
         
         /* Execute copy closure process */
         g_print("[target: %s]: Receiving intra-dependency closure of store derivation: %s\n", item->target, item->derivation);
-        pid = exec_copy_closure_to(interface->clientInterface, item->target, item->derivation);
+        exec_copy_closure_to(interface->clientInterface, item->target, item->derivation);
         running_processes++;
         
         /* If limit has been reached, wait until one of the transfers finishes */

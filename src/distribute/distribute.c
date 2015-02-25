@@ -61,11 +61,10 @@ int distribute(const gchar *manifest_file, const unsigned int max_concurrent_tra
             DistributionItem *item = g_ptr_array_index(manifest->distribution_array, i);
             Target *target = find_target(manifest->target_array, item->target);
             gchar *interface = find_target_client_interface(target);
-            pid_t pid;
             
             /* Invoke copy closure operation */
             g_print("[target: %s]: Receiving intra-dependency closure of profile: %s\n", item->target, item->profile);
-            pid = exec_copy_closure_to(interface, item->target, item->profile);
+            exec_copy_closure_to(interface, item->target, item->profile);
             running_processes++;
             
             /* If limit has been reached, wait until one of the transfers finishes */
