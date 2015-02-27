@@ -122,7 +122,7 @@ then
     
         # Import the serialisation of the target by using the Disnix interface
         # on the remote machine
-        $interface --target $target --import --localfile $tmpfilename
+        $interface --target $target --import --localfile $tmpfilename || (rm -f $tmpfilename; false)
     
         # Remove the serialisation
         rm -f $tmpfilename
@@ -140,6 +140,9 @@ else
         closure=`$interface --target $target --export --remotefile $invalidPaths`
     
         # Import the closure
-        cat $closure | nix-store --import
+        cat $closure | nix-store --import || (rm -f $closure; false)
+        
+        # Remove the serialisation
+        rm -f $closure
     fi
 fi
