@@ -117,7 +117,7 @@ $ nix-env -i disnix
 			it has been installed, so that Disnix (and other Nix utilities) can find it.
 		</para>
 		<para>
-			On NixOS, a copy of Nixpkgs is 
+			In NixOS, a copy of Nixpkgs is 
 			already present and this environment variable has already been configured.
 			On other systems, this variable can be configured by adding the following lines to your
 			<filename>~/.bash_profile</filename> configuration (or a similar configuration
@@ -150,7 +150,7 @@ EOF
 
 		<para>
 			In order to deploy a distributed system in a network of machines, every
-			machine needs to be reachable by the coordinator machine in order to perform deployment
+			machine must be reachable by the coordinator machine in order to perform deployment
 			steps remotely.
 			The Disnix service is a service that provides access to these operations
 			through a RPC protocol, that must be installed on every target machine first.
@@ -160,11 +160,11 @@ EOF
 			The Disnix service consists of two parts. The <emphasis>core</emphasis> actually performs
 			the deployment operations and a <emphasis>wrapper</emphasis> exposes the operations to remote users
 			through a RPC protocol. The default wrapper is the SSH wrapper, which is included in the
-			Disnix distribution but other wrappers can also be used.
+			Disnix distribution. However, other wrappers can also be used.
 		</para>
 
 		<para>
-			If you want to use SSH as a communication protocol, an
+			If you want to use SSH as a communication protocol, the
 			<link xlink:href="http://www.openssh.org">OpenSSH</link>
 			server must be running on each target machine and a client machine
 			requires a OpenSSH client.
@@ -174,11 +174,11 @@ EOF
 			<title>Installing a target machine running NixOS</title>
 			
 			<para>
-				Installing Disnix on NixOS is straight forward. Follow the instructions
+				Installing Disnix in NixOS is straight forward. Follow the instructions
 				explained in the
 				<link xlink:href="http://nixos.org/nixos/docs.html">NixOS manual</link>
 				to install a NixOS machine.
-				To enable the Disnix core service on NixOS the following property
+				To enable the Disnix core service in NixOS the following property
 				must be added to the <filename>/etc/nixos/configuration.nix</filename> file:
 				
 <screen>
@@ -201,7 +201,7 @@ services.openssh.enable = true;
 				simply enabling a container service suffices in a NixOS configuration.
 				For example, by enabling MySQL and Apache Tomcat in NixOS,
 				the NixOS module system automatically configures Dysnomia to install the corresponding plugins
-				so that Disnix can activate services that in these containers:
+				so that Disnix can activate services in these containers:
 <screen>
 services.mysql.enable = true;
 services.tomcat.enable = true;
@@ -243,8 +243,8 @@ $ make install
 					used on the system. For example, if the configure script is able to detect
 					the <command>mysql</command> command on the host system, then the <code>mysql-database</code>
 					module is configured and installed and thus a MySQL database can
-					be deployed on this system (this requires you to manually install MySQL
-					first).
+					be deployed on this system (this requires you to somehow install MySQL
+					first, e.g. with the distribution's package manager or with Nix).
 				</para>
 			
 				<para>
@@ -255,8 +255,8 @@ $ make install
 <screen>
 $ ./configure --help
 </screen>
-					for more information about parameters which can be used to configure Dysnomia you consult
-					Dysnomia's README.md file.
+					for more information about Dysnomia's configuration parameters which can be used to configure. The
+					README.md file can also be consulted for more general information.
 				</para>
 			</section>
 			
@@ -267,9 +267,9 @@ $ ./configure --help
 					The core Disnix service is a D-Bus service operating on the system bus,
 					which requires the D-Bus system daemon running.
 					Moreover, it also requires the Disnix service configuration file
-					(which installed in <code>$PREFIX/etc/dbus-1/system.d</code>) in the right location
+					(which is installed in <code>$PREFIX/etc/dbus-1/system.d</code>) in the right location
 					so that it is allowed to register itself on the system bus with the right access permissions
-					(on most systems this location is in <code>/etc/dbus-1/system.d</code>).
+					(in most Linux distributions this location is in <code>/etc/dbus-1/system.d</code>).
 				</para>
 			</section>
 			
@@ -279,7 +279,7 @@ $ ./configure --help
 				<para>
 					The host system must configured to start the Disnix D-Bus service automatically. 
 					In most Linux distributions this can be done by creating a <code>/etc/init.d/disnix</code>
-					<code>init.d</code> script and configure your distribution so that it will be launched on system startup.
+					<code>init.d</code> script and by configuring your distribution in such a way that it will be launched on system startup.
 					An <code>init.d</code> script for the Disnix service could look like this:
 				</para>
 			
@@ -377,7 +377,7 @@ $ ssh-host-config
 				<title>Installing a protocol wrapper</title>
 				
 				<para>
-					Except for the core Disnix service, a protocol wrapper is required that provides remote
+					Apart from the core Disnix service, a protocol wrapper is required that provides remote
 					access to the core service operations through a RPC protocol. A SSH wrapper is included
 					which only requires a OpenSSH server running on the same machine. For other protocols,
 					you have to read the documentation that is included with the extension package.
@@ -390,7 +390,7 @@ $ ssh-host-config
 			
 			<para>
 				By default, only users who are members of the <code>disnix</code> group may access operations
-				of the core Disnix service. Thus in order to access the Disnix operations remotely, either
+				of the core Disnix service. In order to access the Disnix operations remotely, either
 				an account with the right permissions is required or the protocol wrapper should perform
 				the authentication to the core Disnix service. The OpenSSH wrapper, for instance,
 				uses the credentials of the calling user from the coordinator by default
@@ -400,7 +400,7 @@ $ ssh-host-config
 			</para>
 			
 			<para>
-				On NixOS the <code>disnix</code> user group is automatically added. For other systems this
+				In NixOS, the <code>disnix</code> user group is automatically added. For other systems this
 				must be done by the system administrator.
 				On most systems this user group can be added by typing:
 			</para>

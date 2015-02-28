@@ -72,6 +72,11 @@ $ export DISNIX_TARGET_PROPERTY=sshTarget
 			The <varname>sshTarget</varname> attribute defined in the infrastructure model is used
 			to determine the address of the Disnix service.
 		</para>
+		<para>
+			It is also possible to define a target property and client interface for each individual
+			machine to support multi connection protocol deployment. See <xref linkend="ex-6-infrastructure-model" />
+			for more information.
+		</para>
 	</section>
 	
 	<section>

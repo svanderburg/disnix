@@ -15,7 +15,7 @@
 		<title>Structure</title>
 		
 		<para>
-			Basically, every Dysnomia module implements a process, which takes 2 command-line parameters. The first argument is
+			Basically, every Dysnomia module implements a process, which takes 2 command-line parameters. The first parameter is
 			one of the following:
 		</para>
 		

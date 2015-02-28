@@ -5,15 +5,17 @@
 	<title>Introduction</title>
 
 	<para>
-		Disnix is a toolset used to perform distributed service deployment tasks
-		and is built on top of Nix; a package manager which has some distinct
-		features compared to conventional package
+		Disnix is a distributed service deployment toolset which main
+		purpose is to deploy service oriented systems (i.e. systems that can be
+		decomposed into "distributable units") into networks of machines
+		having various characteristics (such as operating systems) and is built on top of Nix;
+		a package manager which has some unique features compared to conventional package
 		managers to make deployment safe and reliable.
 	</para>
 
 	<para>
 		Most of Nix's unique features stem from the way packages are stored. In Nix,
-		every pacakge is stored in isolation from each other in a special purpose directory
+		every package is stored in isolation from each other in a special purpose directory
 		called the <emphasis>Nix store</emphasis>. Every package has a special file
 		name such as:
 	</para>
@@ -28,17 +30,17 @@
 		(e.g. libraries, compilers, build scripts)
 		used to build a package. If a user decides to build the component
 		with, say, a different
-		compiler, a different hash being computed and thus a different filename.
+		compiler, a different hash will be computed and the package has a different filename.
 		Hashing makes it safe to store multiple versions and variants next
 		to each other, because no component share the same name.
 	</para>
 
 	<para>
-		Since every component is stored in isolation in the Nix store, rather than a global directory
+		Since every component is stored in isolation in the Nix store, rather than global directories
 		such as <filename>/usr/lib</filename>, we have stricter guarantees that its dependencies are
 		correct and complete. With conventional package managers 
-		the fact that a package builds successfully does not guarantee that the
-		dependency specification are correct, since dependencies residing in global locations and
+		the fact that a package builds successfully does not guarantee that
+		dependency specifications are correct, since dependencies residing in global locations
 		can still be implicitly found.
 		In Nix, all packages reside in isolated folders the Nix store and must therefore
 		be explicitly specified.  Isolation guarantees that if a package builds
@@ -48,7 +50,7 @@
 
 	<para>
 		Nix supports atomic upgrades and rollbacks, because components are stored
-		safely next to each other and are never overwritten or automatically removed. Thus 
+		safely next to each other and are never overwritten or automatically removed --
 		there is no time window in which a package has some files from the old version and some
 		files from the new version (which would be bad because a program might crash if 
 		it is started within such a period).
@@ -69,8 +71,9 @@
 		In order to deploy a distributed service-oriented system into a network of machines, additional features 
 		are required, which are provided by Disnix.  Most importantly, Disnix supports models to describe machines in the
 		network, and 
-		manages of <emphasis>inter-dependencies</emphasis> -- the run-time dependencies between components
-		residing on different machines.
+		manages <emphasis>inter-dependencies</emphasis> -- the run-time dependencies between components
+		residing on different machines. Furthermore, Disnix also takes care of the activation and deactivation
+		process of the services of which the system consists.
 	</para>
 
 	<section>
@@ -125,9 +128,9 @@
 
 			<para>
 				Like the standard Nix package manager, which support atomic upgrades,
-				Disnix extends this concept to service-oriented systems by using a
-				two-phase commit implementation mapped onto Nix deployment
-				operations to upgrade a distributed system atomically.
+				Disnix extends this concept to service-oriented systems by mapping the
+				concepts of the two-phase commit protocol onto Nix deployment
+				operations to upgrade a distributed system (almost) atomically.
 				Since the Nix package manager always stores components next to each
 				other in a Nix store and never overwrites existing files,
 				upgrading a distributed system is very safe and we can almost
@@ -140,7 +143,7 @@
 				users may observe that the system is changing. To make this process truly
 				atomic, Disnix has an extension mechanism that can be used to temporary
 				queue/block incoming connections until the transition is finished.
-				We have developed a simple example with stateful TCP connections to demonstrate
+				We have developed a simple prototype example with stateful TCP connections to demonstrate
 				this.
 			</para>
 		</simplesect>
@@ -166,7 +169,7 @@
 
 			<para>
 				Apart from the portability of Disnix itself, Disnix also allows a user to deploy
-				a distributed system into a heterogeneous network (i.e. a network consisting
+				a service oriented system into a heterogeneous network (i.e. a network consisting
 				of various types of machines, running various operating systems). Disnix reuses
 				Nix's delegation mechanism to build a component for an alien target platform.
 				Optionally, it can also delegate builds to target machines in the network.
@@ -183,7 +186,7 @@
 				not all operations can be solved in a generic manner. 
 			</para>
 			<para>
-				The architecture of the Disnix toolset is very modular and uses
+				The architecture of the Disnix toolset is very modular. Disnix uses
 				a plugin system called Dysnomia to integrate
 				customly developed modules used for the activation and deactivation of services,
 				and a plugin system that provides remote access through various RPC protocols.

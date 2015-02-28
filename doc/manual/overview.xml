@@ -31,7 +31,7 @@
 	</para>
 	<para>
 		The service model has a reference to the file named <filename>all-packages.nix</filename>,
-		which captures all the intra-dependencies of every service,
+		which captures all the intra-dependency compositions of every service,
 		such as libraries, configuration files and compilers.
 	</para>
 	<para>
@@ -48,7 +48,7 @@
 	</para>
 
 	<para>
-		By writing instances of the specifications shown above and by running the following command on
+		By writing instances of the specifications shown above and running the following command on
 		the coordinator machine:
 
 <screen>

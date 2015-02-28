@@ -16,7 +16,7 @@
 	<para>
 		Some examples (including the
 		<code>StaffTracker</code>)
-		can be found in on my Github page:
+		can be found on my Github page:
 		<link xlink:href="https://github.com/svanderburg?tab=repositories">https://github.com/svanderburg?tab=repositories</link>.
         </para>
         
@@ -25,7 +25,7 @@
 		
 		<para>
 			The example used in this section is a system which is used to manage staff of a
-			university. This system stores various records about staff members, such as their
+			fictional university. This system stores various records about staff members, such as their
 			names, room numbers and IP addresses.
 		</para>
 		<para>
@@ -70,7 +70,7 @@
 			All the components shown in the picture are
 			<emphasis>distributable</emphasis> components (or services).
 			For instance, the <code>GeolocationService</code> can
-			be deployed on a different machine in the network as
+			be deployed to a different machine in the network as
 			the <code>StaffTracker</code> web application front-end.
 			The arrows represent inter-dependency relationships, which
 			are either (direct) TCP or SOAP connections.
@@ -168,7 +168,7 @@ stdenv.mkDerivation { <co xml:id='co-2-mkDerivation' />
 						This attribute is used to specify which packages must be used
 						in the build environment. In our example, <command>perl</command> has been provided
 						as a build input. The builder automatically sets the <varname>PATH</varname>
-						and <varname>PERL5LIB</varname> environment vairables, so that Perl can be found by
+						and <varname>PERL5LIB</varname> environment variables, so that Perl can be found by
 						build process that is executed in the builder environment. Not providing a
 						dependency also makes it nearly impossible for a build process to find it.
 					</para>
@@ -178,7 +178,7 @@ stdenv.mkDerivation { <co xml:id='co-2-mkDerivation' />
 					<para>
 						We can also specify some meta data for a package, so that we have a description
 						and other useful information, such as the homepage and a license. These properties are not used
-						for building a component.
+						while building the package.
 					</para>
 				</callout>
 			</calloutlist>
@@ -215,7 +215,7 @@ rec { <co xml:id='co-1-rec' />
 		
 			<para>
 				<xref linkend="ex-2-all-packages" /> shows a partial composition expression, in which the GNU Hello
-				build function is called with the its required parameters. Moreover, all the other packages where GNU Hello dependends
+				build function is called with its required function arguments. Moreover, all the other packages where GNU Hello dependends
 				on are also composed in this expression.
 			</para>
 		
@@ -248,6 +248,37 @@ rec { <co xml:id='co-1-rec' />
 					</para>
 				</callout>
 			</calloutlist>
+			
+			<para>
+				There is often a lot of boilerplate code that must be written to compose packages. However, in most
+				cases, the function arguments of each package correspond to an attribute with the same name in the composition
+				expression. The <code>callPackage {}</code> function can be used to take care of automatically composing the package by
+				providing the compositions with the same names as the function arguments, considerably reducing the amount
+				of code that must be written.
+			</para>
+			
+			<example xml:id="ex-2b-all-packages">
+				<title><filename>all-packages.nix</filename>: Simplified partial composition expression</title>
+				
+				<programlisting>
+rec {
+  stdenv = ...;
+  
+  fetchurl = ...;
+  
+  perl = callPackage ../pkgs/perl { };
+  
+  hello = callPackage ../pkgs/hello { };
+  
+  ...
+}
+				</programlisting>
+			</example>
+			
+			<para>
+				<xref linkend="ex-2-all-packages" /> shows a simplified equivalent of the previous composition expression
+				using <code>callPackage {}</code>.
+			</para>
 		</section>
 		
 		<section>
@@ -302,8 +333,8 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 				system, called <code>ZipcodeService</code>, which provides access
 				to records in the <code>zipcode</code> database.
 				A Disnix expression is a nested function (which has two
-				function headers instead of one). The first header refers to the
-				intra-dependencies and the second header to the inter-dependencies respectively.
+				function headers instead of one). The first function header refers to the
+				intra-dependencies and the second header to the inter-dependencies.
 			</para>
 		
 			<calloutlist>
@@ -346,7 +377,7 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 						The <varname>target</varname> parameter is the first element from the 
 						<varname>targets</varname> list.
 						The properties of the inter-dependencies are defined in the services model, which
-						we show later. The properties in the <varname>targets</varname> attribute are
+						we will show later. The properties in the <varname>targets</varname> attribute are
 						defined in the infrastructure model (also shown later).
 					</para>
 				</callout>
@@ -386,10 +417,10 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 		
 		<para>
 			Like ordinary Nix expressions, we cannot use the expression in <xref linkend="ex-3-zipcode-service" /> directly to build the
-			service. We need to <emphasis>compose</emphasis> it by calling the function with the right arguments.
-			With Disnix, we need to call this function twice. First, we have to compose this expression locally,
+			service. We need to <emphasis>compose</emphasis> it by calling the function with its required arguments.
+			With Disnix, we need to call compose a service twice. First, we have to compose this expression locally,
 			by calling it with the required intra-dependency arguments. Later on, we have to compose it
-			by using the inter-dependency arguments.
+			using the inter-dependency arguments.
 		</para>
 		
 		<example xml:id="ex-4-intra-dependency-composition">
@@ -455,6 +486,47 @@ rec { <co xml:id='co-3-rec' />
 				</para>
 			</callout>
 		</calloutlist>
+		
+		<para>
+			We can also simplify the intra-dependency composition by composing our custom <code>callPackage {}</code> function:
+		</para>
+		
+		<example xml:id="ex-4b-intra-dependency-composition">
+			<title>Simplified intra-dependency composition for the <code>StaffTracker</code></title>
+			
+<programlisting>
+{system, pkgs}:
+
+let
+  callPackage = pkgs.lib.callPackageWith (pkgs // self); <co xml:id='co-5-callPackage' />
+  
+  self = {
+  ### Databases
+    rooms = callPackage ../pkgs/databases/rooms { };
+  
+    staff = callPackage ../pkgs/databases/staff { };
+  
+    zipcodes = callPackage ../pkgs/databases/zipcodes { };
+
+  ### Web services + Clients
+    ZipcodeService = callPackage ../pkgs/webservices/ZipcodeService { };
+  
+    ZipcodeServiceClient = callPackage ../pkgs/webservices/ZipcodeServiceClient { };
+    
+    ...
+  
+  ### Web applications
+    StaffTracker = callPackage ../pkgs/webapplications/StaffTracker { };
+  };
+}
+</programlisting>
+		</example>
+		
+		<para>
+			In the simplified expression we compose a custom <code>callPackage {}</code> function <xref linkend="co-5-callPackage" />
+			that first consults <code>self</code> containing our custom intra-dependency compositions and then any package in
+			Nixpkgs.
+		</para>
 	</section>
 	
 	<section>
@@ -513,7 +585,7 @@ rec { <co xml:id='co-3-rec2' />
 		<para>
 			<xref linkend="ex-5-services-model" /> represents the services model of the <code>StaffTracker</code>
 			system. All the distributable components are defined, their inter-dependencies and other relevant
-			properties. As might be observed, the structure of this file (i.e. the services and inter-dependency relationships)
+			properties. As may be observed, the structure of this file (i.e. the services and inter-dependency relationships)
 			closely correspond to those defined in the earlier architecture diagram, shown in <xref linkend="fig-1-stafftracker" />.
 		</para>
 		
@@ -566,8 +638,7 @@ rec { <co xml:id='co-3-rec2' />
 			<callout arearefs='co-6-pkg'>
 				<para>
 					For every service, we must know how to build it and what their intra- and inter-dependencies are. 
-					This attribute refers to the function call that actually builds the service and
-					its intra-dependencies from source code, which is defined in
+					This attribute refers to the intra-dependency closure of the service, which is composed in
 					<xref linkend="ex-4-intra-dependency-composition" />. Later the inter-dependency
 					arguments are passed to this intra-dependency composition.
 				</para>
@@ -693,16 +764,6 @@ rec { <co xml:id='co-3-rec2' />
 					If this attribute is omitted, it will default to 1.
 				</para>
 			  </callout>
-			  
-			  <callout arearefs='co-5-mysqlPort'>
-				  <para>
-					The other properties of a machine can be freely chosen and are used by the
-					Dysnomia modules to activate a particular service. For instance, the
-					<code>mysqlPort</code> specifies on which port the MySQL can be reached.
-					The MySQL properties in this model are used by the MySQL Dysnomia module.
-				  </para>
-			  </callout>
-			  
 			  <callout arearefs='co-6-targetProperty'>
 				  <para>
 					This is a reserved property defining which attribute in this attribute set
@@ -716,7 +777,6 @@ rec { <co xml:id='co-3-rec2' />
 					See <xref linkend="chap-advanced-options" /> for more information.
 				  </para>
 			  </callout>
-			  
 			  <callout arearefs='co-7-clientInterface'>
 				  <para>
 					This reserved property specifies which executable needs to be run to connect
@@ -727,6 +787,14 @@ rec { <co xml:id='co-3-rec2' />
 				  <para>
 					This is an advanced property that should only be used in special circumstances.
 					See <xref linkend="chap-advanced-options" /> for more information.
+				  </para>
+			  </callout>
+			  <callout arearefs='co-5-mysqlPort'>
+				  <para>
+					The other properties of a machine can be freely chosen and are used by the
+					Dysnomia modules to activate a particular service. For instance, the
+					<code>mysqlPort</code> specifies on which port the MySQL can be reached.
+					The MySQL properties in this model are used by the MySQL Dysnomia module.
 				  </para>
 			  </callout>
 		</calloutlist>
