@@ -253,6 +253,44 @@ static void destroy_pids_key(gpointer data)
     g_free(key);
 }
 
+static int iterate_over_activation_or_deactivation_mappings(const int activate_flag, GPtrArray *mappings, GPtrArray *union_array, GPtrArray *target_array, const gboolean dry_run)
+{
+    GHashTable *pids = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
+    unsigned int numDone = 0;
+    int success = TRUE;
+    
+    do
+    {
+        unsigned int i;
+        numDone = 0;
+        
+        for(i = 0; i < mappings->len; i++)
+        {
+            ActivationMapping *mapping = g_ptr_array_index(mappings, i);
+            ActivationStatus status;
+            
+            if(activate_flag)
+                status = activate(union_array, (ActivationMappingKey*)mapping, target_array, dry_run, pids);
+            else
+                status = deactivate(union_array, (ActivationMappingKey*)mapping, target_array, dry_run, pids);
+            
+            if(status == ACTIVATION_ERROR)
+            {
+                success = FALSE;
+                numDone++;
+            }
+            else if(status == ACTIVATION_DONE)
+                numDone++;
+            
+            wait_for_activation_or_deactivation(activate_flag, pids, target_array);
+        }
+    }
+    while(numDone < mappings->len);
+    
+    g_hash_table_destroy(pids);
+    return success;
+}
+
 static void mark_erroneous_mappings(GPtrArray *union_array, ActivationMappingStatus status)
 {
     unsigned int i;
@@ -268,40 +306,9 @@ static void mark_erroneous_mappings(GPtrArray *union_array, ActivationMappingSta
 
 static void rollback_to_old_mappings(GPtrArray *union_array, GPtrArray *old_activation_mappings, GPtrArray *target_array, const gboolean dry_run)
 {
-    GHashTable *pids = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
-    int success = TRUE;
-    unsigned int numDone;
-    
     mark_erroneous_mappings(union_array, ACTIVATIONMAPPING_ACTIVATED); /* Mark erroneous mappings as activated */
-    
-    do
-    {
-        unsigned int i;
-        
-        numDone = 0;
-        
-        for(i = 0; i < old_activation_mappings->len; i++)
-        {
-            ActivationMapping *mapping = g_ptr_array_index(union_array, i);
-            ActivationStatus status = activate(union_array, (ActivationMappingKey*)mapping, target_array, dry_run, pids);
-            
-            if(status == ACTIVATION_ERROR)
-            {
-                success = FALSE;
-                numDone++;
-            }
-            else if(status == ACTIVATION_DONE)
-                numDone++;
-        }
-        
-        wait_for_activation_or_deactivation(TRUE, pids, target_array);
-    }
-    while(numDone < old_activation_mappings->len);
-    
-    if(!success)
+    if(!iterate_over_activation_or_deactivation_mappings(TRUE, old_activation_mappings, union_array, target_array, dry_run))
         g_print("[coordinator]: Rollback failed!\n");
-    
-    g_hash_table_destroy(pids);
 }
 
 static int deactivate_obsolete_mappings(GPtrArray *deactivation_array, GPtrArray *union_array, GPtrArray *target_array, GPtrArray *old_activation_mappings, const gboolean dry_run)
@@ -312,123 +319,30 @@ static int deactivate_obsolete_mappings(GPtrArray *deactivation_array, GPtrArray
         return 0;
     else
     {
-        GHashTable *pids = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
-        int success = TRUE;
-        unsigned int numDone;
-        
-        do
-        {
-            unsigned int i;
-            
-            numDone = 0;
-            
-            /* Deactivate each mapping closure that is not in the new configuration */
-            for(i = 0; i < deactivation_array->len; i++)
-            {
-                ActivationMapping *mapping = g_ptr_array_index(deactivation_array, i);
-                ActivationStatus status = deactivate(union_array, (ActivationMappingKey*)mapping, target_array, dry_run, pids);
-                
-                if(status == ACTIVATION_ERROR)
-                {
-                    success = FALSE;
-                    numDone++;
-                }
-                else if(status == ACTIVATION_DONE)
-                    numDone++;
-            }
-            
-            wait_for_activation_or_deactivation(FALSE, pids, target_array);
-        }
-        while(numDone < deactivation_array->len);
-        
-        g_hash_table_destroy(pids);
-        
-        if(!success)
+        if(iterate_over_activation_or_deactivation_mappings(FALSE, deactivation_array, union_array, target_array, dry_run))
+            return 0;
+        else
         {
             /* If the deactivation fails, perform a rollback */
             g_print("[coordinator]: Deactivation failed! Doing a rollback...\n");
             rollback_to_old_mappings(union_array, old_activation_mappings, target_array, dry_run);
             return 1;
         }
-        else
-            return 0;
     }
 }
 
 static void rollback_new_mappings(GPtrArray *activation_array, GPtrArray *union_array, GPtrArray *target_array, const gboolean dry_run)
 {
-    GHashTable *pids = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
-    int success = TRUE;
-    unsigned int numDone;
-    
     mark_erroneous_mappings(union_array, ACTIVATIONMAPPING_DEACTIVATED); /* Mark erroneous mappings as deactivated */
-    
-    do
-    {
-        unsigned int i;
-        
-        numDone = 0;
-        
-        for(i = 0; i < activation_array->len; i++)
-        {
-            ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
-            ActivationStatus status = deactivate(union_array, (ActivationMappingKey*)mapping, target_array, dry_run, pids);
-            
-            if(status == ACTIVATION_ERROR)
-            {
-                success = FALSE;
-                numDone++;
-            }
-            else if(status == ACTIVATION_DONE)
-                numDone++;
-        }
-        
-        wait_for_activation_or_deactivation(FALSE, pids, target_array);
-    }
-    while(numDone < activation_array->len);
-    
-    if(!success)
+    if(!iterate_over_activation_or_deactivation_mappings(FALSE, activation_array, union_array, target_array, dry_run))
         g_printerr("[coordinator]: Rollback failed!\n");
-    
-    g_hash_table_destroy(pids);
 }
 
 static int activate_new_mappings(GPtrArray *activation_array, GPtrArray *union_array, GPtrArray *target_array, GPtrArray *old_activation_mappings, const gboolean dry_run)
 {
-    GHashTable *pids = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
-    int success = TRUE;
-    unsigned int numDone;
-    
     g_print("[coordinator]: Executing activation of services:\n");
     
-    do
-    {
-        unsigned int i;
-        
-        numDone = 0;
-        
-        /* Activate each mapping closure in the new configuration */
-        for(i = 0; i < activation_array->len; i++)
-        {
-            ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
-            ActivationStatus status = activate(union_array, (ActivationMappingKey*)mapping, target_array, dry_run, pids);
-            
-            if(status == ACTIVATION_ERROR)
-            {
-                success = FALSE;
-                numDone++;
-            }
-            else if(status == ACTIVATION_DONE)
-                numDone++;
-        }
-        
-        wait_for_activation_or_deactivation(TRUE, pids, target_array);
-    }
-    while(numDone < activation_array->len);
-    
-    g_hash_table_destroy(pids);
-
-    if(success)
+    if(iterate_over_activation_or_deactivation_mappings(TRUE, activation_array, union_array, target_array, dry_run))
         return 0;
     else
     {
