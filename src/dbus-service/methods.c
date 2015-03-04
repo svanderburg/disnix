@@ -739,12 +739,12 @@ static void disnix_collect_garbage_thread_func(DisnixObject *object, const gint 
     {
 	if(delete_old)
 	{
-	    char *args[] = {"nix-collect-garbage", NULL};
+	    char *args[] = {"nix-collect-garbage", "-d", NULL};
 	    execvp("nix-collect-garbage", args);
 	}
 	else
 	{
-	    char *args[] = {"nix-collect-garbage", "-d", NULL};
+	    char *args[] = {"nix-collect-garbage", NULL};
 	    execvp("nix-collect-garbage", args);
 	}
 	g_printerr("Error with executing garbage collect process\n");
