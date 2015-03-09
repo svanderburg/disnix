@@ -11,10 +11,10 @@
         <firstname>Sander</firstname>
         <surname>van der Burg</surname>
       </personname>
-      <affiliation>
+      <!--<affiliation>
         <orgname>Delft University of Technology</orgname>
         <orgdiv>Department of Software Technology</orgdiv>
-      </affiliation>
+      </affiliation> -->
       <contrib>Author</contrib>
     </author>
 
