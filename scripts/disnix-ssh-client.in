@@ -34,6 +34,9 @@ showUsage()
     echo "  --deactivate --type type --arguments arguments derivation"
     echo "  --lock [{-p|--profile} profile]"
     echo "  --unlock [{-p|--profile} profile]"
+    echo "  --query-all-snapshots --container container --component component"
+    echo "  --query-latest-snapshot --container container --component component"
+    echo "  --print-missing-snapshots snapshots"
     echo "  {-h | --help}"
 }
 
@@ -47,7 +50,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o rqp:d -l import,export,print-invalid,realise,set,query-installed,query-requisites,collect-garbage,activate,deactivate,lock,unlock,target:,localfile,remotefile,profile:,delete-old,type:,arguments:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o rqp:d -l import,export,print-invalid,realise,set,query-installed,query-requisites,collect-garbage,activate,deactivate,lock,unlock,query-all-snapshots,query-latest-snapshot,print-missing-snapshots,target:,localfile,remotefile,profile:,delete-old,type:,arguments:,container:,component:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -102,6 +105,15 @@ do
             operation="unlock";
             path=$2
             ;;
+        --query-all-snapshots)
+            operation="query-all-snapshots"
+            ;;
+        --query-latest-snapshot)
+            operation="query-latest-snapshot"
+            ;;
+        --print-missing-snapshots)
+            operation="print-missing-snapshots"
+            ;;
         --target)
             target=$2
             ;;
@@ -122,6 +134,12 @@ do
             ;;
         --arguments)
             argsArg="$argsArg --arguments \"$2\""
+            ;;
+        -C|--container)
+            container=$container
+            ;;
+        -c|--component)
+            component=$component
             ;;
         -h|--help)
             showUsage
@@ -226,5 +244,14 @@ case "$operation" in
         ;;
     unlock)
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --unlock $profileArg
+        ;;
+    query-all-snapshots)
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --query-all-snapshots --container $container --component $component
+        ;;
+    query-latest-snapshot)
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --query-latest-snapshot --container $container --component $component
+        ;;
+    print-missing-snapshots)
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --print-missing-snapshots "$@"
         ;;
 esac

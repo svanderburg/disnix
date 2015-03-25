@@ -48,4 +48,10 @@ gboolean disnix_lock(DisnixObject *object, const gint pid, const gchar *profile,
 
 gboolean disnix_unlock(DisnixObject *object, const gint pid, const gchar *profile, GError **error);
 
+gboolean disnix_query_all_snapshots(DisnixObject *object, const gint pid, gchar *container, gchar *component, GError **error);
+
+gboolean disnix_query_latest_snapshot(DisnixObject *object, const gint pid, gchar *container, gchar *component, GError **error);
+
+gboolean disnix_print_missing_snapshots(DisnixObject *object, const gint pid, gchar **component, GError **error);
+
 #endif

@@ -72,6 +72,23 @@
 			<arg type="s" name="profile" direction="in" />
 		</method>
 		
+		<method name="query_all_snapshots">
+			<arg type="i" name="pid" direction="in" />
+			<arg type="s" name="container" direction="in" />
+			<arg type="s" name="component" direction="in" />
+		</method>
+		
+		<method name="query_latest_snapshot">
+			<arg type="i" name="pid" direction="in" />
+			<arg type="s" name="container" direction="in" />
+			<arg type="s" name="component" direction="in" />
+		</method>
+		
+		<method name="print_missing_snapshots">
+			<arg type="i" name="pid" direction="in" />
+			<arg type="as" name="component" direction="in" />
+		</method>
+		
 		<signal name="finish">
 			<arg type="i" name="pid" direction="out" />
 		</signal>

@@ -33,8 +33,10 @@
  * @param delete_old Indicates whether to delete old profile generations
  * @param arguments List of activation arguments in key=value format
  * @param type Type of the service
+ * @param container Name of the container in which snapshots must be deployed
+ * @param component Name of a mutable component in a container
  * @return 0 if the operation succeeds, else a non-zero exit value
  */
-int run_disnix_client(Operation operation, gchar **derivation, gboolean session_bus, char *profile, gboolean delete_old, gchar **arguments, char *type);
+int run_disnix_client(Operation operation, gchar **derivation, gboolean session_bus, char *profile, gboolean delete_old, gchar **arguments, char *type, char *container, char *component);
 
 #endif

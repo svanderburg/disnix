@@ -28,9 +28,7 @@ static void print_usage(const char *command)
 {
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "%s [options]\n\n", command);
-    
     fprintf(stderr, "Options:\n");
-    fprintf(stderr, "--dysnomia-modules-dir    Directory where the Dysnomia modules can be found\n");
     fprintf(stderr, "--session-bus             Register the Disnix service on the session bus instead of the system bus (useful for testing)\n");
     fprintf(stderr, "--help                    Shows the usage of this command to the user\n");
 }

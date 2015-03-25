@@ -32,7 +32,7 @@ static void disnix_finish_signal_handler(DBusGProxy *proxy, const gint pid, gpoi
 
     /* Stop the main loop if our job is done */
     if(pid == my_pid)
-	exit(0);    
+	exit(0);
 }
 
 static void disnix_success_signal_handler(DBusGProxy *proxy, const gint pid, gchar **derivation, gpointer user_data)
@@ -67,7 +67,7 @@ static void cleanup(gchar **derivation, gchar **arguments)
     g_strfreev(arguments);
 }
 
-int run_disnix_client(Operation operation, gchar **derivation, gboolean session_bus, char *profile, gboolean delete_old, gchar **arguments, char *type)
+int run_disnix_client(Operation operation, gchar **derivation, gboolean session_bus, char *profile, gboolean delete_old, gchar **arguments, char *type, char *container, char *component)
 {
     /* The GObject representing a D-Bus connection. */
     DBusGConnection *bus;
@@ -124,9 +124,10 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
     
     g_printerr("Creating a Glib proxy object.\n");
     remote_object = dbus_g_proxy_new_for_name (bus,
-					       "org.nixos.disnix.Disnix", /* name */
-					       "/org/nixos/disnix/Disnix", /* Object path */
-					       "org.nixos.disnix.Disnix"); /* Interface */
+        "org.nixos.disnix.Disnix", /* name */
+        "/org/nixos/disnix/Disnix", /* Object path */
+       "org.nixos.disnix.Disnix"); /* Interface */
+
     if(remote_object == NULL)
     {
         g_printerr("Cannot create the proxy object! Reason: %s\n", error->message);
@@ -226,6 +227,22 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 	    break;
 	case OP_UNLOCK:
 	    org_nixos_disnix_Disnix_unlock(remote_object, pid, profile, &error);
+	    break;
+	case OP_QUERY_ALL_SNAPSHOTS:
+	    org_nixos_disnix_Disnix_query_all_snapshots(remote_object, pid, container, component, &error);
+	    break;
+	case OP_QUERY_LATEST_SNAPSHOT:
+	    org_nixos_disnix_Disnix_query_latest_snapshot(remote_object, pid, container, component, &error);
+	    break;
+	case OP_PRINT_MISSING_SNAPSHOTS:
+	    if(derivation[0] == NULL)
+	    {
+		g_printerr("ERROR: A Dysnomia snapshot has to be specified!\n");
+		cleanup(derivation, arguments);
+		return 1;
+	    }
+	    else
+		org_nixos_disnix_Disnix_print_missing_snapshots(remote_object, pid, (const gchar**) derivation, &error);
 	    break;
 	case OP_NONE:
 	    g_printerr("ERROR: No operation specified!\n");

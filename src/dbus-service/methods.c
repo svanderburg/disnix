@@ -325,7 +325,7 @@ static void disnix_print_invalid_thread_func(DisnixObject *object, const gint pi
 	    args[1] = "--check-validity";
 	    args[2] = "--print-invalid";
 	
-	    for(i = 0; i < derivation_length; i++)	
+	    for(i = 0; i < derivation_length; i++)
 		args[i + 3] = derivation[i];
 	    
 	    args[i + 3] = NULL;
@@ -400,7 +400,7 @@ static void disnix_realise_thread_func(DisnixObject *object, const gint pid, gch
     print_derivations(derivation);
     g_print("\n");
     
-    /* Execute command */    
+    /* Execute command */
 
     if(pipe(pipefd) == 0)
     {
@@ -499,7 +499,7 @@ static void disnix_set_thread_func(DisnixObject *object, const gint pid, const g
     mkdir(LOCALSTATEDIR "/nix/profiles/disnix", 0755);
     profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, NULL);
 
-    status = fork();    
+    status = fork();
     
     if(status == -1)
     {
@@ -1206,6 +1206,275 @@ gboolean disnix_unlock(DisnixObject *object, const gint pid, const gchar *profil
     {
 	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
 	disnix_unlock_thread_func(object, pid, profile);
+    }
+    
+    return TRUE;
+}
+
+/* Query all snapshots method */
+
+static void disnix_query_all_snapshots_thread_func(DisnixObject *object, const gint pid, gchar *container, gchar *component)
+{
+    /* Declarations */
+    int pipefd[2];
+    
+    /* Print log entry */
+    g_print("Query all snapshots from container: %s and component: %s\n", container, component);
+    
+    /* Execute command */
+    
+    if(pipe(pipefd) == 0)
+    {
+	int status = fork();
+	
+	if(status == -1)
+	{
+	    fprintf(stderr, "Error with forking dysnomia-store process!\n");
+	    close(pipefd[0]);
+	    close(pipefd[1]);
+	    disnix_emit_failure_signal(object, pid);
+	}
+	else if(status == 0)
+	{
+	    char *args[] = {"dysnomia-store", "--query-all", "--container", container, "--component", component, NULL};
+	    
+	    close(pipefd[0]); /* Close read-end of pipe */
+	    
+	    dup2(pipefd[1], 1);
+	    execvp("dysnomia-store", args);
+	    _exit(1);
+	}
+	else
+	{
+	    char line[BUFFER_SIZE];
+	    ssize_t line_size;
+	    gchar **snapshots = NULL;
+
+	    close(pipefd[1]); /* Close write-end of pipe */
+	    
+	    while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
+	    {
+	        line[line_size] = '\0';
+		g_print("%s", line);
+		snapshots = update_lines_vector(snapshots, line);
+	    }
+		
+	    g_print("\n");
+	    
+	    close(pipefd[0]);
+
+	    wait(&status);
+	    
+	    if(WEXITSTATUS(status) == 0)
+		disnix_emit_success_signal(object, pid, snapshots);
+	    else
+		disnix_emit_failure_signal(object, pid);
+	
+	    g_strfreev(snapshots);
+	}
+    }
+    else
+    {
+	g_printerr("Error with creating pipe!\n");
+	disnix_emit_failure_signal(object, pid);
+    }
+        
+    _exit(0);
+}
+
+gboolean disnix_query_all_snapshots(DisnixObject *object, const gint pid, gchar *container, gchar *component, GError **error)
+{
+    /* State object should not be NULL */
+    g_assert(object != NULL);
+
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
+	disnix_query_all_snapshots_thread_func(object, pid, container, component);
+    }
+    
+    return TRUE;
+}
+
+/* Query latest snapshot method */
+
+static void disnix_query_latest_snapshot_thread_func(DisnixObject *object, const gint pid, gchar *container, gchar *component)
+{
+    /* Declarations */
+    int pipefd[2];
+    
+    /* Print log entry */
+    g_print("Query latest snapshot from container: %s and component: %s\n", container, component);
+    
+    /* Execute command */
+    
+    if(pipe(pipefd) == 0)
+    {
+	int status = fork();
+	
+	if(status == -1)
+	{
+	    fprintf(stderr, "Error with forking dysnomia-store process!\n");
+	    close(pipefd[0]);
+	    close(pipefd[1]);
+	    disnix_emit_failure_signal(object, pid);
+	}
+	else if(status == 0)
+	{
+	    char *args[] = {"dysnomia-store", "--query-latest", "--container", container, "--component", component, NULL};
+	    
+	    close(pipefd[0]); /* Close read-end of pipe */
+	    
+	    dup2(pipefd[1], 1);
+	    execvp("dysnomia-store", args);
+	    _exit(1);
+	}
+	else
+	{
+	    char line[BUFFER_SIZE];
+	    ssize_t line_size;
+	    gchar **snapshots = NULL;
+
+	    close(pipefd[1]); /* Close write-end of pipe */
+	    
+	    while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
+	    {
+	        line[line_size] = '\0';
+		g_print("%s", line);
+		snapshots = update_lines_vector(snapshots, line);
+	    }
+		
+	    g_print("\n");
+	    
+	    close(pipefd[0]);
+
+	    wait(&status);
+	    
+	    if(WEXITSTATUS(status) == 0)
+		disnix_emit_success_signal(object, pid, snapshots);
+	    else
+		disnix_emit_failure_signal(object, pid);
+	
+	    g_strfreev(snapshots);
+	}
+    }
+    else
+    {
+	g_printerr("Error with creating pipe!\n");
+	disnix_emit_failure_signal(object, pid);
+    }
+        
+    _exit(0);
+}
+
+gboolean disnix_query_latest_snapshot(DisnixObject *object, const gint pid, gchar *container, gchar *component, GError **error)
+{
+    /* State object should not be NULL */
+    g_assert(object != NULL);
+
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
+	disnix_query_latest_snapshot_thread_func(object, pid, container, component);
+    }
+    
+    return TRUE;
+}
+
+/* Query missing snapshots method */
+
+static void disnix_print_missing_snapshots_thread_func(DisnixObject *object, const gint pid, gchar **component)
+{
+    /* Declarations */
+    int pipefd[2];
+    
+    /* Print log entry */
+    g_print("Print missing snapshots: ");
+    print_derivations(component);
+    g_print("\n");
+    
+    /* Execute command */
+    
+    if(pipe(pipefd) == 0)
+    {
+	int status = fork();
+	
+	if(status == -1)
+	{
+	    fprintf(stderr, "Error with forking dysnomia-store process!\n");
+	    close(pipefd[0]);
+	    close(pipefd[1]);
+	    disnix_emit_failure_signal(object, pid);
+	}
+	else if(status == 0)
+	{
+	    unsigned int i, component_size = g_strv_length(component);
+	    gchar **args = (gchar**)g_malloc((component_size + 3) * sizeof(gchar*));
+	    
+	    args[0] = "dysnomia-store";
+	    args[1] = "--print-missing";
+	    
+	    for(i = 0; i < component_size; i++)
+	        args[i + 2] = component[i];
+	    
+	    args[i + 2] = NULL;
+	    
+	    close(pipefd[0]); /* Close read-end of pipe */
+	    
+	    dup2(pipefd[1], 1);
+	    execvp("dysnomia-store", args);
+	    _exit(1);
+	}
+	else
+	{
+	    char line[BUFFER_SIZE];
+	    ssize_t line_size;
+	    gchar **snapshots = NULL;
+
+	    close(pipefd[1]); /* Close write-end of pipe */
+	    
+	    while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
+	    {
+	        line[line_size] = '\0';
+		g_print("%s", line);
+		snapshots = update_lines_vector(snapshots, line);
+	    }
+		
+	    g_print("\n");
+	    
+	    close(pipefd[0]);
+
+	    wait(&status);
+	    
+	    if(WEXITSTATUS(status) == 0)
+		disnix_emit_success_signal(object, pid, snapshots);
+	    else
+		disnix_emit_failure_signal(object, pid);
+	
+	    g_strfreev(snapshots);
+	}
+    }
+    else
+    {
+	g_printerr("Error with creating pipe!\n");
+	disnix_emit_failure_signal(object, pid);
+    }
+        
+    _exit(0);
+}
+
+gboolean disnix_print_missing_snapshots(DisnixObject *object, const gint pid, gchar **component, GError **error)
+{
+    /* State object should not be NULL */
+    g_assert(object != NULL);
+
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
+	disnix_print_missing_snapshots_thread_func(object, pid, component);
     }
     
     return TRUE;

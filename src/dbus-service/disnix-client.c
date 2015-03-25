@@ -43,6 +43,9 @@ static void print_usage(const char *command)
     fprintf(stderr, "--deactivate --type type --arguments arguments derivation\n");
     fprintf(stderr, "--lock [{-p|--profile} profile]\n");
     fprintf(stderr, "--unlock [{-p|--profile} profile]\n");
+    fprintf(stderr, "--query-all-snapshots --container container --component component\n");
+    fprintf(stderr, "--query-latest-snapshot --container container --component component\n");
+    fprintf(stderr, "--print-missing-snapshots snapshots\n");
     fprintf(stderr, "{-h|--help}\n");
 }
 
@@ -59,11 +62,14 @@ int main(int argc, char *argv[])
 	{"set", no_argument, 0, 'S'},
 	{"query-installed", no_argument, 0, 'q'},
 	{"query-requisites", no_argument, 0, 'Q'},
-	{"collect-garbage", no_argument, 0, 'C'},
+	{"collect-garbage", no_argument, 0, 'W'},
 	{"activate", no_argument, 0, 'A'},
 	{"deactivate", no_argument, 0, 'D'},
 	{"lock", no_argument, 0, 'L'},
 	{"unlock", no_argument, 0, 'U'},
+	{"query-all-snapshots", no_argument, 0, 'B'},
+	{"query-latest-snapshot", no_argument, 0, 's'},
+	{"print-missing-snapshots", no_argument, 0, 'M'},
 	{"help", no_argument, 0, 'h'},
 	{"target", required_argument, 0, 't'},
 	{"localfile", no_argument, 0, 'l'},
@@ -72,22 +78,24 @@ int main(int argc, char *argv[])
 	{"delete-old", no_argument, 0, 'd'},
 	{"type", required_argument, 0, 'T'},
 	{"arguments", required_argument, 0, 'a'},
+	{"container", required_argument, 0, 'C'},
+	{"component", required_argument, 0, 'c'},
 	{"session-bus", no_argument, 0, 'b'},
 	{0, 0, 0, 0}
     };
 
     /* Option value declarations */
     Operation operation = OP_NONE;
-    char *profile = NULL, *type = NULL;
+    char *profile = NULL, *type = NULL, *container = NULL, *component = NULL;
     gchar **derivation = NULL, **arguments = NULL;
     unsigned int derivation_size = 0, arguments_size = 0;
     int delete_old = FALSE, session_bus = FALSE;
     
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "rqt:p:dh", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "rqt:p:dC:c:h", long_options, &option_index)) != -1)
     {
 	switch(c)
-	{	    
+	{
 	    case 'I':
 		operation = OP_IMPORT;
 		break;
@@ -109,7 +117,7 @@ int main(int argc, char *argv[])
 	    case 'Q':
 		operation = OP_QUERY_REQUISITES;
 		break;
-	    case 'C':
+	    case 'W':
 		operation = OP_COLLECT_GARBAGE;
 		break;
 	    case 'A':
@@ -123,6 +131,15 @@ int main(int argc, char *argv[])
 		break;
 	    case 'U':
 		operation = OP_UNLOCK;
+		break;
+	    case 'B':
+		operation = OP_QUERY_ALL_SNAPSHOTS;
+		break;
+	    case 's':
+		operation = OP_QUERY_LATEST_SNAPSHOT;
+		break;
+	    case 'M':
+		operation = OP_PRINT_MISSING_SNAPSHOTS;
 		break;
 	    case 't':
 		break;
@@ -143,6 +160,12 @@ int main(int argc, char *argv[])
 		arguments = (gchar**)g_realloc(arguments, (arguments_size + 1) * sizeof(gchar*));
 		arguments[arguments_size] = g_strdup(optarg);
 		arguments_size++;
+		break;
+	    case 'C':
+		container = optarg;
+		break;
+	    case 'c':
+		component = optarg;
 		break;
 	    case 'b':
 		session_bus = TRUE;
@@ -174,5 +197,5 @@ int main(int argc, char *argv[])
     arguments[arguments_size] = NULL;
     
     /* Execute Disnix client */
-    return run_disnix_client(operation, derivation, session_bus, profile, delete_old, arguments, type);
+    return run_disnix_client(operation, derivation, session_bus, profile, delete_old, arguments, type, container, component);
 }

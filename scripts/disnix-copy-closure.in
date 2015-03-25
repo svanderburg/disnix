@@ -89,7 +89,6 @@ then
 fi
 
 checkTarget
-
 checkClientInterface
 
 if [ "$component" = "" ]
