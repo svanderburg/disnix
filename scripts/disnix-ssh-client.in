@@ -254,4 +254,29 @@ case "$operation" in
     print-missing-snapshots)
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --print-missing-snapshots "$@"
         ;;
+    import-snapshots)
+        if [ "$localfile" != "1" ] && [ "$remotefile" != "1" ]
+        then
+            echo "ERROR: Either a remote or a localfile must be specified!" >&2
+            exit 1
+        fi
+        
+        # A localfile must first be transferred
+        if [ "$localfile" != "" ]
+        then
+            remotefile=`ssh -p $targetPort $SSH_OPTS $targetHostname mktemp -d -p $TMPDIR`
+            scp -r -P $targetPort $SSH_OPTS $@ $targetHostname:$remotefile
+        fi
+        
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --container $container --component $component --import-snapshots $remotefile
+        ;;
+    export-snapshots)
+        tmpdir=`mktemp -d -p $TMPDIR`
+        for i in $@
+        do
+            scp -r -P $targetPort $SSH_OPTS $targetHostname:$i $tmpdir
+        done
+        
+        echo $tmpdir
+        ;;
 esac

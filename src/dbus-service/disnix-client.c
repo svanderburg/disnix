@@ -46,6 +46,7 @@ static void print_usage(const char *command)
     fprintf(stderr, "--query-all-snapshots --container container --component component\n");
     fprintf(stderr, "--query-latest-snapshot --container container --component component\n");
     fprintf(stderr, "--print-missing-snapshots snapshots\n");
+    fprintf(stderr, "--import-snapshots --container container --component component [--localfile|--remotefile] snapshots\n");
     fprintf(stderr, "{-h|--help}\n");
 }
 
@@ -70,6 +71,7 @@ int main(int argc, char *argv[])
 	{"query-all-snapshots", no_argument, 0, 'B'},
 	{"query-latest-snapshot", no_argument, 0, 's'},
 	{"print-missing-snapshots", no_argument, 0, 'M'},
+	{"import-snapshots", no_argument, 0, 'Y'},
 	{"help", no_argument, 0, 'h'},
 	{"target", required_argument, 0, 't'},
 	{"localfile", no_argument, 0, 'l'},
@@ -140,6 +142,9 @@ int main(int argc, char *argv[])
 		break;
 	    case 'M':
 		operation = OP_PRINT_MISSING_SNAPSHOTS;
+		break;
+	    case 'Y':
+		operation = OP_IMPORT_SNAPSHOTS;
 		break;
 	    case 't':
 		break;

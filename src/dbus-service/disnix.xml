@@ -89,6 +89,13 @@
 			<arg type="as" name="component" direction="in" />
 		</method>
 		
+		<method name="import_snapshots">
+			<arg type="i" name="pid" direction="in" />
+			<arg type="s" name="container" direction="in" />
+			<arg type="s" name="component" direction="in" />
+			<arg type="as" name="snapshots" direction="in" />
+		</method>
+		
 		<signal name="finish">
 			<arg type="i" name="pid" direction="out" />
 		</signal>

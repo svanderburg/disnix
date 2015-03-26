@@ -513,8 +513,7 @@ static void disnix_set_thread_func(DisnixObject *object, const gint pid, const g
 	g_printerr("Error with executing nix-env\n");
 	_exit(1);
     }
-    
-    if(status != -1)
+    else
     {
 	wait(&status);
 	
@@ -750,8 +749,7 @@ static void disnix_collect_garbage_thread_func(DisnixObject *object, const gint 
 	g_printerr("Error with executing garbage collect process\n");
 	_exit(1);
     }
-    
-    if(status != -1)
+    else
     {
 	wait(&status);
 	
@@ -1475,6 +1473,77 @@ gboolean disnix_print_missing_snapshots(DisnixObject *object, const gint pid, gc
     {
 	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
 	disnix_print_missing_snapshots_thread_func(object, pid, component);
+    }
+    
+    return TRUE;
+}
+
+/* Import snapshots operation */
+
+static void disnix_import_snapshots_thread_func(DisnixObject *object, const gint pid, gchar *container, gchar *component, gchar **snapshots)
+{
+    /* Declarations */
+    int pipefd[2];
+    
+    /* Print log entry */
+    g_print("Import snapshots: ");
+    print_derivations(snapshots);
+    g_print("\n");
+    
+    /* Execute command */
+    
+    int status = fork();
+    
+    if(status == -1)
+    {
+        fprintf(stderr, "Error with forking dysnomia-store process!\n");
+        disnix_emit_failure_signal(object, pid);
+    }
+    else if(status == 0)
+    {
+        unsigned int i, snapshots_size = g_strv_length(snapshots);
+        gchar **args = (gchar**)g_malloc((snapshots_size + 6) * sizeof(gchar*));
+        
+        args[0] = "dysnomia-store";
+        args[1] = "--import";
+        args[2] = "--container";
+        args[3] = container;
+        args[4] = "--component";
+        args[5] = component;
+        
+        for(i = 0; i < snapshots_size; i++)
+            args[i + 6] = snapshots[i];
+        
+        args[i + 6] = NULL;
+	
+	execvp("dysnomia-store", args);
+	_exit(1);
+    }
+    else
+    {
+	wait(&status);
+	
+	if(WEXITSTATUS(status) == 0)
+	    disnix_emit_finish_signal(object, pid);
+	else
+	    disnix_emit_failure_signal(object, pid);
+	
+	g_strfreev(snapshots);
+    }
+    
+    _exit(0);
+}
+
+gboolean disnix_import_snapshots(DisnixObject *object, const gint pid, gchar *container, gchar *component, gchar **snapshots, GError **error)
+{
+    /* State object should not be NULL */
+    g_assert(object != NULL);
+
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
+	disnix_import_snapshots_thread_func(object, pid, container, component, snapshots);
     }
     
     return TRUE;

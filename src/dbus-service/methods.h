@@ -54,4 +54,6 @@ gboolean disnix_query_latest_snapshot(DisnixObject *object, const gint pid, gcha
 
 gboolean disnix_print_missing_snapshots(DisnixObject *object, const gint pid, gchar **component, GError **error);
 
+gboolean disnix_import_snapshots(DisnixObject *object, const gint pid, gchar *container, gchar *component, gchar **snapshots, GError **error);
+
 #endif
