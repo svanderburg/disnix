@@ -268,7 +268,7 @@ case "$operation" in
             scp -r -P $targetPort $SSH_OPTS $@ $targetHostname:$remotefile
         fi
         
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --container $container --component $component --import-snapshots $remotefile
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --container $container --component $component --import-snapshots $remotefile/*
         ;;
     export-snapshots)
         tmpdir=`mktemp -d -p $TMPDIR`
