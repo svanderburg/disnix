@@ -37,6 +37,9 @@ showUsage()
     echo "  --query-all-snapshots --container container --component component"
     echo "  --query-latest-snapshot --container container --component component"
     echo "  --print-missing-snapshots snapshots"
+    echo "  --import-snapshots paths"
+    echo "  --export-snapshots paths"
+    echo "  --resolve-snapshots snapshots"
     echo "  {-h | --help}"
 }
 
@@ -50,7 +53,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o rqp:d -l import,export,print-invalid,realise,set,query-installed,query-requisites,collect-garbage,activate,deactivate,lock,unlock,query-all-snapshots,query-latest-snapshot,print-missing-snapshots,target:,localfile,remotefile,profile:,delete-old,type:,arguments:,container:,component:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o rqp:d -l import,export,print-invalid,realise,set,query-installed,query-requisites,collect-garbage,activate,deactivate,lock,unlock,query-all-snapshots,query-latest-snapshot,print-missing-snapshots,import-snapshots,export-snapshots,resolve-snapshots,target:,localfile,remotefile,profile:,delete-old,type:,arguments:,container:,component:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -114,6 +117,15 @@ do
         --print-missing-snapshots)
             operation="print-missing-snapshots"
             ;;
+        --import-snapshots)
+            operation="import-snapshots"
+            ;;
+        --export-snapshots)
+            operation="export-snapshots"
+            ;;
+        --resolve-snapshots)
+            operation="resolve-snapshots"
+            ;;
         --target)
             target=$2
             ;;
@@ -136,10 +148,10 @@ do
             argsArg="$argsArg --arguments \"$2\""
             ;;
         -C|--container)
-            container=$container
+            container=$2
             ;;
         -c|--component)
-            component=$component
+            component=$2
             ;;
         -h|--help)
             showUsage
@@ -262,7 +274,7 @@ case "$operation" in
         fi
         
         # A localfile must first be transferred
-        if [ "$localfile" != "" ]
+        if [ "$localfile" = "1" ]
         then
             remotefile=`ssh -p $targetPort $SSH_OPTS $targetHostname mktemp -d -p $TMPDIR`
             scp -r -P $targetPort $SSH_OPTS $@ $targetHostname:$remotefile
@@ -278,5 +290,8 @@ case "$operation" in
         done
         
         echo $tmpdir
+        ;;
+    resolve-snapshots)
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --resolve-snapshots "$@"
         ;;
 esac

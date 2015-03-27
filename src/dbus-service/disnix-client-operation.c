@@ -254,6 +254,16 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 	    else
 		org_nixos_disnix_Disnix_import_snapshots(remote_object, pid, container, component, (const gchar**) derivation, &error);
 	    break;
+	case OP_RESOLVE_SNAPSHOTS:
+	    if(derivation[0] == NULL)
+	    {
+		g_printerr("ERROR: A Dysnomia snapshot has to be specified!\n");
+		cleanup(derivation, arguments);
+		return 1;
+	    }
+	    else
+		org_nixos_disnix_Disnix_resolve_snapshots(remote_object, pid, (const gchar**) derivation, &error);
+	    break;
 	case OP_NONE:
 	    g_printerr("ERROR: No operation specified!\n");
 	    cleanup(derivation, arguments);

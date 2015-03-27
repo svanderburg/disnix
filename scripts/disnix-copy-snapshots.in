@@ -1,0 +1,151 @@
+#!/bin/bash -e
+# Disnix - A Nix-based distributed service deployment tool
+# Copyright (C) 2008-2015  Sander van der Burg
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    echo "Usage: $0 [options] {--to|--from} --target target --container container --component component"
+    echo "Options:"
+    echo
+    echo "--to        Copy snapshots to the given target"
+    echo "--from      Copy snapshots from the given target"
+    echo "-t,--target Address of the Disnix service running on the remote machine"
+    echo "--container Name of the container in which the mutable component is deployed"
+    echo "--component Name of the mutable component to take snapshots from"
+    echo "--all       Transfer all snapshots instead of the latest only"
+    echo "--interface Path to executable that communicates with a Disnix interface. Defaults to disnix-ssh-client"
+    echo "-h,--help   Shows the usage of this command to the user"
+}
+
+# Autoconf settings
+
+export prefix=@prefix@
+
+# Import checks
+
+source @datadir@/@PACKAGE@/checks
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o t:C:c:h -l to,from,container:,component:,all,target:,interface:,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+eval set -- "$PARAMS"
+
+# Evaluate valid options
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        --to)
+            to=1
+            ;;
+        --from)
+            from=1
+            ;;
+        --all)
+            all=1
+            ;;
+        -t|--target)
+            target=$2
+            ;;
+        -C|--container)
+            container=$2
+            ;;
+        -c|--component)
+            component=$2
+            ;;
+        --interface)
+            interface=$2
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+    esac
+    
+    shift
+done
+
+# Validate the given options
+
+if [ ! "$to" = "1" ] && [ ! "$from" = "1" ]
+then
+    echo "ERROR: Either the --from or --to option has to be used!" >&2
+    exit 1
+fi
+
+checkTarget
+checkClientInterface
+
+if [ -z "$container" ]
+then
+    echo "ERROR: No container has been specified!" >&2
+    exit 1
+fi
+
+if [ -z "$component" ]
+then
+    echo "ERROR: No component has been specified!" >&2
+    exit 1
+fi
+
+checkTmpDir
+
+# Execute operation
+
+if [ "$to" = "1" ]
+then
+    if [ "$all" = "1" ]
+    then
+        snapshots=$(dysnomia-store --query-all --container $container --component $component)
+    else
+        snapshots=$(dysnomia-store --query-latest --container $container --component $component)
+    fi
+    
+    missingSnapshots=$($interface --target $target --print-missing-snapshots $snapshots)
+    
+    if [ "$missingSnapshots" != "" ]
+    then
+        resolvedPaths=$(dysnomia-store --resolve $missingSnapshots)
+        $interface --target $target --import-snapshots --container $container --component $component --localfile $resolvedPaths
+    fi
+else
+    if [ "$all" = "1" ]
+    then
+        snapshots=$($interface --target $target --query-all-snapshots --container $container --component $component)
+    else
+        snapshots=$($interface --target $target --query-latest-snapshot --container $container --component $component)
+    fi
+    
+    missingSnapshots=$(dysnomia-store --print-missing $snapshots)
+    
+    if [ "$missingSnapshots" != "" ]
+    then
+        resolvedPaths=$($interface --target $target --resolve-snapshots $missingSnapshots)
+        tmpdir=$($interface --target $target --export-snapshots $resolvedPaths)
+        dysnomia-store --import --container $container --component $component $tmpdir/* || (rm -Rf $tmpdir; false)
+        rmdir $tmpdir
+    fi
+fi

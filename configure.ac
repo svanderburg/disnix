@@ -90,6 +90,7 @@ src/visualize/Makefile
 scripts/Makefile
 data/Makefile
 scripts/disnix-copy-closure
+scripts/disnix-copy-snapshots
 scripts/disnix-env
 scripts/disnix-instantiate
 scripts/disnix-manifest
