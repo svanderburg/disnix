@@ -1209,6 +1209,136 @@ gboolean disnix_unlock(DisnixObject *object, const gint pid, const gchar *profil
     return TRUE;
 }
 
+/* Snapshot method */
+
+static void disnix_snapshot_thread_func(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments)
+{
+    /* Declarations */
+    int status;
+        
+    /* Print log entry */
+    g_print("Snapshot: %s of type: %s with arguments: ", derivation, type);
+    print_derivations(arguments);
+    g_print("\n");
+    
+    /* Execute command */
+
+    status = fork();
+    
+    if(status == -1)
+    {
+	g_printerr("Error forking snapshot process!\n");
+	disnix_emit_failure_signal(object, pid);
+    }
+    else if(status == 0)
+    {
+	unsigned int i;
+	char *cmd = "dysnomia";
+	char *args[] = {cmd, "--type", type, "--operation", "snapshot", "--component", derivation, "--environment", NULL};
+	
+	for(i = 0; i < g_strv_length(arguments); i++)
+	{
+	    gchar **name_value_pair = g_strsplit(arguments[i], "=", 2);
+	    setenv(name_value_pair[0], name_value_pair[1], FALSE);
+	    g_strfreev(name_value_pair);
+	}
+	
+	execvp(cmd, args);
+	_exit(1);
+    }
+    else
+    {
+	wait(&status);
+	
+	if(WEXITSTATUS(status) == 0)
+	    disnix_emit_finish_signal(object, pid);
+	else
+	    disnix_emit_failure_signal(object, pid);
+    }
+    
+    _exit(0);
+}
+
+gboolean disnix_snapshot(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments, GError **error)
+{
+    /* State object should not be NULL */
+    g_assert(object != NULL);
+
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
+	disnix_snapshot_thread_func(object, pid, derivation, type, arguments);
+    }
+    
+    return TRUE;
+}
+
+/* Restore method */
+
+static void disnix_restore_thread_func(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments)
+{
+    /* Declarations */
+    int status;
+        
+    /* Print log entry */
+    g_print("Restore: %s of type: %s with arguments: ", derivation, type);
+    print_derivations(arguments);
+    g_print("\n");
+    
+    /* Execute command */
+
+    status = fork();
+    
+    if(status == -1)
+    {
+	g_printerr("Error forking restore process!\n");
+	disnix_emit_failure_signal(object, pid);
+    }
+    else if(status == 0)
+    {
+	unsigned int i;
+	char *cmd = "dysnomia";
+	char *args[] = {cmd, "--type", type, "--operation", "restore", "--component", derivation, "--environment", NULL};
+	
+	for(i = 0; i < g_strv_length(arguments); i++)
+	{
+	    gchar **name_value_pair = g_strsplit(arguments[i], "=", 2);
+	    setenv(name_value_pair[0], name_value_pair[1], FALSE);
+	    g_strfreev(name_value_pair);
+	}
+	
+	execvp(cmd, args);
+	_exit(1);
+    }
+    else
+    {
+	wait(&status);
+	
+	if(WEXITSTATUS(status) == 0)
+	    disnix_emit_finish_signal(object, pid);
+	else
+	    disnix_emit_failure_signal(object, pid);
+    }
+    
+    _exit(0);
+}
+
+gboolean disnix_restore(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments, GError **error)
+{
+    /* State object should not be NULL */
+    g_assert(object != NULL);
+
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
+	disnix_restore_thread_func(object, pid, derivation, type, arguments);
+    }
+    
+    return TRUE;
+}
+
 /* Query all snapshots method */
 
 static void disnix_query_all_snapshots_thread_func(DisnixObject *object, const gint pid, gchar *container, gchar *component)

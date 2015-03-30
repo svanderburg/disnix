@@ -34,6 +34,8 @@ showUsage()
     echo "  --deactivate --type type --arguments arguments derivation"
     echo "  --lock [{-p|--profile} profile]"
     echo "  --unlock [{-p|--profile} profile]"
+    echo "  --snapshot --type type --arguments arguments derivation"
+    echo "  --restore --type type --arguments arguments derivation"
     echo "  --query-all-snapshots --container container --component component"
     echo "  --query-latest-snapshot --container container --component component"
     echo "  --print-missing-snapshots snapshots"
@@ -53,7 +55,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o rqp:d -l import,export,print-invalid,realise,set,query-installed,query-requisites,collect-garbage,activate,deactivate,lock,unlock,query-all-snapshots,query-latest-snapshot,print-missing-snapshots,import-snapshots,export-snapshots,resolve-snapshots,target:,localfile,remotefile,profile:,delete-old,type:,arguments:,container:,component:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o rqp:d -l import,export,print-invalid,realise,set,query-installed,query-requisites,collect-garbage,activate,deactivate,lock,unlock,snapshot,restore,query-all-snapshots,query-latest-snapshot,print-missing-snapshots,import-snapshots,export-snapshots,resolve-snapshots,target:,localfile,remotefile,profile:,delete-old,type:,arguments:,container:,component:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -69,43 +71,51 @@ while [ "$1" != "--" ]
 do
     case "$1" in
         --import)
-            operation="import";
+            operation="import"
             ;;
         --export)
-            operation="export";
+            operation="export"
             ;;
         --print-invalid)
-            operation="print-invalid";
+            operation="print-invalid"
             ;;
         -r|--realise)
-            operation="realise";
+            operation="realise"
             ;;
         --set)
-            operation="set";
+            operation="set"
             ;;
         -q|--query-installed)
-            operation="query-installed";
+            operation="query-installed"
             ;;
         --query-requisites)
-            operation="query-requisites";
+            operation="query-requisites"
             ;;
         --collect-garbage)
-            operation="collect-garbage";
+            operation="collect-garbage"
             ;;
         --activate)
-            operation="activate";
+            operation="activate"
             path=$2
             ;;
         --deactivate)
-            operation="deactivate";
+            operation="deactivate"
             path=$2
             ;;
         --lock)
-            operation="lock";
+            operation="lock"
             path=$2
             ;;
         --unlock)
-            operation="unlock";
+            operation="unlock"
+            path=$2
+            ;;
+        --snapshot)
+            operation="snapshot"
+            path=$2
+            ;;
+        --restore)
+            operation="restore"
             path=$2
             ;;
         --query-all-snapshots)
@@ -257,6 +267,23 @@ case "$operation" in
     unlock)
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --unlock $profileArg
         ;;
+    snapshot)
+        if [ "$type" = "" ]
+        then
+            echo "ERROR: A type must be specified!" >&2
+            exit 1
+        fi
+        
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --snapshot "$@"
+        ;;
+    restore)
+        if [ "$type" = "" ]
+        then
+            echo "ERROR: A type must be specified!" >&2
+            exit 1
+        fi
+        
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --restore "$@"
     query-all-snapshots)
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --query-all-snapshots --container $container --component $component
         ;;

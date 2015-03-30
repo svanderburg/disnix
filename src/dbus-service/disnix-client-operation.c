@@ -228,6 +228,38 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 	case OP_UNLOCK:
 	    org_nixos_disnix_Disnix_unlock(remote_object, pid, profile, &error);
 	    break;
+	case OP_SNAPSHOT:
+	    if(type == NULL)
+	    {
+		g_printerr("ERROR: A type must be specified!\n");
+		cleanup(derivation, arguments);
+		return 1;
+	    }
+	    else if(derivation[0] == NULL)
+	    {
+		g_printerr("ERROR: A Nix store component has to be specified!\n");
+		cleanup(derivation, arguments);
+		return 1;
+	    }
+	    else
+		org_nixos_disnix_Disnix_snapshot(remote_object, pid, derivation[0], type, (const gchar**) arguments, &error);
+	    break;
+	case OP_RESTORE:
+	    if(type == NULL)
+	    {
+		g_printerr("ERROR: A type must be specified!\n");
+		cleanup(derivation, arguments);
+		return 1;
+	    }
+	    else if(derivation[0] == NULL)
+	    {
+		g_printerr("ERROR: A Nix store component has to be specified!\n");
+		cleanup(derivation, arguments);
+		return 1;
+	    }
+	    else
+		org_nixos_disnix_Disnix_restore(remote_object, pid, derivation[0], type, (const gchar**) arguments, &error);
+	    break;
 	case OP_QUERY_ALL_SNAPSHOTS:
 	    org_nixos_disnix_Disnix_query_all_snapshots(remote_object, pid, container, component, &error);
 	    break;

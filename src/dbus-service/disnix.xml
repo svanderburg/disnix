@@ -72,6 +72,20 @@
 			<arg type="s" name="profile" direction="in" />
 		</method>
 		
+		<method name="snapshot">
+			<arg type="i" name="pid" direction="in" />
+			<arg type="s" name="derivation" direction="in" />
+			<arg type="s" name="type" direction="in" />
+			<arg type="as" name="arguments" direction="in" />
+		</method>
+		
+		<method name="restore">
+			<arg type="i" name="pid" direction="in" />
+			<arg type="s" name="derivation" direction="in" />
+			<arg type="s" name="type" direction="in" />
+			<arg type="as" name="arguments" direction="in" />
+		</method>
+		
 		<method name="query_all_snapshots">
 			<arg type="i" name="pid" direction="in" />
 			<arg type="s" name="container" direction="in" />

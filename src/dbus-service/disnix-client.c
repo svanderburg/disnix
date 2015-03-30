@@ -41,6 +41,8 @@ static void print_usage(const char *command)
     fprintf(stderr, "--collect-garbage [{-d|--delete-old}]\n");
     fprintf(stderr, "--activate --type type --arguments arguments derivation\n");
     fprintf(stderr, "--deactivate --type type --arguments arguments derivation\n");
+    fprintf(stderr, "--snapshot --type type --arguments arguments derivation\n");
+    fprintf(stderr, "--restore --type type --arguments arguments derivation\n");
     fprintf(stderr, "--lock [{-p|--profile} profile]\n");
     fprintf(stderr, "--unlock [{-p|--profile} profile]\n");
     fprintf(stderr, "--query-all-snapshots --container container --component component\n");
@@ -69,6 +71,8 @@ int main(int argc, char *argv[])
 	{"deactivate", no_argument, 0, 'D'},
 	{"lock", no_argument, 0, 'L'},
 	{"unlock", no_argument, 0, 'U'},
+	{"snapshot", no_argument, 0, 'f'},
+	{"restore", no_argument, 0, 'g'},
 	{"query-all-snapshots", no_argument, 0, 'B'},
 	{"query-latest-snapshot", no_argument, 0, 's'},
 	{"print-missing-snapshots", no_argument, 0, 'M'},
@@ -135,6 +139,12 @@ int main(int argc, char *argv[])
 		break;
 	    case 'U':
 		operation = OP_UNLOCK;
+		break;
+	    case 'f':
+		operation = OP_SNAPSHOT;
+		break;
+	    case 'g':
+		operation = OP_RESTORE;
 		break;
 	    case 'B':
 		operation = OP_QUERY_ALL_SNAPSHOTS;
