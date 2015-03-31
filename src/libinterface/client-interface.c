@@ -105,6 +105,16 @@ pid_t exec_unlock(gchar *interface, gchar *target, gchar *profile)
     return exec_lock_or_unlock("--unlock", interface, target, profile);
 }
 
+pid_t exec_snapshot(gchar *interface, gchar *target, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
+{
+    return exec_activate_or_deactivate("--snapshot", interface, target, type, arguments, arguments_size, service);
+}
+
+pid_t exec_restore(gchar *interface, gchar *target, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
+{
+    return exec_activate_or_deactivate("--restore", interface, target, type, arguments, arguments_size, service);
+}
+
 pid_t exec_collect_garbage(gchar *interface, gchar *target, const gboolean delete_old)
 {
     /* Declarations */
@@ -180,6 +190,30 @@ pid_t exec_copy_closure_from(gchar *interface, gchar *target, gchar *component)
 pid_t exec_copy_closure_to(gchar *interface, gchar *target, gchar *component)
 {
     return exec_copy_closure("--to", interface, target, component);
+}
+
+static pid_t exec_copy_snapshots(gchar *operation, gchar *interface, gchar *target, gchar *container, gchar *component)
+{
+    pid_t pid = fork();
+    
+    if(pid == 0)
+    {
+	char *const args[] = {"disnix-copy-snapshots", operation, "--target", target, "--interface", interface, "--container", container, "--component", component, NULL};
+	execvp("disnix-copy-snapshots", args);
+	_exit(1);
+    }
+    else
+	return pid;
+}
+
+pid_t exec_copy_snapshots_from(gchar *interface, gchar *target, gchar *container, gchar *component)
+{
+    return exec_copy_snapshots("--from", interface, target, container, component);
+}
+
+pid_t exec_copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar *component)
+{
+    return exec_copy_snapshots("--to", interface, target, container, component);
 }
 
 pid_t exec_realise(gchar *interface, gchar *target, gchar *derivation, int pipefd[2])

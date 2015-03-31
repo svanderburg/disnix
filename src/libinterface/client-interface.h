@@ -78,6 +78,32 @@ pid_t exec_lock(gchar *interface, gchar *target, gchar *profile);
 pid_t exec_unlock(gchar *interface, gchar *target, gchar *profile);
 
 /**
+ * Invokes the snapshot operation through a Disnix client interface
+ *
+ * @param interface Path to the interface executable
+ * @param target Target Address of the remote interface
+ * @param type Type Type of the service
+ * @param arguments String vector with activation arguments in the form key=value
+ * @param arguments_size Size of the arguments string vector
+ * @param service Service to activate
+ * @return PID of the client interface process performing the operation, or -1 in case of a failure
+ */
+pid_t exec_snapshot(gchar *interface, gchar *target, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
+
+/**
+ * Invokes the restore operation through a Disnix client interface
+ *
+ * @param interface Path to the interface executable
+ * @param target Target Address of the remote interface
+ * @param type Type Type of the service
+ * @param arguments String vector with activation arguments in the form key=value
+ * @param arguments_size Size of the arguments string vector
+ * @param service Service to deactivate
+ * @return PID of the client interface process performing the operation, or -1 in case of a failure
+ */
+pid_t exec_restore(gchar *interface, gchar *target, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
+
+/**
  * Invokes the collect garbage operation through a Disnix client interface
  *
  * @param interface Path to the interface executable
@@ -126,6 +152,28 @@ pid_t exec_copy_closure_from(gchar *interface, gchar *target, gchar *component);
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */ 
 pid_t exec_copy_closure_to(gchar *interface, gchar *target, gchar *component);
+
+/**
+ * Invokes the copy snapshots process to copy snapshots from a machine
+ *
+ * @param interface Path to the interface executable
+ * @param target Target Address of the remote interface
+ * @param container Name of the container in which the component is deployed
+ * @param component Name of the component of which state snapshots should be copied
+ * @return PID of the client interface process performing the operation, or -1 in case of a failure
+ */ 
+pid_t exec_copy_snapshots_from(gchar *interface, gchar *target, gchar *container, gchar *component);
+
+/**
+ * Invokes the copy snapshots process to copy snapshots to a machine
+ *
+ * @param interface Path to the interface executable
+ * @param target Target Address of the remote interface
+ * @param container Name of the container in which the component is deployed
+ * @param component Name of the component of which state snapshots should be copied
+ * @return PID of the client interface process performing the operation, or -1 in case of a failure
+ */ 
+pid_t exec_copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar *component);
 
 /**
  * Invokes the realise operation through a Disnix client interface

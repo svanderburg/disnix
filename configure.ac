@@ -87,6 +87,7 @@ src/libinterface/Makefile
 src/distribute/Makefile
 src/activate/Makefile
 src/visualize/Makefile
+src/snapshot/Makefile
 scripts/Makefile
 data/Makefile
 scripts/disnix-copy-closure
