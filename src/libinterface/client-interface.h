@@ -160,9 +160,10 @@ pid_t exec_copy_closure_to(gchar *interface, gchar *target, gchar *component);
  * @param target Target Address of the remote interface
  * @param container Name of the container in which the component is deployed
  * @param component Name of the component of which state snapshots should be copied
+ * @param all Indicates whether all generations of snapshots must be transferred
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */ 
-pid_t exec_copy_snapshots_from(gchar *interface, gchar *target, gchar *container, gchar *component);
+pid_t exec_copy_snapshots_from(gchar *interface, gchar *target, gchar *container, gchar *component, gboolean all);
 
 /**
  * Invokes the copy snapshots process to copy snapshots to a machine
@@ -171,9 +172,10 @@ pid_t exec_copy_snapshots_from(gchar *interface, gchar *target, gchar *container
  * @param target Target Address of the remote interface
  * @param container Name of the container in which the component is deployed
  * @param component Name of the component of which state snapshots should be copied
+ * @param all Indicates whether all generations of snapshots must be transferred
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */ 
-pid_t exec_copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar *component);
+pid_t exec_copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar *component, gboolean all);
 
 /**
  * Invokes the realise operation through a Disnix client interface

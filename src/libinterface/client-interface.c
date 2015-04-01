@@ -192,13 +192,38 @@ pid_t exec_copy_closure_to(gchar *interface, gchar *target, gchar *component)
     return exec_copy_closure("--to", interface, target, component);
 }
 
-static pid_t exec_copy_snapshots(gchar *operation, gchar *interface, gchar *target, gchar *container, gchar *component)
+static pid_t exec_copy_snapshots(gchar *operation, gchar *interface, gchar *target, gchar *container, gchar *component, gboolean all)
 {
     pid_t pid = fork();
     
     if(pid == 0)
     {
-	char *const args[] = {"disnix-copy-snapshots", operation, "--target", target, "--interface", interface, "--container", container, "--component", component, NULL};
+	unsigned int args_length = 11;
+	char **args;
+	
+	if(all)
+	    args_length++;
+	    
+	args = (char**)g_malloc(args_length * sizeof(char*));
+	args[0] = "disnix-copy-snapshots";
+	args[1] = operation;
+	args[2] = "--target";
+	args[3] = target;
+	args[4] = "--interface";
+	args[5] = interface;
+	args[6] = "--container";
+	args[7] = container;
+	args[8] = "--component";
+	args[9] = component;
+	
+	if(all)
+	{
+	    args[10] = "--all";
+	    args[11] = NULL;
+	}
+	else
+	    args[10] = NULL;
+	
 	execvp("disnix-copy-snapshots", args);
 	_exit(1);
     }
@@ -206,14 +231,14 @@ static pid_t exec_copy_snapshots(gchar *operation, gchar *interface, gchar *targ
 	return pid;
 }
 
-pid_t exec_copy_snapshots_from(gchar *interface, gchar *target, gchar *container, gchar *component)
+pid_t exec_copy_snapshots_from(gchar *interface, gchar *target, gchar *container, gchar *component, gboolean all)
 {
-    return exec_copy_snapshots("--from", interface, target, container, component);
+    return exec_copy_snapshots("--from", interface, target, container, component, all);
 }
 
-pid_t exec_copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar *component)
+pid_t exec_copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar *component, gboolean all)
 {
-    return exec_copy_snapshots("--to", interface, target, container, component);
+    return exec_copy_snapshots("--to", interface, target, container, component, all);
 }
 
 pid_t exec_realise(gchar *interface, gchar *target, gchar *derivation, int pipefd[2])

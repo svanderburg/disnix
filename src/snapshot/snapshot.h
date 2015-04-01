@@ -26,8 +26,10 @@
  *
  * @param manifest_file Path to the manifest file which maps services to machines
  * @param max_concurrent_transfers Specifies the maximum amount of concurrent transfers
+ * @param transfer_only Indicates the only snapshots must transferred but not taken
+ * @param all Indicates whether all snapshot generations must be transferred
  * @return 0 if everything succeeds, else a non-zero exit status
  */
-int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers);
+int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all);
 
 #endif

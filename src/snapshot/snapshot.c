@@ -40,6 +40,9 @@ static int wait_to_complete_snapshot(GHashTable *pids, GPtrArray *target_array)
         ActivationMapping *mapping = g_hash_table_lookup(pids, &pid);
         g_hash_table_remove(pids, &pid);
         
+        /* Mark mapping as activated to prevent it from snapshotting again */
+        mapping->status = ACTIVATIONMAPPING_ACTIVATED;
+        
         /* Signal the target to make the CPU core available again */
         target = find_target(target_array, mapping->target);
         signal_available_target_core(target);
@@ -61,13 +64,26 @@ static void destroy_pids_key(gpointer data)
     g_free(key);
 }
 
+static void mark_deactivated(GPtrArray *activation_array)
+{
+    unsigned int i;
+    
+    for(i = 0; i < activation_array->len; i++)
+    {
+        ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
+        mapping->status = ACTIVATIONMAPPING_DEACTIVATED;
+    }
+}
+
 static int snapshot_services(GPtrArray *activation_array, GPtrArray *target_array)
 {
-    unsigned int numSnapshotted = 0;
+    unsigned int num_snapshotted = 0;
     int status = TRUE;
     GHashTable *pids = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
     
-    while(numSnapshotted < activation_array->len)
+    mark_deactivated(activation_array);
+    
+    while(num_snapshotted < activation_array->len)
     {
         unsigned int i;
     
@@ -76,7 +92,7 @@ static int snapshot_services(GPtrArray *activation_array, GPtrArray *target_arra
             ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
             Target *target = find_target(target_array, mapping->target);
             
-            if(request_available_target_core(target)) /* Check if machine has any cores available, if not wait and try again later */
+            if(mapping->status == ACTIVATIONMAPPING_DEACTIVATED && request_available_target_core(target)) /* Check if machine has any cores available, if not wait and try again later */
             {
                 gchar *interface = find_target_client_interface(target);
                 gchar **arguments = generate_activation_arguments(target); /* Generate an array of key=value pairs from infrastructure properties */
@@ -100,7 +116,7 @@ static int snapshot_services(GPtrArray *activation_array, GPtrArray *target_arra
         if(!wait_to_complete_snapshot(pids, target_array))
             status = FALSE;
         
-        numSnapshotted++;
+        num_snapshotted++;
     }
     
     g_hash_table_destroy(pids);
@@ -121,7 +137,7 @@ static int wait_to_complete_retrieve(void)
         return 0;
 }
 
-static int retrieve_snapshots(GPtrArray *activation_array, GPtrArray *target_array, const unsigned int max_concurrent_transfers)
+static int retrieve_snapshots(GPtrArray *activation_array, GPtrArray *target_array, const unsigned int max_concurrent_transfers, const int all)
 {
     unsigned int running_processes = 0, i;
     int exit_status;
@@ -132,9 +148,10 @@ static int retrieve_snapshots(GPtrArray *activation_array, GPtrArray *target_arr
         Target *target = find_target(target_array, mapping->target);
         gchar *interface = find_target_client_interface(target);
         
-        exec_copy_snapshots_from(interface, mapping->target, mapping->type, mapping->service);
+        g_print("[target: %s]: Retrieving snapshots of component: %s deployed to container: %s\n", mapping->target, mapping->service, mapping->type);
+        exec_copy_snapshots_from(interface, mapping->target, mapping->type, mapping->service, all);
         running_processes++;
-            
+        
         /* If limit has been reached, wait until one of the transfers finishes */
         if(running_processes >= max_concurrent_transfers)
         {
@@ -157,7 +174,7 @@ static int retrieve_snapshots(GPtrArray *activation_array, GPtrArray *target_arr
     return exit_status;
 }
 
-int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers)
+int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all)
 {
     /* Generate a distribution array from the manifest file */
     Manifest *manifest = create_manifest(manifest_file);
@@ -171,13 +188,17 @@ int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_trans
     {
         int exit_status = 0;
         
-        if((exit_status = snapshot_services(manifest->activation_array, manifest->target_array)) != 0)
+        g_print("[coordinator]: Snapshotting state of services...\n");
+        
+        if(!transfer_only && !snapshot_services(manifest->activation_array, manifest->target_array))
         {
             delete_manifest(manifest);
-            return exit_status;
+            return 1;
         }
         
-        if((exit_status = retrieve_snapshots(manifest->activation_array, manifest->target_array, max_concurrent_transfers)) != 0)
+        g_print("[coordinator]: Retrieving snapshots...\n");
+        
+        if((exit_status = retrieve_snapshots(manifest->activation_array, manifest->target_array, max_concurrent_transfers, all)) != 0)
         {
             delete_manifest(manifest);
             return exit_status;

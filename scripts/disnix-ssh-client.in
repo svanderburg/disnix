@@ -284,6 +284,7 @@ case "$operation" in
         fi
         
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --restore "$@"
+        ;;
     query-all-snapshots)
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --query-all-snapshots --container $container --component $component
         ;;

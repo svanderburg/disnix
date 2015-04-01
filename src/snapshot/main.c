@@ -28,6 +28,8 @@ static void print_usage(const char *command)
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "%s manifest\n", command);
     fprintf(stderr, "\nOptions:\n");
+    fprintf(stderr, "--transfer-only\n");
+    fprintf(stderr, "--all\n");
     fprintf(stderr, "-m | --max-concurrent-transfers\n");
     fprintf(stderr, "-h | --help\n");
 }
@@ -38,18 +40,28 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
+        {"transfer-only", no_argument, 0, 't'},
+        {"all", no_argument, 0, 'a'},
         {"max-concurrent-transfers", required_argument, 0, 'm'},
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}
     };
     
     unsigned int max_concurrent_transfers = 2;
+    int transfer_only = FALSE;
+    int all = FALSE;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "m:h", long_options, &option_index)) != -1)
     {
         switch(c)
         {
+            case 'a':
+                all = TRUE;
+                break;
+            case 't':
+                transfer_only = TRUE;
+                break;
             case 'm':
                 max_concurrent_transfers = atoi(optarg);
                 break;
@@ -68,5 +80,5 @@ int main(int argc, char *argv[])
         return 1;
     }
     else
-        return snapshot(argv[optind], max_concurrent_transfers); /* Execute snapshot operation */
+        return snapshot(argv[optind], max_concurrent_transfers, transfer_only, all); /* Execute snapshot operation */
 }
