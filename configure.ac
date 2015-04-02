@@ -88,6 +88,7 @@ src/distribute/Makefile
 src/activate/Makefile
 src/visualize/Makefile
 src/snapshot/Makefile
+src/restore/Makefile
 scripts/Makefile
 data/Makefile
 scripts/disnix-copy-closure
