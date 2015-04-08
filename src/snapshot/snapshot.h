@@ -28,8 +28,9 @@
  * @param max_concurrent_transfers Specifies the maximum amount of concurrent transfers
  * @param transfer_only Indicates the only snapshots must transferred but not taken
  * @param all Indicates whether all snapshot generations must be transferred
+ * @param old_manifest Manifest file representing the old deployment configuration
  * @return 0 if everything succeeds, else a non-zero exit status
  */
-int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all);
+int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all, const gchar *old_manifest);
 
 #endif

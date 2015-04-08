@@ -161,7 +161,15 @@ static int retrieve_snapshots(GPtrArray *snapshots_array, GPtrArray *target_arra
     return exit_status;
 }
 
-int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all)
+static void cleanup(const gchar *old_manifest, Manifest *manifest, GPtrArray *snapshots_array)
+{
+    if(old_manifest != NULL)
+        g_ptr_array_free(snapshots_array, TRUE);
+    
+    delete_manifest(manifest);
+}
+
+int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all, const gchar *old_manifest)
 {
     /* Generate a distribution array from the manifest file */
     Manifest *manifest = create_manifest(manifest_file);
@@ -174,24 +182,36 @@ int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_trans
     else
     {
         int exit_status = 0;
+        GPtrArray *snapshots_array;
         
-        g_print("[coordinator]: Snapshotting state of services...\n");
-        
-        if(!transfer_only && !snapshot_services(manifest->snapshots_array, manifest->target_array))
+        if(old_manifest == NULL)
         {
-            delete_manifest(manifest);
+            g_printerr("[coordinator]: Snapshotting state of all components...\n");
+            snapshots_array = manifest->snapshots_array;
+        }
+        else
+        {
+            GPtrArray *old_snapshots_array = create_snapshots_array(old_manifest);
+            g_printerr("[coordinator]: Snapshotting state of moved components...\n");
+            snapshots_array = subtract_snapshot_mappings(manifest->snapshots_array, old_snapshots_array);
+            delete_snapshots_array(old_snapshots_array);
+        }
+        
+        if(!transfer_only && !snapshot_services(snapshots_array, manifest->target_array))
+        {
+            cleanup(old_manifest, manifest, snapshots_array);
             return 1;
         }
         
         g_print("[coordinator]: Retrieving snapshots...\n");
         
-        if((exit_status = retrieve_snapshots(manifest->snapshots_array, manifest->target_array, max_concurrent_transfers, all)) != 0)
+        if((exit_status = retrieve_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, all)) != 0)
         {
-            delete_manifest(manifest);
+            cleanup(old_manifest, manifest, snapshots_array);
             return exit_status;
         }
         
-        delete_manifest(manifest);
+        cleanup(old_manifest, manifest, snapshots_array);
         return exit_status;
     }
 }

@@ -161,7 +161,15 @@ static int restore_services(GPtrArray *snapshots_array, GPtrArray *target_array)
     return status;
 }
 
-int restore(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all)
+static void cleanup(const gchar *old_manifest, Manifest *manifest, GPtrArray *snapshots_array)
+{
+    if(old_manifest != NULL)
+        g_ptr_array_free(snapshots_array, TRUE);
+    
+    delete_manifest(manifest);
+}
+
+int restore(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all, const gchar *old_manifest)
 {
     /* Generate a distribution array from the manifest file */
     Manifest *manifest = create_manifest(manifest_file);
@@ -174,24 +182,36 @@ int restore(const gchar *manifest_file, const unsigned int max_concurrent_transf
     else
     {
         int exit_status = 0;
+        GPtrArray *snapshots_array;
         
-        g_print("[coordinator]: Sending snapshots...\n");
-        
-        if((exit_status = send_snapshots(manifest->snapshots_array, manifest->target_array, max_concurrent_transfers, all)) != 0)
+        if(old_manifest == NULL)
         {
-            delete_manifest(manifest);
+            g_printerr("[coordinator]: Sending snapshots of all components...\n");
+            snapshots_array = manifest->snapshots_array;
+        }
+        else
+        {
+            GPtrArray *old_snapshots_array = create_snapshots_array(old_manifest);
+            g_printerr("[coordinator]: Sending snapshots of moved components...\n");
+            snapshots_array = subtract_snapshot_mappings(manifest->snapshots_array, old_snapshots_array);
+            delete_snapshots_array(old_snapshots_array);
+        }
+        
+        if((exit_status = send_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, all)) != 0)
+        {
+            cleanup(old_manifest, manifest, snapshots_array);
             return exit_status;
         }
         
         g_print("[coordinator]: Restoring state of services...\n");
         
-        if(!transfer_only && !restore_services(manifest->snapshots_array, manifest->target_array))
+        if(!transfer_only && !restore_services(snapshots_array, manifest->target_array))
         {
-            delete_manifest(manifest);
+            cleanup(old_manifest, manifest, snapshots_array);
             return 1;
         }
         
-        delete_manifest(manifest);
+        cleanup(old_manifest, manifest, snapshots_array);
         return exit_status;
     }
 }

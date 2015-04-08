@@ -28,6 +28,7 @@ static void print_usage(const char *command)
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "%s manifest\n", command);
     fprintf(stderr, "\nOptions:\n");
+    fprintf(stderr, "--old-manifest manifest\n");
     fprintf(stderr, "--transfer-only\n");
     fprintf(stderr, "--all\n");
     fprintf(stderr, "-m | --max-concurrent-transfers\n");
@@ -40,6 +41,7 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
+        {"old-manifest", required_argument, 0, 'o'},
         {"transfer-only", no_argument, 0, 't'},
         {"all", no_argument, 0, 'a'},
         {"max-concurrent-transfers", required_argument, 0, 'm'},
@@ -50,12 +52,16 @@ int main(int argc, char *argv[])
     unsigned int max_concurrent_transfers = 2;
     int transfer_only = FALSE;
     int all = FALSE;
+    char *old_manifest = NULL;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "m:h", long_options, &option_index)) != -1)
     {
         switch(c)
         {
+            case 'o':
+                old_manifest = optarg;
+                break;
             case 'a':
                 all = TRUE;
                 break;
@@ -80,5 +86,5 @@ int main(int argc, char *argv[])
         return 1;
     }
     else
-        return snapshot(argv[optind], max_concurrent_transfers, transfer_only, all); /* Execute snapshot operation */
+        return snapshot(argv[optind], max_concurrent_transfers, transfer_only, all, old_manifest); /* Execute snapshot operation */
 }
