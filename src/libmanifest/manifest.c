@@ -20,11 +20,12 @@
 #include "manifest.h"
 #include "distributionmapping.h"
 #include "activationmapping.h"
+#include "snapshotmapping.h"
 #include "targets.h"
 
 Manifest *create_manifest(const gchar *manifest_file)
 {
-    GPtrArray *distribution_array, *activation_array, *target_array;
+    GPtrArray *distribution_array, *activation_array, *snapshots_array, *target_array;
     Manifest *manifest;
     
     distribution_array = generate_distribution_array(manifest_file);
@@ -37,18 +38,26 @@ Manifest *create_manifest(const gchar *manifest_file)
         delete_distribution_array(distribution_array);
         return NULL;
     }
-    
+    snapshots_array = create_snapshots_array(manifest_file);
+    if(snapshots_array == NULL)
+    {
+        delete_distribution_array(distribution_array);
+        delete_activation_array(activation_array);
+        return NULL;
+    }
     target_array = generate_target_array(manifest_file);
     if(target_array == NULL)
     {
         delete_distribution_array(distribution_array);
         delete_activation_array(activation_array);
+        delete_snapshots_array(snapshots_array);
         return NULL;
     }
     
     manifest = (Manifest*)g_malloc(sizeof(Manifest));
     manifest->distribution_array = distribution_array;
     manifest->activation_array = activation_array;
+    manifest->snapshots_array = snapshots_array;
     manifest->target_array = target_array;
     
     return manifest;
@@ -60,6 +69,7 @@ void delete_manifest(Manifest *manifest)
     {
         delete_distribution_array(manifest->distribution_array);
         delete_activation_array(manifest->activation_array);
+        delete_snapshots_array(manifest->snapshots_array);
         delete_target_array(manifest->target_array);
         g_free(manifest);
     }

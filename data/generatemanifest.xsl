@@ -30,6 +30,15 @@
 	  </mapping>
         </xsl:for-each>
       </activation>
+      <snapshots>
+	<xsl:for-each select="attr[@name='snapshots']/list/attrs">
+	  <mapping>
+	    <component><xsl:value-of select="attr[@name='component']/string/@value" /></component>
+	    <container><xsl:value-of select="attr[@name='container']/string/@value" /></container>
+	    <target><xsl:value-of select="attr[@name='target']/string/@value" /></target>
+	  </mapping>
+	</xsl:for-each>
+      </snapshots>
       <targets>
 	<xsl:for-each select="attr[@name='targets']/list/attrs">
 	  <target>

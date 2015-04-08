@@ -36,6 +36,9 @@ typedef struct
     /** Array of services to be activated on a target machine */
     GPtrArray *activation_array;
     
+    /** Array of snapshots to be tranferred to a target machine */
+    GPtrArray *snapshots_array;
+    
     /** Array containing the available target machines */
     GPtrArray *target_array;
 }

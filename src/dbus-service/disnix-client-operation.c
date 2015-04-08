@@ -267,14 +267,7 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 	    org_nixos_disnix_Disnix_query_latest_snapshot(remote_object, pid, container, component, &error);
 	    break;
 	case OP_PRINT_MISSING_SNAPSHOTS:
-	    if(derivation[0] == NULL)
-	    {
-		g_printerr("ERROR: A Dysnomia snapshot has to be specified!\n");
-		cleanup(derivation, arguments);
-		return 1;
-	    }
-	    else
-		org_nixos_disnix_Disnix_print_missing_snapshots(remote_object, pid, (const gchar**) derivation, &error);
+	    org_nixos_disnix_Disnix_print_missing_snapshots(remote_object, pid, (const gchar**) derivation, &error);
 	    break;
 	case OP_IMPORT_SNAPSHOTS:
 	    if(derivation[0] == NULL)

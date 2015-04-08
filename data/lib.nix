@@ -223,6 +223,33 @@ rec {
     in
     if serviceNames == [] then [] else mappingItem ++ (generateServiceActivationMapping (tail serviceNames) services targetProperty)
   ;
+ 
+  /**
+   * For a selected subset of distribution items of every service, a snapshot
+   * mapping is created which is a list of attributesets containing a component
+   * name, container name, and target.
+   *
+   * Parameters:
+   * serviceNames: List of names of services in the service attributeset
+   * services: Services attributeset
+   *
+   * Returns:
+   * List of mappings
+   */
+   
+  generateSnapshotsMapping = serviceNames: services:
+    let
+      service = getAttr (head serviceNames) services;
+      
+      mappingItem = map (distributionItem:
+        { component = builtins.substring 33 (builtins.stringLength (distributionItem.service)) (builtins.baseNameOf (distributionItem.service));
+          container = service.type;
+          inherit (distributionItem) target;
+        }
+      ) (service.distribution);
+    in
+    if serviceNames == [] then [] else mappingItem ++ (generateSnapshotsMapping (tail serviceNames) services)
+  ;
   
   /*
    * Iterates over a service activation mapping list and filters out all the
@@ -337,8 +364,8 @@ rec {
   ;
   
   /*
-   * Generates a manifest file consisting of a profile mapping and
-   * service activation mapping from the 3 Disnix models.
+   * Generates a manifest file consisting of a profile mapping, service
+   * activation mapping, snapshots mapping and targets from the 3 Disnix models.
    *
    * Parameters:
    * pkgs: Nixpkgs top-level expression which contains the buildEnv function
@@ -362,6 +389,7 @@ rec {
     in
     { profiles = generateProfilesMapping pkgs infrastructure (attrNames infrastructure) targetProperty serviceActivationMapping;
       activation = serviceActivationMapping;
+      snapshots = generateSnapshotsMapping (attrNames servicesWithDistribution) servicesWithDistribution;
       targets = generateTargetPropertyList infrastructure targetProperty clientInterface;
     }
   ;
