@@ -1,3 +1,5 @@
+AM_CPPFLAGS = -DLOCALSTATEDIR=\"$(localstatedir)\"
+
 bin_PROGRAMS = disnix-snapshot
 noinst_HEADERS = snapshot.h
 
