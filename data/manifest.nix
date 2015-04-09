@@ -3,6 +3,7 @@
 , distributionFile
 , targetProperty
 , clientInterface
+, deployState ? false
 , nixpkgs ? <nixpkgs>
 }:
 
@@ -13,7 +14,7 @@ let
   
   pkgs = import nixpkgs {};
   lib = import ./lib.nix { inherit nixpkgs pkgs; };
-  manifest = lib.generateManifest pkgs servicesFun infrastructure distributionFun targetProperty clientInterface;
+  manifest = lib.generateManifest pkgs servicesFun infrastructure distributionFun targetProperty clientInterface deployState;
   
   generateManifestXSL = ./generatemanifest.xsl;
 in

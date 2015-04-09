@@ -29,6 +29,7 @@ showUsage()
     echo "--target-property   The target property of an infrastructure model, that specifies how to "
     echo "                    connect to the remote Disnix interface. (Defaults to hostname)"
     echo "--interface         Path to executable that communicates with a Disnix interface. Defaults to disnix-ssh-client"
+    echo "--deploy-state      Indicates whether to globally deploy state (disabled by default)"
     echo "--no-out-link       Do not create a 'result' symlink"
     echo "--show-trace        Shows a trace of the output"
     echo "-h,--help           Shows the usage of this command to the user"
@@ -44,7 +45,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:h -l services:,infrastructure:,distribution:,target-property:,interface:,no-out-link,show-trace,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:h -l services:,infrastructure:,distribution:,target-property:,interface:,deploy-state,no-out-link,show-trace,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -73,6 +74,9 @@ do
             ;;
         --interface)
             interface=$2
+            ;;
+        --deploy-state)
+            deployStateArg="--arg deployState true"
             ;;
         --no-out-link)
             noOutLink=1
@@ -106,6 +110,7 @@ nix-build --argstr servicesFile "$(readlink -f $servicesFile)" \
           --argstr distributionFile "$(readlink -f $distributionFile)" \
           --argstr targetProperty $targetProperty \
           --argstr clientInterface $interface \
+          $deployStateArg \
           $noOutLinkArg \
           $showTraceArg \
           "$(readlink -f @datadir@/@PACKAGE@/manifest.nix)"

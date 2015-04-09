@@ -161,10 +161,13 @@ static int restore_services(GPtrArray *snapshots_array, GPtrArray *target_array)
     return status;
 }
 
-static void cleanup(const gchar *old_manifest, Manifest *manifest, GPtrArray *snapshots_array)
+static void cleanup(const gchar *old_manifest, Manifest *manifest, GPtrArray *snapshots_array, GPtrArray *old_snapshots_array)
 {
     if(old_manifest != NULL)
+    {
+        delete_snapshots_array(old_snapshots_array);
         g_ptr_array_free(snapshots_array, TRUE);
+    }
     
     delete_manifest(manifest);
 }
@@ -183,6 +186,7 @@ int restore(const gchar *manifest_file, const unsigned int max_concurrent_transf
     {
         int exit_status = 0;
         GPtrArray *snapshots_array;
+        GPtrArray *old_snapshots_array = NULL;
         
         if(old_manifest == NULL)
         {
@@ -191,15 +195,14 @@ int restore(const gchar *manifest_file, const unsigned int max_concurrent_transf
         }
         else
         {
-            GPtrArray *old_snapshots_array = create_snapshots_array(old_manifest);
+            old_snapshots_array = create_snapshots_array(old_manifest);
             g_printerr("[coordinator]: Sending snapshots of moved components...\n");
-            snapshots_array = subtract_snapshot_mappings(manifest->snapshots_array, old_snapshots_array);
-            delete_snapshots_array(old_snapshots_array);
+            snapshots_array = subtract_snapshot_mappings(old_snapshots_array, manifest->snapshots_array);
         }
         
         if((exit_status = send_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, all)) != 0)
         {
-            cleanup(old_manifest, manifest, snapshots_array);
+            cleanup(old_manifest, manifest, snapshots_array, old_snapshots_array);
             return exit_status;
         }
         
@@ -207,11 +210,11 @@ int restore(const gchar *manifest_file, const unsigned int max_concurrent_transf
         
         if(!transfer_only && !restore_services(snapshots_array, manifest->target_array))
         {
-            cleanup(old_manifest, manifest, snapshots_array);
+            cleanup(old_manifest, manifest, snapshots_array, old_snapshots_array);
             return 1;
         }
         
-        cleanup(old_manifest, manifest, snapshots_array);
+        cleanup(old_manifest, manifest, snapshots_array, old_snapshots_array);
         return exit_status;
     }
 }

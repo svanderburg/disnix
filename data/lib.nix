@@ -232,23 +232,26 @@ rec {
    * Parameters:
    * serviceNames: List of names of services in the service attributeset
    * services: Services attributeset
+   * deployState: Indicates whether to globally deploy state
    *
    * Returns:
    * List of mappings
    */
    
-  generateSnapshotsMapping = serviceNames: services:
+  generateSnapshotsMapping = serviceNames: services: deployState:
     let
       service = getAttr (head serviceNames) services;
+      
+      distribution = if deployState || (service ? deployState && service.deployState) then service.distribution else []; # Only do state deployment with services that are annotated as such
       
       mappingItem = map (distributionItem:
         { component = builtins.substring 33 (builtins.stringLength (distributionItem.service)) (builtins.baseNameOf (distributionItem.service));
           container = service.type;
           inherit (distributionItem) target;
         }
-      ) (service.distribution);
+      ) distribution;
     in
-    if serviceNames == [] then [] else mappingItem ++ (generateSnapshotsMapping (tail serviceNames) services)
+    if serviceNames == [] then [] else mappingItem ++ (generateSnapshotsMapping (tail serviceNames) services deployState)
   ;
   
   /*
@@ -374,12 +377,13 @@ rec {
    * distributionFun: The distribution model, which is a function that returns an attributeset of services mapping to targets in the infrastructure model.
    * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
    * clientInterface: Path to the executable used to connect to the Disnix interface
+   * deployState: Indicates whether to globally deploy state
    *
    * Returns:
    * An attributeset which should be exported to XML representing the manifest
    */
    
-  generateManifest = pkgs: servicesFun: infrastructure: distributionFun: targetProperty: clientInterface:
+  generateManifest = pkgs: servicesFun: infrastructure: distributionFun: targetProperty: clientInterface: deployState:
     let
       distribution = distributionFun { inherit infrastructure; };
       initialServices = servicesFun { inherit distribution; system = null; inherit pkgs; };
@@ -389,7 +393,7 @@ rec {
     in
     { profiles = generateProfilesMapping pkgs infrastructure (attrNames infrastructure) targetProperty serviceActivationMapping;
       activation = serviceActivationMapping;
-      snapshots = generateSnapshotsMapping (attrNames servicesWithDistribution) servicesWithDistribution;
+      snapshots = generateSnapshotsMapping (attrNames servicesWithDistribution) servicesWithDistribution deployState;
       targets = generateTargetPropertyList infrastructure targetProperty clientInterface;
     }
   ;
