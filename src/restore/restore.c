@@ -20,6 +20,8 @@
 #include "restore.h"
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <pwd.h>
+#include <stdio.h>
 #include <client-interface.h>
 #include <manifest.h>
 #include <snapshotmapping.h>
@@ -161,15 +163,41 @@ static int restore_services(GPtrArray *snapshots_array, GPtrArray *target_array)
     return status;
 }
 
-static void cleanup(const gchar *old_manifest, Manifest *manifest, GPtrArray *snapshots_array)
+static gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, const char *username, const gchar *profile)
 {
+    gchar *old_manifest_file;
+    FILE *file;
+    
+    if(coordinator_profile_path == NULL)
+        old_manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
+    else
+        old_manifest_file = g_strconcat(coordinator_profile_path, "/", profile, NULL);
+    
+    /* Try to open file => if it succeeds we have a previous configuration */
+    file = fopen(old_manifest_file, "r");
+    
+    if(file == NULL)
+    {
+        g_free(old_manifest_file);
+        old_manifest_file = NULL;
+    }
+    else
+        fclose(file);
+    
+    return old_manifest_file;
+}
+
+static void cleanup(const gchar *old_manifest, char *old_manifest_file, Manifest *manifest, GPtrArray *snapshots_array)
+{
+    g_free(old_manifest_file);
+    
     if(old_manifest != NULL)
         g_ptr_array_free(snapshots_array, TRUE);
     
     delete_manifest(manifest);
 }
 
-int restore(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all, const gchar *old_manifest)
+int restore(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade)
 {
     /* Generate a distribution array from the manifest file */
     Manifest *manifest = create_manifest(manifest_file);
@@ -183,15 +211,24 @@ int restore(const gchar *manifest_file, const unsigned int max_concurrent_transf
     {
         int exit_status = 0;
         GPtrArray *snapshots_array;
+        gchar *old_manifest_file;
+        
+        /* Get current username */
+        char *username = (getpwuid(geteuid()))->pw_name;
         
         if(old_manifest == NULL)
+            old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, username, profile);
+        else
+            old_manifest_file = g_strdup(old_manifest);
+        
+        if(no_upgrade || old_manifest_file == NULL)
         {
             g_printerr("[coordinator]: Sending snapshots of all components...\n");
             snapshots_array = manifest->snapshots_array;
         }
         else
         {
-            GPtrArray *old_snapshots_array = create_snapshots_array(old_manifest);
+            GPtrArray *old_snapshots_array = create_snapshots_array(old_manifest_file);
             g_printerr("[coordinator]: Snapshotting state of moved components...\n");
             snapshots_array = subtract_snapshot_mappings(manifest->snapshots_array, old_snapshots_array);
             delete_snapshots_array(old_snapshots_array);
@@ -199,7 +236,7 @@ int restore(const gchar *manifest_file, const unsigned int max_concurrent_transf
         
         if((exit_status = send_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, all)) != 0)
         {
-            cleanup(old_manifest, manifest, snapshots_array);
+            cleanup(old_manifest, old_manifest_file, manifest, snapshots_array);
             return exit_status;
         }
         
@@ -207,11 +244,11 @@ int restore(const gchar *manifest_file, const unsigned int max_concurrent_transf
         
         if(!transfer_only && !restore_services(snapshots_array, manifest->target_array))
         {
-            cleanup(old_manifest, manifest, snapshots_array);
+            cleanup(old_manifest, old_manifest_file, manifest, snapshots_array);
             return 1;
         }
         
-        cleanup(old_manifest, manifest, snapshots_array);
+        cleanup(old_manifest, old_manifest_file, manifest, snapshots_array);
         return exit_status;
     }
 }

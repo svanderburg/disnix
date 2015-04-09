@@ -1,3 +1,5 @@
+AM_CPPFLAGS = -DLOCALSTATEDIR=\"$(localstatedir)\"
+
 bin_PROGRAMS = disnix-restore
 noinst_HEADERS = restore.h
 
