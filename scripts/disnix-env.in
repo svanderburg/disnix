@@ -27,8 +27,7 @@ showUsage()
     echo "-i,--infrastructure           Infrastructure Nix expression which captures properties of machines in the network"
     echo "-d,--distribution             Distribution Nix expression which maps services to machines in the network"
     echo "--target-property             The target property of an infrastructure model, that specifies how to "
-    echo "                              connect to the remote Disnix interface. (Defaults to hostname)"
-    echo "--interface                   Process that communicates with the remote disnix service. Defaults to disnix-ssh-client"
+    echo "--deploy-state                Indicates whether to globally deploy state (disabled by default)"
     echo "-p,--profile                  Name of the profile that is used for this system. Defaults to: default"
     echo "-m,--max-concurrent-transfers Maximum amount of concurrent closure transfers. Defauls to: 2"
     echo "--build-on-targets            Build the services on the target machines in the network instead of managing the build by the coordinator"
@@ -48,7 +47,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:p:m:h -l services:,infrastructure:,distribution:,interface:,target-property:,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,show-trace,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:p:m:h -l services:,infrastructure:,distribution:,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,show-trace,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -93,6 +92,9 @@ do
         --target-property)
             targetProperty=$2
             ;;
+        --deploy-state)
+            deployStateArg="--deploy-state"
+            ;;
         --no-upgrade)
             noUpgradeArg="--no-upgrade"
             ;;
@@ -125,7 +127,7 @@ then
 fi
 
 echo "[coordinator]: Building manifest..."
-manifest=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link --interface $interface $showTraceArg`
+manifest=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link --interface $interface $deployStateArg $showTraceArg`
 echo "[coordinator]: Distributing intra-dependency closures..."
 disnix-distribute $maxConcurrentTransfersArg $manifest
 echo "[coordinator]: Activating new configuration..."
