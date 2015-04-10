@@ -200,10 +200,32 @@ static void cleanup(const gchar *old_manifest, char *old_manifest_file, Manifest
     delete_manifest(manifest);
 }
 
+static Manifest *open_manifest(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const char *username)
+{
+    gchar *path;
+    Manifest *manifest;
+    
+    if(manifest_file == NULL)
+        path = determine_previous_manifest_file(coordinator_profile_path, username, profile);
+    else
+        path = g_strdup(manifest_file);
+    
+    if(path == NULL)
+        manifest = NULL;
+    else
+        manifest = create_manifest(path);
+    
+    g_free(path);
+    return manifest;
+}
+
 int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade)
 {
+    /* Get current username */
+    char *username = (getpwuid(geteuid()))->pw_name;
+    
     /* Generate a distribution array from the manifest file */
-    Manifest *manifest = create_manifest(manifest_file);
+    Manifest *manifest = open_manifest(manifest_file, coordinator_profile_path, profile, username);
     
     if(manifest == NULL)
     {
@@ -217,15 +239,12 @@ int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_trans
         GPtrArray *old_snapshots_array = NULL;
         gchar *old_manifest_file;
         
-        /* Get current username */
-        char *username = (getpwuid(geteuid()))->pw_name;
-        
         if(old_manifest == NULL)
             old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, username, profile);
         else
             old_manifest_file = g_strdup(old_manifest);
         
-        if(no_upgrade || old_manifest_file == NULL)
+        if(no_upgrade || old_manifest_file == NULL || manifest_file == NULL)
         {
             g_printerr("[coordinator]: Snapshotting state of all components...\n");
             snapshots_array = manifest->snapshots_array;

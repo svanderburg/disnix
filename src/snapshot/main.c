@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
     int transfer_only = FALSE;
     int all = FALSE;
     int no_upgrade = FALSE;
+    char *manifest_file;
     char *old_manifest = NULL;
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
@@ -101,10 +102,9 @@ int main(int argc, char *argv[])
     profile = check_profile_option(profile);
     
     if(optind >= argc)
-    {
-        fprintf(stderr, "ERROR: No manifest specified!\n");
-        return 1;
-    }
+        manifest_file = NULL;
     else
-        return snapshot(argv[optind], max_concurrent_transfers, transfer_only, all, old_manifest, coordinator_profile_path, profile, no_upgrade); /* Execute snapshot operation */
+        manifest_file = argv[optind];
+    
+    return snapshot(manifest_file, max_concurrent_transfers, transfer_only, all, old_manifest, coordinator_profile_path, profile, no_upgrade); /* Execute snapshot operation */
 }
