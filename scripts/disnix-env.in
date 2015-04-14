@@ -37,6 +37,14 @@ showUsage()
     echo "-h,--help                     Shows the usage of this command"
 }
 
+# Releases the locks
+
+releaseLocks()
+{
+    echo "[coordinator]: Releasing locks..."
+    disnix-lock --unlock $profileArg $manifest
+}
+
 # Autoconf settings
 
 export prefix=@prefix@
@@ -130,5 +138,14 @@ echo "[coordinator]: Building manifest..."
 manifest=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link --interface $interface $deployStateArg $showTraceArg`
 echo "[coordinator]: Distributing intra-dependency closures..."
 disnix-distribute $maxConcurrentTransfersArg $manifest
+echo "[coordinator]: Acquiring locks..."
+disnix-lock $profileArg $manifest
 echo "[coordinator]: Activating new configuration..."
-disnix-activate $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest
+disnix-activate $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; exit 1)
+echo "[coordinator]: Snapshotting state of annotated services..."
+disnix-snapshot $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; exit 1)
+echo "[coordinator]: Restoring state of annotated services..."
+disnix-restore $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; exit 1)
+echo "[coordinator]: Setting profiles..."
+disnix-set $profileArg $coordinatorProfilePathArg $manifest || (releaseLocks; exit 1)
+releaseLocks

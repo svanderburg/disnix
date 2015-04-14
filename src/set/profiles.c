@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <pwd.h>
 #include <errno.h>
 #include <string.h>
 
@@ -30,7 +31,7 @@
 #include <targets.h>
 #include <client-interface.h>
 
-int set_target_profiles(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
+static int set_target_profiles(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
 {
     unsigned int i;
     int exit_status = 0, running_processes = 0;
@@ -71,10 +72,13 @@ int set_target_profiles(const GPtrArray *distribution_array, const GPtrArray *ta
     return exit_status;
 }
 
-int set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *manifest_file, const gchar *profile, const gchar *username)
+static int set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *manifest_file, const gchar *profile)
 {
     gchar *profile_path, *manifest_file_path;
     int status;
+    
+    /* Get current username */
+    char *username = (getpwuid(geteuid()))->pw_name;
 
     /* Determine which profile path to use, if a coordinator profile path is given use this value otherwise the default */
     if(coordinator_profile_path == NULL)
@@ -130,4 +134,32 @@ int set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *
         wait(&status);
         return WEXITSTATUS(status);
     }
+}
+
+static void cleanup(GPtrArray *target_array, GPtrArray *distribution_array)
+{
+    delete_target_array(target_array);
+    delete_distribution_array(distribution_array);
+}
+
+int set_profiles(const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const int no_coordinator_profile, const int no_target_profiles)
+{
+    GPtrArray *distribution_array = generate_distribution_array(manifest_file);
+    GPtrArray *target_array = generate_target_array(manifest_file);
+    int status;
+    
+    if(!no_target_profiles && (status = set_target_profiles(distribution_array, target_array, profile)) != 0)
+    {
+        cleanup(target_array, distribution_array);
+        return status;
+    }
+    
+    if(!no_coordinator_profile && (status = set_coordinator_profile(coordinator_profile_path, manifest_file, profile)) != 0)
+    {
+        cleanup(target_array, distribution_array);
+        return status;
+    }
+    
+    cleanup(target_array, distribution_array);
+    return 0;
 }

@@ -18,24 +18,21 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <getopt.h>
 #include <defaultoptions.h>
-#include "activate.h"
+#include "profiles.h"
 
 static void print_usage(const char *command)
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "%s [options] manifest\n\n", command);
-    fprintf(stderr, "Options:\n");
+    fprintf(stderr, "%s manifest\n", command);
+    fprintf(stderr, "\nOptions:\n");
     fprintf(stderr, "--profile profile\n");
     fprintf(stderr, "--coordinator-profile-path path\n");
-    fprintf(stderr, "--old-manifest manifest\n");
-    fprintf(stderr, "--target-property targetProperty\n");
-    fprintf(stderr, "--no-upgrade\n");
-    fprintf(stderr, "--dry-run\n");
-    fprintf(stderr, "\n");
-    
-    fprintf(stderr, "%s {-h | --help}\n", command);
+    fprintf(stderr, "--no-coordinator-profile\n");
+    fprintf(stderr, "--no-target-profiles\n");
+    fprintf(stderr, "-h | --help\n");
 }
 
 int main(int argc, char *argv[])
@@ -44,45 +41,40 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-	{"old-manifest", required_argument, 0, 'o'},
-	{"coordinator-profile-path", required_argument, 0, 'P'},
-	{"profile", required_argument, 0, 'p'},
-	{"no-upgrade", no_argument, 0, 'u'},
-	{"dry-run", no_argument, 0, 'd'},
-	{"help", no_argument, 0, 'h'},
-	{0, 0, 0, 0}
+        {"profile", required_argument, 0, 'p'},
+        {"coordinator-profile-path", required_argument, 0, 'P'},
+        {"no-coordinator-profile", no_argument, 0, 'c'},
+        {"no-target-profiles", no_argument, 0, 'C'},
+        {"help", no_argument, 0, 'h'},
+        {0, 0, 0, 0}
     };
-    char *old_manifest = NULL;
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
-    int no_upgrade = FALSE;
-    int dry_run = FALSE;
+    int no_coordinator_profile = FALSE;
+    int no_target_profiles = FALSE;
     
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "o:p:h", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "p:h", long_options, &option_index)) != -1)
     {
-	switch(c)
-	{
-	    case 'o':
-	        old_manifest = optarg;
-	        break;
-	    case 'p':
-	        profile = optarg;
-		break;
-	    case 'P':
-	        coordinator_profile_path = optarg;
-		break;
-	    case 'u':
-		no_upgrade = TRUE;
-		break;
-	    case 'd':
-		dry_run = TRUE;
-		break;
-	    case 'h':
-	    case '?':
-		print_usage(argv[0]);
-		return 0;
-	}
+        switch(c)
+        {
+            case 'p':
+                profile = optarg;
+                break;
+            case 'P':
+                coordinator_profile_path = optarg;
+                break;
+            case 'c':
+                no_coordinator_profile = TRUE;
+                break;
+           case 'C':
+                no_target_profiles = TRUE;
+                break;
+            case 'h':
+            case '?':
+                print_usage(argv[0]);
+                return 0;
+        }
     }
 
     /* Validate options */
@@ -91,9 +83,9 @@ int main(int argc, char *argv[])
     
     if(optind >= argc)
     {
-	fprintf(stderr, "A manifest file has to be specified!\n");
-	return 1;
+        fprintf(stderr, "ERROR: No manifest specified!\n");
+        return 1;
     }
     else
-	return activate_system(argv[optind], old_manifest, coordinator_profile_path, profile, no_upgrade, dry_run); /* Execute activation operation */
+        return set_profiles(argv[optind], coordinator_profile_path, profile, no_coordinator_profile, no_target_profiles); /* Execute set profiles operation */
 }

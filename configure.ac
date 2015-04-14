@@ -85,6 +85,8 @@ src/libmanifest/Makefile
 src/libinfrastructure/Makefile
 src/libinterface/Makefile
 src/distribute/Makefile
+src/lock/Makefile
+src/set/Makefile
 src/activate/Makefile
 src/visualize/Makefile
 src/snapshot/Makefile

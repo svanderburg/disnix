@@ -22,9 +22,23 @@
 #include <targets.h>
 #include <client-interface.h>
 
-extern volatile int interrupted;
+volatile int interrupted;
 
-int unlock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
+static void handle_sigint(int signum)
+{
+    interrupted = TRUE;
+}
+
+static void set_flag_on_interrupt(void)
+{
+    struct sigaction act;
+    act.sa_handler = handle_sigint;
+    act.sa_flags = 0;
+    
+    sigaction(SIGINT, &act, NULL);
+}
+
+static int unlock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
 {
     unsigned int i, running_processes = 0;
     int exit_status = 0;
@@ -66,7 +80,7 @@ int unlock(const GPtrArray *distribution_array, const GPtrArray *target_array, g
     return exit_status;
 }
 
-int lock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
+static int lock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
 {
     unsigned int i;
     GPtrArray *try_array = g_ptr_array_new();
@@ -121,5 +135,33 @@ int lock(const GPtrArray *distribution_array, const GPtrArray *target_array, gch
     g_ptr_array_free(lock_array, TRUE);
     
     /* Return exit status, which is 0 if everything succeeds */
+    return exit_status;
+}
+
+int lock_or_unlock(const int do_lock, const gchar *manifest, gchar *profile)
+{
+    GPtrArray *distribution_array = generate_distribution_array(manifest);
+    GPtrArray *target_array = generate_target_array(manifest);
+    int exit_status;
+    
+    if(distribution_array == NULL || target_array == NULL)
+    {
+        g_printerr("ERROR: Cannot open manifest file!\n");
+        exit_status = 1;
+    }
+    else
+    {
+        /* Override SIGINT's behaviour to allow stuff to be rollbacked in case of an interruption */
+        set_flag_on_interrupt();
+        
+        /* Do the locking */
+        if(do_lock)
+            exit_status = lock(distribution_array, target_array, profile);
+        else
+            exit_status = unlock(distribution_array, target_array, profile);
+    }
+    
+    delete_target_array(target_array);
+    delete_distribution_array(distribution_array);
     return exit_status;
 }

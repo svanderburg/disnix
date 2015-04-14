@@ -221,6 +221,7 @@ static Manifest *open_manifest(const gchar *manifest_file, const gchar *coordina
 
 int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade)
 {
+    
     /* Get current username */
     char *username = (getpwuid(geteuid()))->pw_name;
     
@@ -244,30 +245,35 @@ int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_trans
         else
             old_manifest_file = g_strdup(old_manifest);
         
-        if(no_upgrade || old_manifest_file == NULL || manifest_file == NULL)
-        {
-            g_printerr("[coordinator]: Snapshotting state of all components...\n");
-            snapshots_array = manifest->snapshots_array;
-        }
+        if(no_upgrade || old_manifest_file == NULL)
+            g_printerr("[coordinator]: No snapshots are taken as no upgrade is performed or all of them have been requested!\n");
         else
         {
-            old_snapshots_array = create_snapshots_array(old_manifest_file);
-            g_printerr("[coordinator]: Sending snapshots of moved components using previous manifest: %s...\n", old_manifest_file);
-            snapshots_array = subtract_snapshot_mappings(old_snapshots_array, manifest->snapshots_array);
-        }
+            if(manifest_file == NULL)
+            {
+                g_printerr("[coordinator]: Snapshotting state of all components...\n");
+                snapshots_array = manifest->snapshots_array;
+            }
+            else
+            {
+                old_snapshots_array = create_snapshots_array(old_manifest_file);
+                g_printerr("[coordinator]: Sending snapshots of moved components using previous manifest: %s\n", old_manifest_file);
+                snapshots_array = subtract_snapshot_mappings(old_snapshots_array, manifest->snapshots_array);
+            }
         
-        if(!transfer_only && !snapshot_services(snapshots_array, manifest->target_array))
-        {
-            cleanup(old_manifest, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
-            return 1;
-        }
+            if(!transfer_only && !snapshot_services(snapshots_array, manifest->target_array))
+            {
+                cleanup(old_manifest, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
+                return 1;
+            }
         
-        g_print("[coordinator]: Retrieving snapshots...\n");
+            g_print("[coordinator]: Retrieving snapshots...\n");
         
-        if((exit_status = retrieve_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, all)) != 0)
-        {
-            cleanup(old_manifest, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
-            return exit_status;
+            if((exit_status = retrieve_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, all)) != 0)
+            {
+                cleanup(old_manifest, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
+                return exit_status;
+            }
         }
         
         cleanup(old_manifest, old_manifest_file, manifest, snapshots_array, old_snapshots_array);

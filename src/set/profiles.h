@@ -22,26 +22,17 @@
 #include <glib.h>
 
 /**
- * Sets the Disnix profiles on the target machine, so that the services are
- * no longer garbage to the Nix package manager.
+ * Sets the Disnix profiles on the target machines and the Disnix coordinator
+ * profile on the coordinator machine so that the current configuration is known
+ * and the installed components are no longer considered garbage.
  *
- * @param distribution_array Array with Nix profiles containing installed services for each machine
- * @param target_array Array with target machine property structs
- * @param profile Name of the distributed profile
- * @return 0 if everything succeeds, else a non-zero exit status
- */
-int set_target_profiles(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile);
-
-/**
- * Sets the Disnix coordinator profile, so that the current configuration is 
- * known, which we can use for efficient future upgrades.
- *
- * @param coordinator_profile_path Path where the current deployment configuration must be stored
  * @param manifest_file Path to the manifest file representing the deployment state
+ * @param coordinator_profile_path Path where the current deployment configuration must be stored
  * @param profile Name of the distributed profile
- * @param username Username of the current user invoking the activation
+ * @param no_coordinator_profile Do not create a coordinator profile
+ * @param no_target_profiles Do not create Disnix profiles on the target machines
  * @return 0 if everything succeeds, else a non-zero exit status
  */
-int set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *manifest_file, const gchar *profile, const gchar *username);
+int set_profiles(const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const int no_coordinator_profile, const int no_target_profiles);
 
 #endif

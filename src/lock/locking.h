@@ -22,24 +22,13 @@
 #include <glib.h>
 
 /**
- * Unlocks the given profile on each machine defined in the distribution array.
+ * Locks or unlocks the target machines in a manifest
  *
- * @param distribution_array Array with profiles distributed to the target machines
- * @param target_array Array with target machine property structs
+ * @param do_lock TRUE to lock the machines, FALSE to unlock them
+ * @param manifest Path to the manifest file
  * @param profile Identifier of the distributed profile
  * @return 0 if the unlocking phase succeeds, else a non-zero exit status
  */
-int unlock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile);
-
-/**
- * Locks the given profile on each machine defined in the distribution array.
- * In case of a failure the lock is released again.
- *
- * @param distribution_array Array with profiles distributed to the target machines
- * @param target_array Array with target machine property structs
- * @param profile Identifier of the distributed profile
- * @return 0 if the unlocking phase succeeds, else a non-zero exit status
- */
-int lock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile);
+int lock_or_unlock(const int do_lock, const gchar *manifest, gchar *profile);
 
 #endif

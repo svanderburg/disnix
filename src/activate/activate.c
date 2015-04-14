@@ -18,9 +18,7 @@
  */
 
 #include "activate.h"
-#include "locking.h"
 #include "transition.h"
-#include "profiles.h"
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -71,17 +69,6 @@ static void set_flag_on_interrupt(void)
     sigaction(SIGINT, &act, NULL);
 }
 
-static void release_locks(const gboolean no_lock, const gboolean dry_run, const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
-{
-    if(no_lock || dry_run)
-        g_print("[coordinator]: Not releasing any locks, because they have been disabled\n");
-    else
-    {
-        g_print("[coordinator]: Releasing locks on each target\n");
-        unlock(distribution_array, target_array, profile);
-    }
-}
-
 static void cleanup(gchar *old_manifest_file, Manifest *manifest, GPtrArray *old_activation_mappings)
 {
     g_free(old_manifest_file);
@@ -89,7 +76,7 @@ static void cleanup(gchar *old_manifest_file, Manifest *manifest, GPtrArray *old
     delete_activation_array(old_activation_mappings);
 }
 
-int activate_system(const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_coordinator_profile, const gboolean no_target_profiles, const gboolean no_upgrade, const gboolean no_lock, const gboolean dry_run)
+int activate_system(const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade, const gboolean dry_run)
 {
     Manifest *manifest = create_manifest(new_manifest);
     
@@ -128,66 +115,14 @@ int activate_system(const gchar *new_manifest, const gchar *old_manifest, const 
         /* Override SIGINT's behaviour to allow stuff to be rollbacked in case of an interruption */
         set_flag_on_interrupt();
         
-        /* Try to acquire locks */
-        if(no_lock || dry_run)
-            g_print("[coordinator]: Not acquiring any locks, because they have been disabled\n");
-        else
-        {
-            g_print("[coordinator]: Acquiring locks on each target\n");
-            
-            if((status = lock(manifest->distribution_array, manifest->target_array, profile)) != 0)
-            {
-                release_locks(no_lock, dry_run, manifest->distribution_array, manifest->target_array, profile);
-                cleanup(old_manifest_file, manifest, old_activation_mappings);
-                g_printerr("[coordinator]: ERROR: Lock phase execution failed!\n");
-                return status;
-            }
-        }
-        
         /* Execute transition */
         g_print("[coordinator]: Executing the transition to the new deployment state\n");
         
         if((status = transition(manifest->activation_array, old_activation_mappings, manifest->target_array, dry_run)) != 0)
         {
-            release_locks(no_lock, dry_run, manifest->distribution_array, manifest->target_array, profile);
             cleanup(old_manifest_file, manifest, old_activation_mappings);
             g_printerr("[coordinator]: ERROR: Transition phase execution failed!\n");
             return status;
-        }
-        
-        /* Set the new profiles on the target machines */
-        
-        if(no_target_profiles || dry_run)
-            g_print("[coordinator]: Setting target profiles has been disabled\n");
-        else
-        {
-            g_print("[coordinator]: Setting the profiles on the target machines\n");
-        
-            if((status = set_target_profiles(manifest->distribution_array, manifest->target_array, profile)) != 0)
-            {
-                release_locks(no_lock, dry_run, manifest->distribution_array, manifest->target_array, profile);
-                cleanup(old_manifest_file, manifest, old_activation_mappings);
-                g_printerr("[coordinator]: ERROR: Cannot set profiles on the target machines!\n");
-                return status;
-            }
-        }
-        
-        /* Release the locks */
-        release_locks(no_lock, dry_run, manifest->distribution_array, manifest->target_array, profile);
-        
-        /* Set the coordinator profile */
-        if(no_coordinator_profile || dry_run)
-            g_print("[coordinator]: Not setting the coordinator profile\n");
-        else
-        {
-            g_print("[coordinator]: Setting the coordinator profile: %s\n", profile);
-            
-            if((status = set_coordinator_profile(coordinator_profile_path, new_manifest, profile, username)) != 0)
-            {
-                cleanup(old_manifest_file, manifest, old_activation_mappings);
-                g_printerr("[coordinator]: ERROR: Cannot update the coordinator profile!\n");
-                return status;
-            }
         }
         
         /* Cleanup */

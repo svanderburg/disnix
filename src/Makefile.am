@@ -1,4 +1,4 @@
-SUBDIRS = libmain libxmlutil libinfrastructure libinterface collect-garbage query dbus-service libdistderivation libmanifest build distribute activate visualize snapshot restore
+SUBDIRS = libmain libxmlutil libinfrastructure libinterface collect-garbage query dbus-service libdistderivation libmanifest build distribute lock set activate visualize snapshot restore
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = disnix.pc
