@@ -76,7 +76,7 @@ do
             interface=$2
             ;;
         --deploy-state)
-            deployStateArg="--arg deployState true"
+            deployState=1
             ;;
         --no-out-link)
             noOutLink=1
@@ -102,6 +102,11 @@ checkTargetProperty
 checkClientInterface
 checkNoOutLink
 checkShowTrace
+
+if [ "$DISNIX_DEPLOY_STATE" = "1" ] || [ "$deployState" = "1" ]
+then
+    deployStateArg="--arg deployState true"
+fi
 
 # Build the manifest file
 
