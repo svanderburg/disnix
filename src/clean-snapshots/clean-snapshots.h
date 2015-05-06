@@ -16,38 +16,20 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#ifndef __DISNIX_OPERATION_H
-#define __DISNIX_OPERATION_H
+#ifndef __DISNIX_COLLECT_GARBAGE_H
+#define __DISNIX_COLLECT_GARBAGE_H
+#include <glib.h>
 
 /**
- * Enumeration of possible Disnix service operations
+ * Iterates over targets defined in an infrastructure Nix expression and
+ * performs the cleans all obsolete snapshots on each target.
+ *
+ * @param interface Path to the client interface executable
+ * @param target_property Property in the infrastructure model which specifies
+ *                        how to connect to the Disnix service
+ * @param infrastructure_expr Path to the infrastructure expression
+ * @return 0 if everything succeeds, else a non-zero exit value
  */
-
-typedef enum
-{
-    OP_NONE,
-    OP_IMPORT,
-    OP_EXPORT,
-    OP_PRINT_INVALID,
-    OP_REALISE,
-    OP_SET,
-    OP_QUERY_INSTALLED,
-    OP_QUERY_REQUISITES,
-    OP_COLLECT_GARBAGE,
-    OP_ACTIVATE,
-    OP_DEACTIVATE,
-    OP_LOCK,
-    OP_UNLOCK,
-    OP_SNAPSHOT,
-    OP_RESTORE,
-    OP_QUERY_ALL_SNAPSHOTS,
-    OP_QUERY_LATEST_SNAPSHOT,
-    OP_PRINT_MISSING_SNAPSHOTS,
-    OP_IMPORT_SNAPSHOTS,
-    OP_RESOLVE_SNAPSHOTS,
-    OP_CLEAN_SNAPSHOTS
-}
-Operation;
+int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infrastructure_expr);
 
 #endif

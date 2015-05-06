@@ -178,6 +178,15 @@ pid_t exec_copy_snapshots_from(gchar *interface, gchar *target, gchar *container
 pid_t exec_copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar *component, gboolean all);
 
 /**
+ * Invokes the Dysnomia snapshot garbage collect operation through a Disnix client interface
+ *
+ * @param interface Path to the interface executable
+ * @param target Target Address of the remote interface
+ * @return PID of the client interface process performing the operation, or -1 in case of a failure
+ */
+pid_t exec_clean_snapshots(gchar *interface, gchar *target);
+
+/**
  * Invokes the realise operation through a Disnix client interface
  *
  * @param interface Path to the interface executable

@@ -1772,3 +1772,57 @@ gboolean disnix_resolve_snapshots(DisnixObject *object, const gint pid, gchar **
     
     return TRUE;
 }
+
+/* Clean snapshots method */
+
+static void disnix_clean_snapshots_thread_func(DisnixObject *object, const gint pid)
+{
+    /* Declarations */
+    int status;
+
+    /* Print log entry */
+    g_print("Clean old snapshots!\n");
+    
+    /* Execute command */
+    
+    status = fork();
+    
+    if(status == -1)
+    {
+	g_printerr("Error with forking garbage collect process!\n");
+	disnix_emit_failure_signal(object, pid);
+    }
+    else if(status == 0)
+    {
+	char *args[] = {"dysnomia-store", "--gc", NULL};
+	execvp("dysnomia-store", args);
+	g_printerr("Error with executing clean snapshots process\n");
+	_exit(1);
+    }
+    else
+    {
+	wait(&status);
+	
+	if(WEXITSTATUS(status) == 0)
+	    disnix_emit_finish_signal(object, pid);
+	else
+	    disnix_emit_failure_signal(object, pid);
+    }
+        
+    _exit(0);
+}
+
+gboolean disnix_clean_snapshots(DisnixObject *object, const gint pid, GError **error)
+{
+    /* State object should not be NULL */
+    g_assert(object != NULL);
+
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
+	disnix_clean_snapshots_thread_func(object, pid);
+    }
+        
+    return TRUE;
+}

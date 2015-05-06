@@ -50,6 +50,7 @@ static void print_usage(const char *command)
     fprintf(stderr, "--print-missing-snapshots snapshots\n");
     fprintf(stderr, "--import-snapshots --container container --component component [--localfile|--remotefile] snapshots\n");
     fprintf(stderr, "--resolve-snapshots snapshots\n");
+    fprintf(stderr, "--clean-snapshots\n");
     fprintf(stderr, "{-h|--help}\n");
 }
 
@@ -78,6 +79,7 @@ int main(int argc, char *argv[])
 	{"print-missing-snapshots", no_argument, 0, 'M'},
 	{"import-snapshots", no_argument, 0, 'Y'},
 	{"resolve-snapshots", no_argument, 0, 'Z'},
+	{"clean-snapshots", no_argument, 0, 'e'},
 	{"help", no_argument, 0, 'h'},
 	{"target", required_argument, 0, 't'},
 	{"localfile", no_argument, 0, 'l'},
@@ -160,6 +162,9 @@ int main(int argc, char *argv[])
 		break;
 	    case 'Z':
 		operation = OP_RESOLVE_SNAPSHOTS;
+		break;
+	    case 'e':
+		operation = OP_CLEAN_SNAPSHOTS;
 		break;
 	    case 't':
 		break;

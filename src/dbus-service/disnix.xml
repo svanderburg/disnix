@@ -115,6 +115,10 @@
 			<arg type="as" name="snapshots" direction="in" />
 		</method>
 		
+		<method name="clean_snapshots">
+			<arg type="i" name="pid" direction="in" />
+		</method>
+		
 		<signal name="finish">
 			<arg type="i" name="pid" direction="out" />
 		</signal>

@@ -241,6 +241,20 @@ pid_t exec_copy_snapshots_to(gchar *interface, gchar *target, gchar *container, 
     return exec_copy_snapshots("--to", interface, target, container, component, all);
 }
 
+pid_t exec_clean_snapshots(gchar *interface, gchar *target)
+{
+    pid_t pid = fork();
+    
+    if(pid == 0)
+    {
+	char *const args[] = {interface, "--target", target, "--clean-snapshots", NULL};
+	execvp(interface, args);
+	_exit(1);
+    }
+    else
+	return pid;
+}
+
 pid_t exec_realise(gchar *interface, gchar *target, gchar *derivation, int pipefd[2])
 {
     if(pipe(pipefd) == 0)

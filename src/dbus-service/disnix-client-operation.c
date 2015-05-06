@@ -289,6 +289,9 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 	    else
 		org_nixos_disnix_Disnix_resolve_snapshots(remote_object, pid, (const gchar**) derivation, &error);
 	    break;
+	case OP_CLEAN_SNAPSHOTS:
+	    org_nixos_disnix_Disnix_clean_snapshots(remote_object, pid, &error);
+	    break;
 	case OP_NONE:
 	    g_printerr("ERROR: No operation specified!\n");
 	    cleanup(derivation, arguments);

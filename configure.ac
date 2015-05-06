@@ -91,6 +91,7 @@ src/activate/Makefile
 src/visualize/Makefile
 src/snapshot/Makefile
 src/restore/Makefile
+src/clean-snapshots/Makefile
 scripts/Makefile
 data/Makefile
 scripts/disnix-copy-closure

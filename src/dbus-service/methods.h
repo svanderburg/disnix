@@ -62,4 +62,6 @@ gboolean disnix_import_snapshots(DisnixObject *object, const gint pid, gchar *co
 
 gboolean disnix_resolve_snapshots(DisnixObject *object, const gint pid, gchar **snapshots, GError **error);
 
+gboolean disnix_clean_snapshots(DisnixObject *object, const gint pid, GError **error);
+
 #endif
