@@ -36,6 +36,7 @@ showUsage()
     echo "  --unlock [{-p|--profile} profile]"
     echo "  --snapshot --type type --arguments arguments derivation"
     echo "  --restore --type type --arguments arguments derivation"
+    echo "  --delete-state --type type --arguments arguments derivation"
     echo "  --query-all-snapshots --container container --component component"
     echo "  --query-latest-snapshot --container container --component component"
     echo "  --print-missing-snapshots snapshots"
@@ -55,7 +56,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o rqp:d -l import,export,print-invalid,realise,set,query-installed,query-requisites,collect-garbage,activate,deactivate,lock,unlock,snapshot,restore,query-all-snapshots,query-latest-snapshot,print-missing-snapshots,import-snapshots,export-snapshots,resolve-snapshots,clean-snapshots,target:,localfile,remotefile,profile:,delete-old,type:,arguments:,container:,component:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o rqp:d -l import,export,print-invalid,realise,set,query-installed,query-requisites,collect-garbage,activate,deactivate,lock,unlock,snapshot,restore,delete-state,query-all-snapshots,query-latest-snapshot,print-missing-snapshots,import-snapshots,export-snapshots,resolve-snapshots,clean-snapshots,target:,localfile,remotefile,profile:,delete-old,type:,arguments:,container:,component:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -117,6 +118,9 @@ do
         --restore)
             operation="restore"
             path=$2
+            ;;
+        --delete-state)
+            operation="delete-state"
             ;;
         --query-all-snapshots)
             operation="query-all-snapshots"
@@ -284,6 +288,15 @@ case "$operation" in
         fi
         
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --restore "$@"
+        ;;
+    delete-state)
+        if [ "$type" = "" ]
+        then
+            echo "ERROR: A type must be specified!" >&2
+            exit 1
+        fi
+        
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --delete-state "$@"
         ;;
     query-all-snapshots)
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --query-all-snapshots --container $container --component $component

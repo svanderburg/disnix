@@ -222,6 +222,22 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 	    else
 		org_nixos_disnix_Disnix_deactivate(remote_object, pid, derivation[0], type, (const gchar**) arguments, &error);
 	    break;
+	case OP_DELETE_STATE:
+	    if(type == NULL)
+	    {
+		g_printerr("ERROR: A type must be specified!\n");
+		cleanup(derivation, arguments);
+		return 1;
+	    }
+	    else if(derivation[0] == NULL)
+	    {
+		g_printerr("ERROR: A Nix store component has to be specified!\n");
+		cleanup(derivation, arguments);
+		return 1;
+	    }
+	    else
+		org_nixos_disnix_Disnix_delete_state(remote_object, pid, derivation[0], type, (const gchar**) arguments, &error);
+	    break;
 	case OP_LOCK:
 	    org_nixos_disnix_Disnix_lock(remote_object, pid, profile, &error);
 	    break;

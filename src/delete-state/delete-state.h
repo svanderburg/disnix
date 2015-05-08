@@ -16,20 +16,19 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef __DISNIX_CLEAN_SNAPSHOTS_H
-#define __DISNIX_CLEAN_SNAPSHOTS_H
+
+#ifndef __DISNIX_DELETE_STATE_H
+#define __DISNIX_DELETE_STATE_H
 #include <glib.h>
 
 /**
- * Iterates over targets defined in an infrastructure Nix expression and
- * performs the cleans all obsolete snapshots on each target.
+ * Deletes the state marked as obsolete of the services in the manifest.
  *
- * @param interface Path to the client interface executable
- * @param target_property Property in the infrastructure model which specifies
- *                        how to connect to the Disnix service
- * @param infrastructure_expr Path to the infrastructure expression
- * @return 0 if everything succeeds, else a non-zero exit value
+ * @param manifest_file Path to the manifest file which maps services to machines
+ * @param coordinator_profile_path Path where the current deployment state is stored for future reference
+ * @param profile Name of the distributed profile
+ * @return 0 if everything succeeds, else a non-zero exit status
  */
-int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infrastructure_expr);
+int delete_state(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile);
 
 #endif

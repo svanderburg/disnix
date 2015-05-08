@@ -1823,6 +1823,62 @@ gboolean disnix_clean_snapshots(DisnixObject *object, const gint pid, GError **e
 	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
 	disnix_clean_snapshots_thread_func(object, pid);
     }
+    
+    return TRUE;
+}
+
+/* Delete state operation */
+
+static void disnix_delete_state_thread_func(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments)
+{
+    /* Declarations */
+    int status;
+
+    /* Print log entry */
+    g_print("Delete state of component: %s of type: %s with arguments: ", derivation, type);
+    print_derivations(arguments);
+    g_print("\n");
+    
+    /* Execute command */
+    
+    status = fork();
+    
+    if(status == -1)
+    {
+	g_printerr("Error with forking process!\n");
+	disnix_emit_failure_signal(object, pid);
+    }
+    else if(status == 0)
+    {
+	char *args[] = {"dysnomia", "--type", type, "--operation", "collect-garbage", "--component", derivation, "--environment", NULL};
+	execvp("dysnomia", args);
+	g_printerr("Error with executing delete state process\n");
+	_exit(1);
+    }
+    else
+    {
+	wait(&status);
+	
+	if(WEXITSTATUS(status) == 0)
+	    disnix_emit_finish_signal(object, pid);
+	else
+	    disnix_emit_failure_signal(object, pid);
+    }
         
+    _exit(0);
+}
+
+gboolean disnix_delete_state(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments, GError **error)
+{
+    /* State object should not be NULL */
+    g_assert(object != NULL);
+
+    /* Fork job process which returns a signal later */
+    if(fork() == 0)
+    {
+	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
+	disnix_delete_state_thread_func(object, pid, derivation, type, arguments);
+    }
+    
     return TRUE;
 }

@@ -43,6 +43,7 @@ static void print_usage(const char *command)
     fprintf(stderr, "--deactivate --type type --arguments arguments derivation\n");
     fprintf(stderr, "--snapshot --type type --arguments arguments derivation\n");
     fprintf(stderr, "--restore --type type --arguments arguments derivation\n");
+    fprintf(stderr, "--delete-state --type type --arguments arguments derivation\n\n");
     fprintf(stderr, "--lock [{-p|--profile} profile]\n");
     fprintf(stderr, "--unlock [{-p|--profile} profile]\n");
     fprintf(stderr, "--query-all-snapshots --container container --component component\n");
@@ -70,6 +71,7 @@ int main(int argc, char *argv[])
 	{"collect-garbage", no_argument, 0, 'W'},
 	{"activate", no_argument, 0, 'A'},
 	{"deactivate", no_argument, 0, 'D'},
+	{"delete-state", no_argument, 0, 'F'},
 	{"lock", no_argument, 0, 'L'},
 	{"unlock", no_argument, 0, 'U'},
 	{"snapshot", no_argument, 0, 'f'},
@@ -135,6 +137,9 @@ int main(int argc, char *argv[])
 		break;
 	    case 'D':
 		operation = OP_DEACTIVATE;
+		break;
+	    case 'F':
+		operation = OP_DELETE_STATE;
 		break;
 	    case 'L':
 		operation = OP_LOCK;

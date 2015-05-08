@@ -64,4 +64,6 @@ gboolean disnix_resolve_snapshots(DisnixObject *object, const gint pid, gchar **
 
 gboolean disnix_clean_snapshots(DisnixObject *object, const gint pid, GError **error);
 
+gboolean disnix_delete_state(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments, GError **error);
+
 #endif

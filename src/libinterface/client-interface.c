@@ -115,6 +115,11 @@ pid_t exec_restore(gchar *interface, gchar *target, gchar *type, gchar **argumen
     return exec_activate_or_deactivate("--restore", interface, target, type, arguments, arguments_size, service);
 }
 
+pid_t exec_delete_state(gchar *interface, gchar *target, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
+{
+    return exec_activate_or_deactivate("--delete-state", interface, target, type, arguments, arguments_size, service);
+}
+
 pid_t exec_collect_garbage(gchar *interface, gchar *target, const gboolean delete_old)
 {
     /* Declarations */

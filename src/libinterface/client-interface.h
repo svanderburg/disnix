@@ -104,6 +104,19 @@ pid_t exec_snapshot(gchar *interface, gchar *target, gchar *type, gchar **argume
 pid_t exec_restore(gchar *interface, gchar *target, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
 
 /**
+ * Invokes the delete state operation through a Disnix client interface
+ *
+ * @param interface Path to the interface executable
+ * @param target Target Address of the remote interface
+ * @param type Type Type of the service
+ * @param arguments String vector with activation arguments in the form key=value
+ * @param arguments_size Size of the arguments string vector
+ * @param service Service to activate
+ * @return PID of the client interface process performing the operation, or -1 in case of a failure
+ */
+pid_t exec_delete_state(gchar *interface, gchar *target, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
+
+/**
  * Invokes the collect garbage operation through a Disnix client interface
  *
  * @param interface Path to the interface executable
