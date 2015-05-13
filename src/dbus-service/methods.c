@@ -1357,19 +1357,19 @@ static void disnix_query_all_snapshots_thread_func(DisnixObject *object, const g
 	
 	if(status == -1)
 	{
-	    fprintf(stderr, "Error with forking dysnomia-store process!\n");
+	    fprintf(stderr, "Error with forking dysnomia-snapshots process!\n");
 	    close(pipefd[0]);
 	    close(pipefd[1]);
 	    disnix_emit_failure_signal(object, pid);
 	}
 	else if(status == 0)
 	{
-	    char *args[] = {"dysnomia-store", "--query-all", "--container", container, "--component", component, NULL};
+	    char *args[] = {"dysnomia-snapshots", "--query-all", "--container", container, "--component", component, NULL};
 	    
 	    close(pipefd[0]); /* Close read-end of pipe */
 	    
 	    dup2(pipefd[1], 1);
-	    execvp("dysnomia-store", args);
+	    execvp("dysnomia-snapshots", args);
 	    _exit(1);
 	}
 	else
@@ -1443,19 +1443,19 @@ static void disnix_query_latest_snapshot_thread_func(DisnixObject *object, const
 	
 	if(status == -1)
 	{
-	    fprintf(stderr, "Error with forking dysnomia-store process!\n");
+	    fprintf(stderr, "Error with forking dysnomia-snapshots process!\n");
 	    close(pipefd[0]);
 	    close(pipefd[1]);
 	    disnix_emit_failure_signal(object, pid);
 	}
 	else if(status == 0)
 	{
-	    char *args[] = {"dysnomia-store", "--query-latest", "--container", container, "--component", component, NULL};
+	    char *args[] = {"dysnomia-snapshots", "--query-latest", "--container", container, "--component", component, NULL};
 	    
 	    close(pipefd[0]); /* Close read-end of pipe */
 	    
 	    dup2(pipefd[1], 1);
-	    execvp("dysnomia-store", args);
+	    execvp("dysnomia-snapshots", args);
 	    _exit(1);
 	}
 	else
@@ -1531,7 +1531,7 @@ static void disnix_print_missing_snapshots_thread_func(DisnixObject *object, con
 	
 	if(status == -1)
 	{
-	    fprintf(stderr, "Error with forking dysnomia-store process!\n");
+	    fprintf(stderr, "Error with forking dysnomia-snapshots process!\n");
 	    close(pipefd[0]);
 	    close(pipefd[1]);
 	    disnix_emit_failure_signal(object, pid);
@@ -1541,7 +1541,7 @@ static void disnix_print_missing_snapshots_thread_func(DisnixObject *object, con
 	    unsigned int i, component_size = g_strv_length(component);
 	    gchar **args = (gchar**)g_malloc((component_size + 3) * sizeof(gchar*));
 	    
-	    args[0] = "dysnomia-store";
+	    args[0] = "dysnomia-snapshots";
 	    args[1] = "--print-missing";
 	    
 	    for(i = 0; i < component_size; i++)
@@ -1552,7 +1552,7 @@ static void disnix_print_missing_snapshots_thread_func(DisnixObject *object, con
 	    close(pipefd[0]); /* Close read-end of pipe */
 	    
 	    dup2(pipefd[1], 1);
-	    execvp("dysnomia-store", args);
+	    execvp("dysnomia-snapshots", args);
 	    _exit(1);
 	}
 	else
@@ -1623,7 +1623,7 @@ static void disnix_import_snapshots_thread_func(DisnixObject *object, const gint
     
     if(status == -1)
     {
-        fprintf(stderr, "Error with forking dysnomia-store process!\n");
+        fprintf(stderr, "Error with forking dysnomia-snapshots process!\n");
         disnix_emit_failure_signal(object, pid);
     }
     else if(status == 0)
@@ -1631,7 +1631,7 @@ static void disnix_import_snapshots_thread_func(DisnixObject *object, const gint
         unsigned int i, snapshots_size = g_strv_length(snapshots);
         gchar **args = (gchar**)g_malloc((snapshots_size + 6) * sizeof(gchar*));
         
-        args[0] = "dysnomia-store";
+        args[0] = "dysnomia-snapshots";
         args[1] = "--import";
         args[2] = "--container";
         args[3] = container;
@@ -1643,7 +1643,7 @@ static void disnix_import_snapshots_thread_func(DisnixObject *object, const gint
         
         args[i + 6] = NULL;
 	
-	execvp("dysnomia-store", args);
+	execvp("dysnomia-snapshots", args);
 	_exit(1);
     }
     else
@@ -1696,7 +1696,7 @@ static void disnix_resolve_snapshots_thread_func(DisnixObject *object, const gin
 	
 	if(status == -1)
 	{
-	    fprintf(stderr, "Error with forking dysnomia-store process!\n");
+	    fprintf(stderr, "Error with forking dysnomia-snapshots process!\n");
 	    close(pipefd[0]);
 	    close(pipefd[1]);
 	    disnix_emit_failure_signal(object, pid);
@@ -1706,7 +1706,7 @@ static void disnix_resolve_snapshots_thread_func(DisnixObject *object, const gin
 	    unsigned int i, snapshots_size = g_strv_length(snapshots);
 	    gchar **args = (gchar**)g_malloc((snapshots_size + 3) * sizeof(gchar*));
 	    
-	    args[0] = "dysnomia-store";
+	    args[0] = "dysnomia-snapshots";
 	    args[1] = "--resolve";
 	    
 	    for(i = 0; i < snapshots_size; i++)
@@ -1717,7 +1717,7 @@ static void disnix_resolve_snapshots_thread_func(DisnixObject *object, const gin
 	    close(pipefd[0]); /* Close read-end of pipe */
 	    
 	    dup2(pipefd[1], 1);
-	    execvp("dysnomia-store", args);
+	    execvp("dysnomia-snapshots", args);
 	    _exit(1);
 	}
 	else
@@ -1794,8 +1794,8 @@ static void disnix_clean_snapshots_thread_func(DisnixObject *object, const gint 
     }
     else if(status == 0)
     {
-	char *args[] = {"dysnomia-store", "--gc", NULL};
-	execvp("dysnomia-store", args);
+	char *args[] = {"dysnomia-snapshots", "--gc", NULL};
+	execvp("dysnomia-snapshots", args);
 	g_printerr("Error with executing clean snapshots process\n");
 	_exit(1);
     }

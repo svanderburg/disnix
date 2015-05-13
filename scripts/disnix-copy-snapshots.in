@@ -119,16 +119,16 @@ if [ "$to" = "1" ]
 then
     if [ "$all" = "1" ]
     then
-        snapshots=$(dysnomia-store --query-all --container $container --component $component)
+        snapshots=$(dysnomia-snapshots --query-all --container $container --component $component)
     else
-        snapshots=$(dysnomia-store --query-latest --container $container --component $component)
+        snapshots=$(dysnomia-snapshots --query-latest --container $container --component $component)
     fi
     
     missingSnapshots=$($interface --target $target --print-missing-snapshots $snapshots)
     
     if [ "$missingSnapshots" != "" ]
     then
-        resolvedPaths=$(dysnomia-store --resolve $missingSnapshots)
+        resolvedPaths=$(dysnomia-snapshots --resolve $missingSnapshots)
         $interface --target $target --import-snapshots --container $container --component $component --localfile $resolvedPaths
     fi
 else
@@ -139,13 +139,13 @@ else
         snapshots=$($interface --target $target --query-latest-snapshot --container $container --component $component)
     fi
     
-    missingSnapshots=$(dysnomia-store --print-missing $snapshots)
+    missingSnapshots=$(dysnomia-snapshots --print-missing $snapshots)
     
     if [ "$missingSnapshots" != "" ]
     then
         resolvedPaths=$($interface --target $target --resolve-snapshots $missingSnapshots)
         tmpdir=$($interface --target $target --export-snapshots $resolvedPaths)
-        dysnomia-store --import --container $container --component $component $tmpdir/* || (rm -Rf $tmpdir; false)
+        dysnomia-snapshots --import --container $container --component $component $tmpdir/* || (rm -Rf $tmpdir; false)
         rmdir $tmpdir
     fi
 fi
