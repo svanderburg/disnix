@@ -18,6 +18,7 @@
  */
 
 #include "client-interface.h"
+#include <stdio.h>
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -246,13 +247,16 @@ pid_t exec_copy_snapshots_to(gchar *interface, gchar *target, gchar *container, 
     return exec_copy_snapshots("--to", interface, target, container, component, all);
 }
 
-pid_t exec_clean_snapshots(gchar *interface, gchar *target)
+pid_t exec_clean_snapshots(gchar *interface, gchar *target, int keep)
 {
+    char keepStr[15];
     pid_t pid = fork();
+    
+    sprintf(keepStr, "%d", keep);
     
     if(pid == 0)
     {
-	char *const args[] = {interface, "--target", target, "--clean-snapshots", NULL};
+	char *const args[] = {interface, "--target", target, "--clean-snapshots", "--keep", keepStr, NULL};
 	execvp(interface, args);
 	_exit(1);
     }

@@ -67,7 +67,7 @@ static void cleanup(gchar **derivation, gchar **arguments)
     g_strfreev(arguments);
 }
 
-int run_disnix_client(Operation operation, gchar **derivation, gboolean session_bus, char *profile, gboolean delete_old, gchar **arguments, char *type, char *container, char *component)
+int run_disnix_client(Operation operation, gchar **derivation, gboolean session_bus, char *profile, gboolean delete_old, gchar **arguments, char *type, char *container, char *component, int keep)
 {
     /* The GObject representing a D-Bus connection. */
     DBusGConnection *bus;
@@ -306,7 +306,7 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 		org_nixos_disnix_Disnix_resolve_snapshots(remote_object, pid, (const gchar**) derivation, &error);
 	    break;
 	case OP_CLEAN_SNAPSHOTS:
-	    org_nixos_disnix_Disnix_clean_snapshots(remote_object, pid, &error);
+	    org_nixos_disnix_Disnix_clean_snapshots(remote_object, pid, keep, &error);
 	    break;
 	case OP_NONE:
 	    g_printerr("ERROR: No operation specified!\n");

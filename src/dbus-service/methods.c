@@ -1775,11 +1775,15 @@ gboolean disnix_resolve_snapshots(DisnixObject *object, const gint pid, gchar **
 
 /* Clean snapshots method */
 
-static void disnix_clean_snapshots_thread_func(DisnixObject *object, const gint pid)
+static void disnix_clean_snapshots_thread_func(DisnixObject *object, const gint pid, const gint keep)
 {
     /* Declarations */
     int status;
+    char keepStr[15];
 
+    /* Convert keep value to string */
+    sprintf(keepStr, "%d", keep);
+    
     /* Print log entry */
     g_print("Clean old snapshots!\n");
     
@@ -1794,7 +1798,8 @@ static void disnix_clean_snapshots_thread_func(DisnixObject *object, const gint 
     }
     else if(status == 0)
     {
-	char *args[] = {"dysnomia-snapshots", "--gc", NULL};
+	
+	char *args[] = {"dysnomia-snapshots", "--gc", "--keep", keepStr, NULL};
 	execvp("dysnomia-snapshots", args);
 	g_printerr("Error with executing clean snapshots process\n");
 	_exit(1);
@@ -1812,7 +1817,7 @@ static void disnix_clean_snapshots_thread_func(DisnixObject *object, const gint 
     _exit(0);
 }
 
-gboolean disnix_clean_snapshots(DisnixObject *object, const gint pid, GError **error)
+gboolean disnix_clean_snapshots(DisnixObject *object, const gint pid, const gint keep, GError **error)
 {
     /* State object should not be NULL */
     g_assert(object != NULL);
@@ -1821,7 +1826,7 @@ gboolean disnix_clean_snapshots(DisnixObject *object, const gint pid, GError **e
     if(fork() == 0)
     {
 	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
-	disnix_clean_snapshots_thread_func(object, pid);
+	disnix_clean_snapshots_thread_func(object, pid, keep);
     }
     
     return TRUE;

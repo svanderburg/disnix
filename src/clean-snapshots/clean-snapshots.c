@@ -21,7 +21,7 @@
 #include <infrastructure.h>
 #include <client-interface.h> 
 
-int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infrastructure_expr)
+int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, int keep)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
     GPtrArray *target_array = create_target_array(infrastructure_expr);
@@ -49,7 +49,7 @@ int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infra
                 client_interface = interface;
             
             g_print("[target: %s]: Running snapshot garbage collector!\n", target_key);
-            pid = exec_clean_snapshots(client_interface, target_key);
+            pid = exec_clean_snapshots(client_interface, target_key, keep);
         
             /* If an operation failed, change the exit status */
             if(pid == -1)

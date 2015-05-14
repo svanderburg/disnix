@@ -124,6 +124,7 @@
 		
 		<method name="clean_snapshots">
 			<arg type="i" name="pid" direction="in" />
+			<arg type="i" name="keep" direction="in" />
 		</method>
 		
 		<signal name="finish">

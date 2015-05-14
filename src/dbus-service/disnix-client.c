@@ -18,6 +18,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <getopt.h>
 #include <glib.h>
 #include <defaultoptions.h>
@@ -51,7 +52,7 @@ static void print_usage(const char *command)
     fprintf(stderr, "--print-missing-snapshots snapshots\n");
     fprintf(stderr, "--import-snapshots --container container --component component [--localfile|--remotefile] snapshots\n");
     fprintf(stderr, "--resolve-snapshots snapshots\n");
-    fprintf(stderr, "--clean-snapshots\n");
+    fprintf(stderr, "--clean-snapshots [--keep num]\n");
     fprintf(stderr, "{-h|--help}\n");
 }
 
@@ -93,6 +94,7 @@ int main(int argc, char *argv[])
 	{"container", required_argument, 0, 'C'},
 	{"component", required_argument, 0, 'c'},
 	{"session-bus", no_argument, 0, 'b'},
+	{"keep", required_argument, 0, 'z'},
 	{0, 0, 0, 0}
     };
 
@@ -101,7 +103,7 @@ int main(int argc, char *argv[])
     char *profile = NULL, *type = NULL, *container = NULL, *component = NULL;
     gchar **derivation = NULL, **arguments = NULL;
     unsigned int derivation_size = 0, arguments_size = 0;
-    int delete_old = FALSE, session_bus = FALSE;
+    int delete_old = FALSE, session_bus = FALSE, keep = 1;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "rqt:p:dC:c:h", long_options, &option_index)) != -1)
@@ -200,6 +202,9 @@ int main(int argc, char *argv[])
 	    case 'b':
 		session_bus = TRUE;
 		break;
+	    case 'z':
+		keep = atoi(optarg);
+		break;
 	    case 'h':
 	    case '?':
 		print_usage(argv[0]);
@@ -227,5 +232,5 @@ int main(int argc, char *argv[])
     arguments[arguments_size] = NULL;
     
     /* Execute Disnix client */
-    return run_disnix_client(operation, derivation, session_bus, profile, delete_old, arguments, type, container, component);
+    return run_disnix_client(operation, derivation, session_bus, profile, delete_old, arguments, type, container, component, keep);
 }

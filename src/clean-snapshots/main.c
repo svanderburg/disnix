@@ -18,6 +18,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <getopt.h>
 #include <defaultoptions.h>
 #include "clean-snapshots.h"
@@ -25,7 +26,7 @@
 static void print_usage(const char *command)
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "%s [--interface interface] [--target-property targetProperty] infrastructure_expr\n", command);
+    fprintf(stderr, "%s [--interface interface] [--target-property targetProperty] [--keep num] infrastructure_expr\n", command);
     fprintf(stderr, "%s {-h | --help}\n", command);
 }
 
@@ -37,11 +38,13 @@ int main(int argc, char *argv[])
     {
 	{"interface", required_argument, 0, 'i'},
 	{"target-property", required_argument, 0, 't'},
+	{"keep", required_argument, 0, 'z'},
 	{"help", no_argument, 0, 'h'},
 	{0, 0, 0, 0}
     };
     char *interface = NULL;
     char *target_property = NULL;
+    int keep = 1;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "h", long_options, &option_index)) != -1)
@@ -53,6 +56,9 @@ int main(int argc, char *argv[])
 		break;
 	    case 't':
 		target_property = optarg;
+		break;
+	    case 'z':
+		keep = atoi(optarg);
 		break;
 	    case 'h':
 	    case '?':
@@ -72,5 +78,5 @@ int main(int argc, char *argv[])
 	return 1;
     }
     else
-	return clean_snapshots(interface, target_property, argv[optind]); /* Execute clean snapshots operation */
+	return clean_snapshots(interface, target_property, argv[optind], keep); /* Execute clean snapshots operation */
 }
