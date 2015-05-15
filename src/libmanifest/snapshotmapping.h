@@ -52,6 +52,9 @@ typedef struct
     /** Target property referring to the target machine to which the service is deployed */
     gchar *target;
     
+    /** Full Nix store path to the corresponding service */
+    gchar *service;
+    
     /** Indicates whether the snapshot has been transferred or not */
     gboolean transferred;
 }

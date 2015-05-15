@@ -247,7 +247,7 @@ rec {
       mappingItem = map (distributionItem:
         { component = builtins.substring 33 (builtins.stringLength (distributionItem.service)) (builtins.baseNameOf (distributionItem.service));
           container = service.type;
-          inherit (distributionItem) target;
+          inherit (distributionItem) target service;
         }
       ) distribution;
     in

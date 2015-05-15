@@ -36,6 +36,7 @@
 	    <component><xsl:value-of select="attr[@name='component']/string/@value" /></component>
 	    <container><xsl:value-of select="attr[@name='container']/string/@value" /></container>
 	    <target><xsl:value-of select="attr[@name='target']/string/@value" /></target>
+	    <service><xsl:value-of select="attr[@name='service']/string/@value" /></service>
 	  </mapping>
 	</xsl:for-each>
       </snapshots>

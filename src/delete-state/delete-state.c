@@ -90,7 +90,7 @@ static int delete_obsolete_state(GPtrArray *snapshots_array, GPtrArray *target_a
                 gint *pidKey;
                 
                 g_print("[target: %s]: Deleting obsolete state of service: %s\n", mapping->target, mapping->component);
-                pid = exec_delete_state(interface, mapping->target, mapping->container, arguments, arguments_size, mapping->component);
+                pid = exec_delete_state(interface, mapping->target, mapping->container, arguments, arguments_size, mapping->service);
                 
                 /* Add pid and mapping to the hash table */
                 pidKey = g_malloc(sizeof(gint));

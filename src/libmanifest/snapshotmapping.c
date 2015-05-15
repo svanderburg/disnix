@@ -97,6 +97,7 @@ GPtrArray *create_snapshots_array(const gchar *manifest_file)
 	    gchar *component = NULL;
 	    gchar *container = NULL;
 	    gchar *target = NULL;
+	    gchar *service = NULL;
 	    SnapshotMapping *mapping = (SnapshotMapping*)g_malloc(sizeof(SnapshotMapping));
 	    
 	    /* Iterate over all the mapping item children (service,target,targetProperty,type,dependsOn elements) */
@@ -109,12 +110,15 @@ GPtrArray *create_snapshots_array(const gchar *manifest_file)
 		    container = g_strdup((gchar*)mapping_children->children->content);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "target") == 0)
 		    target = g_strdup((gchar*)mapping_children->children->content);
+		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "service") == 0)
+		    service = g_strdup((gchar*)mapping_children->children->content);
 		
 		mapping_children = mapping_children->next;
 	    }
 	    mapping->component = component;
 	    mapping->container = container;
 	    mapping->target = target;
+	    mapping->service = service;
 	    mapping->transferred = FALSE;
 	    
 	    /* Add the mapping to the array */
@@ -146,6 +150,7 @@ void delete_snapshots_array(GPtrArray *snapshots_array)
             g_free(mapping->component);
             g_free(mapping->container);
             g_free(mapping->target);
+            g_free(mapping->service);
             g_free(mapping);
         }
     
