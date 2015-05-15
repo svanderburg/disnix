@@ -1785,7 +1785,7 @@ static void disnix_clean_snapshots_thread_func(DisnixObject *object, const gint 
     sprintf(keepStr, "%d", keep);
     
     /* Print log entry */
-    g_print("Clean old snapshots!\n");
+    g_print("Clean old snapshots, num of generations to keep: %s!\n", keepStr);
     
     /* Execute command */
     

@@ -141,6 +141,9 @@ do
         --resolve-snapshots)
             operation="resolve-snapshots"
             ;;
+        --clean-snapshots)
+            operation="clean-snapshots"
+            ;;
         --target)
             target=$2
             ;;
