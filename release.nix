@@ -89,6 +89,10 @@ let
         distbuild = import ./tests/distbuild.nix {
           inherit nixpkgs dysnomia disnix;
         };
+        snapshots = import ./tests/snapshots.nix {
+          inherit nixpkgs dysnomia disnix;
+          inherit (pkgs) stdenv;
+        };
       };
   };
 in

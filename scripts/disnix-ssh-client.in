@@ -330,7 +330,7 @@ case "$operation" in
         if [ "$localfile" = "1" ]
         then
             remotefile=`ssh -p $targetPort $SSH_OPTS $targetHostname mktemp -d -p $TMPDIR`
-            scp -r -P $targetPort $SSH_OPTS $@ $targetHostname:$remotefile
+            scp -r -P $targetPort $SSH_OPTS $@ $targetHostname:$remotefile > /dev/null
         fi
         
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --container $container --component $component --import-snapshots $remotefile/*
@@ -339,7 +339,7 @@ case "$operation" in
         tmpdir=`mktemp -d -p $TMPDIR`
         for i in $@
         do
-            scp -r -P $targetPort $SSH_OPTS $targetHostname:$i $tmpdir
+            scp -r -P $targetPort $SSH_OPTS $targetHostname:$i $tmpdir > /dev/null
         done
         
         echo $tmpdir
