@@ -148,5 +148,105 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # Delete the state and check if it is not present anymore.
         $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --delete-state --type wrapper ${wrapper}");
         $server->mustSucceed("[ ! -e /var/db/wrapper ]");
+        
+        # Delete all the snapshots on the server machine and check if none is
+        # present.
+        
+        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --clean-snapshots --container wrapper --component ${wrapper} --keep 0");
+        $result = $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --query-all-snapshots --container wrapper --component ${wrapper} | wc -l");
+        
+        if($result == 0) {
+            print "We have no remaining snapshots left!\n";
+        } else {
+            die "Expecting no remaining snapshots!";
+        }
+        
+        #### Test disnix-copy-snapshots
+        
+        # Activate the wrapper component
+        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --activate --type wrapper ${wrapper}");
+        
+        # Take a snapshot
+        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --snapshot --type wrapper ${wrapper}");
+        
+        # Make a change and take another snapshot
+        $server->mustSucceed("echo 1 > /var/db/wrapper/state");
+        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --snapshot --type wrapper ${wrapper}");
+        
+        # Make another change and take yet another snapshot
+        $server->mustSucceed("echo 2 > /var/db/wrapper/state");
+        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --snapshot --type wrapper ${wrapper}");
+        
+        # Copy the latest snapshot from the server, check whether only one has
+        # been sent and if it is the latest one (containing the string: 2)
+        
+        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-copy-snapshots --from --target server --container wrapper --component ${wrapper}");
+        $result = $client->mustSucceed("dysnomia-snapshots --query-all --container wrapper --component ${wrapper} | wc -l");
+        
+        if($result == 1) {
+            print "We have only one snapshot!\n";
+        } else {
+            die "Expecting only one snapshot!";
+        }
+        
+        $lastSnapshot = $client->mustSucceed("dysnomia-snapshots --query-latest --container wrapper --component ${wrapper}");
+        $lastResolvedSnapshot = $client->mustSucceed("dysnomia-snapshots --resolve ".(substr $lastSnapshot, 0, -1));
+        $result = $client->mustSucceed("cat ".(substr $lastResolvedSnapshot, 0, -1)."/state");
+        
+        if($result == 2) {
+            print "Result is 2\n";
+        } else {
+            die "Result should be 2!";
+        }
+        
+        # Copy all (remaining) snapshots from the server and check whether we
+        # have 3 of them.
+        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-copy-snapshots --from --target server --container wrapper --component ${wrapper} --all");
+        
+        $result = $client->mustSucceed("dysnomia-snapshots --query-all --container wrapper --component ${wrapper} | wc -l");
+        
+        if($result == 3) {
+            print "We have 3 snapshots!\n";
+        } else {
+            die "Expecting only 3 snapshots!";
+        }
+        
+        # Delete all snapshots from the server
+        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --clean-snapshots --container wrapper --component ${wrapper} --keep 0");
+        
+        # Copy the latest snapshot to the server, check whether only one has
+        # been sent and if it is the latest one (containing the string: 2)
+        
+        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-copy-snapshots --to --target server --container wrapper --component ${wrapper}");
+        $result = $server->mustSucceed("dysnomia-snapshots --query-all --container wrapper --component ${wrapper} | wc -l");
+        
+        if($result == 1) {
+            print "We have only one snapshot!\n";
+        } else {
+            die "Expecting only one snapshot!";
+        }
+        
+        $lastSnapshot = $server->mustSucceed("dysnomia-snapshots --query-latest --container wrapper --component ${wrapper}");
+        $lastResolvedSnapshot = $server->mustSucceed("dysnomia-snapshots --resolve ".(substr $lastSnapshot, 0, -1));
+        $result = $server->mustSucceed("cat ".(substr $lastResolvedSnapshot, 0, -1)."/state");
+        
+        # TODO: should be 2. Think about order of generation symlinks
+        if($result == 0) {
+            print "Result is 0\n";
+        } else {
+            die "Result should be 0!";
+        }
+        
+        # Copy all (remaining) snapshots to the server and check whether we
+        # have 3 of them.
+        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-copy-snapshots --to --target server --container wrapper --component ${wrapper} --all");
+        
+        $result = $server->mustSucceed("dysnomia-snapshots --query-all --container wrapper --component ${wrapper} | wc -l");
+        
+        if($result == 3) {
+            print "We have 3 snapshots!\n";
+        } else {
+            die "Expecting only 3 snapshots!";
+        }
       '';
   }
