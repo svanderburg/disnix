@@ -3,7 +3,7 @@
 let
   manifestTests = ./manifest;
   machine = import ./machine.nix { inherit dysnomia disnix; };
-  wrapper = import ./snapshots/wrapper.nix { inherit stdenv dysnomia; };
+  wrapper = import ./snapshots/wrapper.nix { inherit stdenv dysnomia; } {};
 in
 with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem; };
 

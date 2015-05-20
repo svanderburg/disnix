@@ -3,7 +3,8 @@
 
 {
   virtualisation.writableStore = true;
-
+  virtualisation.pathsInNixDB = [ pkgs.stdenv ];
+  
   ids.gids = { disnix = 200; };
   users.extraGroups = [ { gid = 200; name = "disnix"; } ];
   
@@ -41,5 +42,5 @@
       exec = "disnix-service";
     };
     
-    environment.systemPackages = [ pkgs.stdenv pkgs.paxctl pkgs.busybox pkgs.gnumake pkgs.patchelf pkgs.gcc pkgs.nix disnix dysnomia ];
+    environment.systemPackages = [ disnix dysnomia ];
 }

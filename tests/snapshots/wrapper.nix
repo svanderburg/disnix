@@ -1,7 +1,8 @@
 {stdenv, dysnomia}:
+{name ? "wrapper"}:
 
 stdenv.mkDerivation {
-  name = "wrapper";
+  inherit name;
   buildCommand = ''
     mkdir -p $out/bin
     cat > $out/bin/wrapper << "EOF"
@@ -9,7 +10,7 @@ stdenv.mkDerivation {
     
     source ${dysnomia}/share/dysnomia/util
     
-    determineComponentName "wrapper"
+    determineComponentName "${name}"
     checkStateDir
     determineTypeIdentifier "wrapper"
     composeSnapshotsPath
@@ -18,8 +19,11 @@ stdenv.mkDerivation {
     
     case "$1" in
         activate)
-            mkdir -p /var/db/wrapper
-            echo 0 > /var/db/wrapper/state
+            if [ ! -d /var/db/${name} ]
+            then
+                mkdir -p /var/db/${name}
+                echo 0 > /var/db/${name}/state
+            fi
             unmarkStateAsGarbage
             ;;
         deactivate)
@@ -29,7 +33,7 @@ stdenv.mkDerivation {
             tmpdir=$(mktemp -d)
             cd $tmpdir
             
-            cp /var/db/wrapper/state .
+            cp /var/db/${name}/state .
             
             hash=$(cat state | sha256sum)
             hash=''${hash:0:64}
@@ -50,14 +54,14 @@ stdenv.mkDerivation {
         
             if [ "$lastSnapshot" != "" ]
             then
-                cp $snapshotsPath/$lastSnapshot/state /var/db/wrapper
+                cp $snapshotsPath/$lastSnapshot/state /var/db/${name}
             fi
             ;;
         collect-garbage)
             if [ -f $garbagePath ]
             then
-                rm /var/db/wrapper/state
-                rmdir /var/db/wrapper
+                rm /var/db/${name}/state
+                rmdir /var/db/${name}
             fi
             ;;
     esac

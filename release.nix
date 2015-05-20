@@ -93,6 +93,9 @@ let
           inherit nixpkgs dysnomia disnix;
           inherit (pkgs) stdenv;
         };
+        datamigration = import ./tests/datamigration.nix {
+          inherit nixpkgs dysnomia disnix;
+        };
       };
   };
 in
