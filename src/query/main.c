@@ -24,9 +24,38 @@
 
 static void print_usage(const char *command)
 {
-    fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "%s [--interface interface] [--target-property targetProperty] [{-p | --profile} profile] infrastructure_expr\n", command);
-    fprintf(stderr, "%s {-h | --help}\n", command);
+    printf("Usage: %s [OPTION] infrastructure_nix\n\n", command);
+    
+    printf("The command `disnix-query' collects and displays all the installed services from\n");
+    printf("the machines defined in a given infrastructure model.\n\n");
+    
+    printf("Options:\n");
+    printf("  -p, --profile          Name of the profile in which the services are\n");
+    printf("                         registered. Defaults to: default\n");
+    printf("      --interface        Path to executable that communicates with a Disnix\n");
+    printf("                         interface. Defaults to `disnix-ssh-client'\n");
+    printf("      --target-property  The target property of an infrastructure model, that\n");
+    printf("                         specifies how to connect to the remote Disnix\n");
+    printf("                         interface. (Defaults to hostname)\n");
+    printf("  -h, --help             Shows the usage of this command to the user\n");
+    printf("  -v, --version          Shows the version of this command to the user\n");
+    
+    printf("\nEnvironment:\n");
+    printf("  DISNIX_CLIENT_INTERFACE    Sets the client interface (which defaults to\n");
+    printf("                             `disnix-ssh-client')\n");
+    printf("  DISNIX_TARGET_PROPERTY     Specifies which property in the infrastructure Nix\n");
+    printf("                             expression specifies how to connect to the remote\n");
+    printf("                             interface (defaults to: hostname)\n");
+    printf("  DISNIX_PROFILE             Sets the name of the profile that stores the\n");
+    printf("                             manifest on the coordinator machine and the\n");
+    printf("                             deployed services per machine on each target\n");
+    printf("                             (Defaults to: default).\n");
+}
+
+static void print_version(const char *command)
+{
+    printf("%s (" PACKAGE_NAME ") " PACKAGE_VERSION "\n\n", command);
+    printf("Copyright (C) 2008-2015 Sander van der Burg\n");
 }
 
 int main(int argc, char *argv[])
@@ -35,35 +64,39 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-	{"interface", required_argument, 0, 'i'},
-	{"target-property", required_argument, 0, 't'},
-	{"profile", required_argument, 0, 'p'},
-	{"help", no_argument, 0, 'h'},
-	{0, 0, 0, 0}
+        {"interface", required_argument, 0, 'i'},
+        {"target-property", required_argument, 0, 't'},
+        {"profile", required_argument, 0, 'p'},
+        {"help", no_argument, 0, 'h'},
+        {"version", no_argument, 0, 'v'},
+        {0, 0, 0, 0}
     };
     char *interface = NULL;
     char *target_property = NULL;
     char *profile = NULL;
     
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "p:h", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "p:hv", long_options, &option_index)) != -1)
     {
-	switch(c)
-	{
-	    case 'i':
-		interface = optarg;
-		break;
-	    case 't':
-		target_property = optarg;
-		break;
-	    case 'p':
-		profile = optarg;
-		break;
-	    case 'h':
-	    case '?':
-		print_usage(argv[0]);
-		return 0;
-	}
+        switch(c)
+        {
+            case 'i':
+                interface = optarg;
+                break;
+            case 't':
+                target_property = optarg;
+                break;
+            case 'p':
+                profile = optarg;
+                break;
+            case 'h':
+            case '?':
+                print_usage(argv[0]);
+                return 0;
+            case 'v':
+                print_version(argv[0]);
+                return 0;
+        }
     }
 
     /* Validate options */
@@ -74,9 +107,9 @@ int main(int argc, char *argv[])
     
     if(optind >= argc)
     {
-	fprintf(stderr, "An infrastructure Nix expression has to be specified!\n");
-	return 1;
+        fprintf(stderr, "An infrastructure Nix expression has to be specified!\n");
+        return 1;
     }
     else
-	return query_installed(interface, target_property, argv[optind], profile); /* Execute query operation */
+        return query_installed(interface, target_property, argv[optind], profile); /* Execute query operation */
 }

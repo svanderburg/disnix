@@ -25,11 +25,35 @@
 
 static void print_usage(const char *command)
 {
-    fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "%s distributed_derivation\n", command);
-    fprintf(stderr, "\nOptions:\n");
-    fprintf(stderr, "-m | --max-concurrent-transfers\n");
-    fprintf(stderr, "-h | --help\n");
+    printf("Usage: %s [OPTION] DISTRIBUTED_DERIVATION\n\n", command);
+    
+    printf("The command `disnix-build' builds derivations on the given target machines\n");
+    printf("specified in a distributed derivation XML file. When the building process is\n");
+    printf("complete, the results are transfered back to the coordinator machine, so that\n");
+    printf("they are kept for further use and do not have to be rebuilt again in case of a\n");
+    printf("configuration change.\n\n");
+    
+    printf("In most cases this command should not be called directly. The command\n");
+    printf("`disnix-env' automatically uses this command if the --build-on-targets is\n");
+    printf("specified.\n\n");
+    
+    printf("Options:\n");
+    printf("  -m, --max-concurrent-transfers=NUM  Maximum amount of concurrent closure\n");
+    printf("                                      transfers. Defauls to: 2\n");
+    printf("  -h, --help                          Shows the usage of this command to the user\n");
+    printf("  -v, --version                       Shows the version of this command to the\n");
+    printf("                                      user\n");
+    
+    printf("\nEnvironment:\n");
+    printf("  DISNIX_TARGET_PROPERTY    Specifies which property in the infrastructure Nix\n");
+    printf("                            expression specifies how to connect to the remote\n");
+    printf("                            interface (defaults to: hostname)\n");
+}
+
+static void print_version(const char *command)
+{
+    printf("%s (" PACKAGE_NAME ") " PACKAGE_VERSION "\n\n", command);
+    printf("Copyright (C) 2008-2015 Sander van der Burg\n");
 }
 
 int main(int argc, char *argv[])
@@ -38,35 +62,39 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-	{"help", no_argument, 0, 'h'},
-	{"max-concurrent-transfers", required_argument, 0, 'm'},
-	{0, 0, 0, 0}
+        {"max-concurrent-transfers", required_argument, 0, 'm'},
+        {"help", no_argument, 0, 'h'},
+        {"version", no_argument, 0, 'v'},
+        {0, 0, 0, 0}
     };
     
     unsigned int max_concurrent_transfers = 2;
     
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "m:h", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "m:hv", long_options, &option_index)) != -1)
     {
-	switch(c)
-	{
-	    case 'm':
-		max_concurrent_transfers = atoi(optarg);
-		break;
-	    case 'h':
-	    case '?':
-		print_usage(argv[0]);
-		return 0;
-	}
+        switch(c)
+        {
+            case 'm':
+                max_concurrent_transfers = atoi(optarg);
+                break;
+            case 'h':
+            case '?':
+                print_usage(argv[0]);
+                return 0;
+            case 'v':
+                print_version(argv[0]);
+                return 0;
+        }
     }
 
     /* Validate options */
 
     if(optind >= argc)
     {
-	fprintf(stderr, "ERROR: No distributed derivation file specified!\n");
-	return 1;
+        fprintf(stderr, "ERROR: No distributed derivation file specified!\n");
+        return 1;
     }
     else
-	return build(argv[optind], max_concurrent_transfers); /* Perform distributed build operation */
+        return build(argv[optind], max_concurrent_transfers); /* Perform distributed build operation */
 }
