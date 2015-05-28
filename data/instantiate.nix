@@ -20,12 +20,19 @@ in
 pkgs.stdenv.mkDerivation {
   name = "distributedDerivation.xml";
   buildInputs = [ pkgs.libxslt ];
+  distributedDerivationXML = builtins.toXML distributedDerivation;
+  passAsFile = [ "distributedDerivationXML" ];
   
   buildCommand = ''
+    if [ "$distributedDerivationXMLPath" != "" ]
+    then
+        xsltproc ${generateDistributedDerivationXSL} $distributedDerivationXMLPath > $out
+    else
     (
     cat <<EOF
-    ${builtins.toXML distributedDerivation}
+    $distributedDerivationXML
     EOF
     ) | xsltproc ${generateDistributedDerivationXSL} - > $out
+    fi
   '';
 }

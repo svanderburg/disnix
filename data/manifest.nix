@@ -21,11 +21,19 @@ in
 pkgs.stdenv.mkDerivation {
   name = "manifest.xml";
   buildInputs = [ pkgs.libxslt ];
+  manifestXML = builtins.toXML manifest;
+  passAsFile = [ "manifestXML" ];
+  
   buildCommand = ''
+    if [ "$manifestXMLPath" != "" ]
+    then
+        xsltproc ${generateManifestXSL} $manifestXMLPath > $out
+    else
     (
     cat <<EOF
-    ${builtins.toXML manifest}
+    $manifestXML
     EOF
     ) | xsltproc ${generateManifestXSL} - > $out
+    fi
   '';
 }
