@@ -1,3 +1,11 @@
+Version 0.4
+===========
+- Manual pages are now generated with help2man and polyglotman
+
+- Implemented snapshot and restore operations that can be optionally enabled
+
+- Separated locking and profile operations from disnix-activate into disnix-lock and disnix-set
+
 Version 0.3
 ===========
 - Added Cygwin installation instructions

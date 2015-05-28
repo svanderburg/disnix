@@ -20,14 +20,46 @@
 
 showUsage()
 {
-    echo "Usage: $0 [options] {--to|--from} --target target path"
-    echo "Options:"
-    echo
-    echo "--to        Copy closure to the given target"
-    echo "--from      Copy closure from the given target"
-    echo "-t,--target Address of the Disnix service running on the remote machine"
-    echo "--interface Path to executable that communicates with a Disnix interface. Defaults to disnix-ssh-client"
-    echo "-h,--help   Shows the usage of this command to the user"
+    cat <<EOF
+Usage: $0 [OPTION] --to --target TARGET path
+  or: $0 [OPTION] --from --target TARGET path
+
+The command \`disnix-copy-closure' copies a Nix store component and all its
+intra-dependencies to or from a given target machine through a Disnix
+interface. This process is very efficient, because it scans for all
+intra-dependencies and only copies the missing parts.
+
+This command is very similar to the \`nix-copy-closure' command, except that it
+uses a Disnix interface for transport (which optionally uses SSH or a custom
+protocol) instead of using SSH directly.
+
+Options:
+
+      --to                   Copy closure to the given target
+      --from                 Copy closure from the given target
+  -t, --target=TARGET        Address of the Disnix service running on the remote
+                             machine
+      --interface=INTERFACE  Path to executable that communicates with a Disnix
+                             interface. Defaults to: disnix-ssh-client
+  -h, --help                 Shows the usage of this command to the user
+  -v, --version              Shows the version of this command to the user
+
+Environment:
+
+  DISNIX_CLIENT_INTERFACE    Sets the client interface (which defaults to:
+                             disnix-ssh-client)
+EOF
+}
+
+# Shows the version of this command to the user
+
+showVersion()
+{
+    cat <<EOF
+$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+
+Copyright (C) 2008-2015 Sander van der Burg
+EOF
 }
 
 # Autoconf settings
@@ -40,7 +72,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o t:h -l to,from,target:,interface:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o t:hv -l to,from,target:,interface:,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -71,6 +103,9 @@ do
             showUsage
             exit 0
             ;;
+        -v|--version)
+            showVersion
+            exit 0
     esac
     
     shift

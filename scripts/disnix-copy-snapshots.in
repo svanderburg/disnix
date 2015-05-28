@@ -20,17 +20,47 @@
 
 showUsage()
 {
-    echo "Usage: $0 [options] {--to|--from} --target target --container container --component component"
-    echo "Options:"
-    echo
-    echo "--to        Copy snapshots to the given target"
-    echo "--from      Copy snapshots from the given target"
-    echo "-t,--target Address of the Disnix service running on the remote machine"
-    echo "--container Name of the container in which the mutable component is deployed"
-    echo "--component Name of the mutable component to take snapshots from"
-    echo "--all       Transfer all snapshots instead of the latest only"
-    echo "--interface Path to executable that communicates with a Disnix interface. Defaults to disnix-ssh-client"
-    echo "-h,--help   Shows the usage of this command to the user"
+    cat <<EOF
+Usage: $0 [OPTION] --from --target TARGET -c CONTAINER -C COMPONENT
+  or: $0 [OPTION] --to --target TARGET -c CONTAINER -C COMPONENT
+
+The command \`disnix-copy-snapshots' transfers the logical state (typically
+represented as snapshots in a consistent and portable format) of a component
+residing in a container from and to a remote machine through a Disnix interface.
+
+Options:
+
+      --to                   Copy snapshots to the given target
+      --from                 Copy snapshots from the given target
+  -t, --target=TARGET        Address of the Disnix service running on the remote
+                             machine
+  -c, --container=CONTAINER  Name of the container in which the mutable
+                             component is deployed
+  -C, --component=COMPONENT  Name of the mutable component to take snapshots from
+      --all                  Transfer all snapshots instead of the latest only
+      --interface=INTERFACE  Path to executable that communicates with a Disnix
+                             interface. Defaults to: disnix-ssh-client
+  -h, --help                 Shows the usage of this command to the user
+  -v, --version              Shows the version of this command to the user
+
+Environment:
+
+  DISNIX_CLIENT_INTERFACE    Sets the client interface (defaults to:
+                             disnix-ssh-client)
+  DYSNOMIA_STATEDIR          Specifies where the snapshots must be stored on the
+                             coordinator machine (defaults to: /var/dysnomia)
+EOF
+}
+
+# Shows the version of this command to the user
+
+showVersion()
+{
+    cat <<EOF
+$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+
+Copyright (C) 2008-2015 Sander van der Burg
+EOF
 }
 
 # Autoconf settings
@@ -43,7 +73,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o t:C:c:h -l to,from,container:,component:,all,target:,interface:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o t:C:c:hv -l to,from,container:,component:,all,target:,interface:,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -83,6 +113,9 @@ do
             showUsage
             exit 0
             ;;
+        -v|--version)
+            showVersion
+            exit 0
     esac
     
     shift

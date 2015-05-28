@@ -16,35 +16,132 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
+# Shows the usage of this command to the user
+
 showUsage()
 {
-    echo "Usage:"
-    echo "$0 --target hostname[:port] {operation}"
-    echo
-    echo "Operations:"
-    echo "  --import [--localfile|--remotefile] derivations"
-    echo "  --export [--localfile|--remotefile] derivations"
-    echo "  --print-invalid derivations"
-    echo "  {-r|--realise} derivations"
-    echo "  --set [{-p|--profile} name] derivation"
-    echo "  {-q|--query-installed} [{-p|--profile} name]"
-    echo "  --query-requisites derivations"
-    echo "  --collect-garbage [{-d|--delete-old}]\n"
-    echo "  --activate --type type --arguments arguments derivation"
-    echo "  --deactivate --type type --arguments arguments derivation"
-    echo "  --lock [{-p|--profile} profile]"
-    echo "  --unlock [{-p|--profile} profile]"
-    echo "  --snapshot --type type --arguments arguments derivation"
-    echo "  --restore --type type --arguments arguments derivation"
-    echo "  --delete-state --type type --arguments arguments derivation"
-    echo "  --query-all-snapshots --container container --component component"
-    echo "  --query-latest-snapshot --container container --component component"
-    echo "  --print-missing-snapshots snapshots"
-    echo "  --import-snapshots paths"
-    echo "  --export-snapshots paths"
-    echo "  --resolve-snapshots snapshots"
-    echo "  --clean-snapshots [--keep num]"
-    echo "  {-h | --help}"
+    cat <<EOF
+Usage: $0 --target hostname[:port] operation [OPTION] [paths]
+
+The command \`disnix-ssh-client' provides remote access to a \`disnix-service'
+instance running on a machine in the network by using a SSH connection. This
+allows the user to perform remote deployment operations on a target machine
+through SSH.
+
+Because this command uses \`ssh' to connect to the target machine, for every
+operation the user has to provide a password. If this bothers you, have a look
+at \`ssh-agent'.
+
+In most cases this command is not used directly, but is used by specifying the
+--interface option for a Disnix command-line utility (such as \`disnix-env') or
+by setting the \`DISNIX_CLIENT_INTERFACE' environment variable. By using one of
+those properties, the Disnix tools will use the given interface instead of the
+standard \`disnix-client' which only provides loopback access.
+
+Options:
+
+Operations:
+  --import                   Imports a given closure into the Nix store of the
+                             target machine. Optionally, transfers the closure
+                             from this machine to the target machine
+  --export                   Exports the closure of a given Nix store path of
+                             the target machine into a file, and optionally
+                             downloads it
+  --print-invalid            Prints all the paths that are not valid in the Nix
+                             store of the target machine
+  -r, --realise              Realises the given store derivation on the target
+                             machine
+  --set                      Creates a Disnix profile only containing the given
+                             derivation on the target machine
+  -q, --query-installed      Queries all the installed services on the given
+                             target machine
+  --query-requisites         Queries all the requisites (intra-dependencies) of
+                             the given services on the target machine
+  --collect-garbage          Collects garbage on the given target machine
+  --activate                 Activates the given service on the target machine
+  --deactivate               Deactivates the given service on the target machine
+  --lock                     Acquires a lock on a Disnix profile of the target
+                             machine
+  --unlock                   Release the lock on a Disnix profile of the target
+                             machine
+  --snapshot                 Snapshots the logical state of a component on the
+                             given target machine
+  --restore                  Restores the logical state of a component on the
+                             given target machine
+  --delete-state             Deletes the state of a component on the given
+                             machine
+  --query-all-snapshots      Queries all available snapshots of a component on
+                             the given target machine
+  --query-latest-snapshot    Queries the latest snapshot of a component on the
+                             given target machine
+  --print-missing-snapshots  Prints the paths of all snapshots not present on
+                             the given target machine
+  --import-snapshots         Imports the specified snapshots into the remote
+                             snapshot store
+  --export-snapshots         Exports the specified snapshot to the local
+                             snapshot store
+  --resolve-snapshots        Converts the relative paths to the snapshots to
+                             absolute paths
+  --clean-snapshots          Removes older snapshots from the snapshot store
+  --help                     Shows the usage of this command to the user
+  --version                  Shows the version of this command to the user
+
+General options:
+  -t, --target=TARGET        Specifies the hostname and optional port number of
+                             the SSH server used to connect to the target
+                             machine
+
+Import/Export/Import snapshots/Export snapshots options:
+  --localfile                Specifies that the given paths are stored locally
+                             and must be transferred to the remote machine if
+                             needed
+  --remotefile               Specifies that the given paths are stored remotely
+                             and must transferred from the remote machine if
+                             needed
+
+Set/Query installed/Lock/Unlock options:
+  -p, --profile=PROFILE      Name of the Disnix profile. Defaults to: default
+  
+Collect garbage options:
+  -d, --delete-old           Indicates whether all older generations of Nix
+                             profiles must be removed as well
+
+Activation/Deactivation/Snapshot/Restore/Delete state options:
+  --type=TYPE                Specifies the activation module that should be
+                             used, such as echo or process.
+
+  --arguments=ARGUMENTS      Specifies the arguments passed to the Dysnomia
+                             module, which is a string with key=value pairs
+
+Query all snapshots/Query latest snapshot options:
+  -C, --container=CONTAINER  Name of the container in which the component is managed
+  -c, --component=COMPONENT  Name of the component hosted in a container
+
+Clean snapshots options:
+  --keep=NUM                 Amount of snapshot generations to keep. Defaults
+                             to: 1
+
+Environment:
+  SSH_OPTS                   Additional properties which are passed to the ssh
+                             command
+  DISNIX_PROFILE             Sets the name of the profile that stores the
+                             manifest on the coordinator machine and the
+                             deployed services per machine on each target
+                             (Defaults to: default)
+  DYSNOMIA_STATEDIR          Specifies where the snapshots must be stored on the
+                             coordinator machine (defaults to: /var/dysnomia)
+EOF
+}
+
+# Shows the version of this command to the user
+
+showVersion()
+{
+    cat <<EOF
+$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+
+Copyright (C) 2008-2015 Sander van der Burg
+EOF
 }
 
 # Autoconf settings
@@ -57,7 +154,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o rqp:d -l import,export,print-invalid,realise,set,query-installed,query-requisites,collect-garbage,activate,deactivate,lock,unlock,snapshot,restore,delete-state,query-all-snapshots,query-latest-snapshot,print-missing-snapshots,import-snapshots,export-snapshots,resolve-snapshots,clean-snapshots,target:,localfile,remotefile,profile:,delete-old,type:,arguments:,container:,component:,keep:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o rqp:d -l import,export,print-invalid,realise,set,query-installed,query-requisites,collect-garbage,activate,deactivate,lock,unlock,snapshot,restore,delete-state,query-all-snapshots,query-latest-snapshot,print-missing-snapshots,import-snapshots,export-snapshots,resolve-snapshots,clean-snapshots,target:,localfile,remotefile,profile:,delete-old,type:,arguments:,container:,component:,keep:,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -174,10 +271,13 @@ do
         --keep)
             keep=$2
             ;;
-        -h|--help)
+        --help)
             showUsage
             exit 0
             ;;
+        --version)
+            showVersion
+            exit 0
     esac
     
     shift

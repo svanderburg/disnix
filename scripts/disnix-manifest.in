@@ -20,19 +20,67 @@
 
 showUsage()
 {
-    echo "Usage: $0 -s services_expr -i infrastructure_expr -d distribution_expr [options]"
-    echo "Options:"
-    echo
-    echo "-s,--services       Services Nix expression which describes all components of the distributed system"
-    echo "-i,--infrastructure Infrastructure Nix expression which captures properties of machines in the network"
-    echo "-d,--distribution   Distribution Nix expression which maps services to machines in the network"
-    echo "--target-property   The target property of an infrastructure model, that specifies how to "
-    echo "                    connect to the remote Disnix interface. (Defaults to hostname)"
-    echo "--interface         Path to executable that communicates with a Disnix interface. Defaults to disnix-ssh-client"
-    echo "--deploy-state      Indicates whether to globally deploy state (disabled by default)"
-    echo "--no-out-link       Do not create a 'result' symlink"
-    echo "--show-trace        Shows a trace of the output"
-    echo "-h,--help           Shows the usage of this command to the user"
+    cat <<EOF
+Usage: $0 -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
+
+The command \`disnix-manifest' generates a manifest file from a service,
+infrastructure and distribution Nix expression, which can be used for the
+distribution of services to machines in the network and for the activation of
+services on target machines in the right order.
+
+Since the manifest file contains Nix store paths of every service, a side effect
+of running this command is that all the services that have to be activated are
+automatically built from source and stored in the Nix store of the coordinato"
+machine."
+
+Most users and developers don't need to use this command directly. The command
+\`disnix-env' performs generation of a manifest automatically. It is mostly used
+for debugging purposes or to perform certain tasks manually.
+
+Options:
+
+  -s, --services=services_nix
+                              Services Nix expression which describes all
+                              components of the distributed system
+  -i, --infrastructure=infrastructure_nix
+                              Infrastructure Nix expression which captures
+                              properties of machines in the network
+  -d, --distribution=distribution_nix
+                              Distribution Nix expression which maps services to
+                              machines in the network
+      --target-property=PROP  The target property of an infrastructure model,
+                              that specifies how to connect to the remote Disnix
+                              interface. (Defaults to hostname)
+      --interface=INTERFACE   Path to executable that communicates with a Disnix
+                              interface. Defaults to: disnix-ssh-client
+      --deploy-state          Indicates whether to globally deploy state
+                              (disabled by default)
+      --no-out-link           Do not create a 'result' symlink
+      --show-trace            Shows a trace of the output
+  -h, --help                  Shows the usage of this command to the user
+  -v, --version               Shows the version of this command to the user
+
+Environment:"
+
+  DISNIX_CLIENT_INTERFACE    Sets the client interface (defaults to:
+                             disnix-ssh-client)
+  DISNIX_TARGET_PROPERTY     Sets the target property of an infrastructure
+                             model, that specifies how to connect to the remote
+                             Disnix interface. (Defaults to: hostname)
+  DISNIX_DEPLOY_STATE        If set to 1 it also deploys the state of all
+                             components. (defaults to: 0)
+EOF
+}
+
+# Shows the version of this command to the user
+
+showVersion()
+{
+    cat <<EOF
+$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+
+Copyright (C) 2008-2015 Sander van der Burg
+EOF
 }
 
 # Autoconf settings
@@ -45,7 +93,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:h -l services:,infrastructure:,distribution:,target-property:,interface:,deploy-state,no-out-link,show-trace,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:hv -l services:,infrastructure:,distribution:,target-property:,interface:,deploy-state,no-out-link,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -88,6 +136,10 @@ do
             showUsage
             exit 0
             ;;
+        -v|--version)
+            showVersion
+            exit 0
+            ;;
     esac
     
     shift
@@ -111,11 +163,11 @@ fi
 # Build the manifest file
 
 nix-build --argstr servicesFile "$(readlink -f $servicesFile)" \
-          --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
-          --argstr distributionFile "$(readlink -f $distributionFile)" \
-          --argstr targetProperty $targetProperty \
-          --argstr clientInterface $interface \
-          $deployStateArg \
-          $noOutLinkArg \
-          $showTraceArg \
-          "$(readlink -f @datadir@/@PACKAGE@/manifest.nix)"
+    --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
+    --argstr distributionFile "$(readlink -f $distributionFile)" \
+    --argstr targetProperty $targetProperty \
+    --argstr clientInterface $interface \
+    $deployStateArg \
+    $noOutLinkArg \
+    $showTraceArg \
+    "$(readlink -f @datadir@/@PACKAGE@/manifest.nix)"

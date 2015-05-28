@@ -20,14 +20,38 @@
 
 showUsage()
 {
-    echo "Usage: $0 -s services_expr -i infrastructure_expr"
-    echo "Options:"
-    echo
-    echo "-s,--services       Services Nix expression which describes all components of the distributed system"
-    echo "-i,--infrastructure Infrastructure Nix expression which captures properties of machines in the network"
-    echo "--no-out-link       Do not create a 'result' symlink"
-    echo "--show-trace        Shows a trace of the output"
-    echo "-h,--help           Shows the usage of this command to the user"
+    cat <<EOF
+Usage: $0 -s services_nix -i infrastructure_nix [OPTION]
+
+The command \`disnix-gendist-roundrobin' generates a distribution expression
+from a given services and infrastructure expression. It uses the round robin
+scheduling method to distribute every service in the services model over each
+machine in the infrastructure in equal proportions and circular order.
+
+Options:
+
+  -s, --services=services_nix
+                                     Services Nix expression which describes all
+                                     components of the distributed system
+  -i, --infrastructure=infrastructure_nix
+                                     Infrastructure Nix expression which captures
+                                     properties of machines in the network
+      --no-out-link                  Do not create a 'result' symlink
+      --show-trace                   Shows a trace of the output
+  -h, --help                         Shows the usage of this command to the user
+  -v, --version                      Shows the version of this command to the user
+EOF
+}
+
+# Shows the version of this command to the user
+
+showVersion()
+{
+    cat <<EOF
+$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+
+Copyright (C) 2008-2015 Sander van der Burg
+EOF
 }
 
 # Autoconf settings
@@ -40,7 +64,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:h -l services:,infrastructure:,no-out-link,show-trace,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:hv -l services:,infrastructure:,no-out-link,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -71,6 +95,10 @@ do
             showUsage
             exit 0
             ;;
+        -v|--version)
+            showVersion
+            exit 0
+            ;;
     esac
     
     shift
@@ -86,7 +114,7 @@ checkShowTrace
 # Build the distribution model
 
 nix-build --argstr servicesFile "$(readlink -f $servicesFile)" \
-          --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
-          "$(readlink -f @datadir@/@PACKAGE@/gendist-roundrobin.nix)" \
-          $noOutLinkArg \
-          $showTraceArg
+    --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
+    "$(readlink -f @datadir@/@PACKAGE@/gendist-roundrobin.nix)" \
+    $noOutLinkArg \
+    $showTraceArg

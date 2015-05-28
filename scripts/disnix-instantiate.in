@@ -20,18 +20,58 @@
 
 showUsage()
 {
-    echo "Usage: $0 -s services_expr -i infrastructure_expr -d distribution_expr [options]"
-    echo "Options:"
-    echo
-    echo "-s,--services       Services Nix expression which describes all components of the distributed system"
-    echo "-i,--infrastructure Infrastructure Nix expression which captures properties of machines in the network"
-    echo "-d,--distribution   Distribution Nix expression which maps services to machines in the network"
-    echo "--target-property   The target property of an infrastructure model, that specifies how to "
-    echo "                    connect to the remote Disnix interface. (Defaults to hostname)"
-    echo "--interface         Path to executable that communicates with a Disnix interface. Defaults to disnix-ssh-client"
-    echo "--no-out-link       Do not create a 'result' symlink"
-    echo "--show-trace        Shows a trace of the output"
-    echo "-h,--help           Shows the usage of this command to the user"
+    cat <<EOF
+Usage: $0 -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
+
+The command \`disnix-instantiate' generates a distributed derivation file from
+a service, infrastructure and distribution Nix expression, which can be used to
+build the services on the target machines from source code by using the
+\`disnix-build' command.
+
+Most users and developers don't need to use this command directly. The command
+\`disnix-env' performs instantiation of a distributed derivation automatically.
+It is mostly used for debugging purposes or to perform certain tasks manually.
+
+Options:
+
+  -s, --services=services_nix
+                              Services Nix expression which describes all
+                              components of the distributed system
+  -i, --infrastructure=infrastructure_nix
+                              Infrastructure Nix expression which captures
+                              properties of machines in the network
+  -d, --distribution=distribution_nix
+                              Distribution Nix expression which maps services to
+                              machines in the network
+      --target-property=PROP  The target property of an infrastructure model,
+                              that specifies how to connect to the remote Disnix
+                              interface. (Defaults to: hostname)
+      --interface=INTERFACE   Path to executable that communicates with a Disnix
+                              interface. Defaults to: disnix-ssh-client
+      --no-out-link           Do not create a 'result' symlink
+      --show-trace            Shows a trace of the output
+  -h, --help                  Shows the usage of this command to the user
+  -v, --version               Shows the version of this command to the user
+
+Environment:
+
+  DISNIX_CLIENT_INTERFACE    Sets the client interface (defaults to:
+                             disnix-ssh-client)
+  DISNIX_TARGET_PROPERTY     Sets the target property of an infrastructure
+                             model, that specifies how to connect to the remote
+                             Disnix interface. (Defaults to: hostname)
+EOF
+}
+
+# Shows the version of this command to the user
+
+showVersion()
+{
+    cat <<EOF
+$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+
+Copyright (C) 2008-2015 Sander van der Burg
+EOF
 }
 
 # Autoconf settings
@@ -44,7 +84,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:h -l services:,infrastructure:,distribution:,target-property:,interface:,no-out-link,show-trace,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:hv -l services:,infrastructure:,distribution:,target-property:,interface:,no-out-link,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -84,6 +124,10 @@ do
             showUsage
             exit 0
             ;;
+        -v|--version)
+            showVersion
+            exit 0
+            ;;
     esac
     
     shift
@@ -102,10 +146,10 @@ checkShowTrace
 # Build the distributed derivation file
 
 nix-build --argstr servicesFile "$(readlink -f $servicesFile)" \
-          --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
-          --argstr distributionFile "$(readlink -f $distributionFile)" \
-          --argstr targetProperty $targetProperty \
-          --argstr clientInterface $interface \
-          $noOutLinkArg \
-          $showTraceArg \
-          "$(readlink -f @datadir@/@PACKAGE@/instantiate.nix)"
+    --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
+    --argstr distributionFile "$(readlink -f $distributionFile)" \
+    --argstr targetProperty $targetProperty \
+    --argstr clientInterface $interface \
+    $noOutLinkArg \
+    $showTraceArg \
+    "$(readlink -f @datadir@/@PACKAGE@/instantiate.nix)"
