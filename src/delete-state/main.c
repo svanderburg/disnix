@@ -25,12 +25,33 @@
 
 static void print_usage(const char *command)
 {
-    fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "%s manifest\n", command);
-    fprintf(stderr, "\nOptions:\n");
-    fprintf(stderr, "--profile profile\n");
-    fprintf(stderr, "--coordinator-profile-path path\n");
-    fprintf(stderr, "-h | --help\n");
+    printf("Usage: %s [OPTION] MANIFEST\n\n", command);
+    
+    printf("The command `disnix-delete-state' removes all state of the components that are\n");
+    printf("in the old deployment manifest, but not in the new deployment manifest\n\n");
+    
+    printf("Options:\n");
+    printf("  -p, --profile=PROFILE          Name of the profile in which the services are\n");
+    printf("                                 registered. Defaults to: default\n");
+    printf("      --coordinator-profile-path=PATH\n");
+    printf("                                 Path to the manifest of the previous\n");
+    printf("                                 configuration. By default this tool will use\n");
+    printf("                                 the manifest stored in the disnix coordinator\n");
+    printf("                                 profile instead of the specified one, which is\n");
+    printf("                                 usually sufficient in most cases.\n");
+    printf("  -h, --help                     Shows the usage of this command to the user\n");
+    printf("  -v, --version                  Shows the version of this command to the user\n");
+    
+    printf("\nEnvironment:\n");
+    printf("  DISNIX_PROFILE    Sets the name of the profile that stores the manifest on the\n");
+    printf("                    coordinator machine and the deployed services per machine on\n");
+    printf("                    each target (Defaults to: default)\n");
+}
+
+static void print_version(const char *command)
+{
+    printf("%s (" PACKAGE_NAME ") " PACKAGE_VERSION "\n\n", command);
+    printf("Copyright (C) 2008-2015 Sander van der Burg\n");
 }
 
 int main(int argc, char *argv[])
@@ -41,8 +62,8 @@ int main(int argc, char *argv[])
     {
         {"coordinator-profile-path", required_argument, 0, 'P'},
         {"profile", required_argument, 0, 'p'},
-        {"old-manifest", required_argument, 0, 'o'},
         {"help", no_argument, 0, 'h'},
+        {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
     };
     
@@ -51,7 +72,7 @@ int main(int argc, char *argv[])
     char *coordinator_profile_path = NULL;
     
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "p:h", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "p:hv", long_options, &option_index)) != -1)
     {
         switch(c)
         {
@@ -64,6 +85,9 @@ int main(int argc, char *argv[])
             case 'h':
             case '?':
                 print_usage(argv[0]);
+                return 0;
+            case 'v':
+                print_version(argv[0]);
                 return 0;
         }
     }

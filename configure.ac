@@ -25,6 +25,8 @@ NEED_PROG(dysnomia, dysnomia)
 AC_PATH_PROG(xmllint, xmllint, false)
 AC_PATH_PROG(xsltproc, xsltproc, false)
 AC_PATH_PROG(dblatex, dblatex)
+AC_PATH_PROG(HELP2MAN, help2man, false)
+AC_PATH_PROG(DOCLIFTER, doclifter, false)
 
 # Checks for D-Bus libraries
 PKG_CHECK_MODULES(GLIB_DBUS, [dbus-1 dbus-glib-1])

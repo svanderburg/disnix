@@ -25,9 +25,33 @@
 
 static void print_usage(const char *command)
 {
-    fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "%s [--interface interface] [--target-property targetProperty] [--keep num] infrastructure_expr\n", command);
-    fprintf(stderr, "%s {-h | --help}\n", command);
+    printf("Usage: %s [OPTION] infrastructure_nix\n\n", command);
+    
+    printf("The command `disnix-clean-snapshots' removes all older snapshot generations\n");
+    printf("stored on the machines in the network.\n\n");
+    
+    printf("Options:\n");
+    printf("      --interface=INTERFACE   Path to executable that communicates with a Disnix\n");
+    printf("                              interface. Defaults to `disnix-ssh-client'\n");
+    printf("      --target-property=PROP  The target property of an infrastructure model,\n");
+    printf("                              that specifies how to connect to the remote Disnix\n");
+    printf("      --keep=NUM              Amount of snapshot generations to keep. Defaults\n");
+    printf("                              to: 1\n");
+    printf("  -h, --help                  Shows the usage of this command to the user\n");
+    printf("  -v, --version               Shows the version of this command to the user\n");
+    
+    printf("\nEnvironment:\n");
+    printf("  DISNIX_CLIENT_INTERFACE    Sets the client interface (which defaults to\n");
+    printf("                             `disnix-ssh-client')\n");
+    printf("  DISNIX_TARGET_PROPERTY     Specifies which property in the infrastructure Nix\n");
+    printf("                             expression specifies how to connect to the remote\n");
+    printf("                             interface (defaults to: hostname)\n");
+}
+
+static void print_version(const char *command)
+{
+    printf("%s (" PACKAGE_NAME ") " PACKAGE_VERSION "\n\n", command);
+    printf("Copyright (C) 2008-2015 Sander van der Burg\n");
 }
 
 int main(int argc, char *argv[])
@@ -36,35 +60,39 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-	{"interface", required_argument, 0, 'i'},
-	{"target-property", required_argument, 0, 't'},
-	{"keep", required_argument, 0, 'z'},
-	{"help", no_argument, 0, 'h'},
-	{0, 0, 0, 0}
+        {"interface", required_argument, 0, 'i'},
+        {"target-property", required_argument, 0, 't'},
+        {"keep", required_argument, 0, 'z'},
+        {"version", no_argument, 0, 'v'},
+        {"help", no_argument, 0, 'h'},
+        {0, 0, 0, 0}
     };
     char *interface = NULL;
     char *target_property = NULL;
     int keep = 1;
     
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "h", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "hv", long_options, &option_index)) != -1)
     {
-	switch(c)
-	{
-	    case 'i':
-		interface = optarg;
-		break;
-	    case 't':
-		target_property = optarg;
-		break;
-	    case 'z':
-		keep = atoi(optarg);
-		break;
-	    case 'h':
-	    case '?':
-		print_usage(argv[0]);
-		return 0;
-	}
+        switch(c)
+        {
+            case 'i':
+                interface = optarg;
+                break;
+            case 't':
+                target_property = optarg;
+                break;
+            case 'z':
+                keep = atoi(optarg);
+                break;
+            case 'h':
+            case '?':
+                print_usage(argv[0]);
+                return 0;
+            case 'v':
+                print_version(argv[0]);
+                return 0;
+        }
     }
     
     /* Validate options */
@@ -74,9 +102,9 @@ int main(int argc, char *argv[])
     
     if(optind >= argc)
     {
-	fprintf(stderr, "An infrastructure Nix expression has to be specified!\n");
-	return 1;
+        fprintf(stderr, "An infrastructure Nix expression has to be specified!\n");
+        return 1;
     }
     else
-	return clean_snapshots(interface, target_property, argv[optind], keep); /* Execute clean snapshots operation */
+        return clean_snapshots(interface, target_property, argv[optind], keep); /* Execute clean snapshots operation */
 }

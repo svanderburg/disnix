@@ -25,14 +25,39 @@
 
 static void print_usage(const char *command)
 {
-    fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "%s manifest\n", command);
-    fprintf(stderr, "\nOptions:\n");
-    fprintf(stderr, "--profile profile\n");
-    fprintf(stderr, "--coordinator-profile-path path\n");
-    fprintf(stderr, "--no-coordinator-profile\n");
-    fprintf(stderr, "--no-target-profiles\n");
-    fprintf(stderr, "-h | --help\n");
+    printf("Usage: %s [OPTION] MANIFEST\n\n", command);
+    
+    printf("The command `disnix-set' updates the coordinator profile referring to the last\n");
+    printf("deployed manifest and the Disnix profiles on the target machines referring\n");
+    printf("to the set of installed services. Updating the profiles prevents the\n");
+    printf("configuration from being garbage collected.\n\n");
+    
+    printf("This command should almost never be called directly. The command `disnix-env'\n");
+    printf("invokes this command to update the proiles automatically.\n\n");
+    
+    printf("Options:\n");
+    printf("  -p, --profile=PROFILE                Name of the profile in which the services\n");
+    printf("                                       are registered. Defaults to: default\n");
+    printf("      --coordinator-profile-path=PATH  Path to the manifest of the previous\n");
+    printf("                                       configuration. By default this tool will\n");
+    printf("                                       use the manifest stored in the disnix\n");
+    printf("                                       coordinator profile instead of the\n");
+    printf("                                       specified one, which is usually sufficient\n");
+    printf("                                       in most cases.\n");
+    printf("      --no-coordinator-profile         Specifies that the coordinator profile\n");
+    printf("                                       should not be updated\n");
+    printf("      --no-target-profiles             Specifies that the target profiles should\n");
+    printf("                                       not be updated\n");
+    printf("  -h, --help                           Shows the usage of this command to the\n");
+    printf("                                       user\n");
+    printf("  -v, --version                        Shows the version of this command to the\n");
+    printf("                                       user\n");
+}
+
+static void print_version(const char *command)
+{
+    printf("%s (" PACKAGE_NAME ") " PACKAGE_VERSION "\n\n", command);
+    printf("Copyright (C) 2008-2015 Sander van der Burg\n");
 }
 
 int main(int argc, char *argv[])
@@ -46,6 +71,7 @@ int main(int argc, char *argv[])
         {"no-coordinator-profile", no_argument, 0, 'c'},
         {"no-target-profiles", no_argument, 0, 'C'},
         {"help", no_argument, 0, 'h'},
+        {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
     };
     char *profile = NULL;
@@ -54,7 +80,7 @@ int main(int argc, char *argv[])
     int no_target_profiles = FALSE;
     
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "p:h", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "p:hv", long_options, &option_index)) != -1)
     {
         switch(c)
         {
@@ -73,6 +99,9 @@ int main(int argc, char *argv[])
             case 'h':
             case '?':
                 print_usage(argv[0]);
+                return 0;
+            case 'v':
+                print_version(argv[0]);
                 return 0;
         }
     }

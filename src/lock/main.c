@@ -25,11 +25,29 @@
 
 static void print_usage(const char *command)
 {
-    fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "%s [ --unlock ] manifest\n", command);
-    fprintf(stderr, "\nOptions:\n");
-    fprintf(stderr, "--profile profile\n");
-    fprintf(stderr, "-h | --help\n");
+    printf("Usage: %s [--unlock] MANIFEST\n\n", command);
+    
+    printf("Notifies all services on the machines that the transition phase starts or ends,\n");
+    printf("so that they can temporarily lock or unlock themselves (or take other\n");
+    printf("precautions to make the transition to go smooth)\n\n");
+    
+    printf("Options:\n");
+    printf("      --unlock           Executes an unlock operation instead of a lock\n");
+    printf("  -p, --profile=PROFILE  Name of the profile in which the services are\n");
+    printf("                         registered. Defaults to: default\n");
+    printf("  -h, --help             Shows the usage of this command to the user\n");
+    printf("  -v, --version          Shows the version of this command to the user\n");
+    
+    printf("\nEnvironment:\n");
+    printf("  DISNIX_PROFILE    Sets the name of the profile that stores the manifest on the\n");
+    printf("                    coordinator machine and the deployed services per machine on\n");
+    printf("                    each target (Defaults to: default)\n");
+}
+
+static void print_version(const char *command)
+{
+    printf("%s (" PACKAGE_NAME ") " PACKAGE_VERSION "\n\n", command);
+    printf("Copyright (C) 2008-2015 Sander van der Burg\n");
 }
 
 int main(int argc, char *argv[])
@@ -41,13 +59,14 @@ int main(int argc, char *argv[])
         {"unlock", no_argument, 0, 'l'},
         {"profile", required_argument, 0, 'p'},
         {"help", no_argument, 0, 'h'},
+        {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
     };
     char *profile = NULL;
     int lock = TRUE;
     
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "p:h", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "p:hv", long_options, &option_index)) != -1)
     {
         switch(c)
         {
@@ -60,6 +79,9 @@ int main(int argc, char *argv[])
             case 'h':
             case '?':
                 print_usage(argv[0]);
+                return 0;
+            case 'v':
+                print_version(argv[0]);
                 return 0;
         }
     }

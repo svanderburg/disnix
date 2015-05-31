@@ -16,13 +16,7 @@ dblatex_opts = \
 
 FIGURES = model.png stafftracker.png disnixwinservice.png
 
-man1_MANS = disnix-activate.1 disnix-build.1 disnix-client.1 disnix-copy-closure.1 disnix-distribute.1 disnix-env.1 \
-  disnix-gendist-roundrobin.1 disnix-instantiate.1 disnix-manifest.1 disnix-ssh-client.1 disnix-visualize.1 disnix-query.1
-
-man8_MANS = disnix-service.8
-
-MANUAL_SRCS = index.xml introduction.xml overview.xml installation.xml models.xml dysnomia-modules.xml usage.xml advanced-options.xml images style.css \
-  $(man1_MANS:.1=.xml) $(man8_MANS:.8=.xml)
+MANUAL_SRCS = index.xml introduction.xml overview.xml installation.xml models.xml dysnomia-modules.xml usage.xml advanced-options.xml images style.css
 
 version.txt:
 	echo -n $(VERSION) > version.txt
@@ -32,14 +26,11 @@ manual.is-valid: $(MANUAL_SRCS) version.txt
 	$(XMLLINT) --noout --nonet --xinclude --noxincludenode --relaxng $(docbookrng)/docbook.rng $<
 	touch $@
 
-man $(MANS): $(MANUAL_SRCS) manual.is-valid
-	$(XSLTPROC) --nonet --xinclude $(docbookxsl)/manpages/docbook.xsl index.xml
-
 index.html: $(MANUAL_SRCS) manual.is-valid images
 	$(XSLTPROC) --nonet --xinclude --output index.html \
 	  $(docbookxsl)/html/docbook.xsl index.xml
 
-index.pdf: $(MANUAL_SRCS) manual.is-valid images
+index.pdf: $(MANUAL_SRCS) $(MAN_SRCS) manual.is-valid images
 	if test "$(dblatex)" != ""; then \
 		$(dblatex) $(dblatex_opts) index.xml; \
 	else \
@@ -62,7 +53,7 @@ install-data-local: index.html
 	$(INSTALL_DATA) $(FIGURES) $(DESTDIR)$(docdir)/manual
 	cp -r images $(DESTDIR)$(docdir)/manual/images
 
-KEEP = index.html manual.is-valid version.txt $(MANS)
+KEEP = index.html manual.is-valid version.txt
 
 EXTRA_DIST = $(MANUAL_SRCS) $(FIGURES) $(KEEP)
 

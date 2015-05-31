@@ -48,25 +48,25 @@
     <section>
       <title>Main commands</title>
       
-      <xi:include href="disnix-collect-garbage.xml" />
-      <xi:include href="disnix-env.xml" />
+      <xi:include href="../../src/collect-garbage/disnix-collect-garbage.1.xml" />
+      <xi:include href="../../scripts/disnix-env.1.xml" />
     </section>
     
     <section>
       <title>Utilities</title>
       
-      <xi:include href="disnix-activate.xml" />
-      <xi:include href="disnix-build.xml" />
-      <xi:include href="disnix-client.xml" />
-      <xi:include href="disnix-copy-closure.xml" />
-      <xi:include href="disnix-distribute.xml" />
-      <xi:include href="disnix-gendist-roundrobin.xml" />
-      <xi:include href="disnix-instantiate.xml" />
-      <xi:include href="disnix-manifest.xml" />
-      <xi:include href="disnix-service.xml" />
-      <xi:include href="disnix-ssh-client.xml" />
-      <xi:include href="disnix-visualize.xml" />
-      <xi:include href="disnix-query.xml" />
+      <xi:include href="../../src/activate/disnix-activate.1.xml" />
+      <xi:include href="../../src/build/disnix-build.1.xml" />
+      <xi:include href="../../src/dbus-service/disnix-client.1.xml" />
+      <xi:include href="../../scripts/disnix-copy-closure.1.xml" />
+      <xi:include href="../../src/distribute/disnix-distribute.1.xml" />
+      <xi:include href="../../scripts/disnix-gendist-roundrobin.1.xml" />
+      <xi:include href="../../scripts/disnix-instantiate.1.xml" />
+      <xi:include href="../../scripts/disnix-manifest.1.xml" />
+      <xi:include href="../../src/dbus-service/disnix-service.8.xml" />
+      <xi:include href="../../scripts/disnix-ssh-client.1.xml" />
+      <xi:include href="../../src/visualize/disnix-visualize.1.xml" />
+      <xi:include href="../../src/query/disnix-query.1.xml" />
     </section>
   </appendix>
 </book>

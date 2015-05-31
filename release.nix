@@ -20,8 +20,9 @@ let
         version = builtins.readFile ./version;
         src = disnix;
         inherit officialRelease;
+        dontBuild = false;
 
-        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable dblatex tetex doxygen nukeReferences dysnomia ];
+        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable dblatex tetex doxygen nukeReferences help2man doclifter dysnomia ];
         
         # Add documentation in the tarball
         configureFlags = ''
