@@ -79,6 +79,8 @@ Options:
                                   generations
       --no-upgrade                Do not perform an upgrade, but activate all
                                   services of the new configuration
+      --no-lock                   Do not attempt to acquire and release any
+                                  locks
       --show-trace                Shows a trace of the output
   -h, --help                      Shows the usage of this command
   -v, --version                   Shows the version of this command
@@ -116,8 +118,13 @@ EOF
 
 releaseLocks()
 {
-    echo "[coordinator]: Releasing locks..."
-    disnix-lock --unlock $profileArg $manifest
+    if [ "$noLock" = "1" ]
+    then
+        echo "[coordinator]: Not releasing any locks..."
+    else
+        echo "[coordinator]: Releasing locks..."
+        disnix-lock --unlock $profileArg $manifest
+    fi
 }
 
 # Autoconf settings
@@ -130,7 +137,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:p:m:hv -l services:,infrastructure:,distribution:,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:p:m:hv -l services:,infrastructure:,distribution:,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -181,6 +188,9 @@ do
         --no-upgrade)
             noUpgradeArg="--no-upgrade"
             ;;
+        --no-lock)
+            noLock=1
+            ;;
         -h|--help)
             showUsage
             exit 0
@@ -217,8 +227,15 @@ echo "[coordinator]: Building manifest..."
 manifest=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link --interface $interface $deployStateArg $showTraceArg`
 echo "[coordinator]: Distributing intra-dependency closures..."
 disnix-distribute $maxConcurrentTransfersArg $manifest
-echo "[coordinator]: Acquiring locks..."
-disnix-lock $profileArg $manifest
+
+if [ "$noLock" = "1" ]
+then
+    echo "[coordinator]: Not acquiring any locks..."
+else
+    echo "[coordinator]: Acquiring locks..."
+    disnix-lock $profileArg $manifest
+fi
+
 echo "[coordinator]: Activating new configuration..."
 disnix-activate $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; exit 1)
 echo "[coordinator]: Snapshotting state of annotated services..."

@@ -11,10 +11,6 @@
         <firstname>Sander</firstname>
         <surname>van der Burg</surname>
       </personname>
-      <!--<affiliation>
-        <orgname>Delft University of Technology</orgname>
-        <orgdiv>Department of Software Technology</orgdiv>
-      </affiliation> -->
       <contrib>Author</contrib>
     </author>
 
@@ -30,7 +26,7 @@
       <holder>Sander van der Burg</holder>
     </copyright>
 
-    <date>February 2015</date>
+    <date>June 2015</date>
   </info>
   
   <xi:include href="introduction.xml" />
@@ -49,6 +45,7 @@
       <title>Main commands</title>
       
       <xi:include href="../../src/collect-garbage/disnix-collect-garbage.1.xml" />
+      <xi:include href="../../src/clean-snapshots/disnix-clean-snapshots.1.xml" />
       <xi:include href="../../scripts/disnix-env.1.xml" />
     </section>
     
@@ -59,14 +56,20 @@
       <xi:include href="../../src/build/disnix-build.1.xml" />
       <xi:include href="../../src/dbus-service/disnix-client.1.xml" />
       <xi:include href="../../scripts/disnix-copy-closure.1.xml" />
+      <xi:include href="../../scripts/disnix-copy-snapshots.1.xml" />
+      <xi:include href="../../src/delete-state/disnix-delete-state.1.xml" />
       <xi:include href="../../src/distribute/disnix-distribute.1.xml" />
       <xi:include href="../../scripts/disnix-gendist-roundrobin.1.xml" />
       <xi:include href="../../scripts/disnix-instantiate.1.xml" />
+      <xi:include href="../../src/lock/disnix-lock.1.xml" />
       <xi:include href="../../scripts/disnix-manifest.1.xml" />
+      <xi:include href="../../src/query/disnix-query.1.xml" />
+      <xi:include href="../../src/restore/disnix-restore.1.xml" />
       <xi:include href="../../src/dbus-service/disnix-service.8.xml" />
+      <xi:include href="../../src/set/disnix-set.1.xml" />
+      <xi:include href="../../src/snapshot/disnix-snapshot.1.xml" />
       <xi:include href="../../scripts/disnix-ssh-client.1.xml" />
       <xi:include href="../../src/visualize/disnix-visualize.1.xml" />
-      <xi:include href="../../src/query/disnix-query.1.xml" />
     </section>
   </appendix>
 </book>
