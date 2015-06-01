@@ -75,12 +75,17 @@ Options:
       --build-on-targets          Build the services on the target machines in
                                   the network instead of managing the build by
                                   the coordinator
-      --coordinator-profile-path  Path where to store the coordinator profile
+      --coordinator-profile-path=PATH
+                                  Path where to store the coordinator profile
                                   generations
       --no-upgrade                Do not perform an upgrade, but activate all
                                   services of the new configuration
       --no-lock                   Do not attempt to acquire and release any
                                   locks
+      --no-coordinator-profile    Specifies that the coordinator profile should
+                                  not be updated
+      --no-target-profiles        Specifies that the target profiles should not
+                                  be updated
       --show-trace                Shows a trace of the output
   -h, --help                      Shows the usage of this command
   -v, --version                   Shows the version of this command
@@ -137,7 +142,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:p:m:hv -l services:,infrastructure:,distribution:,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:p:m:hv -l services:,infrastructure:,distribution:,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -191,6 +196,12 @@ do
         --no-lock)
             noLock=1
             ;;
+        --no-coordinator-profile)
+            noCoordinatorProfileArg="--no-coordinator-profile"
+            ;;
+        --no-target-profiles)
+            noTargetProfilesArg="--no-target-profiles"
+            ;;
         -h|--help)
             showUsage
             exit 0
@@ -243,5 +254,5 @@ disnix-snapshot $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest |
 echo "[coordinator]: Restoring state of annotated services..."
 disnix-restore $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; exit 1)
 echo "[coordinator]: Setting profiles..."
-disnix-set $profileArg $coordinatorProfilePathArg $manifest || (releaseLocks; exit 1)
+disnix-set $profileArg $coordinatorProfilePathArg $noCoordinatorProfileArg $noTargetProfilesArg $manifest || (releaseLocks; exit 1)
 releaseLocks
