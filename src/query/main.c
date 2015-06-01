@@ -30,15 +30,15 @@ static void print_usage(const char *command)
     printf("the machines defined in a given infrastructure model.\n\n");
     
     printf("Options:\n");
-    printf("  -p, --profile          Name of the profile in which the services are\n");
-    printf("                         registered. Defaults to: default\n");
-    printf("      --interface        Path to executable that communicates with a Disnix\n");
-    printf("                         interface. Defaults to `disnix-ssh-client'\n");
-    printf("      --target-property  The target property of an infrastructure model, that\n");
-    printf("                         specifies how to connect to the remote Disnix\n");
-    printf("                         interface. (Defaults to hostname)\n");
-    printf("  -h, --help             Shows the usage of this command to the user\n");
-    printf("  -v, --version          Shows the version of this command to the user\n");
+    printf("  -p, --profile=PROFILE       Name of the profile in which the services are\n");
+    printf("                              registered. Defaults to: default\n");
+    printf("      --interface=INTERFACE   Path to executable that communicates with a Disnix\n");
+    printf("                              interface. Defaults to `disnix-ssh-client'\n");
+    printf("      --target-property=PROP  The target property of an infrastructure model,\n");
+    printf("                              that specifies how to connect to the remote Disnix\n");
+    printf("                              interface. (Defaults to hostname)\n");
+    printf("  -h, --help                  Shows the usage of this command to the user\n");
+    printf("  -v, --version               Shows the version of this command to the user\n");
     
     printf("\nEnvironment:\n");
     printf("  DISNIX_CLIENT_INTERFACE    Sets the client interface (which defaults to\n");
