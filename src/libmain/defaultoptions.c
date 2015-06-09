@@ -19,6 +19,7 @@
 
 #include "defaultoptions.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 /* Default interface value */
 static char *default_interface = "disnix-ssh-client";
@@ -69,4 +70,10 @@ char *check_profile_option(char *profile)
     }
     
     return profile;
+}
+
+void print_version(const char *command)
+{
+    printf("%s (" PACKAGE_NAME ") " PACKAGE_VERSION "\n\n", command);
+    printf("Copyright (C) 2008-2015 Sander van der Burg\n");
 }

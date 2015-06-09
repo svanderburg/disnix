@@ -48,4 +48,11 @@ char *check_target_property_option(char *target_property);
  */
 char *check_profile_option(char *profile);
 
+/**
+ * Prints the name, version, package and copyright statement for a command
+ *
+ * @param command Path to the executable
+ */
+void print_version(const char *command);
+
 #endif

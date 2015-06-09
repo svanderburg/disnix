@@ -44,12 +44,6 @@ static void print_usage(const char *command)
     printf("                    each target (Defaults to: default)\n");
 }
 
-static void print_version(const char *command)
-{
-    printf("%s (" PACKAGE_NAME ") " PACKAGE_VERSION "\n\n", command);
-    printf("Copyright (C) 2008-2015 Sander van der Burg\n");
-}
-
 int main(int argc, char *argv[])
 {
     /* Declarations */
