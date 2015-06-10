@@ -1,4 +1,7 @@
-#!/bin/bash -e
+#!/bin/bash
+set -e
+set -o pipefail
+
 # Disnix - A Nix-based distributed service deployment tool
 # Copyright (C) 2008-2015  Sander van der Burg
 #
@@ -54,14 +57,6 @@ Copyright (C) 2008-2015 Sander van der Burg
 EOF
 }
 
-# Autoconf settings
-
-export prefix=@prefix@
-
-# Import checks
-
-source @datadir@/@PACKAGE@/checks
-
 # Parse valid argument options
 
 PARAMS=`@getopt@ -n $0 -o s:i:hv -l services:,infrastructure:,no-out-link,show-trace,help,version -- "$@"`
@@ -72,9 +67,9 @@ then
     exit 1
 fi
 
-eval set -- "$PARAMS"
-
 # Evaluate valid options
+
+eval set -- "$PARAMS"
 
 while [ "$1" != "--" ]
 do
@@ -103,6 +98,14 @@ do
     
     shift
 done
+
+# Autoconf settings
+
+export prefix=@prefix@
+
+# Import checks
+
+source @datadir@/@PACKAGE@/checks
 
 # Validate the given options
 

@@ -1,4 +1,7 @@
-#!/bin/bash -e
+#!/bin/bash
+set -e
+set -o pipefail
+
 # Disnix - A Nix-based distributed service deployment tool
 # Copyright (C) 2008-2015  Sander van der Burg
 #
@@ -24,12 +27,12 @@ checkClientInterface()
 {
     if [ "$interface" = "" ]
     then
-	if [ "$DISNIX_CLIENT_INTERFACE" = "" ]
-	then
-    	    interface="disnix-ssh-client"
-	else
-    	    interface=$DISNIX_CLIENT_INTERFACE
-	fi
+        if [ "$DISNIX_CLIENT_INTERFACE" = "" ]
+        then
+            interface="disnix-ssh-client"
+        else
+            interface=$DISNIX_CLIENT_INTERFACE
+        fi
     fi
 }
 
@@ -41,12 +44,12 @@ checkTargetProperty()
 {
     if [ "$targetProperty" = "" ]
     then
-	if [ "$DISNIX_TARGET_PROPERTY" != "" ]
-	then
-	    targetProperty=$DISNIX_TARGET_PROPERTY
-	else
-	    targetProperty="hostname";
-	fi
+        if [ "$DISNIX_TARGET_PROPERTY" != "" ]
+        then
+            targetProperty=$DISNIX_TARGET_PROPERTY
+        else
+            targetProperty="hostname";
+        fi
     fi
 }
 
@@ -56,8 +59,8 @@ checkServicesFile()
 {
     if [ "$servicesFile" = "" ]
     then
-	echo "ERROR: A services expression must be specified!" >&2
-	exit 1
+        echo "ERROR: A services expression must be specified!" >&2
+        exit 1
     fi
 }
 
@@ -67,8 +70,8 @@ checkInfrastructureFile()
 {
     if [ "$infrastructureFile" = "" ]
     then
-	echo "ERROR: An infrastructure expression must be specified!" >&2
-	exit 1
+        echo "ERROR: An infrastructure expression must be specified!" >&2
+        exit 1
     fi
 }
 
@@ -78,8 +81,8 @@ checkDistributionFile()
 {
     if [ "$distributionFile" = "" ]
     then
-	echo "ERROR: A distribution expression must be specified!" >&2
-	exit 1
+        echo "ERROR: A distribution expression must be specified!" >&2
+        exit 1
     fi
 }
 
@@ -90,7 +93,7 @@ checkShowTrace()
 {
     if [ "$showTrace" = "1" ]
     then
-	showTraceArg="--show-trace"
+        showTraceArg="--show-trace"
     fi
 }
 
@@ -101,7 +104,7 @@ checkNoOutLink()
 {
     if [ "$noOutLink" = "1" ]
     then
-	noOutLinkArg="--no-out-link"
+        noOutLinkArg="--no-out-link"
     fi
 }
 
@@ -111,8 +114,8 @@ checkTarget()
 {
     if [ "$target" = "" ]
     then
-	echo "ERROR: A target address must be specified!" >&2
-	exit 1
+        echo "ERROR: A target address must be specified!" >&2
+        exit 1
     fi
 }
 
@@ -123,6 +126,6 @@ checkTmpDir()
 {
     if [ "$TMPDIR" = "" ]
     then
-	export TMPDIR=/tmp
+        export TMPDIR=/tmp
     fi
 }
