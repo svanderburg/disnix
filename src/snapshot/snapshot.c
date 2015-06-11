@@ -221,7 +221,6 @@ static Manifest *open_manifest(const gchar *manifest_file, const gchar *coordina
 
 int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade)
 {
-    
     /* Get current username */
     char *username = (getpwuid(geteuid()))->pw_name;
     

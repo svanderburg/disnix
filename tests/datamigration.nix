@@ -133,7 +133,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         $testtarget1->mustSucceed("echo 5 > /var/db/testService2/state");
         $testtarget2->mustSucceed("echo 6 > /var/db/testService1/state");
         
-        $coordinator->mustSucceed("DYSNOMIA_STATEDIR=/root/dysnomia SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-restore --no-upgrade /nix/var/nix/profiles/per-user/root/disnix-coordinator/default");
+        $coordinator->mustSucceed("DYSNOMIA_STATEDIR=/root/dysnomia SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-restore --no-upgrade");
         
         $result = $testtarget1->mustSucceed("cat /var/db/testService2/state");
         

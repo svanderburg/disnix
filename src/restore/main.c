@@ -97,6 +97,7 @@ int main(int argc, char *argv[])
     char *old_manifest = NULL;
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
+    char *manifest_file;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "m:o:p:hv", long_options, &option_index)) != -1)
@@ -139,10 +140,9 @@ int main(int argc, char *argv[])
     profile = check_profile_option(profile);
     
     if(optind >= argc)
-    {
-        fprintf(stderr, "ERROR: No manifest specified!\n");
-        return 1;
-    }
+        manifest_file = NULL;
     else
-        return restore(argv[optind], max_concurrent_transfers, transfer_only, all, old_manifest, coordinator_profile_path, profile, no_upgrade); /* Execute restore operation */
+        manifest_file = argv[optind];
+    
+    return restore(manifest_file, max_concurrent_transfers, transfer_only, all, old_manifest, coordinator_profile_path, profile, no_upgrade); /* Execute restore operation */
 }

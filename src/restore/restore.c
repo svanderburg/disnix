@@ -187,6 +187,25 @@ static gchar *determine_previous_manifest_file(const gchar *coordinator_profile_
     return old_manifest_file;
 }
 
+static Manifest *open_manifest(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const char *username)
+{
+    gchar *path;
+    Manifest *manifest;
+    
+    if(manifest_file == NULL)
+        path = determine_previous_manifest_file(coordinator_profile_path, username, profile);
+    else
+        path = g_strdup(manifest_file);
+    
+    if(path == NULL)
+        manifest = NULL;
+    else
+        manifest = create_manifest(path);
+    
+    g_free(path);
+    return manifest;
+}
+
 static void cleanup(const gchar *old_manifest, char *old_manifest_file, Manifest *manifest, GPtrArray *snapshots_array)
 {
     g_free(old_manifest_file);
@@ -199,8 +218,11 @@ static void cleanup(const gchar *old_manifest, char *old_manifest_file, Manifest
 
 int restore(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade)
 {
+    /* Get current username */
+    char *username = (getpwuid(geteuid()))->pw_name;
+    
     /* Generate a distribution array from the manifest file */
-    Manifest *manifest = create_manifest(manifest_file);
+    Manifest *manifest = open_manifest(manifest_file, coordinator_profile_path, profile, username);
     
     if(manifest == NULL)
     {
@@ -212,9 +234,6 @@ int restore(const gchar *manifest_file, const unsigned int max_concurrent_transf
         int exit_status = 0;
         GPtrArray *snapshots_array;
         gchar *old_manifest_file;
-        
-        /* Get current username */
-        char *username = (getpwuid(geteuid()))->pw_name;
         
         if(old_manifest == NULL)
             old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, username, profile);
