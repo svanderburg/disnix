@@ -36,7 +36,6 @@ Most users and developers don't need to use this command directly. The command
 It is mostly used for debugging purposes or to perform certain tasks manually.
 
 Options:
-
   -s, --services=services_nix
                               Services Nix expression which describes all
                               components of the distributed system
@@ -57,7 +56,6 @@ Options:
   -v, --version               Shows the version of this command to the user
 
 Environment:
-
   DISNIX_CLIENT_INTERFACE    Sets the client interface (defaults to:
                              disnix-ssh-client)
   DISNIX_TARGET_PROPERTY     Sets the target property of an infrastructure

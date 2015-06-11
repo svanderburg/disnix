@@ -32,7 +32,6 @@ scheduling method to distribute every service in the services model over each
 machine in the infrastructure in equal proportions and circular order.
 
 Options:
-
   -s, --services=services_nix
                                      Services Nix expression which describes all
                                      components of the distributed system

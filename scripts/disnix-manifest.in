@@ -33,15 +33,14 @@ services on target machines in the right order.
 
 Since the manifest file contains Nix store paths of every service, a side effect
 of running this command is that all the services that have to be activated are
-automatically built from source and stored in the Nix store of the coordinato"
-machine."
+automatically built from source and stored in the Nix store of the coordinator
+machine.
 
 Most users and developers don't need to use this command directly. The command
 \`disnix-env' performs generation of a manifest automatically. It is mostly used
 for debugging purposes or to perform certain tasks manually.
 
 Options:
-
   -s, --services=services_nix
                               Services Nix expression which describes all
                               components of the distributed system
@@ -63,8 +62,7 @@ Options:
   -h, --help                  Shows the usage of this command to the user
   -v, --version               Shows the version of this command to the user
 
-Environment:"
-
+Environment:
   DISNIX_CLIENT_INTERFACE    Sets the client interface (defaults to:
                              disnix-ssh-client)
   DISNIX_TARGET_PROPERTY     Sets the target property of an infrastructure

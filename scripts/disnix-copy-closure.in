@@ -37,7 +37,6 @@ uses a Disnix interface for transport (which optionally uses SSH or a custom
 protocol) instead of using SSH directly.
 
 Options:
-
       --to                   Copy closure to the given target
       --from                 Copy closure from the given target
   -t, --target=TARGET        Address of the Disnix service running on the remote

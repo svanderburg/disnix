@@ -56,7 +56,6 @@ build the services on the target machines and to keep the build results for
 future use.
 
 Options:
-
   -s, --services=services_nix
                                   Services Nix expression which describes all
                                   components of the distributed system
@@ -94,7 +93,6 @@ Options:
   -v, --version                   Shows the version of this command
 
 Environment:
-
   DISNIX_CLIENT_INTERFACE    Sets the client interface (defaults to:
                              disnix-ssh-client)
   DISNIX_TARGET_PROPERTY     Sets the target property of an infrastructure

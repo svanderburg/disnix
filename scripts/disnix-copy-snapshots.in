@@ -32,7 +32,6 @@ represented as snapshots in a consistent and portable format) of a component
 residing in a container from and to a remote machine through a Disnix interface.
 
 Options:
-
       --to                   Copy snapshots to the given target
       --from                 Copy snapshots from the given target
   -t, --target=TARGET        Address of the Disnix service running on the remote
