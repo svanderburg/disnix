@@ -244,11 +244,11 @@ int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_trans
         else
             old_manifest_file = g_strdup(old_manifest);
         
-        if(no_upgrade || old_manifest_file == NULL)
-            g_printerr("[coordinator]: No snapshots are taken as no upgrade is performed or all of them have been requested!\n");
+        if(!no_upgrade && old_manifest_file == NULL)
+            g_printerr("[coordinator]: No snapshots are taken since an upgrade is requested and no previous deployment state is known\n");
         else
         {
-            if(manifest_file == NULL)
+            if(no_upgrade || manifest_file == NULL)
             {
                 g_printerr("[coordinator]: Snapshotting state of all components...\n");
                 snapshots_array = manifest->snapshots_array;
