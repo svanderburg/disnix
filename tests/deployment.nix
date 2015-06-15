@@ -72,6 +72,64 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         $testtarget2->mustSucceed("[ \"\$(journalctl --no-pager --full _SYSTEMD_UNIT=disnix.service | grep \"Activate: $lines[7]\")\" != \"\" ]");
         $testtarget2->mustSucceed("[ \"\$(journalctl --no-pager --full _SYSTEMD_UNIT=disnix.service | grep \"Activate: $lines[8]\")\" != \"\" ]");
         
+        # Check if there is only one generation link in the coordinator profile
+        # folder and one generation link in the target profiles folder on each
+        # machine.
+        
+        my $result = $coordinator->mustSucceed("ls /nix/var/nix/profiles/per-user/root/disnix-coordinator | wc -l");
+        
+        if($result == 2) {
+            print "We have only one generation symlink on the coordinator!\n";
+        } else {
+            die "We should have one generation symlink on the coordinator!";
+        }
+        
+        $result = $testtarget1->mustSucceed("ls /nix/var/nix/profiles/disnix | wc -l");
+        
+        if($result == 2) {
+            print "We have only one generation symlink on target1!\n";
+        } else {
+            die "We should have one generation symlink on target1!";
+        }
+        
+        $result = $testtarget2->mustSucceed("ls /nix/var/nix/profiles/disnix | wc -l");
+        
+        if($result == 2) {
+            print "We have only one generation symlink on target2!\n";
+        } else {
+            die "We should have one generation symlink on target2!";
+        }
+        
+        # We repeat the previous disnix-env command. No changes should be
+        # performed. Moreover, we should still have one coordinator profile
+        # and one target profile per machine. This test should succeed.
+        
+        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+        
+        $result = $coordinator->mustSucceed("ls /nix/var/nix/profiles/per-user/root/disnix-coordinator | wc -l");
+        
+        if($result == 2) {
+            print "We have only one generation symlink on the coordinator!\n";
+        } else {
+            die "We should have one generation symlink on the coordinator!";
+        }
+        
+        $result = $testtarget1->mustSucceed("ls /nix/var/nix/profiles/disnix | wc -l");
+        
+        if($result == 2) {
+            print "We have only one generation symlink on target1!\n";
+        } else {
+            die "We should have one generation symlink on target1!";
+        }
+        
+        $result = $testtarget2->mustSucceed("ls /nix/var/nix/profiles/disnix | wc -l");
+        
+        if($result == 2) {
+            print "We have only one generation symlink on target2!\n";
+        } else {
+            die "We should have one generation symlink on target2!";
+        }
+        
         # We now perform an upgrade by moving testService2 to another machine.
         # This test should succeed.
         $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-reverse.nix");
@@ -94,6 +152,32 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
             print "Found testService3 on disnix-query output line 8\n";
         } else {
             die "disnix-query output line 8 does not contain testService3!\n";
+        }
+        
+        # Since the deployment state has changes, we should now have a new
+        # profile entry added on the coordinator and target machines.
+        $result = $coordinator->mustSucceed("ls /nix/var/nix/profiles/per-user/root/disnix-coordinator | wc -l");
+        
+        if($result == 3) {
+            print "We have two generation symlinks on the coordinator!\n";
+        } else {
+            die "We should have two generation symlinks on the coordinator!";
+        }
+        
+        $result = $testtarget1->mustSucceed("ls /nix/var/nix/profiles/disnix | wc -l");
+        
+        if($result == 3) {
+            print "We have two generation symlinks on target1!\n";
+        } else {
+            die "We should have two generation symlinks on target1!";
+        }
+        
+        $result = $testtarget2->mustSucceed("ls /nix/var/nix/profiles/disnix | wc -l");
+        
+        if($result == 3) {
+            print "We have two generation symlinks on target2!\n";
+        } else {
+            die "We should have two generation symlinks on target2!";
         }
         
         # Now we undo the upgrade again by moving testService2 back.

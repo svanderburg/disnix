@@ -477,7 +477,7 @@ gboolean disnix_realise(DisnixObject *object, const gint pid, gchar **derivation
     if(fork() == 0)
     {
 	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
-	disnix_realise_thread_func(object, pid, derivation);    
+	disnix_realise_thread_func(object, pid, derivation);
     }
     
     return TRUE;
@@ -490,6 +490,8 @@ static void disnix_set_thread_func(DisnixObject *object, const gint pid, const g
     /* Declarations */
     gchar *profile_path;
     int status;
+    char resolved_path[BUFFER_SIZE];
+    ssize_t resolved_path_size;
     
     /* Print log entry */
     g_print("Set profile: %s with derivation: %s\n", profile, derivation);
@@ -498,30 +500,50 @@ static void disnix_set_thread_func(DisnixObject *object, const gint pid, const g
     
     mkdir(LOCALSTATEDIR "/nix/profiles/disnix", 0755);
     profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, NULL);
-
-    status = fork();
     
-    if(status == -1)
+    /* Resolve the manifest file to which the disnix profile points */
+    resolved_path_size = readlink(profile_path, resolved_path, BUFFER_SIZE);
+    
+    if(resolved_path_size != -1 && (strlen(profile_path) != resolved_path_size || strncmp(resolved_path, profile_path, resolved_path_size) != 0)) /* If the symlink resolves not to itself, we get a generation symlink that we must resolve again */
     {
-	g_printerr("Error with forking nix-env process!\n");
-	disnix_emit_failure_signal(object, pid);
+        gchar *generation_path;
+
+        resolved_path[resolved_path_size] = '\0';
+        
+        generation_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", resolved_path, NULL);
+        resolved_path_size = readlink(generation_path, resolved_path, BUFFER_SIZE);
+        
+        g_free(generation_path);
     }
-    else if(status == 0)
+
+    if(resolved_path_size == -1 || (strlen(derivation) == resolved_path_size && strncmp(resolved_path, derivation, resolved_path_size) != 0)) /* Only configure the configurator profile if the given manifest is not identical to the previous manifest */
     {
-	char *args[] = {"nix-env", "-p", profile_path, "--set", derivation, NULL};
-	execvp("nix-env", args);
-	g_printerr("Error with executing nix-env\n");
-	_exit(1);
+        status = fork();
+    
+        if(status == -1)
+        {
+            g_printerr("Error with forking nix-env process!\n");
+            disnix_emit_failure_signal(object, pid);
+        }
+        else if(status == 0)
+        {
+            char *args[] = {"nix-env", "-p", profile_path, "--set", derivation, NULL};
+            execvp("nix-env", args);
+            g_printerr("Error with executing nix-env\n");
+            _exit(1);
+        }
+        else
+        {
+            wait(&status);
+            
+            if(WEXITSTATUS(status) == 0)
+                disnix_emit_finish_signal(object, pid);
+            else
+                disnix_emit_failure_signal(object, pid);
+        }
     }
     else
-    {
-	wait(&status);
-	
-	if(WEXITSTATUS(status) == 0)
-	    disnix_emit_finish_signal(object, pid);
-	else
-	    disnix_emit_failure_signal(object, pid);
-    }
+        disnix_emit_finish_signal(object, pid);
     
     /* Free variables */
     g_free(profile_path);
