@@ -164,7 +164,11 @@ then
     if [ "$missingSnapshots" != "" ]
     then
         resolvedPaths=$(dysnomia-snapshots --resolve $missingSnapshots)
-        $interface --target $target --import-snapshots --container $container --component $component --localfile $resolvedPaths
+        
+        for i in $resolvedPaths
+        do
+            $interface --target $target --import-snapshots --container $container --component $component --localfile $i
+        done
     fi
 else
     if [ "$all" = "1" ]
@@ -179,8 +183,12 @@ else
     if [ "$missingSnapshots" != "" ]
     then
         resolvedPaths=$($interface --target $target --resolve-snapshots $missingSnapshots)
-        tmpdir=$($interface --target $target --export-snapshots $resolvedPaths)
-        dysnomia-snapshots --import --container $container --component $component $tmpdir/* || (rm -Rf $tmpdir; false)
-        rmdir $tmpdir
+        
+        for i in $resolvedPaths
+        do
+            tmpdir=$($interface --target $target --export-snapshots $i)
+            dysnomia-snapshots --import --container $container --component $component $tmpdir/* || (rm -Rf $tmpdir; false)
+            rmdir $tmpdir
+        done
     fi
 fi

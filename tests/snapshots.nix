@@ -208,7 +208,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         if($result == 3) {
             print "We have 3 snapshots!\n";
         } else {
-            die "Expecting only 3 snapshots!";
+            die "Expecting only 3 snapshots, but we have: $result!";
         }
         
         # Delete all snapshots from the server
@@ -231,10 +231,10 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         $result = $server->mustSucceed("cat ".(substr $lastResolvedSnapshot, 0, -1)."/state");
         
         # TODO: should be 2. Think about order of generation symlinks
-        if($result == 0) {
-            print "Result is 0\n";
+        if($result == 1) {
+            print "Result is 1\n";
         } else {
-            die "Result should be 0!";
+            die "Result should be 1, instead it is: $result!";
         }
         
         # Copy all (remaining) snapshots to the server and check whether we
