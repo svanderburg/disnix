@@ -159,17 +159,17 @@ then
         snapshots=$(dysnomia-snapshots --query-latest --container $container --component $component)
     fi
     
-    missingSnapshots=$($interface --target $target --print-missing-snapshots $snapshots)
-    
-    if [ "$missingSnapshots" != "" ]
-    then
-        resolvedPaths=$(dysnomia-snapshots --resolve $missingSnapshots)
-        
-        for i in $resolvedPaths
-        do
-            $interface --target $target --import-snapshots --container $container --component $component --localfile $i
-        done
-    fi
+    for i in $snapshots
+    do
+        if [ "$($interface --target $target --print-missing-snapshots $i)" = "" ]
+        then
+            resolvedPath=$($interface --target $target --resolve-snapshots $i)
+            $interface --target $target --import-snapshots --container $container --component $component --remotefile $resolvedPath
+        else
+            resolvedPath=$(dysnomia-snapshots --resolve $i)
+            $interface --target $target --import-snapshots --container $container --component $component --localfile $resolvedPath
+        fi
+    done
 else
     if [ "$all" = "1" ]
     then
@@ -178,17 +178,17 @@ else
         snapshots=$($interface --target $target --query-latest-snapshot --container $container --component $component)
     fi
     
-    missingSnapshots=$(dysnomia-snapshots --print-missing $snapshots)
-    
-    if [ "$missingSnapshots" != "" ]
-    then
-        resolvedPaths=$($interface --target $target --resolve-snapshots $missingSnapshots)
-        
-        for i in $resolvedPaths
-        do
-            tmpdir=$($interface --target $target --export-snapshots $i)
+    for i in $snapshots
+    do
+        if [ "$(dysnomia-snapshots --print-missing $i)" = "" ]
+        then
+            resolvedPath=$(dysnomia-snapshots --resolve $i)
+            dysnomia-snapshots --import --container $container --component $component $resolvedPath
+        else
+            resolvedPath=$($interface --target $target --resolve-snapshots $i)
+            tmpdir=$($interface --target $target --export-snapshots $resolvedPath)
             dysnomia-snapshots --import --container $container --component $component $tmpdir/* || (rm -Rf $tmpdir; false)
             rmdir $tmpdir
-        done
-    fi
+        fi
+    done
 fi

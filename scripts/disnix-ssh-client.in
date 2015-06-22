@@ -432,11 +432,14 @@ case "$operation" in
         # A localfile must first be transferred
         if [ "$localfile" = "1" ]
         then
-            remotefile=`ssh -p $targetPort $SSH_OPTS $targetHostname mktemp -d -p $TMPDIR`
-            scp -r -P $targetPort $SSH_OPTS $@ $targetHostname:$remotefile > /dev/null
+            tempdir=`ssh -p $targetPort $SSH_OPTS $targetHostname mktemp -d -p $TMPDIR`
+            scp -r -P $targetPort $SSH_OPTS $@ $targetHostname:$tempdir > /dev/null
+            remotefile=`ssh -p $targetPort $SSH_OPTS $targetHostname echo $tempdir/*`
+        else
+            remotefile=$@
         fi
         
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --container $container --component $component --import-snapshots $remotefile/*
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --container $container --component $component --import-snapshots $remotefile
         ;;
     export-snapshots)
         tmpdir=`mktemp -d -p $TMPDIR`

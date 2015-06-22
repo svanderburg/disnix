@@ -200,15 +200,15 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         }
         
         # Copy all (remaining) snapshots from the server and check whether we
-        # have 3 of them.
+        # have 4 of them.
         $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-copy-snapshots --from --target server --container wrapper --component ${wrapper} --all");
         
         $result = $client->mustSucceed("dysnomia-snapshots --query-all --container wrapper --component ${wrapper} | wc -l");
         
-        if($result == 3) {
-            print "We have 3 snapshots!\n";
+        if($result == 4) {
+            print "We have 4 snapshots!\n";
         } else {
-            die "Expecting only 3 snapshots, but we have: $result!";
+            die "Expecting 4 snapshots, but we have: $result!";
         }
         
         # Delete all snapshots from the server
@@ -230,23 +230,33 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         $lastResolvedSnapshot = $server->mustSucceed("dysnomia-snapshots --resolve ".(substr $lastSnapshot, 0, -1));
         $result = $server->mustSucceed("cat ".(substr $lastResolvedSnapshot, 0, -1)."/state");
         
-        # TODO: should be 2. Think about order of generation symlinks
-        if($result == 1) {
-            print "Result is 1\n";
+        if($result == 2) {
+            print "Result is 2\n";
         } else {
-            die "Result should be 1, instead it is: $result!";
+            die "Result should be 2, instead it is: $result!";
         }
         
         # Copy all (remaining) snapshots to the server and check whether we
-        # have 3 of them.
+        # have 4 of them. The last snapshot should still contain 2 (which
+        # corresponds to the last local snapshot).
         $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-copy-snapshots --to --target server --container wrapper --component ${wrapper} --all");
         
         $result = $server->mustSucceed("dysnomia-snapshots --query-all --container wrapper --component ${wrapper} | wc -l");
         
-        if($result == 3) {
-            print "We have 3 snapshots!\n";
+        if($result == 4) {
+            print "We have 4 snapshots!\n";
         } else {
-            die "Expecting only 3 snapshots!";
+            die "Expecting only 4 snapshots, but we have: $result!";
+        }
+        
+        $lastSnapshot = $server->mustSucceed("dysnomia-snapshots --query-latest --container wrapper --component ${wrapper}");
+        $lastResolvedSnapshot = $server->mustSucceed("dysnomia-snapshots --resolve ".(substr $lastSnapshot, 0, -1));
+        $result = $server->mustSucceed("cat ".(substr $lastResolvedSnapshot, 0, -1)."/state");
+        
+        if($result == 2) {
+            print "Result is 2\n";
+        } else {
+            die "Result should be 2, instead it is: $result!";
         }
       '';
   }
