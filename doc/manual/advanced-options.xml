@@ -119,4 +119,23 @@ $ disnix-env -s my-other-services.nix -i my-other-infrastructure.nix -d my-other
 $ disnix-env --profile other -s my-other-services.nix -i my-other-infrastructure.nix -d my-other-distribution.nix
 </screen>
 	</section>
+	
+	<section>
+		<title>Enable state deployment by default</title>
+		
+		<para>
+			If it desired to let Disnix manage state, you must annotate the corresponding services in the service model.
+			However, it is also possible to override Disnix's default behaviour to enable state manage management for all
+			services by default.
+		</para>
+		
+		<para>
+			Global state deployment can be enabled by providing the <option>--deploy-state</option> command-line option to
+			commands such as <command>disnix-env</command> or by setting the following environment variable:
+		</para>
+		
+<screen>
+$ export DISNIX_DEPLOY_STATE=1
+</screen>
+	</section>
 </chapter>

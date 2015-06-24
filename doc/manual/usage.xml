@@ -27,6 +27,10 @@ $ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
 			new services are activated.
 		</para>
 		<para>
+			If state deployment has been enabled for any of the services, then their states will be captured, transferred
+			and restored if a service gets moved from one machine to another.
+		</para>
+		<para>
 			It may be possible that the coordinator machine is not able build services for every machine in the network
 			(e.g. if a target is a <code>i686-freebsd</code> and the coordinator is a <code>i686-linux</code> machine).
 			In such cases it is also possible to perform builds on machines in the network and then copy the build results
@@ -166,6 +170,88 @@ $ disnix-collect-garbage infrastructure.nix
 		
 <screen>
 $ disnix-collect-garbage -d infrastructure.nix
+</screen>
+	</section>
+	
+	<section>
+		<title>Capturing the state of deployed services</title>
+		
+		<para>
+			If state deployment has been enabled for one or more services, you can take capture them
+			and transfer them to the coordinator machine by running:
+		</para>
+		
+<screen>
+$ disnix-snapshot
+</screen>
+		
+		<para>
+			The above command takes the last executed deployment configuration, takes snapshots and only
+			transfers the snapshots that have not been transferred before. This approch could serve as a backup mechanism.
+		</para>
+	</section>
+	
+	<section>
+		<title>Restoring the state of deployed services</title>
+		
+		<para>
+			Restoring the state of services for which state deployment has been enabled, can be done as follows:
+		</para>
+		
+<screen>
+$ disnix-restore
+</screen>
+		
+		<para>
+			The above command transfers the latest versions of the snapshots from the coordinator machine to the target
+			machines and restores the state of all services that do not have any state deployed, i.e. a database that
+			is still empty.
+		</para>
+		
+		<para>
+			The fact that only services without any state are restored, serves as a safety mechanism so that no data
+			is accendentally lost.
+		</para>
+		
+		<para>
+			It may also be desirable to force all state to be restored, even for components that have some state already.
+			Forcing all snapshots to be restored can be done as follows:
+		</para>
+		
+<screen>
+$ disnix-restore --no-upgrade
+</screen>
+	</section>
+	
+	<section>
+		<title>Cleaning snapshots</title>
+		<para>
+			Every time the snapshot operation is executed, new generations of snapshots are created which are stored
+			alongside older generations. Moreover, older generations of snapshots are never removed automatically.
+		</para>
+		<para>
+			To remove older snapshot generations on the target machines, run the following command:
+		</para>
+<screen>
+$ disnix-clean-snapshots infrastructure.nix
+</screen>
+		<para>
+			The above command removes all but the last snapshot generation of all services. The amount of snapshot generations
+			that must be kept can be raised:
+		</para>
+<screen>
+$ disnix-clean-snapshots --keep 3 infrastructure.nix
+</screen>
+		<para>
+			The above instruction states that the last three generations must be kept.
+		</para>
+		<para>
+			Keep in mind that Disnix always transfers the snapshots to the coordinator machine, so there is typically little
+			reason (besides improving the efficiency of the snapshot operations) to keep them on the targets. All snapshots
+			on the target machines can be wiped as follows:
+		</para>
+<screen>
+$ disnix-clean-snapshots --keep 0 infrastructure.nix
 </screen>
 	</section>
 </chapter>

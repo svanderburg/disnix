@@ -199,6 +199,20 @@
 				forward manner.
 			</para>
 		</simplesect>
+		
+		<simplesect>
+			<title>Data migration and backups</title>
+			
+			<para>
+				Disnix can also optionally take snapshots of the state of deployed services for
+				backup and migration purposes, e.g. when a service is moved from one machine to
+				another.
+			</para>
+			<para>
+				It uses a plugin system that takes care of executing the required snapshot and
+				restore operations for a given service type.
+			</para>
+		</simplesect>
 	</section>
 
 	<section>
