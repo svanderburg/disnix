@@ -74,4 +74,16 @@ $ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
 		In such cases, Disnix can also compile a service on a target machine in the network or
 		use Nix to delegate a build to a machine capable of building it.
 	</para>
+	
+	<para>
+		Optionally, Disnix can also move the state of a service from machine to another.
+		For example, when deploying databases Disnix only ensures that they are created with
+		a schema and initial dataset. However, when the structure and contents of a database
+		evolves the changes are not migrated automatically.
+	</para>
+	
+	<para>
+		As a solution, Disnix has a mechanism that snapshots, moves and restores state of a service
+		if it has been explicitly enabled for that service.
+	</para>
 </chapter>

@@ -552,19 +552,20 @@ rec { <co xml:id='co-3-rec2' />
     name = "zipcodes"; 
     pkg = customPkgs.zipcodes; 
     dependsOn = {};
+    deployState = true; <co xml:id='co-4-deployState' />
     type = "mysql-database";
   };
   ...
   
 ### Web services  
 
-  ZipcodeService = { <co xml:id='co-4-service' />
-    name = "ZipcodeService"; <co xml:id='co-5-serviceName' />
-    pkg = customPkgs.ZipcodeService; <co xml:id='co-6-pkg' />
-    dependsOn = { <co xml:id='co-7-dependsOn' />
+  ZipcodeService = { <co xml:id='co-5-service' />
+    name = "ZipcodeService"; <co xml:id='co-6-serviceName' />
+    pkg = customPkgs.ZipcodeService; <co xml:id='co-7-pkg' />
+    dependsOn = { <co xml:id='co-8-dependsOn' />
       inherit zipcodes;
     };
-    type = "tomcat-webapplication"; <co xml:id='co-8-type' />
+    type = "tomcat-webapplication"; <co xml:id='co-9-type' />
   };
   ...
 
@@ -620,7 +621,20 @@ rec { <co xml:id='co-3-rec2' />
 				</para>
 			</callout>
 			
-			<callout arearefs='co-4-service'>
+			<callout arearefs='co-4-deployState'>
+				<para>
+					This boolean value indicates that Disnix should also do state deployment, causing it
+					to move data if the database if moved from one machine to another. Moreover, when executing
+					the snapshot and restory utility a dump of the database is made, transferred and restored.
+				</para>
+				<para>
+					By default, state deployment is disabled unless explicitly enabled.
+					However, it can also be enabled by default if needed.
+					See <xref linkend="chap-advanced-options" /> for more information.
+				</para>
+			</callout>
+			
+			<callout arearefs='co-5-service'>
 				 <para>
 					Every attribute represents a <emphasis>service</emphasis> (i.e. a distributable
 					component). Services correspond to the components shown in the
@@ -628,14 +642,14 @@ rec { <co xml:id='co-3-rec2' />
 				 </para>
 			</callout>
 			
-			<callout arearefs='co-5-serviceName'>
+			<callout arearefs='co-6-serviceName'>
 				<para>
 					Every service has a canonical name, so that it is known to which one is referred
 					from the inter-dependency arguments. This name must match the attribute name.
 				</para>
 			</callout>
 			
-			<callout arearefs='co-6-pkg'>
+			<callout arearefs='co-7-pkg'>
 				<para>
 					For every service, we must know how to build it and what their intra- and inter-dependencies are. 
 					This attribute refers to the intra-dependency closure of the service, which is composed in
@@ -644,7 +658,7 @@ rec { <co xml:id='co-3-rec2' />
 				</para>
 			</callout>
 			
-			<callout arearefs='co-7-dependsOn'>
+			<callout arearefs='co-8-dependsOn'>
 				<para>
 					We also need to know for each service what the inter-dependencies actually are. In this
 					particular example, we specify that the attribute <varname>zipcodes</varname> (a service also
@@ -660,9 +674,10 @@ rec { <co xml:id='co-3-rec2' />
 				</para>
 			</callout>
 			
-			<callout arearefs='co-8-type'>
+			<callout arearefs='co-9-type'>
 				<para>
-					Finally, we must know how to activate and deactive a service. Since services can represent
+					Finally, we must know how to activate and deactive a service, and how to snapshot and restore
+					their state. Since services can represent
 					nearly anything, such as a database or web application, we cannot perform this step generically.
 					This attribute specifies the type of the service, which is used by Disnix to consult Dysnomia
 					on the target machine performing the actual activation or deactivation process. 
