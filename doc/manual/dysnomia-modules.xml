@@ -24,6 +24,9 @@
 			<listitem><simpara><varname>deactivate</varname>. Used to deactivate a service</simpara></listitem>
 			<listitem><simpara><varname>lock</varname>. Invoked for each service before the activation phase starts</simpara></listitem>
 			<listitem><simpara><varname>unlock</varname>. Invoked for each service after the activation phase</simpara></listitem>
+			<listitem><simpara><varname>snapshot</varname>. Invoked to capture the state of the service</simpara></listitem>
+			<listitem><simpara><varname>restore</varname>. Invoked to restore the state of the service</simpara></listitem>
+			<listitem><simpara><varname>collect-garbage</varname>. Invoked to delete the state of the service</simpara></listitem>
 		</itemizedlist>
 		
 		<para>
@@ -39,25 +42,77 @@
 			<title>MySQL database Dysnomia module</title>
 			
 			<programlisting>
-#!/bin/bash -e
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+# Autoconf settings
+export prefix=@prefix@
+
+# Import utility functions
+source @datadir@/@PACKAGE@/util
+
+determineComponentName $2
+checkStateDir
+determineTypeIdentifier $0
+composeSnapshotsPath
+composeGarbagePath
+composeGenerationsPath
 
 case "$1" in
     activate) <co xml:id='co-1-activate' />
         # Initalize the given schema if the database does not exists
-        componentName=`basename $2`
-        dbName=${componentName:33}
-
-        if [ "$(echo "show databases" | mysql --user=$mysqlUsername --password=$mysqlPassword -N | grep -x $dbName)" = "" ]
+        if [ "$(echo "show databases" | @mysql@ --user=$mysqlUsername --password=$mysqlPassword -N | grep -x $componentName)" = "" ]
         then
-            ( echo "create database $dbName;"
-              echo "use $dbName;"
-              cat $2/mysql-databases/*.sql ) | mysql --user=$mysqlUsername --password=$mysqlPassword -N
+            ( echo "create database $componentName;"
+              echo "use $componentName;"
+              
+              if [ -d $2/mysql-databases ]
+              then
+                  cat $2/mysql-databases/*.sql
+              fi
+            ) | @mysql@ --user=$mysqlUsername --password=$mysqlPassword -N
         fi
+        unmarkStateAsGarbage
         ;;
     deactivate) <co xml:id='co-2-deactivate' />
-        # A MySQL database cannot be deactivated, we do not want to drop a database
-        # with all data in it, right?
-        echo
+        markStateAsGarbage
+        ;;
+    snapshot) <co xml:id='co-3-snapshot' />
+        tmpdir=$(mktemp -d)
+        cd $tmpdir
+        @mysqldump@ --single-transaction --quick --user=$mysqlUsername --password=$mysqlPassword $componentName | head -n-1 | xz > dump.sql.xz
+        
+        hash=$(cat dump.sql.xz | sha256sum)
+        hash=${hash:0:64}
+        
+        if [ -d $snapshotsPath/$hash ]
+        then
+            rm -Rf $tmpdir
+        else
+            mkdir -p $snapshotsPath/$hash
+            mv dump.sql.xz $snapshotsPath/$hash
+            rmdir $tmpdir
+        fi
+        createGenerationSymlink $snapshotsPath/$hash
+        ;;
+    restore) <co xml:id='co-4-restore' />
+        determineLastSnapshot
+        
+        if [ "$lastSnapshot" != "" ]
+        then
+            ( echo "use $componentName;"
+              xzcat $snapshotsPath/$lastSnapshot/dump.sql.xz
+            ) | @mysql@ --user=$mysqlUsername --password=$mysqlPassword -N
+        fi
+        ;;
+    collect-garbage) <co xml:id='co-5-collect-garbage' />
+        if [ -f $garbagePath ]
+        then
+            echo "drop database $componentName;" | @mysql@ --user=$mysqlUsername --password=$mysqlPassword -N
+            unmarkStateAsGarbage
+        fi
         ;;
 esac
 			</programlisting>
@@ -74,14 +129,39 @@ esac
 					we first check whether the database already exists. If the database is not there yet,
 					we create a MySQL database having the same name as the Nix component
 					and finally we import the attached MySQL schema into the database.
+					Moreover, it also marks the database as being used, so that it will not be garbage collected.
 				</para>
 			</callout>
 			
 			<callout arearefs="co-2-deactivate">
 				<para>
-					This part performs the deactivation step of a MySQL service. 
-					For a MySQL database, we do not do anything because we do not want
-					to discard data.
+					The deactivation step consists of marking the database as garbage, so that it
+					will be removed by the garbage collector.
+				</para>
+			</callout>
+			
+			<callout arearefs="co-3-snapshot">
+				<para>
+					Dumps the state of the MySQL database in a single transaction into a dump file and places
+					it in the Dysnomia snapshot folder using the output hash as a naming convention. If a dump
+					with an identical hash exists, then the taken snapshot is discarded, because there is no
+					reason to store the same output twice.
+					After the snapshot has been taken, the generation symlink (that indicates what the last snapshot
+					is) is updated.
+				</para>
+			</callout>
+			
+			<callout arearefs="co-4-restore">
+				<para>
+					Determines what the latest snapshot of the database is and restores the corresponding snapshot.
+					If no snapshot exists, it does nothing.
+				</para>
+			</callout>
+			
+			<callout arearefs="co-5-collect-garbage">
+				<para>
+					Checks whether the database has been marked as garbage and drops it if this is the case.
+					Otherwise, it does not nothing.
 				</para>
 			</callout>
 		</calloutlist>				

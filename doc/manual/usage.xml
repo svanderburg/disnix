@@ -254,4 +254,33 @@ $ disnix-clean-snapshots --keep 3 infrastructure.nix
 $ disnix-clean-snapshots --keep 0 infrastructure.nix
 </screen>
 	</section>
+	
+	<section>
+		<title>Notes on state deployment</title>
+		<para>
+			Although Disnix supports state deployment, it has been disabled by default. The reason why this is the default policy
+			is that its mechanisms may neither be the preferred nor the optimal way of doing it.
+		</para>
+		<para>
+			Disnix uses Dysnomia's plugin system that invokes external tools taking care of snapshotting and restoring the state
+			of the corresponding components. The good part of this approach is that it is general and works for all kinds of mutable
+			components. Moreover, the tools that are consulted by the plugin system typically dump state in a portable and consistent
+			format, which is also useful for a variety of reasons.
+		</para>
+		<para>
+			However, some of the drawbacks of this approach is that the process of snapshotting and restoring portable dumps is
+			typically very slow, especially for large data sets. Moreover, the snapshot tools also write dumps entirely to the filesystem.
+		</para>
+		<para>
+			An alternative approach of doing state deployment is by working on filesystem level which is typically much faster.
+			However, some drawbacks of working on filesystem level is that state may be inconsistent (because of incomplete write operations),
+			and non-portable. Also, for some type of containers, it is difficult to manage individiual chunks of data. Filesystem level
+			state management is unsupported by Disnix and must be done by other means.
+		</para>
+		<para>
+			Another state deployment approach that works for databases is using their replication engine features. Replication engines
+			can typically move data from one machine to another much more efficiently. To accomplish this the DBMS must be reconfigured
+			to do replication. However, replication features cannot be configured generically.
+		</para>
+	</section>
 </chapter>

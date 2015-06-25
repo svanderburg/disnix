@@ -628,9 +628,8 @@ rec { <co xml:id='co-3-rec2' />
 					the snapshot and restory utility a dump of the database is made, transferred and restored.
 				</para>
 				<para>
-					By default, state deployment is disabled unless explicitly enabled.
-					However, it can also be enabled by default if needed.
-					See <xref linkend="chap-advanced-options" /> for more information.
+					By default, Disnix does not attempt to do any state deployment unless it has been explicitly enabled.
+					However, it can also be enabled by default if needed, see <xref linkend="chap-advanced-options" /> for more information.
 				</para>
 			</callout>
 			
@@ -880,5 +879,12 @@ rec { <co xml:id='co-3-rec2' />
 				</para>
 			</callout>
 		</calloutlist>
+		
+		<para>
+			There is one important caveat when deploying multiple redundant instances of the same services.
+			If state deployment has been enabled, Disnix assumes that redundant instances of the services
+			all have the same state (that are synchronized somehow). If this is not the case, then you must give
+			each service a unique identity.
+		</para>
 	</section>
 </chapter>

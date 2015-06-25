@@ -118,10 +118,17 @@ $ disnix-env -s my-other-services.nix -i my-other-infrastructure.nix -d my-other
 <screen>
 $ disnix-env --profile other -s my-other-services.nix -i my-other-infrastructure.nix -d my-other-distribution.nix
 </screen>
+
+		<para>
+			Besides using the <option>--profile</option> option, you can also use an environment variable:
+		</para>
+<screen>
+$ export DISNIX_PROFILE=other
+</screen>
 	</section>
 	
 	<section>
-		<title>Enable state deployment by default</title>
+		<title>Enabling state deployment by default</title>
 		
 		<para>
 			If it desired to let Disnix manage state, you must annotate the corresponding services in the service model.
