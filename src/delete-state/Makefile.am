@@ -4,8 +4,6 @@ disnix-delete-state.1: main.c
 disnix-delete-state.1.xml: disnix-delete-state.1
 	$(SHELL) ../../maintenance/man2docbook.bash $<
 
-AM_CPPFLAGS = -DLOCALSTATEDIR=\"$(localstatedir)\"
-
 bin_PROGRAMS = disnix-delete-state
 noinst_HEADERS = delete-state.h
 noinst_DATA = disnix-delete-state.1.xml

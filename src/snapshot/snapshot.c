@@ -163,30 +163,6 @@ static int retrieve_snapshots(GPtrArray *snapshots_array, GPtrArray *target_arra
     return exit_status;
 }
 
-static gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, const char *username, const gchar *profile)
-{
-    gchar *old_manifest_file;
-    FILE *file;
-    
-    if(coordinator_profile_path == NULL)
-        old_manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
-    else
-        old_manifest_file = g_strconcat(coordinator_profile_path, "/", profile, NULL);
-    
-    /* Try to open file => if it succeeds we have a previous configuration */
-    file = fopen(old_manifest_file, "r");
-    
-    if(file == NULL)
-    {
-        g_free(old_manifest_file);
-        old_manifest_file = NULL;
-    }
-    else
-        fclose(file);
-    
-    return old_manifest_file;
-}
-
 static void cleanup(const gchar *old_manifest, char *old_manifest_file, Manifest *manifest, GPtrArray *snapshots_array, GPtrArray *old_snapshots_array)
 {
     g_free(old_manifest_file);

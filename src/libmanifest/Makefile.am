@@ -1,3 +1,5 @@
+AM_CPPFLAGS = -DLOCALSTATEDIR=\"$(localstatedir)\"
+
 pkglib_LTLIBRARIES = libmanifest.la
 pkginclude_HEADERS = activationmapping.h distributionmapping.h snapshotmapping.h targets.h manifest.h
 

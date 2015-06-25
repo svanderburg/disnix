@@ -18,6 +18,7 @@
  */
 
 #include "manifest.h"
+#include <stdio.h>
 #include "distributionmapping.h"
 #include "activationmapping.h"
 #include "snapshotmapping.h"
@@ -73,4 +74,28 @@ void delete_manifest(Manifest *manifest)
         delete_target_array(manifest->target_array);
         g_free(manifest);
     }
+}
+
+gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, const char *username, const gchar *profile)
+{
+    gchar *old_manifest_file;
+    FILE *file;
+    
+    if(coordinator_profile_path == NULL)
+        old_manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
+    else
+        old_manifest_file = g_strconcat(coordinator_profile_path, "/", profile, NULL);
+    
+    /* Try to open file => if it succeeds we have a previous configuration */
+    file = fopen(old_manifest_file, "r");
+    
+    if(file == NULL)
+    {
+        g_free(old_manifest_file);
+        old_manifest_file = NULL;
+    }
+    else
+        fclose(file);
+    
+    return old_manifest_file;
 }

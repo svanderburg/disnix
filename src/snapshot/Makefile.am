@@ -4,8 +4,6 @@ disnix-snapshot.1: main.c
 disnix-snapshot.1.xml: disnix-snapshot.1
 	$(SHELL) ../../maintenance/man2docbook.bash $<
 
-AM_CPPFLAGS = -DLOCALSTATEDIR=\"$(localstatedir)\"
-
 bin_PROGRAMS = disnix-snapshot
 noinst_HEADERS = snapshot.h
 noinst_DATA = disnix-snapshot.1.xml

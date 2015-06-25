@@ -112,30 +112,6 @@ static int delete_obsolete_state(GPtrArray *snapshots_array, GPtrArray *target_a
     return status;
 }
 
-static gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, const char *username, const gchar *profile)
-{
-    gchar *old_manifest_file;
-    FILE *file;
-    
-    if(coordinator_profile_path == NULL)
-        old_manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
-    else
-        old_manifest_file = g_strconcat(coordinator_profile_path, "/", profile, NULL);
-    
-    /* Try to open file => if it succeeds we have a previous configuration */
-    file = fopen(old_manifest_file, "r");
-    
-    if(file == NULL)
-    {
-        g_free(old_manifest_file);
-        old_manifest_file = NULL;
-    }
-    else
-        fclose(file);
-    
-    return old_manifest_file;
-}
-
 static Manifest *open_manifest(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const char *username)
 {
     gchar *path;

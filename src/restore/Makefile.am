@@ -4,8 +4,6 @@ disnix-restore.1: main.c
 disnix-restore.1.xml: disnix-restore.1
 	$(SHELL) ../../maintenance/man2docbook.bash $<
 
-AM_CPPFLAGS = -DLOCALSTATEDIR=\"$(localstatedir)\"
-
 bin_PROGRAMS = disnix-restore
 noinst_HEADERS = restore.h
 noinst_DATA = disnix-restore.1.xml

@@ -158,9 +158,9 @@ void delete_snapshots_array(GPtrArray *snapshots_array)
     }
 }
 
-SnapshotMapping *find_snapshot_mapping(const GPtrArray *snapshot_array, const SnapshotMappingKey *key)
+SnapshotMapping *find_snapshot_mapping(const GPtrArray *snapshots_array, const SnapshotMappingKey *key)
 {
-    SnapshotMapping **ret = bsearch(&key, snapshot_array->pdata, snapshot_array->len, sizeof(gpointer), (int (*)(const void*, const void*)) compare_snapshot_mapping);
+    SnapshotMapping **ret = bsearch(&key, snapshots_array->pdata, snapshots_array->len, sizeof(gpointer), (int (*)(const void*, const void*)) compare_snapshot_mapping);
     
     if(ret == NULL)
         return NULL;

@@ -4,8 +4,6 @@ disnix-activate.1: main.c
 disnix-activate.1.xml: disnix-activate.1
 	$(SHELL) ../../maintenance/man2docbook.bash $<
 
-AM_CPPFLAGS = -DLOCALSTATEDIR=\"$(localstatedir)\"
-
 bin_PROGRAMS = disnix-activate
 noinst_HEADERS = transition.h activate.h
 noinst_DATA = disnix-activate.1.xml

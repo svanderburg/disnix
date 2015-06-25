@@ -82,7 +82,7 @@ void delete_snapshots_array(GPtrArray *snapshots_array);
  * @param key Key of the snapshots mapping to find
  * @return The snapshot mapping with the specified key, or NULL if it cannot be found
  */
-SnapshotMapping *find_snapshot_mapping(const GPtrArray *snapshot_array, const SnapshotMappingKey *key);
+SnapshotMapping *find_snapshot_mapping(const GPtrArray *snapshots_array, const SnapshotMappingKey *key);
 
 /**
  * Subtract the snapshots from array1 that are in array2.
