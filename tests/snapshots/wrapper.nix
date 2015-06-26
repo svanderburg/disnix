@@ -13,6 +13,7 @@ stdenv.mkDerivation {
     determineComponentName "${name}"
     checkStateDir
     determineTypeIdentifier "wrapper"
+    determineContainerName $3
     composeSnapshotsPath
     composeGarbagePath
     composeGenerationsPath

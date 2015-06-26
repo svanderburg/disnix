@@ -51,7 +51,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         if($result == 3) {
             print "We have 3 snapshots!\n";
         } else {
-            die "Expecting 3 snapshots!";
+            die "Expecting 3 snapshots, but we have: $result!";
         }
         
         # Query latest snapshot. The resulting snapshot text must contain 2.
