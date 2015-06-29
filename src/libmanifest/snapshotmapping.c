@@ -183,3 +183,19 @@ GPtrArray *subtract_snapshot_mappings(GPtrArray *snapshots_array1, GPtrArray *sn
     
     return return_array;
 }
+
+GPtrArray *find_snapshot_mappings_per_target(const GPtrArray *snapshots_array, const gchar *target)
+{
+    GPtrArray *return_array = g_ptr_array_new();
+    unsigned int i;
+    
+    for(i = 0; i < snapshots_array->len; i++)
+    {
+        SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
+        
+        if(g_strcmp0(mapping->target, target) == 0)
+            g_ptr_array_add(return_array, mapping);
+    }
+    
+    return return_array;
+}

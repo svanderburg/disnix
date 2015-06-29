@@ -93,4 +93,13 @@ SnapshotMapping *find_snapshot_mapping(const GPtrArray *snapshots_array, const S
  */
 GPtrArray *subtract_snapshot_mappings(GPtrArray *snapshots_array1, GPtrArray *snapshots_array2);
 
+/**
+ * Finds all snapshot mappings that map to a specific target.
+ *
+ * @param snapshots_array Snapshots array
+ * @param target Key that identifies a target machine
+ * @return An array with snapshot mappings linked to the given target
+ */
+GPtrArray *find_snapshot_mappings_per_target(const GPtrArray *snapshots_array, const gchar *target);
+
 #endif

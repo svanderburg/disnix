@@ -126,32 +126,66 @@ static int wait_to_complete_retrieve(void)
         return 0;
 }
 
-static int retrieve_snapshots(GPtrArray *snapshots_array, GPtrArray *target_array, const unsigned int max_concurrent_transfers, const int all)
+static int retrieve_snapshots_per_target(GPtrArray *snapshots_array, Target *target, const int all)
 {
-    unsigned int running_processes = 0, i;
-    int exit_status;
+    gchar *target_key = find_target_key(target);
+    gchar *interface = find_target_client_interface(target);
+    GPtrArray *snapshots_per_target_array = find_snapshot_mappings_per_target(snapshots_array, target_key);
+    unsigned int i;
+    int status = 0;
     
-    for(i = 0; i < snapshots_array->len; i++)
+    for(i = 0; i < snapshots_per_target_array->len; i++)
     {
-        SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
-        Target *target = find_target(target_array, mapping->target);
-        gchar *interface = find_target_client_interface(target);
+        SnapshotMapping *mapping = g_ptr_array_index(snapshots_per_target_array, i);
         
         g_print("[target: %s]: Retrieving snapshots of component: %s deployed to container: %s\n", mapping->target, mapping->component, mapping->container);
-        exec_copy_snapshots_from(interface, mapping->target, mapping->container, mapping->component, all);
-        running_processes++;
+        status = wait_to_finish(exec_copy_snapshots_from(interface, mapping->target, mapping->container, mapping->component, all));
         
-        /* If limit has been reached, wait until one of the transfers finishes */
-        if(running_processes >= max_concurrent_transfers)
-        {
-            exit_status = wait_to_complete_retrieve();
-            running_processes--;
-            
-            if(exit_status != 0)
-                break;
-        }
+        if(status != 0)
+            break;
     }
     
+    g_ptr_array_free(snapshots_per_target_array, TRUE);
+    
+    return status;
+}
+
+static int retrieve_snapshots(GPtrArray *snapshots_array, GPtrArray *target_array, const unsigned int max_concurrent_transfers, const int all)
+{
+    unsigned int i, running_processes = 0;
+    int exit_status = 0;
+    
+    for(i = 0; i < target_array->len; i++)
+    {
+        Target *target = g_ptr_array_index(target_array, i);
+        pid_t pid = fork();
+        
+        if(pid == 0)
+        {
+            int status = retrieve_snapshots_per_target(snapshots_array, target, all);
+            _exit(status);
+        }
+        else if(pid == -1)
+        {
+            g_printerr("Cannot fork retrieval process!\n");
+            exit_status = -1;
+        }
+        else
+        {
+            running_processes++;
+        
+            /* If limit has been reached, wait until one of the transfers finishes */
+            if(running_processes >= max_concurrent_transfers)
+            {
+                exit_status = wait_to_complete_retrieve();
+                running_processes--;
+                
+                if(exit_status != 0)
+                    break;
+            }
+        }
+    }
+
     /* Wait for remaining transfers to finish */
     for(i = 0; i < running_processes; i++)
     {
