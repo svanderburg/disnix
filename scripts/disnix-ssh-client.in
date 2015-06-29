@@ -147,6 +147,24 @@ Copyright (C) 2008-2015 Sander van der Burg
 EOF
 }
 
+checkLocalOrRemoteFile()
+{
+    if [ "$localfile" != "1" ] && [ "$remotefile" != "1" ]
+    then
+        echo "ERROR: Either a remote or a localfile must be specified!" >&2
+        exit 1
+    fi
+}
+
+checkType()
+{
+    if [ "$type" = "" ]
+    then
+        echo "ERROR: A type must be specified!" >&2
+        exit 1
+    fi
+}
+
 # Parse valid argument options
 
 PARAMS=`@getopt@ -n $0 -o rqp:dC:c:hv -l import,export,print-invalid,realise,set,query-installed,query-requisites,collect-garbage,activate,deactivate,lock,unlock,snapshot,restore,delete-state,query-all-snapshots,query-latest-snapshot,print-missing-snapshots,import-snapshots,export-snapshots,resolve-snapshots,clean-snapshots,target:,localfile,remotefile,profile:,delete-old,type:,arguments:,container:,component:,keep:,help,version -- "$@"`
@@ -311,28 +329,22 @@ checkTmpDir
 
 case "$operation" in
     import)
-        if [ "$localfile" != "1" ] && [ "$remotefile" != "1" ]
-        then
-            echo "ERROR: Either a remote or a localfile must be specified!" >&2
-            exit 1
-        fi
+        checkLocalOrRemoteFile
         
         # A localfile must first be transferred
         if [ "$localfile" != "" ]
         then
-            remotefile=`ssh -p $targetPort $SSH_OPTS $targetHostname mktemp -p $TMPDIR`
-            scp -P $targetPort $SSH_OPTS "$@" $targetHostname:$remotefile
+            remoteClosure=`ssh -p $targetPort $SSH_OPTS $targetHostname mktemp -p $TMPDIR`
+            scp -P $targetPort $SSH_OPTS "$@" $targetHostname:$remoteClosure
+        else
+            remoteClosure="$@"
         fi
         
         # Import the closure into the Nix store
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --import $remotefile
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --import $remoteClosure
         ;;
     export)
-        if [ "$localfile" != "1" ] && [ "$remotefile" != "1" ]
-        then
-            echo "ERROR: Either a remote or a localfile must be specified!" >&2
-            exit 1
-        fi
+        checkLocalOrRemoteFile
 
         closure=`ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --export $@`
         
@@ -363,21 +375,11 @@ case "$operation" in
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --collect-garbage $deleteOldArg "$@"
         ;;
     activate)
-        if [ "$type" = "" ]
-        then
-            echo "ERROR: A type must be specified!" >&2
-            exit 1
-        fi
-        
+        checkType
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --activate "$@"
         ;;
     deactivate)
-        if [ "$type" = "" ]
-        then
-            echo "ERROR: A type must be specified!" >&2
-            exit 1
-        fi
-        
+        checkType
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --deactivate "$@"
         ;;
     lock)
@@ -387,30 +389,15 @@ case "$operation" in
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --unlock $profileArg
         ;;
     snapshot)
-        if [ "$type" = "" ]
-        then
-            echo "ERROR: A type must be specified!" >&2
-            exit 1
-        fi
-        
+        checkType
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --snapshot "$@"
         ;;
     restore)
-        if [ "$type" = "" ]
-        then
-            echo "ERROR: A type must be specified!" >&2
-            exit 1
-        fi
-        
+        checkType
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --restore "$@"
         ;;
     delete-state)
-        if [ "$type" = "" ]
-        then
-            echo "ERROR: A type must be specified!" >&2
-            exit 1
-        fi
-        
+        checkType
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --delete-state "$@"
         ;;
     query-all-snapshots)
@@ -423,32 +410,27 @@ case "$operation" in
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --print-missing-snapshots "$@"
         ;;
     import-snapshots)
-        if [ "$localfile" != "1" ] && [ "$remotefile" != "1" ]
-        then
-            echo "ERROR: Either a remote or a localfile must be specified!" >&2
-            exit 1
-        fi
+        checkLocalOrRemoteFile
         
         # A localfile must first be transferred
         if [ "$localfile" = "1" ]
         then
             tempdir=`ssh -p $targetPort $SSH_OPTS $targetHostname mktemp -d -p $TMPDIR`
             scp -r -P $targetPort $SSH_OPTS $@ $targetHostname:$tempdir > /dev/null
-            remotefile=`ssh -p $targetPort $SSH_OPTS $targetHostname echo $tempdir/*`
+            remoteSnapshots=`ssh -p $targetPort $SSH_OPTS $targetHostname echo $tempdir/*`
         else
-            remotefile=$@
+            remoteSnapshots=$@
         fi
         
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --container $container --component $component --import-snapshots $remotefile
+        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --container $container --component $component --import-snapshots $remoteSnapshots
         ;;
     export-snapshots)
-        tmpdir=`mktemp -d -p $TMPDIR`
         for i in $@
         do
+            tmpdir=`mktemp -d -p $TMPDIR`
             scp -r -P $targetPort $SSH_OPTS $targetHostname:$i $tmpdir > /dev/null
+            echo $tmpdir
         done
-        
-        echo $tmpdir
         ;;
     resolve-snapshots)
         ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --resolve-snapshots "$@"

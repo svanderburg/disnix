@@ -284,6 +284,11 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         $result = $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --export --remotefile ${pkgs.bash}");
         $client->mustSucceed("nix-store --import < $result");
         
+        # Repeat the same export operation, but now as a localfile. It should
+        # export the same closure to a file. This test should succeed.
+        $result = $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --export --localfile ${pkgs.bash}");
+        $server->mustSucceed("[ -e $result ]");
+        
         # Import test. Creates a closure of the target2Profile on the
         # client. Then it imports the closure into the Nix store of the 
         # server. This test should succeed.
@@ -292,6 +297,11 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         $client->mustSucceed("nix-store --export \$(nix-store -qR @target2Profile) > /root/target2Profile.closure");
         $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --import --localfile /root/target2Profile.closure");
         $server->mustSucceed("nix-store --check-validity @target2Profile");
+        
+        # Do a remotefile import. It should import the bash closure stored
+        # remotely. This test should succeed.
+        $server->mustSucceed("nix-store --export \$(nix-store -qR /bin/sh) > /root/bash.closure");
+        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --import --remotefile /root/bash.closure");
         
         # Set test. Adds the testtarget2 profile as only derivation into 
         # the Disnix profile. We first set the profile, then we check
