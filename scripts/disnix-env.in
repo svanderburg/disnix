@@ -290,23 +290,30 @@ disnix-restore $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest ||
 
 if [ "$coordinatorProfilePath" = "" ]
 then
-    previousGenerationManifest=$(echo @localstatedir@/nix/profiles/per-user/$(whoami)/disnix-coordinator/$profile-* | sort -V | tail -1)
+    profileDir="@localstatedir@/nix/profiles/per-user/$(whoami)/disnix-coordinator"
 else
-    previousGenerationManifest=$(echo $coordinatorProfilePath/$profile-* | sort -V | tail -1)
+    profileDir="$coordinatorProfilePath"
 fi
 
-if [ "$noDeleteState" != "1" ] && [ "$previousGenerationManifest" != "" ]
+if [ -d "$profileDir" ]
+then
+    previousGeneration="$(ls $profileDir/$profile-* | sort -V | tail -1)"
+fi
+
+echo "PREVIOUS GENERATION: $previousGeneration" >&2
+
+if [ "$noDeleteState" != "1" ] && [ "$previousGeneration" != "" ]
 then
     # Delete the obsolete state if an upgrade is performed
     echo "[coordinator]: Deleting obsolete state..."
-    disnix-delete-state $profileArg $coordinatorProfilePathArg #$previousGenerationManifest
+    disnix-delete-state $profileArg $coordinatorProfilePathArg
 fi
 
 echo "[coordinator]: Setting profiles..."
 disnix-set $profileArg $coordinatorProfilePathArg $noCoordinatorProfileArg $noTargetProfilesArg $manifest || (releaseLocks; displayFailure; exit 1)
 releaseLocks || (displayFailure; exit 1)
 
-if [ "$noDeleteState" = "1" ] && [ "$previousGenerationManifest" != "" ]
+if [ "$noDeleteState" = "1" ] && [ "$previousGeneration" != "" ]
 then
     # If we don't want to delete state, but there has been an upgrade, notify the user
     cat <<EOF
@@ -317,7 +324,7 @@ from their previous locations!
 
 To actually remove the old obsolete state, run the following command:
 
-$ disnix-delete-state $profileArg $coordinatorProfilePathArg $previousGenerationManifest
+$ disnix-delete-state $profileArg $coordinatorProfilePathArg $profileDir/$previousGeneration
 
 EOF
 fi
