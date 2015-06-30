@@ -56,7 +56,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         $testtarget2->mustSucceed("echo 2 > /var/db/testService2/state");
         
         # Use disnix-env to reverse the location of the deployed services.
-        $coordinator->mustSucceed("DYSNOMIA_STATEDIR=/root/dysnomia NIX_PATH='nixpkgs=${nixpkgs}' dysnomia=\"\$(dirname \$(readlink -f \$(type -p dysnomia)))/..\"  SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure.nix -d ${snapshotTests}/distribution-reverse.nix");
+        $coordinator->mustSucceed("DYSNOMIA_STATEDIR=/root/dysnomia NIX_PATH='nixpkgs=${nixpkgs}' dysnomia=\"\$(dirname \$(readlink -f \$(type -p dysnomia)))/..\"  SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure.nix -d ${snapshotTests}/distribution-reverse.nix --no-delete-state");
         
         # Check if the state is reversed
         $result = $testtarget1->mustSucceed("cat /var/db/testService2/state");

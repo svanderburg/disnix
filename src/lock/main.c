@@ -31,6 +31,9 @@ static void print_usage(const char *command)
     printf("so that they can temporarily lock or unlock themselves (or take other\n");
     printf("precautions to make the transition to go smooth)\n\n");
     
+    printf("Most users don't need to use this command directly. The `disnix-env' command\n");
+    printf("will automatically invoke this command before upgrading the configuration.\n\n");
+    
     printf("Options:\n");
     printf("      --unlock           Executes an unlock operation instead of a lock\n");
     printf("  -p, --profile=PROFILE  Name of the profile in which the services are\n");

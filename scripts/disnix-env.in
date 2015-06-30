@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 set -o pipefail
+shopt -s nullglob
 
 # Disnix - A Nix-based distributed service deployment tool
 # Copyright (C) 2008-2015  Sander van der Burg
@@ -88,6 +89,7 @@ Options:
                                   not be updated
       --no-target-profiles        Specifies that the target profiles should not
                                   be updated
+      --no-delete-state           Do not remove the state of deactivated services
       --show-trace                Shows a trace of the output
   -h, --help                      Shows the usage of this command
   -v, --version                   Shows the version of this command
@@ -104,6 +106,8 @@ Environment:
                              (Defaults to: default).
   DISNIX_DEPLOY_STATE        If set to 1 it also deploys the state of all
                              components. (defaults to: 0)
+  DISNIX_NO_DELETE_STATE     If set to 1 it does not delete the obsolete state
+                             after upgrading. (defaults to: 0)
   DYSNOMIA_STATEDIR          Specifies where the snapshots must be stored on the
                              coordinator machine (defaults to: /var/dysnomia)
 EOF
@@ -118,6 +122,13 @@ $0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
 
 Copyright (C) 2008-2015 Sander van der Burg
 EOF
+}
+
+# Displays a note indicating that the deployment failed
+
+displayFailure()
+{
+    echo "[coordinator]: The deployment failed! Please inspect the output to diagnose any problems!" >&2
 }
 
 # Releases the locks
@@ -135,7 +146,7 @@ releaseLocks()
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:p:m:hv -l services:,infrastructure:,distribution:,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:p:m:hv -l services:,infrastructure:,distribution:,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-delete-state,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -172,9 +183,11 @@ do
             interface=$2
             ;;
         -p|--profile)
+            profile=$2
             profileArg="--profile $2"
             ;;
         --coordinator-profile-path)
+            coordinatorProfilePath=$2
             coordinatorProfilePathArg="--coordinator-profile-path $2"
             ;;
         --target-property)
@@ -194,6 +207,9 @@ do
             ;;
         --no-target-profiles)
             noTargetProfilesArg="--no-target-profiles"
+            ;;
+        --no-delete-state)
+            noDeleteState=1
             ;;
         -h|--help)
             showUsage
@@ -225,6 +241,16 @@ checkClientInterface
 checkTargetProperty
 checkShowTrace
 
+if [ "$DISNIX_NO_DELETE_STATE" = "1" ]
+then
+    noDeleteState=1
+fi
+
+if [ "$profile" = "" ]
+then
+    profile=default
+fi
+
 # Execute operations
 
 if [ "$buildOnTargets" = "1" ]
@@ -245,15 +271,50 @@ then
     echo "[coordinator]: Not acquiring any locks..."
 else
     echo "[coordinator]: Acquiring locks..."
-    disnix-lock $profileArg $manifest
+    disnix-lock $profileArg $manifest || (displayFailure; exit 1)
 fi
 
 echo "[coordinator]: Activating new configuration..."
-disnix-activate $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; exit 1)
+disnix-activate $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; displayFailure; exit 1)
 echo "[coordinator]: Snapshotting state of annotated services..."
-disnix-snapshot $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; exit 1)
+disnix-snapshot $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; displayFailure; exit 1)
 echo "[coordinator]: Restoring state of annotated services..."
-disnix-restore $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; exit 1)
+disnix-restore $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; displayFailure; exit 1)
+
+# Memorize the last profile generation symlink
+
+if [ "$coordinatorProfilePath" = "" ]
+then
+    previousGenerationManifest=$(echo @localstatedir@/nix/profiles/per-user/$(whoami)/disnix-coordinator/$profile-* | sort -V | tail -1)
+else
+    previousGenerationManifest=$(echo $coordinatorProfilePath/$profile-* | sort -V | tail -1)
+fi
+
+if [ "$noDeleteState" != "1" ] && [ "$previousGenerationManifest" != "" ]
+then
+    # Delete the obsolete state if an upgrade is performed
+    echo "[coordinator]: Deleting obsolete state..."
+    disnix-delete-state $profileArg $coordinatorProfilePathArg #$previousGenerationManifest
+fi
+
 echo "[coordinator]: Setting profiles..."
-disnix-set $profileArg $coordinatorProfilePathArg $noCoordinatorProfileArg $noTargetProfilesArg $manifest || (releaseLocks; exit 1)
-releaseLocks
+disnix-set $profileArg $coordinatorProfilePathArg $noCoordinatorProfileArg $noTargetProfilesArg $manifest || (releaseLocks; displayFailure; exit 1)
+releaseLocks || (displayFailure; exit 1)
+
+if [ "$noDeleteState" = "1" ] && [ "$previousGenerationManifest" != "" ]
+then
+    # If we don't want to delete state, but there has been an upgrade, notify the user
+    cat <<EOF
+
+NOTE: Deleting state has been disabled! This means that the state of services
+that have been moved from one machine to another are copied, but not deleted
+from their previous locations!
+
+To actually remove the old obsolete state, run the following command:
+
+$ disnix-delete-state $profileArg $coordinatorProfilePathArg $previousGenerationManifest
+
+EOF
+fi
+
+echo "[coordinator]: The system has been successfully deployed!" >&2
