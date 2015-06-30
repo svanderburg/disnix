@@ -300,8 +300,6 @@ then
     previousGeneration="$(ls $profileDir/$profile-* | sort -V | tail -1)"
 fi
 
-echo "PREVIOUS GENERATION: $previousGeneration" >&2
-
 if [ "$noDeleteState" != "1" ] && [ "$previousGeneration" != "" ]
 then
     # Delete the obsolete state if an upgrade is performed
@@ -324,7 +322,7 @@ from their previous locations!
 
 To actually remove the old obsolete state, run the following command:
 
-$ disnix-delete-state $profileArg $coordinatorProfilePathArg $profileDir/$previousGeneration
+$ disnix-delete-state $profileArg $coordinatorProfilePathArg $previousGeneration
 
 EOF
 fi
