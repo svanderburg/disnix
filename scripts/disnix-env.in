@@ -248,7 +248,12 @@ fi
 
 if [ "$profile" = "" ]
 then
-    profile=default
+    if [ "$DISNIX_PROFILE" = "" ]
+    then
+        profile=default
+    else
+        profile=$DISNIX_PROFILE
+    fi
 fi
 
 # Execute operations
