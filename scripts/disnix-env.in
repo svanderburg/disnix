@@ -56,6 +56,10 @@ given target machine. In such cases, \`disnix-env' also provides the option to
 build the services on the target machines and to keep the build results for
 future use.
 
+If state deployment has been enabled for a service and that particular service
+has been moved from one machine to another, then a snapshot of the state is
+taken, transferred to the new machine, and finally restored.
+
 Options:
   -s, --services=services_nix
                                   Services Nix expression which describes all

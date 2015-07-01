@@ -27,9 +27,9 @@ static void print_usage(const char *command)
 {
     printf("Usage: %s [OPTION] [MANIFEST]\n\n", command);
     
-    printf("The command `disnix-delete-state' removes all state of the components that are\n");
-    printf("in the old deployment manifest, but not in the new deployment manifest. If no\n");
-    printf("manifest file is given it uses the last deployed one.\n\n");
+    printf("The command `disnix-delete-state' removes the state of all the components\n");
+    printf("in a given deployment manifest that have been marked as garbage. If no manifest\n");
+    printf("file is given, it uses the last deployed one.\n\n");
     
     printf("Most users don't need to use this command directly. The `disnix-env' command\n");
     printf("will automatically invoke this command after the new configuration has been\n");
