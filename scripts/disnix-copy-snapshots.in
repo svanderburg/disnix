@@ -51,7 +51,8 @@ Environment:
   DISNIX_CLIENT_INTERFACE    Sets the client interface (defaults to:
                              disnix-ssh-client)
   DYSNOMIA_STATEDIR          Specifies where the snapshots must be stored on the
-                             coordinator machine (defaults to: /var/dysnomia)
+                             coordinator machine (defaults to:
+                             /var/state/dysnomia)
 EOF
 }
 

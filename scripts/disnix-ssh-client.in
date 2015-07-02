@@ -132,7 +132,8 @@ Environment:
                              deployed services per machine on each target
                              (Defaults to: default)
   DYSNOMIA_STATEDIR          Specifies where the snapshots must be stored on the
-                             coordinator machine (defaults to: /var/dysnomia)
+                             coordinator machine (defaults to:
+                             /var/state/dysnomia)
 EOF
 }
 
