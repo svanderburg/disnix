@@ -5,8 +5,8 @@
 	<title>Installation</title>
 
 	<para>
-		This chapter explains how Disnix can be installed. Basically, the coordinator machine only needs the Disnix
-		client utilities. Every target machine needs a both the client utilities and a Disnix service instance running,
+		This chapter explains how Disnix can be installed. To summarize, the coordinator machine only needs the Disnix
+		client utilities. Every target machine needs both the client utilities and a Disnix service instance running,
 		so that the coordinator machine can perform remote deployment steps.
 	</para>
 	<para>
@@ -16,7 +16,7 @@
 		which only requires a little configuration effort.
 		Disnix can also be used on other Linux distributions, other Unix-like systems such as FreeBSD and
 		on Windows through Cygwin.
-		To make Disnix work on these platforms more configuration steps have to be performed.
+		To make Disnix work on these platforms, more configuration steps have to be performed.
 	</para>
 	<para>
 		Moreover, Disnix can be installed using the
@@ -100,18 +100,22 @@ $ ./bootstrap
 		<title>Installing Disnix with the Nix package manager</title>
 		
 		<para>
-			A more convenient way to install Disnix by using
+			A more convenient way to install Disnix is using
 			the Nix package manager. The
-			<link xlink:href="http://nixos.org/nixpkgs">Nixpkgs</link> collection
-			contains Disnix. It can be deployed by typing:
+			<link xlink:href="http://nixos.org/nixpkgs">Nixpkgs</link> collection has
+			Disnix (as well as some of its extensions) packaged.
+			It can be deployed by running the following command-line instruction:
 
 <screen>
 $ nix-env -i disnix
 </screen>
 		</para>
-
+	</section>
+	
+	<section>
+		<title>Installing Nixpkgs</title>
 		<para>
-			To allow distributed system configurations to be built, a copy of
+			To allow service-oriented systems to be deployed, a copy of
 			<link xlink:href="http://nixos.org/nixpkgs">Nixpkgs</link> is required.
 			An environment variable named <code>NIX_PATH</code> must point to the path where
 			it has been installed, so that Disnix (and other Nix utilities) can find it.
@@ -141,7 +145,8 @@ EOF
 
 		<para>
 			A coordinator machine simply requires the presence of the Disnix client utilities,
-			and a copy of Nixpkgs so that services can be built.
+			and a copy of Nixpkgs so that services can be built. Simply executing the steps
+			described in the previous sections should suffice.
 		</para>
 	</section>
 
@@ -174,11 +179,11 @@ EOF
 			<title>Installing a target machine running NixOS</title>
 			
 			<para>
-				Installing Disnix in NixOS is straight forward. Follow the instructions
-				explained in the
-				<link xlink:href="http://nixos.org/nixos/docs.html">NixOS manual</link>
-				to install a NixOS machine.
-				To enable the Disnix core service in NixOS the following property
+				Installing the Disnix service in NixOS is straight forward. First install
+				a NixOS machine following the instructions
+				described in the
+				<link xlink:href="http://nixos.org/nixos/docs.html">NixOS manual</link>.
+				To enable the Disnix core service the following property
 				must be added to the <filename>/etc/nixos/configuration.nix</filename> file:
 				
 <screen>
@@ -186,22 +191,18 @@ services.disnix.enable = true;
 </screen>
 				
 				In order to use the OpenSSH wrapper, also the OpenSSH service must
-				be added to the <filename>/etc/nixos/configuration.nix</filename> file:
+				be enabled in the <filename>/etc/nixos/configuration.nix</filename> file:
 				
 <screen>
 services.openssh.enable = true;
 </screen>
-				Disnix is also responsible for activating and deactivating services. However,
-				this can not be done generically since services can have basically any form.
-				Dysnomia is a tool that is consulted by Disnix to take care of the activation and deactivation steps
-				and exposes various activation processes as plugins.
-			</para>
-			<para>
-				To allow Disnix to activate or deactiate a certain service type through Dysnomia,
-				simply enabling a container service suffices in a NixOS configuration.
+				Disnix is also executes a number of non-generic deployment activities that
+				are carried out by Dysnomia that uses a plugin system implementing them.
+				Simply enabling a container service in a NixOS configuration suffices to configure
+				Dysnomia to support them.
 				For example, by enabling MySQL and Apache Tomcat in NixOS,
 				the NixOS module system automatically configures Dysnomia to install the corresponding plugins
-				so that Disnix can activate services in these containers:
+				so that Disnix can activate and deactivate services in these containers:
 <screen>
 services.mysql.enable = true;
 services.tomcat.enable = true;
@@ -277,7 +278,7 @@ $ ./configure --help
 				<title>Configuring boot scripts on regular Linux distributions</title>
 				
 				<para>
-					The host system must configured to start the Disnix D-Bus service automatically. 
+					The host system must be configured to start the Disnix D-Bus service automatically. 
 					In most Linux distributions this can be done by creating a <code>/etc/init.d/disnix</code>
 					<code>init.d</code> script and by configuring your distribution in such a way that it will be launched on system startup.
 					An <code>init.d</code> script for the Disnix service could look like this:
@@ -309,9 +310,8 @@ esac
 					are configured and launched.
 				</para>
 				<para>
-					One important aspect to keep in mind is that <command>dysnomia</command> should be in the <code>PATH</code>
-					of the <code>init.d</code> script so that the service can invoke it for activation or deactivation of
-					services.
+					One important aspect to keep in mind is that both Nix and Dysnomia should be in the <code>PATH</code>
+					of the <code>init.d</code> script so that the service can execute all required deployment activities.
 					Another important thing is that the Disnix service should be started after the DBus system service and stopped
 					in exactly the opposite order.
 				</para>
@@ -328,7 +328,7 @@ esac
 				
 				<para>
 					Since the core Disnix daemon is a D-Bus service, we need to run the D-Bus system daemon,
-					which can be configured by typing:
+					which can be configured by executing the following command:
 				</para>
 				
 <screen>
@@ -336,7 +336,7 @@ $ cygrunsrv -I dbus -p /usr/sbin/dbus-daemon.exe -a '--system --nofork'
 </screen>
 
 				<para>
-					The Disnix service can be configured by typing:
+					The Disnix service can be configured as follows:
 				</para>
 				
 <screen>
@@ -395,7 +395,7 @@ $ ssh-host-config
 				the authentication to the core Disnix service. The OpenSSH wrapper, for instance,
 				uses the credentials of the calling user from the coordinator by default
 				and therefore every target machine requires
-				the user to be defined in <code>/etc/passwd</code> and the user should be member of
+				the user to be defined in <code>/etc/passwd</code> and the corresponding user should be member of
 				the <code>disnix</code> group.
 			</para>
 			
@@ -416,7 +416,7 @@ $ groupadd disnix
 			</para>
 			
 <screen>
-$ usermod -G disnix someuser
+$ usermod -a -G disnix someuser
 </screen>
 		</section>
 		
@@ -424,7 +424,7 @@ $ usermod -G disnix someuser
 			<title>Additional settings for the SSH wrapper</title>
 			
 			<para>
-				If a SSH connection is used, it may ask you to provide user credentials for each operation.
+				If an SSH connection is used, <command>disnix-env</command> may ask you to provide user credentials for each operation.
 				This is not a bug, but an implication of using SSH. In order to make this process non-interactive
 				you must either generate an SSH keypair through <command>ssh-keygen</command> or use
 				<command>ssh-agent</command> to remember the authentication settings.

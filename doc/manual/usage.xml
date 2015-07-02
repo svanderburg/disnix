@@ -81,8 +81,8 @@ $ nix-store -qR ./result
 			You can also perform all the builds on the target machines and then retrieve
 			back the results. The following command generates a
 			<emphasis>distributed derivation</emphasis> file, which is basically
-			a similar file as a manifest, except that this file maps Nix store derivation
-			files (low-level specifications that Nix uses to build a component) on target
+			a similar file as a manifest, except that it maps Nix store derivation
+			files (low-level specifications that Nix uses to build a component) to target
 			machines.
 		</para>
 		
@@ -177,7 +177,7 @@ $ disnix-collect-garbage -d infrastructure.nix
 		<title>Capturing the state of deployed services</title>
 		
 		<para>
-			If state deployment has been enabled for one or more services, you can take capture them
+			If state deployment has been enabled for one or more services, you can take capture their states
 			and transfer them to the coordinator machine by running:
 		</para>
 		
@@ -269,18 +269,29 @@ $ disnix-clean-snapshots --keep 0 infrastructure.nix
 		</para>
 		<para>
 			However, some of the drawbacks of this approach is that the process of snapshotting and restoring portable dumps is
-			typically very slow, especially for large data sets. Moreover, the snapshot tools also write dumps entirely to the filesystem.
+			typically very slow, especially for large data sets. Moreover, the snapshot tools also write dumps entirely to the filesystem
+			which is not always desired.
 		</para>
 		<para>
-			An alternative approach of doing state deployment is by working on filesystem level which is typically much faster.
-			However, some drawbacks of working on filesystem level is that state may be inconsistent (because of incomplete write operations),
-			and non-portable. Also, for some type of containers, it is difficult to manage individiual chunks of data. Filesystem level
-			state management is unsupported by Disnix and must be done by other means.
+			Alternative approaches of doing state deployment are the following:
 		</para>
-		<para>
-			Another state deployment approach that works for databases is using their replication engine features. Replication engines
-			can typically move data from one machine to another much more efficiently. To accomplish this the DBMS must be reconfigured
-			to do replication. However, replication features cannot be configured generically.
-		</para>
+		
+		<itemizedlist>
+			<listitem>
+				<para>
+					Filesystem level snapshots. This is an approach that works typically much faster.
+					However, some drawbacks of working on filesystem level is that physical state may be inconsistent (because of incomplete write operations),
+					and non-portable. Also, for some types of containers, it is difficult to manage chunks of data, such as individual databases. Filesystem level
+					state management is unsupported by Disnix and must be done by other means.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Replication engines. Replication engines of DBMSes can typically move data from one machine to another much faster and more efficiently.
+					Disnix does not take care of configuring a DBMS' replication engine automatically.
+					Instead, while deploying a machine's configuration this feature must be explicitly enabled by the deployer.
+				</para>
+			</listitem>
+		</itemizedlist>
 	</section>
 </chapter>

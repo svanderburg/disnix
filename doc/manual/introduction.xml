@@ -10,12 +10,12 @@
 		decomposed into "distributable units") into networks of machines
 		having various characteristics (such as operating systems) and is built on top of Nix;
 		a package manager which has some unique features compared to conventional package
-		managers to make deployment safe and reliable.
+		managers to make deployment safe, reliable, and reproducible.
 	</para>
 
 	<para>
 		Most of Nix's unique features stem from the way packages are stored. In Nix,
-		every package is stored in isolation from each other in a special purpose directory
+		packages are stored in isolation in a special purpose directory
 		called the <emphasis>Nix store</emphasis>. Every package has a special file
 		name such as:
 	</para>
@@ -32,7 +32,7 @@
 		with, say, a different
 		compiler, a different hash will be computed and the package has a different filename.
 		Hashing makes it safe to store multiple versions and variants next
-		to each other, because no component share the same name.
+		to each other, because no package shares the same name.
 	</para>
 
 	<para>
@@ -72,8 +72,8 @@
 		are required, which are provided by Disnix.  Most importantly, Disnix supports models to describe machines in the
 		network, and 
 		manages <emphasis>inter-dependencies</emphasis> -- the run-time dependencies between components
-		residing on different machines. Furthermore, Disnix also takes care of the activation and deactivation
-		process of the services of which the system consists.
+		residing on different machines. Besides building and transferring services, Disnix also takes care of all
+		remaining deployment activities, such as activation and deactivation steps of the services of which the system consists.
 	</para>
 
 	<section>
@@ -88,8 +88,8 @@
 				systems.
 			</para>
 			<para>
-				Disnix requires three kinds of models, each capturing a specific concern
-				in deploying a distributed system. The <emphasis>services model</emphasis> is used
+				Disnix requires three kinds of models, each capturing a specific deployment concern.
+				The <emphasis>services model</emphasis> is used
 				for specifying the components of a distributed system and
 				its inter-dependencies.
 				The <emphasis>infrastructure model</emphasis> is used for
@@ -102,7 +102,7 @@
 		<simplesect>
 			<title>Complete dependencies</title>
 			<para>
-				The standard Nix package manager ensures that package dependency
+				The Nix package manager ensures that package dependency
 				specifications are complete on a single system, i.e. <emphasis>intra-dependencies</emphasis>.
 				Components of a distributed service-oriented system may have dependencies on components
 				running on different machines in a network, i.e. <emphasis>inter-dependencies</emphasis>.
@@ -110,8 +110,8 @@
 
 			<para>
 				Disnix allows someone to specify inter-dependencies of distributed system
-				components, which can be used to compose distributed system components
-				into a complete system. If a certain service is deployed, Disnix ensures that
+				components, which can be composed into a complete distributed service-oriented system.
+				If a service is deployed, Disnix ensures that
 				its inter-dependencies are deployed first so that we never have a failing
 				system due to missing dependencies.
 			</para>
@@ -127,7 +127,7 @@
 			<title>Atomic upgrades and rollbacks</title>
 
 			<para>
-				Like the standard Nix package manager, which support atomic upgrades,
+				Like the Nix package manager, which support atomic upgrades,
 				Disnix extends this concept to service-oriented systems by mapping the
 				concepts of the two-phase commit protocol onto Nix deployment
 				operations to upgrade a distributed system (almost) atomically.
@@ -138,10 +138,10 @@
 			</para>
 
 			<para>
-				The only impure step while upgrading, is the activation of obsolete
+				The only impure step while upgrading, is the deactivation of obsolete
 				services and activation of newly installed services, a phase in which
 				users may observe that the system is changing. To make this process truly
-				atomic, Disnix has an extension mechanism that can be used to temporary
+				atomic, Disnix uses an extension mechanism that can be used to temporary
 				queue/block incoming connections until the transition is finished.
 				We have developed a simple prototype example with stateful TCP connections to demonstrate
 				this.
@@ -152,8 +152,8 @@
 			<title>Garbage collection</title>
 
 			<para>
-				Like the standard Nix package manager, Disnix also provides a garbage
-				collector, which safely removes all obsolete components from the machines
+				Like the Nix package manager, Disnix provides a distributed garbage
+				collector, which safely removes all obsolete packages from the machines
 				in the network.
 			</para>
 		</simplesect>
@@ -172,7 +172,7 @@
 				a service oriented system into a heterogeneous network (i.e. a network consisting
 				of various types of machines, running various operating systems). Disnix reuses
 				Nix's delegation mechanism to build a component for an alien target platform.
-				Optionally, it can also delegate builds to target machines in the network.
+				Optionally, it can also delegate builds to the target machines in the network.
 			</para>
 		</simplesect>
 
@@ -183,12 +183,12 @@
 				Since service-oriented systems can be deployed in heterogeneous networks
 				consisting of various platforms and using various communication protocols,
 				and their components can have basically any form,
-				not all operations can be solved in a generic manner. 
+				not all deployment operations can be executed in a generic manner. 
 			</para>
 			<para>
 				The architecture of the Disnix toolset is very modular. Disnix uses
 				a plugin system called Dysnomia to integrate
-				customly developed modules used for the activation and deactivation of services,
+				customly developed modules to execute various non-generic deployment activities,
 				and a plugin system that provides remote access through various RPC protocols.
 			</para>
 
@@ -204,13 +204,14 @@
 			<title>Data migration and backups</title>
 			
 			<para>
-				Disnix can also optionally take snapshots of the state of deployed services for
+				Disnix can also optionally take and restore snapshots of the state of deployed services for
 				backup and migration purposes, e.g. when a service is moved from one machine to
 				another.
 			</para>
 			<para>
-				It uses a plugin system that takes care of executing the required snapshot and
-				restore operations for a given service type.
+				Since the snapshot and restore operations differ among component types, Dysnomia's
+				plugin system is consulted to execute the required snapshot and restore operations
+				for a given service type.
 			</para>
 		</simplesect>
 	</section>

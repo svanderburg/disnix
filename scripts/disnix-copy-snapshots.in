@@ -39,7 +39,8 @@ Options:
   -c, --container=CONTAINER  Name of the container in which the mutable
                              component is deployed
   -C, --component=COMPONENT  Name of the mutable component to take snapshots from
-      --all                  Transfer all snapshots instead of the latest only
+      --all                  Transfer all snapshot generations instead of the
+                             latest only
       --interface=INTERFACE  Path to executable that communicates with a Disnix
                              interface. Defaults to: disnix-ssh-client
   -h, --help                 Shows the usage of this command to the user

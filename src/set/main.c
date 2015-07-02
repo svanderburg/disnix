@@ -33,7 +33,7 @@ static void print_usage(const char *command)
     printf("configuration from being garbage collected.\n\n");
     
     printf("This command should almost never be called directly. The command `disnix-env'\n");
-    printf("invokes this command to update the proiles automatically.\n\n");
+    printf("invokes this command to update the profiles automatically.\n\n");
     
     printf("Options:\n");
     printf("  -p, --profile=PROFILE                Name of the profile in which the services\n");

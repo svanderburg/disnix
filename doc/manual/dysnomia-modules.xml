@@ -6,8 +6,8 @@
 
 	<para>
 		As explained in <xref linkend="chap-models" /> a type is assigned to each service, which
-		are used to determine how to activate or deactivate a service.
-		Each type is mapped onto a Dysnomia module which performs the actual activation or deactivation procedure.
+		are used to determine how to execute a number of non-generic deployment activities, such as activating or deactivating a service in a container.
+		Each type is mapped onto a Dysnomia module that performs the actual deployment steps.
 		In this chapter we explain how Dysnomia modules work.
 	</para>
 	
@@ -15,13 +15,13 @@
 		<title>Structure</title>
 		
 		<para>
-			Basically, every Dysnomia module implements a process, which takes 2 command-line parameters. The first parameter is
+			Basically, every Dysnomia module implements a process, which takes two command-line parameters. The first parameter is
 			one of the following:
 		</para>
 		
 		<itemizedlist>
-			<listitem><simpara><varname>activate</varname>. Used to activate a service</simpara></listitem>
-			<listitem><simpara><varname>deactivate</varname>. Used to deactivate a service</simpara></listitem>
+			<listitem><simpara><varname>activate</varname>. Invoked to activate a service in a container</simpara></listitem>
+			<listitem><simpara><varname>deactivate</varname>. Invoked to deactivate a service in a container</simpara></listitem>
 			<listitem><simpara><varname>lock</varname>. Invoked for each service before the activation phase starts</simpara></listitem>
 			<listitem><simpara><varname>unlock</varname>. Invoked for each service after the activation phase</simpara></listitem>
 			<listitem><simpara><varname>snapshot</varname>. Invoked to capture the state of the service</simpara></listitem>
@@ -31,7 +31,8 @@
 		
 		<para>
 			The second parameter is a Nix path referring to a service. Moreover, all the properties defined in the infrastructure
-			model are passed as environment variables so that they can be while running activation or deactivation steps.
+			model are passed as environment variables so that all relevant machine properties are known while executing any of
+			these deployment activities.
 		</para>
 	</section>
 	
@@ -128,7 +129,7 @@ esac
 					This part performs the activation step of a MySQL service. In this step,
 					we first check whether the database already exists. If the database is not there yet,
 					we create a MySQL database having the same name as the Nix component
-					and finally we import the attached MySQL schema into the database.
+					and finally we import the attached MySQL dump (defining the schema) into the database.
 					Moreover, it also marks the database as being used, so that it will not be garbage collected.
 				</para>
 			</callout>
@@ -144,7 +145,7 @@ esac
 				<para>
 					Dumps the state of the MySQL database in a single transaction into a dump file and places
 					it in the Dysnomia snapshot folder using the output hash as a naming convention. If a dump
-					with an identical hash exists, then the taken snapshot is discarded, because there is no
+					with an identical hash exists, then the snapshot is discarded, because there is no
 					reason to store the same output twice.
 					After the snapshot has been taken, the generation symlink (that indicates what the last snapshot
 					is) is updated.
