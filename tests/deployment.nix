@@ -68,9 +68,9 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # the services in the distribution model. This test should
         # succeed.
         
-        $testtarget1->mustSucceed("[ \"\$(journalctl --no-pager --full _SYSTEMD_UNIT=disnix.service | grep \"Activate: $lines[3]\")\" != \"\" ]");
-        $testtarget2->mustSucceed("[ \"\$(journalctl --no-pager --full _SYSTEMD_UNIT=disnix.service | grep \"Activate: $lines[7]\")\" != \"\" ]");
-        $testtarget2->mustSucceed("[ \"\$(journalctl --no-pager --full _SYSTEMD_UNIT=disnix.service | grep \"Activate: $lines[8]\")\" != \"\" ]");
+        $testtarget1->mustSucceed("[ \"\$(journalctl --no-pager --full _SYSTEMD_UNIT=disnix.service | grep \"activate: $lines[3]\")\" != \"\" ]");
+        $testtarget2->mustSucceed("[ \"\$(journalctl --no-pager --full _SYSTEMD_UNIT=disnix.service | grep \"activate: $lines[7]\")\" != \"\" ]");
+        $testtarget2->mustSucceed("[ \"\$(journalctl --no-pager --full _SYSTEMD_UNIT=disnix.service | grep \"activate: $lines[8]\")\" != \"\" ]");
         
         # Check if there is only one generation link in the coordinator profile
         # folder and one generation link in the target profiles folder on each

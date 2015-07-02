@@ -114,7 +114,7 @@ static gchar **update_lines_vector(gchar **lines, char *buf)
     return lines;
 }
 
-static void print_derivations(gchar **derivation)
+static void print_paths(gchar **derivation)
 {
     unsigned int i;
     
@@ -208,7 +208,7 @@ static void disnix_export_thread_func(DisnixObject *object, const gint pid, gcha
     
     /* Print log entry */
     g_print("Exporting: ");
-    print_derivations(derivation);
+    print_paths(derivation);
     g_print("\n");
     
     /* Execute command */
@@ -298,7 +298,7 @@ static void disnix_print_invalid_thread_func(DisnixObject *object, const gint pi
     
     /* Print log entry */
     g_print("Print invalid: ");
-    print_derivations(derivation);
+    print_paths(derivation);
     g_print("\n");
     
     /* Execute command */
@@ -397,7 +397,7 @@ static void disnix_realise_thread_func(DisnixObject *object, const gint pid, gch
     
     /* Print log entry */
     g_print("Realising: ");
-    print_derivations(derivation);
+    print_paths(derivation);
     g_print("\n");
     
     /* Execute command */
@@ -646,7 +646,7 @@ static void disnix_query_requisites_thread_func(DisnixObject *object, const gint
     
     /* Print log entry */
     g_print("Query requisites from derivations: ");
-    print_derivations(derivation);
+    print_paths(derivation);
     g_print("\n");
     
     /* Execute command */
@@ -799,16 +799,16 @@ gboolean disnix_collect_garbage(DisnixObject *object, const gint pid, const gboo
     return TRUE;
 }
 
-/* Activate method */
+/* Common dysnomia invocation function */
 
-static void disnix_activate_thread_func(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments)
+static void disnix_dysnomia_activity_thread_func(DisnixObject *object, gchar *activity, const gint pid, gchar *derivation, gchar *type, gchar **arguments)
 {
     /* Declarations */
     int status;
         
     /* Print log entry */
-    g_print("Activate: %s of type: %s with arguments: ", derivation, type);
-    print_derivations(arguments);
+    g_print("%s: %s of type: %s with arguments: ", activity, derivation, type);
+    print_paths(arguments);
     g_print("\n");
     
     /* Execute command */
@@ -817,15 +817,16 @@ static void disnix_activate_thread_func(DisnixObject *object, const gint pid, gc
     
     if(status == -1)
     {
-	g_printerr("Error forking activation process!\n");
+	g_printerr("Error forking %s process!\n", activity);
 	disnix_emit_failure_signal(object, pid);
     }
     else if(status == 0)
     {
 	unsigned int i;
 	char *cmd = "dysnomia";
-	char *args[] = {cmd, "--type", type, "--operation", "activate", "--component", derivation, "--environment", NULL};
+	char *args[] = {cmd, "--type", type, "--operation", activity, "--component", derivation, "--environment", NULL};
 	
+	/* Compose environment variables out of the arguments */
 	for(i = 0; i < g_strv_length(arguments); i++)
 	{
 	    gchar **name_value_pair = g_strsplit(arguments[i], "=", 2);
@@ -848,6 +849,8 @@ static void disnix_activate_thread_func(DisnixObject *object, const gint pid, gc
     
     _exit(0);
 }
+
+/* Activate method */
 
 gboolean disnix_activate(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments, GError **error)
 {
@@ -858,61 +861,13 @@ gboolean disnix_activate(DisnixObject *object, const gint pid, gchar *derivation
     if(fork() == 0)
     {
 	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
-	disnix_activate_thread_func(object, pid, derivation, type, arguments);
+	disnix_dysnomia_activity_thread_func(object, "activate", pid, derivation, type, arguments);
     }
     
     return TRUE;
 }
 
 /* Deactivate method */
-
-static void disnix_deactivate_thread_func(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments)
-{
-    /* Declarations */
-    int status;
-        
-    /* Print log entry */
-    g_print("Deactivate: %s of type: %s with arguments: ", derivation, type);
-    print_derivations(arguments);
-    g_print("\n");
-    
-    /* Execute command */
-
-    status = fork();
-    
-    if(status == -1)
-    {
-	g_printerr("Error forking deactivation process!\n");
-	disnix_emit_failure_signal(object, pid);
-    }
-    else if(status == 0)
-    {
-	unsigned int i;
-	char *cmd = "dysnomia";
-	char *args[] = {cmd, "--type", type, "--operation", "deactivate", "--component", derivation, "--environment", NULL};
-	
-	for(i = 0; i < g_strv_length(arguments); i++)
-	{
-	    gchar **name_value_pair = g_strsplit(arguments[i], "=", 2);
-	    setenv(name_value_pair[0], name_value_pair[1], FALSE);
-	    g_strfreev(name_value_pair);
-	}
-	
-	execvp(cmd, args);
-	_exit(1);
-    }
-    else
-    {
-	wait(&status);
-	
-	if(WEXITSTATUS(status) == 0)
-	    disnix_emit_finish_signal(object, pid);
-	else
-	    disnix_emit_failure_signal(object, pid);
-    }
-    
-    _exit(0);
-}
 
 gboolean disnix_deactivate(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments, GError **error)
 {
@@ -923,7 +878,7 @@ gboolean disnix_deactivate(DisnixObject *object, const gint pid, gchar *derivati
     if(fork() == 0)
     {
 	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
-	disnix_deactivate_thread_func(object, pid, derivation, type, arguments);
+	disnix_dysnomia_activity_thread_func(object, "deactivate", pid, derivation, type, arguments);
     }
     
     return TRUE;
@@ -1233,54 +1188,6 @@ gboolean disnix_unlock(DisnixObject *object, const gint pid, const gchar *profil
 
 /* Snapshot method */
 
-static void disnix_snapshot_thread_func(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments)
-{
-    /* Declarations */
-    int status;
-        
-    /* Print log entry */
-    g_print("Snapshot: %s of type: %s with arguments: ", derivation, type);
-    print_derivations(arguments);
-    g_print("\n");
-    
-    /* Execute command */
-
-    status = fork();
-    
-    if(status == -1)
-    {
-	g_printerr("Error forking snapshot process!\n");
-	disnix_emit_failure_signal(object, pid);
-    }
-    else if(status == 0)
-    {
-	unsigned int i;
-	char *cmd = "dysnomia";
-	char *args[] = {cmd, "--type", type, "--operation", "snapshot", "--component", derivation, "--environment", NULL};
-	
-	for(i = 0; i < g_strv_length(arguments); i++)
-	{
-	    gchar **name_value_pair = g_strsplit(arguments[i], "=", 2);
-	    setenv(name_value_pair[0], name_value_pair[1], FALSE);
-	    g_strfreev(name_value_pair);
-	}
-	
-	execvp(cmd, args);
-	_exit(1);
-    }
-    else
-    {
-	wait(&status);
-	
-	if(WEXITSTATUS(status) == 0)
-	    disnix_emit_finish_signal(object, pid);
-	else
-	    disnix_emit_failure_signal(object, pid);
-    }
-    
-    _exit(0);
-}
-
 gboolean disnix_snapshot(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments, GError **error)
 {
     /* State object should not be NULL */
@@ -1290,61 +1197,13 @@ gboolean disnix_snapshot(DisnixObject *object, const gint pid, gchar *derivation
     if(fork() == 0)
     {
 	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
-	disnix_snapshot_thread_func(object, pid, derivation, type, arguments);
+	disnix_dysnomia_activity_thread_func(object, "snapshot", pid, derivation, type, arguments);
     }
     
     return TRUE;
 }
 
 /* Restore method */
-
-static void disnix_restore_thread_func(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments)
-{
-    /* Declarations */
-    int status;
-        
-    /* Print log entry */
-    g_print("Restore: %s of type: %s with arguments: ", derivation, type);
-    print_derivations(arguments);
-    g_print("\n");
-    
-    /* Execute command */
-
-    status = fork();
-    
-    if(status == -1)
-    {
-	g_printerr("Error forking restore process!\n");
-	disnix_emit_failure_signal(object, pid);
-    }
-    else if(status == 0)
-    {
-	unsigned int i;
-	char *cmd = "dysnomia";
-	char *args[] = {cmd, "--type", type, "--operation", "restore", "--component", derivation, "--environment", NULL};
-	
-	for(i = 0; i < g_strv_length(arguments); i++)
-	{
-	    gchar **name_value_pair = g_strsplit(arguments[i], "=", 2);
-	    setenv(name_value_pair[0], name_value_pair[1], FALSE);
-	    g_strfreev(name_value_pair);
-	}
-	
-	execvp(cmd, args);
-	_exit(1);
-    }
-    else
-    {
-	wait(&status);
-	
-	if(WEXITSTATUS(status) == 0)
-	    disnix_emit_finish_signal(object, pid);
-	else
-	    disnix_emit_failure_signal(object, pid);
-    }
-    
-    _exit(0);
-}
 
 gboolean disnix_restore(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments, GError **error)
 {
@@ -1355,7 +1214,7 @@ gboolean disnix_restore(DisnixObject *object, const gint pid, gchar *derivation,
     if(fork() == 0)
     {
 	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
-	disnix_restore_thread_func(object, pid, derivation, type, arguments);
+	disnix_dysnomia_activity_thread_func(object, "restore", pid, derivation, type, arguments);
     }
     
     return TRUE;
@@ -1542,7 +1401,7 @@ static void disnix_print_missing_snapshots_thread_func(DisnixObject *object, con
     
     /* Print log entry */
     g_print("Print missing snapshots: ");
-    print_derivations(component);
+    print_paths(component);
     g_print("\n");
     
     /* Execute command */
@@ -1636,7 +1495,7 @@ static void disnix_import_snapshots_thread_func(DisnixObject *object, const gint
 {
     /* Print log entry */
     g_print("Import snapshots: ");
-    print_derivations(snapshots);
+    print_paths(snapshots);
     g_print("\n");
     
     /* Execute command */
@@ -1707,7 +1566,7 @@ static void disnix_resolve_snapshots_thread_func(DisnixObject *object, const gin
     
     /* Print log entry */
     g_print("Resolve snapshots: ");
-    print_derivations(snapshots);
+    print_paths(snapshots);
     g_print("\n");
     
     /* Execute command */
@@ -1856,45 +1715,6 @@ gboolean disnix_clean_snapshots(DisnixObject *object, const gint pid, const gint
 
 /* Delete state operation */
 
-static void disnix_delete_state_thread_func(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments)
-{
-    /* Declarations */
-    int status;
-
-    /* Print log entry */
-    g_print("Delete state of component: %s of type: %s with arguments: ", derivation, type);
-    print_derivations(arguments);
-    g_print("\n");
-    
-    /* Execute command */
-    
-    status = fork();
-    
-    if(status == -1)
-    {
-	g_printerr("Error with forking process!\n");
-	disnix_emit_failure_signal(object, pid);
-    }
-    else if(status == 0)
-    {
-	char *args[] = {"dysnomia", "--type", type, "--operation", "collect-garbage", "--component", derivation, "--environment", NULL};
-	execvp("dysnomia", args);
-	g_printerr("Error with executing delete state process\n");
-	_exit(1);
-    }
-    else
-    {
-	wait(&status);
-	
-	if(WEXITSTATUS(status) == 0)
-	    disnix_emit_finish_signal(object, pid);
-	else
-	    disnix_emit_failure_signal(object, pid);
-    }
-        
-    _exit(0);
-}
-
 gboolean disnix_delete_state(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments, GError **error)
 {
     /* State object should not be NULL */
@@ -1904,7 +1724,7 @@ gboolean disnix_delete_state(DisnixObject *object, const gint pid, gchar *deriva
     if(fork() == 0)
     {
 	sigaction(SIGCHLD, (const struct sigaction *)&oldact, NULL);
-	disnix_delete_state_thread_func(object, pid, derivation, type, arguments);
+	disnix_dysnomia_activity_thread_func(object, "collect-garbage", pid, derivation, type, arguments);
     }
     
     return TRUE;
