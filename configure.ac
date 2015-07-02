@@ -97,6 +97,7 @@ src/clean-snapshots/Makefile
 src/delete-state/Makefile
 scripts/Makefile
 data/Makefile
+maintenance/Makefile
 scripts/disnix-copy-closure
 scripts/disnix-copy-snapshots
 scripts/disnix-env
