@@ -541,7 +541,7 @@ let
 			<title>Services model for the <code>StaffTracker</code></title>
 			
 <programlisting>
-{distribution, system, pkgs}: <co xml:id='co-1-servicesHeader' />
+{system, pkgs, distribution, invDistribution}: <co xml:id='co-1-servicesHeader' />
 
 let customPkgs = import ../top-level/all-packages.nix { inherit system; }; <co xml:id='co-2-importIntra' />
 in
@@ -593,14 +593,19 @@ rec { <co xml:id='co-3-rec2' />
 			<callout arearefs='co-1-servicesHeader'>
 				<para>
 					In general, the services expression is a function, which takes three arguments.
-					The <varname>distribution</varname> parameter refers to the distribution model,
-					in which services are mapped onto machines in the network (this model is explained
-					later). The <varname>system</varname> parameter is an identifier
+					The <varname>system</varname> parameter is an identifier
 					for the system architecture for services must be built. An example of an
 					identifier is: <code>i686-linux</code> representing a 32-bit <code>x86</code> Linux machine.
 					The <varname>pkgs</varname> parameter refers to the Nixpkgs collection for
 					the corresponding system identifier. Nixpkgs contains a large collection of free and open source packages
 					(including some proprietary ones).
+					The <varname>distribution</varname> parameter refers to the distribution model,
+					in which services are mapped onto machines in the network (this model is explained
+					later).
+					The <varname>invDistribution</varname> parameter refers to an inverse distribution model.
+					This model is generated from the infrastructure model (explained later) in which
+					each target configuration is augmented with the services that have been deployed to it.
+					The latter model is useful to dynamically compose services for a specific host.
 				</para>
 			</callout>
 			

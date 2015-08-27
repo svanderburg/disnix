@@ -14,7 +14,7 @@ let
   
 in
 rec {
-  inherit (builtins) attrNames getAttr listToAttrs head tail unsafeDiscardOutputDependency hashString;
+  inherit (builtins) attrNames getAttr listToAttrs head tail unsafeDiscardOutputDependency hashString filter elem;
 
   /* 
    * Determines the right pkgs collection from the system identifier.
@@ -112,6 +112,7 @@ rec {
    *
    * Parameters:
    * distribution: Distribution attribute set
+   * invDistribution: Inverse distribution attribute set
    * services: Services attribute set, augemented with targets in dependsOn
    * servicesFun: Function that returns a services attributeset (defined in the services.nix file)
    * serviceProperty: Defines which property we need of a derivation (either "outPath" or "drvPath")
@@ -121,7 +122,7 @@ rec {
    * Service attributeset augmented with a distribution mapping property 
    */
    
-  evaluatePkgFunctions = distribution: services: servicesFun: serviceProperty: targetProperty:
+  evaluatePkgFunctions = distribution: invDistribution: services: servicesFun: serviceProperty: targetProperty:
     listToAttrs (map (serviceName: 
       let
         targets = getAttr serviceName distribution;
@@ -132,7 +133,7 @@ rec {
           distribution = map (target:
             let
               system = if target ? system then target.system else builtins.currentSystem;
-              pkg = (getAttr serviceName (servicesFun { inherit distribution; inherit system; pkgs = selectPkgs system; })).pkg;
+              pkg = (getAttr serviceName (servicesFun { inherit distribution invDistribution; inherit system; pkgs = selectPkgs system; })).pkg;
             in
             { service = 
                 if serviceProperty == "outPath" then
@@ -367,6 +368,62 @@ rec {
   ;
   
   /*
+   * Returns the names of the services that have been distributed to a given target machine.
+   *
+   * Parameters:
+   * distribution: Distribution attribute set
+   * target: An attribute set representing a target machine from the infrastructure model
+   *
+   * Returns:
+   * A list of strings containing the names services mapped to the given target
+   */
+  findServiceNamesPerTarget = distribution: target:
+    filter (serviceName:
+      let
+        targets = getAttr serviceName distribution;
+      in
+      elem target targets
+    ) (attrNames distribution)
+  ;
+  
+  /*
+   * Returns all the services that have been distributed to a given target machine.
+   *
+   * Parameters:
+   * services: The final services model
+   * distribution: Distribution attribute set
+   * target: An attribute set representing a target machine from the infrastructure model
+   *
+   * Returns:
+   * A list of attribute sets containing the services mapped to the given target
+   */
+  findServicesPerTarget = services: distribution: target:
+    listToAttrs (map (serviceName: {
+      name = serviceName;
+      value = getAttr serviceName services;
+    }) (findServiceNamesPerTarget distribution target))
+  ;
+  
+  /*
+   * Generates an inverse distribution attribute set, which is the infrastructure
+   * model in which each target is augmented with a services attribute that is
+   * a list of services that have been mapped to it.
+   *
+   * Parameters:
+   * services: The final services model
+   * infrastructure: The infrastructure model, which is an attributeset containing targets in the network
+   * distribution: Distribution attribute set
+   *
+   * Returns:
+   * An inverse distribution attribute set
+   */
+  generateInverseDistribution = services: infrastructure: distribution:
+    pkgs.lib.mapAttrs (targetName: target:
+      target // { services = findServicesPerTarget services distribution target; }
+    ) infrastructure
+  ;
+  
+  /*
    * Generates a manifest file consisting of a profile mapping, service
    * activation mapping, snapshots mapping and targets from the 3 Disnix models.
    *
@@ -386,10 +443,11 @@ rec {
   generateManifest = pkgs: servicesFun: infrastructure: distributionFun: targetProperty: clientInterface: deployState:
     let
       distribution = distributionFun { inherit infrastructure; };
-      initialServices = servicesFun { inherit distribution; system = null; inherit pkgs; };
+      initialServices = servicesFun { inherit distribution invDistribution; system = null; inherit pkgs; };
       servicesWithTargets = augmentTargetsInDependsOn distribution initialServices;
-      servicesWithDistribution = evaluatePkgFunctions distribution servicesWithTargets servicesFun "outPath" targetProperty;
+      servicesWithDistribution = evaluatePkgFunctions distribution invDistribution servicesWithTargets servicesFun "outPath" targetProperty;
       serviceActivationMapping = generateServiceActivationMapping (attrNames servicesWithDistribution) servicesWithDistribution targetProperty;
+      invDistribution = generateInverseDistribution servicesWithDistribution infrastructure distribution;
     in
     { profiles = generateProfilesMapping pkgs infrastructure (attrNames infrastructure) targetProperty serviceActivationMapping;
       activation = serviceActivationMapping;
@@ -417,11 +475,12 @@ rec {
   generateDistributedDerivation = servicesFun: infrastructure: distributionFun: targetProperty: clientInterface:
     let
       distribution = distributionFun { inherit infrastructure; };
-      initialServices = servicesFun { inherit distribution; system = null; inherit pkgs; };
+      initialServices = servicesFun { inherit distribution invDistribution; system = null; inherit pkgs; };
       servicesWithTargets = augmentTargetsInDependsOn distribution initialServices;
-      servicesWithDistribution = evaluatePkgFunctions distribution servicesWithTargets servicesFun "drvPath" targetProperty;
+      servicesWithDistribution = evaluatePkgFunctions distribution invDistribution servicesWithTargets servicesFun "drvPath" targetProperty;
       serviceActivationMapping = generateServiceActivationMapping (attrNames servicesWithDistribution) servicesWithDistribution targetProperty;
       targets = generateTargetPropertyList infrastructure targetProperty clientInterface;
+      invDistribution = generateInverseDistribution servicesWithDistribution infrastructure distribution;
     in
     {
       build = map (mappingItem: { derivation = mappingItem.service; target = mappingItem.target; }) serviceActivationMapping;
