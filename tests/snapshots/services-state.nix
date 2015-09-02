@@ -1,4 +1,4 @@
-{distribution, system, pkgs}:
+{distribution, invDistribution, system, pkgs}:
 
 let
   dysnomia = builtins.storePath (builtins.getEnv "dysnomia");
