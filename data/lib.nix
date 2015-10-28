@@ -522,7 +522,12 @@ rec {
    */
   generateDistributionModelRoundRobin = servicesFun: infrastructure:
     let
-      services = servicesFun { distribution = null; system = null; inherit pkgs; };
+      services = servicesFun {
+        distribution = null;
+        invDistribution = null;
+        system = null;
+        inherit pkgs;
+      };
     in
     ''
       {infrastructure}:

@@ -154,10 +154,10 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
             die "${pkgs.bash} should be in the closure!\n";
         }
         
-        # Realise test. First a bash derivation file is instantiated,
+        # Realise test. First the coreutils derivation file is instantiated,
         # then it is realised. This test should succeed.
         
-        $result = $client->mustSucceed("nix-instantiate ${nixpkgs} -A bash");
+        $result = $client->mustSucceed("nix-instantiate ${nixpkgs} -A coreutils");
         $client->mustSucceed("disnix-client --realise $result");
         
         # Set test. Adds the testtarget1 profile as only derivation into 
@@ -272,10 +272,10 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
             die "${pkgs.bash} should be in the closure!\n";
         }
         
-        # Realise test. First a bash derivation file is instantiated,
+        # Realise test. First the coreutils derivation file is instantiated,
         # then it is realised. This test should succeed.
         
-        $result = $server->mustSucceed("nix-instantiate ${nixpkgs} -A bash");
+        $result = $server->mustSucceed("nix-instantiate ${nixpkgs} -A coreutils");
         $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --realise $result");
         
         # Export test. Exports the closure of the bash shell on the server
