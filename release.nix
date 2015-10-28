@@ -22,7 +22,7 @@ let
         inherit officialRelease;
         dontBuild = false;
 
-        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable dblatex tetex doxygen nukeReferences help2man doclifter dysnomia ];
+        buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable dblatex (dblatex.tex or tetex) doxygen nukeReferences help2man doclifter dysnomia ];
         
         # Add documentation in the tarball
         configureFlags = ''
