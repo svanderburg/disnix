@@ -28,11 +28,9 @@ static void disnix_finish_signal_handler(DBusGProxy *proxy, const gint pid, gpoi
 {
     gint my_pid = *((gint*)user_data);
 
-    g_printerr("Received finish signal from pid: %d\n", pid);
-
     /* Stop the main loop if our job is done */
     if(pid == my_pid)
-	exit(0);
+        exit(0);
 }
 
 static void disnix_success_signal_handler(DBusGProxy *proxy, const gint pid, gchar **derivation, gpointer user_data)
@@ -40,25 +38,21 @@ static void disnix_success_signal_handler(DBusGProxy *proxy, const gint pid, gch
     unsigned int i;
     gint my_pid = *((gint*)user_data);
     
-    g_printerr("Received success signal from pid: %d\n", pid);
-    
     for(i = 0; i < g_strv_length(derivation); i++)
-	g_print("%s", derivation[i]);
-	
+        g_print("%s", derivation[i]);
+
     /* Stop the main loop if our job is done */
     if(pid == my_pid)
-	exit(0);
+        exit(0);
 }
 
 static void disnix_failure_signal_handler(DBusGProxy *proxy, const gint pid, gpointer user_data)
 {
     gint my_pid = *((gint*)user_data);
     
-    g_printerr("Received failure signal from pid: %d\n", pid);
-    
     /* Stop the main loop if our job is done */
     if(pid == my_pid)
-	exit(1);
+        exit(1);
 }
 
 static void cleanup(gchar **derivation, gchar **arguments)
@@ -87,7 +81,7 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
     /* If no operation is specified we should quit */
     if(operation == OP_NONE)
     {
-	g_printerr("No operation is specified!\n");
+	g_printerr("No operation has been specified!\n");
 	cleanup(derivation, arguments);
 	return 1;
     }
@@ -104,25 +98,22 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
     /* Connect to the session/system bus */
     
     if(session_bus)
-    {
-	g_printerr("Connecting to the session bus.\n");
-	bus = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
-    }
+        bus = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
     else
-    {
-	g_printerr("Connecting to the system bus.\n");
-	bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
-    }
+        bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
     
     if(!bus)
     {
-        g_printerr("Cannot connect to session/system bus! Reason: %s\n", error->message);
+        if(session_bus)
+            g_printerr("Cannot connect to session bus! Reason: %s\n", error->message);
+        else
+            g_printerr("Cannot connect to system bus! Reason: %s\n", error->message);
+            
         return 1;
     }
     
     /* Create the proxy object that will be used to access the object */
     
-    g_printerr("Creating a Glib proxy object.\n");
     remote_object = dbus_g_proxy_new_for_name (bus,
         "org.nixos.disnix.Disnix", /* name */
         "/org/nixos/disnix/Disnix", /* Object path */
@@ -140,23 +131,19 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
     
     /* Register the signatures for the signal handlers */
 
-    g_printerr("Add the argument signatures for the signal handler\n");
     dbus_g_proxy_add_signal(remote_object, "finish", G_TYPE_INT, G_TYPE_INVALID);
     dbus_g_proxy_add_signal(remote_object, "success", G_TYPE_INT, G_TYPE_STRV, G_TYPE_INVALID);
     dbus_g_proxy_add_signal(remote_object, "failure", G_TYPE_INT, G_TYPE_INVALID);
 
-    g_printerr("Register D-Bus signal handlers\n");
     dbus_g_proxy_connect_signal(remote_object, "finish", G_CALLBACK(disnix_finish_signal_handler), &pid, NULL);
     dbus_g_proxy_connect_signal(remote_object, "success", G_CALLBACK(disnix_success_signal_handler), &pid, NULL);
     dbus_g_proxy_connect_signal(remote_object, "failure", G_CALLBACK(disnix_failure_signal_handler), &pid, NULL);
 
     /* Receive a PID for the job we want to execute */
     org_nixos_disnix_Disnix_get_job_id(remote_object, &pid, &error);
-    g_printerr("Assigned PID: %d\n", pid);
 
     /* Execute operation */
-    g_printerr("Executing operation.\n");
-    
+
     switch(operation)
     {
 	case OP_IMPORT:
