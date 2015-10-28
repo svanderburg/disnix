@@ -203,6 +203,7 @@ do
             ;;
         --no-upgrade)
             noUpgradeArg="--no-upgrade"
+            noUpgrade=1
             ;;
         --no-lock)
             noLock=1
@@ -300,12 +301,12 @@ else
     profileDir="$coordinatorProfilePath"
 fi
 
-if [ -d "$profileDir" ]
+if [ -d "$profileDir" ] && [ "$(echo $profileDir/$profile-*)" != "" ]
 then
     previousGeneration="$(ls $profileDir/$profile-* | sort -V | tail -1)"
 fi
 
-if [ "$noDeleteState" != "1" ] && [ "$previousGeneration" != "" ]
+if [ "$noDeleteState" != "1" ] && [ "$noUpgrade" != "1" ] && [ "$previousGeneration" != "" ]
 then
     # Delete the obsolete state if an upgrade is performed
     echo "[coordinator]: Deleting obsolete state..."
