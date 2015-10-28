@@ -142,9 +142,18 @@ int delete_state(const gchar *manifest_file, const gchar *coordinator_profile_pa
     if(manifest_file == NULL)
     {
         gchar *old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, username, profile);
-        g_printerr("[coordinator]: Deleting obsolete state of all components of the previous generation: %s\n", old_manifest_file);
-        manifest = open_manifest(old_manifest_file, coordinator_profile_path, profile, username);
-        g_free(old_manifest_file);
+        
+        if(old_manifest_file == NULL)
+        {
+            g_printerr("[coordinator]: No previous manifest file exists, so no state will be deleted!\n");
+            return 0;
+        }
+        else
+        {
+            g_printerr("[coordinator]: Deleting obsolete state of all components of the previous generation: %s\n", old_manifest_file);
+            manifest = open_manifest(old_manifest_file, coordinator_profile_path, profile, username);
+            g_free(old_manifest_file);
+        }
     }
     else
     {
