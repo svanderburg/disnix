@@ -4,6 +4,8 @@ Version 0.5
 
 - Some noise has been removed from the output
 
+- Introduced SSH_USER environment variable to configure the username to connect with to remote machines with disnix-ssh-client
+
 Version 0.4
 ===========
 - The distributed derivation and manifest generator now pass the XML input as files to support bigger ones (Nix 1.9 or newer required)

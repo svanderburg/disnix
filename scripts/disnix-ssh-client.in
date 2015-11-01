@@ -125,6 +125,8 @@ Clean snapshots options:
                              to: 1
 
 Environment:
+  SSH_USER                   Username that should be used to connect to remote
+                             machines
   SSH_OPTS                   Additional properties which are passed to the ssh
                              command
   DISNIX_PROFILE             Sets the name of the profile that stores the
@@ -324,6 +326,11 @@ then
     keep=1
 fi
 
+if [ "$SSH_USER" != "" ]
+then
+    SSH_USER="$SSH_USER@"
+fi
+
 checkTmpDir
 
 # Execute selected operation
@@ -335,80 +342,80 @@ case "$operation" in
         # A localfile must first be transferred
         if [ "$localfile" != "" ]
         then
-            remoteClosure=`ssh -p $targetPort $SSH_OPTS $targetHostname mktemp -p $TMPDIR`
-            scp -P $targetPort $SSH_OPTS "$@" $targetHostname:$remoteClosure
+            remoteClosure=`ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname mktemp -p $TMPDIR`
+            scp -P $targetPort $SSH_OPTS "$@" $SSH_USER$targetHostname:$remoteClosure
         else
             remoteClosure="$@"
         fi
         
         # Import the closure into the Nix store
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --import $remoteClosure
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --import $remoteClosure
         ;;
     export)
         checkLocalOrRemoteFile
 
-        closure=`ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --export $@`
+        closure=`ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --export $@`
         
         # A remote file must be downloaded afterwards
         if [ "$remotefile" = "1" ]
         then
             localClosure=`mktemp -p $TMPDIR`
-            scp -P $targetPort $SSH_OPTS $targetHostname:$closure $localClosure > /dev/null
+            scp -P $targetPort $SSH_OPTS $SSH_USER$targetHostname:$closure $localClosure > /dev/null
             echo $localClosure
         fi
         ;;
     print-invalid)
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --print-invalid "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --print-invalid "$@"
         ;;
     realise)
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --realise "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --realise "$@"
         ;;
     set)
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client $profileArg --set "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client $profileArg --set "$@"
         ;;
     query-installed)
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client $profileArg --query-installed "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client $profileArg --query-installed "$@"
         ;;
     query-requisites)
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --query-requisites "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --query-requisites "$@"
         ;;
     collect-garbage)
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --collect-garbage $deleteOldArg "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --collect-garbage $deleteOldArg "$@"
         ;;
     activate)
         checkType
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --activate "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --activate "$@"
         ;;
     deactivate)
         checkType
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --deactivate "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --deactivate "$@"
         ;;
     lock)
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --lock $profileArg
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --lock $profileArg
         ;;
     unlock)
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --unlock $profileArg
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --unlock $profileArg
         ;;
     snapshot)
         checkType
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --snapshot "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --snapshot "$@"
         ;;
     restore)
         checkType
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --restore "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --restore "$@"
         ;;
     delete-state)
         checkType
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --type $type $argsArg --delete-state "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --delete-state "$@"
         ;;
     query-all-snapshots)
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --query-all-snapshots --container $container --component $component
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --query-all-snapshots --container $container --component $component
         ;;
     query-latest-snapshot)
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --query-latest-snapshot --container $container --component $component
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --query-latest-snapshot --container $container --component $component
         ;;
     print-missing-snapshots)
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --print-missing-snapshots "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --print-missing-snapshots "$@"
         ;;
     import-snapshots)
         checkLocalOrRemoteFile
@@ -416,27 +423,27 @@ case "$operation" in
         # A localfile must first be transferred
         if [ "$localfile" = "1" ]
         then
-            tempdir=`ssh -p $targetPort $SSH_OPTS $targetHostname mktemp -d -p $TMPDIR`
+            tempdir=`ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname mktemp -d -p $TMPDIR`
             scp -r -P $targetPort $SSH_OPTS $@ $targetHostname:$tempdir > /dev/null
-            remoteSnapshots=`ssh -p $targetPort $SSH_OPTS $targetHostname echo $tempdir/*`
+            remoteSnapshots=`ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname echo $tempdir/*`
         else
             remoteSnapshots=$@
         fi
         
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --container $container --component $component --import-snapshots $remoteSnapshots
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --container $container --component $component --import-snapshots $remoteSnapshots
         ;;
     export-snapshots)
         for i in $@
         do
             tmpdir=`mktemp -d -p $TMPDIR`
-            scp -r -P $targetPort $SSH_OPTS $targetHostname:$i $tmpdir > /dev/null
+            scp -r -P $targetPort $SSH_OPTS $SSH_USER$targetHostname:$i $tmpdir > /dev/null
             echo $tmpdir
         done
         ;;
     resolve-snapshots)
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --resolve-snapshots "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --resolve-snapshots "$@"
         ;;
     clean-snapshots)
-        ssh -p $targetPort $SSH_OPTS $targetHostname disnix-client --clean-snapshots --keep $keep "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --clean-snapshots --keep $keep "$@"
         ;;
 esac

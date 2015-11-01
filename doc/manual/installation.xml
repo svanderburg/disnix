@@ -332,7 +332,7 @@ esac
 				</para>
 				
 <screen>
-$ cygrunsrv -I dbus -p /usr/sbin/dbus-daemon.exe -a '--system --nofork'
+$ cygrunsrv -I dbus -p /usr/bin/dbus-daemon.exe -a '--system --nofork'
 </screen>
 
 				<para>
@@ -340,11 +340,32 @@ $ cygrunsrv -I dbus -p /usr/sbin/dbus-daemon.exe -a '--system --nofork'
 				</para>
 				
 <screen>
-$ cygrunsrv -I disnix -p /usr/local/bin/disnix-service.exe -a \
-  -e 'PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin' \
-  -y dbus
+$ cygrunsrv -I disnix -p /usr/local/bin/disnix-service.exe \
+  -e 'PATH=/bin:/usr/bin:/usr/local/bin' \
+  -y dbus -u sander
 </screen>
 
+				<para>
+					The <option>-u</option> parameter specifies under which the Disnix
+					service runs. This username should be substituted by the
+					actual username under which Disnix has been installed.
+				</para>
+				
+				<para>
+					The user under which the Disnix service runs should
+					have service logon permissions. To check which
+					permissions a user has, run:
+				</para>
+<screen>
+$ editrights -u sander -l
+</screen>
+				<para>
+					It should list <replaceable>SeServiceLogonRight</replaceable>. If this is not
+					the case, this permission can be granted by running:
+				</para>
+<screen>
+$ editrights -u sander -a SeServiceLogonRight
+</screen>
 				<para>
 					Disnix also needs to be remotely connectible. In order to connect through SSH, you also need to configure a SSH server.
 					This can be done by executing the following script on Cygwin:
