@@ -10,7 +10,7 @@ noinst_DATA = disnix-visualize.1.xml
 man1_MANS = disnix-visualize.1
 
 disnix_visualize_SOURCES = main.c clustertable.c edgestable.c graph.c
-disnix_visualize_LDADD = ../libmanifest/libmanifest.la
-disnix_visualize_CFLAGS = -I../libmanifest
+disnix_visualize_LDADD = ../libmanifest/libmanifest.la ../libmain/libmain.la
+disnix_visualize_CFLAGS = -I../libmanifest -I../libmain
 
 EXTRA_DIST = disnix-visualize.1 disnix-visualize.1.xml

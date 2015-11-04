@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <getopt.h>
+#include <defaultoptions.h>
 #include "graph.h"
 
 static void print_usage(const char *command)
@@ -43,12 +44,6 @@ static void print_usage(const char *command)
     printf("                         one, which is usually sufficient in most cases.\n");
     printf("  -h, --help             Shows the usage of this command to the user\n");
     printf("  -v, --version          Shows the version of this command to the user\n");
-}
-
-static void print_version(const char *command)
-{
-    printf("%s (" PACKAGE_NAME ") " PACKAGE_VERSION "\n\n", command);
-    printf("Copyright (C) 2008-2015 Sander van der Burg\n");
 }
 
 int main(int argc, char *argv[])
@@ -89,6 +84,8 @@ int main(int argc, char *argv[])
     }
 
     /* Validate options */
+    profile = check_profile_option(profile);
+    
     if(optind >= argc)
         manifest_file = NULL;
     else
