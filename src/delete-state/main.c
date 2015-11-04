@@ -29,7 +29,7 @@ static void print_usage(const char *command)
     
     printf("The command `disnix-delete-state' removes the state of all the components\n");
     printf("in a given deployment manifest that have been marked as garbage. If no manifest\n");
-    printf("file is given, it uses the last deployed one.\n\n");
+    printf("file is given, it uses the manifest of last deployed configuration.\n\n");
     
     printf("Most users don't need to use this command directly. The `disnix-env' command\n");
     printf("will automatically invoke this command after the new configuration has been\n");

@@ -25,10 +25,11 @@
  * Locks or unlocks the target machines in a manifest
  *
  * @param do_lock TRUE to lock the machines, FALSE to unlock them
- * @param manifest Path to the manifest file
+ * @param manifest_file Path to the manifest file
+ * @param coordinator_profile_path Path where the current deployment state is stored for future reference
  * @param profile Identifier of the distributed profile
  * @return 0 if the unlocking phase succeeds, else a non-zero exit status
  */
-int lock_or_unlock(const int do_lock, const gchar *manifest, gchar *profile);
+int lock_or_unlock(const int do_lock, const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile);
 
 #endif

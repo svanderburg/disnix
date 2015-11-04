@@ -18,6 +18,9 @@
  */
 
 #include "locking.h"
+#include <sys/types.h>
+#include <pwd.h>
+#include <unistd.h>
 #include <distributionmapping.h>
 #include <targets.h>
 #include <client-interface.h>
@@ -138,11 +141,38 @@ static int lock(const GPtrArray *distribution_array, const GPtrArray *target_arr
     return exit_status;
 }
 
-int lock_or_unlock(const int do_lock, const gchar *manifest, gchar *profile)
+int lock_or_unlock(const int do_lock, const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile)
 {
-    GPtrArray *distribution_array = generate_distribution_array(manifest);
-    GPtrArray *target_array = generate_target_array(manifest);
+    GPtrArray *distribution_array;
+    GPtrArray *target_array;
     int exit_status;
+    
+    if(manifest_file == NULL)
+    {
+        /* Get current username */
+        char *username = (getpwuid(geteuid()))->pw_name;
+        
+        /* If no manifest file has been provided, try opening the last deployed one */
+        gchar *old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, username, profile);
+        
+        if(old_manifest_file == NULL)
+        {
+            g_printerr("[coordinator]: No previous manifest file exists, so no locking operations will be executed!\n");
+            return 0;
+        }
+        else
+        {
+            distribution_array = generate_distribution_array(old_manifest_file);
+            target_array = generate_target_array(old_manifest_file);
+            g_free(old_manifest_file);
+        }
+    }
+    else
+    {
+        /* Open the provided manifest */
+        distribution_array = generate_distribution_array(manifest_file);
+        target_array = generate_target_array(manifest_file);
+    }
     
     if(distribution_array == NULL || target_array == NULL)
     {
@@ -161,7 +191,10 @@ int lock_or_unlock(const int do_lock, const gchar *manifest, gchar *profile)
             exit_status = unlock(distribution_array, target_array, profile);
     }
     
+    /* Cleanup */
     delete_target_array(target_array);
     delete_distribution_array(distribution_array);
+
+    /* Return exit status */
     return exit_status;
 }

@@ -112,35 +112,16 @@ static int delete_obsolete_state(GPtrArray *snapshots_array, GPtrArray *target_a
     return status;
 }
 
-static Manifest *open_manifest(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const char *username)
-{
-    gchar *path;
-    Manifest *manifest;
-    
-    if(manifest_file == NULL)
-        path = determine_previous_manifest_file(coordinator_profile_path, username, profile);
-    else
-        path = g_strdup(manifest_file);
-    
-    if(path == NULL)
-        manifest = NULL;
-    else
-        manifest = create_manifest(path);
-    
-    g_free(path);
-    return manifest;
-}
-
 int delete_state(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile)
 {
     Manifest *manifest;
-
-    /* Get current username */
-    char *username = (getpwuid(geteuid()))->pw_name;
     
-    /* Generate a distribution array from the manifest file */
     if(manifest_file == NULL)
     {
+        /* Get current username */
+        char *username = (getpwuid(geteuid()))->pw_name;
+        
+        /* If no manifest file has been provided, try opening the last deployed one */
         gchar *old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, username, profile);
         
         if(old_manifest_file == NULL)
@@ -151,14 +132,15 @@ int delete_state(const gchar *manifest_file, const gchar *coordinator_profile_pa
         else
         {
             g_printerr("[coordinator]: Deleting obsolete state of all components of the previous generation: %s\n", old_manifest_file);
-            manifest = open_manifest(old_manifest_file, coordinator_profile_path, profile, username);
+            manifest = create_manifest(old_manifest_file);
             g_free(old_manifest_file);
         }
     }
     else
     {
+        /* Open the provided manifest */
         g_printerr("[coordinator]: Deleting obsolete state of all components...\n");
-        manifest = open_manifest(manifest_file, coordinator_profile_path, profile, username);
+        manifest = create_manifest(manifest_file);
     }
     
     if(manifest == NULL)
@@ -168,6 +150,7 @@ int delete_state(const gchar *manifest_file, const gchar *coordinator_profile_pa
     }
     else
     {
+        /* Delete the obsolete state */
         int exit_status;
         
         if(delete_obsolete_state(manifest->snapshots_array, manifest->target_array))

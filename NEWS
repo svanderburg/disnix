@@ -1,10 +1,12 @@
 Version 0.5
 ===========
-- Services model also takes an invDistribution parameter, which is the infrastructure model in which each target is augmented with the services that have been mapped to it
+- Services model also takes an invDistribution parameter, which refers to the infrastructure model in which each target is augmented with the services that have been mapped to it
 
 - Some noise has been removed from the output
 
 - Introduced SSH_USER environment variable to configure the username to connect with to remote machines with disnix-ssh-client
+
+- disnix-lock and disnix-visualize can now also be called without a file parameter. With no file parameter, it attempts to open the manifest of the last deployment
 
 Version 0.4
 ===========

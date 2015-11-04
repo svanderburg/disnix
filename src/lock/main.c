@@ -25,11 +25,14 @@
 
 static void print_usage(const char *command)
 {
-    printf("Usage: %s [--unlock] MANIFEST\n\n", command);
+    printf("Usage: %s [--unlock] [MANIFEST]\n\n", command);
     
     printf("Notifies all services on the machines that the transition phase starts or ends,\n");
     printf("so that they can temporarily lock or unlock themselves (or take other\n");
     printf("precautions to make the transition to go smooth)\n\n");
+    
+    printf("If no manifest is specified, the manifest of the last deployed configuration\n");
+    printf("will be used\n\n");
     
     printf("Most users don't need to use this command directly. The `disnix-env' command\n");
     printf("will automatically invoke this command before upgrading the configuration.\n\n");
@@ -38,6 +41,11 @@ static void print_usage(const char *command)
     printf("      --unlock           Executes an unlock operation instead of a lock\n");
     printf("  -p, --profile=PROFILE  Name of the profile in which the services are\n");
     printf("                         registered. Defaults to: default\n");
+    printf("      --coordinator-profile-path=PATH\n");
+    printf("                         Path to the manifest of the previous configuration. By\n");
+    printf("                         default this tool will use the manifest stored in the\n");
+    printf("                         disnix coordinator profile instead of the specified\n");
+    printf("                         one, which is usually sufficient in most cases.\n");
     printf("  -h, --help             Shows the usage of this command to the user\n");
     printf("  -v, --version          Shows the version of this command to the user\n");
     
@@ -54,6 +62,7 @@ int main(int argc, char *argv[])
     struct option long_options[] =
     {
         {"unlock", no_argument, 0, 'l'},
+        {"coordinator-profile-path", required_argument, 0, 'P'},
         {"profile", required_argument, 0, 'p'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
@@ -61,6 +70,8 @@ int main(int argc, char *argv[])
     };
     char *profile = NULL;
     int lock = TRUE;
+    char *coordinator_profile_path = NULL;
+    char *manifest_file;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "p:hv", long_options, &option_index)) != -1)
@@ -69,6 +80,9 @@ int main(int argc, char *argv[])
         {
             case 'l':
                 lock = FALSE;
+                break;
+            case 'P':
+                coordinator_profile_path = optarg;
                 break;
             case 'p':
                 profile = optarg;
@@ -88,10 +102,9 @@ int main(int argc, char *argv[])
     profile = check_profile_option(profile);
     
     if(optind >= argc)
-    {
-        fprintf(stderr, "ERROR: No manifest specified!\n");
-        return 1;
-    }
+        manifest_file = NULL;
     else
-        return lock_or_unlock(lock, argv[optind], profile); /* Execute lock or unlock operation */
+        manifest_file = argv[optind];
+    
+    return lock_or_unlock(lock, manifest_file, coordinator_profile_path, profile); /* Execute lock or unlock operation */
 }

@@ -18,16 +18,40 @@
  */
 
 #include "graph.h"
+#include <sys/types.h>
+#include <unistd.h>
+#include <pwd.h>
 #include "edgestable.h"
 #include "clustertable.h"
 #include <manifest.h>
 #include <activationmapping.h>
 
-int generate_graph(const gchar *manifest_file)
+int generate_graph(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile)
 {
-    /* Creates a manifest object */
-    Manifest *manifest = create_manifest(manifest_file);
+    Manifest *manifest;
     
+    if(manifest_file == NULL)
+    {
+        /* Get current username */
+        char *username = (getpwuid(geteuid()))->pw_name;
+        
+        /* If no manifest file has been provided, try opening the last deployed one */
+        gchar *old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, username, profile);
+        
+        if(old_manifest_file == NULL)
+        {
+            g_printerr("[coordinator]: No previous manifest file exists, so no visualization will be provided!\n");
+            return 0;
+        }
+        else
+        {
+            manifest = create_manifest(old_manifest_file);
+            g_free(old_manifest_file);
+        }
+    }
+    else
+        manifest = create_manifest(manifest_file); /* Open the provided manifest */
+
     if(manifest == NULL)
     {
         g_printerr("Error with opening manifest file!\n");
