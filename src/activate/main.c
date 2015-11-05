@@ -62,8 +62,9 @@ static void print_usage(const char *command)
     printf("      --no-upgrade               By enabling this option Disnix does not store\n");
     printf("                                 the deployment state for further use, such as\n");
     printf("                                 upgrading\n");
-    printf("      --dry-run                  Prints the activation and deactivation steps to\n");
-    printf("                                 but does not actually executes them\n");
+    printf("      --dry-run                  Prints the activation and deactivation steps\n");
+    printf("                                 that will be performed but does not actually\n");
+    printf("                                 execute them\n");
     printf("  -h, --help                     Shows the usage of this command to the user\n");
     printf("  -v, --version                  Shows the version of this command to the user\n");
     

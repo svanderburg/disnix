@@ -22,6 +22,7 @@
 #include <pwd.h>
 #include <unistd.h>
 #include <distributionmapping.h>
+#include <manifest.h>
 #include <targets.h>
 #include <client-interface.h>
 
