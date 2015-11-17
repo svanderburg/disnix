@@ -1,0 +1,47 @@
+#!/bin/sh
+# Start/stop the disnix-service.
+#
+### BEGIN INIT INFO
+# Provides:          disnix-service
+# Default-Start:     2 3 4 5
+# Default-Stop:
+# Short-Description: Disnix Service
+# Description:       Exposes deployment operations to remote machines that are
+#                    carried out by Nix and Dysnomia
+### END INIT INFO
+
+PATH=/home/sander/.nix-profile/bin:/bin:/usr/bin:/sbin:/usr/sbin
+DESC="disnix service"
+NAME=disnix-service
+DAEMONUSER=sander
+DAEMON=/home/$DAEMONUSER/.nix-profile/bin/disnix-service
+PIDFILE=/var/run/disnix-service.pid
+SCRIPTNAME=/etc/init.d/"$NAME"
+
+test -f $DAEMON || exit 0
+
+. /lib/lsb/init-functions
+
+case "$1" in
+start)  log_daemon_msg "Starting disnix service" "$NAME"
+        start-stop-daemon --start --quiet --pidfile $PIDFILE --user $DAEMONUSER --name $NAME --background --chuid $DAEMONUSER --exec $DAEMON $EXTRA_OPTS
+        log_end_msg $?
+        ;;
+stop)   log_daemon_msg "Stopping disnix service" "$NAME"
+        start-stop-daemon --stop --quiet --user $DAEMONUSER --name $NAME --retry 5
+        RETVAL=$?
+        [ $RETVAL -eq 0 ] && [ -e "$PIDFILE" ] && rm -f $PIDFILE
+        log_end_msg $RETVAL
+        ;;
+restart) log_daemon_msg "Restarting disnix service" "$NAME"
+        $0 stop
+        $0 start
+        ;;
+status)
+        start-stop-daemon --status --pidfile $PIDFILE --name $NAME && exit 0 || exit $?
+        ;;
+*)      log_action_msg "Usage: /etc/init.d/disnix-service {start|stop|status|restart}"
+        exit 2
+        ;;
+esac
+exit 0
