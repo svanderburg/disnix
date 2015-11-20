@@ -107,5 +107,6 @@ scripts/disnix-gendist-roundrobin
 scripts/disnix-ssh-client
 doc/Makefile
 doc/manual/Makefile
+init.d/Makefile
 ])
 AC_OUTPUT

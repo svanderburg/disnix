@@ -1,1 +1,1 @@
-SUBDIRS = conf src scripts data doc maintenance
+SUBDIRS = conf init.d src scripts data doc maintenance

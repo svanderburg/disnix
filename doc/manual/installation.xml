@@ -307,10 +307,12 @@ esac
 			
 				<para>
 					Refer to your distribution's <code>init.d</code> script style to see how services
-					are configured and launched.
+					are configured and launched. For convenience, a Debian-compatible init.d script named
+					<code>disnix-service.initd</code> has been placed in the <code>$PREFIX/share/doc</code> folder
+					of this package.
 				</para>
 				<para>
-					One important aspect to keep in mind is that both Nix and Dysnomia should be in the <code>PATH</code>
+					An important aspect to keep in mind is that both Nix and Dysnomia should be in the <code>PATH</code>
 					of the <code>init.d</code> script so that the service can execute all required deployment activities.
 					Another important thing is that the Disnix service should be started after the DBus system service and stopped
 					in exactly the opposite order.

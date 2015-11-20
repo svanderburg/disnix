@@ -8,6 +8,8 @@ Version 0.5
 
 - disnix-lock and disnix-visualize can now also be called without a file parameter. With no file parameter, it attempts to open the manifest of the last deployment
 
+- Added a Debian compatible init.d script for convenience for installing on Debian derivatives
+
 Version 0.4
 ===========
 - The distributed derivation and manifest generator now pass the XML input as files to support bigger ones (Nix 1.9 or newer required)
