@@ -267,10 +267,29 @@ $ ./configure --help
 				<para>
 					The core Disnix service is a D-Bus service operating on the system bus,
 					which requires the D-Bus system daemon running.
-					Moreover, it also requires the Disnix service configuration file
+					Moreover, it requires the Disnix service configuration file
 					(which is installed in <code>$PREFIX/etc/dbus-1/system.d</code>) in the right location
 					so that it is allowed to register itself on the system bus with the right access permissions
-					(in most Linux distributions this location is in <code>/etc/dbus-1/system.d</code>).
+					(in most Linux distributions this location is <code>/etc/dbus-1/system.d</code>).
+				</para>
+				
+				<para>
+					If a single user Nix installation has been performed, you typically want to change
+					the root user into the user that runs Nix. For example, we may want to change this line:
+				</para>
+				
+<screen>
+&lt;policy user="root"&gt;
+</screen>
+				<para>
+					into:
+				</para>
+<screen>
+&lt;policy user="sander"&gt;
+</screen>
+				<para>
+					To grant the user: <code>sander</code>, that has a single user Nix installation the permissions to own
+					the Disnix service.
 				</para>
 			</section>
 			
@@ -285,24 +304,53 @@ $ ./configure --help
 				</para>
 			
 <screen>
-#!/bin/bash
+#!/bin/sh
+# Start/stop the disnix-service.
+#
+### BEGIN INIT INFO
+# Provides:          disnix-service
+# Default-Start:     2 3 4 5
+# Default-Stop:
+# Short-Description: Disnix Service
+# Description:       Exposes deployment operations to remote machines that are
+#                    carried out by Nix and Dysnomia
+### END INIT INFO
 
-source /etc/init.d/functions
+PATH=/home/sander/.nix-profile/bin:/bin:/usr/bin:/sbin:/usr/sbin
+DESC="disnix service"
+NAME=disnix-service
+DAEMONUSER=sander
+DAEMON=/home/$DAEMONUSER/.nix-profile/bin/disnix-service
+PIDFILE=/var/run/disnix-service.pid
+SCRIPTNAME=/etc/init.d/"$NAME"
 
-case "$1":
-    start)
-        loadproc disnix-service
+test -f $DAEMON || exit 0
+
+. /lib/lsb/init-functions
+
+case "$1" in
+start)  log_daemon_msg "Starting disnix service" "$NAME"
+        start-stop-daemon --start --quiet --pidfile $PIDFILE --user $DAEMONUSER --name $NAME --background --chuid $DAEMONUSER --exec $DAEMON $EXTRA_OPTS
+        log_end_msg $?
         ;;
-
-    stop)
-        killproc disnix-service
+stop)   log_daemon_msg "Stopping disnix service" "$NAME"
+        start-stop-daemon --stop --quiet --user $DAEMONUSER --name $NAME --retry 5
+        RETVAL=$?
+        [ $RETVAL -eq 0 ] &amp;&amp; [ -e "$PIDFILE" ] &amp;&amp; rm -f $PIDFILE
+        log_end_msg $RETVAL
         ;;
-    
-    restart)
+restart) log_daemon_msg "Restarting disnix service" "$NAME"
         $0 stop
         $0 start
         ;;
+status)
+        start-stop-daemon --status --pidfile $PIDFILE --name $NAME &amp;&amp; exit 0 || exit $?
+        ;;
+*)      log_action_msg "Usage: /etc/init.d/disnix-service {start|stop|status|restart}"
+        exit 2
+        ;;
 esac
+exit 0
 </screen>
 			
 				<para>
@@ -316,6 +364,11 @@ esac
 					of the <code>init.d</code> script so that the service can execute all required deployment activities.
 					Another important thing is that the Disnix service should be started after the DBus system service and stopped
 					in exactly the opposite order.
+				</para>
+				<para>
+					If a single user Nix installation has been performed the <code>DAEMONUSER</code> should correspond to the name
+					of the user that is allowed to use it. The name should correspond to <code>root</code> in case of a multi-user
+					Nix installation.
 				</para>
 			</section>
 			
@@ -349,8 +402,11 @@ $ cygrunsrv -I disnix -p /usr/local/bin/disnix-service.exe \
 
 				<para>
 					The <option>-u</option> parameter specifies under which the Disnix
-					service runs. This username should be substituted by the
+					service runs. If a single user Nix installation has been performed, 
+					this username should be substituted by the
 					actual username under which Disnix has been installed.
+					In multi user Nix installations, the <code>-u</code> parameter should
+					be omitted.
 				</para>
 				
 				<para>
