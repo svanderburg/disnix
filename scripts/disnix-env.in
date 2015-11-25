@@ -307,7 +307,9 @@ else
 fi
 
 echo "[coordinator]: Activating new configuration..."
-disnix-activate $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; displayStateFailure; exit 1)
+disnix-activate $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; displayFailure; exit 1)
+
+# Execute data migration
 echo "[coordinator]: Snapshotting state of annotated services..."
 disnix-snapshot $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; displayStateFailure; exit 1)
 echo "[coordinator]: Restoring state of annotated services..."
