@@ -136,6 +136,27 @@ displayFailure()
     echo "[coordinator]: The deployment failed! Please inspect the output to diagnose any problems!" >&2
 }
 
+# Displays a note indicating that data migration has failed and provide the
+# caller some notes on how to resolve it.
+
+displayStateFailure()
+{
+    cat <<EOF
+
+The problem is a data migration issue, which must be manually diagnosed. To
+attempt migrating the data again, run:
+
+$ disnix-snapshot $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest
+$ disnix-restore $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest
+
+If all problems have been resolved, the deployment must be made final. To
+accomplish this, run:
+
+$ disnix-set $profileArg $coordinatorProfilePathArg $noCoordinatorProfileArg $noTargetProfilesArg $manifest
+
+EOF
+}
+
 # Releases the locks
 
 releaseLocks()
@@ -286,11 +307,11 @@ else
 fi
 
 echo "[coordinator]: Activating new configuration..."
-disnix-activate $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; displayFailure; exit 1)
+disnix-activate $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; displayStateFailure; exit 1)
 echo "[coordinator]: Snapshotting state of annotated services..."
-disnix-snapshot $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; displayFailure; exit 1)
+disnix-snapshot $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; displayStateFailure; exit 1)
 echo "[coordinator]: Restoring state of annotated services..."
-disnix-restore $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; displayFailure; exit 1)
+disnix-restore $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; displayStateFailure; exit 1)
 
 # Memorize the last profile generation symlink
 
@@ -310,7 +331,7 @@ if [ "$noDeleteState" != "1" ] && [ "$noUpgrade" != "1" ] && [ "$previousGenerat
 then
     # Delete the obsolete state if an upgrade is performed
     echo "[coordinator]: Deleting obsolete state..."
-    disnix-delete-state $profileArg $coordinatorProfilePathArg
+    disnix-delete-state $profileArg $coordinatorProfilePathArg || (releaseLocks; displayStateFailure; exit 1)
 fi
 
 echo "[coordinator]: Setting profiles..."
@@ -322,9 +343,9 @@ then
     # If we don't want to delete state, but there has been an upgrade, notify the user
     cat <<EOF
 
-NOTE: Deleting state has been disabled! This means that the state of services
-that have been moved from one machine to another are copied, but not deleted
-from their previous locations!
+NOTE: Deleting state has been disabled! This means that the state of the
+services that have been moved from one machine to another were copied, but not
+deleted from their previous locations!
 
 To actually remove the old obsolete state, run the following command:
 
