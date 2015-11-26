@@ -299,17 +299,17 @@ then
     fi
 fi
 
+if [ "$coordinatorProfilePath" = "" ]
+then
+    profileDir="@localstatedir@/nix/profiles/per-user/$(whoami)/disnix-coordinator"
+else
+    profileDir="$coordinatorProfilePath"
+fi
+
 # Execute operations
 
 if [ "$switchGeneration" = "1" ]
 then
-    if [ "$coordinatorProfilePath" = "" ]
-    then
-        profileDir="@localstatedir@/nix/profiles/per-user/$(whoami)/disnix-coordinator"
-    else
-        profileDir="$coordinatorProfilePath"
-    fi
-    
     # If no generation link has been requested, figure out what the previous one is
     if [ "$generationId" = "" ]
     then
@@ -367,16 +367,9 @@ disnix-restore $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest ||
 
 # Memorize the last profile generation symlink
 
-if [ "$coordinatorProfilePath" = "" ]
+if [ -d "$profileDir" ] && [ "$(echo $profileDir/$profile-*-link)" != "" ]
 then
-    profileDir="@localstatedir@/nix/profiles/per-user/$(whoami)/disnix-coordinator"
-else
-    profileDir="$coordinatorProfilePath"
-fi
-
-if [ -d "$profileDir" ] && [ "$(echo $profileDir/$profile-*)" != "" ]
-then
-    previousGeneration="$(ls $profileDir/$profile-* | sort -V | tail -1)"
+    previousGeneration="$(ls $profileDir/$profile-*-link | sort -V | tail -1)"
 fi
 
 if [ "$noDeleteState" != "1" ] && [ "$noUpgrade" != "1" ] && [ "$previousGeneration" != "" ]

@@ -364,6 +364,9 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # Roll back to the previously deployed configuration
         $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env --rollback");
         
+        # We should have one service of type echo now on the testtarget1 machine
+        $testtarget1->mustSucceed("[ \"\$(cat /nix/var/nix/profiles/disnix/default/manifest | tail -1)\" = \"echo\" ]");
+        
         # Roll back to the first deployed configuration
         $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env --switch-to-generation 1");
         
