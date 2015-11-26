@@ -40,6 +40,13 @@ $ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
 <screen>
 $ disnix-env --build-on-targets -s services.nix -i infrastructure.nix -d distribution.nix
 </screen>
+		<para>
+			If we regret upgrading a system, we can also roll back to its previously deployed configuration, by running:
+		</para>
+		
+<screen>
+$ disnix-env --rollback
+</screen>
 	</section>
 		
 	<section>

@@ -26,9 +26,11 @@ showUsage()
 {
     cat <<EOF
 Usage: $0 -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
+  or: $0 --rollback [OPTION]
+  or: $0 --switch-generation NUM [OPTION]
 
-The command \`disnix-env' is used to install or upgrade a service-oriented
-system in a given environment.
+The command \`disnix-env' is used to install, upgrade, or roll back a
+service-oriented system in a given environment.
 
 This command requires three Nix expressions as input parameters -- a services
 model capturing the components of a distributed system and its
@@ -70,6 +72,9 @@ Options:
   -d, --distribution=distribution_nix
                                   Distribution Nix expression which maps
                                   services to machines in the network
+      --switch-to-generation=NUM  Switches to a specific profile generation
+      --rollback                  Switches back to the previously deployed
+                                  configuration
       --target-property=PROP      The target property of an infrastructure
                                   model, that specifies how to
       --deploy-state              Indicates whether to globally deploy state
@@ -172,7 +177,7 @@ releaseLocks()
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:p:m:hv -l services:,infrastructure:,distribution:,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-delete-state,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:p:m:hv -l services:,infrastructure:,distribution:,rollback,switch-to-generation:,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-delete-state,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -195,6 +200,13 @@ do
             ;;
         -d|--distribution)
             distributionFile=`readlink -f $2`
+            ;;
+        --rollback)
+            switchGeneration=1
+            ;;
+        --switch-to-generation)
+            switchGeneration=1
+            generationId=$2
             ;;
         -m|--max-concurrent-transfers)
             maxConcurrentTransfersArg="-m $2"
@@ -261,9 +273,13 @@ source @datadir@/@PACKAGE@/checks
 
 # Validate the given options
 
-checkServicesFile
-checkInfrastructureFile
-checkDistributionFile
+if [ "$switchGeneration" != "1" ]
+then
+    checkServicesFile
+    checkInfrastructureFile
+    checkDistributionFile
+fi
+
 checkClientInterface
 checkTargetProperty
 checkShowTrace
@@ -285,16 +301,50 @@ fi
 
 # Execute operations
 
-if [ "$buildOnTargets" = "1" ]
+if [ "$switchGeneration" = "1" ]
 then
-    echo "[coordinator]: Instantiating store derivations..."
-    distributedDerivation=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --interface $interface --no-out-link $showTraceArg`
-    echo "[coordinator]: Building store derivations..."
-    disnix-build $maxConcurrentTransfersArg $distributedDerivation
+    if [ "$coordinatorProfilePath" = "" ]
+    then
+        profileDir="@localstatedir@/nix/profiles/per-user/$(whoami)/disnix-coordinator"
+    else
+        profileDir="$coordinatorProfilePath"
+    fi
+    
+    # If no generation link has been requested, figure out what the previous one is
+    if [ "$generationId" = "" ]
+    then
+        if [ -d "$profileDir" ] && [ "$(echo $profileDir/$profile-*-link)" != "" ] && [ "$(ls $profileDir/$profile-*-link | wc -l)" -gt 1 ]
+        then
+            generation="$(basename $(ls $profileDir/$profile-*-link | sort -V | tail -2 | head -1))"
+        else
+            echo "[coordinator]: Unable to roll back as there are no known previous deployments!" >&2
+            exit 1
+        fi
+    else
+        generation="$profile-$generationId-link"
+    fi
+    
+    if [ -e "$profileDir/$generation" ]
+    then
+        # Retrieve the manifest of the requested profile generation
+        manifest=`readlink -f $profileDir/$generation`
+    else
+        echo "[coordinator]: Cannot switch profile generations, because the requested profile does not exist!" >&2
+        exit 1
+    fi
+else
+    if [ "$buildOnTargets" = "1" ]
+    then
+        echo "[coordinator]: Instantiating store derivations..."
+        distributedDerivation=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --interface $interface --no-out-link $showTraceArg`
+        echo "[coordinator]: Building store derivations..."
+        disnix-build $maxConcurrentTransfersArg $distributedDerivation
+    fi
+
+    echo "[coordinator]: Building manifest..."
+    manifest=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link --interface $interface $deployStateArg $showTraceArg`
 fi
 
-echo "[coordinator]: Building manifest..."
-manifest=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link --interface $interface $deployStateArg $showTraceArg`
 echo "[coordinator]: Distributing intra-dependency closures..."
 disnix-distribute $maxConcurrentTransfersArg $manifest
 

@@ -29,9 +29,15 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         $coordinator->copyFileFromHost("key", "/root/.ssh/id_dsa");
         $coordinator->mustSucceed("chmod 600 /root/.ssh/id_dsa");
         
+        # Do a rollback. Since there is nothing deployed, it should fail.
+        $coordinator->mustFail("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env --rollback");
+        
         # Use disnix-env to perform a new installation.
         # This test should succeed.
         $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+        
+        # Do another rollback. Since there is no previous deployment, it should fail.
+        $coordinator->mustFail("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env --rollback");
         
         # Use disnix-query to see if the right services are installed on
         # the right target platforms. This test should succeed.
@@ -353,6 +359,43 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         
         # Check if the 'process' has written the tmp file again.
         # This test should succeed.
-        $testtarget1->mustSucceed("sleep 10 && [ -f /tmp/process_out ]");
+        $testtarget1->mustSucceed("sleep 10 && [ -f /tmp/process_out ] && rm /tmp/process_out");
+        
+        # Roll back to the previously deployed configuration
+        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env --rollback");
+        
+        # Roll back to the first deployed configuration
+        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env --switch-to-generation 1");
+        
+        # Use disnix-query to see if the right services are installed on
+        # the right target platforms. This test should succeed.
+        
+        my @lines = split('\n', $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-query ${manifestTests}/infrastructure.nix"));
+        
+        if($lines[1] ne "Services on: testtarget1") {
+            die "disnix-query output line 1 does not match what we expect!\n";
+        }
+        
+        if($lines[3] =~ /\-testService1/) {
+            print "Found testService1 on disnix-query output line 3\n";
+        } else {
+            die "disnix-query output line 3 does not contain testService1!\n";
+        }
+        
+        if($lines[5] ne "Services on: testtarget2") {
+            die "disnix-query output line 5 does not match what we expect!\n";
+        }
+        
+        if($lines[7] =~ /\-testService2/) {
+            print "Found testService2 on disnix-query output line 7\n";
+        } else {
+            die "disnix-query output line 7 does not contain testService2!\n";
+        }
+        
+        if($lines[8] =~ /\-testService3/) {
+            print "Found testService3 on disnix-query output line 8\n";
+        } else {
+            die "disnix-query output line 8 does not contain testService3!\n";
+        }
       '';
   }
