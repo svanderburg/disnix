@@ -24,7 +24,8 @@
  * Starts the Disnix D-Bus service
  *
  * @param session_bus Indicates whether the daemon should be registered on the session bus or system bus
+ * @param log_path Directory in which log files are stored
  */
-int start_disnix_service(int session_bus);
+int start_disnix_service(int session_bus, char *log_path);
 
 #endif

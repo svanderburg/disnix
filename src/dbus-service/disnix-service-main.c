@@ -45,6 +45,8 @@ static void print_usage(const char *command)
     printf("Options:\n");
     printf("      --session-bus  Register the Disnix service on the session bus instead of\n");
     printf("                     the system bus (useful for testing)\n");
+    printf("      --log-dir      Specify the directory in which the logfiles are stored\n");
+    printf("                     (defaults to: /var/log/disnix)\n");
     printf("  -h, --help         Shows the usage of this command to the user\n");
     printf("  -v, --version      Shows the version of this command to the user\n");
 }
@@ -62,12 +64,14 @@ int main(int argc, char *argv[])
     struct option long_options[] =
     {
         {"session-bus", no_argument, 0, 's'},
+        {"log-dir", required_argument, 0, 'l'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
     };
     
     int session_bus = FALSE;
+    char *logdir = "/var/log/disnix";
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "hv", long_options, &option_index)) != -1)
@@ -76,6 +80,9 @@ int main(int argc, char *argv[])
         {
             case 's':
                 session_bus = TRUE;
+                break;
+            case 'l':
+                logdir = optarg;
                 break;
             case 'h':
             case '?':
@@ -88,5 +95,5 @@ int main(int argc, char *argv[])
     }
 
     /* Start the program with the given options */
-    return start_disnix_service(session_bus);
+    return start_disnix_service(session_bus, logdir);
 }

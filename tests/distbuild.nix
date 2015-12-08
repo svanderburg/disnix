@@ -36,7 +36,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # Checks whether the testService1 has been actually built on the
         # targets by checking the logfiles. This test should succeed.
         
-        $testtarget1->mustSucceed("[ \"\$(journalctl --no-pager --full _SYSTEMD_UNIT=disnix.service | grep \"\\-testService1.drv\")\" != \"\" ]");
+        $testtarget1->mustSucceed("[ \"\$(cat /var/log/disnix/1 | grep \"\\-testService1.drv\")\" != \"\" ]");
         
         # Checks whether the build log of testService1 is available on the
         # coordinator machine. This test should fail, since the build

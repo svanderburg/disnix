@@ -29,6 +29,9 @@
 /** Path to the temp directory */
 char *tmpdir;
 
+/** Path to the log directory */
+char *logdir;
+
 /** Stores the original signal action for the SIGCHLD signal */
 struct sigaction oldact;
 
@@ -121,7 +124,7 @@ static void handle_sigchild(int signum)
     wait(&status);
 }
 
-int start_disnix_service(int session_bus)
+int start_disnix_service(int session_bus, char *log_path)
 {
     /* The D-Bus connection object provided by dbus_glib */
     DBusGConnection *bus;
@@ -150,6 +153,9 @@ int start_disnix_service(int session_bus)
     
     if(tmpdir == NULL)
 	tmpdir = "/tmp";
+    
+    /* Determine the log directory */
+    logdir = log_path;
     
     /* Create a new SIGCHLD handler which discards the result of the child process */
     act.sa_handler = handle_sigchild;
