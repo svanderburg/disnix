@@ -21,6 +21,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <dirent.h>
 #include <dbus/dbus-glib.h>
 #include <glib.h>
 
@@ -34,6 +35,9 @@ char *logdir;
 
 /** Stores the original signal action for the SIGCHLD signal */
 struct sigaction oldact;
+
+/* Provides each job a unique job id */
+int job_counter;
 
 /* Disnix instance definition */
 #include "disnix-instance.h"
@@ -73,7 +77,7 @@ static void disnix_object_init(DisnixObject *obj)
  *
  * @param klass Class to initialize
  */
-static void disnix_object_class_init (DisnixObjectClass *klass)
+static void disnix_object_class_init(DisnixObjectClass *klass)
 {
     g_assert(klass != NULL);
 
@@ -124,6 +128,27 @@ static void handle_sigchild(int signum)
     wait(&status);
 }
 
+static int filter_irrelevant(const struct dirent *entity)
+{
+    if(strcmp(entity->d_name, ".") == 0 || strcmp(entity->d_name, "..") == 0)
+        return FALSE;
+    else
+        return TRUE;
+}
+
+static int numbersort(const struct dirent **a, const struct dirent **b)
+{
+    int left = atoi((*a)->d_name);
+    int right = atoi((*b)->d_name);
+    
+    if(left < right)
+        return -1;
+    else if(left > right)
+        return 1;
+    else
+        return 0;
+}
+
 int start_disnix_service(int session_bus, char *log_path)
 {
     /* The D-Bus connection object provided by dbus_glib */
@@ -147,6 +172,10 @@ int start_disnix_service(int session_bus, char *log_path)
 
     /* Specifies the new action for a SIGCHLD signal */
     struct sigaction act;
+    
+    /* Contains information about the amount of logfiles in the log directory */
+    struct dirent **namelist;
+    int num_of_entries;
     
     /* Determine the temp directory */
     tmpdir = getenv("TMPDIR");
@@ -174,7 +203,7 @@ int start_disnix_service(int session_bus, char *log_path)
         
     if(session_bus)
     {
-	g_print("Connecting to the session bus\n");	
+	g_print("Connecting to the session bus\n");
 	bus = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
     }
     else
@@ -221,7 +250,7 @@ int start_disnix_service(int session_bus, char *log_path)
     g_print("RequestName returned: %d\n", result);
     
     if(result != 1)
-    {        
+    {
         g_printerr("Failed to get the primary well-known name!\n");
         return 1;
     }
@@ -239,7 +268,21 @@ int start_disnix_service(int session_bus, char *log_path)
     /* Register the instance to D-Bus */
     g_print("Registering the Disnix instance to D-Bus\n");
     dbus_g_connection_register_g_object (bus, "/org/nixos/disnix/Disnix", G_OBJECT(object));
-
+    
+    /* Figure out what the next job id number is */
+    num_of_entries = scandir(logdir, &namelist, 0, numbersort);
+    
+    if(num_of_entries <= 0)
+       job_counter = 0;
+    else
+    {
+       char *filename = namelist[num_of_entries - 1]->d_name;
+       job_counter = atoi(filename);
+       job_counter++;
+       free(namelist[num_of_entries - 1]);
+       free(namelist);
+    }
+    
     /* Starting the main loop */
     g_print("The Disnix is service is running!\n");
     g_main_loop_run(mainloop);

@@ -34,7 +34,7 @@ extern char *tmpdir, *logdir;
 
 extern struct sigact oldact;
 
-static int job_counter = 0;
+extern int job_counter;
 
 static gchar **update_lines_vector(gchar **lines, char *buf)
 {
