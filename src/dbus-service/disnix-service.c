@@ -22,6 +22,7 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <string.h>
 #include <dbus/dbus-glib.h>
 #include <glib.h>
 

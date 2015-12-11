@@ -18,9 +18,41 @@
  */
 
 #include "disnix-client-operation.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include "disnix-client.h"
 #include "disnix-marshal.h"
+
+#define BUFFER_SIZE 1024
+
+char *logdir;
+
+static void print_log(const gint pid)
+{
+    char pidStr[15], buf[BUFFER_SIZE];
+    gchar *logfile;
+    FILE *file;
+    
+    sprintf(pidStr, "%d", pid);
+    logfile = g_strconcat(logdir, "/", pidStr, NULL);
+    file = fopen(logfile, "r");
+    
+    if(file == NULL)
+        fprintf(stderr, "Cannot display logfile of pid: %d\n", pid);
+    else
+    {
+        while(!feof(file))
+        {
+            fgets(buf, BUFFER_SIZE - 1, file);
+            buf[BUFFER_SIZE - 1] = '\0';
+            fputs(buf, stderr);
+        }
+        
+        fclose(file);
+    }
+    
+    g_free(logfile);
+}
 
 /* Signal handlers */
 
@@ -50,6 +82,8 @@ static void disnix_failure_signal_handler(DBusGProxy *proxy, const gint pid, gpo
 {
     gint my_pid = *((gint*)user_data);
     
+    print_log(pid);
+    
     /* Stop the main loop if our job is done */
     if(pid == my_pid)
         exit(1);
@@ -57,6 +91,7 @@ static void disnix_failure_signal_handler(DBusGProxy *proxy, const gint pid, gpo
 
 static void cleanup(gchar **derivation, gchar **arguments)
 {
+    g_free(logdir);
     g_strfreev(derivation);
     g_strfreev(arguments);
 }
@@ -139,6 +174,9 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
     dbus_g_proxy_connect_signal(remote_object, "success", G_CALLBACK(disnix_success_signal_handler), &pid, NULL);
     dbus_g_proxy_connect_signal(remote_object, "failure", G_CALLBACK(disnix_failure_signal_handler), &pid, NULL);
 
+    /* Receive the logdir */
+    org_nixos_disnix_Disnix_get_logdir(remote_object, pid, &logdir, &error);
+    
     /* Receive a PID for the job we want to execute */
     org_nixos_disnix_Disnix_get_job_id(remote_object, &pid, &error);
 
@@ -301,7 +339,7 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 	    return 1;
     }
 
-    if(error != NULL) 
+    if(error != NULL)
     {
         g_printerr("Error while executing the operation! Reason: %s\n", error->message);
         cleanup(derivation, arguments);
