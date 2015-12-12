@@ -132,7 +132,7 @@ static int open_log_file(const gint pid)
     
     mkdir(logdir, 0755);
     log_path = g_strconcat(logdir, "/", pidStr, NULL);
-    log_fd = open(log_path, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
+    log_fd = open(log_path, O_CREAT | O_EXCL | O_RDWR);
     
     g_free(log_path);
     return log_fd;
