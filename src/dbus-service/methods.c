@@ -2006,7 +2006,7 @@ gboolean disnix_delete_state(DisnixObject *object, const gint pid, gchar *deriva
     return TRUE;
 }
 
-gboolean disnix_get_logdir(DisnixObject *object, const gint pid, gchar **path, GError **error)
+gboolean disnix_get_logdir(DisnixObject *object, gchar **path, GError **error)
 {
     *path = g_strdup(logdir);
     return TRUE;

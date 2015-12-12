@@ -128,7 +128,6 @@
 		</method>
 		
 		<method name="get_logdir">
-			<arg type="i" name="pid" direction="in" />
 			<arg type="s" name="path" direction="out" />
 		</method>
 		

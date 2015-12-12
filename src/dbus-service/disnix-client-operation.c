@@ -175,7 +175,7 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
     dbus_g_proxy_connect_signal(remote_object, "failure", G_CALLBACK(disnix_failure_signal_handler), &pid, NULL);
 
     /* Receive the logdir */
-    org_nixos_disnix_Disnix_get_logdir(remote_object, pid, &logdir, &error);
+    org_nixos_disnix_Disnix_get_logdir(remote_object, &logdir, &error);
     
     /* Receive a PID for the job we want to execute */
     org_nixos_disnix_Disnix_get_job_id(remote_object, &pid, &error);
