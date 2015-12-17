@@ -60,33 +60,34 @@ static void disnix_finish_signal_handler(DBusGProxy *proxy, const gint pid, gpoi
 {
     gint my_pid = *((gint*)user_data);
 
-    /* Stop the main loop if our job is done */
     if(pid == my_pid)
         exit(0);
 }
 
 static void disnix_success_signal_handler(DBusGProxy *proxy, const gint pid, gchar **derivation, gpointer user_data)
 {
-    unsigned int i;
     gint my_pid = *((gint*)user_data);
-    
-    for(i = 0; i < g_strv_length(derivation); i++)
-        g_print("%s", derivation[i]);
 
-    /* Stop the main loop if our job is done */
     if(pid == my_pid)
+    {
+        unsigned int i;
+    
+        for(i = 0; i < g_strv_length(derivation); i++)
+            g_print("%s", derivation[i]);
+            
         exit(0);
+    }
 }
 
 static void disnix_failure_signal_handler(DBusGProxy *proxy, const gint pid, gpointer user_data)
 {
     gint my_pid = *((gint*)user_data);
     
-    print_log(pid);
-    
-    /* Stop the main loop if our job is done */
     if(pid == my_pid)
+    {
+        print_log(pid);
         exit(1);
+    }
 }
 
 static void cleanup(gchar **derivation, gchar **arguments)
