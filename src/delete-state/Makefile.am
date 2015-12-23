@@ -10,7 +10,7 @@ noinst_DATA = disnix-delete-state.1.xml
 man1_MANS = disnix-delete-state.1
 
 disnix_delete_state_SOURCES = delete-state.c main.c
-disnix_delete_state_LDADD = ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la
-disnix_delete_state_CFLAGS = -I../libmanifest -I../libmain -I../libinterface
+disnix_delete_state_CFLAGS = $(GLIB2_CFLAGS) -I../libmanifest -I../libmain -I../libinterface
+disnix_delete_state_LDADD = $(GLIB2_LIBS) ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la
 
 EXTRA_DIST = disnix-delete-state.1 disnix-delete-state.1.xml

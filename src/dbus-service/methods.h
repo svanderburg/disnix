@@ -19,53 +19,52 @@
 
 #ifndef __DISNIX_METHODS_H
 #define __DISNIX_METHODS_H
-#include <glib.h>
-#include "disnix-instance.h"
+#include "disnix-dbus.h"
 
-gboolean disnix_get_job_id(DisnixObject *object, gint *pid, GError **error);
+gboolean on_handle_get_job_id(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation);
 
-gboolean disnix_import(DisnixObject *object, const gint pid, gchar *closure, GError **error);
+gboolean on_handle_import(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_closure);
 
-gboolean disnix_export(DisnixObject *object, const gint pid, gchar **derivation, GError **error);
+gboolean on_handle_export(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_derivation);
 
-gboolean disnix_print_invalid(DisnixObject *object, const gint pid, gchar **derivation, GError **error);
+gboolean on_handle_print_invalid(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_derivation);
 
-gboolean disnix_realise(DisnixObject *object, const gint pid, gchar **derivation, GError **error);
+gboolean on_handle_realise(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_derivation);
 
-gboolean disnix_set(DisnixObject *object, const gint pid, const gchar *profile, gchar *derivation, GError **error);
+gboolean on_handle_set(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_profile, const gchar *arg_derivation);
 
-gboolean disnix_query_installed(DisnixObject *object, const gint pid, const gchar *profile, GError **error);
+gboolean on_handle_query_installed(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_profile);
 
-gboolean disnix_query_requisites(DisnixObject *object, const gint pid, gchar **derivation, GError **error);
+gboolean on_handle_query_requisites(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_derivation);
 
-gboolean disnix_collect_garbage(DisnixObject *object, const gint pid, const gboolean delete_old, GError **error);
+gboolean on_handle_collect_garbage(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, gboolean arg_delete_old);
 
-gboolean disnix_activate(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments, GError **error);
+gboolean on_handle_activate(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_type, const gchar *const *arg_arguments);
 
-gboolean disnix_deactivate(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments, GError **error);
+gboolean on_handle_deactivate(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_type, const gchar *const *arg_arguments);
 
-gboolean disnix_lock(DisnixObject *object, const gint pid, const gchar *profile, GError **error);
+gboolean on_handle_lock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_profile);
 
-gboolean disnix_unlock(DisnixObject *object, const gint pid, const gchar *profile, GError **error);
+gboolean on_handle_unlock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_profile);
 
-gboolean disnix_snapshot(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments, GError **error);
+gboolean on_handle_snapshot(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_type, const gchar *const *arg_arguments);
 
-gboolean disnix_restore(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments, GError **error);
+gboolean on_handle_restore(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_type, const gchar *const *arg_arguments);
 
-gboolean disnix_query_all_snapshots(DisnixObject *object, const gint pid, gchar *container, gchar *component, GError **error);
+gboolean on_handle_query_all_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_container, const gchar *arg_component);
 
-gboolean disnix_query_latest_snapshot(DisnixObject *object, const gint pid, gchar *container, gchar *component, GError **error);
+gboolean on_handle_query_latest_snapshot(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_container, const gchar *arg_component);
 
-gboolean disnix_print_missing_snapshots(DisnixObject *object, const gint pid, gchar **component, GError **error);
+gboolean on_handle_print_missing_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_component);
 
-gboolean disnix_import_snapshots(DisnixObject *object, const gint pid, gchar *container, gchar *component, gchar **snapshots, GError **error);
+gboolean on_handle_import_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_container, const gchar *arg_component, const gchar *const *arg_snapshots);
 
-gboolean disnix_resolve_snapshots(DisnixObject *object, const gint pid, gchar **snapshots, GError **error);
+gboolean on_handle_resolve_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_snapshots);
 
-gboolean disnix_clean_snapshots(DisnixObject *object, const gint pid, const gint keep, GError **error);
+gboolean on_handle_clean_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, gint arg_keep);
 
-gboolean disnix_delete_state(DisnixObject *object, const gint pid, gchar *derivation, gchar *type, gchar **arguments, GError **error);
+gboolean on_handle_delete_state(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_type, const gchar *const *arg_arguments);
 
-gboolean disnix_get_logdir(DisnixObject *object, const gint pid, gchar **path, GError **error);
+gboolean on_handle_get_logdir(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation);
 
 #endif

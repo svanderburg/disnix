@@ -10,7 +10,7 @@ noinst_DATA = disnix-lock.1.xml
 man1_MANS = disnix-lock.1
 
 disnix_lock_SOURCES = locking.c main.c
-disnix_lock_LDADD = ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la
-disnix_lock_CFLAGS = -I../libmanifest -I../libmain -I../libinterface
+disnix_lock_CFLAGS = $(GLIB2_CFLAGS) -I../libmanifest -I../libmain -I../libinterface
+disnix_lock_LDADD = $(GLIB2_LIBS) ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la
 
 EXTRA_DIST = disnix-lock.1 disnix-lock.1.xml

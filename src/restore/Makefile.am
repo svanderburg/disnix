@@ -10,7 +10,7 @@ noinst_DATA = disnix-restore.1.xml
 man1_MANS = disnix-restore.1
 
 disnix_restore_SOURCES = restore.c main.c
-disnix_restore_LDADD = ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la
-disnix_restore_CFLAGS = -I../libmanifest -I../libmain -I../libinterface
+disnix_restore_CFLAGS = $(GLIB2_CFLAGS) -I../libmanifest -I../libmain -I../libinterface
+disnix_restore_LDADD = $(GLIB2_LIBS) ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la
 
 EXTRA_DIST = disnix-restore.1 disnix-restore.1.xml

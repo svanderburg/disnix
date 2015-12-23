@@ -17,8 +17,6 @@ In order to build Disnix from source code, the following packages are required:
 * [libxml2](http://xmlsoft.org)
 * [libxslt](http://xmlsoft.org)
 * [glib](https://developer.gnome.org/glib)
-* [DBus](http://www.freedesktop.org/wiki/Software/dbus)
-* [DBus-GLib](http://www.freedesktop.org/wiki/Software/dbus)
 
 To be able to build software with Disnix, Nix and Nixpkgs are required:
 

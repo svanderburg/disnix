@@ -11,6 +11,6 @@ man1_MANS = disnix-query.1
 
 disnix_query_SOURCES = query-installed.c main.c
 disnix_query_LDADD = ../libinfrastructure/libinfrastructure.la ../libmain/libmain.la ../libinterface/libinterface.la
-disnix_query_CFLAGS = -I../libinfrastructure -I../libmain -I../libinterface
+disnix_query_CFLAGS = $(GLIB2_CFLAGS) -I../libinfrastructure -I../libmain -I../libinterface
 
 EXTRA_DIST = disnix-query.1 disnix-query.1.xml

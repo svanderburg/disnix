@@ -17,292 +17,343 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include "disnix-client.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <getopt.h>
-#include <glib.h>
-#include <defaultoptions.h>
-#include "operation.h"
-#include "disnix-client-operation.h"
+#include "disnix-dbus.h"
+#define BUFFER_SIZE 1024
 
-static void print_usage(const char *command)
+char *logdir;
+
+static void print_log(const gint pid)
 {
-    printf("Usage: %s [OPTION] operation\n\n", command);
+    char pidStr[15], buf[BUFFER_SIZE];
+    gchar *logfile;
+    FILE *file;
     
-    printf("The command `disnix-client' provides access to a `disnix-service' instance\n");
-    printf("running on the same machine by connecting to the D-Bus system or session bus.\n\n");
+    sprintf(pidStr, "%d", pid);
+    logfile = g_strconcat(logdir, "/", pidStr, NULL);
+    file = fopen(logfile, "r");
     
-    printf("In most cases this tool is only needed for debugging purposes, since it only uses\n");
-    printf("the D-Bus protocol and cannot connect to a remote machine. A more useful client\n");
-    printf("for use in production environments is: `disnix-ssh-client'.\n\n");
+    if(file == NULL)
+        fprintf(stderr, "Cannot display logfile of pid: %d\n", pid);
+    else
+    {
+        while(!feof(file))
+        {
+            fgets(buf, BUFFER_SIZE - 1, file);
+            buf[BUFFER_SIZE - 1] = '\0';
+            fputs(buf, stderr);
+        }
+        
+        fclose(file);
+    }
     
-    printf("Options:\n\n");
-    
-    printf("Operations:\n");
-    printf("  --import                   Imports a given closure into the Nix store of the\n");
-    printf("                             target machine\n");
-    printf("  --export                   Exports the closure of a given Nix store path of\n");
-    printf("                             the target machine into a file\n");
-    printf("  --print-invalid            Prints all the paths that are not valid in the Nix\n");
-    printf("                             store of the target machine\n");
-    printf("  -r, --realise              Realises the given store derivation on the target\n");
-    printf("                             machine\n");
-    printf("  --set                      Creates a Disnix profile only containing the given\n");
-    printf("                             derivation on the target machine\n");
-    printf("  -q, --query-installed      Queries all the installed services on the given\n");
-    printf("                             target machine\n");
-    printf("  --query-requisites         Queries all the requisites (intra-dependencies) of\n");
-    printf("                             the given services on the target machine\n");
-    printf("  --collect-garbage          Collects garbage on the given target machine\n");
-    printf("  --activate                 Activates the given service on the target machine\n");
-    printf("  --deactivate               Deactivates the given service on the target machine\n");
-    printf("  --lock                     Acquires a lock on a Disnix profile of the target\n");
-    printf("                             machine\n");
-    printf("  --unlock                   Release the lock on a Disnix profile of the target\n");
-    printf("                             machine\n");
-    printf("  --snapshot                 Snapshots the logical state of a component on the\n");
-    printf("                             given target machine\n");
-    printf("  --restore                  Restores the logical state of a component on the\n");
-    printf("                             given target machine\n");
-    printf("  --delete-state             Deletes the state of a component on the given\n");
-    printf("                             machine\n");
-    printf("  --query-all-snapshots      Queries all available snapshots of a component on\n");
-    printf("                             the given target machine\n");
-    printf("  --query-latest-snapshot    Queries the latest snapshot of a component on the\n");
-    printf("                             given target machine\n");
-    printf("  --print-missing-snapshots  Prints the paths of all snapshots not present on\n");
-    printf("                             the given target machine\n");
-    printf("  --import-snapshots         Imports the specified snapshots into the remote\n");
-    printf("                             snapshot store\n");
-    printf("  --export-snapshots         Exports the specified snapshot to the local\n");
-    printf("                             snapshot store\n");
-    printf("  --resolve-snapshots        Converts the relative paths to the snapshots to\n");
-    printf("                             absolute paths\n");
-    printf("  --clean-snapshots          Removes older snapshots from the snapshot store\n");
-    printf("  --help                     Shows the usage of this command to the user\n");
-    printf("  --version                  Shows the version of this command to the user\n");
-
-    printf("\nGeneral options:\n");
-    printf("  -t, --target=TARGET        Specifies the target to connect to. This property\n");
-    printf("                             is ignored by this client because it only supports\n");
-    printf("                             loopback connections.\n");
-    printf("  --session-bus              Connects to the session bus instead of the system\n");
-    printf("                             bus. This is useful for testing/debugging purposes\n");
-    
-    printf("\nImport/Export/Import snapshots/Export snapshots options:\n");
-    printf("  --localfile                Specifies that the given paths are stored locally\n");
-    printf("                             and must be transferred to the remote machine if\n");
-    printf("                             needed\n");
-    printf("  --remotefile               Specifies that the given paths are stored remotely\n");
-    printf("                             and must transferred from the remote machine if\n");
-    printf("                             needed\n");
-    
-    printf("\nSet/Query installed/Lock/Unlock options:\n");
-    printf("  -p, --profile=PROFILE      Name of the Disnix profile. Defaults to: default\n");
-  
-    printf("\nCollect garbage options:\n");
-    printf("  -d, --delete-old           Indicates whether all older generations of Nix\n");
-    printf("                             profiles must be removed as well\n");
-
-    printf("\nActivation/Deactivation/Snapshot/Restore/Delete state options:\n");
-    printf("  --type=TYPE                Specifies the activation module that should be\n");
-    printf("                             used, such as echo or process.\n");
-    printf("  --arguments=ARGUMENTS      Specifies the arguments passed to the Dysnomia\n");
-    printf("                             module, which is a string with key=value pairs\n");
-
-    printf("\nQuery all snapshots/Query latest snapshot options:\n");
-    printf("  -C, --container=CONTAINER  Name of the container in which the component is managed\n");
-    printf("  -c, --component=COMPONENT  Name of the component hosted in a container\n");
-
-    printf("\nClean snapshots options:\n");
-    printf("  --keep=NUM                 Amount of snapshot generations to keep. Defaults\n");
-    printf("                             to: 1\n");
-
-    printf("\nEnvironment:\n");
-    printf("  DISNIX_PROFILE    Sets the name of the profile that stores the manifest on the\n");
-    printf("                    coordinator machine and the deployed services per machine on\n");
-    printf("                    each target (Defaults to: default).\n");
+    g_free(logfile);
 }
 
-int main(int argc, char *argv[])
-{
-    /* Declarations */
-    int c, option_index = 0;
-    struct option long_options[] =
-    {
-        {"import", no_argument, 0, 'I'},
-        {"export", no_argument, 0, 'E'},
-        {"print-invalid", no_argument, 0, 'P'},
-        {"realise", no_argument, 0, 'r'},
-        {"set", no_argument, 0, 'S'},
-        {"query-installed", no_argument, 0, 'q'},
-        {"query-requisites", no_argument, 0, 'Q'},
-        {"collect-garbage", no_argument, 0, 'W'},
-        {"activate", no_argument, 0, 'A'},
-        {"deactivate", no_argument, 0, 'D'},
-        {"delete-state", no_argument, 0, 'F'},
-        {"lock", no_argument, 0, 'L'},
-        {"unlock", no_argument, 0, 'U'},
-        {"snapshot", no_argument, 0, 'f'},
-        {"restore", no_argument, 0, 'g'},
-        {"query-all-snapshots", no_argument, 0, 'B'},
-        {"query-latest-snapshot", no_argument, 0, 's'},
-        {"print-missing-snapshots", no_argument, 0, 'M'},
-        {"import-snapshots", no_argument, 0, 'Y'},
-        {"resolve-snapshots", no_argument, 0, 'Z'},
-        {"clean-snapshots", no_argument, 0, 'e'},
-        {"target", required_argument, 0, 't'},
-        {"localfile", no_argument, 0, 'l'},
-        {"remotefile", no_argument, 0, 'R'},
-        {"profile", required_argument, 0, 'p'},
-        {"delete-old", no_argument, 0, 'd'},
-        {"type", required_argument, 0, 'T'},
-        {"arguments", required_argument, 0, 'a'},
-        {"container", required_argument, 0, 'C'},
-        {"component", required_argument, 0, 'c'},
-        {"session-bus", no_argument, 0, 'b'},
-        {"keep", required_argument, 0, 'z'},
-        {"help", no_argument, 0, 'h'},
-        {"version", no_argument, 0, 'v'},
-        {0, 0, 0, 0}
-    };
+/* Signal handlers */
 
-    /* Option value declarations */
-    Operation operation = OP_NONE;
-    char *profile = NULL, *type = NULL, *container = NULL, *component = NULL;
-    gchar **derivation = NULL, **arguments = NULL;
-    unsigned int derivation_size = 0, arguments_size = 0;
-    int delete_old = FALSE, session_bus = FALSE, keep = 1;
-    
-    /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "rqt:p:dC:c:hv", long_options, &option_index)) != -1)
+static void disnix_finish_signal_handler(GDBusProxy *proxy, const gint pid, gpointer user_data)
+{
+    gint my_pid = *((gint*)user_data);
+
+    if(pid == my_pid)
+        exit(0);
+}
+
+static void disnix_success_signal_handler(GDBusProxy *proxy, const gint pid, gchar **derivation, gpointer user_data)
+{
+    gint my_pid = *((gint*)user_data);
+
+    if(pid == my_pid)
     {
-        switch(c)
-        {
-            case 'I':
-                operation = OP_IMPORT;
-                break;
-            case 'E':
-                operation = OP_EXPORT;
-                break;
-            case 'P':
-                operation = OP_PRINT_INVALID;
-                break;
-            case 'r':
-                operation = OP_REALISE;
-                break;
-            case 'S':
-                operation = OP_SET;
-                break;
-            case 'q':
-                operation = OP_QUERY_INSTALLED;
-                break;
-            case 'Q':
-                operation = OP_QUERY_REQUISITES;
-                break;
-            case 'W':
-                operation = OP_COLLECT_GARBAGE;
-                break;
-            case 'A':
-                operation = OP_ACTIVATE;
-                break;
-            case 'D':
-                operation = OP_DEACTIVATE;
-                break;
-            case 'F':
-                operation = OP_DELETE_STATE;
-                break;
-            case 'L':
-                operation = OP_LOCK;
-                break;
-            case 'U':
-                operation = OP_UNLOCK;
-                break;
-            case 'f':
-                operation = OP_SNAPSHOT;
-                break;
-            case 'g':
-                operation = OP_RESTORE;
-                break;
-            case 'B':
-                operation = OP_QUERY_ALL_SNAPSHOTS;
-                break;
-            case 's':
-                operation = OP_QUERY_LATEST_SNAPSHOT;
-                break;
-            case 'M':
-                operation = OP_PRINT_MISSING_SNAPSHOTS;
-                break;
-            case 'Y':
-                operation = OP_IMPORT_SNAPSHOTS;
-                break;
-            case 'Z':
-                operation = OP_RESOLVE_SNAPSHOTS;
-                break;
-            case 'e':
-                operation = OP_CLEAN_SNAPSHOTS;
-                break;
-            case 't':
-                break;
-            case 'l':
-                break;
-            case 'R':
-                break;
-            case 'p':
-                profile = optarg;
-                break;
-            case 'd':
-                delete_old = TRUE;
-                break;
-            case 'T':
-                type = optarg;
-                break;
-            case 'a':
-                arguments = (gchar**)g_realloc(arguments, (arguments_size + 1) * sizeof(gchar*));
-                arguments[arguments_size] = g_strdup(optarg);
-                arguments_size++;
-                break;
-            case 'C':
-                container = optarg;
-                break;
-            case 'c':
-                component = optarg;
-                break;
-            case 'b':
-                session_bus = TRUE;
-                break;
-            case 'z':
-                keep = atoi(optarg);
-                break;
-            case 'h':
-            case '?':
-                print_usage(argv[0]);
-                return 0;
-            case 'v':
-                print_version(argv[0]);
-                return 0;
-        }
+        unsigned int i;
+    
+        for(i = 0; i < g_strv_length(derivation); i++)
+            g_print("%s", derivation[i]);
+            
+        exit(0);
+    }
+}
+
+static void disnix_failure_signal_handler(GDBusProxy *proxy, const gint pid, gpointer user_data)
+{
+    gint my_pid = *((gint*)user_data);
+    
+    if(pid == my_pid)
+    {
+        print_log(pid);
+        exit(1);
+    }
+}
+
+static void cleanup(OrgNixosDisnixDisnix *proxy, gchar **derivation, gchar **arguments)
+{
+    g_free(logdir);
+    g_strfreev(derivation);
+    g_strfreev(arguments);
+    g_object_unref(proxy);
+}
+
+int run_disnix_client(Operation operation, gchar **derivation, gboolean session_bus, char *profile, gboolean delete_old, gchar **arguments, char *type, char *container, char *component, int keep)
+{
+    /* Proxy object representing the D-Bus service object. */
+    OrgNixosDisnixDisnix *proxy;
+
+    /* GMainLoop object */
+    GMainLoop *mainloop;
+    
+    /* Captures the results of D-Bus operations */
+    GError *error = NULL;
+    
+    /* Other declarations */
+    gint pid;
+    
+    /* If no operation is specified we should quit */
+    if(operation == OP_NONE)
+    {
+        g_printerr("No operation has been specified!\n");
+        cleanup(NULL, derivation, arguments);
+        return 1;
     }
     
-    /* Validate options */
-    profile = check_profile_option(profile);
+    /* Connect to the session/system bus */
     
-    /* Validate non-options */
-    while(optind < argc)
+    if(session_bus)
+        proxy = org_nixos_disnix_disnix_proxy_new_for_bus_sync(G_BUS_TYPE_SESSION,
+            G_DBUS_PROXY_FLAGS_NONE,
+            "org.nixos.disnix.Disnix",
+            "/org/nixos/disnix/Disnix",
+            NULL,
+            &error);
+    else
+        proxy = org_nixos_disnix_disnix_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
+            G_DBUS_PROXY_FLAGS_NONE,
+            "org.nixos.disnix.Disnix",
+            "/org/nixos/disnix/Disnix",
+            NULL,
+            &error);
+    
+    if(error != NULL)
     {
-        derivation = g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
-        derivation[derivation_size] = g_strdup(argv[optind]);
-        derivation_size++;
-        optind++;
+        if(session_bus)
+            g_printerr("Cannot connect to session bus! Reason: %s\n", error->message);
+        else
+            g_printerr("Cannot connect to system bus! Reason: %s\n", error->message);
+        
+        g_error_free(error);
+        return 1;
     }
     
-    derivation = g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
-    derivation[derivation_size] = NULL;
+    /* Register the signatures for the signal handlers */
+    g_signal_connect(proxy, "finish", G_CALLBACK(disnix_finish_signal_handler), &pid);
+    g_signal_connect(proxy, "success", G_CALLBACK(disnix_success_signal_handler), &pid);
+    g_signal_connect(proxy, "failure", G_CALLBACK(disnix_failure_signal_handler), &pid);
     
-    /* Add NULL termination to the arguments vector */
-    arguments = g_realloc(arguments, (arguments_size + 1) * sizeof(gchar*));
-    arguments[arguments_size] = NULL;
+    /* Receive the logdir */
+    org_nixos_disnix_disnix_call_get_logdir_sync(proxy, &logdir, NULL, &error);
     
-    /* Execute Disnix client */
-    return run_disnix_client(operation, derivation, session_bus, profile, delete_old, arguments, type, container, component, keep);
+    if(error != NULL)
+    {
+        g_printerr("ERROR: Cannot obtain log directory! Reason: %s\n", error->message);
+        cleanup(proxy, derivation, arguments);
+        g_error_free(error);
+        return 1;
+    }
+    
+    /* Receive a PID for the job we want to execute */
+    org_nixos_disnix_disnix_call_get_job_id_sync(proxy, &pid, NULL, &error);
+    
+    if(error != NULL)
+    {
+        g_printerr("ERROR: Cannot obtain job id! Reason: %s\n", error->message);
+        cleanup(proxy, derivation, arguments);
+        g_error_free(error);
+        return 1;
+    }
+
+    /* Execute operation */
+
+    switch(operation)
+    {
+	case OP_IMPORT:
+	    if(derivation[0] == NULL)
+	    {
+		g_printerr("ERROR: A Nix store component has to be specified!\n");
+		cleanup(proxy, derivation, arguments);
+		return 1;
+	    }
+	    else
+		org_nixos_disnix_disnix_call_import_sync(proxy, pid, derivation[0], NULL, &error);
+	    break;
+	case OP_EXPORT:
+	    org_nixos_disnix_disnix_call_export_sync(proxy, pid, (const gchar**) derivation, NULL, &error);
+	    break;
+	case OP_PRINT_INVALID:
+	    org_nixos_disnix_disnix_call_print_invalid_sync(proxy, pid, (const gchar**) derivation, NULL, &error);
+	    break;
+	case OP_REALISE:
+	    org_nixos_disnix_disnix_call_realise_sync(proxy, pid, (const gchar**) derivation, NULL, &error);
+	    break;
+	case OP_SET:
+	    org_nixos_disnix_disnix_call_set_sync(proxy, pid, profile, derivation[0], NULL, &error);
+	    break;
+	case OP_QUERY_INSTALLED:
+	    org_nixos_disnix_disnix_call_query_installed_sync(proxy, pid, profile, NULL, &error);
+	    break;
+	case OP_QUERY_REQUISITES:
+	    org_nixos_disnix_disnix_call_query_requisites_sync(proxy, pid, (const gchar**) derivation, NULL, &error);
+	    break;
+	case OP_COLLECT_GARBAGE:
+	    org_nixos_disnix_disnix_call_collect_garbage_sync(proxy, pid, delete_old, NULL, &error);
+	    break;
+	case OP_ACTIVATE:
+	    if(type == NULL)
+	    {
+		g_printerr("ERROR: A type must be specified!\n");
+		cleanup(proxy, derivation, arguments);
+		return 1;
+	    }
+	    else if(derivation[0] == NULL)
+	    {
+		g_printerr("ERROR: A Nix store component has to be specified!\n");
+		cleanup(proxy, derivation, arguments);
+		return 1;
+	    }
+	    else
+		org_nixos_disnix_disnix_call_activate_sync(proxy, pid, derivation[0], type, (const gchar**) arguments, NULL, &error);
+	    break;
+	case OP_DEACTIVATE:
+	    if(type == NULL)
+	    {
+		g_printerr("ERROR: A type must be specified!\n");
+		cleanup(proxy, derivation, arguments);
+		return 1;
+	    }
+	    else if(derivation[0] == NULL)
+	    {
+		g_printerr("ERROR: A Nix store component has to be specified!\n");
+		cleanup(proxy, derivation, arguments);
+		return 1;
+	    }
+	    else
+		org_nixos_disnix_disnix_call_deactivate_sync(proxy, pid, derivation[0], type, (const gchar**) arguments, NULL, &error);
+	    break;
+	case OP_DELETE_STATE:
+	    if(type == NULL)
+	    {
+		g_printerr("ERROR: A type must be specified!\n");
+		cleanup(proxy, derivation, arguments);
+		return 1;
+	    }
+	    else if(derivation[0] == NULL)
+	    {
+		g_printerr("ERROR: A Nix store component has to be specified!\n");
+		cleanup(proxy, derivation, arguments);
+		return 1;
+	    }
+	    else
+		org_nixos_disnix_disnix_call_delete_state_sync(proxy, pid, derivation[0], type, (const gchar**) arguments, NULL, &error);
+	    break;
+	case OP_LOCK:
+	    org_nixos_disnix_disnix_call_lock_sync(proxy, pid, profile, NULL, &error);
+	    break;
+	case OP_UNLOCK:
+	    org_nixos_disnix_disnix_call_unlock_sync(proxy, pid, profile, NULL, &error);
+	    break;
+	case OP_SNAPSHOT:
+	    if(type == NULL)
+	    {
+		g_printerr("ERROR: A type must be specified!\n");
+		cleanup(proxy, derivation, arguments);
+		return 1;
+	    }
+	    else if(derivation[0] == NULL)
+	    {
+		g_printerr("ERROR: A Nix store component has to be specified!\n");
+		cleanup(proxy, derivation, arguments);
+		return 1;
+	    }
+	    else
+		org_nixos_disnix_disnix_call_snapshot_sync(proxy, pid, derivation[0], type, (const gchar**) arguments, NULL, &error);
+	    break;
+	case OP_RESTORE:
+	    if(type == NULL)
+	    {
+		g_printerr("ERROR: A type must be specified!\n");
+		cleanup(proxy, derivation, arguments);
+		return 1;
+	    }
+	    else if(derivation[0] == NULL)
+	    {
+		g_printerr("ERROR: A Nix store component has to be specified!\n");
+		cleanup(proxy, derivation, arguments);
+		return 1;
+	    }
+	    else
+		org_nixos_disnix_disnix_call_restore_sync(proxy, pid, derivation[0], type, (const gchar**) arguments, NULL, &error);
+	    break;
+	case OP_QUERY_ALL_SNAPSHOTS:
+	    org_nixos_disnix_disnix_call_query_all_snapshots_sync(proxy, pid, container, component, NULL, &error);
+	    break;
+	case OP_QUERY_LATEST_SNAPSHOT:
+	    org_nixos_disnix_disnix_call_query_latest_snapshot_sync(proxy, pid, container, component, NULL, &error);
+	    break;
+	case OP_PRINT_MISSING_SNAPSHOTS:
+	    org_nixos_disnix_disnix_call_print_missing_snapshots_sync(proxy, pid, (const gchar**) derivation, NULL, &error);
+	    break;
+	case OP_IMPORT_SNAPSHOTS:
+	    if(derivation[0] == NULL)
+	    {
+		g_printerr("ERROR: A Dysnomia snapshot has to be specified!\n");
+		cleanup(proxy, derivation, arguments);
+		return 1;
+	    }
+	    else
+		org_nixos_disnix_disnix_call_import_snapshots_sync(proxy, pid, container, component, (const gchar**) derivation, NULL, &error);
+	    break;
+	case OP_RESOLVE_SNAPSHOTS:
+	    if(derivation[0] == NULL)
+	    {
+		g_printerr("ERROR: A Dysnomia snapshot has to be specified!\n");
+		cleanup(proxy, derivation, arguments);
+		return 1;
+	    }
+	    else
+		org_nixos_disnix_disnix_call_resolve_snapshots_sync(proxy, pid, (const gchar**) derivation, NULL, &error);
+	    break;
+	case OP_CLEAN_SNAPSHOTS:
+	    org_nixos_disnix_disnix_call_clean_snapshots_sync(proxy, pid, keep, NULL, &error);
+	    break;
+	case OP_NONE:
+	    g_printerr("ERROR: No operation specified!\n");
+	    cleanup(proxy, derivation, arguments);
+	    return 1;
+    }
+
+    if(error != NULL)
+    {
+        g_printerr("Error while executing the operation! Reason: %s\n", error->message);
+        cleanup(proxy, derivation, arguments);
+        g_error_free(error);
+        return 1;
+    }
+    
+    /* Create main loop */
+    mainloop = g_main_loop_new(NULL, FALSE);
+    if(mainloop == NULL)
+    {
+        g_printerr("Cannot create main loop.\n");
+        cleanup(proxy, derivation, arguments);
+        return 1;
+    }
+    
+    /* Run loop and wait for signals */
+    g_main_loop_run(mainloop);
+    
+    /* Operation is finished */
+    cleanup(proxy, derivation, arguments);
+    
+    return 1;
 }

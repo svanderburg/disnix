@@ -28,8 +28,15 @@ AC_PATH_PROG(dblatex, dblatex)
 AC_PATH_PROG(HELP2MAN, help2man, false)
 AC_PATH_PROG(DOCLIFTER, doclifter, false)
 
-# Checks for D-Bus libraries
-PKG_CHECK_MODULES(GLIB_DBUS, [dbus-1 dbus-glib-1])
+# Checks for glib libraries
+GLIB2_REQUIRED=2.26.0
+PKG_CHECK_MODULES(GLIB2, glib-2.0 >= $GLIB2_REQUIRED)
+AC_SUBST(GLIB2_CFLAGS)
+AC_SUBST(GLIB2_LIBS)
+
+PKG_CHECK_MODULES(GIO2, gio-unix-2.0 >= $GLIB2_REQUIRED)
+AC_SUBST(GIO2_CFLAGS)
+AC_SUBST(GIO2_LIBS)
 
 # Checks for libxml2 libraries
 LIBXML2_REQUIRED=2.5.10

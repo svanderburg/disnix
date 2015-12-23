@@ -20,8 +20,36 @@
 #ifndef __DISNIX_CLIENT_OPERATION_H
 #define __DISNIX_CLIENT_OPERATION_H
 #include <glib.h>
-#include <dbus/dbus-glib.h>
-#include "operation.h"
+
+/**
+ * Enumeration of possible Disnix service operations
+ */
+typedef enum
+{
+    OP_NONE,
+    OP_IMPORT,
+    OP_EXPORT,
+    OP_PRINT_INVALID,
+    OP_REALISE,
+    OP_SET,
+    OP_QUERY_INSTALLED,
+    OP_QUERY_REQUISITES,
+    OP_COLLECT_GARBAGE,
+    OP_ACTIVATE,
+    OP_DEACTIVATE,
+    OP_LOCK,
+    OP_UNLOCK,
+    OP_SNAPSHOT,
+    OP_RESTORE,
+    OP_QUERY_ALL_SNAPSHOTS,
+    OP_QUERY_LATEST_SNAPSHOT,
+    OP_PRINT_MISSING_SNAPSHOTS,
+    OP_IMPORT_SNAPSHOTS,
+    OP_RESOLVE_SNAPSHOTS,
+    OP_CLEAN_SNAPSHOTS,
+    OP_DELETE_STATE
+}
+Operation;
 
 /**
  * Runs the Disnix client

@@ -13,30 +13,26 @@ disnix-service.8.xml: disnix-service.8
 AM_CPPFLAGS=-DLOCALSTATEDIR=\"$(localstatedir)\"
 
 bin_PROGRAMS = disnix-service disnix-client
-noinst_HEADERS = methods.h signals.h disnix-gtype-def.h disnix-instance.h operation.h disnix-client-operation.h disnix-service-main.h
+noinst_HEADERS = methods.h disnix-client.h disnix-service.h
 noinst_DATA = disnix-client.1.xml disnix-service.8.xml
 man1_MANS = disnix-client.1
 man8_MANS = disnix-service.8
 
-disnix_service_SOURCES = methods.c signals.c disnix-service.c disnix-service-main.c 
+disnix_service_SOURCES = methods.c disnix-service.c disnix-service-main.c disnix-dbus.c
+disnix_service_CFLAGS = $(GLIB2_CFLAGS) $(GIO2_CFLAGS)
+disnix_service_LDADD = $(GLIB2_LIBS) $(GIO2_LIBS)
 
-disnix_client_SOURCES = disnix-marshal.c disnix-client-operation.c disnix-client.c
-disnix_client_CFLAGS = -I../libmain
-disnix_client_LDADD = ../libmain/libmain.la
+disnix_client_SOURCES = disnix-client.c disnix-client-main.c disnix-dbus.c
+disnix_client_CFLAGS = $(GLIB2_CFLAGS) $(GIO2_CFLAGS) -I../libmain
+disnix_client_LDADD = $(GLIB2_LIBS) $(GIO2_LIBS) ../libmain/libmain.la
 
-BUILT_SOURCES = disnix-service.h disnix-client.h disnix-marshal.h disnix-marshal.c
+disnix-dbus.h: disnix.xml
+	gdbus-codegen --generate-c-code=disnix-dbus disnix.xml
 
-disnix-service.h: disnix.xml
-	dbus-binding-tool --prefix=disnix --mode=glib-server --output=disnix-service.h disnix.xml
+disnix-dbus.c: disnix.xml
+	gdbus-codegen --generate-c-code=disnix-dbus disnix.xml
 
-disnix-client.h: disnix.xml
-	dbus-binding-tool --prefix=disnix --mode=glib-client --output=disnix-client.h disnix.xml
-
-disnix-marshal.h: marshal.list
-	glib-genmarshal --prefix=marshal marshal.list --header > disnix-marshal.h
-
-disnix-marshal.c: marshal.list
-	glib-genmarshal --prefix=marshal marshal.list --body > disnix-marshal.c
+BUILT_SOURCES = disnix-dbus.c disnix-dbus.h
 
 CLEANFILES = $(BUILT_SOURCES)
-EXTRA_DIST = disnix.xml marshal.list disnix-client.1 disnix-service.8 disnix-client.1.xml disnix-service.8.xml
+EXTRA_DIST = disnix.xml disnix-client.1 disnix-service.8 disnix-client.1.xml disnix-service.8.xml

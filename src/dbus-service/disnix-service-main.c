@@ -19,7 +19,7 @@
 
 #include <stdio.h>
 #include <getopt.h>
-#include "disnix-service-main.h"
+#include "disnix-service.h"
 
 #define TRUE 1
 #define FALSE 0

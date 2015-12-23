@@ -45,16 +45,8 @@
 				and
 				<link xlink:href="http://www.xmlsoft.org">libxslt</link>
 				to parse and transform them.
-
-				The Disnix service that provides remote access to deployment operations
-				is a D-Bus service and requires
-				<link xlink:href="http://www.freedesktop.org/wiki/Software/DBusBindings">dbus-glib</link>
-				(which itself depends on
-				<link xlink:href="http://www.gtk.org">GLib</link>
-				and
-				<link xlink:href="http://www.freedesktop.org/wiki/Software/dbus">D-Bus</link>
-				).
-
+			</para>
+			<para>
 				Since Disnix is built on top of the 
 				<link xlink:href="http://nixos.org/nix">Nix package manager</link> it also requires
 				Nix to be installed on the same machine.
