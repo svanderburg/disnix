@@ -784,7 +784,7 @@ rec { <co xml:id='co-3-rec2' />
 				  <para>
 					This is a reserved property defining which attribute in this attribute set
 					specifies how to connect to this machine. If this attribute is not specified
-					then the value provided by the <code>--interface</code> parameter, or
+					then the value provided by the <code>--target-property</code> parameter, or
 					<code>DISNIX_TARGET_PROPERTY</code> environment variable is used, which
 					defaults to <code>hostname</code>.
 				  </para>

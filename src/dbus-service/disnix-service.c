@@ -70,7 +70,7 @@ static void on_bus_acquired(GDBusConnection *connection, const gchar *name, gpoi
     g_signal_connect(interface, "handle-query-installed", G_CALLBACK(on_handle_query_installed), NULL);
     g_signal_connect(interface, "handle-query-requisites", G_CALLBACK(on_handle_query_requisites), NULL);
     g_signal_connect(interface, "handle-collect-garbage", G_CALLBACK(on_handle_collect_garbage), NULL);
-    g_signal_connect(interface, "handle-activate", G_CALLBACK(on_handle_activate), NULL); //, some_user_data);
+    g_signal_connect(interface, "handle-activate", G_CALLBACK(on_handle_activate), NULL);
     g_signal_connect(interface, "handle-deactivate", G_CALLBACK(on_handle_deactivate), NULL);
     g_signal_connect(interface, "handle-lock", G_CALLBACK(on_handle_lock), NULL);
     g_signal_connect(interface, "handle-unlock", G_CALLBACK(on_handle_unlock), NULL);
