@@ -1037,6 +1037,20 @@ typedef struct
 }
 ActivityParams;
 
+static ActivityParams *create_activity_params(OrgNixosDisnixDisnix *object, gchar *activity, gint arg_pid, const gchar *arg_derivation, const gchar *arg_type, const gchar *const *arg_arguments)
+{
+    ActivityParams *params = (ActivityParams*)g_malloc(sizeof(ActivityParams));
+    
+    params->object = object;
+    params->activity = g_strdup(activity);
+    params->arg_pid = arg_pid;
+    params->arg_derivation = g_strdup(arg_derivation);
+    params->arg_type = g_strdup(arg_type);
+    params->arg_arguments = g_strdupv((gchar**)arg_arguments);
+    
+    return params;
+}
+
 static gpointer disnix_dysnomia_activity_thread_func(gpointer data)
 {
     ActivityParams *params = (ActivityParams*)data;
@@ -1111,17 +1125,8 @@ static gpointer disnix_dysnomia_activity_thread_func(gpointer data)
 
 gboolean on_handle_activate(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    GThread *thread;
-    
-    ActivityParams *params = (ActivityParams*)g_malloc(sizeof(ActivityParams));
-    params->object = object;
-    params->activity = g_strdup("activate");
-    params->arg_pid = arg_pid;
-    params->arg_derivation = g_strdup(arg_derivation);
-    params->arg_type = g_strdup(arg_type);
-    params->arg_arguments = g_strdupv((gchar**)arg_arguments);
-
-    thread = g_thread_new("activate", disnix_dysnomia_activity_thread_func, params);
+    ActivityParams *params = create_activity_params(object, "activate", arg_pid, arg_derivation, arg_type, arg_arguments);
+    GThread *thread = g_thread_new("activate", disnix_dysnomia_activity_thread_func, params);
     org_nixos_disnix_disnix_complete_activate(object, invocation);
     g_thread_unref(thread);
     return TRUE;
@@ -1131,17 +1136,8 @@ gboolean on_handle_activate(OrgNixosDisnixDisnix *object, GDBusMethodInvocation 
 
 gboolean on_handle_deactivate(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    GThread *thread;
-    
-    ActivityParams *params = (ActivityParams*)g_malloc(sizeof(ActivityParams));
-    params->object = object;
-    params->activity = g_strdup("deactivate");
-    params->arg_pid = arg_pid;
-    params->arg_derivation = g_strdup(arg_derivation);
-    params->arg_type = g_strdup(arg_type);
-    params->arg_arguments = g_strdupv((gchar**)arg_arguments);
-    
-    thread = g_thread_new("deactivate", disnix_dysnomia_activity_thread_func, params);
+    ActivityParams *params = create_activity_params(object, "deactivate", arg_pid, arg_derivation, arg_type, arg_arguments);
+    GThread *thread = g_thread_new("deactivate", disnix_dysnomia_activity_thread_func, params);
     org_nixos_disnix_disnix_complete_deactivate(object, invocation);
     g_thread_unref(thread);
     return TRUE;
@@ -1499,17 +1495,8 @@ gboolean on_handle_unlock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *i
 
 gboolean on_handle_snapshot(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    GThread *thread;
-    
-    ActivityParams *params = (ActivityParams*)g_malloc(sizeof(ActivityParams));
-    params->object = object;
-    params->activity = g_strdup("snapshot");
-    params->arg_pid = arg_pid;
-    params->arg_derivation = g_strdup(arg_derivation);
-    params->arg_type = g_strdup(arg_type);
-    params->arg_arguments = g_strdupv((gchar**)arg_arguments);
-    
-    thread = g_thread_new("snapshot", disnix_dysnomia_activity_thread_func, params);
+    ActivityParams *params = create_activity_params(object, "snapshot", arg_pid, arg_derivation, arg_type, arg_arguments);
+    GThread *thread = g_thread_new("snapshot", disnix_dysnomia_activity_thread_func, params);
     org_nixos_disnix_disnix_complete_snapshot(object, invocation);
     g_thread_unref(thread);
     return TRUE;
@@ -1519,17 +1506,8 @@ gboolean on_handle_snapshot(OrgNixosDisnixDisnix *object, GDBusMethodInvocation 
 
 gboolean on_handle_restore(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    GThread *thread;
-    
-    ActivityParams *params = (ActivityParams*)g_malloc(sizeof(ActivityParams));
-    params->object = object;
-    params->activity = g_strdup("restore");
-    params->arg_pid = arg_pid;
-    params->arg_derivation = g_strdup(arg_derivation);
-    params->arg_type = g_strdup(arg_type);
-    params->arg_arguments = g_strdupv((gchar**)arg_arguments);
-    
-    thread = g_thread_new("restore", disnix_dysnomia_activity_thread_func, params);
+    ActivityParams *params = create_activity_params(object, "restore", arg_pid, arg_derivation, arg_type, arg_arguments);
+    GThread *thread = g_thread_new("restore", disnix_dysnomia_activity_thread_func, params);
     org_nixos_disnix_disnix_complete_restore(object, invocation);
     g_thread_unref(thread);
     return TRUE;
@@ -2193,17 +2171,8 @@ gboolean on_handle_clean_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvo
 
 gboolean on_handle_delete_state(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    GThread *thread;
-    
-    ActivityParams *params = (ActivityParams*)g_malloc(sizeof(ActivityParams));
-    params->object = object;
-    params->activity = g_strdup("collect-garbage");
-    params->arg_pid = arg_pid;
-    params->arg_derivation = g_strdup(arg_derivation);
-    params->arg_type = g_strdup(arg_type);
-    params->arg_arguments = g_strdupv((gchar**)arg_arguments);
-    
-    thread = g_thread_new("delete-state", disnix_dysnomia_activity_thread_func, params);
+    ActivityParams *params = create_activity_params(object, "collect-garbage", arg_pid, arg_derivation, arg_type, arg_arguments);
+    GThread *thread = g_thread_new("delete-state", disnix_dysnomia_activity_thread_func, params);
     org_nixos_disnix_disnix_complete_delete_state(object, invocation);
     g_thread_unref(thread);
     return TRUE;
