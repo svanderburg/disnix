@@ -27,89 +27,12 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <glib.h>
+#include "logging.h"
 #define BUFFER_SIZE 1024
 
 extern char *tmpdir, *logdir;
 
 extern int job_counter;
-
-static gchar **update_lines_vector(gchar **lines, char *buf)
-{
-    unsigned int i;
-    unsigned int start_offset = 0;
-    unsigned int lines_length; 
-    
-    /* If lines is NULL, first allocate memory */
-    if(lines == NULL)
-    {
-	lines = (gchar**)g_malloc(sizeof(gchar*));
-	lines[0] = NULL;
-	lines_length = 0;
-    }
-    else
-	lines_length = g_strv_length((gchar**)lines);
-    
-    /* Check the buffer for lines */
-    for(i = 0; i < strlen(buf); i++)
-    {
-	/* If a linefeed is found append the line to the lines vector */
-	if(buf[i] == '\n')
-	{
-	    unsigned int line_size = i - start_offset + 1;
-	    gchar *line = (gchar*)g_malloc((line_size + 1) * sizeof(gchar));
-	    strncpy(line, buf + start_offset, line_size);
-	    line[line_size] = '\0';
-	    
-	    start_offset = i + 1;
-	    
-	    if(lines_length == 0)
-	    {
-		lines_length++;
-		lines = (gchar**)g_realloc(lines, (lines_length + 1) * sizeof(gchar*));
-		lines[0] = line;
-		lines[1] = NULL;
-	    }
-	    else
-	    {
-		gchar *const last_line = lines[lines_length - 1];
-		
-		if(strlen(last_line) > 0 && last_line[strlen(last_line) - 1] == '\n')
-		{
-		    lines_length++;
-		    lines = (gchar**)g_realloc(lines, (lines_length + 1) * sizeof(gchar*));
-		    lines[lines_length - 1] = line;
-		    lines[lines_length] = NULL;
-		}
-		else
-		{
-		    gchar *old_last_line = lines[lines_length - 1];
-		    
-		    lines[lines_length - 1] = g_strconcat(old_last_line, line, NULL);
-		    
-		    g_free(old_last_line);
-		    g_free(line);
-		}
-	    }
-	}
-    }
-    
-    /* If there is trailing stuff, append it to the lines vector */
-    if(start_offset < i)
-    {
-	unsigned int line_size = i - start_offset + 1;
-	gchar *line = (gchar*)g_malloc((line_size + 1) * sizeof(gchar));
-	strncpy(line, buf + start_offset, line_size);
-	line[line_size] = '\0';
-
-	lines_length++;
-	lines = (gchar**)g_realloc(lines, (lines_length + 1) * sizeof(gchar*));
-	lines[lines_length - 1] = line;
-	lines[lines_length] = NULL;
-    }
-    
-    /* Return modified lines vector */
-    return lines;
-}
 
 static gchar **allocate_empty_array_if_null(gchar **arr)
 {
@@ -120,30 +43,6 @@ static gchar **allocate_empty_array_if_null(gchar **arr)
     }
     
     return arr;
-}
-
-static void print_paths(int fd, gchar **derivation)
-{
-    unsigned int i;
-    
-    for(i = 0; i < g_strv_length(derivation); i++)
-        dprintf(fd, "%s ", derivation[i]);
-}
-
-static int open_log_file(const gint pid)
-{
-    gchar pidStr[15];
-    gchar *log_path;
-    int log_fd;
-    
-    sprintf(pidStr, "%d", pid);
-    
-    mkdir(logdir, 0755);
-    log_path = g_strconcat(logdir, "/", pidStr, NULL);
-    log_fd = open(log_path, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    
-    g_free(log_path);
-    return log_fd;
 }
 
 /* Get job id method */
@@ -1166,6 +1065,8 @@ static int unlock_services(int log_fd, gchar **derivation, unsigned int derivati
 	{
 	    char *cmd = "dysnomia";
 	    char *args[] = {cmd, "--type", type[i], "--operation", "unlock", "--component", derivation[i], "--environment", NULL};
+	    dup2(log_fd, 1);
+	    dup2(log_fd, 2);
 	    execvp(cmd, args);
 	    _exit(1);
 	}

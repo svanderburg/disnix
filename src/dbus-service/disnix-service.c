@@ -32,8 +32,8 @@
 /** Path to the temp directory */
 char *tmpdir;
 
-/** Path to the log directory */
-char *logdir;
+/* Path to the log directory */
+extern char *logdir;
 
 /** Stores the original signal action for the SIGCHLD signal */
 struct sigaction oldact;
