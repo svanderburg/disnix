@@ -18,13 +18,11 @@
  */
 
 #include "disnix-service.h"
+#include <unistd.h>
 #include <stdlib.h>
-#include <sys/wait.h>
-#include <sys/types.h>
-#include <dirent.h>
-#include <string.h>
 #include <glib.h>
 #include "disnix-dbus.h"
+#include "jobmanagement.h"
 #include "methods.h"
 
 /* Server settings variables */
@@ -34,25 +32,6 @@ char *tmpdir;
 
 /* Path to the log directory */
 extern char *logdir;
-
-/** Stores the original signal action for the SIGCHLD signal */
-struct sigaction oldact;
-
-/* Provides each job a unique job id */
-int job_counter;
-
-static int numbersort(const struct dirent **a, const struct dirent **b)
-{
-    int left = atoi((*a)->d_name);
-    int right = atoi((*b)->d_name);
-    
-    if(left < right)
-        return -1;
-    else if(left > right)
-        return 1;
-    else
-        return 0;
-}
 
 static void on_bus_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
@@ -111,11 +90,8 @@ int start_disnix_service(int session_bus, char *log_path)
     /* GLib mainloop that keeps the server running */
     GMainLoop *mainloop;
     
+    /* ID of the bus owner */
     guint owner_id;
-    
-    /* Contains information about the amount of logfiles in the log directory */
-    struct dirent **namelist;
-    int num_of_entries;
     
     /* Determine the temp directory */
     tmpdir = getenv("TMPDIR");
@@ -135,18 +111,7 @@ int start_disnix_service(int session_bus, char *log_path)
     }
     
     /* Figure out what the next job id number is */
-    num_of_entries = scandir(logdir, &namelist, 0, numbersort);
-    
-    if(num_of_entries <= 0)
-       job_counter = 0;
-    else
-    {
-       char *filename = namelist[num_of_entries - 1]->d_name;
-       job_counter = atoi(filename);
-       job_counter++;
-       free(namelist[num_of_entries - 1]);
-       free(namelist);
-    }
+    determine_next_pid(logdir);
     
     /* Connect to the system/session bus */
     if(session_bus)
@@ -179,5 +144,5 @@ int start_disnix_service(int session_bus, char *log_path)
     g_bus_unown_name(owner_id);
     
     /* The main loop should not be stopped, but if it does return the exit failure status */
-    return EXIT_FAILURE;
+    return 1;
 }

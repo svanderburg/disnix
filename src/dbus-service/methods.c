@@ -29,11 +29,11 @@
 #include <glib.h>
 #include "logging.h"
 #include "profilemanifest.h"
+#include "jobmanagement.h"
+
 #define BUFFER_SIZE 1024
 
 extern char *tmpdir, *logdir;
-
-extern int job_counter;
 
 static gchar **allocate_empty_array_if_null(gchar **arr)
 {
@@ -50,9 +50,9 @@ static gchar **allocate_empty_array_if_null(gchar **arr)
 
 gboolean on_handle_get_job_id(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation)
 {
+    int job_counter = assign_pid();
     g_printerr("Assigned job id: %d\n", job_counter);
     org_nixos_disnix_disnix_complete_get_job_id(object, invocation, job_counter);
-    job_counter++;
     return TRUE;
 }
 
