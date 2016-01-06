@@ -231,6 +231,24 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         $client->mustFail("su - unprivileged -c 'disnix-client --print-invalid /nix/store/invalid'");
         $client->mustSucceed("su - privileged -c 'disnix-client --print-invalid /nix/store/invalid'");
         
+        # Logfiles test. We perform an operation and check the id of the
+        # logfile. Then we stop the Disnix service and start it again and perform
+        # another operation. It should create a logfile which id is one higher.
+        
+        $client->mustSucceed("disnix-client --print-invalid /nix/store/invalid");
+        $result = $client->mustSucceed("ls /var/log/disnix | sort -n | tail -1");
+        $client->stopJob("disnix");
+        $client->startJob("disnix");
+        $client->waitForJob("disnix");
+        $client->mustSucceed("sleep 3; disnix-client --print-invalid /nix/store/invalid");
+        my $result2 = $client->mustSucceed("ls /var/log/disnix | sort -n | tail -1");
+        
+        if((substr $result2, 0, -1) - (substr $result, 0, -1) == 1) {
+            print "The log file numbers are correct!\n";
+        } else {
+            die "The logfile numbers are incorrect!";
+        }
+        
         #### Test disnix-ssh-client
         # Initialise ssh stuff by creating a key pair for communication
         my $key=`${pkgs.openssh}/bin/ssh-keygen -t dsa -f key -N ""`;
