@@ -27,6 +27,11 @@
 /** Path to the log directory */
 char *logdir;
 
+void set_logdir(char *log_path)
+{
+    logdir = log_path;
+}
+
 static gchar *compose_line_from_buffer(char *buf, unsigned int start_offset, unsigned int pos)
 {
     unsigned int line_size = pos - start_offset + 1;

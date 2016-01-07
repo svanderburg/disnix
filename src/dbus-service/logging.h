@@ -22,9 +22,16 @@
 #include <glib.h>
 
 /**
+ * Configures the log directory.
+ *
+ * @param log_path Path to the directory in which the log files will be stored
+ */
+void set_logdir(char *log_path);
+
+/**
  * Takes a string buffer, delimits the lines into arrays and appends it
  * to existing lines vector.
- 
+ *
  * @param lines An array of strings corresponding to a line of text
  * @param buf A string buffer that may contain linefeeds
  * @return An array of strings in which each element corresponds to a line
@@ -34,7 +41,7 @@ gchar **update_lines_vector(gchar **lines, char *buf);
 /**
  * Opens a writable file descriptor for the logfile of a given process id.
  * It also creates the log directory if it does not exists.
- 
+ *
  * @param pid PID of the job that needs to be logged
  * @return A file descriptor that can be written to
  */
@@ -42,7 +49,7 @@ int open_log_file(const gint pid);
 
 /**
  * Prints the derivation paths to a given file descriptor
- * 
+ *
  * @param fd Number of the file descriptor
  * @param derivation A NULL terminated array of derivation paths
  */

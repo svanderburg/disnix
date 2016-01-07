@@ -23,6 +23,7 @@
 #include <glib.h>
 #include "disnix-dbus.h"
 #include "jobmanagement.h"
+#include "logging.h"
 #include "methods.h"
 
 /* Server settings variables */
@@ -100,14 +101,14 @@ int start_disnix_service(int session_bus, char *log_path)
 	tmpdir = "/tmp";
     
     /* Determine the log directory */
-    logdir = log_path;
+    set_logdir(log_path);
     
     /* Create a GMainloop with initial state of 'not running' (FALSE) */
     mainloop = g_main_loop_new(NULL, FALSE);
     if(mainloop == NULL)
     {
-	g_printerr("ERROR: Failed to create the mainloop!\n");
-	return 1;
+        g_printerr("ERROR: Failed to create the mainloop!\n");
+        return 1;
     }
     
     /* Figure out what the next job id number is */
