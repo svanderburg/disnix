@@ -38,7 +38,7 @@ static void print_usage(const char *command)
     printf("will automatically invoke this command before upgrading the configuration.\n\n");
     
     printf("Options:\n");
-    printf("      --unlock           Executes an unlock operation instead of a lock\n");
+    printf("  -u, --unlock           Executes an unlock operation instead of a lock\n");
     printf("  -p, --profile=PROFILE  Name of the profile in which the services are\n");
     printf("                         registered. Defaults to: default\n");
     printf("      --coordinator-profile-path=PATH\n");
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-        {"unlock", no_argument, 0, 'l'},
+        {"unlock", no_argument, 0, 'u'},
         {"coordinator-profile-path", required_argument, 0, 'P'},
         {"profile", required_argument, 0, 'p'},
         {"help", no_argument, 0, 'h'},
@@ -74,11 +74,11 @@ int main(int argc, char *argv[])
     char *manifest_file;
     
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "p:hv", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "up:hv", long_options, &option_index)) != -1)
     {
         switch(c)
         {
-            case 'l':
+            case 'u':
                 lock = FALSE;
                 break;
             case 'P':
