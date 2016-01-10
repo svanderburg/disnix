@@ -7,9 +7,9 @@
         <para>
 		In this section, we explain how to write models that Disnix can use to
 		automatically deploy a service-oriented system into a network of machines.
-		We use a particular flavour <link xlink:href="https://github.com/svanderburg/disnix-stafftracker-java-example">StaffTracker</link>
+		We use a particular flavour of the <link xlink:href="https://github.com/svanderburg/disnix-stafftracker-java-example">StaffTracker</link>
 		system as an example, which is a distributed toy system consisting of MySQL databases,
-		Java web services and Java web applications. Other types of distributed
+		Java web services, and Java web applications. Other types of service-oriented
 		systems, with different types of components, can be deployed by Disnix as well, such
 		as PHP applications and UNIX processes.
 	</para>
