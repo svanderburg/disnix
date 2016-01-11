@@ -16,6 +16,8 @@ Version 0.5
 
 - Eliminates dependency on dbus-glib and move to gdbus
 
+- Major restructurings in manual and additional chapters describing state management, and deploying target-specific services
+
 Version 0.4
 ===========
 - The distributed derivation and manifest generator now pass the XML input as files to support bigger ones (Nix 1.9 or newer required)

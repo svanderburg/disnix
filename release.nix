@@ -24,6 +24,8 @@ let
 
         buildInputs = [ pkgconfig glib libxml2 libxslt getopt nixUnstable dblatex (dblatex.tex or tetex) doxygen nukeReferences help2man doclifter dysnomia ];
         
+        CFLAGS = "-Wall";
+        
         # Add documentation in the tarball
         configureFlags = ''
           --with-docbook-rng=${docbook5}/xml/rng/docbook

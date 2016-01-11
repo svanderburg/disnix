@@ -1247,7 +1247,7 @@ static gpointer disnix_query_all_snapshots_thread_func(gpointer data)
                 else
                     org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
 
-               g_strfreev(snapshots);
+                g_strfreev(snapshots);
             }
         }
         else
@@ -1487,7 +1487,7 @@ static gpointer disnix_print_missing_snapshots_thread_func(gpointer data)
                     org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
 
                 g_strfreev(snapshots);
-           }
+            }
         }
         else
         {
@@ -1706,8 +1706,8 @@ static gpointer disnix_resolve_snapshots_thread_func(gpointer data)
                 else
                     org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
 
-               g_strfreev(snapshots);
-           }
+                g_strfreev(snapshots);
+            }
         }
         else
         {

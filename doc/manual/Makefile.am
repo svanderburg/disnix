@@ -16,7 +16,7 @@ dblatex_opts = \
 
 FIGURES = model.png stafftracker.png disnixwinservice.png
 
-MANUAL_SRCS = index.xml introduction.xml overview.xml installation.xml models.xml dysnomia-modules.xml usage.xml advanced-options.xml images style.css
+MANUAL_SRCS = index.xml introduction.xml overview.xml installation.xml basicusage.xml dysnomia-modules.xml usage.xml advanced-options.xml images style.css
 
 version.txt:
 	echo -n $(VERSION) > version.txt

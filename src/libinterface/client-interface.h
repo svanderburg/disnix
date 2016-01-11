@@ -1,6 +1,6 @@
 /*
- * Disnix - A distributed application layer for Nix
- * Copyright (C) 2008-2010  Sander van der Burg
+ * Disnix - A Nix-based distributed service deployment tool
+ * Copyright (C) 2008-2016  Sander van der Burg
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

@@ -5,7 +5,7 @@
 	<title>Dysnomia modules</title>
 
 	<para>
-		As explained in <xref linkend="chap-models" /> a type is assigned to each service, which
+		As explained in <xref linkend="chap-basicusage" /> a type is assigned to each service, which
 		are used to determine how to execute a number of non-generic deployment activities, such as activating or deactivating a service in a container.
 		Each type is mapped onto a Dysnomia module that performs the actual deployment steps.
 		In this chapter we explain how Dysnomia modules work.
