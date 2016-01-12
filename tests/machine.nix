@@ -29,7 +29,7 @@
   services.dbus.packages = [ disnix ];
   services.openssh.enable = true;
   
-  jobs.disnix =
+  systemd.services.disnix =
     { description = "Disnix server";
       wantedBy = [ "multi-user.target" ];
       after = [ "dbus.service" ];
@@ -39,7 +39,7 @@
         HOME = "/root";
       };
 
-      exec = "disnix-service";
+      serviceConfig.ExecStart = "${disnix}/bin/disnix-service";
     };
     
     environment.systemPackages = [ disnix dysnomia ];
