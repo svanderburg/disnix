@@ -1,0 +1,199 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="chap-state">
+
+	<title>Managing state</title>
+	
+	<para>
+		As described in the previous chapter, Disnix automatically deploys service-oriented systems into heterogeneous
+		networks of machines running various kinds of operating systems. However, there is one major unaddressed concern
+		when using Disnix to deploy a service-oriented system.
+		Like the Nix the package manager -- that serves as the basis of Disnix --, Disnix's deployment approach is stateless.
+	</para>
+	<para>
+		The absence of state management has a number of implications. For example, when deploying a database, it gets created
+		on first startup, often with a schema and initial data set. However, the structure and contents of a database typically
+		evolves over time. When updating a deployment configuration that (for example) moves a database from one machine to
+		another, the changes that have been made since its initial deployment are not migrated.
+	</para>
+	<para>
+		In a large network of machines it can be quite costly to manage state manually. Disnix also provides
+		experimental state management facilities to cope with this. However, they are disabled by default.
+		To manage state for a specific subset of services, they must be annotated as such in the services model.
+	</para>
+	
+	<section>
+		<title>Annotating services in the services model</title>
+		
+		<example xml:id="ex-6-annotated-services-model">
+			<title>Annotated services model for the <code>StaffTracker</code></title>
+<programlisting>
+{system, pkgs, distribution, invDistribution}:
+
+let customPkgs = import ../top-level/all-packages.nix { inherit system; };
+in
+rec {
+### Databases
+  zipcodes = {
+    name = "zipcodes";
+    pkg = customPkgs.zipcodes;
+    dependsOn = {};
+    type = "mysql-database";
+    deployState = true; <co xml:id='co-4-deployState' />
+  };
+  ...
+}
+</programlisting>
+		</example>
+
+		<para>
+			<xref linkend="ex-6-annotated-services-model" /> shows a partial services model that is based on the services
+			model of the StraffTracker example, described earlier in <xref linkend="ex-5-services-model" />:
+		</para>
+		
+		<calloutlist>
+			<callout arearefs='co-4-deployState'>
+				<para>
+					This boolean value indicates that Disnix should also do state deployment for this service, causing it
+					to move data if the database if moved from one machine to another. Moreover, when executing
+					the snapshot or restore commands, a dump of the database is made, transferred and restored.
+				</para>
+			</callout>
+		</calloutlist>
+		
+		<para>
+			There is an important caveat when deploying multiple redundant instances of the same services.
+			If state deployment has been enabled, Disnix assumes that redundant instances of the services
+			all have the same state (that are synchronized somehow). If this is not the case, then you must give
+			each service a unique identity.
+		</para>
+		<para>
+			Besides annotating individual services, it also possible to globally enable state deployment for
+			all services without annotating them. See <xref linkend="chap-advanced-options" /> for more information.
+		</para>
+	</section>
+	
+	<section>
+		<title>Usage</title>
+		
+		<para>
+			With state management enabled, we can do various kinds of additional deployment tasks.
+		</para>
+		
+		<section>
+			<title>Deploying a system and migrating its state</title>
+			
+			<para>
+				Running <code>disnix-env</code> with an annotated services model causes it to migrate data after deploying the services.
+				For example, when changing the target machine of the <code>zipcodes</code> database in the distribution model from:
+<screen>
+zipcodes = [ infrastructure.test2 ];
+</screen>
+				into:
+<screen>
+zipcodes = [ infrastructure.test1 ];
+</screen>
+				and by running the following command:
+<screen>
+$ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
+</screen>
+				Disnix executes the data migration phase after the configuration has been successfully activated.
+				In this phase, Disnix snapshots the state of the annotated services on the target machines, transfers the snapshots
+				to the new targets (through the coordinator machine), and finally restores their state.
+			</para>
+			
+			<para>
+				When state management has been enabled, Disnix attempts to restore the state of a service whenever it has been
+				added to the services model. Similarly, when removing a service from the service model, and undeploying it, its state
+				will be captured first and transferred to the coordinator machine.
+			</para>
+		</section>
+
+		<section>
+			<title>Snapshotting and restoring the state of a system</title>
+			<para>
+				In addition to data migration, Disnix can also be used as a primitive backup tool. Running the following command:
+<screen>
+$ disnix-snapshot
+</screen>
+				Captures the state of all annotated services in the configuration that has been previously deployed and transfers
+				their snapshots to the coordinator machine's snapshot store.
+			</para>
+
+			<para>
+				Likewise, the snapshots can be restored as follows:
+<screen>
+$ disnix-restore
+</screen>
+				By default, the above command only restores the state of the services that are in the last configuration, but not
+				in the configuration before. However, it may also be desirable to force the state of all annotated services in the
+				current configuration to be restored. This can be done as follows:
+<screen>
+$ disnix-restore --no-upgrade
+</screen>
+			</para>
+		</section>
+		<section>
+			<title>Cleaning snapshots on the target machines</title>
+			 
+			<para>
+				The snapshots that are taken on the target machines are not deleted automatically.
+				Disnix can clean the snapshot stores of all the machines in a network:
+<screen>
+$ disnix-clean-snapshots --keep 3 infrastructure.nix
+</screen>
+				The above command deletes all but the last three snapshot generations from all
+				machines defined in the infrastructure model.
+			</para>
+
+			<para>
+				Keep in mind that Disnix always transfers the snapshots to the coordinator machine, so there is typically little
+				reason (besides improving the efficiency of the snapshot operations) to keep them on the targets. All snapshots
+				on the target machines can be wiped as follows:
+<screen>
+$ disnix-clean-snapshots --keep 0 infrastructure.nix
+</screen>
+			</para>
+		</section>
+	</section>
+	
+	<section>
+		<title>Notes on state deployment</title>
+		<para>
+			Although Disnix supports state deployment, it has been disabled by default. The reason why this is the default policy
+			is that its mechanisms may neither be the preferred nor the optimal way of doing it.
+		</para>
+		<para>
+			Disnix uses Dysnomia's plugin system that invokes external tools taking care of snapshotting and restoring the state
+			of the corresponding components. The good part of this approach is that it is general and works for all kinds of mutable
+			components. Moreover, the tools that are consulted by the plugin system typically dump state in a portable and consistent
+			format, which is also useful for a variety of reasons.
+		</para>
+		<para>
+			However, some of the drawbacks of this approach is that the process of snapshotting and restoring portable dumps is
+			typically very slow, especially for large data sets. Moreover, the snapshot tools also write dumps entirely to the filesystem
+			which is not always desired.
+		</para>
+		<para>
+			Alternative approaches of doing state deployment are the following:
+		</para>
+		
+		<itemizedlist>
+			<listitem>
+				<para>
+					Filesystem level snapshots. This is an approach that works typically much faster.
+					However, some drawbacks of working on filesystem level is that physical state may be inconsistent (because of incomplete write operations),
+					and non-portable. Also, for some types of containers, it is difficult to manage chunks of data, such as individual databases. Filesystem level
+					state management is unsupported by Disnix and must be done by other means.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Replication engines. Replication engines of DBMSes can typically move data from one machine to another much faster and more efficiently.
+					Disnix does not take care of configuring a DBMS' replication engine automatically.
+					Instead, while deploying a machine's configuration this feature must be explicitly enabled by the deployer.
+				</para>
+			</listitem>
+		</itemizedlist>
+	</section>
+</chapter>

@@ -34,6 +34,7 @@
   <xi:include href="overview.xml" />
   <xi:include href="installation.xml" />
   <xi:include href="basicusage.xml" />
+  <xi:include href="state.xml" />
   <xi:include href="dysnomia-modules.xml" />
   <xi:include href="usage.xml" />
   <xi:include href="advanced-options.xml" />

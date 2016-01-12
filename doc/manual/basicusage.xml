@@ -541,7 +541,6 @@ let
 			
 			<example xml:id="ex-5-services-model">
 				<title>Services model for the <code>StaffTracker</code></title>
-				<!--deployState = true; <co xml:id='co-4-deployState' />-->
 <programlisting>
 {system, pkgs, distribution, invDistribution}: <co xml:id='co-1-servicesHeader' />
 
@@ -624,18 +623,6 @@ rec { <co xml:id='co-3-rec2' />
 						arguments to each service.
 					</para>
 				</callout>
-				
-				<!--<callout arearefs='co-4-deployState'>
-					<para>
-						This boolean value indicates that Disnix should also do state deployment, causing it
-						to move data if the database if moved from one machine to another. Moreover, when executing
-						the snapshot or restory commands, a dump of the database is made, transferred and restored.
-					</para>
-					<para>
-						By default, Disnix does not attempt to do any state deployment unless it has been explicitly enabled.
-						However, it can also be enabled by default if needed, see <xref linkend="chap-advanced-options" /> for more information.
-					</para>
-				</callout>-->
 				
 				<callout arearefs='co-5-service'>
 					<para>
@@ -899,13 +886,6 @@ rec { <co xml:id='co-3-rec2' />
 					</para>
 				</callout>
 			</calloutlist>
-			
-			<!--<para>
-				There is one important caveat when deploying multiple redundant instances of the same services.
-				If state deployment has been enabled, Disnix assumes that redundant instances of the services
-				all have the same state (that are synchronized somehow). If this is not the case, then you must give
-				each service a unique identity.
-			</para>-->
 		</section>
 	</section>
 	
