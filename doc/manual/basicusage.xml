@@ -602,9 +602,8 @@ rec { <co xml:id='co-3-rec2' />
 						in which services are mapped onto machines in the network (this model is explained
 						later).
 						The <varname>invDistribution</varname> parameter refers to an inverse distribution model.
-						This model is generated from the infrastructure model (explained later) in which
-						each target configuration is augmented with the services that have been deployed to it.
-						In the next chapter, we show how this model can be used to generate target-specific services.
+						In <xref linkend="chap-target-specific" /> we show how this model can be used to generate
+						target-specific services.
 					</para>
 				</callout>
 				

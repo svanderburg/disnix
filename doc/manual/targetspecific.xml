@@ -1,0 +1,358 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="chap-target-specific">
+
+	<title>Deploying target-specific services</title>
+	
+	<para>
+		As explained in the previous chapters, services in a Disnix context have many forms and Disnix uses plugin system to execute
+		deployment steps that cannot be execute generically. Moreover, Disnix can also optionally manage state albeit the provided facilities
+		have some expensive drawbacks.
+	</para>
+	<para>
+		Besides the earlier described properties, services have another important characteristic from a deployment perspective.
+		By default, services are target-agnostic, which
+		means that they always have the same form regardless to what machine they are deployed in the network.
+		In most cases this is considered a good thing.
+	</para>
+	<para>
+		However, there are also situations in which we want to deploy services that are built and configured specifically for a target machine.
+	</para>
+	
+	<section>
+		<title>Why are services target-agnostic by default in Disnix?</title>
+		
+		<para>
+			This property actually stems from the way "ordinary packages" are built with the Nix package manager which is used as a basis for Disnix.
+		</para>
+		<para>
+			Nix package builds are influenced by its declared inputs only, such as the source code, build scripts and other kinds of dependencies,
+			e.g. a compiler and libraries. Nix has means to ensure that undeclared dependencies cannot influence a build and that dependencies
+			never collide with each other.
+		</para>
+		<para>
+			Moreover, since it does not matter where a package has been built, we can, for example, also download a package built from identical
+			inputs from a remote location, instead of building it ourselves improving the efficiency of deployment processes.
+		</para>
+		<para>
+			In Disnix, Nix's concept of building packages has been extended to services in a distributed setting. The major difference between
+			a package and a serivce is that services take an additional class of dependencies into account. Besides the intra-dependencies that
+			Nix manages, services may also have inter-dependencies on services that may be deployed to remote machines in a network. Disnix can be
+			used to configure services in such a way that a service knows how to reach them and that the system is activated and deactivated
+			in the right order.
+		</para>
+		<para>
+			As a consequence, it does not take a machine's properties into account when deploying it to a target machine in the network
+			unless a machine's properties are explicitly provided as dependencies of a service.
+			In many cases, this is a considered a good thing. 
+			One of the things we could do is changing the location of the StaffTracker web application front-end
+			service (the example captured in shown earlier), by changing the following line in the distribution model:
+<screen>
+StaffTracker = [ infrastructure.test2 ];
+</screen>
+			to:
+<screen>
+StaffTracker = [ infrastructure.test1 ];
+</screen>
+		</para>
+		
+		<para>  
+			Performing the redeployment procedure is actually quite efficient. Since the intra-dependencies
+			and inter-dependencies of the StaffTracker service have not changed, we do not have to rebuild and
+			reconfigure the StaffTracker service. We can simply take the existing build result from the coordinator machine
+			(that has been previously distributed to machine <code>test1</code>) and distribute it to <code>test2</code>.
+			Also, because the build result is the same, we have better guarantees that if the service worked on machine
+			<code>test1</code>, it should work on machine <code>test2</code> as well.
+		</para>
+		
+		<para>
+			(As a sidenote: there is actually a situation in which a service will get rebuilt when moving it from one
+			machine to another while its intra-dependencies and inter-dependencies have not changed.
+			As shown in <xref linkend="ex-6-infrastructure-model" /> Disnix also supports heterogeneous service deployment
+			meaning that we can run target machines having
+			different CPU architectures and operating systems. For example, if <code>test2</code> were a Linux machine
+			and test1 a Mac OS X machine, Disnix attempts to rebuild it for the new platform.
+			However, if all machines have the CPU architecture and operating system this will not happen).
+		</para>
+	</section>
+	
+	<section>
+		<title>Deploying target-agnostic services</title>
+		<para>
+			Target-agnostic services are generally considered good because they improve reproducibility and efficiency
+			when moving a service from machine to another. However, in some situations you may need to configure a service
+			for a target machine specifically.
+		</para>
+		<para>
+			An example of a deployment scenario in which we need to deploy target-specific services, is when we
+			want to deploy a collection of Node.js web applications and an nginx reverse proxy in which each
+			web application should be reached by its own unique DNS domain name
+			(e.g. <code>http://webapp1.local</code>, <code>http://webapp2.local</code> etc.).
+		</para>
+		<para>
+			We could model the nginx reverse proxy and each web application as (component-agnostic)
+			distributable services, and deploy them in a network with Disnix as follows:
+			<figure xml:id="fig-1-virtualhosts-simple">
+				<title>Deployment architecture containing a single target-agnostic reverse proxy</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="virtualhosts1.png" format="PNG"/>
+					</imageobject>
+				</mediaobject>
+			</figure>
+			We can declare the web applications to be inter-dependencies of the nginx service and generate
+			its configuration accordingly.
+		</para>
+		
+		<para>
+			Although this approach works, the downside is that in the above deployment architecture,
+			the <code>test1</code> machine has to handle all the network traffic including the requests
+			that should be propagated to the web applications deployed to <code>test2</code> making the system not very
+			scalable, because only one machine is responsible for handling all the network load.
+		</para>
+		
+		<para>
+			We can also deploy two redundant instances of the nginx service by specifying the following attribute
+			in the distribution model:
+<screen>
+nginx = [ infrastructure.test1 infrastructure.test2 ];
+</screen>
+			The above modification yields the following deployment architecture:
+			<figure xml:id="fig-2-virtualhosts-redundant">
+				<title>Deployment architecture containing a multiple target-agnostic reverse proxies</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="virtualhosts2.png" format="PNG"/>
+					</imageobject>
+				</mediaobject>
+			</figure>
+			The above deployment architecture is more scalable -- now requests meant for any of the web applications
+			deployed to machine <code>test1</code> can be handled by the nginx server deployed to <code>test1</code> and
+			the nginx server deployed to <code>test2</code> can handle all the requests meant for the web applications
+			deployed to <code>test2</code>.
+		</para>
+		<para>
+			Unfortunately, there is also an undesired side effect. As all the nginx services have the same form
+			regardless to which machines they have been deployed, they have inter-dependencies on all web applications in
+			the entire network including the ones that are not running on the same machine.
+		</para>
+		<para>
+			This property makes upgrading the system very inefficient. For example, if we update the <code>webapp3</code>
+			service (deployed to machine <code>test2</code>), the nginx configurations on all the other machines
+			must be updated as well causing all nginx services on all machines to be upgraded, because they also
+			have an inter-dependency on the upgraded web application.
+		</para>
+		<para>
+			In a 2 machine scenario with 4 web applications, this efficiency may still be acceptable, but in a
+			big environment with tens of web applications and tens of machines, we most likely suffer
+			from many (hundreds of) unnecessary redeployment activities bringing the system down for a
+			unnecessary long time.
+		</para>
+	</section>
+	
+	<section>
+		<title>Deploying target-specific services</title>
+		
+		<para>
+			A more efficient deployment architecture would be the following:
+			<figure xml:id="fig-3-virtualhosts-target-specific">
+				<title>Deployment architecture containing a multiple target-agnostic reverse proxies</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="virtualhosts3.png" format="PNG"/>
+					</imageobject>
+				</mediaobject>
+			</figure>
+		</para>
+		<para>
+			We deploy two target-specific nginx services that only have inter-dependencies on the web
+			applications deployed to the same machine. In this scenario, upgrading <code>webapp3</code>
+			does not affect the configurations of any of the services deployed to the <code>test1</code>
+			machine.
+		</para>
+		
+		<section>
+			<title>Manually specifying target-specific services</title>
+			
+			<para>
+				A dumb way to specify target-specific services is defining for each service and target machine pair,
+				a service in the service model:
+<programlisting>
+{pkgs, system, distribution, invDistribution}:
+
+let
+  customPkgs = ...
+in
+rec {
+  ...
+
+  nginx-wrapper-test1 = rec {
+    name = "nginx-wrapper-test1";
+    pkg = customPkgs.nginx-wrapper;
+    dependsOn = {
+      inherit webapp1 webapp2;
+    };
+    type = "wrapper";
+  };
+
+  nginx-wrapper-test2 = rec {
+    name = "nginx-wrapper-test2";
+    pkg = customPkgs.nginx-wrapper;
+    dependsOn = {
+      inherit webapp3 webapp4;
+    };
+    type = "wrapper";
+  };
+}
+</programlisting>
+				And then distributing them to the appropriate target machines in the Disnix distribution model:
+<programlisting>
+{infrastructure}:
+
+{
+  ...
+  nginx-wrapper-test1 = [ infrastructure.test1 ];
+  nginx-wrapper-test2 = [ infrastructure.test2 ];
+}
+</programlisting>
+			</para>
+			
+			<para>
+				Manually specifying target-specific services is quite tedious and labourious especially
+				if you have tens of services and tens of machines.
+				We have to specify <code>machines x components</code> services resulting in hundreds of target-specific
+				service configurations.
+			</para>
+			<para>
+				Furthermore, there is a bit of repetition. Both the distribution model and the service
+				models reflect mappings from services to target machines.
+			</para>
+		</section>
+		
+		<section>
+			<title>Generating target-specific services</title>
+			
+			<para>
+				A better approach would be to generate target-specific services. An example of such an
+				approach is to specify the mappings of these services in the distribution model first:
+<programlisting>
+{infrastructure}:
+
+let
+  inherit (builtins) listToAttrs attrNames getAttr;
+in
+{
+  webapp1 = [ infrastructure.test1 ];
+  webapp2 = [ infrastructure.test1 ];
+  webapp3 = [ infrastructure.test2 ];
+  webapp4 = [ infrastructure.test2 ];
+} //
+
+# To each target, distribute a reverse proxy
+
+listToAttrs (map (targetName: {
+  name = "nginx-wrapper-${targetName}";
+  value = [ (getAttr targetName infrastructure) ];
+}) (attrNames infrastructure))
+</programlisting>
+				In the above distribution model, we statically map all the target-agnostic web application
+				services, and for each target machine in the infrastructure model we generate a mapping
+				of the target-specific nginx service to its target machine.
+			</para>
+			<para>
+				We can generate the target-specific nginx service configurations in the services model as
+				follows:
+<programlisting>
+{system, pkgs, distribution, invDistribution}:
+
+let
+  customPkgs = import ../top-level/all-packages.nix {
+    inherit pkgs system;
+  };
+in
+{
+  webapp1 = ...
+  
+  webapp2 = ...
+  
+  webapp3 = ...
+  
+  webapp4 = ...
+} //
+
+# Generate nginx proxy per target host
+
+builtins.listToAttrs (map (targetName:
+  let
+    serviceName = "nginx-wrapper-${targetName}";
+    servicesToTarget = (builtins.getAttr targetName invDistribution).services;
+  in
+  { name = serviceName;
+    value = {
+      name = serviceName;
+      pkg = customPkgs.nginx-wrapper;
+      # The reverse proxy depends on all services distributed to the same
+      # machine, except itself (of course)
+      dependsOn = builtins.removeAttrs servicesToTarget [ serviceName ];
+      type = "wrapper";
+    };
+  }
+) (builtins.attrNames invDistribution))
+</programlisting>
+				To generate the nginx services, we iterate over a so-called inverse distribution model
+				mapping targets to services that has been computed from the distribution model
+				(mapping services to one or more machines in the network).
+			</para>
+			<para>
+				The inverse distribution model is basically just the infrastructure model in which
+				each target attribute set has been augmented with a services attribute containing
+				the properties of the services that have been deployed to it. The services attribute
+				refers to an attribute set in which each key is the name of the service and each
+				value the service configuration properties defined in the services model:
+<programlisting>
+{
+  test1 = {
+    services = {
+      nginx-wrapper-test1 = {
+        name = "nginx-wrapper-test1";
+        pkg = customPkgs.nginx-wrapper;
+        dependsOn = {
+          inherit webapp1 webapp2;
+        };
+        type = "wrapper";
+      };
+      webapp1 = ...
+      webapp2 = ...
+    };
+    hostname = "test1";
+  };
+  
+  test2 = {
+    services = {
+      nginx-wrapper-test2 = {
+        name = "nginx-wrapper-test2";
+	...
+      };
+      webapp3 = ...
+      webapp4 = ...
+    };
+    hostname = "test2";
+  };
+}
+</programlisting>
+				For example, if we refer to <code>invDistribution.test1.services</code> we get all the
+				configurations of the services that are deployed to machine <code>test1</code>. If we remove
+				the reference to the nginx reverse proxy, we can pass this entire attribute set as
+				inter-dependencies to configure the reverse proxy on machine <code>test1</code>.
+				(The reason why we remove the reverse proxy as a dependency is because it is meaningless
+				to let it refer to itself. Furthermore, this would also cause infinite recursion).
+			</para>
+			<para>
+				With this approach we can also easily scale up the environment. By simply adding more
+				machines in the infrastructure model and additional web application service mappings
+				in the distribution model, the service configurations in the service model get adjusted
+				automatically not requiring us to think about specifying inter-dependencies at all.
+			</para>
+		</section>
+	</section>
+</chapter>
