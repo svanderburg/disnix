@@ -5,10 +5,14 @@
 	<title>Dysnomia modules</title>
 
 	<para>
-		As explained in <xref linkend="chap-basicusage" /> a type is assigned to each service, which
-		are used to determine how to execute a number of non-generic deployment activities, such as activating or deactivating a service in a container.
-		Each type is mapped onto a Dysnomia module that performs the actual deployment steps.
-		In this chapter we explain how Dysnomia modules work.
+		As explained in <xref linkend="chap-basicusage" />, a type is assigned to each service in the services model. 
+		In <xref linkend="chap-architecture" /> we have shown the architecture of the Disnix service (running on every target machine)
+		that consults Dysnomia to execute these activities.
+		Types are used to determine how to non-generic deployment activities, such as activating or deactivating a service in a container.
+		Each type is mapped to a Dysnomia module that performs the actual deployment steps.
+	</para>
+	<para>
+		In this chapter, we explain how Dysnomia modules work.
 	</para>
 	
 	<section>

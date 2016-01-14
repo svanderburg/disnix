@@ -1,0 +1,258 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="chap-architecture">
+
+	<title>Architecture</title>
+	
+	<para>
+		Disnix is not a self-contained toolset and has a modular and extensible architecture.
+		This chapter describes the architecture of Disnix and shows how certain low-level
+		activities can be performed.
+	</para>
+	
+	<section>
+		<title>Communication flow</title>
+		
+		<figure xml:id="fig-1-communicationflow">
+			<title>Architecture of the <code>StaffTracker</code></title>
+			<mediaobject>
+				<imageobject>
+					<imagedata fileref="communicationflow.png" format="PNG"/>
+				</imageobject>
+			</mediaobject>
+		</figure>
+		
+		<para>
+			<xref linkend="fig-1-communicationflow" /> illustrates the communication flow of the disnix deployment utilities, such as <code>disnix-env</code>.
+			When executing a deployment step on the coordinator machine,
+			a connection client process in consulted that connects to a protocol wrapper on the remote machine.
+			By default, Disnix uses <code>disnix-ssh-client</code>
+			that connects through SSH. Other kinds of communication protocols are supported through extensions, such as SOAP/HTTP.
+			See <xref linkend="chap-advanced-options" /> for more information.
+		</para>
+		
+		<para>
+			The protocol wrapper connects to the core Disnix service, a D-Bus service exposing the deployment operations that
+			Disnix needs to execute remotely. The core Disnix service invokes two external tools to carry out certain deployment
+			activities. Nix is used for building and distributing packages. Dysnomia is used for activation, deactivation, locking,
+			snapshotting, and restoring.
+		</para>
+	</section>
+	
+	<section>
+		<title>Composition of <code>disnix-env</code></title>
+		
+		<figure xml:id="fig-1-disnix-env">
+			<title>Architecture of the <code>StaffTracker</code></title>
+			<mediaobject>
+				<imageobject>
+					<imagedata fileref="disnix-env.png" format="PNG"/>
+				</imageobject>
+			</mediaobject>
+		</figure>
+		
+		<para>
+			As shown in <xref linkend="fig-1-disnix-env" />, the <code>disnix-env</code>, the command-line tool that performs all activities to make a
+			service-oriented system available for use, is composed of several lower-level command-line tools each executing a
+			specific deployment activity.
+		</para>
+		
+		<para>
+			In the default workflow, the following command-line utilities are invoked:
+		</para>
+		
+		<itemizedlist>
+			<listitem>
+				<para>
+					<code>disnix-manifest</code> produces a low-level manifest file from the three Disnix models, describing
+					which profiles to distribute, which services to activate and their dependencies, and which snapshots to
+					transfer. This manifest file is used by most of the other low-level command-line tools.
+				</para>
+				<para>
+					The manifest file contains Nix store paths to refer to profiles and services. As a side effect of
+					computing these paths, all services will be built from source code, except the ones that have been
+					built previously.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<code>disnix-distribute</code>. Distributes the intra-dependency closures of the Nix profiles in the
+					manifest file, that contains all services that should be deployed to a particular machine.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<code>disnix-lock</code>. Locks or unlocks the Disnix service instances on the target machines,
+					so that other deployment processes cannot interfere. Additionally, it uses Dysnomia to
+					notify all the services so that they can
+					optionally take precautions while they are being upgraded.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<code>disnix-activate</code>. Deactivates obsolete services from the previous configuration and
+					activates new services in the new configuration. Moreover, it uses the inter-dependency parameters
+					from the models to execute these steps in the right order.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<code>disnix-set</code>. Sets the profiles on the target machines to the ones that have been transferred
+					with <code>disnix-distribute</code> so that the services are considered used and will not be garbage collected.
+					On the coordinator machine, it sets the new coordinator profile referring to the manifest of the last executed
+					deployment.
+				</para>
+			</listitem>
+		</itemizedlist>
+		
+		<para>
+			Two additional tools are used when the building on targets option has been enabled:
+		</para>
+		
+		<itemizedlist>
+			<listitem>
+				<para>
+					<code>disnix-instantiate</code>. Creates a distributed derivation file from the three Disnix models that
+					maps Nix store derivation files (low level build specifications that Nix uses to build a package) to
+					target machines in the network.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<code>disnix-build</code>. Distributes the store derivation closures from the distributed derivation file
+					to the target machines in the network, builds the corresponding packages on the target machines and fetches
+					the closures of the build results.
+				</para>
+			</listitem>
+		</itemizedlist>
+		
+		<para>
+			When state deployment has been enabled, another three tools are invoked:
+		</para>
+		
+		<itemizedlist>
+			<listitem>
+				<para>
+					<code>disnix-snapshot</code>. Snapshots the state of all services that were in the previous configuration,
+					but not in the current configuration and transfers them to the coordinator machine.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<code>disnix-restore</code>. Transfers and restores the snapshots of all services that have been added in the new configuration.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<code>disnix-delete-state</code>. Deletes the physical state of the services that have become obsolete in the new configuration.
+				</para>
+			</listitem>
+		</itemizedlist>
+	</section>
+	
+	<section>
+		<title>Low-level usage examples</title>
+		
+		<para>
+			As described earlier, we can also invoke the low-level utilities that <code>disnix-env</code> consults, to execute a certain deployment activity
+			individually. In this section, we provide a few examples.
+		</para>
+		
+		<section>
+			<title>Building a system on the coordinator machine</title>
+			
+			<para>
+				In order to build all the services from source code, the following command can be used:
+<screen>
+$ disnix-manifest -s services.nix -i infrastructure.nix -d distribution.nix
+</screen>
+			</para>
+			
+			<para>
+				This command produces a <emphasis>manifest</emphasis> file, which is basically
+				a more concrete version of the distribution model. This file contains references
+				to the actual Nix store paths of all the build results. 
+				As a side effect, all the services that are specified in the distribution model
+				are built from source code.
+				The manifest is also a Nix package residing in the Nix store.
+				For convenience, this tool creates a symlink called <filename>result</filename> pointing
+				to it.
+			</para>
+			
+			<para>
+				For instance, by querying the runtime dependencies of the generated manifest file,
+				all the services including their runtime dependencies can be retrieved:
+			</para>
+<screen>
+$ nix-store -qR ./result
+</screen>
+		</section>
+		
+		<section>
+			<title>Building services on target machines</title>
+			
+			<para>
+				You can also perform all the builds on the target machines and then retrieve
+				back the results. The following command generates a
+				<emphasis>distributed derivation</emphasis> file, which is basically
+				a similar file as a manifest, except that it maps Nix store derivation
+				files (low-level specifications that Nix uses to build a component) to target
+				machines.
+<screen>
+$ disnix-instantiate -s services.nix -i infrastructure.nix -d distribution.nix
+</screen>
+			</para>
+			
+			<para>
+				Like the manifest file, the distributed derivation file is also stored
+				in the Nix store and a <filename>result</filename> symlink is stored in the
+				current directory pointing to it.
+			</para>
+			
+			<para>
+				By querying the runtime dependencies of a distributed derivation file,
+				all the store derivations files of the services, including their build-time
+				dependencies can be retrieved:
+<screen>
+$ nix-store -qR ./result
+</screen>
+			</para>
+			
+			<para>
+				The distributed derivation file can then be used to perform the builds:
+<screen>
+$ disnix-build ./result
+</screen>
+				This command distributes the store derivation file of each service and its
+				dependencies to the machines in the network, then it builds them on each
+				machine and finally copies the build results back into the Nix store of the 
+				coordinator machine.
+			</para>
+		</section>
+		
+		<section>
+			<title>Distributing services to target machines</title>
+			
+			<para>
+				After all services have been built by invoking <command>disnix-manifest</command>,
+				then the services including their runtime dependencies can be distributed
+				to machines in the network by calling:
+<screen>
+$ disnix-distribute ./result
+</screen>
+			</para>
+		</section>
+		
+		<section>
+			<title>Deactivating obsolete services and activating services on target machines</title>
+			
+			<para>
+			      After services have been distributed by invoking <command>disnix-distribute</command>, the
+			      obsolete services can be deactivated and the new services activated by running:
+<screen>
+$ disnix-activate ./result
+</screen>
+			</para>
+		</section>
+	</section>
+</chapter>

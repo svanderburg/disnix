@@ -119,7 +119,7 @@ nginx = [ infrastructure.test1 infrastructure.test2 ];
 </screen>
 			The above modification yields the following deployment architecture:
 			<figure xml:id="fig-2-virtualhosts-redundant">
-				<title>Deployment architecture containing a multiple target-agnostic reverse proxies</title>
+				<title>Deployment architecture containing multiple target-agnostic reverse proxies</title>
 				<mediaobject>
 					<imageobject>
 						<imagedata fileref="virtualhosts2.png" format="PNG"/>
@@ -156,7 +156,7 @@ nginx = [ infrastructure.test1 infrastructure.test2 ];
 		<para>
 			A more efficient deployment architecture would be the following:
 			<figure xml:id="fig-3-virtualhosts-target-specific">
-				<title>Deployment architecture containing a multiple target-agnostic reverse proxies</title>
+				<title>Deployment architecture containing multiple target-specific reverse proxies</title>
 				<mediaobject>
 					<imageobject>
 						<imagedata fileref="virtualhosts3.png" format="PNG"/>
