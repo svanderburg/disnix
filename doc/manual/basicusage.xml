@@ -46,7 +46,7 @@
 	<section>
 		<title>Architecture</title>
 		
-		<figure xml:id="fig-1-stafftracker">
+		<figure xml:id="fig-stafftracker">
 			<title>Architecture of the <code>StaffTracker</code></title>
 			<mediaobject>
 				<imageobject>
@@ -56,7 +56,7 @@
 		</figure>
 		
 		<para>
-			<xref linkend="fig-1-stafftracker" /> shows the architecture of the 
+			<xref linkend="fig-stafftracker" /> shows the architecture of the 
 			<code>StaffTracker</code> system. The
 			architecture consists of three layers: 
 			a <emphasis>data layer</emphasis>, <emphasis>service layer</emphasis> and <emphasis>presentation layer</emphasis>.
@@ -97,20 +97,20 @@
 		<section>
 			<title>A basic Nix example</title>
 			
-			<example xml:id="ex-1-hello">
+			<example xml:id="ex-hello">
 				<title>Nix expression for the GNU Hello package</title>
 <programlisting>
-{stdenv, fetchurl, perl}: <co xml:id='co-1-functionHeader' />
+{stdenv, fetchurl, perl}: <co xml:id='co-functionHeader' />
 
-stdenv.mkDerivation { <co xml:id='co-2-mkDerivation' />
-  name = "hello-2.1.1"; <co xml:id='co-3-name' />
-  src = fetchurl { <co xml:id='co-4-src' />
+stdenv.mkDerivation { <co xml:id='co-mkDerivation' />
+  name = "hello-2.1.1"; <co xml:id='co-name' />
+  src = fetchurl { <co xml:id='co-src' />
     url = ftp://ftp.gnu.org/gnu/hello/hello-2.1.1.tar.gz;
     md5 = "70c9ccf9fac07f762c24f2df2290784d";
   };
-  buildInputs = [ perl ]; <co xml:id='co-5-buildInputs' />
+  buildInputs = [ perl ]; <co xml:id='co-buildInputs' />
 
-  meta = { <co xml:id='co-6-meta' />
+  meta = { <co xml:id='co-meta' />
     description = "GNU Hello, a classic computer science tool";
     homepage = http://www.gnu.org/software/hello/;
   };
@@ -119,27 +119,40 @@ stdenv.mkDerivation { <co xml:id='co-2-mkDerivation' />
 			</example>
 		
 			<para>
-				<xref linkend="ex-1-hello" /> shows a Nix expression for the GNU Hello package,
+				<xref linkend="ex-hello" /> shows a Nix expression for the GNU Hello package,
 				a trivial example package containing the <command>hello</command> command
 				showing the famous "Hello World" quote.
 			</para>
 		
 			<calloutlist>
-				<callout arearefs='co-1-functionHeader'>
+				<callout arearefs='co-functionHeader'>
 					<para>
 						A Nix expression defines a function in which every
 						argument represents a dependency to build a package. This particular example takes three arguments:
-						<varname>stdenv</varname>, <varname>fetchurl</varname> and <varname>perl</varname>.
-						<varname>stdenv</varname> is a package representing a standard
-						environment containing a set of basic UNIX build utilities,
-						such as <code>cat</code>, <code>ls</code> and <code>gcc</code>.
-						The <varname>fetchurl</varname> argument refers to a function that is used to download a source tarball
-						from a particular URL. The <varname>perl</varname> argument corresponds to the Perl
-						interpreter.
+						<itemizedlist>
+							<listitem>
+								<simpara>
+									<varname>stdenv</varname> is a package representing a standard
+									environment containing a set of basic UNIX build utilities,
+									such as <command>cat</command>, <command>ls</command> and <command>gcc</command>.
+								</simpara>
+							</listitem>
+							<listitem>
+								<simpara>
+									The <varname>fetchurl</varname> argument refers to a function that
+									is used to download a source tarball from a particular URL.
+								</simpara>
+							</listitem>
+							<listitem>
+								<simpara>
+									The <varname>perl</varname> argument corresponds to the Perl interpreter.
+								</simpara>
+							</listitem>
+						</itemizedlist>
 					</para>
 				</callout>
 				
-				<callout arearefs='co-2-mkDerivation'>
+				<callout arearefs='co-mkDerivation'>
 					<para>
 						In the body of the function, we invoke <code>stdenv.mkDerivation</code>
 						which is used to compose an isolated environment in which a build is performed.
@@ -151,7 +164,7 @@ stdenv.mkDerivation { <co xml:id='co-2-mkDerivation' />
 					</para>
 				</callout>
 				
-				<callout arearefs='co-3-name'>
+				<callout arearefs='co-name'>
 					<para>
 						Every package requires a name, which becomes part
 						of the filename of the resulting package filename in the Nix store. It also gives a user
@@ -159,7 +172,7 @@ stdenv.mkDerivation { <co xml:id='co-2-mkDerivation' />
 					</para>
 				</callout>
 				
-				<callout arearefs='co-4-src'>
+				<callout arearefs='co-src'>
 					<para>
 						This attribute specifies the location of source code that we want to compile. In our example,
 						it is bound to the result of the <varname>fetchurl</varname>
@@ -168,7 +181,7 @@ stdenv.mkDerivation { <co xml:id='co-2-mkDerivation' />
 					</para>
 				</callout>
 				
-				<callout arearefs='co-5-buildInputs'>
+				<callout arearefs='co-buildInputs'>
 					<para>
 						This attribute is used to specify which packages must be used
 						in the build environment. In our example, <command>perl</command> has been provided
@@ -179,7 +192,7 @@ stdenv.mkDerivation { <co xml:id='co-2-mkDerivation' />
 					</para>
 				</callout>
 				
-				<callout arearefs='co-6-meta'>
+				<callout arearefs='co-meta'>
 					<para>
 						We can also specify some meta data for a package, so that we have a description
 						and other useful information, such as the homepage and a license. These properties are not used
@@ -189,27 +202,27 @@ stdenv.mkDerivation { <co xml:id='co-2-mkDerivation' />
 			</calloutlist>
 		
 			<para>
-				Although the expression in <xref linkend="ex-1-hello" /> defines how to build a package from source code
+				Although the expression in <xref linkend="ex-hello" /> defines how to build a package from source code
 				and its dependencies, we cannot use this expression to build the package directly because we do not
 				know which version/variant of the dependencies we want to use, such as the version of Perl.
 				Therefore, we have to <emphasis>compose</emphasis> the package in a seperate expression, in which we call
 				the function shown ealier with its required parameters.
 			</para>
 		
-			<example xml:id="ex-2-all-packages">
+			<example xml:id="ex-all-packages">
 				<title><filename>all-packages.nix</filename>: Partial composition expression</title>
 				
 				<programlisting>
-rec { <co xml:id='co-1-rec' />
+rec { <co xml:id='co-rec' />
   stdenv = ...;
   
   fetchurl = ...;
   
-  perl = import ../pkgs/perl { <co xml:id='co-2-importPerl' />
+  perl = import ../pkgs/perl { <co xml:id='co-importPerl' />
     inherit stdenv fetchurl;
   };
   
-  hello = import ../pkgs/hello { <co xml:id='co-3-importHello' />
+  hello = import ../pkgs/hello { <co xml:id='co-importHello' />
     inherit stdenv fetchurl perl;
   };
   
@@ -219,24 +232,24 @@ rec { <co xml:id='co-1-rec' />
 			</example>
 		
 			<para>
-				<xref linkend="ex-2-all-packages" /> shows a partial composition expression, in which the GNU Hello
+				<xref linkend="ex-all-packages" /> shows a partial composition expression, in which the GNU Hello
 				build function is called with its required function arguments. Moreover, all the other packages where GNU Hello depends
 				on are also composed in this expression.
 			</para>
 		
 			<calloutlist>
-				<callout arearefs='co-1-rec'>
+				<callout arearefs='co-rec'>
 					<para>
 						This expression is a mutually recursive attribute set in which attributes can refer to each other.
 						Without allowing recursion, we cannot pass attributes in this set as function parameters.
 					</para>
 				</callout>
 				
-				<callout arearefs='co-3-importHello'>
+				<callout arearefs='co-importHello'>
 					<para>
-						Here, the expression defined in <xref linkend="ex-1-hello" /> is imported and called
+						Here, the expression defined in <xref linkend="ex-hello" /> is imported and called
 						with the its required function parameters. The corresponding dependencies are
-						composed in the same composition expression shown in <xref linkend="ex-2-all-packages" />.
+						composed in the same composition expression shown in <xref linkend="ex-all-packages" />.
 					</para>
 					<para>
 						We can also use the function parameters to make different kinds of compositions of the same package.
@@ -245,7 +258,7 @@ rec { <co xml:id='co-1-rec' />
 					</para>
 				</callout>
 				
-				<callout arearefs='co-2-importPerl'>
+				<callout arearefs='co-importPerl'>
 					<para>
 						All the dependencies of the GNU Hello package, such as the Perl interpreter
 						are composed in this expression as well.
@@ -261,7 +274,7 @@ rec { <co xml:id='co-1-rec' />
 				of code that must be written.
 			</para>
 			
-			<example xml:id="ex-2b-all-packages">
+			<example xml:id="ex-all-packages-simplified">
 				<title><filename>all-packages.nix</filename>: Simplified partial composition expression</title>
 				
 				<programlisting>
@@ -280,7 +293,7 @@ rec {
 			</example>
 			
 			<para>
-				<xref linkend="ex-2-all-packages" /> shows a simplified equivalent of the previous composition expression
+				<xref linkend="ex-all-packages-simplified" /> shows a simplified equivalent of the previous composition expression
 				using <code>callPackage {}</code>.
 			</para>
 		</section>
@@ -296,11 +309,11 @@ rec {
 				takes inter-dependencies into account while configuring or building a component.
 			</para>
 			
-			<example xml:id="ex-3-zipcode-service">
+			<example xml:id="ex-zipcode-service">
 				<title>Disnix expression for the <code>ZipcodeService</code></title>
 <programlisting>
-{stdenv, apacheAnt, axis2}: <co xml:id='co-1-outerFunctionHeader' />
-{zipcodes}: <co xml:id='co-2-innerFunctionHeader' />
+{stdenv, apacheAnt, axis2}: <co xml:id='co-outerFunctionHeader' />
+{zipcodes}: <co xml:id='co-innerFunctionHeader' />
 
 let
   contextXML = ''
@@ -309,10 +322,10 @@ let
                 maxActivate="100" maxIdle="30" maxWait="10000"
                 username="${zipcodes.target.mysqlUsername}" password="${zipcodes.target.mysqlPassword}" driverClassName="com.mysql.jdbc.Driver"
                 url="jdbc:mysql://${zipcodes.target.hostname}:${toString (zipcodes.target.mysqlPort)}/${zipcodes.name}?autoReconnect=true" /&gt;
-    &lt;/Context&gt; <co xml:id='co-3-contextXML' />
+    &lt;/Context&gt; <co xml:id='co-contextXML' />
   '';
 in
-stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
+stdenv.mkDerivation { <co xml:id='co-mkDerivation-service' />
   name = "ZipcodeService";
   src = ../../../../services/webservices/ZipcodeService;
   buildInputs = [ apacheAnt ];
@@ -321,7 +334,7 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
   buildPhase = "ant generate.war";
   installPhase = ''
     ensureDir $out/conf/Catalina
-    cat > $out/conf/Catalina/ZipcodeService.xml &lt;&lt;EOF <co xml:id='co-5-cat-contextXML' />
+    cat > $out/conf/Catalina/ZipcodeService.xml &lt;&lt;EOF <co xml:id='co-cat-contextXML' />
     ${contextXML}
     EOF
     ensureDir $out/webapps
@@ -332,7 +345,7 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 			</example>
 			
 			<para>
-				<xref linkend="ex-3-zipcode-service" /> shows a Disnix expression for
+				<xref linkend="ex-zipcode-service" /> shows a Disnix expression for
 				a particular web service component of the <code>StaffTracker</code>
 				system, called <code>ZipcodeService</code>, which provides access
 				to records in the <code>zipcode</code> database.
@@ -341,7 +354,7 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 			</para>
 		
 			<calloutlist>
-				<callout arearefs='co-1-outerFunctionHeader'>
+				<callout arearefs='co-outerFunctionHeader'>
 					<para>
 						This is the outer function header, which specifies all the local dependencies,
 						or <emphasis>intra-dependencies</emphasis>.
@@ -355,7 +368,7 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 					</para>
 				</callout>
 				
-				<callout arearefs='co-2-innerFunctionHeader'>
+				<callout arearefs='co-innerFunctionHeader'>
 					  <para>
 						This is the inner function header, which defines all the <emphasis>inter-dependencies</emphasis>.
 						The <varname>zipcodes</varname> argument refers to a database in which all the
@@ -364,7 +377,7 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 					  </para>
 				</callout>
 				
-				<callout arearefs='co-3-contextXML'>
+				<callout arearefs='co-contextXML'>
 					<para>
 						This string composes a so-called context XML file. This is a configuration
 						file used by Apache Tomcat to configure web application specific settings.
@@ -385,7 +398,7 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 					</para>
 				</callout>
 				
-				<callout arearefs='co-4-mkDerivation'>
+				<callout arearefs='co-mkDerivation-service'>
 					  <para>
 						Like ordinary Nix expressions, we must call the derivation function to build a component
 						from source code (that stores its build result in the Nix store). It also requires
@@ -394,7 +407,7 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 					  </para>
 				</callout>
 				
-				<callout arearefs='co-5-cat-contextXML'>
+				<callout arearefs='co-cat-contextXML'>
 					  <para>
 						Here, the context XML file defined earlier is written into a text file and bundled
 						with the generated web application so that the configuration settings can be
@@ -405,7 +418,7 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 			</calloutlist>
 		
 			<para>
-				<xref linkend="ex-3-zipcode-service" /> shows you how to build and configure an Apache Axis2 web service.
+				<xref linkend="ex-zipcode-service" /> shows you how to build and configure an Apache Axis2 web service.
 				Other types of service may have different kinds configuration steps, but can also be configured and built
 				by Disnix, like ordinary Nix packages.
 				What Disnix basically provides is the locations of the inter-dependencies and the properties of
@@ -419,20 +432,20 @@ stdenv.mkDerivation { <co xml:id='co-4-mkDerivation' />
 			<title>Intra-dependency composition</title>
 			
 			<para>
-				Like ordinary Nix expressions, we cannot use the expression in <xref linkend="ex-3-zipcode-service" /> directly to build the
+				Like ordinary Nix expressions, we cannot use the expression in <xref linkend="ex-zipcode-service" /> directly to build the
 				service. We need to <emphasis>compose</emphasis> it by calling the function with its required arguments.
 				With Disnix, we need to compose a service twice. First, we have to compose this expression locally,
 				by calling it with the required intra-dependency arguments. Later, we have to compose it
 				using the inter-dependency arguments.
 			</para>
 			
-			<example xml:id="ex-4-intra-dependency-composition">
+			<example xml:id="ex-intra-dependency-composition">
 				<title>Intra-dependency composition for the <code>StaffTracker</code></title>
 			
 <programlisting>
 {system, pkgs}:
 
-rec { <co xml:id='co-3-rec' />
+rec { <co xml:id='co-rec-intra' />
 ### Databases
 
   rooms = import ../pkgs/databases/rooms {
@@ -449,7 +462,7 @@ rec { <co xml:id='co-3-rec' />
 
 ### Web services + Clients
     
-  ZipcodeService = import ../pkgs/webservices/ZipcodeService { <co xml:id='co-4-composition' />
+  ZipcodeService = import ../pkgs/webservices/ZipcodeService { <co xml:id='co-composition' />
     inherit (pkgs) stdenv apacheAnt axis2;
   };
   
@@ -469,21 +482,21 @@ rec { <co xml:id='co-3-rec' />
 			</example>
 			
 			<para>
-				<xref linkend="ex-4-intra-dependency-composition" /> shows a Nix expression in which
+				<xref linkend="ex-intra-dependency-composition" /> shows a Nix expression in which
 				services are composed locally by calling the expressions with its required intra-dependency arguments.
 			</para>
 			
 			<calloutlist>
-				<callout arearefs='co-3-rec'>
+				<callout arearefs='co-rec-intra'>
 					<para>
-						Like the <code>pkgs/top-level/all-packages.nix</code> file in Nixpkgs, this composition expression
+						Like the <filename>pkgs/top-level/all-packages.nix</filename> file in Nixpkgs, this composition expression
 						is a mutually recursive attribute set in which attributes can refer to each other.
 					</para>
 				</callout>
 				
-				<callout arearefs='co-4-composition'>
+				<callout arearefs='co-composition'>
 					<para>
-						Here, the expression from <xref linkend="ex-3-zipcode-service" /> is imported and called with the right
+						Here, the expression from <xref linkend="ex-zipcode-service" /> is imported and called with the right
 						intra-dependency arguments. The dependencies are either defined in the same model or in Nixpkgs.
 					</para>
 				</callout>
@@ -493,13 +506,13 @@ rec { <co xml:id='co-3-rec' />
 				We can also simplify the intra-dependency composition by composing our custom <code>callPackage {}</code> function:
 			</para>
 			
-			<example xml:id="ex-4b-intra-dependency-composition">
+			<example xml:id="ex-intra-dependency-composition-simplified">
 				<title>Simplified intra-dependency composition for the <code>StaffTracker</code></title>
 <programlisting>
 {system, pkgs}:
 
 let
-  callPackage = pkgs.lib.callPackageWith (pkgs // self); <co xml:id='co-5-callPackage' />
+  callPackage = pkgs.lib.callPackageWith (pkgs // self); <co xml:id='co-callPackage' />
   
   self = {
   ### Databases
@@ -524,8 +537,8 @@ let
 			</example>
 			
 			<para>
-				In the simplified expression, we compose a custom <code>callPackage {}</code> function <xref linkend="co-5-callPackage" />
-				that first consults <code>self</code> containing our custom intra-dependency compositions and then any package
+				In the simplified expression, we compose a custom <code>callPackage {}</code> function <xref linkend="co-callPackage" />
+				that first consults <varname>self</varname> containing our custom intra-dependency compositions and then any package
 				provided by Nixpkgs.
 			</para>
 		</section>
@@ -539,14 +552,14 @@ let
 				The distributed deployment aspects of the components of a service-oriented system are captured in the services model.
 			</para>
 			
-			<example xml:id="ex-5-services-model">
+			<example xml:id="ex-services-model">
 				<title>Services model for the <code>StaffTracker</code></title>
 <programlisting>
-{system, pkgs, distribution, invDistribution}: <co xml:id='co-1-servicesHeader' />
+{system, pkgs, distribution, invDistribution}: <co xml:id='co-servicesHeader' />
 
-let customPkgs = import ../top-level/all-packages.nix { inherit system; }; <co xml:id='co-2-importIntra' />
+let customPkgs = import ../top-level/all-packages.nix { inherit system; }; <co xml:id='co-importIntra' />
 in
-rec { <co xml:id='co-3-rec2' />
+rec { <co xml:id='co-rec2' />
 ### Databases
   zipcodes = { 
     name = "zipcodes"; 
@@ -558,13 +571,13 @@ rec { <co xml:id='co-3-rec2' />
   
 ### Web services  
 
-  ZipcodeService = { <co xml:id='co-5-service' />
-    name = "ZipcodeService"; <co xml:id='co-6-serviceName' />
-    pkg = customPkgs.ZipcodeService; <co xml:id='co-7-pkg' />
-    dependsOn = { <co xml:id='co-8-dependsOn' />
+  ZipcodeService = { <co xml:id='co-service' />
+    name = "ZipcodeService"; <co xml:id='co-serviceName' />
+    pkg = customPkgs.ZipcodeService; <co xml:id='co-pkg' />
+    dependsOn = { <co xml:id='co-dependsOn' />
       inherit zipcodes;
     };
-    type = "tomcat-webapplication"; <co xml:id='co-9-type' />
+    type = "tomcat-webapplication"; <co xml:id='co-type' />
   };
   ...
 
@@ -583,38 +596,57 @@ rec { <co xml:id='co-3-rec2' />
 			</example>
 			
 			<para>
-				<xref linkend="ex-5-services-model" /> represents the services model of the <code>StaffTracker</code>
+				<xref linkend="ex-services-model" /> represents the services model of the <code>StaffTracker</code>
 				system. This model is a function returning an attribute set in which each attribute corresponds to a distributable component
-				in the architecture diagram, shown earlier in <xref linkend="fig-1-stafftracker" />.
+				in the architecture diagram, shown earlier in <xref linkend="fig-stafftracker" />.
 			</para>
 			
 			<calloutlist>
-				<callout arearefs='co-1-servicesHeader'>
+				<callout arearefs='co-servicesHeader'>
 					<para>
-						A services expression is a function taking three arguments.
-						The <varname>system</varname> parameter takes an identifier
-						of a system architecture that we want to build a service for. An example of an
-						identifier is: <code>i686-linux</code> representing a 32-bit <code>x86</code> Linux machine.
-						The <varname>pkgs</varname> parameter refers to the Nixpkgs collection for
-						the corresponding system identifier. Nixpkgs contains a large collection of free and open source packages
-						(including some proprietary ones).
-						The <varname>distribution</varname> parameter refers to the distribution model,
-						in which services are mapped onto machines in the network (this model is explained
-						later).
-						The <varname>invDistribution</varname> parameter refers to an inverse distribution model.
-						In <xref linkend="chap-target-specific" /> we show how this model can be used to generate
-						target-specific services.
+						A services expression is a function taking four arguments:
+						<itemizedlist>
+							<listitem>
+								<simpara>
+									The <varname>system</varname> parameter takes an identifier
+									of a system architecture that we want to build a service for.
+									An example of an identifier is: <code>i686-linux</code> representing
+									a 32-bit <code>x86</code> Linux machine.
+								</simpara>
+							</listitem>
+							<listitem>
+								<simpara>
+									The <varname>pkgs</varname> parameter refers to the Nixpkgs collection for
+									the corresponding system identifier. Nixpkgs contains a large collection of
+									free and open source packages (including some proprietary ones).
+								</simpara>
+							</listitem>
+							<listitem>
+								<simpara>
+									The <varname>distribution</varname> parameter refers to the distribution model,
+									in which services are mapped onto machines in the network (this model is explained
+									later).
+								</simpara>
+							</listitem>
+							<listitem>
+								<simpara>
+									The <varname>invDistribution</varname> parameter refers to an inverse distribution model.
+									In <xref linkend="chap-target-specific" /> we show how this model can be used to generate
+									target-specific services.
+								</simpara>
+							</listitem>
+						</itemizedlist>
 					</para>
 				</callout>
 				
-				<callout arearefs='co-2-importIntra'>
+				<callout arearefs='co-importIntra'>
 					<para>
-						Here, the expression from <xref linkend="ex-4-intra-dependency-composition" /> is imported so that we can use the
+						Here, the expression from <xref linkend="ex-intra-dependency-composition" /> is imported so that we can use the
 						intra-dependency compositions of all packages implementing a services.
 					</para>
 				</callout>
 				
-				<callout arearefs='co-3-rec2'>
+				<callout arearefs='co-rec2'>
 					<para>
 						Like the intra-dependency composition expression in the previous example,
 						the services expression is also a mutually recursive attribute set in which attributes
@@ -623,33 +655,33 @@ rec { <co xml:id='co-3-rec2' />
 					</para>
 				</callout>
 				
-				<callout arearefs='co-5-service'>
+				<callout arearefs='co-service'>
 					<para>
 						Every attribute represents a <emphasis>service</emphasis> (i.e. a distributable
 						component). Services correspond to the components shown in the
-						architecture in <xref linkend="fig-1-stafftracker" />.
+						architecture in <xref linkend="fig-stafftracker" />.
 					</para>
 				</callout>
 				
-				<callout arearefs='co-6-serviceName'>
+				<callout arearefs='co-serviceName'>
 					<para>
 						Every service has a canonical name, so that it is known to which one is referred
 						from the inter-dependency arguments. This name must match the attribute name.
 					</para>
 				</callout>
 				
-				<callout arearefs='co-7-pkg'>
+				<callout arearefs='co-pkg'>
 					<para>
 						For every service, we must know how to build it and what their intra- and inter-dependencies are. 
 						This attribute refers to the intra-dependency closure of the service, which is composed in
-						<xref linkend="ex-4-intra-dependency-composition" />.
+						<xref linkend="ex-intra-dependency-composition-simplified" />.
 					</para>
 				</callout>
 				
-				<callout arearefs='co-8-dependsOn'>
+				<callout arearefs='co-dependsOn'>
 					<para>
 						We also need to know for each service what the inter-dependencies actually are. 
-						Inter-dependencies correspond to the arrows shown in <xref linkend="fig-1-stafftracker" />.
+						Inter-dependencies correspond to the arrows shown in <xref linkend="fig-stafftracker" />.
 					</para>
 					<para>
 						In this
@@ -666,7 +698,7 @@ rec { <co xml:id='co-3-rec2' />
 					</para>
 				</callout>
 				
-				<callout arearefs='co-9-type'>
+				<callout arearefs='co-type'>
 					<para>
 						Finally, we must know how to activate and deactive a service. Since services can represent
 						nearly anything, such as a database or web application, we cannot perform this step generically.
@@ -693,7 +725,7 @@ rec { <co xml:id='co-3-rec2' />
 				infrastructure model.
 			</para>
 			
-			<example xml:id="ex-6-infrastructure-model">
+			<example xml:id="ex-infrastructure-model">
 				<title>Infrastructure model</title>
 			
 <programlisting>
@@ -705,24 +737,24 @@ rec { <co xml:id='co-3-rec2' />
     system = "i686-linux";
   };
   
-  test2 = { <co xml:id='co-1-target' />
-    hostname = "test2.example.org"; <co xml:id='co-2-hostname' />
+  test2 = { <co xml:id='co-target' />
+    hostname = "test2.example.org"; <co xml:id='co-hostname' />
     tomcatPort = 8080;
-    mysqlPort = 3306; <co xml:id='co-5-mysqlPort' />
+    mysqlPort = 3306; <co xml:id='co-mysqlPort' />
     mysqlUsername = "root";
     mysqlPassword = "admin";
     
-    system = "x86_64-linux"; <co xml:id='co-3-system' />
-    numOfCores = 1; <co xml:id='co-4-numOfCores' />
-    targetProperty = "hostname"; <co xml:id='co-6-targetProperty' />
-    clientInterface = "disnix-ssh-client"; <co xml:id='co-7-clientInterface' />
+    system = "x86_64-linux"; <co xml:id='co-system' />
+    numOfCores = 1; <co xml:id='co-numOfCores' />
+    targetProperty = "hostname"; <co xml:id='co-targetProperty' />
+    clientInterface = "disnix-ssh-client"; <co xml:id='co-clientInterface' />
   }; 
 }
 </programlisting>
 			</example>
 			
 			<para>
-				<xref linkend="ex-6-infrastructure-model" /> shows an infrastructure model describing two machines and their properties.
+				<xref linkend="ex-infrastructure-model" /> shows an infrastructure model describing two machines and their properties.
 			</para>
 			
 			<para>
@@ -730,29 +762,29 @@ rec { <co xml:id='co-3-rec2' />
 			</para>
 			
 			<calloutlist>
-				  <callout arearefs='co-1-target'>
+				  <callout arearefs='co-target'>
 					<para>
 						The infrastructure model is an attribute set in which each attribute represents a 
 						machine in the network. This attribute refers to the properties of a machine called
-						<code>test2</code>.
+						<varname>test2</varname>.
 					</para>
 				  </callout>
 				  
-				  <callout arearefs='co-2-hostname'>
+				  <callout arearefs='co-hostname'>
 					  <para>
 						In order to perform deployment steps remotely, we need to know how to connect
-						to the machine. By default, the <code>hostname</code> attribute is used for this.
+						to the machine. By default, the <varname>hostname</varname> attribute is used for this.
 						Disnix can be configured to use a different property as well through a command-line
 						parameter or environment variable.
 					  </para>
 				  </callout>
 				  
-				  <callout arearefs='co-5-mysqlPort'>
+				  <callout arearefs='co-mysqlPort'>
 					  <para>
 						Most of the properties of a machine can be freely chosen and are used by the
 						Dysnomia modules to execute a specific non-generic deployment step for a particular service.
 						For instance, the
-						<code>mysqlPort</code> specifies on which port the MySQL can be reached.
+						<varname>mysqlPort</varname> specifies on which port the MySQL can be reached.
 						The MySQL properties in this model are used by the MySQL Dysnomia module.
 					  </para>
 				  </callout>
@@ -764,10 +796,10 @@ rec { <co xml:id='co-3-rec2' />
 			</para>
 			
 			<calloutlist>
-				  <callout arearefs='co-3-system'>
+				  <callout arearefs='co-system'>
 					<para>
 						A machine in the network may have a different system architecture as the coordinator machine.
-						The <code>system</code> attribute can be used to specify the system architecture of a target machine.
+						The <varname>system</varname> attribute can be used to specify the system architecture of a target machine.
 					</para>
 					<para>
 						In some cases, Nix may not be able to build a service for a target machine directly, because it is incapable
@@ -776,7 +808,7 @@ rec { <co xml:id='co-3-rec2' />
 						In such cases, you can build the service on a target machine in the network.
 					</para>
 					<para>
-						By omitting the <code>system</code> attribute, Disnix builds the service for
+						By omitting the <varname>system</varname> attribute, Disnix builds the service for
 						the same architecture as the coordinator machine.
 					</para>
 					<para>
@@ -787,32 +819,32 @@ rec { <co xml:id='co-3-rec2' />
 					</para>
 				  </callout>
 				  
-				  <callout arearefs='co-4-numOfCores'>
+				  <callout arearefs='co-numOfCores'>
 					<para>
 						In the activation phase, Disnix tries to concurrently activate as many services as possible.
-						The <code>numOfCores</code> attribute can be used to indicate the amount of CPU cores available on
+						The <varname>numOfCores</varname> attribute can be used to indicate the amount of CPU cores available on
 						the target machine. If, for example, this value is set to 2, Disnix tries to activate two services
 						concurrently on this machine when possible.
 					</para>
 					<para>
-						If this attribute is omitted, it will default to 1.
+						If this attribute is omitted, it will default to <code>1</code>.
 					</para>
 				  </callout>
-				  <callout arearefs='co-6-targetProperty'>
+				  <callout arearefs='co-targetProperty'>
 					  <para>
 						This is a reserved property defining which attribute in this attribute set
 						specifies how to connect to this machine. If this attribute is not specified
-						then the value provided by the <code>--target-property</code> parameter, or
-						<code>DISNIX_TARGET_PROPERTY</code> environment variable is used, which
-						defaults to <code>hostname</code>. See <xref linkend="chap-advanced-options" /> for more information.
+						then the value provided by the <option>--target-property</option> parameter, or
+						<envar>DISNIX_TARGET_PROPERTY</envar> environment variable is used, which
+						defaults to <varname>hostname</varname>. See <xref linkend="chap-advanced-options" /> for more information.
 					  </para>
 				  </callout>
-				  <callout arearefs='co-7-clientInterface'>
+				  <callout arearefs='co-clientInterface'>
 					  <para>
 						This reserved property specifies which executable needs to be run to connect
 						to the target machine. If this attribute is not specified then the value provided
-						by the <code>--interface</code> parameter, or the <code>DISNIX_CLIENT_INTERFACE</code>
-						environment variable is used, which defaults to <code>disnix-ssh-client</code>.
+						by the <option>--interface</option> parameter, or the <envar>DISNIX_CLIENT_INTERFACE</envar>
+						environment variable is used, which defaults to <command>disnix-ssh-client</command>.
 						See <xref linkend="chap-advanced-options" /> for more information.
 					  </para>
 				  </callout>
@@ -835,53 +867,53 @@ rec { <co xml:id='co-3-rec2' />
 				model is used to specify these mappings.
 			</para>
 			
-			<example xml:id="ex-7-distribution-model">
+			<example xml:id="ex-distribution-model">
 				<title>Distribution model for the <code>StaffTracker</code></title>
 			
 <programlisting>
 {infrastructure}:
 
 {
-  zipcodes = [ infrastructure.test2 ]; <co xml:id='co-1-zipcodes' />
-  ZipcodeService = [ infrastructure.test1 ]; <co xml:id='co-2-ZipcodeService' />
-  StaffTracker = [ infrastructure.test1 infrastructure.test2 ]; <co xml:id='co-3-StaffTracker' />
+  zipcodes = [ infrastructure.test2 ]; <co xml:id='co-zipcodes' />
+  ZipcodeService = [ infrastructure.test1 ]; <co xml:id='co-ZipcodeService' />
+  StaffTracker = [ infrastructure.test1 infrastructure.test2 ]; <co xml:id='co-StaffTracker' />
   ...
 }
 </programlisting>
 			</example>
 			
 			<para>
-				<xref linkend="ex-7-distribution-model" /> shows a distribution model for a particular
+				<xref linkend="ex-distribution-model" /> shows a distribution model for a particular
 				deployment scenario of the <code>StaffTracker</code> system.
 			</para>
 			
 			<calloutlist>
-				<callout arearefs='co-1-zipcodes'>
+				<callout arearefs='co-zipcodes'>
 					<para>
-						This attribute assignment states that the <code>zipcodes</code> service should be
+						This attribute assignment states that the <varname>zipcodes</varname> service should be
 						deployed to machine <code>test2</code>.
 						The machine and its properties can be accessed in a service build
 						through the <varname>target</varname> property
 						on an inter-dependency argument in a Disnix expression, such as
-						<xref linkend="ex-3-zipcode-service" />.
+						<xref linkend="ex-zipcode-service" />.
 					</para>
 				</callout>
 				
-				<callout arearefs='co-2-ZipcodeService'>
+				<callout arearefs='co-ZipcodeService'>
 					<para>
 						This attribute assignment states that the <code>ZipcodeService</code> service should be
 						deployed to machine <code>test1</code>.
 					</para>
 				</callout>
 				
-				<callout arearefs='co-3-StaffTracker'>
+				<callout arearefs='co-StaffTracker'>
 					<para>
 						This attribute assignment states that the <code>StaffTracker</code> service should be
-						deployed to both <code>test1</code> and <code>test2</code>. Specifying multiple
+						deployed to both <varname>test1</varname> and <varname>test2</varname>. Specifying multiple
 						machines is useful for deploying redundant services, such as a fallback or a load balancer.
 						The list of machines can be accessed in a service build by referencing the <varname>targets</varname> property
 						of an inter-dependency argument in a Disnix expression, such as
-						<xref linkend="ex-3-zipcode-service" />.
+						<xref linkend="ex-zipcode-service" />.
 					</para>
 				</callout>
 			</calloutlist>

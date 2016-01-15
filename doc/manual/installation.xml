@@ -231,10 +231,10 @@ $ nix-env -i disnix
 			</para>
 			<para>
 				Besides installing D-Bus, it is required that the Disnix service configuration file
-				(which has been installed in <code>/usr/local/etc/dbus-1/system.d</code>) resides in the right location
+				(which has been installed in <filename>/usr/local/etc/dbus-1/system.d</filename>) resides in the right location
 				so that it is allowed to register itself on the system bus with the right access permissions.
 				In most Linux distributions the configuration files of the system services reside in
-				<code>/etc/dbus-1/system.d</code>.
+				<filename>/etc/dbus-1/system.d</filename>.
 			</para>
 			<para>
 				The following command copies the configuration file into the right location:
@@ -277,7 +277,7 @@ $ cp /usr/local/etc/dbus-1/system.d/disnix.conf /etc/dbus-1/system.d
 				
 				<para>
 					Most conventional Linux distributions support starting and stopping system services by composing
-					an init script that typically resides in <code>/etc/init.d/disnix</code>.
+					an init script that typically resides in <filename>/etc/init.d/disnix</filename>.
 					An <code>init.d</code> script for the Disnix service could look like this:
 				</para>
 			
@@ -334,17 +334,17 @@ exit 0
 				<para>
 					Refer to your distribution's <code>init.d</code> script style to see how services
 					are configured and launched. For convenience, a Debian-compatible init.d script named
-					<code>disnix-service.initd</code> has been placed in the <code>$PREFIX/share/doc</code> folder
+					<filename>disnix-service.initd</filename> has been placed in the <filename>$PREFIX/share/doc</filename> folder
 					of this package.
 				</para>
 				<para>
-					An important aspect to keep in mind is that both Nix and Dysnomia should be in the <code>PATH</code>
+					An important aspect to keep in mind is that both Nix and Dysnomia should be in the <envar>PATH</envar>
 					of the <code>init.d</code> script so that the service can execute all required deployment activities.
 					Another important thing is that the Disnix service should be started after the D-Bus system service and stopped
 					in exactly the opposite order.
 				</para>
 				<para>
-					If a single user Nix installation has been performed, then the <code>DAEMONUSER</code> environment variable
+					If a single user Nix installation has been performed, then the <envar>DAEMONUSER</envar> environment variable
 					should correspond to the name of the user that is allowed to use it. The name should correspond
 					to <code>root</code> in case of a multi-user Nix installation.
 				</para>
@@ -383,7 +383,7 @@ $ cygrunsrv -I disnix -p /usr/local/bin/disnix-service.exe \
 					service runs. If a single user Nix installation has been performed, 
 					this username should be substituted by the
 					actual username under which Disnix has been installed.
-					In multi-user Nix installations, the <code>-u</code> parameter should
+					In multi-user Nix installations, the <option>-u</option> parameter should
 					be omitted.
 				</para>
 				
@@ -428,10 +428,10 @@ $ ssh-host-config
 				-> Administrative Tools -> Services).
 				You need to pick the Disnix service and select the start option.
 				If you want to use the SSH server, you need to pick and start the 'CYGWIN sshd' service as well.
-				A screenshot of this is shown in <xref linkend="fig-2-disnixwinservice" />.
+				A screenshot of this is shown in <xref linkend="fig-disnixwinservice" />.
 			</para>
 				
-			<figure xml:id="fig-2-disnixwinservice">
+			<figure xml:id="fig-disnixwinservice">
 				<title>Starting the Disnix Windows system service</title>
 				<mediaobject>
 					<imageobject>
@@ -455,7 +455,7 @@ $ ssh-host-config
 			The SSH wrapper, for instance,
 			uses the credentials of the calling user on the coordinator by default.
 			Therefore, every target machine requires
-			the user to be defined in <code>/etc/passwd</code> and the user should be member of
+			the user to be defined in <filename>/etc/passwd</filename> and the user should be member of
 			the <code>disnix</code> group.
 		</para>
 		

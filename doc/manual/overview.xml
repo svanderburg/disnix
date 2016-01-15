@@ -20,19 +20,31 @@
 		process of a distributed system.
 	</para>
 	<para>
-		This tool requires three models as input parameters, which are shown
-		on the left side of the figure.
-		The <emphasis>services model</emphasis> describes of which distributable
-		components (called services) the system consists, their inter-dependencies and their types.
-		The <emphasis>infrastructure model</emphasis> describes all the machines
-		in the network and their relevant properties and capabilities.
-		The <emphasis>distribution model</emphasis> maps services defined
-		in the services model to machines defined in the infrastructure model.
-	</para>
-	<para>
-		The service model has a reference to a file named <filename>all-packages.nix</filename>,
-		which captures all the intra-dependency compositions of every service,
-		such as libraries, configuration files and compilers.
+		This tool requires three models as input parameters shown
+		on the left side of the figure:
+		<itemizedlist>
+			<listitem>
+				<simpara>
+					The <emphasis>services model</emphasis> describes of which distributable
+					components (called services) the system consists, their inter-dependencies and their types.
+					The service model has a reference to a file named <filename>all-packages.nix</filename>,
+					which captures all the intra-dependency compositions of every service,
+					such as libraries, configuration files and compilers.
+				</simpara>
+			</listitem>
+			<listitem>
+				<simpara>
+					The <emphasis>infrastructure model</emphasis> describes all the machines
+					in the network and their relevant properties and capabilities.
+				</simpara>
+			</listitem>
+			<listitem>
+				<simpara>
+					The <emphasis>distribution model</emphasis> maps services defined
+					in the services model to machines defined in the infrastructure model.
+				</simpara>
+			</listitem>
+		</itemizedlist>
 	</para>
 	<para>
 		On the right side of the figure, the network is shown in which the system

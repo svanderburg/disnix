@@ -43,7 +43,7 @@
 	<section>
 		<title>Dysnomia module for the <code>mysql-database</code> type</title>
 		
-		<example xml:id="ex-8-mysql-database">
+		<example xml:id="ex-mysql-database">
 			<title>MySQL database Dysnomia module</title>
 			
 			<programlisting>
@@ -66,7 +66,7 @@ composeGarbagePath
 composeGenerationsPath
 
 case "$1" in
-    activate) <co xml:id='co-1-activate' />
+    activate) <co xml:id='co-activate' />
         # Initalize the given schema if the database does not exists
         if [ "$(echo "show databases" | @mysql@ --user=$mysqlUsername --password=$mysqlPassword -N | grep -x $componentName)" = "" ]
         then
@@ -81,10 +81,10 @@ case "$1" in
         fi
         unmarkStateAsGarbage
         ;;
-    deactivate) <co xml:id='co-2-deactivate' />
+    deactivate) <co xml:id='co-deactivate' />
         markStateAsGarbage
         ;;
-    snapshot) <co xml:id='co-3-snapshot' />
+    snapshot) <co xml:id='co-snapshot' />
         tmpdir=$(mktemp -d)
         cd $tmpdir
         @mysqldump@ --single-transaction --quick --user=$mysqlUsername --password=$mysqlPassword $componentName | head -n-1 | xz > dump.sql.xz
@@ -102,7 +102,7 @@ case "$1" in
         fi
         createGenerationSymlink $snapshotsPath/$hash
         ;;
-    restore) <co xml:id='co-4-restore' />
+    restore) <co xml:id='co-restore' />
         determineLastSnapshot
         
         if [ "$lastSnapshot" != "" ]
@@ -112,7 +112,7 @@ case "$1" in
             ) | @mysql@ --user=$mysqlUsername --password=$mysqlPassword -N
         fi
         ;;
-    collect-garbage) <co xml:id='co-5-collect-garbage' />
+    collect-garbage) <co xml:id='co-collect-garbage' />
         if [ -f $garbagePath ]
         then
             echo "drop database $componentName;" | @mysql@ --user=$mysqlUsername --password=$mysqlPassword -N
@@ -124,11 +124,11 @@ esac
 		</example>
 		
 		<para>
-			<xref linkend="ex-8-mysql-database" /> shows the Dysnomia module used for the <code>mysql-database</code> type:
+			<xref linkend="ex-mysql-database" /> shows the Dysnomia module used for the <code>mysql-database</code> type:
 		</para>
 		
 		<calloutlist>
-			<callout arearefs="co-1-activate">
+			<callout arearefs="co-activate">
 				<para>
 					This part performs the activation step of a MySQL service. In this step,
 					we first check whether the database already exists. If the database is not there yet,
@@ -138,14 +138,14 @@ esac
 				</para>
 			</callout>
 			
-			<callout arearefs="co-2-deactivate">
+			<callout arearefs="co-deactivate">
 				<para>
 					The deactivation step consists of marking the database as garbage, so that it
 					will be removed by the garbage collector.
 				</para>
 			</callout>
 			
-			<callout arearefs="co-3-snapshot">
+			<callout arearefs="co-snapshot">
 				<para>
 					Dumps the state of the MySQL database in a single transaction into a dump file and places
 					it in the Dysnomia snapshot folder using the output hash as a naming convention. If a dump
@@ -156,20 +156,20 @@ esac
 				</para>
 			</callout>
 			
-			<callout arearefs="co-4-restore">
+			<callout arearefs="co-restore">
 				<para>
 					Determines what the latest snapshot of the database is and restores the corresponding snapshot.
 					If no snapshot exists, it does nothing.
 				</para>
 			</callout>
 			
-			<callout arearefs="co-5-collect-garbage">
+			<callout arearefs="co-collect-garbage">
 				<para>
 					Checks whether the database has been marked as garbage and drops it if this is the case.
 					Otherwise, it does not nothing.
 				</para>
 			</callout>
-		</calloutlist>				
+		</calloutlist>
 	</section>
 	
 	<section>
@@ -189,7 +189,7 @@ esac
 			Then this process performs all the steps to activate the component and so on.
 		</para>
 		
-		<example xml:id="ex-9-tcp-proxy-wrapper">
+		<example xml:id="ex-tcp-proxy-wrapper">
 			<title>Disnix TCP proxy wrapper script</title>
 			
 			<programlisting>
@@ -230,7 +230,7 @@ esac
 		</example>
 		
 		<para>
-			<xref linkend="ex-9-tcp-proxy-wrapper" /> shows an example of a wrapper script used for the
+			<xref linkend="ex-tcp-proxy-wrapper" /> shows an example of a wrapper script used for the
 			<link xlink:href="https://github.com/svanderburg/disnix-proxy-example">TCP proxy example</link>
 			available from my Github page. As you may notice, the structure is very
 			similar to an activation script, since it also contains the <code>activate</code> and <code>deactivate</code> steps.

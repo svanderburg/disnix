@@ -13,8 +13,8 @@
 	<section>
 		<title>Communication flow</title>
 		
-		<figure xml:id="fig-1-communicationflow">
-			<title>Architecture of the <code>StaffTracker</code></title>
+		<figure xml:id="fig-communicationflow">
+			<title>Communication flow of the deployment operations</title>
 			<mediaobject>
 				<imageobject>
 					<imagedata fileref="communicationflow.png" format="PNG"/>
@@ -23,10 +23,10 @@
 		</figure>
 		
 		<para>
-			<xref linkend="fig-1-communicationflow" /> illustrates the communication flow of the disnix deployment utilities, such as <code>disnix-env</code>.
+			<xref linkend="fig-communicationflow" /> illustrates the communication flow of the disnix deployment utilities, such as <command>disnix-env</command>.
 			When executing a deployment step on the coordinator machine,
 			a connection client process in consulted that connects to a protocol wrapper on the remote machine.
-			By default, Disnix uses <code>disnix-ssh-client</code>
+			By default, Disnix uses <command>disnix-ssh-client</command>
 			that connects through SSH. Other kinds of communication protocols are supported through extensions, such as SOAP/HTTP.
 			See <xref linkend="chap-advanced-options" /> for more information.
 		</para>
@@ -40,9 +40,9 @@
 	</section>
 	
 	<section>
-		<title>Composition of <code>disnix-env</code></title>
+		<title>Composition of <command>disnix-env</command></title>
 		
-		<figure xml:id="fig-1-disnix-env">
+		<figure xml:id="fig-disnix-env">
 			<title>Architecture of the <code>StaffTracker</code></title>
 			<mediaobject>
 				<imageobject>
@@ -52,7 +52,7 @@
 		</figure>
 		
 		<para>
-			As shown in <xref linkend="fig-1-disnix-env" />, the <code>disnix-env</code>, the command-line tool that performs all activities to make a
+			As shown in <xref linkend="fig-disnix-env" />, the <command>disnix-env</command>, the command-line tool that performs all activities to make a
 			service-oriented system available for use, is composed of several lower-level command-line tools each executing a
 			specific deployment activity.
 		</para>
@@ -64,7 +64,7 @@
 		<itemizedlist>
 			<listitem>
 				<para>
-					<code>disnix-manifest</code> produces a low-level manifest file from the three Disnix models, describing
+					<command>disnix-manifest</command> produces a low-level manifest file from the three Disnix models, describing
 					which profiles to distribute, which services to activate and their dependencies, and which snapshots to
 					transfer. This manifest file is used by most of the other low-level command-line tools.
 				</para>
@@ -76,13 +76,13 @@
 			</listitem>
 			<listitem>
 				<para>
-					<code>disnix-distribute</code>. Distributes the intra-dependency closures of the Nix profiles in the
+					<command>disnix-distribute</command>. Distributes the intra-dependency closures of the Nix profiles in the
 					manifest file, that contains all services that should be deployed to a particular machine.
 				</para>
 			</listitem>
 			<listitem>
 				<para>
-					<code>disnix-lock</code>. Locks or unlocks the Disnix service instances on the target machines,
+					<command>disnix-lock</command>. Locks or unlocks the Disnix service instances on the target machines,
 					so that other deployment processes cannot interfere. Additionally, it uses Dysnomia to
 					notify all the services so that they can
 					optionally take precautions while they are being upgraded.
@@ -90,15 +90,15 @@
 			</listitem>
 			<listitem>
 				<para>
-					<code>disnix-activate</code>. Deactivates obsolete services from the previous configuration and
+					<command>disnix-activate</command>. Deactivates obsolete services from the previous configuration and
 					activates new services in the new configuration. Moreover, it uses the inter-dependency parameters
 					from the models to execute these steps in the right order.
 				</para>
 			</listitem>
 			<listitem>
 				<para>
-					<code>disnix-set</code>. Sets the profiles on the target machines to the ones that have been transferred
-					with <code>disnix-distribute</code> so that the services are considered used and will not be garbage collected.
+					<command>disnix-set</command>. Sets the profiles on the target machines to the ones that have been transferred
+					with <command>disnix-distribute</command> so that the services are considered used and will not be garbage collected.
 					On the coordinator machine, it sets the new coordinator profile referring to the manifest of the last executed
 					deployment.
 				</para>
@@ -112,14 +112,14 @@
 		<itemizedlist>
 			<listitem>
 				<para>
-					<code>disnix-instantiate</code>. Creates a distributed derivation file from the three Disnix models that
+					<command>disnix-instantiate</command>. Creates a distributed derivation file from the three Disnix models that
 					maps Nix store derivation files (low level build specifications that Nix uses to build a package) to
 					target machines in the network.
 				</para>
 			</listitem>
 			<listitem>
 				<para>
-					<code>disnix-build</code>. Distributes the store derivation closures from the distributed derivation file
+					<command>disnix-build</command>. Distributes the store derivation closures from the distributed derivation file
 					to the target machines in the network, builds the corresponding packages on the target machines and fetches
 					the closures of the build results.
 				</para>
@@ -133,18 +133,18 @@
 		<itemizedlist>
 			<listitem>
 				<para>
-					<code>disnix-snapshot</code>. Snapshots the state of all services that were in the previous configuration,
+					<command>disnix-snapshot</command>. Snapshots the state of all services that were in the previous configuration,
 					but not in the current configuration and transfers them to the coordinator machine.
 				</para>
 			</listitem>
 			<listitem>
 				<para>
-					<code>disnix-restore</code>. Transfers and restores the snapshots of all services that have been added in the new configuration.
+					<command>disnix-restore</command>. Transfers and restores the snapshots of all services that have been added in the new configuration.
 				</para>
 			</listitem>
 			<listitem>
 				<para>
-					<code>disnix-delete-state</code>. Deletes the physical state of the services that have become obsolete in the new configuration.
+					<command>disnix-delete-state</command>. Deletes the physical state of the services that have become obsolete in the new configuration.
 				</para>
 			</listitem>
 		</itemizedlist>
@@ -154,7 +154,7 @@
 		<title>Low-level usage examples</title>
 		
 		<para>
-			As described earlier, we can also invoke the low-level utilities that <code>disnix-env</code> consults, to execute a certain deployment activity
+			As described earlier, we can also invoke the low-level utilities that <command>disnix-env</command> consults, to execute a certain deployment activity
 			individually. In this section, we provide a few examples.
 		</para>
 		

@@ -25,7 +25,7 @@
 	<section>
 		<title>Annotating services in the services model</title>
 		
-		<example xml:id="ex-6-annotated-services-model">
+		<example xml:id="ex-annotated-services-model">
 			<title>Annotated services model for the <code>StaffTracker</code></title>
 <programlisting>
 {system, pkgs, distribution, invDistribution}:
@@ -39,7 +39,7 @@ rec {
     pkg = customPkgs.zipcodes;
     dependsOn = {};
     type = "mysql-database";
-    deployState = true; <co xml:id='co-4-deployState' />
+    deployState = true; <co xml:id='co-deployState' />
   };
   ...
 }
@@ -47,12 +47,12 @@ rec {
 		</example>
 
 		<para>
-			<xref linkend="ex-6-annotated-services-model" /> shows a partial services model that is based on the services
-			model of the StraffTracker example, described earlier in <xref linkend="ex-5-services-model" />:
+			<xref linkend="ex-annotated-services-model" /> shows a partial services model that is based on the services
+			model of the StraffTracker example, described earlier in <xref linkend="ex-services-model" />:
 		</para>
 		
 		<calloutlist>
-			<callout arearefs='co-4-deployState'>
+			<callout arearefs='co-deployState'>
 				<para>
 					This boolean value indicates that Disnix should also do state deployment for this service, causing it
 					to move data if the database if moved from one machine to another. Moreover, when executing
@@ -84,8 +84,8 @@ rec {
 			<title>Deploying a system and migrating its state</title>
 			
 			<para>
-				Running <code>disnix-env</code> with an annotated services model causes it to migrate data after deploying the services.
-				For example, when changing the target machine of the <code>zipcodes</code> database in the distribution model from:
+				Running <command>disnix-env</command> with an annotated services model causes it to migrate data after deploying the services.
+				For example, when changing the target machine of the <varname>zipcodes</varname> database in the distribution model from:
 <screen>
 zipcodes = [ infrastructure.test2 ];
 </screen>
@@ -181,7 +181,7 @@ $ disnix-clean-snapshots --keep 0 infrastructure.nix
 		<itemizedlist>
 			<listitem>
 				<para>
-					Filesystem level snapshots. This is an approach that works typically much faster.
+					<emphasis>Filesystem level snapshots</emphasis>. This is an approach that works typically much faster.
 					However, some drawbacks of working on filesystem level is that physical state may be inconsistent (because of incomplete write operations),
 					and non-portable. Also, for some types of containers, it is difficult to manage chunks of data, such as individual databases. Filesystem level
 					state management is unsupported by Disnix and must be done by other means.
@@ -189,7 +189,7 @@ $ disnix-clean-snapshots --keep 0 infrastructure.nix
 			</listitem>
 			<listitem>
 				<para>
-					Replication engines. Replication engines of DBMSes can typically move data from one machine to another much faster and more efficiently.
+					<emphasis>Replication engines</emphasis>. Replication engines of DBMSes can typically move data from one machine to another much faster and more efficiently.
 					Disnix does not take care of configuring a DBMS' replication engine automatically.
 					Instead, while deploying a machine's configuration this feature must be explicitly enabled by the deployer.
 				</para>

@@ -68,7 +68,7 @@ StaffTracker = [ infrastructure.test1 ];
 		<para>
 			(As a sidenote: there is actually a situation in which a service will get rebuilt when moving it from one
 			machine to another while its intra-dependencies and inter-dependencies have not changed.
-			As shown in <xref linkend="ex-6-infrastructure-model" /> Disnix also supports heterogeneous service deployment
+			As shown in <xref linkend="ex-infrastructure-model" /> Disnix also supports heterogeneous service deployment
 			meaning that we can run target machines having
 			different CPU architectures and operating systems. For example, if <code>test2</code> were a Linux machine
 			and test1 a Mac OS X machine, Disnix attempts to rebuild it for the new platform.
@@ -92,7 +92,7 @@ StaffTracker = [ infrastructure.test1 ];
 		<para>
 			We could model the nginx reverse proxy and each web application as (component-agnostic)
 			distributable services, and deploy them in a network with Disnix as follows:
-			<figure xml:id="fig-1-virtualhosts-simple">
+			<figure xml:id="fig-virtualhosts-simple">
 				<title>Deployment architecture containing a single target-agnostic reverse proxy</title>
 				<mediaobject>
 					<imageobject>
@@ -118,7 +118,7 @@ StaffTracker = [ infrastructure.test1 ];
 nginx = [ infrastructure.test1 infrastructure.test2 ];
 </screen>
 			The above modification yields the following deployment architecture:
-			<figure xml:id="fig-2-virtualhosts-redundant">
+			<figure xml:id="fig-virtualhosts-redundant">
 				<title>Deployment architecture containing multiple target-agnostic reverse proxies</title>
 				<mediaobject>
 					<imageobject>
@@ -155,7 +155,7 @@ nginx = [ infrastructure.test1 infrastructure.test2 ];
 		
 		<para>
 			A more efficient deployment architecture would be the following:
-			<figure xml:id="fig-3-virtualhosts-target-specific">
+			<figure xml:id="fig-virtualhosts-target-specific">
 				<title>Deployment architecture containing multiple target-specific reverse proxies</title>
 				<mediaobject>
 					<imageobject>
@@ -340,7 +340,7 @@ builtins.listToAttrs (map (targetName:
   };
 }
 </programlisting>
-				For example, if we refer to <code>invDistribution.test1.services</code> we get all the
+				For example, if we refer to <varname>invDistribution.test1.services</varname> we get all the
 				configurations of the services that are deployed to machine <code>test1</code>. If we remove
 				the reference to the nginx reverse proxy, we can pass this entire attribute set as
 				inter-dependencies to configure the reverse proxy on machine <code>test1</code>.
