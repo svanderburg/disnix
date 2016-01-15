@@ -116,7 +116,7 @@ $ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
 <screen>
 $ disnix-snapshot
 </screen>
-				Captures the state of all annotated services in the configuration that has been previously deployed and transfers
+				Captures the state of all annotated services in the configuration that have been previously deployed and transfers
 				their snapshots to the coordinator machine's snapshot store.
 			</para>
 

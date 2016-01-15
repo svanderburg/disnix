@@ -46,7 +46,7 @@
 			unless a machine's properties are explicitly provided as dependencies of a service.
 			In many cases, this is a considered a good thing. 
 			One of the things we could do is changing the location of the StaffTracker web application front-end
-			service (the example captured in shown earlier), by changing the following line in the distribution model:
+			service (the example shown in <xref linkend="chap-basicusage" />), by changing the following line in the distribution model:
 <screen>
 StaffTracker = [ infrastructure.test2 ];
 </screen>
@@ -177,6 +177,8 @@ nginx = [ infrastructure.test1 infrastructure.test2 ];
 			<para>
 				A dumb way to specify target-specific services is defining for each service and target machine pair,
 				a service in the service model:
+				<example xml:id="ex-target-specific-services-static">
+					<title>A services model with statically composed target-specific services</title>
 <programlisting>
 {pkgs, system, distribution, invDistribution}:
 
@@ -205,7 +207,10 @@ rec {
   };
 }
 </programlisting>
+				</example>
 				And then distributing them to the appropriate target machines in the Disnix distribution model:
+				<example xml:id="ex-distribution-target-specific-static">
+					  <title>A distribution model with target-specific services mapped statically</title>
 <programlisting>
 {infrastructure}:
 
@@ -215,6 +220,7 @@ rec {
   nginx-wrapper-test2 = [ infrastructure.test2 ];
 }
 </programlisting>
+				</example>
 			</para>
 			
 			<para>
@@ -235,6 +241,8 @@ rec {
 			<para>
 				A better approach would be to generate target-specific services. An example of such an
 				approach is to specify the mappings of these services in the distribution model first:
+				<example xml:id="ex-distribution-target-specific-dynamic">
+					<title>A distribution model with target-specific services generated dynamically</title>
 <programlisting>
 {infrastructure}:
 
@@ -255,13 +263,17 @@ listToAttrs (map (targetName: {
   value = [ (getAttr targetName infrastructure) ];
 }) (attrNames infrastructure))
 </programlisting>
-				In the above distribution model, we statically map all the target-agnostic web application
+				</example>
+				In <xref linkend="ex-distribution-target-specific-dynamic" />, we statically map all the
+				target-agnostic web application
 				services, and for each target machine in the infrastructure model we generate a mapping
 				of the target-specific nginx service to its target machine.
 			</para>
 			<para>
 				We can generate the target-specific nginx service configurations in the services model as
 				follows:
+				<example xml:id="ex-target-specific-services-dynamic">
+					<title>A services model with dynamically generated target-specific services</title>
 <programlisting>
 {system, pkgs, distribution, invDistribution}:
 
@@ -299,6 +311,7 @@ builtins.listToAttrs (map (targetName:
   }
 ) (builtins.attrNames invDistribution))
 </programlisting>
+				</example>
 				To generate the nginx services, we iterate over a so-called inverse distribution model
 				mapping targets to services that has been computed from the distribution model
 				(mapping services to one or more machines in the network).
@@ -309,6 +322,8 @@ builtins.listToAttrs (map (targetName:
 				the properties of the services that have been deployed to it. The services attribute
 				refers to an attribute set in which each key is the name of the service and each
 				value the service configuration properties defined in the services model:
+				<example xml:id="ex-invDistribution">
+					<title>A partial inverse distribution model</title>
 <programlisting>
 {
   test1 = {
@@ -340,6 +355,7 @@ builtins.listToAttrs (map (targetName:
   };
 }
 </programlisting>
+				</example>
 				For example, if we refer to <varname>invDistribution.test1.services</varname> we get all the
 				configurations of the services that are deployed to machine <code>test1</code>. If we remove
 				the reference to the nginx reverse proxy, we can pass this entire attribute set as

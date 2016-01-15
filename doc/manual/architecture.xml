@@ -24,8 +24,8 @@
 		
 		<para>
 			<xref linkend="fig-communicationflow" /> illustrates the communication flow of the disnix deployment utilities, such as <command>disnix-env</command>.
-			When executing a deployment step on the coordinator machine,
-			a connection client process in consulted that connects to a protocol wrapper on the remote machine.
+			When executing a deployment step that needs to be executed remotely,
+			a connection client process is consulted that connects to a protocol wrapper on the remote machine.
 			By default, Disnix uses <command>disnix-ssh-client</command>
 			that connects through SSH. Other kinds of communication protocols are supported through extensions, such as SOAP/HTTP.
 			See <xref linkend="chap-advanced-options" /> for more information.
@@ -52,7 +52,7 @@
 		</figure>
 		
 		<para>
-			As shown in <xref linkend="fig-disnix-env" />, the <command>disnix-env</command>, the command-line tool that performs all activities to make a
+			As shown in <xref linkend="fig-disnix-env" />, <command>disnix-env</command>, the command-line tool that performs all activities to make a
 			service-oriented system available for use, is composed of several lower-level command-line tools each executing a
 			specific deployment activity.
 		</para>

@@ -29,7 +29,7 @@
 		
 		<para>
 			The example used in this section is a system which is used to manage staff of a
-			fictional university. This system stores various records about staff members, such as their
+			fictional university. This system stores various kinds of records about staff members, such as their
 			names, room numbers and IP addresses.
 		</para>
 		<para>
@@ -241,7 +241,7 @@ rec { <co xml:id='co-rec' />
 				<callout arearefs='co-rec'>
 					<para>
 						This expression is a mutually recursive attribute set in which attributes can refer to each other.
-						Without allowing recursion, we cannot pass attributes in this set as function parameters.
+						Without recursion, we cannot pass attributes in this set as function parameters.
 					</para>
 				</callout>
 				
@@ -359,12 +359,28 @@ stdenv.mkDerivation { <co xml:id='co-mkDerivation-service' />
 						This is the outer function header, which specifies all the local dependencies,
 						or <emphasis>intra-dependencies</emphasis>.
 						Intra-dependencies are all build-time and run-time dependencies
-						located on the same system. In order to build the <code>ZipcodeService</code>
-						a <varname>stdenv</varname> is needed which is the standard
-						environment containing basic UNIX utilities and build environment.
-						The <varname>apacheAnt</varname> argument refers to
-						Apache Ant that is required to compile the project. The <varname>axis2</varname> argument
-						refers to the Apache Axis2 library that is used to implement web services.
+						located on the same system:
+						<itemizedlist>
+							<listitem>
+								<simpara>
+									<varname>stdenv</varname> is provides an environment containing
+									basic UNIX utilities and build environment.
+								</simpara>
+							</listitem>
+							<listitem>
+								<simpara>
+									The <varname>apacheAnt</varname> argument refers to
+									Apache Ant that is required to compile the project.
+								</simpara>
+							</listitem>
+							<listitem>
+								<simpara>
+									The <varname>axis2</varname> argument
+									refers to the Apache Axis2 library that is used to
+									implement web services.
+								</simpara>
+							</listitem>
+						</itemizedlist>
 					</para>
 				</callout>
 				
@@ -642,7 +658,7 @@ rec { <co xml:id='co-rec2' />
 				<callout arearefs='co-importIntra'>
 					<para>
 						Here, the expression from <xref linkend="ex-intra-dependency-composition" /> is imported so that we can use the
-						intra-dependency compositions of all packages implementing a services.
+						intra-dependency compositions of all packages implementing the services.
 					</para>
 				</callout>
 				
@@ -894,7 +910,7 @@ rec { <co xml:id='co-rec2' />
 						deployed to machine <code>test2</code>.
 						The machine and its properties can be accessed in a service build
 						through the <varname>target</varname> property
-						on an inter-dependency argument in a Disnix expression, such as
+						of an inter-dependency argument in a Disnix expression, such as
 						<xref linkend="ex-zipcode-service" />.
 					</para>
 				</callout>
@@ -910,7 +926,7 @@ rec { <co xml:id='co-rec2' />
 					<para>
 						This attribute assignment states that the <code>StaffTracker</code> service should be
 						deployed to both <varname>test1</varname> and <varname>test2</varname>. Specifying multiple
-						machines is useful for deploying redundant services, such as a fallback or a load balancer.
+						machines is useful for deploying redundant services, that can be used as a fallback or reached by load balancer.
 						The list of machines can be accessed in a service build by referencing the <varname>targets</varname> property
 						of an inter-dependency argument in a Disnix expression, such as
 						<xref linkend="ex-zipcode-service" />.

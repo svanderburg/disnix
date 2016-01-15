@@ -14,7 +14,7 @@
 		<title>DisnixWebService</title> 
 		
 		<para>
-			In some cases other communication kinds of communication protocols are needed to
+			In some cases, other communication kinds of communication protocols are needed to
 			connect to remote machines besides SSH. The <code>DisnixWebService</code>
 			is a package that implements a SOAP interface for deployment operations and
 			a client interface named <command>disnix-soap-client</command> to connect to it.
@@ -28,10 +28,13 @@
 			Although Disnix manages the distributable components (services) of which a
 			distributed system is composed and the inter-dependencies, Disnix does
 			not manage the underlying system configurations of the actual machines to which services are deployed.
-			The DisnixOS package comnbines the Disnix tooling and NixOS tooling to manage distributed
-			system components <emphasis>and</emphasis> the underlying infrastructure based on
-			<link xlink:href="http://nixos.org/nixos">NixOS</link>
-			system configurations, and an extension to automatically
+			The DisnixOS package combines the Disnix tooling for service deployment and
+			<link xlink:href="http://nixos.org/nixos">NixOS</link> tooling to deploy
+			the underlying infrastructure.
+		</para>
+		<para>
+			Furthermore, it integrates with the NixOS test driver that
+			can be used to automatically
 			create virtual machine instances from the network configuration for testing.
 		</para>
 	</section>
@@ -46,7 +49,9 @@
 		<para>
 			Dynamic Disnix is an extended toolset providing a discovery service to capture machine configurations in a
 			network, as well as a distribution generation framework that can be used to
-			generate a distribution model from technical and non-functional attributes of services and machines.
+			generate a distribution model from technical and non-functional properties of services and machines.
+		</para>
+		<para>
 			These tools can be used to develop a framework enabling self adaptive (re)deployment of service-oriented
 			systems.
 		</para>
