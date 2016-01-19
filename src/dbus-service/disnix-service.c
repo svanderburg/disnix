@@ -83,6 +83,7 @@ static void on_name_acquired(GDBusConnection *connection, const gchar *name, gpo
 
 static void on_name_lost(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
+    g_printerr("Name lost: %s\n", name);
     exit(1);
 }
 
