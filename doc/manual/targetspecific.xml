@@ -90,6 +90,10 @@ StaffTracker = [ infrastructure.test1 ];
 			(e.g. <code>http://webapp1.local</code>, <code>http://webapp2.local</code> etc.).
 		</para>
 		<para>
+			This particular scenario is implemented as an example package, known as the
+			<link xlink:href="https://github.com/svanderburg/disnix-virtualhosts-example">Disnix virtual hosts example</link>.
+		</para>
+		<para>
 			We could model the nginx reverse proxy and each web application as (component-agnostic)
 			distributable services, and deploy them in a network with Disnix as follows:
 			<figure xml:id="fig-virtualhosts-simple">

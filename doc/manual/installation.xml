@@ -407,6 +407,21 @@ $ editrights -u sander -a SeServiceLogonRight
 		</section>
 		
 		<section>
+			<title>Setting the log directory permissions</title>
+			
+			<para>
+				The Disnix service writes log entries for each operation that it executes. If a single user Nix installation
+				has been performed, you probably want to grant the user that owns the installation the rights to own
+				the log directory as well:
+			</para>
+		  
+<screen>
+$ mkdir -p /var/log/disnix
+$ chown sander:users /var/log/disnix
+</screen>
+		</section>
+		
+		<section>
 			<title>Configuring the SSH protocol wrapper</title>
 			
 			<para>
