@@ -1,12 +1,19 @@
 { nixpkgs ? <nixpkgs>
 , systems ? [ "i686-linux" "x86_64-linux" ]
-, dysnomiaJobset ? import ../dysnomia/release.nix { inherit nixpkgs systems officialRelease; }
+, fetchDependenciesFromNixpkgs ? false
 , disnix ? { outPath = ./.; rev = 1234; }
 , officialRelease ? false
 }:
 
 let
   pkgs = import nixpkgs {};
+  
+  # Refer either to dysnomia in the parent folder, or to the one in Nixpkgs
+  dysnomiaJobset = if fetchDependenciesFromNixpkgs then {
+    build = pkgs.lib.genAttrs systems (system:
+      (import nixpkgs { inherit system; }).dysnomia
+    );
+  } else import ../dysnomia/release.nix { inherit nixpkgs systems officialRelease; };
   
   jobs = rec {
     tarball =
