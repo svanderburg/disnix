@@ -98,6 +98,9 @@ Options:
                                   not be updated
       --no-target-profiles        Specifies that the target profiles should not
                                   be updated
+      --no-migration              Do not migrate the state of services from one
+                                  machine to another, even if they have been
+                                  annotated as such
       --no-delete-state           Do not remove the state of deactivated services
       --show-trace                Shows a trace of the output
   -h, --help                      Shows the usage of this command
@@ -177,7 +180,7 @@ releaseLocks()
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:p:m:hv -l services:,infrastructure:,distribution:,rollback,switch-to-generation:,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-delete-state,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:p:m:hv -l services:,infrastructure:,distribution:,rollback,switch-to-generation:,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,no-delete-state,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -246,6 +249,9 @@ do
             ;;
         --no-target-profiles)
             noTargetProfilesArg="--no-target-profiles"
+            ;;
+        --no-migration)
+            noMigration=1
             ;;
         --no-delete-state)
             noDeleteState=1
@@ -360,10 +366,13 @@ echo "[coordinator]: Activating new configuration..."
 disnix-activate $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; displayFailure; exit 1)
 
 # Execute data migration
-echo "[coordinator]: Snapshotting state of annotated services..."
-disnix-snapshot $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; displayStateFailure; exit 1)
-echo "[coordinator]: Restoring state of annotated services..."
-disnix-restore $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; displayStateFailure; exit 1)
+if [ "$noMigration" != "1" ]
+then
+    echo "[coordinator]: Snapshotting state of annotated services..."
+    disnix-snapshot $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; displayStateFailure; exit 1)
+    echo "[coordinator]: Restoring state of annotated services..."
+    disnix-restore $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; displayStateFailure; exit 1)
+fi
 
 # Memorize the last profile generation symlink
 
