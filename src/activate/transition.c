@@ -307,8 +307,9 @@ static void mark_erroneous_mappings(GPtrArray *union_array, ActivationMappingSta
 static void rollback_to_old_mappings(GPtrArray *union_array, GPtrArray *old_activation_mappings, GPtrArray *target_array, const gboolean dry_run)
 {
     mark_erroneous_mappings(union_array, ACTIVATIONMAPPING_ACTIVATED); /* Mark erroneous mappings as activated */
-    if(!iterate_over_activation_or_deactivation_mappings(TRUE, old_activation_mappings, union_array, target_array, dry_run))
-        g_print("[coordinator]: Rollback failed!\n");
+    if(!iterate_over_activation_or_deactivation_mappings(TRUE, old_activation_mappings, union_array, target_array, dry_run)) {
+        g_print("[coordinator]: Rollback failed!\n\n");
+    }
 }
 
 static int deactivate_obsolete_mappings(GPtrArray *deactivation_array, GPtrArray *union_array, GPtrArray *target_array, GPtrArray *old_activation_mappings, const gboolean dry_run)
@@ -335,7 +336,11 @@ static void rollback_new_mappings(GPtrArray *activation_array, GPtrArray *union_
 {
     mark_erroneous_mappings(union_array, ACTIVATIONMAPPING_DEACTIVATED); /* Mark erroneous mappings as deactivated */
     if(!iterate_over_activation_or_deactivation_mappings(FALSE, activation_array, union_array, target_array, dry_run))
-        g_printerr("[coordinator]: Rollback failed!\n");
+    {
+        g_printerr("[coordinator]: Rollback failed!\n\n");
+        g_printerr("The system is now in an inconsistent state! Before redeploying it again, please\n");
+        g_printerr("investigate the errors and correct them!\n\n");
+    }
 }
 
 static int activate_new_mappings(GPtrArray *activation_array, GPtrArray *union_array, GPtrArray *target_array, GPtrArray *old_activation_mappings, const gboolean dry_run)
