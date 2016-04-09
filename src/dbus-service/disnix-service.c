@@ -84,6 +84,12 @@ static void on_name_acquired(GDBusConnection *connection, const gchar *name, gpo
 static void on_name_lost(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
     g_printerr("Name lost: %s\n", name);
+    
+    if (connection == NULL)
+        g_printerr("No D-Bus connection has been established!\n");
+    else
+        g_printerr("A D-Bus connection seems to have been established!\n");
+
     exit(1);
 }
 
