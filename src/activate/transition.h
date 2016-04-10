@@ -20,6 +20,7 @@
 #ifndef __DISNIX_TRANSITION_H
 #define __DISNIX_TRANSITION_H
 #include <glib.h>
+#define ROLLBACK_FAILED 2
 
 /**
  * Performs the transition phase, in which obsolete services are deactivated and
