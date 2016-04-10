@@ -311,12 +311,12 @@ static int rollback_to_old_mappings(GPtrArray *union_array, GPtrArray *old_activ
         return 1;
     else
     {
-        g_print("[coordinator]: Rollback failed!\n\n");
+        g_printerr("[coordinator]: Rollback failed!\n\n");
         return ROLLBACK_FAILED;
     }
 }
 
-static int deactivate_obsolete_mappings(GPtrArray *deactivation_array, GPtrArray *union_array, GPtrArray *target_array, GPtrArray *old_activation_mappings, const gboolean dry_run)
+static int deactivate_obsolete_mappings(GPtrArray *deactivation_array, GPtrArray *union_array, GPtrArray *target_array, GPtrArray *old_activation_mappings, const gboolean no_rollback, const gboolean dry_run)
 {
     g_print("[coordinator]: Executing deactivation of services:\n");
 
@@ -328,9 +328,18 @@ static int deactivate_obsolete_mappings(GPtrArray *deactivation_array, GPtrArray
             return 0;
         else
         {
-            /* If the deactivation fails, perform a rollback */
-            g_print("[coordinator]: Deactivation failed! Doing a rollback...\n");
-            return rollback_to_old_mappings(union_array, old_activation_mappings, target_array, dry_run);
+            if(no_rollback)
+            {
+                g_printerr("[coordinator]: Deactivation failed, but not performing a rollback because it has\n");
+                g_printerr("been disabled! Please manually diagnose the problems!\n");
+                return 1;
+            }
+            else
+            {
+                /* If the deactivation fails, perform a rollback */
+                g_printerr("[coordinator]: Deactivation failed! Doing a rollback...\n");
+                return rollback_to_old_mappings(union_array, old_activation_mappings, target_array, dry_run);
+            }
         }
     }
 }
@@ -347,7 +356,7 @@ static int rollback_new_mappings(GPtrArray *activation_array, GPtrArray *union_a
     }
 }
 
-static int activate_new_mappings(GPtrArray *activation_array, GPtrArray *union_array, GPtrArray *target_array, GPtrArray *old_activation_mappings, const gboolean dry_run)
+static int activate_new_mappings(GPtrArray *activation_array, GPtrArray *union_array, GPtrArray *target_array, GPtrArray *old_activation_mappings, const gboolean no_rollback, const gboolean dry_run)
 {
     g_print("[coordinator]: Executing activation of services:\n");
     
@@ -355,20 +364,29 @@ static int activate_new_mappings(GPtrArray *activation_array, GPtrArray *union_a
         return 0;
     else
     {
-        int status;
-        
-        /* If the activation fails, perform a rollback */
-        g_printerr("[coordinator]: Activation failed! Doing a rollback...\n");
-        
-        status = rollback_new_mappings(activation_array, union_array, target_array, dry_run);
-        
-        if(status != 0)
-            return status;
-        
-        if(old_activation_mappings != NULL)
-            return rollback_to_old_mappings(union_array, old_activation_mappings, target_array, dry_run);
+        if(no_rollback)
+        {
+            g_printerr("[coordinator]: Activation failed, but not doing a rollback as it has been\n");
+            g_printerr("disabled! Please manually diagnose the errors!\n");
+            return 1;
+        }
         else
-            return status;
+        {
+            int status;
+            
+            /* If the activation fails, perform a rollback */
+            g_printerr("[coordinator]: Activation failed! Doing a rollback...\n");
+            
+            status = rollback_new_mappings(activation_array, union_array, target_array, dry_run);
+            
+            if(status != 0)
+                return status;
+            
+            if(old_activation_mappings != NULL)
+                return rollback_to_old_mappings(union_array, old_activation_mappings, target_array, dry_run);
+            else
+                return status;
+        }
     }
 }
 
@@ -382,7 +400,7 @@ static void cleanup(const GPtrArray *old_activation_mappings, GPtrArray *deactiv
     }
 }
 
-int transition(GPtrArray *new_activation_mappings, GPtrArray *old_activation_mappings, GPtrArray *target_array, const gboolean dry_run)
+int transition(GPtrArray *new_activation_mappings, GPtrArray *old_activation_mappings, GPtrArray *target_array, const gboolean no_rollback, const gboolean dry_run)
 {
     GPtrArray *union_array;
     GPtrArray *deactivation_array;
@@ -419,14 +437,14 @@ int transition(GPtrArray *new_activation_mappings, GPtrArray *old_activation_map
     }
 
     /* Execute deactivation process */
-    if((status = deactivate_obsolete_mappings(deactivation_array, union_array, target_array, old_activation_mappings, dry_run)) != 0)
+    if((status = deactivate_obsolete_mappings(deactivation_array, union_array, target_array, old_activation_mappings, no_rollback, dry_run)) != 0)
     {
         cleanup(old_activation_mappings, deactivation_array, activation_array, union_array);
         return status;
     }
 
     /* Execute activation process (if deactivation process did not fail) */
-    if((status = activate_new_mappings(activation_array, union_array, target_array, old_activation_mappings, dry_run)) != 0)
+    if((status = activate_new_mappings(activation_array, union_array, target_array, old_activation_mappings, no_rollback, dry_run)) != 0)
     {
         cleanup(old_activation_mappings, deactivation_array, activation_array, union_array);
         return status;

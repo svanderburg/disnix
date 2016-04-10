@@ -52,7 +52,7 @@ static void cleanup(gchar *old_manifest_file, Manifest *manifest, GPtrArray *old
     delete_activation_array(old_activation_mappings);
 }
 
-int activate_system(const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade, const gboolean dry_run)
+int activate_system(const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade, const gboolean no_rollback, const gboolean dry_run)
 {
     Manifest *manifest = create_manifest(new_manifest);
     
@@ -94,7 +94,7 @@ int activate_system(const gchar *new_manifest, const gchar *old_manifest, const 
         /* Execute transition */
         g_print("[coordinator]: Executing the transition to the new deployment state\n");
         
-        if((status = transition(manifest->activation_array, old_activation_mappings, manifest->target_array, dry_run)) != 0)
+        if((status = transition(manifest->activation_array, old_activation_mappings, manifest->target_array, no_rollback, dry_run)) != 0)
         {
             cleanup(old_manifest_file, manifest, old_activation_mappings);
             g_printerr("[coordinator]: ERROR: Transition phase execution failed!\n");
@@ -106,7 +106,7 @@ int activate_system(const gchar *new_manifest, const gchar *old_manifest, const 
                 
                 g_printerr("When the problems have been solved, the rollback can be triggered again, by\n");
                 g_printerr("running:\n\n");
-                g_printerr("$ disnix-activate -p %s --coordinator-profile-path %s -o %s %s\n\n", profile, coordinator_profile_path, new_manifest, old_manifest_file);
+                g_printerr("$ disnix-activate --no-rollback -p %s --coordinator-profile-path %s -o %s %s\n\n", profile, coordinator_profile_path, new_manifest, old_manifest_file);
             }
             
             return status;

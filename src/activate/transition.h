@@ -29,9 +29,10 @@
  * @param new_activation_mappings Array containing the activation mappings of the new configuration
  * @param old_activation_mappings Array containing the activation mappings of the old configuration
  * @param target_array Array containing all the targets of the new configuration
+ * @param no_rollback Do not roll back if an error occurs in the transition phase
  * @param dry_run Only prints the steps to be executed but does not actually perform them
  * @return 0 if the phase succeeds, else a non-zero exit status
  */
-int transition(GPtrArray *new_activation_mappings, GPtrArray *old_activation_mappings, GPtrArray *target_array, const gboolean dry_run);
+int transition(GPtrArray *new_activation_mappings, GPtrArray *old_activation_mappings, GPtrArray *target_array, const gboolean no_rollback, const gboolean dry_run);
 
 #endif

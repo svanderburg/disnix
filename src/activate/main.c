@@ -62,6 +62,8 @@ static void print_usage(const char *command)
     printf("      --no-upgrade               By enabling this option Disnix does not store\n");
     printf("                                 the deployment state for further use, such as\n");
     printf("                                 upgrading\n");
+    printf("      --no-rollback              Do not roll back if an error occurs while\n");
+    printf("                                 deactivating and activating services\n");
     printf("      --dry-run                  Prints the activation and deactivation steps\n");
     printf("                                 that will be performed but does not actually\n");
     printf("                                 execute them\n");
@@ -84,6 +86,7 @@ int main(int argc, char *argv[])
         {"coordinator-profile-path", required_argument, 0, 'P'},
         {"profile", required_argument, 0, 'p'},
         {"no-upgrade", no_argument, 0, 'u'},
+        {"no-rollback", no_argument, 0, 'r'},
         {"dry-run", no_argument, 0, 'd'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
@@ -93,6 +96,7 @@ int main(int argc, char *argv[])
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
     int no_upgrade = FALSE;
+    int no_rollback = FALSE;
     int dry_run = FALSE;
     
     /* Parse command-line options */
@@ -108,6 +112,9 @@ int main(int argc, char *argv[])
                 break;
             case 'P':
                 coordinator_profile_path = optarg;
+                break;
+            case 'r':
+                no_rollback = TRUE;
                 break;
             case 'u':
                 no_upgrade = TRUE;
@@ -135,5 +142,5 @@ int main(int argc, char *argv[])
         return 1;
     }
     else
-        return activate_system(argv[optind], old_manifest, coordinator_profile_path, profile, no_upgrade, dry_run); /* Execute activation operation */
+        return activate_system(argv[optind], old_manifest, coordinator_profile_path, profile, no_upgrade, no_rollback, dry_run); /* Execute activation operation */
 }
