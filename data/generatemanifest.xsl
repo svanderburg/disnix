@@ -43,14 +43,40 @@
       <targets>
 	<xsl:for-each select="attr[@name='targets']/list/attrs">
 	  <target>
-	    <xsl:for-each select="attr">
-	      <xsl:element name="{@name}">
-		<xsl:value-of select="*/@value" />
-		  <xsl:for-each select="list/*">
-		  <xsl:value-of select="@value" /><xsl:text>&#x20;</xsl:text>
+	    <xsl:for-each select="attr[@name='properties']/attrs">
+	      <properties>
+		<xsl:for-each select="attr">
+		  <xsl:element name="{@name}">
+		    <xsl:value-of select="*/@value" />
+		    <xsl:for-each select="list/*">
+		      <xsl:value-of select="@value" /><xsl:text>&#x20;</xsl:text>
+		    </xsl:for-each>
+		  </xsl:element>
 		</xsl:for-each>
-	      </xsl:element>
+	      </properties>
 	    </xsl:for-each>
+	    
+	    <xsl:for-each select="attr[@name='containers']/attrs">
+	      <containers>
+		<xsl:for-each select="attr">
+		  <xsl:element name="{@name}">
+		    <xsl:for-each select="attrs/attr">
+		      <xsl:element name="{@name}">
+			<xsl:value-of select="*/@value" />
+			<xsl:for-each select="list/*">
+			  <xsl:value-of select="@value" /><xsl:text>&#x20;</xsl:text>
+			</xsl:for-each>
+		      </xsl:element>
+		    </xsl:for-each>
+		  </xsl:element>
+		</xsl:for-each>
+	      </containers>
+	    </xsl:for-each>
+
+	    <system><xsl:value-of select="attr[@name='system']/string/@value" /></system>
+	    <numOfCores><xsl:value-of select="attr[@name='numOfCores']/*/@value" /></numOfCores>
+	    <clientInterface><xsl:value-of select="attr[@name='clientInterface']/string/@value" /></clientInterface>
+	    <targetProperty><xsl:value-of select="attr[@name='targetProperty']/string/@value" /></targetProperty>
 	  </target>
 	</xsl:for-each>
       </targets>

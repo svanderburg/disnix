@@ -91,8 +91,8 @@ rec {
    * A string containing the key value
    */
   getTargetProperty = targetProperty: target:
-    if target ? targetProperty then getAttr (target.targetProperty) target
-    else getAttr targetProperty target
+    if target ? properties ? targetProperty then getAttr (target.targetProperty) target.properties
+    else getAttr targetProperty target.properties
   ;
   
   /*
@@ -363,6 +363,7 @@ rec {
         targetProperty = if target ? targetProperty then target.targetProperty else targetProperty;
         clientInterface = if target ? clientInterface then target.clientInterface else clientInterface;
         numOfCores = if target ? numOfCores then target.numOfCores else 1;
+        system = if target ? system then target.system else builtins.currentSystem;
       }
     ) (attrNames infrastructure)
   ;
