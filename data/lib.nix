@@ -72,8 +72,7 @@ rec {
                   ) targets
                 else if isAttrs targets then
                   map (mapping:
-                    {
-                      inherit (mapping.target) properties;
+                    { inherit (mapping.target) properties;
                       container = if mapping.target ? container
                         then mapping.target.container
                         else getAttr dependency.type mapping.target.containers;
@@ -163,6 +162,7 @@ rec {
                       else unsafeDiscardOutputDependency ((pkg (service.dependsOn)).drvPath)
                     ;
                   target = getTargetProperty targetProperty target;
+                  container = service.type;
                 }
               ) targets
             else if isAttrs targets then
@@ -180,6 +180,7 @@ rec {
                       else unsafeDiscardOutputDependency ((pkg (service.dependsOn)).drvPath)
                     ;
                   target = getTargetProperty targetProperty mapping.target;
+                  container = if mapping ? container then mapping.container else service.type;
                 }
               ) targets.targets
             else throw "A service in a distribution model should either refer to a list or an attribute set!";
@@ -227,7 +228,7 @@ rec {
       service = getAttr serviceName services;
       dependencyMappingItems = map (distributionItem:
         { _key = generateServiceHashKey services service distributionItem;
-          inherit (distributionItem) target;
+          inherit (distributionItem) target container;
         }
       ) (service.distribution);
     in
@@ -252,7 +253,7 @@ rec {
       service = getAttr (head serviceNames) services;
       dependsOn = generateDependencyMapping (attrNames (service.dependsOn)) (service.dependsOn) services;
       mappingItem = map (distributionItem:
-        { inherit (distributionItem) service target;
+        { inherit (distributionItem) service target container;
           inherit (service) name type;
           inherit dependsOn;
           _key = generateServiceHashKey services service distributionItem;
@@ -284,8 +285,8 @@ rec {
       
       mappingItem = map (distributionItem:
         { component = builtins.substring 33 (builtins.stringLength (distributionItem.service)) (builtins.baseNameOf (distributionItem.service));
-          container = service.type;
-          inherit (distributionItem) target service;
+          inherit (service) type;
+          inherit (distributionItem) target container service;
         }
       ) distribution;
     in
