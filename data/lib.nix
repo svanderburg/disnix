@@ -14,7 +14,7 @@ let
   
 in
 rec {
-  inherit (builtins) attrNames getAttr listToAttrs head tail unsafeDiscardOutputDependency hashString filter elem;
+  inherit (builtins) attrNames getAttr listToAttrs head tail unsafeDiscardOutputDependency hashString filter elem isList isAttrs;
 
   /* 
    * Determines the right pkgs collection from the system identifier.
@@ -63,11 +63,28 @@ rec {
                 dependencyName = (getAttr argName (service.dependsOn)).name;
                 dependency = getAttr dependencyName services;
                 targets = getAttr dependencyName distribution;
+                
+                targetParameters = if isList targets then
+                  map (target:
+                    { inherit (target) properties;
+                      container = getAttr dependency.type target.containers;
+                    }
+                  ) targets
+                else if isAttrs targets then
+                  map (mapping:
+                    {
+                      inherit (mapping.target) properties;
+                      container = if mapping.target ? container
+                        then mapping.target.container
+                        else getAttr dependency.type mapping.target.containers;
+                    }
+                  ) targets.targets
+                else throw "One of the targets in the distribution model is neither a list nor an attribute set!";
               in
               { name = argName;
                 value = dependency // {
-                  inherit targets;
-                  target = head targets;
+                  targets = targetParameters;
+                  target = head targetParameters;
                 };
               }
             ) (attrNames (service.dependsOn)))
@@ -130,22 +147,42 @@ rec {
       in
       { name = serviceName;
         value = service // {
-          distribution = map (target:
-            let
-              system = if target ? system then target.system else builtins.currentSystem;
-              pkg = (getAttr serviceName (servicesFun { inherit distribution invDistribution; inherit system; pkgs = selectPkgs system; })).pkg;
-            in
-            { service = 
-                if serviceProperty == "outPath" then
-                  if service.dependsOn == {} then pkg.outPath
-                  else (pkg (service.dependsOn)).outPath
-                else
-                  if service.dependsOn == {} then unsafeDiscardOutputDependency (pkg.drvPath)
-                  else unsafeDiscardOutputDependency ((pkg (service.dependsOn)).drvPath)
-                ;
-              target = getTargetProperty targetProperty target;
-            }
-          ) targets;
+          distribution =
+            if isList targets then
+              map (target:
+                let
+                  system = if target ? system then target.system else builtins.currentSystem;
+                  pkg = (getAttr serviceName (servicesFun { inherit distribution invDistribution; inherit system; pkgs = selectPkgs system; })).pkg;
+                in
+                { service =
+                    if serviceProperty == "outPath" then
+                      if service.dependsOn == {} then pkg.outPath
+                      else (pkg (service.dependsOn)).outPath
+                    else
+                      if service.dependsOn == {} then unsafeDiscardOutputDependency (pkg.drvPath)
+                      else unsafeDiscardOutputDependency ((pkg (service.dependsOn)).drvPath)
+                    ;
+                  target = getTargetProperty targetProperty target;
+                }
+              ) targets
+            else if isAttrs targets then
+              map (mapping:
+                let
+                  system = if mapping.target ? system then mapping.target.system else builtins.currentSystem;
+                  pkg = (getAttr serviceName (servicesFun { inherit distribution invDistribution; inherit system; pkgs = selectPkgs system; })).pkg;
+                in
+                { service =
+                    if serviceProperty == "outPath" then
+                      if service.dependsOn == {} then pkg.outPath
+                      else (pkg (service.dependsOn)).outPath
+                    else
+                      if service.dependsOn == {} then unsafeDiscardOutputDependency (pkg.drvPath)
+                      else unsafeDiscardOutputDependency ((pkg (service.dependsOn)).drvPath)
+                    ;
+                  target = getTargetProperty targetProperty mapping.target;
+                }
+              ) targets.targets
+            else throw "A service in a distribution model should either refer to a list or an attribute set!";
         };
       } 
     ) (attrNames distribution))
