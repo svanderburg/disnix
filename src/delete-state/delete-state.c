@@ -83,14 +83,13 @@ static int delete_obsolete_state(GPtrArray *snapshots_array, GPtrArray *target_a
             
             if(!mapping->transferred && request_available_target_core(target)) /* Check if machine has any cores available, if not wait and try again later */
             {
-                gchar *interface = find_target_client_interface(target);
-                gchar **arguments = generate_activation_arguments(target); /* Generate an array of key=value pairs from infrastructure properties */
+                gchar **arguments = generate_activation_arguments(target, mapping->container); /* Generate an array of key=value pairs from container properties */
                 unsigned int arguments_size = g_strv_length(arguments); /* Determine length of the activation arguments array */
                 pid_t pid;
                 gint *pidKey;
                 
                 g_print("[target: %s]: Deleting obsolete state of service: %s\n", mapping->target, mapping->component);
-                pid = exec_delete_state(interface, mapping->target, mapping->container, arguments, arguments_size, mapping->service);
+                pid = exec_delete_state(target->clientInterface, mapping->target, mapping->container, arguments, arguments_size, mapping->service);
                 
                 /* Add pid and mapping to the hash table */
                 pidKey = g_malloc(sizeof(gint));

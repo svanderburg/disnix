@@ -33,7 +33,14 @@ static gint compare_activation_mapping_keys(const ActivationMappingKey **l, cons
     gint status = g_strcmp0(left->key, right->key);
     
     if(status == 0)
-        return g_strcmp0(left->target, right->target); /* If services are equal then compare the targets */
+    {
+        status = g_strcmp0(left->target, right->target); /* If services are equal then compare the targets */
+        
+        if(status == 0)
+            return g_strcmp0(left->container, right->container); /* If targets are equal then compare the containers */
+        else
+            return status;
+    }
     else
         return status;
 }
@@ -89,6 +96,7 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 	    xmlNodePtr mapping_children = nodeset->nodeTab[i]->children;
 	    gchar *key = NULL;
 	    gchar *target = NULL;
+	    gchar *container = NULL;
 	    gchar *service = NULL;
 	    gchar *name = NULL;
 	    gchar *type = NULL;
@@ -110,6 +118,8 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 		    type = g_strdup((gchar*)mapping_children->children->content);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "target") == 0)
 		    target = g_strdup((gchar*)mapping_children->children->content);
+		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "container") == 0)
+		    container = g_strdup((gchar*)mapping_children->children->content);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "dependsOn") == 0)
 		{
 		    xmlNodePtr depends_on_children = mapping_children->children;
@@ -121,6 +131,7 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 			xmlNodePtr dependency_children = depends_on_children->children;
 			gchar *key = NULL;
 			gchar *target = NULL;
+			gchar *container = NULL;
 			ActivationMappingKey *dependency = (ActivationMappingKey*)g_malloc(sizeof(ActivationMappingKey));
 			
 			if(xmlStrcmp(depends_on_children->name, (xmlChar*) "dependency") == 0) /* Only iterate over dependency nodes */
@@ -132,12 +143,15 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 				    key = g_strdup((gchar*)dependency_children->children->content);
 				else if(xmlStrcmp(dependency_children->name, (xmlChar*) "target") == 0)
 				    target = g_strdup((gchar*)dependency_children->children->content);
-				    
+				else if(xmlStrcmp(dependency_children->name, (xmlChar*) "container") == 0)
+				    container = g_strdup((gchar*)dependency_children->children->content);
+				
 				dependency_children = dependency_children->next;
 			    }
 			
 			    dependency->key = key;
 			    dependency->target = target;
+			    dependency->container = container;
 			    g_ptr_array_add(depends_on, dependency);
 			}
 			
@@ -153,6 +167,7 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 	    
 	    mapping->key = key;
 	    mapping->target = target;
+	    mapping->container = container;
 	    mapping->service = service;
 	    mapping->name = name;
 	    mapping->type = type;
@@ -189,6 +204,7 @@ void delete_activation_array(GPtrArray *activation_array)
             
             g_free(mapping->key);
             g_free(mapping->target);
+            g_free(mapping->container);
             g_free(mapping->service);
             g_free(mapping->name);
             g_free(mapping->type);
@@ -200,6 +216,7 @@ void delete_activation_array(GPtrArray *activation_array)
                     ActivationMappingKey *dependency = g_ptr_array_index(mapping->depends_on, j);
                     g_free(dependency->key);
                     g_free(dependency->target);
+                    g_free(dependency->container);
                     g_free(dependency);
                 }
             }
@@ -340,6 +357,7 @@ void print_activation_array(const GPtrArray *activation_array)
 	
 	g_print("key: %s\n", mapping->key);
 	g_print("target: %s\n", mapping->target);
+	g_print("container: %s\n", mapping->container);
 	g_print("service: %s\n", mapping->service);
 	g_print("type: %s\n", mapping->type);
 	g_print("dependsOn:\n");
@@ -350,6 +368,7 @@ void print_activation_array(const GPtrArray *activation_array)
 	    
 	    g_print("  key: %s\n", dependency->key);
 	    g_print("  target: %s\n", dependency->target);
+	    g_print("  container: %s\n", dependency->container);
 	}
 	
 	g_print("\n");

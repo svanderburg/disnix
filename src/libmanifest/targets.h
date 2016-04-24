@@ -35,12 +35,37 @@ typedef struct
 TargetProperty;
 
 /**
+ * @brief Contains properties of a container belonging to a machine.
+ */
+typedef struct
+{
+    /** Name of the container */
+    gchar *name;
+    
+    /** Contains the properties of the container */
+    GPtrArray *properties;
+}
+Container;
+
+/**
  * @brief Contains properties of a target machine.
  */
 typedef struct
 {
     /* Contains arbitrary target machine properties */
     GPtrArray *properties;
+    
+    /* Contains container-specific configuration properties */
+    GPtrArray *containers;
+    
+    /* Contains the system architecture identifier of the system */
+    gchar *system;
+    
+    /* Refers to the executable that must be executed to connect to the target system */
+    gchar *clientInterface;
+    
+    /* Refer to the name of the property in properties that must be used to connect to the target system */
+    gchar *targetProperty;
     
     /* Contains the amount CPU cores this machine has */
     int numOfCores;
@@ -100,24 +125,16 @@ gchar *find_target_property(const Target *target, const gchar *name);
 gchar *find_target_key(const Target *target);
 
 /**
- * Retrieves the client interface property that is an executable used to connect
- * to a target machine.
- *
- * @param target A target struct containing properties of a target machine
- * @return The path to the client executable, or NULL if none has been defined
- */
-gchar *find_target_client_interface(const Target *target);
-
-/**
  * Generates a string vector with: 'name=value' pairs from the
  * target properties, which are passed to the activation module as
  * environment variables. The resulting string must be eventually be removed
  * from memory with g_strfreev()
  *
  * @param target Struct with target properties
+ * @param container Name of the container to deploy to
  * @return String with environment variable settings
  */
-gchar **generate_activation_arguments(const Target *target);
+gchar **generate_activation_arguments(const Target *target, const gchar *container_name);
 
 /**
  * Requests a CPU core for deployment utilisation.

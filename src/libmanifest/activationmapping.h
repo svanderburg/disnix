@@ -30,6 +30,8 @@ typedef struct
     gchar *key;
     /** Target property referring to the target machine to which the service is deployed */
     gchar *target;
+    /** Name of the container to which the service is deployed */
+    gchar *container;
 }
 ActivationMappingKey;
 
@@ -47,7 +49,7 @@ ActivationMappingStatus;
 
 /**
  * @brief Contains all properties to activate a specific service on a specific machine.
- * This struct maps (key,target) -> (service,name,type,depends_on,activated)
+ * This struct maps (key,target,container) -> (service,name,type,depends_on,activated)
  */
 typedef struct
 {
@@ -55,6 +57,8 @@ typedef struct
     gchar *key;
     /** Target property referring to the target machine to which the service is deployed */
     gchar *target;
+    /** Name of the container to which the service is deployed */
+    gchar *container;
     /** Nix store path to the service */
     gchar *service;
     /* Name of the service */

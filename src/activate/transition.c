@@ -38,7 +38,7 @@ static void print_activation_step(const int activate, const ActivationMapping *m
     else
         g_print("Deactivating");
     
-    g_print(" service with key: %s and package: %s of type: %s, arguments: ", mapping->key, mapping->service, mapping->type);
+    g_print(" service with key: %s and package: %s of type: %s in container: %s, arguments: ", mapping->key, mapping->service, mapping->type, mapping->container);
     
     for(i = 0; i < arguments_size; i++)
         g_print("%s ", arguments[i]);
@@ -85,9 +85,8 @@ static ActivationStatus activate(GPtrArray *union_array, const ActivationMapping
         
                 if(request_available_target_core(target)) /* Check if machine has any cores available, if not wait and try again later */
                 {
-                    gchar **arguments = generate_activation_arguments(target); /* Generate an array of key=value pairs from infrastructure properties */
+                    gchar **arguments = generate_activation_arguments(target, actual_mapping->container); /* Generate an array of key=value pairs from container properties */
                     unsigned int arguments_size = g_strv_length(arguments); /* Determine length of the activation arguments array */
-                    gchar *interface = find_target_client_interface(target);
                     pid_t pid;
                     
                     print_activation_step(TRUE, actual_mapping, arguments, arguments_size); /* Print debug message */
@@ -95,7 +94,7 @@ static ActivationStatus activate(GPtrArray *union_array, const ActivationMapping
                     if(dry_run)
                         pid = exec_true(); /* Execute dummy process */
                     else
-                        pid = exec_activate(interface, actual_mapping->target, actual_mapping->type, arguments, arguments_size, actual_mapping->service); /* Execute the activation operation asynchronously */
+                        pid = exec_activate(target->clientInterface, actual_mapping->target, actual_mapping->type, arguments, arguments_size, actual_mapping->service); /* Execute the activation operation asynchronously */
                     
                     /* Cleanup */
                     g_strfreev(arguments);
@@ -167,9 +166,8 @@ static int deactivate(GPtrArray *union_array, const ActivationMappingKey *key, G
                 }
                 else if(request_available_target_core(target))
                 {
-                    gchar **arguments = generate_activation_arguments(target); /* Generate an array of key=value pairs from infrastructure properties */
+                    gchar **arguments = generate_activation_arguments(target, actual_mapping->container); /* Generate an array of key=value pairs from container properties */
                     unsigned int arguments_size = g_strv_length(arguments); /* Determine length of the activation arguments array */
-                    gchar *interface = find_target_client_interface(target);
                     pid_t pid;
                     
                     print_activation_step(FALSE, actual_mapping, arguments, arguments_size); /* Print debug message */
@@ -177,7 +175,7 @@ static int deactivate(GPtrArray *union_array, const ActivationMappingKey *key, G
                     if(dry_run)
                         pid = exec_true(); /* Execute dummy process */
                     else
-                        pid = exec_deactivate(interface, actual_mapping->target, actual_mapping->type, arguments, arguments_size, actual_mapping->service); /* Execute the deactivation operation asynchronously */
+                        pid = exec_deactivate(target->clientInterface, actual_mapping->target, actual_mapping->type, arguments, arguments_size, actual_mapping->service); /* Execute the deactivation operation asynchronously */
                     
                     /* Cleanup */
                     g_free(arguments);

@@ -55,6 +55,9 @@ typedef struct
     /** Full Nix store path to the corresponding service */
     gchar *service;
     
+    /** Activation type */
+    gchar *type;
+    
     /** Indicates whether the snapshot has been transferred or not */
     gboolean transferred;
 }

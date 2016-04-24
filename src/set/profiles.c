@@ -43,11 +43,10 @@ static int set_target_profiles(const GPtrArray *distribution_array, const GPtrAr
         pid_t pid;
         DistributionItem *item = g_ptr_array_index(distribution_array, i);
         Target *target = find_target(target_array, item->target);
-        gchar *interface = find_target_client_interface(target);
         
         g_print("[target: %s]: Setting Disnix profile: %s\n", item->target, item->profile);
         
-        pid = exec_set(interface, item->target, profile, item->profile);
+        pid = exec_set(target->clientInterface, item->target, profile, item->profile);
         
         if(pid == -1)
         {

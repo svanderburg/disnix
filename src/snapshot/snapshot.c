@@ -83,14 +83,13 @@ static int snapshot_services(GPtrArray *snapshots_array, GPtrArray *target_array
             
             if(!mapping->transferred && request_available_target_core(target)) /* Check if machine has any cores available, if not wait and try again later */
             {
-                gchar *interface = find_target_client_interface(target);
-                gchar **arguments = generate_activation_arguments(target); /* Generate an array of key=value pairs from infrastructure properties */
+                gchar **arguments = generate_activation_arguments(target, mapping->container); /* Generate an array of key=value pairs from container properties */
                 unsigned int arguments_size = g_strv_length(arguments); /* Determine length of the activation arguments array */
                 pid_t pid;
                 gint *pidKey;
                 
                 g_print("[target: %s]: Snapshotting state of service: %s\n", mapping->target, mapping->component);
-                pid = exec_snapshot(interface, mapping->target, mapping->container, arguments, arguments_size, mapping->service);
+                pid = exec_snapshot(target->clientInterface, mapping->target, mapping->container, arguments, arguments_size, mapping->service);
                 
                 /* Add pid and mapping to the hash table */
                 pidKey = g_malloc(sizeof(gint));
@@ -129,7 +128,6 @@ static int wait_to_complete_retrieve(void)
 static int retrieve_snapshots_per_target(GPtrArray *snapshots_array, Target *target, const int all)
 {
     gchar *target_key = find_target_key(target);
-    gchar *interface = find_target_client_interface(target);
     GPtrArray *snapshots_per_target_array = find_snapshot_mappings_per_target(snapshots_array, target_key);
     unsigned int i;
     int status = 0;
@@ -139,7 +137,7 @@ static int retrieve_snapshots_per_target(GPtrArray *snapshots_array, Target *tar
         SnapshotMapping *mapping = g_ptr_array_index(snapshots_per_target_array, i);
         
         g_print("[target: %s]: Retrieving snapshots of component: %s deployed to container: %s\n", mapping->target, mapping->component, mapping->container);
-        status = wait_to_finish(exec_copy_snapshots_from(interface, mapping->target, mapping->container, mapping->component, all));
+        status = wait_to_finish(exec_copy_snapshots_from(target->clientInterface, mapping->target, mapping->container, mapping->component, all));
         
         if(status != 0)
             break;

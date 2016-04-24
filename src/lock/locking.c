@@ -53,10 +53,9 @@ static int unlock(const GPtrArray *distribution_array, const GPtrArray *target_a
     {
         DistributionItem *item = g_ptr_array_index(distribution_array, i);
         Target *target = find_target(target_array, item->target);
-        gchar *interface = find_target_client_interface(target);
         
         g_print("[target: %s]: Releasing a lock!\n", item->target);
-        status = exec_unlock(interface, item->target, profile);
+        status = exec_unlock(target->clientInterface, item->target, profile);
         
         if(status == -1)
         {
@@ -97,10 +96,9 @@ static int lock(const GPtrArray *distribution_array, const GPtrArray *target_arr
     {
         DistributionItem *item = g_ptr_array_index(distribution_array, i);
         Target *target = find_target(target_array, item->target);
-        gchar *interface = find_target_client_interface(target);
         
         g_print("[target: %s]: Acquiring a lock\n", item->target);
-        status = exec_lock(interface, item->target, profile);
+        status = exec_lock(target->clientInterface, item->target, profile);
         
         /* If a process fails, change the exit status */
         if(status == -1)
