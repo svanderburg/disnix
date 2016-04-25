@@ -38,8 +38,8 @@ int query_installed(gchar *interface, const gchar *target_property, gchar *infra
         /* For each target execute the query operation and display the results */
         for(i = 0; i < target_array->len; i++)
         {
-            GPtrArray *target = g_ptr_array_index(target_array, i);
-            gchar *client_interface = find_client_interface(target);
+            Target *target = g_ptr_array_index(target_array, i);
+            gchar *client_interface = target->clientInterface;
             gchar *target_key = find_target_key(target, target_property);
             int status;
             

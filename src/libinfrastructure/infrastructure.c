@@ -37,7 +37,7 @@ static gint compare_target_property(const TargetProperty **l, const TargetProper
     return g_strcmp0(left->name, right->name);
 }
 
-static gchar *find_target_property(const GPtrArray *target, const gchar *name)
+static gchar *find_target_property(const Target *target, const gchar *name)
 {
     TargetProperty key;
     const TargetProperty *key_ptr = &key;
@@ -45,7 +45,7 @@ static gchar *find_target_property(const GPtrArray *target, const gchar *name)
     
     key.name = (gchar*)name;
     
-    ret = bsearch(&key_ptr, target->pdata, target->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_target_property);
+    ret = bsearch(&key_ptr, target->properties->pdata, target->properties->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_target_property);
     
     if(ret == NULL)
         return NULL;
@@ -53,15 +53,23 @@ static gchar *find_target_property(const GPtrArray *target, const gchar *name)
         return (*ret)->value;
 }
 
-static gint compare_target(const GPtrArray **l, const GPtrArray **r)
+static gint compare_target(const Target **l, const Target **r)
 {
-    const GPtrArray *left = *l;
-    const GPtrArray *right = *r;
+    const Target *left = *l;
+    const Target *right = *r;
     
     gchar *left_target_property = find_target_key(left, NULL);
     gchar *right_target_property = find_target_key(right, NULL);
     
     return g_strcmp0(left_target_property, right_target_property);
+}
+
+static gint compare_container(const Container **l, const Container **r)
+{
+    const Container *left = *l;
+    const Container *right = *r;
+    
+    return g_strcmp0(left->name, right->name);
 }
 
 static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
@@ -177,7 +185,7 @@ GPtrArray *create_target_array(char *infrastructure_expr)
     gchar *infrastructureXML;
     xmlDocPtr doc;
     xmlXPathObjectPtr result;
-    GPtrArray *target_array = NULL;
+    GPtrArray *targets_array = NULL;
     
     /* Open the XML output of nix-instantiate */
     infrastructureXML = create_infrastructure_xml(infrastructure_expr);
@@ -206,41 +214,139 @@ GPtrArray *create_target_array(char *infrastructure_expr)
     if(result)
     {
         unsigned int i;
+        
         xmlNodeSetPtr nodeset = result->nodesetval;
-	target_array = g_ptr_array_new();
+        
+        /* Create a targets array */
+	targets_array = g_ptr_array_new();
 	
-	/* Iterate over all target elements */
-        for(i = 0; i < nodeset->nodeNr; i++)
-        {
+	/* Iterate over all the target elements */
+	for(i = 0; i < nodeset->nodeNr; i++)
+	{
 	    xmlNodePtr targets_children = nodeset->nodeTab[i]->children;
-	    GPtrArray *target_properties = g_ptr_array_new();
-	    
+	    Target *target = (Target*)g_malloc(sizeof(Target));
+	
+	    gchar *system = NULL;
+	    gchar *clientInterface = NULL;
+	    gchar *targetProperty = NULL;
+	    int numOfCores = 0;
+	    int availableCores = 0;
+	    GPtrArray *properties = NULL;
+	    GPtrArray *containers = NULL;
+	
 	    while(targets_children != NULL)
 	    {
-	        TargetProperty *targetProperty = (TargetProperty*)g_malloc(sizeof(TargetProperty));
-	        targetProperty->name = g_strdup((gchar*)targets_children->name);
-	        
-	        if(targets_children->children == NULL)
-	            targetProperty->value = NULL;
-	        else
-	            targetProperty->value = g_strdup((gchar*)targets_children->children->content);
-	        
-	        /* Add the property to the target properties array */
-	        g_ptr_array_add(target_properties, targetProperty);
+	        if(xmlStrcmp(targets_children->name, (xmlChar*) "system") == 0)
+	            system = g_strdup((gchar*)targets_children->children->content);
+	        else if(xmlStrcmp(targets_children->name, (xmlChar*) "clientInterface") == 0)
+	        {
+	            if(targets_children->children != NULL)
+	                clientInterface = g_strdup((gchar*)targets_children->children->content);
+	        }
+	        else if(xmlStrcmp(targets_children->name, (xmlChar*) "targetProperty") == 0)
+	        {
+	            if(targets_children->children != NULL)
+	                targetProperty = g_strdup((gchar*)targets_children->children->content);
+	        }
+	        else if(xmlStrcmp(targets_children->name, (xmlChar*) "numOfCores") == 0)
+	        {
+	            if(targets_children->children != NULL)
+	            {
+	                numOfCores = atoi((char*)targets_children->children->content);
+	                availableCores = numOfCores;
+	            }
+	        }
+	        else if(xmlStrcmp(targets_children->name, (xmlChar*) "properties") == 0)
+	        {
+	            xmlNodePtr properties_children = targets_children->children;
+	            properties = g_ptr_array_new();
+	            
+	            /* Iterate over all properties */
+	            while(properties_children != NULL)
+	            {
+	                TargetProperty *targetProperty = (TargetProperty*)g_malloc(sizeof(TargetProperty));
+	                targetProperty->name = g_strdup((gchar*)properties_children->name);
+	                
+	                if(properties_children->children == NULL)
+	                    targetProperty->value = NULL;
+	                else
+	                    targetProperty->value = g_strdup((gchar*)properties_children->children->content);
+	                
+	                g_ptr_array_add(properties, targetProperty);
+	                
+	                properties_children = properties_children->next;
+	            }
+	            
+	            /* Sort the target properties */
+	            g_ptr_array_sort(properties, (GCompareFunc)compare_target_property);
+	        }
+	        else if(xmlStrcmp(targets_children->name, (xmlChar*) "containers") == 0)
+	        {
+	            xmlNodePtr container_children = targets_children->children;
+	            containers = g_ptr_array_new();
+	            
+	            /* Iterate over all containers */
+	            while(container_children != NULL)
+	            {
+	                Container *container = (Container*)g_malloc(sizeof(Container));
+	                container->name = g_strdup((gchar*)container_children->name);
+	                
+	                if(container_children->children == NULL)
+	                    container->properties = NULL;
+	                else
+	                {
+	                    xmlNodePtr properties_children = container_children->children;
+	                    GPtrArray *properties = g_ptr_array_new();
+	                    
+	                    /* Iterate over all properties */
+	                    while(properties_children != NULL)
+	                    {
+	                        TargetProperty *targetProperty = (TargetProperty*)g_malloc(sizeof(TargetProperty));
+	                        targetProperty->name = g_strdup((gchar*)properties_children->name);
+	                        
+	                        if(properties_children->children == NULL)
+	                            targetProperty->value = NULL;
+	                        else
+	                            targetProperty->value = g_strdup((gchar*)properties_children->children->content);
+	                
+	                        g_ptr_array_add(properties, targetProperty);
+	                
+	                        properties_children = properties_children->next;
+	                    }
+	                    
+	                    /* Sort the target properties */
+	                    g_ptr_array_sort(properties, (GCompareFunc)compare_target_property);
+	                    
+	                    container->properties = properties;
+	                }
+	                
+	                g_ptr_array_add(containers, container);
+	                
+	                container_children = container_children->next;
+	            }
+	            
+	            /* Sort the containers */
+	            g_ptr_array_sort(containers, (GCompareFunc)compare_container);
+	        }
 	        
 	        targets_children = targets_children->next;
 	    }
 	    
-	    /* Sort the target properties */
-	    g_ptr_array_sort(target_properties, (GCompareFunc)compare_target_property);
+	    target->system = system;
+	    target->clientInterface = clientInterface;
+	    target->targetProperty = targetProperty;
+	    target->numOfCores = numOfCores;
+	    target->availableCores = availableCores;
+	    target->properties = properties;
+	    target->containers = containers;
 	    
-	    /* Add the property to the targets array */
-	    g_ptr_array_add(target_array, target_properties);
+	    /* Add target item to the targets array */
+	    g_ptr_array_add(targets_array, target);
 	}
 	
 	/* Sort the targets array */
-	g_ptr_array_sort(target_array, (GCompareFunc)compare_target);
-	
+	g_ptr_array_sort(targets_array, (GCompareFunc)compare_target);
+
 	xmlXPathFreeObject(result);
     }
     else
@@ -251,7 +357,49 @@ GPtrArray *create_target_array(char *infrastructure_expr)
     xmlCleanupParser();
 
     /* Return the target array */
-    return target_array;
+    return targets_array;
+}
+
+static void delete_properties(GPtrArray *properties)
+{
+    unsigned int i;
+    
+    for(i = 0; i < properties->len; i++)
+    {
+        TargetProperty *targetProperty = g_ptr_array_index(properties, i);
+        
+        g_free(targetProperty->name);
+        g_free(targetProperty->value);
+        g_free(targetProperty);
+    }
+    
+    g_ptr_array_free(properties, TRUE);
+}
+
+static void delete_container(Container *container)
+{
+    g_free(container->name);
+    delete_properties(container->properties);
+}
+
+static void delete_target(Target *target)
+{
+    unsigned int i;
+    
+    delete_properties(target->properties);
+    
+    for(i = 0; i < target->containers->len; i++)
+    {
+        Container *container = g_ptr_array_index(target->containers, i);
+        delete_container(container);
+    }
+    
+    g_ptr_array_free(target->containers, TRUE);
+    
+    g_free(target->system);
+    g_free(target->clientInterface);
+    g_free(target->targetProperty);
+    g_free(target);
 }
 
 void delete_target_array(GPtrArray *target_array)
@@ -259,38 +407,21 @@ void delete_target_array(GPtrArray *target_array)
     if(target_array != NULL)
     {
         unsigned int i;
-    
+        
         for(i = 0; i < target_array->len; i++)
         {
-            GPtrArray *target_properties = g_ptr_array_index(target_array, i);
-            unsigned int j;
-            
-            for(j = 0; j < target_properties->len; j++)
-            {
-                TargetProperty *target_property = g_ptr_array_index(target_properties, j);
-                g_free(target_property->name);
-                g_free(target_property->value);
-                g_free(target_property);
-            }
-            
-            g_ptr_array_free(target_properties, TRUE);
+            Target *target = g_ptr_array_index(target_array, i);
+            delete_target(target);
         }
-
+    
         g_ptr_array_free(target_array, TRUE);
     }
 }
 
-gchar *find_target_key(const GPtrArray *target, const gchar *global_target_property)
+gchar *find_target_key(const Target *target, const gchar *global_target_property)
 {
-    gchar *target_property_name = find_target_property(target, "targetProperty");
-    
-    if(target_property_name == NULL)
+    if(target->targetProperty == NULL)
         return find_target_property(target, global_target_property);
     else
-        return find_target_property(target, target_property_name);
-}
-
-gchar *find_client_interface(const GPtrArray *target)
-{
-    return find_target_property(target, "clientInterface");
+        return find_target_property(target, target->targetProperty);
 }

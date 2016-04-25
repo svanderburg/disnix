@@ -39,8 +39,8 @@ int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infra
         /* Spawn garbage collection processes */
         for(i = 0; i < target_array->len; i++)
         {
-            GPtrArray *target = g_ptr_array_index(target_array, i);
-            gchar *client_interface = find_client_interface(target);
+            Target *target = g_ptr_array_index(target_array, i);
+            gchar *client_interface = target->clientInterface;
             gchar *target_key = find_target_key(target, target_property);
             int pid;
             

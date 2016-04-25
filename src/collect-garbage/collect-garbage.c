@@ -39,8 +39,8 @@ int collect_garbage(gchar *interface, const gchar *target_property, gchar *infra
         /* Spawn garbage collection processes */
         for(i = 0; i < target_array->len; i++)
         {
-            GPtrArray *target = g_ptr_array_index(target_array, i);
-            gchar *client_interface = find_client_interface(target);
+            Target *target = g_ptr_array_index(target_array, i);
+            gchar *client_interface = target->clientInterface;
             gchar *target_key = find_target_key(target, target_property);
             int pid;
             
@@ -49,6 +49,7 @@ int collect_garbage(gchar *interface, const gchar *target_property, gchar *infra
                 client_interface = interface;
             
             g_print("[target: %s]: Running garbage collector\n", target_key);
+            
             pid = exec_collect_garbage(client_interface, target_key, delete_old);
         
             /* If an operation failed, change the exit status */

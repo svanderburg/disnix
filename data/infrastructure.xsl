@@ -4,15 +4,41 @@
   <xsl:template match="/expr/attrs">
     <infrastructure>
       <xsl:for-each select="attr">
-        <target name="{@name}">
-	  <xsl:for-each select="attrs/attr">
-	    <xsl:element name="{@name}">
-	      <xsl:value-of select="*/@value" />
-	      <xsl:for-each select="list/*">
-		<xsl:value-of select="@value" /><xsl:text>&#x20;</xsl:text>
+	<target name="{@name}">
+	  <xsl:for-each select="attrs/attr[@name='properties']/attrs">
+	    <properties>
+	      <xsl:for-each select="attr">
+	        <xsl:element name="{@name}">
+		  <xsl:value-of select="*/@value" />
+		  <xsl:for-each select="list/*">
+		    <xsl:value-of select="@value" /><xsl:text>&#x20;</xsl:text>
+		  </xsl:for-each>
+		</xsl:element>
 	      </xsl:for-each>
-	    </xsl:element>  
+	    </properties>
 	  </xsl:for-each>
+	
+	  <xsl:for-each select="attrs/attr[@name='containers']/attrs">
+	    <containers>
+	      <xsl:for-each select="attr">
+		<xsl:element name="{@name}">
+		  <xsl:for-each select="attrs/attr">
+		    <xsl:element name="{@name}">
+		      <xsl:value-of select="*/@value" />
+		      <xsl:for-each select="list/*">
+		        <xsl:value-of select="@value" /><xsl:text>&#x20;</xsl:text>
+		      </xsl:for-each>
+		    </xsl:element>
+		  </xsl:for-each>
+		</xsl:element>
+	      </xsl:for-each>
+	    </containers>
+	  </xsl:for-each>
+
+	  <system><xsl:value-of select="attrs/attr[@name='system']/string/@value" /></system>
+	  <numOfCores><xsl:value-of select="attrs/attr[@name='numOfCores']/*/@value" /></numOfCores>
+	  <clientInterface><xsl:value-of select="attrs/attr[@name='clientInterface']/string/@value" /></clientInterface>
+	  <targetProperty><xsl:value-of select="attrs/attr[@name='targetProperty']/string/@value" /></targetProperty>
 	</target>
       </xsl:for-each>
     </infrastructure>

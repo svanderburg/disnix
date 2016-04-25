@@ -35,7 +35,48 @@ typedef struct
 TargetProperty;
 
 /**
- * Creates an array with target properties from an infrastructure Nix expression
+ * @brief Contains properties of a container belonging to a machine.
+ */
+typedef struct
+{
+    /** Name of the container */
+    gchar *name;
+    
+    /** Contains the properties of the container */
+    GPtrArray *properties;
+}
+Container;
+
+/**
+ * @brief Contains properties of a target machine.
+ */
+typedef struct
+{
+    /* Contains arbitrary target machine properties */
+    GPtrArray *properties;
+    
+    /* Contains container-specific configuration properties */
+    GPtrArray *containers;
+    
+    /* Contains the system architecture identifier of the system */
+    gchar *system;
+    
+    /* Refers to the executable that must be executed to connect to the target system */
+    gchar *clientInterface;
+    
+    /* Refer to the name of the property in properties that must be used to connect to the target system */
+    gchar *targetProperty;
+    
+    /* Contains the amount CPU cores this machine has */
+    int numOfCores;
+    
+    /* Contains the amount of CPU cores that are currently available */
+    int availableCores;
+}
+Target;
+
+/**
+ * Creates an array with targets from an infrastructure Nix expression
  *
  * @param infrastructure_expr Path to the infrastructure Nix expression
  * @return GPtrArray with target properties
@@ -43,7 +84,7 @@ TargetProperty;
 GPtrArray *create_target_array(char *infrastructure_expr);
 
 /**
- * Deletes an array with target properties
+ * Deletes an array with targets
  *
  * @param target_array Array to delete
  */
@@ -53,18 +94,10 @@ void delete_target_array(GPtrArray *target_array);
  * Retrieves the value of the target property that serves as the key to identify
  * the machine.
  *
- * @param target A target array containing properties of a target machine
+ * @param target A target struct containing properties of a target machine
  * @param global_target_property Global key that is used if no target property is defined by the target machine
  * @return The key value of identifying the machine or NULL if it does not exists
  */
-gchar *find_target_key(const GPtrArray *target, const gchar *global_target_property);
-
-/**
- * Retrieves the client interface property of a target machine.
- *
- * @param target A target array containing properties of a target machine
- * @return The client interface property or NULL if it does not exists
- */
-gchar *find_client_interface(const GPtrArray *target);
+gchar *find_target_key(const Target *target, const gchar *global_target_property);
 
 #endif
