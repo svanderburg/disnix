@@ -9,9 +9,9 @@ stdenv.mkDerivation {
     echo "Depends on service: ${testService1.name}"
     echo "Targets:"
     cat <<EOF
-    ${stdenv.lib.concatMapStrings (target: "${target.hostname}\n") (testService1.targets)}
+    ${stdenv.lib.concatMapStrings (target: "${target.properties.hostname}\n") (testService1.targets)}
     EOF
-    echo "Target: ${testService1.target.hostname}"
+    echo "Target: ${testService1.target.properties.hostname}"
     ) > $out
   '';
 }
