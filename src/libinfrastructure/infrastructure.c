@@ -237,7 +237,10 @@ GPtrArray *create_target_array(char *infrastructure_expr)
 	    while(targets_children != NULL)
 	    {
 	        if(xmlStrcmp(targets_children->name, (xmlChar*) "system") == 0)
-	            system = g_strdup((gchar*)targets_children->children->content);
+	        {
+	            if(targets_children->children != NULL)
+	                system = g_strdup((gchar*)targets_children->children->content);
+	        }
 	        else if(xmlStrcmp(targets_children->name, (xmlChar*) "clientInterface") == 0)
 	        {
 	            if(targets_children->children != NULL)
@@ -362,39 +365,44 @@ GPtrArray *create_target_array(char *infrastructure_expr)
 
 static void delete_properties(GPtrArray *properties)
 {
-    unsigned int i;
-    
-    for(i = 0; i < properties->len; i++)
+    if(properties != NULL)
     {
-        TargetProperty *targetProperty = g_ptr_array_index(properties, i);
-        
-        g_free(targetProperty->name);
-        g_free(targetProperty->value);
-        g_free(targetProperty);
-    }
+        unsigned int i;
     
-    g_ptr_array_free(properties, TRUE);
+        for(i = 0; i < properties->len; i++)
+        {
+            TargetProperty *targetProperty = g_ptr_array_index(properties, i);
+            
+            g_free(targetProperty->name);
+            g_free(targetProperty->value);
+            g_free(targetProperty);
+        }
+        
+        g_ptr_array_free(properties, TRUE);
+    }
 }
 
-static void delete_container(Container *container)
+static void delete_containers(GPtrArray *containers)
 {
-    g_free(container->name);
-    delete_properties(container->properties);
+    if(containers != NULL)
+    {
+        unsigned int i;
+
+        for(i = 0; i < containers->len; i++)
+        {
+            Container *container = g_ptr_array_index(containers, i);
+            g_free(container->name);
+            delete_properties(container->properties);
+        }
+        
+        g_ptr_array_free(containers, TRUE);
+    }
 }
 
 static void delete_target(Target *target)
 {
-    unsigned int i;
-    
     delete_properties(target->properties);
-    
-    for(i = 0; i < target->containers->len; i++)
-    {
-        Container *container = g_ptr_array_index(target->containers, i);
-        delete_container(container);
-    }
-    
-    g_ptr_array_free(target->containers, TRUE);
+    delete_containers(target->containers);
     
     g_free(target->system);
     g_free(target->clientInterface);

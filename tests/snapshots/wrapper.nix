@@ -25,10 +25,10 @@ stdenv.mkDerivation {
                 mkdir -p /var/db/${name}
                 echo 0 > /var/db/${name}/state
             fi
-            unmarkStateAsGarbage
+            markComponentAsActive
             ;;
         deactivate)
-            markStateAsGarbage
+            markComponentAsGarbage
             ;;
         snapshot)
             tmpdir=$(mktemp -d)
@@ -63,6 +63,7 @@ stdenv.mkDerivation {
             then
                 rm /var/db/${name}/state
                 rmdir /var/db/${name}
+                unmarkComponentAsGarbage
             fi
             ;;
     esac

@@ -229,39 +229,44 @@ GPtrArray *generate_target_array(const gchar *manifest_file)
 
 static void delete_properties(GPtrArray *properties)
 {
-    unsigned int i;
-    
-    for(i = 0; i < properties->len; i++)
+    if(properties != NULL)
     {
-        TargetProperty *targetProperty = g_ptr_array_index(properties, i);
-        
-        g_free(targetProperty->name);
-        g_free(targetProperty->value);
-        g_free(targetProperty);
-    }
+        unsigned int i;
     
-    g_ptr_array_free(properties, TRUE);
+        for(i = 0; i < properties->len; i++)
+        {
+            TargetProperty *targetProperty = g_ptr_array_index(properties, i);
+            
+            g_free(targetProperty->name);
+            g_free(targetProperty->value);
+            g_free(targetProperty);
+        }
+    
+        g_ptr_array_free(properties, TRUE);
+    }
 }
 
-static void delete_container(Container *container)
+static void delete_containers(GPtrArray *containers)
 {
-    g_free(container->name);
-    delete_properties(container->properties);
+    if(containers != NULL)
+    {
+        unsigned int i;
+        
+        for(i = 0; i < containers->len; i++)
+        {
+            Container *container = g_ptr_array_index(containers, i);
+            g_free(container->name);
+            delete_properties(container->properties);
+        }
+        
+        g_ptr_array_free(containers, TRUE);
+    }
 }
 
 static void delete_target(Target *target)
 {
-    unsigned int i;
-    
     delete_properties(target->properties);
-    
-    for(i = 0; i < target->containers->len; i++)
-    {
-        Container *container = g_ptr_array_index(target->containers, i);
-        delete_container(container);
-    }
-    
-    g_ptr_array_free(target->containers, TRUE);
+    delete_containers(target->containers);
     
     g_free(target->system);
     g_free(target->clientInterface);
@@ -362,18 +367,23 @@ gchar *find_target_key(const Target *target)
 
 static Container *find_container(const GPtrArray *containers, const gchar *name)
 {
-    Container key;
-    const Container *key_ptr = &key;
-    Container **ret;
-    
-    key.name = (gchar*)name;
-    
-    ret = bsearch(&key_ptr, containers->pdata, containers->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_container);
-    
-    if(ret == NULL)
+    if(containers == NULL)
         return NULL;
     else
-        return *ret;
+    {
+        Container key;
+        const Container *key_ptr = &key;
+        Container **ret;
+        
+        key.name = (gchar*)name;
+        
+        ret = bsearch(&key_ptr, containers->pdata, containers->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_container);
+        
+        if(ret == NULL)
+            return NULL;
+        else
+            return *ret;
+    }
 }
 
 gchar **generate_activation_arguments(const Target *target, const gchar *container_name)
