@@ -36,26 +36,28 @@ int wait_to_finish(const pid_t pid);
  *
  * @param interface Path to the interface executable
  * @param target Target Address of the remote interface
+ * @param container Name of the container in which the component is deployed
  * @param type Type Type of the service
  * @param arguments String vector with activation arguments in the form key=value
  * @param arguments_size Size of the arguments string vector
  * @param service Service to activate
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_activate(gchar *interface, gchar *target, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
+pid_t exec_activate(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
 
 /**
  * Invokes the deactivate operation through a Disnix client interface
  *
  * @param interface Path to the interface executable
  * @param target Target Address of the remote interface
+ * @param container Name of the container in which the component is deployed
  * @param type Type Type of the service
  * @param arguments String vector with activation arguments in the form key=value
  * @param arguments_size Size of the arguments string vector
  * @param service Service to deactivate
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_deactivate(gchar *interface, gchar *target, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
+pid_t exec_deactivate(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
 
 /**
  * Invokes the lock operation through a Disnix client interface
@@ -82,39 +84,42 @@ pid_t exec_unlock(gchar *interface, gchar *target, gchar *profile);
  *
  * @param interface Path to the interface executable
  * @param target Target Address of the remote interface
+ * @param container Name of the container in which the component is deployed
  * @param type Type Type of the service
  * @param arguments String vector with activation arguments in the form key=value
  * @param arguments_size Size of the arguments string vector
  * @param service Service to activate
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_snapshot(gchar *interface, gchar *target, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
+pid_t exec_snapshot(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
 
 /**
  * Invokes the restore operation through a Disnix client interface
  *
  * @param interface Path to the interface executable
  * @param target Target Address of the remote interface
+ * @param container Name of the container in which the component is deployed
  * @param type Type Type of the service
  * @param arguments String vector with activation arguments in the form key=value
  * @param arguments_size Size of the arguments string vector
  * @param service Service to deactivate
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_restore(gchar *interface, gchar *target, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
+pid_t exec_restore(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
 
 /**
  * Invokes the delete state operation through a Disnix client interface
  *
  * @param interface Path to the interface executable
  * @param target Target Address of the remote interface
+ * @param container Name of the container in which the component is deployed
  * @param type Type Type of the service
  * @param arguments String vector with activation arguments in the form key=value
  * @param arguments_size Size of the arguments string vector
  * @param service Service to activate
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_delete_state(gchar *interface, gchar *target, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
+pid_t exec_delete_state(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
 
 /**
  * Invokes the collect garbage operation through a Disnix client interface

@@ -221,8 +221,11 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 		cleanup(proxy, derivation, arguments);
 		return 1;
 	    }
-	    else
-		org_nixos_disnix_disnix_call_activate_sync(proxy, pid, derivation[0], type, (const gchar**) arguments, NULL, &error);
+	    
+	    if(container == NULL)
+	        container = type;
+	        
+	    org_nixos_disnix_disnix_call_activate_sync(proxy, pid, derivation[0], container, type, (const gchar**) arguments, NULL, &error);
 	    break;
 	case OP_DEACTIVATE:
 	    if(type == NULL)
@@ -237,8 +240,11 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 		cleanup(proxy, derivation, arguments);
 		return 1;
 	    }
-	    else
-		org_nixos_disnix_disnix_call_deactivate_sync(proxy, pid, derivation[0], type, (const gchar**) arguments, NULL, &error);
+	    
+	    if(container == NULL)
+	        container = type;
+	    
+	    org_nixos_disnix_disnix_call_deactivate_sync(proxy, pid, derivation[0], container, type, (const gchar**) arguments, NULL, &error);
 	    break;
 	case OP_DELETE_STATE:
 	    if(type == NULL)
@@ -253,8 +259,11 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 		cleanup(proxy, derivation, arguments);
 		return 1;
 	    }
-	    else
-		org_nixos_disnix_disnix_call_delete_state_sync(proxy, pid, derivation[0], type, (const gchar**) arguments, NULL, &error);
+	    
+	    if(container == NULL)
+	        container = type;
+	
+	    org_nixos_disnix_disnix_call_delete_state_sync(proxy, pid, derivation[0], container, type, (const gchar**) arguments, NULL, &error);
 	    break;
 	case OP_LOCK:
 	    org_nixos_disnix_disnix_call_lock_sync(proxy, pid, profile, NULL, &error);
@@ -275,8 +284,11 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 		cleanup(proxy, derivation, arguments);
 		return 1;
 	    }
-	    else
-		org_nixos_disnix_disnix_call_snapshot_sync(proxy, pid, derivation[0], type, (const gchar**) arguments, NULL, &error);
+	    
+	    if(container == NULL)
+	        container = type;
+	    
+	    org_nixos_disnix_disnix_call_snapshot_sync(proxy, pid, derivation[0], container, type, (const gchar**) arguments, NULL, &error);
 	    break;
 	case OP_RESTORE:
 	    if(type == NULL)
@@ -291,8 +303,11 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 		cleanup(proxy, derivation, arguments);
 		return 1;
 	    }
-	    else
-		org_nixos_disnix_disnix_call_restore_sync(proxy, pid, derivation[0], type, (const gchar**) arguments, NULL, &error);
+	    
+	    if(container == NULL)
+	        container = type;
+	    
+	    org_nixos_disnix_disnix_call_restore_sync(proxy, pid, derivation[0], container, type, (const gchar**) arguments, NULL, &error);
 	    break;
 	case OP_QUERY_ALL_SNAPSHOTS:
 	    org_nixos_disnix_disnix_call_query_all_snapshots_sync(proxy, pid, container, component, NULL, &error);

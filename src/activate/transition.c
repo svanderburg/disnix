@@ -94,7 +94,7 @@ static ActivationStatus activate(GPtrArray *union_array, const ActivationMapping
                     if(dry_run)
                         pid = exec_true(); /* Execute dummy process */
                     else
-                        pid = exec_activate(target->clientInterface, actual_mapping->target, actual_mapping->type, arguments, arguments_size, actual_mapping->service); /* Execute the activation operation asynchronously */
+                        pid = exec_activate(target->clientInterface, actual_mapping->target, actual_mapping->container, actual_mapping->type, arguments, arguments_size, actual_mapping->service); /* Execute the activation operation asynchronously */
                     
                     /* Cleanup */
                     g_strfreev(arguments);
@@ -175,7 +175,7 @@ static int deactivate(GPtrArray *union_array, const ActivationMappingKey *key, G
                     if(dry_run)
                         pid = exec_true(); /* Execute dummy process */
                     else
-                        pid = exec_deactivate(target->clientInterface, actual_mapping->target, actual_mapping->type, arguments, arguments_size, actual_mapping->service); /* Execute the deactivation operation asynchronously */
+                        pid = exec_deactivate(target->clientInterface, actual_mapping->target, actual_mapping->container, actual_mapping->type, arguments, arguments_size, actual_mapping->service); /* Execute the deactivation operation asynchronously */
                     
                     /* Cleanup */
                     g_free(arguments);

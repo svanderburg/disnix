@@ -112,9 +112,11 @@ Collect garbage options:
 Activation/Deactivation/Snapshot/Restore/Delete state options:
   --type=TYPE                Specifies the activation module that should be
                              used, such as echo or process.
-
   --arguments=ARGUMENTS      Specifies the arguments passed to the Dysnomia
                              module, which is a string with key=value pairs
+  --container=CONTAINER      Name of the container in which the component is
+                             managed. If omitted it will default to the same
+                             value as the type.
 
 Query all snapshots/Query latest snapshot options:
   -C, --container=CONTAINER  Name of the container in which the component is managed
@@ -165,6 +167,14 @@ checkType()
     then
         echo "ERROR: A type must be specified!" >&2
         exit 1
+    fi
+}
+
+checkContainer()
+{
+    if [ "$container" = "" ]
+    then
+        container=type
     fi
 }
 
@@ -384,11 +394,13 @@ case "$operation" in
         ;;
     activate)
         checkType
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --activate "$@"
+        checkContainer
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --container $container --activate "$@"
         ;;
     deactivate)
         checkType
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --deactivate "$@"
+        checkContainer
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --container $container --deactivate "$@"
         ;;
     lock)
         ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --lock $profileArg
@@ -398,15 +410,18 @@ case "$operation" in
         ;;
     snapshot)
         checkType
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --snapshot "$@"
+        checkContainer
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --container $container --snapshot "$@"
         ;;
     restore)
         checkType
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --restore "$@"
+        checkContainer
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --container $container --restore "$@"
         ;;
     delete-state)
         checkType
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --delete-state "$@"
+        checkContainer
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --container $container --delete-state "$@"
         ;;
     query-all-snapshots)
         ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --query-all-snapshots --container $container --component $component

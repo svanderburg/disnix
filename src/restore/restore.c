@@ -173,7 +173,7 @@ static int restore_services(GPtrArray *snapshots_array, GPtrArray *target_array)
                 gint *pidKey;
                 
                 g_print("[target: %s]: Restoring state of service: %s\n", mapping->target, mapping->component);
-                pid = exec_restore(target->clientInterface, mapping->target, mapping->container, arguments, arguments_size, mapping->service);
+                pid = exec_restore(target->clientInterface, mapping->target, mapping->container, mapping->type, arguments, arguments_size, mapping->service);
                 
                 /* Add pid and mapping to the hash table */
                 pidKey = g_malloc(sizeof(gint));

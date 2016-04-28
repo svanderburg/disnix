@@ -108,6 +108,10 @@ static void print_usage(const char *command)
     printf("                             used, such as echo or process.\n");
     printf("  --arguments=ARGUMENTS      Specifies the arguments passed to the Dysnomia\n");
     printf("                             module, which is a string with key=value pairs\n");
+    printf("  --container=CONTAINER      Name of the container in which the component is\n");
+    printf("                             managed. If omitted it will default to the same\n");
+    printf("                             value as the type.\n");
+
 
     printf("\nQuery all snapshots/Query latest snapshot options:\n");
     printf("  -C, --container=CONTAINER  Name of the container in which the component is managed\n");

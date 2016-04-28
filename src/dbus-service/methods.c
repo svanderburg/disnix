@@ -905,12 +905,13 @@ typedef struct
     gchar *activity;
     gint arg_pid;
     gchar *arg_derivation;
+    gchar *arg_container;
     gchar *arg_type;
     gchar **arg_arguments;
 }
 ActivityParams;
 
-static ActivityParams *create_activity_params(OrgNixosDisnixDisnix *object, gchar *activity, gint arg_pid, const gchar *arg_derivation, const gchar *arg_type, const gchar *const *arg_arguments)
+static ActivityParams *create_activity_params(OrgNixosDisnixDisnix *object, gchar *activity, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
     ActivityParams *params = (ActivityParams*)g_malloc(sizeof(ActivityParams));
     
@@ -918,6 +919,7 @@ static ActivityParams *create_activity_params(OrgNixosDisnixDisnix *object, gcha
     params->activity = g_strdup(activity);
     params->arg_pid = arg_pid;
     params->arg_derivation = g_strdup(arg_derivation);
+    params->arg_container = g_strdup(arg_container);
     params->arg_type = g_strdup(arg_type);
     params->arg_arguments = g_strdupv((gchar**)arg_arguments);
     
@@ -940,7 +942,7 @@ static gpointer disnix_dysnomia_activity_thread_func(gpointer data)
         int status;
         
         /* Print log entry */
-        dprintf(log_fd, "%s: %s of type: %s with arguments: ", params->activity, params->arg_derivation, params->arg_type);
+        dprintf(log_fd, "%s: %s of type: %s in container: %s with arguments: ", params->activity, params->arg_derivation, params->arg_type, params->arg_container);
         print_paths(log_fd, params->arg_arguments);
         dprintf(log_fd, "\n");
     
@@ -957,7 +959,7 @@ static gpointer disnix_dysnomia_activity_thread_func(gpointer data)
         {
             unsigned int i;
             char *cmd = "dysnomia";
-            char *args[] = {cmd, "--type", params->arg_type, "--operation", params->activity, "--component", params->arg_derivation, "--environment", NULL};
+            char *args[] = {cmd, "--type", params->arg_type, "--operation", params->activity, "--component", params->arg_derivation, "--container", params->arg_container, "--environment", NULL};
 
             /* Compose environment variables out of the arguments */
             for(i = 0; i < g_strv_length(params->arg_arguments); i++)
@@ -988,6 +990,7 @@ static gpointer disnix_dysnomia_activity_thread_func(gpointer data)
     /* Cleanup */
     g_free(params->activity);
     g_free(params->arg_derivation);
+    g_free(params->arg_container);
     g_free(params->arg_type);
     g_strfreev(params->arg_arguments);
     g_free(params);
@@ -996,9 +999,9 @@ static gpointer disnix_dysnomia_activity_thread_func(gpointer data)
 
 /* Activate method */
 
-gboolean on_handle_activate(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_type, const gchar *const *arg_arguments)
+gboolean on_handle_activate(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    ActivityParams *params = create_activity_params(object, "activate", arg_pid, arg_derivation, arg_type, arg_arguments);
+    ActivityParams *params = create_activity_params(object, "activate", arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
     GThread *thread = g_thread_new("activate", disnix_dysnomia_activity_thread_func, params);
     org_nixos_disnix_disnix_complete_activate(object, invocation);
     g_thread_unref(thread);
@@ -1007,9 +1010,9 @@ gboolean on_handle_activate(OrgNixosDisnixDisnix *object, GDBusMethodInvocation 
 
 /* Deactivate method */
 
-gboolean on_handle_deactivate(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_type, const gchar *const *arg_arguments)
+gboolean on_handle_deactivate(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    ActivityParams *params = create_activity_params(object, "deactivate", arg_pid, arg_derivation, arg_type, arg_arguments);
+    ActivityParams *params = create_activity_params(object, "deactivate", arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
     GThread *thread = g_thread_new("deactivate", disnix_dysnomia_activity_thread_func, params);
     org_nixos_disnix_disnix_complete_deactivate(object, invocation);
     g_thread_unref(thread);
@@ -1148,9 +1151,9 @@ gboolean on_handle_unlock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *i
 
 /* Snapshot method */
 
-gboolean on_handle_snapshot(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_type, const gchar *const *arg_arguments)
+gboolean on_handle_snapshot(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    ActivityParams *params = create_activity_params(object, "snapshot", arg_pid, arg_derivation, arg_type, arg_arguments);
+    ActivityParams *params = create_activity_params(object, "snapshot", arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
     GThread *thread = g_thread_new("snapshot", disnix_dysnomia_activity_thread_func, params);
     org_nixos_disnix_disnix_complete_snapshot(object, invocation);
     g_thread_unref(thread);
@@ -1159,9 +1162,9 @@ gboolean on_handle_snapshot(OrgNixosDisnixDisnix *object, GDBusMethodInvocation 
 
 /* Restore method */
 
-gboolean on_handle_restore(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_type, const gchar *const *arg_arguments)
+gboolean on_handle_restore(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    ActivityParams *params = create_activity_params(object, "restore", arg_pid, arg_derivation, arg_type, arg_arguments);
+    ActivityParams *params = create_activity_params(object, "restore", arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
     GThread *thread = g_thread_new("restore", disnix_dysnomia_activity_thread_func, params);
     org_nixos_disnix_disnix_complete_restore(object, invocation);
     g_thread_unref(thread);
@@ -1824,9 +1827,9 @@ gboolean on_handle_clean_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvo
 
 /* Delete state operation */
 
-gboolean on_handle_delete_state(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_type, const gchar *const *arg_arguments)
+gboolean on_handle_delete_state(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    ActivityParams *params = create_activity_params(object, "collect-garbage", arg_pid, arg_derivation, arg_type, arg_arguments);
+    ActivityParams *params = create_activity_params(object, "collect-garbage", arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
     GThread *thread = g_thread_new("delete-state", disnix_dysnomia_activity_thread_func, params);
     org_nixos_disnix_disnix_complete_delete_state(object, invocation);
     g_thread_unref(thread);

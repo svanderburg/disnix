@@ -1,3 +1,11 @@
+Version 0.6
+===========
+- Changed the distribution internals. Now every service maps to a container on a target system. When no container is specified, it auto maps a service to the container with the type name
+
+- New formalism for the infrastructure model. Now every target defines system settings, general properties and properties per container
+
+- Activation parameters are now scoped. Only parameters that a Dysnomia module needs to know about are propagated.
+
 Version 0.5
 ===========
 - Services model also takes an invDistribution parameter, which refers to the infrastructure model in which each target is augmented with the services that have been mapped to it
