@@ -47,7 +47,7 @@ static pid_t exec_activate_or_deactivate(gchar *operation, gchar *interface, gch
     if(pid == 0)
     {
 	unsigned int i;
-	char **args = (char**)g_malloc((8 + 2 * arguments_size) * sizeof(char*));
+	char **args = (char**)g_malloc((10 + 2 * arguments_size) * sizeof(char*));
 	    
 	args[0] = interface;
 	args[1] = operation;
