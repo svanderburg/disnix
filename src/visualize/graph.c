@@ -26,7 +26,7 @@
 #include <manifest.h>
 #include <activationmapping.h>
 
-int generate_graph(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile)
+int generate_graph(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, int no_containers)
 {
     Manifest *manifest;
     
@@ -77,21 +77,54 @@ int generate_graph(const gchar *manifest_file, const gchar *coordinator_profile_
         g_hash_table_iter_init(&iter, cluster_table);
         while(g_hash_table_iter_next(&iter, (gpointer*)&key, (gpointer*)&value)) 
         {
-            unsigned int i;
-            GPtrArray *cluster_array = (GPtrArray*)value;
             gchar *target = (gchar*)key;
-        
+            GHashTable *container_table = (GHashTable*)value;
+            GHashTableIter iter2;
+            gpointer *key2;
+            gpointer *value2;
+            int count2 = 0;
+            
             g_print("subgraph cluster_%d {\n", count);
             g_print("style=filled;\n");
-            g_print("node [style=filled,fillcolor=white,color=black];\n");
-        
-            for(i = 0; i < cluster_array->len; i++)
+            g_print("label=\"%s\";\n", target);
+            g_print("fillcolor=grey\n");
+
+            g_hash_table_iter_init(&iter2, container_table);
+            
+            while(g_hash_table_iter_next(&iter2, (gpointer*)&key2, (gpointer*)&value2))
             {
-                ActivationMapping *mapping = g_ptr_array_index(cluster_array, i);
-                g_print("\"%s:%s\" [ label = \"%s\" ];\n", mapping->key, target, mapping->name);
+                unsigned int i;
+                gchar *container_key = (gchar*)key2;
+                GPtrArray *cluster_array = (GPtrArray*)value2;
+                
+                if(!no_containers)
+                {
+                    g_print("subgraph cluster_%d_%d {\n", count, count2);
+                    g_print("style=filled;\n");
+                
+                    if(cluster_array->len > 0)
+                    {
+                        ActivationMapping *mapping = g_ptr_array_index(cluster_array, 0);
+                        g_print("label=\"%s\";\n", mapping->container);
+                    }
+                    
+                    g_print("fillcolor=grey40\n");
+                }
+                
+                g_print("node [style=filled,fillcolor=white,color=black];\n");
+                
+                for(i = 0; i < cluster_array->len; i++)
+                {
+                    ActivationMapping *mapping = g_ptr_array_index(cluster_array, i);
+                    g_print("\"%s:%s:%s\" [ label = \"%s\" ];\n", mapping->key, target, mapping->container, mapping->name);
+                }
+                
+                if(!no_containers)
+                    g_print("}\n");
+                
+                count2++;
             }
-        
-            g_print("label = \"%s\"\n", target);
+            
             g_print("}\n");
         
             count++;

@@ -6,6 +6,8 @@ Version 0.6
 
 - Activation parameters are now scoped. Only parameters that a Dysnomia module needs to know about are propagated.
 
+- disnix-visualize also shows containers to which services have been deployed
+
 Version 0.5
 ===========
 - Services model also takes an invDistribution parameter, which refers to the infrastructure model in which each target is augmented with the services that have been mapped to it

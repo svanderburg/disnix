@@ -42,6 +42,7 @@ static void print_usage(const char *command)
     printf("                         default this tool will use the manifest stored in the\n");
     printf("                         disnix coordinator profile instead of the specified\n");
     printf("                         one, which is usually sufficient in most cases.\n");
+    printf("      --no-containers    Do not visualize the containers.\n");
     printf("  -h, --help             Shows the usage of this command to the user\n");
     printf("  -v, --version          Shows the version of this command to the user\n");
 }
@@ -54,6 +55,7 @@ int main(int argc, char *argv[])
     {
         {"coordinator-profile-path", required_argument, 0, 'P'},
         {"profile", required_argument, 0, 'p'},
+        {"no-containers", no_argument, 0, 'c'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
@@ -61,6 +63,7 @@ int main(int argc, char *argv[])
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
     char *manifest_file;
+    int no_containers;
 
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "p:hv", long_options, &option_index)) != -1)
@@ -72,6 +75,9 @@ int main(int argc, char *argv[])
                 break;
             case 'P':
                 coordinator_profile_path = optarg;
+                break;
+            case 'c':
+                no_containers = TRUE;
                 break;
             case 'h':
             case '?':
@@ -91,5 +97,5 @@ int main(int argc, char *argv[])
     else
         manifest_file = argv[optind];
 
-    return generate_graph(manifest_file, coordinator_profile_path, profile); /* Execute operation */
+    return generate_graph(manifest_file, coordinator_profile_path, profile, no_containers); /* Execute operation */
 }

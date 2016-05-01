@@ -21,12 +21,30 @@
 #include <activationmapping.h>
 #include <targets.h>
 
+static void destroy_cluster_value(gpointer data)
+{
+    GHashTable *container_table = (GHashTable*)data;
+    g_hash_table_destroy(container_table);
+}
+
+static void destroy_container_key(gpointer data)
+{
+    gchar *key = (gchar*)data;
+    g_free(key);
+}
+
+static void destroy_container_value(gpointer data)
+{
+    GPtrArray *services_array = (GPtrArray*)data;
+    g_ptr_array_free(services_array, TRUE);
+}
+
 GHashTable *generate_cluster_table(GPtrArray *activation_array, GPtrArray *target_array)
 {
     unsigned int i;
     
     /* Create empty hash table */
-    GHashTable *cluster_table = g_hash_table_new(g_str_hash, g_str_equal);
+    GHashTable *cluster_table = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, destroy_cluster_value);
 
     /* Check all activtion mappings */
     for(i = 0; i < activation_array->len; i++)
@@ -39,17 +57,36 @@ GHashTable *generate_cluster_table(GPtrArray *activation_array, GPtrArray *targe
 	gchar *target_key = find_target_key(target);
 	
 	/* See whether the target already exists in the table */
-	GPtrArray *services_array = g_hash_table_lookup(cluster_table, target_key);
+	GHashTable *containers_table = g_hash_table_lookup(cluster_table, target_key);
+	GPtrArray *services_array;
+	gchar *container_key;
 	
 	/*
-	 * If the target is not yet in the table, create a new empty array
-	 * of services and add it to a new entry in the hash table
+	 * If the target is not yet in the table, create a new hashtable of containers
+	 * per machine
 	 */
+	
+	if(containers_table == NULL)
+	{
+	    containers_table = g_hash_table_new_full(g_str_hash, g_str_equal, destroy_container_key, destroy_container_value);
+	    g_hash_table_insert(cluster_table, target_key, containers_table);
+	}
+	
+	/*
+	 * If the services are not yet in the containers table, add a new empty array
+	 * of services
+	 */
+	
+	container_key = g_strconcat(target_key, ":", mapping->container, NULL);
+	services_array = g_hash_table_lookup(containers_table, container_key);
+	
 	if(services_array == NULL)
 	{
 	    services_array = g_ptr_array_new();
-	    g_hash_table_insert(cluster_table, target_key, services_array);
+	    g_hash_table_insert(containers_table, container_key, services_array);
 	}
+	else
+	    g_free(container_key);
 	
 	/* Append service to the array */
 	g_ptr_array_add(services_array, mapping);
@@ -61,16 +98,5 @@ GHashTable *generate_cluster_table(GPtrArray *activation_array, GPtrArray *targe
 
 void destroy_cluster_table(GHashTable *cluster_table)
 {
-    GHashTableIter iter;
-    gpointer *key;
-    gpointer *value;
-
-    g_hash_table_iter_init(&iter, cluster_table);
-    while(g_hash_table_iter_next(&iter, (gpointer*)&key, (gpointer*)&value)) 
-    {
-	GPtrArray *services_array = (GPtrArray*)value;
-	g_ptr_array_free(services_array, TRUE);
-    }
-    
     g_hash_table_destroy(cluster_table);
 }

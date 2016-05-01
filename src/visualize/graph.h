@@ -28,8 +28,9 @@
  * @param manifest_file Manifest file to visualize
  * @param coordinator_profile_path Path where the current deployment state is stored for future reference
  * @param profile Name of the distributed profile
+ * @param no_containers Indicates whether to visualize the containers or not
  * @return 0 in case of success, otherwise a non-zero exit value
  */
-int generate_graph(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile);
+int generate_graph(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, int no_containers);
 
 #endif

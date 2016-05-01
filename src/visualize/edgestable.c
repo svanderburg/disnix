@@ -21,12 +21,37 @@
 #include <activationmapping.h>
 #include <targets.h>
 
+static void destroy_key(gpointer data)
+{
+    gchar *mapping_key = (gchar*)data;
+    g_free(mapping_key);
+}
+
+static void destroy_value(gpointer data)
+{
+    GPtrArray *dependency_array = (GPtrArray*)data;
+    unsigned int i;
+    
+    for(i = 0; i < dependency_array->len; i++)
+    {
+        gchar *dep = g_ptr_array_index(dependency_array, i);
+        g_free(dep);
+    }
+    
+    g_ptr_array_free(dependency_array, TRUE);
+}
+
+static gchar *compose_mapping_key(ActivationMapping *mapping, gchar *target_key)
+{
+    return g_strconcat(mapping->key, ":", target_key, ":", mapping->container, NULL);
+}
+
 GHashTable *generate_edges_table(const GPtrArray *activation_array, GPtrArray *targets_array)
 {    
     unsigned int i;
     
     /* Create empty hash table */
-    GHashTable *edges_table = g_hash_table_new(g_str_hash, g_str_equal);
+    GHashTable *edges_table = g_hash_table_new_full(g_str_hash, g_str_equal, destroy_key, destroy_value);
 
     for(i = 0; i < activation_array->len; i++)
     {
@@ -38,7 +63,7 @@ GHashTable *generate_edges_table(const GPtrArray *activation_array, GPtrArray *t
 	gchar *target_key = find_target_key(target);
 	
 	/* Generate an edge table key, which consist of Nix store component:targetProperty */
-	gchar *mapping_key = g_strconcat(mapping->key, ":", target_key, NULL);
+	gchar *mapping_key = compose_mapping_key(mapping, target_key);
 	
 	/* Retrieve the dependency array of the mapping from the edges table */
 	GPtrArray *dependency_array = g_hash_table_lookup(edges_table, mapping_key);
@@ -70,10 +95,10 @@ GHashTable *generate_edges_table(const GPtrArray *activation_array, GPtrArray *t
 		target_key = find_target_key(target);
 		
 		/* Generate mapping value from the service key and target property */
-		mapping_value = g_strconcat(actual_mapping->key, ":", target_key, NULL);
-		    
+		mapping_value = compose_mapping_key(actual_mapping, target_key);
+		
 		/* Add mapping value to the dependency array */
-	    	g_ptr_array_add(dependency_array, mapping_value);
+		g_ptr_array_add(dependency_array, mapping_value);
 	    }
 	    
 	    /* Associate the dependency array to the given mapping */
@@ -87,26 +112,5 @@ GHashTable *generate_edges_table(const GPtrArray *activation_array, GPtrArray *t
 
 void destroy_edges_table(GHashTable *edges_table)
 {
-    GHashTableIter iter;
-    gpointer *key;
-    gpointer *value;
-
-    g_hash_table_iter_init(&iter, edges_table);
-    while(g_hash_table_iter_next(&iter, (gpointer*)&key, (gpointer*)&value)) 
-    {
-	gchar *mapping_key = (gchar*)key;
-	GPtrArray *dependency_array = (GPtrArray*)value;
-	unsigned int i;
-	
-	for(i = 0; i < dependency_array->len; i++)
-	{
-	    gchar *dep = g_ptr_array_index(dependency_array, i);
-	    g_free(dep);
-	}
-	
-	g_ptr_array_free(dependency_array, TRUE);
-	g_free(mapping_key);
-    }
-        
     g_hash_table_destroy(edges_table);
 }
