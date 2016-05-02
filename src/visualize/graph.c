@@ -94,7 +94,6 @@ int generate_graph(const gchar *manifest_file, const gchar *coordinator_profile_
             while(g_hash_table_iter_next(&iter2, (gpointer*)&key2, (gpointer*)&value2))
             {
                 unsigned int i;
-                gchar *container_key = (gchar*)key2;
                 GPtrArray *cluster_array = (GPtrArray*)value2;
                 
                 if(!no_containers)

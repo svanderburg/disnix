@@ -265,13 +265,16 @@ static void delete_containers(GPtrArray *containers)
 
 static void delete_target(Target *target)
 {
-    delete_properties(target->properties);
-    delete_containers(target->containers);
-    
-    g_free(target->system);
-    g_free(target->clientInterface);
-    g_free(target->targetProperty);
-    g_free(target);
+    if(target != NULL)
+    {
+        delete_properties(target->properties);
+        delete_containers(target->containers);
+        
+        g_free(target->system);
+        g_free(target->clientInterface);
+        g_free(target->targetProperty);
+        g_free(target);
+    }
 }
 
 void delete_target_array(GPtrArray *target_array)
@@ -292,13 +295,43 @@ void delete_target_array(GPtrArray *target_array)
 
 static void print_properties(const GPtrArray *properties)
 {
-    unsigned int i;
-    
-    for(i = 0; i < properties->len; i++)
+    if(properties != NULL)
     {
-        TargetProperty *targetProperty = g_ptr_array_index(properties, i);
-        g_print("    %s = %s;\n", targetProperty->name, targetProperty->value);
+        unsigned int i;
+        
+        g_print("  properties:\n");
+        
+        for(i = 0; i < properties->len; i++)
+        {
+            TargetProperty *targetProperty = g_ptr_array_index(properties, i);
+            g_print("    %s = %s;\n", targetProperty->name, targetProperty->value);
+        }
     }
+}
+
+static void print_containers(const GPtrArray *containers)
+{
+    if(containers != NULL)
+    {
+        unsigned int i;
+        g_print("  containers:\n");
+        
+        for(i = 0; i < containers->len; i++)
+        {
+            Container *container = g_ptr_array_index(containers, i);
+            g_print("    %s:\n", container->name);
+            print_properties(container->properties);
+            g_print("\n");
+        }
+    }
+}
+
+static void print_reserved_properties(const Target *target)
+{
+    g_print("  system = %s\n", target->system);
+    g_print("  clientInterface = %s\n", target->clientInterface);
+    g_print("  targetProperty = %s\n", target->targetProperty);
+    g_print("  numOfCores = %d\n", target->numOfCores);
 }
 
 void print_target_array(const GPtrArray *target_array)
@@ -308,27 +341,12 @@ void print_target_array(const GPtrArray *target_array)
     for(i = 0; i < target_array->len; i++)
     {
         Target *target = g_ptr_array_index(target_array, i);
-        unsigned int j;
         
         g_print("Target:\n");
         
-        g_print("  properties:\n");
         print_properties(target->properties);
-        
-        g_print("  containers:\n");
-        
-        for(j = 0; j < target->containers->len; j++)
-        {
-            Container *container = g_ptr_array_index(target->containers, j);
-            g_print("    %s:\n", container->name);
-            print_properties(container->properties);
-            g_print("\n");
-        }
-        
-        g_print("  system = %s\n", target->system);
-        g_print("  clientInterface = %s\n", target->clientInterface);
-        g_print("  targetProperty = %s\n", target->targetProperty);
-        g_print("  numOfCores = %d\n", target->numOfCores);
+        print_containers(target->containers);
+        print_reserved_properties(target);
         
         g_print("\n");
     }
@@ -346,18 +364,23 @@ Target *find_target(const GPtrArray *target_array, const gchar *key)
 
 gchar *find_target_property(const Target *target, const gchar *name)
 {
-    TargetProperty key;
-    const TargetProperty *key_ptr = &key;
-    TargetProperty **ret;
-    
-    key.name = (gchar*)name;
-    
-    ret = bsearch(&key_ptr, target->properties->pdata, target->properties->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_target_property);
-    
-    if(ret == NULL)
+    if(target->properties == NULL)
         return NULL;
     else
-        return (*ret)->value;
+    {
+        TargetProperty key;
+        const TargetProperty *key_ptr = &key;
+        TargetProperty **ret;
+        
+        key.name = (gchar*)name;
+        
+        ret = bsearch(&key_ptr, target->properties->pdata, target->properties->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_target_property);
+        
+        if(ret == NULL)
+            return NULL;
+        else
+            return (*ret)->value;
+    }
 }
 
 gchar *find_target_key(const Target *target)
