@@ -136,6 +136,10 @@
 			<arg type="s" name="path" direction="out" />
 		</method>
 		
+		<method name="capture_config">
+			<arg type="i" name="pid" direction="in" />
+		</method>
+		
 		<signal name="finish">
 			<arg type="i" name="pid" direction="out" />
 		</signal>

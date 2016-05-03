@@ -296,6 +296,36 @@ pid_t exec_realise(gchar *interface, gchar *target, gchar *derivation, int pipef
 	return -1;
 }
 
+pid_t exec_capture_config(gchar *interface, gchar *target, int pipefd[2])
+{
+    if(pipe(pipefd) == 0)
+    {
+        pid_t pid = fork();
+	
+	if(pid == 0)
+	{
+	    char *const args[] = {interface, "--capture-config", "--target", target, NULL};
+	    close(pipefd[0]); /* Close read-end */
+	    dup2(pipefd[1], 1); /* Attach pipe to the stdout */
+	    execvp(interface, args); /* Run process */
+	    _exit(1);
+	}
+	else if(pid == -1)
+	{
+	    close(pipefd[0]); /* Close read-end */
+	    close(pipefd[1]); /* Close write-end */
+	    return pid;
+	}
+	else
+	{
+	    close(pipefd[1]); /* Close write-end */
+	    return pid;
+	}
+    }
+    else
+	return -1;
+}
+
 pid_t exec_true(void)
 {
     pid_t pid = fork();

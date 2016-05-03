@@ -400,5 +400,16 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         } else {
             die "disnix-query output line 8 does not contain testService3!\n";
         }
+        
+        # Test disnix-capture-infra. Capture the container properties of all
+        # machines and generate an infrastructure expression from it. It should
+        # contain: "foo" = "bar"; twice.
+        $result = $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-capture-infra ${manifestTests}/infrastructure.nix | grep '\"foo\" = \"bar\"' | wc -l");
+        
+        if($result == 2) {
+           print "We have foo=bar twice in the infrastructure model!\n";
+        } else {
+            die "We should have foo=bar twice in the infrastructure model. Instead, we have: $result";
+        }
       '';
   }

@@ -217,6 +217,17 @@ pid_t exec_clean_snapshots(gchar *interface, gchar *target, int keep);
 pid_t exec_realise(gchar *interface, gchar *target, gchar *derivation, int pipefd[2]);
 
 /**
+ * Captures the configuration from the Dysnomia container configuration files
+ * and generates a Nix expression from it.
+ *
+ * @param interface Path to the interface executable
+ * @param target Target Address of the remote interface
+ * @param pipefd Pipe which can be used to capture the output of the process
+ * @return PID of the client interface process performing the operation, or -1 in case of a failure
+ */
+pid_t exec_capture_config(gchar *interface, gchar *target, int pipefd[2]);
+
+/**
  * Invokes the true command for testing purposes.
  */
 pid_t exec_true(void);

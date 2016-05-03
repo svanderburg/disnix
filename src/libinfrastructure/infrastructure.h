@@ -58,6 +58,9 @@ typedef struct
     /* Contains container-specific configuration properties */
     GPtrArray *containers;
     
+    /* Contains the attribute name of the target machine */
+    gchar *name;
+    
     /* Contains the system architecture identifier of the system */
     gchar *system;
     

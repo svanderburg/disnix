@@ -1842,3 +1842,104 @@ gboolean on_handle_get_logdir(OrgNixosDisnixDisnix *object, GDBusMethodInvocatio
     org_nixos_disnix_disnix_complete_get_logdir(object, invocation, logdir);
     return TRUE;
 }
+
+/* Capture config operation */
+
+typedef struct
+{
+    OrgNixosDisnixDisnix *object;
+    gint arg_pid;
+}
+CaptureConfigParams;
+
+static gpointer disnix_capture_config_thread_func(gpointer data)
+{
+    CaptureConfigParams *params = (CaptureConfigParams*)data;
+    int log_fd = open_log_file(params->arg_pid);
+    
+    if(log_fd == -1)
+    {
+        g_printerr("Cannot write logfile!\n");
+        org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
+    }
+    else
+    {
+        /* Declarations */
+        gchar *tempfilename = g_strconcat(tmpdir, "/disnix.XXXXXX", NULL);
+        int closure_fd;
+        
+        /* Print log entry */
+        dprintf(log_fd, "Capture config\n");
+    
+        /* Execute command */
+    
+        closure_fd = mkstemp(tempfilename);
+    
+        if(closure_fd == -1)
+        {
+            dprintf(log_fd, "Error opening tempfile!\n");
+            org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
+        }
+        else
+        {
+            int status = fork();
+
+            if(status == -1)
+            {
+                dprintf(log_fd, "Error with forking dysnomia-containers process!\n");
+                org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
+            }
+            else if(status == 0)
+            {
+                char *args[] = { "dysnomia-containers", "--generate-expr", NULL };
+                
+                dup2(closure_fd, 1);
+                dup2(log_fd, 2);
+                execvp("dysnomia-containers", args);
+                _exit(1);
+            }
+            else
+            {
+                wait(&status);
+
+                if(WEXITSTATUS(status) == 0)
+                {
+                    const gchar *tempfilepaths[] = { tempfilename, NULL };
+                    
+                    if(fchmod(closure_fd, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) == 1)
+                        dprintf(log_fd, "Cannot change permissions on captured expression: %s\n", tempfilename);
+                    
+                    org_nixos_disnix_disnix_emit_success(params->object, params->arg_pid, (const gchar**)tempfilepaths);
+                }
+                else
+                    org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
+            }
+
+            close(closure_fd);
+        }
+        
+        close(log_fd);
+    
+        /* Cleanup */
+        g_free(tempfilename);
+    }
+    
+    /* Cleanup */
+    g_free(params);
+    return NULL;
+
+}
+
+gboolean on_handle_capture_config(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid)
+{
+    GThread *thread;
+    
+    CaptureConfigParams *params = (CaptureConfigParams*)g_malloc(sizeof(CaptureConfigParams));
+    params->object = object;
+    params->arg_pid = arg_pid;
+
+    thread = g_thread_new("capture-config", disnix_capture_config_thread_func, params);
+    org_nixos_disnix_disnix_complete_capture_config(object, invocation);
+    g_thread_unref(thread);
+    return TRUE;
+}

@@ -67,4 +67,6 @@ gboolean on_handle_delete_state(OrgNixosDisnixDisnix *object, GDBusMethodInvocat
 
 gboolean on_handle_get_logdir(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation);
 
+gboolean on_handle_capture_config(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid);
+
 #endif

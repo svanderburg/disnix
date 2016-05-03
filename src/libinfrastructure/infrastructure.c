@@ -224,8 +224,10 @@ GPtrArray *create_target_array(char *infrastructure_expr)
 	for(i = 0; i < nodeset->nodeNr; i++)
 	{
 	    xmlNodePtr targets_children = nodeset->nodeTab[i]->children;
+	    xmlAttrPtr target_properties = nodeset->nodeTab[i]->properties;
 	    Target *target = (Target*)g_malloc(sizeof(Target));
 	
+	    gchar *name = NULL;
 	    gchar *system = NULL;
 	    gchar *clientInterface = NULL;
 	    gchar *targetProperty = NULL;
@@ -233,7 +235,18 @@ GPtrArray *create_target_array(char *infrastructure_expr)
 	    int availableCores = 0;
 	    GPtrArray *properties = NULL;
 	    GPtrArray *containers = NULL;
-	
+	    
+	    while(target_properties != NULL)
+	    {
+	        if(xmlStrcmp(target_properties->name, (xmlChar*) "name") == 0)
+	        {
+	            if(target_properties->children != NULL)
+	                name = g_strdup((gchar*)target_properties->children->content);
+	        }
+	        
+	        target_properties = target_properties->next;
+	    }
+	    
 	    while(targets_children != NULL)
 	    {
 	        if(xmlStrcmp(targets_children->name, (xmlChar*) "system") == 0)
@@ -335,6 +348,7 @@ GPtrArray *create_target_array(char *infrastructure_expr)
 	        targets_children = targets_children->next;
 	    }
 	    
+	    target->name = name;
 	    target->system = system;
 	    target->clientInterface = clientInterface;
 	    target->targetProperty = targetProperty;

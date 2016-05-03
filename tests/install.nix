@@ -249,6 +249,11 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
             die "The logfile numbers are incorrect!";
         }
         
+        # Capture config test. We capture a config and the tempfile should
+        # contain one property: "foo" = "bar";
+        $result = $client->mustSucceed("disnix-client --capture-config");
+        $client->mustSucceed("(cat $result) | grep '\"foo\" = \"bar\"'");
+        
         #### Test disnix-ssh-client
         # Initialise ssh stuff by creating a key pair for communication
         my $key=`${pkgs.openssh}/bin/ssh-keygen -t dsa -f key -N ""`;
@@ -372,6 +377,13 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         
         # Deactivate the same service using the echo type. This test should succeed.
         $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --deactivate --arguments foo=foo --arguments bar=bar --type echo @testService1");
+        
+        # Deactivate the same service using the echo type. This test should succeed.
+        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --deactivate --arguments foo=foo --arguments bar=bar --type echo @testService1");
+        
+        # Capture config test. We capture a config and the tempfile should
+        # contain one property: "foo" = "bar";
+        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --capture-config | grep '\"foo\" = \"bar\"'");
         
         #### Test disnix-copy-closure
         

@@ -64,6 +64,7 @@ static void on_bus_acquired(GDBusConnection *connection, const gchar *name, gpoi
     g_signal_connect(interface, "handle-resolve-snapshots", G_CALLBACK(on_handle_resolve_snapshots), NULL);
     g_signal_connect(interface, "handle-clean-snapshots", G_CALLBACK(on_handle_clean_snapshots), NULL);
     g_signal_connect(interface, "handle-get-logdir", G_CALLBACK(on_handle_get_logdir), NULL);
+    g_signal_connect(interface, "handle-capture-config", G_CALLBACK(on_handle_capture_config), NULL);
     
     /* Export skeleton */
     if(!g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(interface),

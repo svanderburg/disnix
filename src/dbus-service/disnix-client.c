@@ -341,6 +341,9 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 	case OP_CLEAN_SNAPSHOTS:
 	    org_nixos_disnix_disnix_call_clean_snapshots_sync(proxy, pid, keep, NULL, &error);
 	    break;
+	case OP_CAPTURE_CONFIG:
+	    org_nixos_disnix_disnix_call_capture_config_sync(proxy, pid, NULL, &error);
+	    break;
 	case OP_NONE:
 	    g_printerr("ERROR: No operation specified!\n");
 	    cleanup(proxy, derivation, arguments);

@@ -42,5 +42,13 @@
       serviceConfig.ExecStart = "${disnix}/bin/disnix-service";
     };
     
-    environment.systemPackages = [ disnix dysnomia ];
+  environment.systemPackages = [ disnix dysnomia ];
+  environment.etc."dysnomia/properties" = {
+    source = pkgs.writeTextFile {
+      name = "dysnomia-properties";
+      text = ''
+        foo=bar
+      '';
+    };
+  };
 }

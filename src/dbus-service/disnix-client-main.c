@@ -78,6 +78,8 @@ static void print_usage(const char *command)
     printf("  --resolve-snapshots        Converts the relative paths to the snapshots to\n");
     printf("                             absolute paths\n");
     printf("  --clean-snapshots          Removes older snapshots from the snapshot store\n");
+    printf("  --capture-config           Captures the configuration of the machine from the\n");
+    printf("                             Dysnomia container properties in a Nix expression\n");
     printf("  --help                     Shows the usage of this command to the user\n");
     printf("  --version                  Shows the version of this command to the user\n");
 
@@ -111,7 +113,6 @@ static void print_usage(const char *command)
     printf("  --container=CONTAINER      Name of the container in which the component is\n");
     printf("                             managed. If omitted it will default to the same\n");
     printf("                             value as the type.\n");
-
 
     printf("\nQuery all snapshots/Query latest snapshot options:\n");
     printf("  -C, --container=CONTAINER  Name of the container in which the component is managed\n");
@@ -154,6 +155,7 @@ int main(int argc, char *argv[])
         {"import-snapshots", no_argument, 0, 'Y'},
         {"resolve-snapshots", no_argument, 0, 'Z'},
         {"clean-snapshots", no_argument, 0, 'e'},
+        {"capture-config", no_argument, 0, '1'},
         {"target", required_argument, 0, 't'},
         {"localfile", no_argument, 0, 'l'},
         {"remotefile", no_argument, 0, 'R'},
@@ -244,6 +246,9 @@ int main(int argc, char *argv[])
                 break;
             case 'e':
                 operation = OP_CLEAN_SNAPSHOTS;
+                break;
+            case '1':
+                operation = OP_CAPTURE_CONFIG;
                 break;
             case 't':
                 break;
