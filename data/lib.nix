@@ -107,7 +107,7 @@ rec {
    * A string containing the key value
    */
   getTargetProperty = targetProperty: target:
-    if target ? properties ? targetProperty then getAttr (target.targetProperty) target.properties
+    if target ? targetProperty then getAttr (target.targetProperty) target.properties
     else getAttr targetProperty target.properties
   ;
   
