@@ -414,7 +414,11 @@ gchar **generate_activation_arguments(const Target *target, const gchar *contain
     Container *container = find_container(target->containers, container_name);
     
     if(container == NULL || container->properties == NULL)
-        return NULL;
+    {
+        gchar **ret = (gchar**)g_malloc(sizeof(gchar*));
+        ret[0] = NULL;
+        return ret;
+    }
     else
     {
         unsigned int i;
