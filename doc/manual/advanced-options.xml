@@ -145,4 +145,142 @@ $ export DISNIX_PROFILE=other
 $ export DISNIX_DEPLOY_STATE=1
 </screen>
 	</section>
+	
+	<section>
+		<title>Multi-container deployment</title>
+		
+		<para>
+			As described in <xref linkend="chap-basicusage" />, when mapping a service to a target machine in the distribution model,
+			Disnix automatically maps the service to the appropriate container, by referring to a container with the same name as the type
+			the service belongs to.
+		</para>
+		
+		<para>
+			In some unconventional scenarios, it may be desired to run multiple instances of the same container on one machine. In such
+			cases, automapping no longer works and a different notation is required. In Disnix, the following mapping in the distribution model
+			(mapping a service to a list of target machines in the infrastructure model):
+		</para>
+		
+<screen>
+ZipcodeService = [ infrastructure.test2 ];
+</screen>
+		
+		<para>
+			Is equivalent to the mapping in the following notation:
+		</para>
+  
+<screen>
+ZipcodeService = {
+  targets = [ { target = infrastructure.test2; } ];
+};
+</screen>
+		
+		<para>
+			In the above notation, we define an attribute set in which the <varname>targets</varname> property
+			refers to a list of attribute sets defining all possible attributes of a mapping. This alternative notation
+			is more verbose and allows more mapping properties to be specified.
+		</para>
+		
+		<example xml:id="ex-infrastructure-containers-model">
+			<title>Infrastructure model with multiple container instances</title>
+<programlisting>
+{
+  test1 = {
+    properties = {
+      hostname = "test1.example.org";
+    };
+    
+    containers = {
+      tomcat-first = {
+        tomcatPort = 8080;
+      };
+      
+      tomcat-second = {
+        tomcatPort = 8081;
+      };
+    };
+  };
+  
+  test2 = {
+    properties = {
+      hostname = "test2.example.org";
+    };
+    
+    containers = {
+      mysql-first = {
+        mysqlPort = 3306;
+        mysqlUsername = "root";
+        mysqlPassword = "admin";
+      };
+      
+      mysql-second = {
+        mysqlPort = 3307;
+        mysqlUsername = "root";
+        mysqlPassword = "secret";
+      };
+    };
+  }; 
+}
+</programlisting>
+		</example>
+		
+		<para>
+			<xref linkend="ex-infrastructure-containers-model" /> is based on the StaffTracker infrastructure model
+			shown in <xref linkend="ex-infrastructure-model" />. In this modified infrastructure model, the <varname>test1</varname> machine
+			hosts two Apache Tomcat servers (one listening on TCP port 8080 and the other on TCP port 8081) and the <varname>test2</varname>
+			machine hosts two MySQL DBMSes (one listening on TCP port 3306 and the other on TCP port 3307).
+			Because we have two instances of each container and their names do not correspond to the services types, automapping
+			no longer works.
+		</para>
+
+		<example xml:id="ex-distribution-containers-model">
+			<title>Distribution model for the <code>StaffTracker</code> mapping to multiple containers</title>
+			
+<programlisting>
+{infrastructure}:
+
+{
+  zipcodes = {
+    targets = [ { target = infrastructure.test2; container = "mysql-first"; } ]; <co xml:id='co-mysql-first' />
+  };
+  ZipcodeService = {
+    targets = [ { target = infrastructure.test1; container = "tomcat-second"; } ]; <co xml:id='co-tomcat-second' />
+  };
+  StaffTracker = {
+    targets = [ <co xml:id='co-multi-containers' />
+      { target = infrastructure.test1; container = "tomcat-first"; }
+      { target = infrastructure.test1; container = "tomcat-second"; }
+    ];
+  };
+  ...
+}
+</programlisting>
+		</example>
+
+		<para>
+			<xref linkend="ex-distribution-containers-model" /> shows a distribution model using the alternative
+			notation to directly control the container mappings:
+		</para>
+			
+		<calloutlist>
+			<callout arearefs='co-mysql-first'>
+				<para>
+					This mapping states that the <varname>zipcodes</varname> database should be deployed to the first MySQL instance container (<varname>mysql-first</varname>)
+					on machine <varname>test2</varname>.
+				</para>
+			</callout>
+			<callout arearefs='co-tomcat-second'>
+				<para>
+					This mapping states that the <varname>ZipcodeService</varname> application should be deployed to the second Apache Tomcat container (<varname>tomcat-second</varname>)
+					on machine <varname>test1</varname>.
+				</para>
+			</callout>
+			<callout arearefs='co-multi-containers'>
+				<para>
+					It also possible to map a service to multple containers on multiple machines. This line states that the <varname>StaffTracker</varname> service should be deployed
+					to both the first and second Apache Tomcat container on machine <varname>test1</varname>.
+				</para>
+			</callout>
+		</calloutlist>
+	</section>
 </chapter>

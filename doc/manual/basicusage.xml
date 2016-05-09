@@ -320,8 +320,8 @@ let
     &lt;Context&gt;
       &lt;Resource name="jdbc/ZipcodeDB" auth="Container" type="javax.sql.DataSource"
                 maxActivate="100" maxIdle="30" maxWait="10000"
-                username="${zipcodes.target.mysqlUsername}" password="${zipcodes.target.mysqlPassword}" driverClassName="com.mysql.jdbc.Driver"
-                url="jdbc:mysql://${zipcodes.target.hostname}:${toString (zipcodes.target.mysqlPort)}/${zipcodes.name}?autoReconnect=true" /&gt;
+                username="${zipcodes.target.container.mysqlUsername}" password="${zipcodes.target.container.mysqlPassword}" driverClassName="com.mysql.jdbc.Driver"
+                url="jdbc:mysql://${zipcodes.target.properties.hostname}:${toString (zipcodes.target.container.mysqlPort)}/${zipcodes.name}?autoReconnect=true" /&gt;
     &lt;/Context&gt; <co xml:id='co-contextXML' />
   '';
 in
@@ -385,12 +385,29 @@ stdenv.mkDerivation { <co xml:id='co-mkDerivation-service' />
 				</callout>
 				
 				<callout arearefs='co-innerFunctionHeader'>
-					  <para>
+					<para>
 						This is the inner function header, which defines all the <emphasis>inter-dependencies</emphasis>.
 						The <varname>zipcodes</varname> argument refers to a database in which all the
 						zipcodes are stored. The database may be running on a different machine as the
 						<code>ZipcodeService</code>. The service establishes a TCP connection to the database.
-					  </para>
+					</para>
+					<para>
+						Each inter-dependency parameter is an attribute set, which properties are taken
+						from the services model, shown in the section.
+					</para>
+					<para>
+						In addition, each inter-dependency parameter provides an attribute named <varname>targets</varname> referring
+						to list of target machines to which the inter-dependency has been deployed. This mapping is
+						defined in the distribution model shown later in this chapter.
+						In the majority of cases, an inter-dependency only maps to one
+						machine. The attribute <varname>target</varname> refers to the first list element for convenience.
+					</para>
+					<para>
+						Each target attribute set defines two properties. The <varname>properties</varname> attribute refers to general
+						machine properties and correspond to the properties attribute defined in the infrastructure model.
+						The <varname>container</varname> attribute refers to the set of container properties to which the services
+						has been deployed.
+					</para>
 				</callout>
 				
 				<callout arearefs='co-contextXML'>
@@ -402,15 +419,9 @@ stdenv.mkDerivation { <co xml:id='co-mkDerivation-service' />
 					<para>
 						To compose this string, we use the inter-dependency parameter: <varname>zipcodes</varname>
 						to generate a JDBC connection string that can be used to connect to the
-						remote database. The <varname>zipcodes</varname> argument is an attribute set,
-						containing service and infrastructure properties. Each inter-dependency parameter contains
-						the attribute <varname>targets</varname>, which contains a list of machines
-						(and its properties) to which the inter-dependency is deployed.
-						The <varname>target</varname> parameter is the first element from the 
-						<varname>targets</varname> list.
-						The properties of the inter-dependencies are defined in the services model, which
-						we will show later. The properties in the <varname>targets</varname> attribute are
-						defined in the infrastructure model (also shown later).
+						remote database. We use the machine-specific <varname>hostname</varname> attribute to determine
+						the hostname to remotely connect and the <varname>container</varname> specific properties to fetch
+						MySQL's port number and authentication credentials.
 					</para>
 				</callout>
 				
@@ -439,7 +450,6 @@ stdenv.mkDerivation { <co xml:id='co-mkDerivation-service' />
 				by Disnix, like ordinary Nix packages.
 				What Disnix basically provides is the locations of the inter-dependencies and the properties of
 				the services and machines.
-
 			</para>
 		</section>
 	
@@ -747,18 +757,35 @@ rec { <co xml:id='co-rec2' />
 <programlisting>
 {
   test1 = {
-    hostname = "test1.example.org";
-    tomcatPort = 8080;
+    properties = {
+      hostname = "test1.example.org";
+    };
+    
+    containers = {
+      tomcat-webapplication = {
+        tomcatPort = 8080;
+      };
+    };
     
     system = "i686-linux";
   };
   
   test2 = { <co xml:id='co-target' />
-    hostname = "test2.example.org"; <co xml:id='co-hostname' />
-    tomcatPort = 8080;
-    mysqlPort = 3306; <co xml:id='co-mysqlPort' />
-    mysqlUsername = "root";
-    mysqlPassword = "admin";
+    properties = { <co xml:id='co-target-properties' />
+      hostname = "test2.example.org"; <co xml:id='co-hostname' />
+    };
+    
+    containers = { <co xml:id='co-target-containers' />
+      tomcat-webapplication = {
+        tomcatPort = 8080;
+      };
+      
+      mysql-database = {
+        mysqlPort = 3306; <co xml:id='co-mysqlPort' />
+        mysqlUsername = "root";
+        mysqlPassword = "admin";
+      };
+    };
     
     system = "x86_64-linux"; <co xml:id='co-system' />
     numOfCores = 1; <co xml:id='co-numOfCores' />
@@ -778,41 +805,54 @@ rec { <co xml:id='co-rec2' />
 			</para>
 			
 			<calloutlist>
-				  <callout arearefs='co-target'>
+				<callout arearefs='co-target'>
 					<para>
 						The infrastructure model is an attribute set in which each attribute represents a 
 						machine in the network. This attribute refers to the properties of a machine called
 						<varname>test2</varname>.
 					</para>
-				  </callout>
-				  
-				  <callout arearefs='co-hostname'>
-					  <para>
+				</callout>
+				
+				<callout arearefs='co-target-properties'>
+					<para>
+						  Each target can define a set of properties describing arbitrary characteristics of a machine.
+					</para>
+				</callout>
+				
+				<callout arearefs='co-hostname'>
+					<para>
 						In order to perform deployment steps remotely, we need to know how to connect
 						to the machine. By default, the <varname>hostname</varname> attribute is used for this.
 						Disnix can be configured to use a different property as well through a command-line
 						parameter or environment variable.
-					  </para>
-				  </callout>
+					</para>
+				</callout>
 				  
-				  <callout arearefs='co-mysqlPort'>
-					  <para>
-						Most of the properties of a machine can be freely chosen and are used by the
-						Dysnomia modules to execute a specific non-generic deployment step for a particular service.
-						For instance, the
-						<varname>mysqlPort</varname> specifies on which port the MySQL can be reached.
-						The MySQL properties in this model are used by the MySQL Dysnomia module.
-					  </para>
-				  </callout>
+				<callout arearefs='co-target-containers'>
+					<para>
+						Besides general target properties, each service has a specific type and will be deployed
+						to a container that can host them. The <varname>containers</varname> attribute set defines
+						properties of each container. These container-specific properties are used both for building
+						the service, and for activation and deactivation.
+					</para>
+				</callout>
+				  
+				<callout arearefs='co-mysqlPort'>
+					<para>
+						The <varname>mysqlPort</varname> specifies on which port the MySQL can be reached.
+						The MySQL properties in this model are used by the MySQL Dysnomia module for activating
+						or deactivating the database.
+					</para>
+				</callout>
 			</calloutlist>
 			
 			<para>
-				The infrastructure model also allows you to specify a number of advanced properties. These properties are
+				The infrastructure model also allows you to specify a number of advanced system properties. These properties are
 				optional and typically reasonable default values are provided for them. They only need to be specified in special circumstances:
 			</para>
 			
 			<calloutlist>
-				  <callout arearefs='co-system'>
+				<callout arearefs='co-system'>
 					<para>
 						A machine in the network may have a different system architecture as the coordinator machine.
 						The <varname>system</varname> attribute can be used to specify the system architecture of a target machine.
@@ -833,9 +873,9 @@ rec { <co xml:id='co-rec2' />
 						You do not need a dedicated cluster of machines to build for these architecture, but you can
 						reuse the existing deployment infrastructure.
 					</para>
-				  </callout>
-				  
-				  <callout arearefs='co-numOfCores'>
+				</callout>
+				
+				<callout arearefs='co-numOfCores'>
 					<para>
 						In the activation phase, Disnix tries to concurrently activate as many services as possible.
 						The <varname>numOfCores</varname> attribute can be used to indicate the amount of CPU cores available on
@@ -845,8 +885,8 @@ rec { <co xml:id='co-rec2' />
 					<para>
 						If this attribute is omitted, it will default to <code>1</code>.
 					</para>
-				  </callout>
-				  <callout arearefs='co-targetProperty'>
+				</callout>
+				<callout arearefs='co-targetProperty'>
 					  <para>
 						This is a reserved property defining which attribute in this attribute set
 						specifies how to connect to this machine. If this attribute is not specified
@@ -854,8 +894,8 @@ rec { <co xml:id='co-rec2' />
 						<envar>DISNIX_TARGET_PROPERTY</envar> environment variable is used, which
 						defaults to <varname>hostname</varname>. See <xref linkend="chap-advanced-options" /> for more information.
 					  </para>
-				  </callout>
-				  <callout arearefs='co-clientInterface'>
+				</callout>
+				<callout arearefs='co-clientInterface'>
 					  <para>
 						This reserved property specifies which executable needs to be run to connect
 						to the target machine. If this attribute is not specified then the value provided
@@ -863,7 +903,7 @@ rec { <co xml:id='co-rec2' />
 						environment variable is used, which defaults to <command>disnix-ssh-client</command>.
 						See <xref linkend="chap-advanced-options" /> for more information.
 					  </para>
-				  </callout>
+				</callout>
 			</calloutlist>
 			
 			<para>
@@ -933,6 +973,20 @@ rec { <co xml:id='co-rec2' />
 					</para>
 				</callout>
 			</calloutlist>
+			
+			<para>
+				As may be obsevered in the distribution model, each service is mapped to a target machine. Each service is supposed
+				to be deployed to a container (predeployed to a machine) that is capable of hosting the service.
+				By default, Disnix uses an auto-mapping strategy to determine to which container a service gets deployed.
+				In principle, the container has the same name as the type to which the service belongs.
+				In most cases, automapping suffices -- you typically only run one instance of a MySQL DBMS or Apache Tomcat service
+				on one machine.
+			</para>
+			<para>
+				In some unconventional cases, it may be desired to run multiple instances of the same container on one machine, e.g. two MySQL DBMSes or two Apache
+				Tomcat services. In such cases, more control in the distribution model needed. Disnix also supports an alternative (and more verbose)
+				distribution model notation in which the container mapping can be specified. See <xref linkend="chap-advanced-options" /> for more information.
+			</para>
 		</section>
 	</section>
 	
