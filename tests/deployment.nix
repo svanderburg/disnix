@@ -401,6 +401,46 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
             die "disnix-query output line 8 does not contain testService3!\n";
         }
         
+        # Test multi container deployment.
+        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-multicontainer.nix");
+        
+        # Use disnix-query to see if the right services are installed on
+        # the right target platforms. This test should succeed.
+        
+        my @lines = split('\n', $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-query ${manifestTests}/infrastructure.nix"));
+        
+        if($lines[1] ne "Services on: testtarget1") {
+            die "disnix-query output line 1 does not match what we expect!\n";
+        }
+        
+        if($lines[3] =~ /\-testService1/) {
+            print "Found testService1 on disnix-query output line 3\n";
+        } else {
+            die "disnix-query output line 3 does not contain testService1!\n";
+        }
+        
+        if($lines[4] =~ /\-testService3/) {
+            print "Found testService3 on disnix-query output line 4\n";
+        } else {
+            die "disnix-query output line 4 does not contain testService3!\n";
+        }
+        
+        if($lines[6] ne "Services on: testtarget2") {
+            die "disnix-query output line 6 does not match what we expect!\n";
+        }
+        
+        if($lines[8] =~ /\-testService2/) {
+            print "Found testService2 on disnix-query output line 8\n";
+        } else {
+            die "disnix-query output line 8 does not contain testService2!\n";
+        }
+        
+        if($lines[9] =~ /\-testService3/) {
+            print "Found testService3 on disnix-query output line 9\n";
+        } else {
+            die "disnix-query output line 9 does not contain testService3!\n";
+        }
+        
         # Test disnix-capture-infra. Capture the container properties of all
         # machines and generate an infrastructure expression from it. It should
         # contain: "foo" = "bar"; twice.
