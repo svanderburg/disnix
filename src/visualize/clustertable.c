@@ -100,3 +100,71 @@ void destroy_cluster_table(GHashTable *cluster_table)
 {
     g_hash_table_destroy(cluster_table);
 }
+
+static void print_container_table(GHashTable *container_table, int id, gchar *target, int no_containers)
+{
+    GHashTableIter iter;
+    gpointer *key;
+    gpointer *value;
+    int count = 0;
+    
+    g_hash_table_iter_init(&iter, container_table);
+    while(g_hash_table_iter_next(&iter, (gpointer*)&key, (gpointer*)&value))
+    {
+        unsigned int i;
+        GPtrArray *cluster_array = (GPtrArray*)value;
+        
+        if(!no_containers)
+        {
+            g_print("subgraph cluster_%d_%d {\n", id, count);
+            g_print("style=filled;\n");
+        
+            if(cluster_array->len > 0)
+            {
+                ActivationMapping *mapping = g_ptr_array_index(cluster_array, 0);
+                g_print("label=\"%s\";\n", mapping->container);
+            }
+            
+            g_print("fillcolor=grey40\n");
+        }
+        
+        g_print("node [style=filled,fillcolor=white,color=black];\n");
+        
+        for(i = 0; i < cluster_array->len; i++)
+        {
+            ActivationMapping *mapping = g_ptr_array_index(cluster_array, i);
+            g_print("\"%s:%s:%s\" [ label = \"%s\" ];\n", mapping->key, target, mapping->container, mapping->name);
+        }
+        
+        if(!no_containers)
+            g_print("}\n");
+        
+        count++;
+    }
+}
+
+void print_cluster_table(GHashTable *cluster_table, int no_containers)
+{
+    GHashTableIter iter;
+    gpointer *key;
+    gpointer *value;
+    int count = 0;
+    
+    g_hash_table_iter_init(&iter, cluster_table);
+    while(g_hash_table_iter_next(&iter, (gpointer*)&key, (gpointer*)&value)) 
+    {
+        gchar *target = (gchar*)key;
+        GHashTable *container_table = (GHashTable*)value;
+        
+        g_print("subgraph cluster_%d {\n", count);
+        g_print("style=filled;\n");
+        g_print("label=\"%s\";\n", target);
+        g_print("fillcolor=grey\n");
+
+        print_container_table(container_table, count, target, no_containers);
+        
+        g_print("}\n");
+    
+        count++;
+    }
+}

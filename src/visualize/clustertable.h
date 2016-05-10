@@ -38,4 +38,12 @@ GHashTable *generate_cluster_table(GPtrArray *activation_array, GPtrArray *targe
  */
 void destroy_cluster_table(GHashTable *cluster_table);
 
+/**
+ * Prints the cluster table in dot format.
+ *
+ * @param cluster_table Clustered table to print
+ * @param no_containers Indicates whether not to visualize the containers
+ */
+void print_cluster_table(GHashTable *cluster_table, int no_containers);
+
 #endif

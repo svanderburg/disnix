@@ -114,3 +114,23 @@ void destroy_edges_table(GHashTable *edges_table)
 {
     g_hash_table_destroy(edges_table);
 }
+
+void print_edges_table(GHashTable *edges_table)
+{
+    GHashTableIter iter;
+    gpointer *key;
+    gpointer *value;
+    
+    g_hash_table_iter_init(&iter, edges_table);
+    while(g_hash_table_iter_next(&iter, (gpointer*)&key, (gpointer*)&value))
+    {
+        unsigned int i;
+        GPtrArray *dependency_array = (GPtrArray*)value;
+    
+        for(i = 0; i < dependency_array->len; i++)
+        {
+            gchar *dep = g_ptr_array_index(dependency_array, i);
+            g_print("\"%s\" -> \"%s\"\n", (gchar*)key, dep);
+        }
+    }
+}

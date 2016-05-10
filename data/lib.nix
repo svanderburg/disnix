@@ -93,7 +93,7 @@ rec {
     ) (attrNames distribution))
   ;
   
-  /**
+  /*
    * Fetches the key value that is used to refer to a target machine.
    * If a target defines a 'targetProperty' then the corresponding attribute
    * is used. If no targetProperty is provided by the target, then the global
@@ -110,6 +110,45 @@ rec {
     if target ? targetProperty then getAttr (target.targetProperty) target.properties
     else getAttr targetProperty target.properties
   ;
+  
+  /*
+   * Selects the pkg property of a specific service with all the required
+   * parameters to evaluate it.
+   *
+   * Parameters:
+   * servicesFun: Function that returns a services attributeset (defined in the services.nix file)
+   * serviceName: Name of the service to select
+   * distribution: Distribution attribute set
+   * invDistribution: Inverse distribution attribute set
+   * system: System identifier
+   *
+   * Returns:
+   * The pkg property (a nested function taking intra- and inter dependency
+   * parameters) that can be evaluated to build it
+   */
+  selectPkgProperty = servicesFun: serviceName: distribution: invDistribution: system:
+    (getAttr serviceName (servicesFun { inherit distribution invDistribution; inherit system; pkgs = selectPkgs system; })).pkg;
+  
+  /*
+   * Evaluates the service package and produces a store or derivation path from
+   * it.
+   *
+   * Parameters:
+   * service: Service to evaluate
+   * serviceProperty: Defines which property we need of a derivation (either "outPath" or "drvPath")
+   * pkg: Composed package property that needs to be evaluated
+   *
+   * Returns:
+   * A store path to the build output or derivation file
+   */
+  evaluateService = service: serviceProperty: pkg:
+    if serviceProperty == "outPath" then
+      if service.dependsOn == {} then pkg.outPath
+      else (pkg (service.dependsOn)).outPath
+    else
+      if service.dependsOn == {} then unsafeDiscardOutputDependency (pkg.drvPath)
+      else unsafeDiscardOutputDependency ((pkg (service.dependsOn)).drvPath)
+    ;
   
   /*
    * Iterates over all services in the distribution attributeset. For every
@@ -137,9 +176,9 @@ rec {
    * Returns:
    * Service attributeset augmented with a distribution mapping property 
    */
-   
+  
   evaluatePkgFunctions = distribution: invDistribution: services: servicesFun: serviceProperty: targetProperty:
-    listToAttrs (map (serviceName: 
+    listToAttrs (map (serviceName:
       let
         targets = getAttr serviceName distribution;
         service = getAttr serviceName services;
@@ -151,16 +190,9 @@ rec {
               map (target:
                 let
                   system = if target ? system then target.system else builtins.currentSystem;
-                  pkg = (getAttr serviceName (servicesFun { inherit distribution invDistribution; inherit system; pkgs = selectPkgs system; })).pkg;
+                  pkg = selectPkgProperty servicesFun serviceName distribution invDistribution system;
                 in
-                { service =
-                    if serviceProperty == "outPath" then
-                      if service.dependsOn == {} then pkg.outPath
-                      else (pkg (service.dependsOn)).outPath
-                    else
-                      if service.dependsOn == {} then unsafeDiscardOutputDependency (pkg.drvPath)
-                      else unsafeDiscardOutputDependency ((pkg (service.dependsOn)).drvPath)
-                    ;
+                { service = evaluateService service serviceProperty pkg;
                   target = getTargetProperty targetProperty target;
                   container = service.type;
                 }
@@ -169,16 +201,9 @@ rec {
               map (mapping:
                 let
                   system = if mapping.target ? system then mapping.target.system else builtins.currentSystem;
-                  pkg = (getAttr serviceName (servicesFun { inherit distribution invDistribution; inherit system; pkgs = selectPkgs system; })).pkg;
+                  pkg = selectPkgProperty servicesFun serviceName distribution invDistribution system;
                 in
-                { service =
-                    if serviceProperty == "outPath" then
-                      if service.dependsOn == {} then pkg.outPath
-                      else (pkg (service.dependsOn)).outPath
-                    else
-                      if service.dependsOn == {} then unsafeDiscardOutputDependency (pkg.drvPath)
-                      else unsafeDiscardOutputDependency ((pkg (service.dependsOn)).drvPath)
-                    ;
+                { service = evaluateService service serviceProperty pkg;
                   target = getTargetProperty targetProperty mapping.target;
                   container = if mapping ? container then mapping.container else service.type;
                 }

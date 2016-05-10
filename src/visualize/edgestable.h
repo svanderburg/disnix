@@ -38,4 +38,11 @@ GHashTable *generate_edges_table(const GPtrArray *activation_array, GPtrArray *t
  */
 void destroy_edges_table(GHashTable *edges_table);
 
+/**
+ * Prints the edges table in dot format.
+ *
+ * @param edges_table Edges table to print
+ */
+void print_edges_table(GHashTable *edges_table);
+
 #endif
