@@ -45,7 +45,7 @@ int capture_infra(gchar *interface, const gchar *target_property, gchar *infrast
         for(i = 0; i < target_array->len; i++)
         {
             Target *target = g_ptr_array_index(target_array, i);
-            gchar *client_interface = target->clientInterface;
+            gchar *client_interface = target->client_interface;
             gchar *target_key = find_target_key(target, target_property);
             int status;
             int pipefd[2];

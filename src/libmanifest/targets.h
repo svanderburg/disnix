@@ -62,16 +62,16 @@ typedef struct
     gchar *system;
     
     /* Refers to the executable that must be executed to connect to the target system */
-    gchar *clientInterface;
+    gchar *client_interface;
     
     /* Refer to the name of the property in properties that must be used to connect to the target system */
-    gchar *targetProperty;
+    gchar *target_property;
     
     /* Contains the amount CPU cores this machine has */
-    int numOfCores;
+    int num_of_cores;
     
     /* Contains the amount of CPU cores that are currently available */
-    int availableCores;
+    int available_cores;
 }
 Target;
 

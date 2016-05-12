@@ -63,7 +63,7 @@ int distribute(const gchar *manifest_file, const unsigned int max_concurrent_tra
             
             /* Invoke copy closure operation */
             g_print("[target: %s]: Receiving intra-dependency closure of profile: %s\n", item->target, item->profile);
-            exec_copy_closure_to(target->clientInterface, item->target, item->profile);
+            exec_copy_closure_to(target->client_interface, item->target, item->profile);
             running_processes++;
             
             /* If limit has been reached, wait until one of the transfers finishes */

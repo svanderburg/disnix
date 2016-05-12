@@ -40,7 +40,7 @@ int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infra
         for(i = 0; i < target_array->len; i++)
         {
             Target *target = g_ptr_array_index(target_array, i);
-            gchar *client_interface = target->clientInterface;
+            gchar *client_interface = target->client_interface;
             gchar *target_key = find_target_key(target, target_property);
             int pid;
             

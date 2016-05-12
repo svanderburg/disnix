@@ -46,7 +46,7 @@ static int set_target_profiles(const GPtrArray *distribution_array, const GPtrAr
         
         g_print("[target: %s]: Setting Disnix profile: %s\n", item->target, item->profile);
         
-        pid = exec_set(target->clientInterface, item->target, profile, item->profile);
+        pid = exec_set(target->client_interface, item->target, profile, item->profile);
         
         if(pid == -1)
         {

@@ -229,10 +229,10 @@ GPtrArray *create_target_array(char *infrastructure_expr)
 	
 	    gchar *name = NULL;
 	    gchar *system = NULL;
-	    gchar *clientInterface = NULL;
-	    gchar *targetProperty = NULL;
-	    int numOfCores = 0;
-	    int availableCores = 0;
+	    gchar *client_interface = NULL;
+	    gchar *target_property = NULL;
+	    int num_of_cores = 0;
+	    int available_cores = 0;
 	    GPtrArray *properties = NULL;
 	    GPtrArray *containers = NULL;
 	    
@@ -257,19 +257,19 @@ GPtrArray *create_target_array(char *infrastructure_expr)
 	        else if(xmlStrcmp(targets_children->name, (xmlChar*) "clientInterface") == 0)
 	        {
 	            if(targets_children->children != NULL)
-	                clientInterface = g_strdup((gchar*)targets_children->children->content);
+	                client_interface = g_strdup((gchar*)targets_children->children->content);
 	        }
 	        else if(xmlStrcmp(targets_children->name, (xmlChar*) "targetProperty") == 0)
 	        {
 	            if(targets_children->children != NULL)
-	                targetProperty = g_strdup((gchar*)targets_children->children->content);
+	                target_property = g_strdup((gchar*)targets_children->children->content);
 	        }
 	        else if(xmlStrcmp(targets_children->name, (xmlChar*) "numOfCores") == 0)
 	        {
 	            if(targets_children->children != NULL)
 	            {
-	                numOfCores = atoi((char*)targets_children->children->content);
-	                availableCores = numOfCores;
+	                num_of_cores = atoi((char*)targets_children->children->content);
+	                available_cores = num_of_cores;
 	            }
 	        }
 	        else if(xmlStrcmp(targets_children->name, (xmlChar*) "properties") == 0)
@@ -280,15 +280,15 @@ GPtrArray *create_target_array(char *infrastructure_expr)
 	            /* Iterate over all properties */
 	            while(properties_children != NULL)
 	            {
-	                TargetProperty *targetProperty = (TargetProperty*)g_malloc(sizeof(TargetProperty));
-	                targetProperty->name = g_strdup((gchar*)properties_children->name);
+	                TargetProperty *target_property = (TargetProperty*)g_malloc(sizeof(TargetProperty));
+	                target_property->name = g_strdup((gchar*)properties_children->name);
 	                
 	                if(properties_children->children == NULL)
-	                    targetProperty->value = NULL;
+	                    target_property->value = NULL;
 	                else
-	                    targetProperty->value = g_strdup((gchar*)properties_children->children->content);
+	                    target_property->value = g_strdup((gchar*)properties_children->children->content);
 	                
-	                g_ptr_array_add(properties, targetProperty);
+	                g_ptr_array_add(properties, target_property);
 	                
 	                properties_children = properties_children->next;
 	            }
@@ -317,15 +317,15 @@ GPtrArray *create_target_array(char *infrastructure_expr)
 	                    /* Iterate over all properties */
 	                    while(properties_children != NULL)
 	                    {
-	                        TargetProperty *targetProperty = (TargetProperty*)g_malloc(sizeof(TargetProperty));
-	                        targetProperty->name = g_strdup((gchar*)properties_children->name);
+	                        TargetProperty *target_property = (TargetProperty*)g_malloc(sizeof(TargetProperty));
+	                        target_property->name = g_strdup((gchar*)properties_children->name);
 	                        
 	                        if(properties_children->children == NULL)
-	                            targetProperty->value = NULL;
+	                            target_property->value = NULL;
 	                        else
-	                            targetProperty->value = g_strdup((gchar*)properties_children->children->content);
+	                            target_property->value = g_strdup((gchar*)properties_children->children->content);
 	                
-	                        g_ptr_array_add(properties, targetProperty);
+	                        g_ptr_array_add(properties, target_property);
 	                
 	                        properties_children = properties_children->next;
 	                    }
@@ -350,10 +350,10 @@ GPtrArray *create_target_array(char *infrastructure_expr)
 	    
 	    target->name = name;
 	    target->system = system;
-	    target->clientInterface = clientInterface;
-	    target->targetProperty = targetProperty;
-	    target->numOfCores = numOfCores;
-	    target->availableCores = availableCores;
+	    target->client_interface = client_interface;
+	    target->target_property = target_property;
+	    target->num_of_cores = num_of_cores;
+	    target->available_cores = available_cores;
 	    target->properties = properties;
 	    target->containers = containers;
 	    
@@ -385,11 +385,11 @@ static void delete_properties(GPtrArray *properties)
     
         for(i = 0; i < properties->len; i++)
         {
-            TargetProperty *targetProperty = g_ptr_array_index(properties, i);
+            TargetProperty *target_property = g_ptr_array_index(properties, i);
             
-            g_free(targetProperty->name);
-            g_free(targetProperty->value);
-            g_free(targetProperty);
+            g_free(target_property->name);
+            g_free(target_property->value);
+            g_free(target_property);
         }
         
         g_ptr_array_free(properties, TRUE);
@@ -419,8 +419,8 @@ static void delete_target(Target *target)
     delete_containers(target->containers);
     
     g_free(target->system);
-    g_free(target->clientInterface);
-    g_free(target->targetProperty);
+    g_free(target->client_interface);
+    g_free(target->target_property);
     g_free(target);
 }
 
@@ -442,8 +442,8 @@ void delete_target_array(GPtrArray *target_array)
 
 gchar *find_target_key(const Target *target, const gchar *global_target_property)
 {
-    if(target->targetProperty == NULL)
+    if(target->target_property == NULL)
         return find_target_property(target, global_target_property);
     else
-        return find_target_property(target, target->targetProperty);
+        return find_target_property(target, target->target_property);
 }

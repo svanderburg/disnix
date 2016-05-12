@@ -89,7 +89,7 @@ static int snapshot_services(GPtrArray *snapshots_array, GPtrArray *target_array
                 gint *pidKey;
                 
                 g_print("[target: %s]: Snapshotting state of service: %s\n", mapping->target, mapping->component);
-                pid = exec_snapshot(target->clientInterface, mapping->target, mapping->container, mapping->type, arguments, arguments_size, mapping->service);
+                pid = exec_snapshot(target->client_interface, mapping->target, mapping->container, mapping->type, arguments, arguments_size, mapping->service);
                 
                 /* Add pid and mapping to the hash table */
                 pidKey = g_malloc(sizeof(gint));
@@ -137,7 +137,7 @@ static int retrieve_snapshots_per_target(GPtrArray *snapshots_array, Target *tar
         SnapshotMapping *mapping = g_ptr_array_index(snapshots_per_target_array, i);
         
         g_print("[target: %s]: Retrieving snapshots of component: %s deployed to container: %s\n", mapping->target, mapping->component, mapping->container);
-        status = wait_to_finish(exec_copy_snapshots_from(target->clientInterface, mapping->target, mapping->container, mapping->component, all));
+        status = wait_to_finish(exec_copy_snapshots_from(target->client_interface, mapping->target, mapping->container, mapping->component, all));
         
         if(status != 0)
             break;
