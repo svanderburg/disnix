@@ -24,7 +24,6 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <xmlutil.h>
 #include <libxslt/xslt.h>
 #include <libxslt/transform.h>
 #define BUFFER_SIZE 4096
@@ -179,26 +178,9 @@ static gchar *create_infrastructure_xml(gchar *infrastructure_expr)
     }
 }
 
-GPtrArray *create_target_array(char *infrastructure_expr)
+GPtrArray *create_target_array_from_doc(xmlDocPtr doc)
 {
-    /* Declarations */
-    gchar *infrastructureXML;
-    xmlDocPtr doc;
     xmlXPathObjectPtr result;
-    GPtrArray *targets_array = NULL;
-    
-    /* Open the XML output of nix-instantiate */
-    infrastructureXML = create_infrastructure_xml(infrastructure_expr);
-    
-    if(infrastructureXML == NULL)
-    {
-        g_printerr("Error opening infrastructure XML file!\n");
-        return NULL;
-    }
-    
-    /* Parse the infrastructure XML file */
-    doc = create_infrastructure_doc(infrastructureXML);
-    g_free(infrastructureXML);
     
     if(doc == NULL)
     {
@@ -218,7 +200,7 @@ GPtrArray *create_target_array(char *infrastructure_expr)
         xmlNodeSetPtr nodeset = result->nodesetval;
         
         /* Create a targets array */
-	targets_array = g_ptr_array_new();
+	GPtrArray *targets_array = g_ptr_array_new();
 	
 	/* Iterate over all the target elements */
 	for(i = 0; i < nodeset->nodeNr; i++)
@@ -238,6 +220,7 @@ GPtrArray *create_target_array(char *infrastructure_expr)
 	    
 	    while(target_properties != NULL)
 	    {
+	        /* Parse the name attribute */
 	        if(xmlStrcmp(target_properties->name, (xmlChar*) "name") == 0)
 	        {
 	            if(target_properties->children != NULL)
@@ -247,6 +230,7 @@ GPtrArray *create_target_array(char *infrastructure_expr)
 	        target_properties = target_properties->next;
 	    }
 	    
+	    /* Parse the sub elements */
 	    while(targets_children != NULL)
 	    {
 	        if(xmlStrcmp(targets_children->name, (xmlChar*) "system") == 0)
@@ -364,10 +348,40 @@ GPtrArray *create_target_array(char *infrastructure_expr)
 	/* Sort the targets array */
 	g_ptr_array_sort(targets_array, (GCompareFunc)compare_target);
 
+	/* Cleanup */
 	xmlXPathFreeObject(result);
+	
+	/* Return the generated targets array */
+	return targets_array;
     }
     else
+    {
         g_printerr("No targets found!\n");
+        return NULL;
+    }
+}
+
+GPtrArray *create_target_array(char *infrastructure_expr)
+{
+    /* Declarations */
+    xmlDocPtr doc;
+    GPtrArray *targets_array = NULL;
+    
+    /* Open the XML output of nix-instantiate */
+    gchar *infrastructureXML = create_infrastructure_xml(infrastructure_expr);
+    
+    if(infrastructureXML == NULL)
+    {
+        g_printerr("Error opening infrastructure XML file!\n");
+        return NULL;
+    }
+    
+    /* Parse the infrastructure XML file */
+    doc = create_infrastructure_doc(infrastructureXML);
+    g_free(infrastructureXML);
+    
+    /* Create a target array from the XML document */
+    targets_array = create_target_array_from_doc(doc);
 
     /* Cleanup */
     xmlFreeDoc(doc);

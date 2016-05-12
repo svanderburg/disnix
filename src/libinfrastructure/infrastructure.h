@@ -20,6 +20,7 @@
 #ifndef __DISNIX_INFRASTRUCTURE_H
 #define __DISNIX_INFRASTRUCTURE_H
 #include <glib.h>
+#include <xmlutil.h>
 
 /**
  * @brief Encapsulates a property of a machine
@@ -77,6 +78,14 @@ typedef struct
     int available_cores;
 }
 Target;
+
+/**
+ * Creaes an array with targets from an XML document
+ *
+ * @param doc XML document composed by the XML parser
+ * @return GPtrArray with target properties
+ */
+GPtrArray *create_target_array_from_doc(xmlDocPtr doc);
 
 /**
  * Creates an array with targets from an infrastructure Nix expression
