@@ -28,6 +28,8 @@ typedef struct
 {
     /** Nix store path to a deployed service */
     gchar *derivation;
+    /** Name of the container to which the service has been deployed */
+    gchar *container;
     /** Dysnomia module type used for executing certain deployment activities */
     gchar *type;
 }

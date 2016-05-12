@@ -41,7 +41,7 @@ static int unlock_services(int log_fd, GPtrArray *profile_manifest_array)
         ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
         int status;
         
-        dprintf(log_fd, "Notifying unlock on %s: of type: %s\n", entry->derivation, entry->type);
+        dprintf(log_fd, "Notifying unlock on %s: of type: %s in container: %s\n", entry->derivation, entry->type, entry->container);
         status = fork();
         
         if(status == -1)
@@ -52,7 +52,7 @@ static int unlock_services(int log_fd, GPtrArray *profile_manifest_array)
         else if(status == 0)
         {
             char *cmd = "dysnomia";
-            char *args[] = {cmd, "--type", entry->type, "--operation", "unlock", "--component", entry->derivation, "--environment", NULL};
+            char *args[] = {cmd, "--type", entry->type, "--operation", "unlock", "--container", entry->container, "--component", entry->derivation, "--environment", NULL};
             dup2(log_fd, 1);
             dup2(log_fd, 2);
             execvp(cmd, args);
@@ -84,7 +84,7 @@ static int lock_services(int log_fd, GPtrArray *profile_manifest_array)
         ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
         int status;
     
-        dprintf(log_fd, "Notifying lock on %s: of type: %s\n", entry->derivation, entry->type);
+        dprintf(log_fd, "Notifying lock on %s: of type: %s in container: %s\n", entry->derivation, entry->type, entry->container);
         
         status = fork();
 
@@ -96,7 +96,7 @@ static int lock_services(int log_fd, GPtrArray *profile_manifest_array)
         else if(status == 0)
         {
             char *cmd = "dysnomia";
-            char *args[] = {cmd, "--type", entry->type, "--operation", "lock", "--component", entry->derivation, "--environment", NULL};
+            char *args[] = {cmd, "--type", entry->type, "--operation", "lock", "--container", entry->container, "--component", entry->derivation, "--environment", NULL};
             dup2(log_fd, 1);
             dup2(log_fd, 2);
             execvp(cmd, args);
@@ -163,6 +163,14 @@ static int unlock_disnix(int log_fd)
     return status;
 }
 
+typedef enum
+{
+    LINE_DERIVATION,
+    LINE_CONTAINER,
+    LINE_TYPE
+}
+LineType;
+
 GPtrArray *create_profile_manifest_array(gchar *profile)
 {
     gchar *manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, "/manifest", NULL);
@@ -174,7 +182,7 @@ GPtrArray *create_profile_manifest_array(gchar *profile)
     else
     {
         char line[BUFFER_SIZE];
-        int is_component = TRUE;
+        LineType line_type = LINE_DERIVATION;
         GPtrArray *profile_manifest_array = g_ptr_array_new();
         ProfileManifestEntry *entry = NULL;
 
@@ -189,24 +197,29 @@ GPtrArray *create_profile_manifest_array(gchar *profile)
                 line[line_length - 1] = '\0';
             
             /* Compose derivation and type pairs and add them to an array */
-            if(is_component)
+            switch(line_type)
             {
-                entry = (ProfileManifestEntry*)g_malloc(sizeof(ProfileManifestEntry));
-                entry->derivation = g_strdup(line);
-                is_component = FALSE;
-            }
-            else
-            {
-                entry->type = g_strdup(line);
-                g_ptr_array_add(profile_manifest_array, entry);
-                is_component = TRUE;
+                case LINE_DERIVATION:
+                    entry = (ProfileManifestEntry*)g_malloc(sizeof(ProfileManifestEntry));
+                    entry->derivation = g_strdup(line);
+                    line_type = LINE_CONTAINER;
+                    break;
+                case LINE_CONTAINER:
+                    entry->container = g_strdup(line);
+                    line_type = LINE_TYPE;
+                    break;
+                case LINE_TYPE:
+                    entry->type = g_strdup(line);
+                    g_ptr_array_add(profile_manifest_array, entry);
+                    line_type = LINE_DERIVATION;
+                    break;
             }
         }
 
         fclose(fp);
         
-        /* We should have an even number of lines */
-        if(is_component)
+        /* We should have the right number of lines */
+        if(line_type == LINE_DERIVATION)
             return profile_manifest_array; /* Return the generate profile manifest array */
         else
         {
@@ -228,6 +241,7 @@ void delete_profile_manifest_array(GPtrArray *profile_manifest_array)
         {
             ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
             g_free(entry->derivation);
+            g_free(entry->container);
             g_free(entry->type);
         }
     }

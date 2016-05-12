@@ -364,7 +364,7 @@ rec {
         target = getAttr targetName infrastructure;
       in
       if (head serviceActivationMapping).target == getTargetProperty targetProperty target
-      then [ (head serviceActivationMapping).service (head serviceActivationMapping).type ] ++ (generateProfileManifest (tail serviceActivationMapping) targetName infrastructure targetProperty)
+      then [ (head serviceActivationMapping).service (head serviceActivationMapping).container (head serviceActivationMapping).type ] ++ (generateProfileManifest (tail serviceActivationMapping) targetName infrastructure targetProperty)
       else generateProfileManifest (tail serviceActivationMapping) targetName infrastructure targetProperty
   ;
   
