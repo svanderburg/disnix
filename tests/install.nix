@@ -1,8 +1,8 @@
-{nixpkgs, dysnomia, disnix}:
+{nixpkgs, dysnomia}:
 
 let
   manifestTests = ./manifest;
-  machine = import ./machine.nix { inherit dysnomia disnix; };
+  machine = import ./machine.nix { inherit dysnomia; };
 in
 with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem; };
 

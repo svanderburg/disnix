@@ -1,8 +1,8 @@
-{nixpkgs, dysnomia, disnix}:
+{nixpkgs, dysnomia}:
 
 let
   snapshotTests = ./snapshots;
-  machine = import ./machine.nix { inherit dysnomia disnix; };
+  machine = import ./machine.nix { inherit dysnomia; };
 in
 with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem; };
 

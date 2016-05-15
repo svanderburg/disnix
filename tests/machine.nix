@@ -1,12 +1,14 @@
-{disnix, dysnomia}:
+{dysnomia}:
 {config, pkgs, ...}:
 
 {
+  imports = [ ../disnix-module.nix ];
+  
   virtualisation.writableStore = true;
   virtualisation.pathsInNixDB = [ pkgs.stdenv ];
   
-  ids.gids = { disnix = 200; };
-  users.extraGroups = [ { gid = 200; name = "disnix"; } ];
+  services.disnixTest.enable = true;
+  services.disnixTest.dysnomia = dysnomia;
   
   users.extraUsers = [
     { uid = 1000;
@@ -24,25 +26,9 @@
       description = "Privileged user for the disnix-service";
     }
   ];
-
-  services.dbus.enable = true;
-  services.dbus.packages = [ disnix ];
-  services.openssh.enable = true;
   
-  systemd.services.disnix =
-    { description = "Disnix server";
-      wantedBy = [ "multi-user.target" ];
-      after = [ "dbus.service" ];
-      
-      path = [ pkgs.nix pkgs.getopt disnix dysnomia ];
-      environment = {
-        HOME = "/root";
-      };
+  environment.systemPackages = [ dysnomia ];
 
-      serviceConfig.ExecStart = "${disnix}/bin/disnix-service";
-    };
-    
-  environment.systemPackages = [ disnix dysnomia ];
   environment.etc."dysnomia/properties" = {
     source = pkgs.writeTextFile {
       name = "dysnomia-properties";

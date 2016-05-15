@@ -91,20 +91,20 @@ let
       in
       {
         install = import ./tests/install.nix {
-          inherit nixpkgs dysnomia disnix;
+          inherit nixpkgs dysnomia;
         };
         deployment = import ./tests/deployment.nix {
-          inherit nixpkgs dysnomia disnix;
+          inherit nixpkgs dysnomia;
         };
         distbuild = import ./tests/distbuild.nix {
-          inherit nixpkgs dysnomia disnix;
+          inherit nixpkgs dysnomia;
         };
         snapshots = import ./tests/snapshots.nix {
-          inherit nixpkgs dysnomia disnix;
+          inherit nixpkgs dysnomia;
           inherit (pkgs) stdenv;
         };
         datamigration = import ./tests/datamigration.nix {
-          inherit nixpkgs dysnomia disnix;
+          inherit nixpkgs dysnomia;
         };
       };
   };

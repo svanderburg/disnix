@@ -1,8 +1,8 @@
-{nixpkgs, stdenv, dysnomia, disnix}:
+{nixpkgs, stdenv, dysnomia}:
 
 let
   manifestTests = ./manifest;
-  machine = import ./machine.nix { inherit dysnomia disnix; };
+  machine = import ./machine.nix { inherit dysnomia; };
   wrapper = import ./snapshots/wrapper.nix { inherit stdenv dysnomia; } {};
 in
 with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem; };
