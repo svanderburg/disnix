@@ -451,5 +451,14 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         } else {
             die "We should have foo=bar twice in the infrastructure model. Instead, we have: $result";
         }
+        
+        # It should also provide a list of supported types twice.
+        $result = $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-capture-infra ${manifestTests}/infrastructure.nix | grep '\"supportedTypes\" = \\[ \"process\"' | wc -l");
+        
+        if($result == 2) {
+           print "We have supportedTypes twice in the infrastructure model!\n";
+        } else {
+            die "We should have supportedTypes twice in the infrastructure model. Instead, we have: $result";
+        }
       '';
   }

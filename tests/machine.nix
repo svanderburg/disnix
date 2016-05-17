@@ -34,6 +34,7 @@
       name = "dysnomia-properties";
       text = ''
         foo=bar
+        supportedTypes=("process" "wrapper")
       '';
     };
   };
