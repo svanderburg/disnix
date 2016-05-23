@@ -55,6 +55,7 @@
     <section>
       <title>Utilities</title>
       
+      <xi:include href="../../src/capture-infra/disnix-capture-infra.1.xml" />
       <xi:include href="../../src/activate/disnix-activate.1.xml" />
       <xi:include href="../../src/build/disnix-build.1.xml" />
       <xi:include href="../../src/dbus-service/disnix-client.1.xml" />

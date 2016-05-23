@@ -910,8 +910,73 @@ rec { <co xml:id='co-rec2' />
 				Besides specifying the available machines and their properties,
 				you as a developer or system administrator has to responsibility that the machines in the
 				network match the given configuration. There are some tools which can assist you while doing this job. 
-				For instance, if only NixOS machines are used, an infrastructure model can be generated
-				from a network of NixOS configurations.
+			</para>
+			<para>
+				For example, when having Dysnomia containers preconfigured on the target machines in the network, we
+				can capture their configurations and generate an infrastructure model from them using the
+				<xref linkend="sec-disnix-capture-infra" /> command. This command is driven by a simple infrastructure
+				model only containing connectivity attributes as shown in <xref linkend="ex-infrastructure-model-basic" />.
+			</para>
+			
+			<example xml:id="ex-infrastructure-model-basic">
+				<title>Basic infrastructure model only containing only connectivity properties</title>
+			
+<programlisting>
+{
+  test1.properties.hostname = "test1.example.org";
+  test2 = {
+    properties.hostname = "test2.example.org";
+    targetProperty = "hostname";
+    clientInterface = "disnix-ssh-client";
+  };
+}
+</programlisting>
+			</example>
+			
+			<para>
+				Running the following command will automatically capture the configurations of the machines
+				and redirects it to the standard output:
+			</para>
+			
+<screen>
+$ disnix-capture-infra infrastructure-basic.nix
+{
+  test1 = {
+    properties = {
+      "hostname" = "test1.example.org";
+    };
+    
+    containers = {
+      "tomcat-webapplication" = {
+        "tomcatPort" = "8080";
+      };
+    };
+  };
+  
+  test2 = {
+    properties = {
+      "hostname" = "test2.example.org";
+    };
+    
+    containers = {
+      "tomcat-webapplication" = {
+        "tomcatPort" = "8080";
+      };
+      
+      mysql-database = {
+        "mysqlPort" = "3306";
+        "mysqlUsername" = "root";
+        "mysqlPassword" = "admin";
+      };
+    };
+  };
+}
+</screen>
+			
+			<para>
+				Alternatively, if only NixOS machines are used, an infrastructure model can be generated
+				from a network of NixOS configurations. See the DisnixOS extension, descibed in <xref linkend="chap-extensions" /> for
+				more information.
 			</para>
 		</section>
 	
