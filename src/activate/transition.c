@@ -375,15 +375,17 @@ static int activate_new_mappings(GPtrArray *activation_array, GPtrArray *union_a
             /* If the activation fails, perform a rollback */
             g_printerr("[coordinator]: Activation failed! Doing a rollback...\n");
             
+            /* Roll back the new mappings */
             status = rollback_new_mappings(activation_array, union_array, target_array, dry_run);
             
             if(status != 0)
-                return status;
+                return status; // If the roll back failed, stop and notify the user to take manual action
             
+            /* If the new mappings have been rolled backed, roll back to the old mappings */
             if(old_activation_mappings != NULL)
                 return rollback_to_old_mappings(union_array, old_activation_mappings, target_array, dry_run);
             else
-                return status;
+                return 1;
         }
     }
 }

@@ -32,6 +32,10 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # Do a rollback. Since there is nothing deployed, it should fail.
         $coordinator->mustFail("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env --rollback");
         
+        # Use disnix-env to perform a new installation that fails.
+        # It should properly do a rollback.
+        $coordinator->mustFail("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-fail.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-fail.nix");
+        
         # Use disnix-env to perform a new installation.
         # This test should succeed.
         $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
@@ -74,7 +78,10 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # the services in the distribution model. This test should
         # succeed.
         
-        $testtarget1->mustSucceed("[ \"\$(cat /var/log/disnix/3 | grep \"activate: $lines[3]\")\" != \"\" ]");
+        $testtarget1->mustSucceed("ls /var/log/disnix >&2");
+        $testtarget2->mustSucceed("ls /var/log/disnix >&2");
+        
+        $testtarget1->mustSucceed("[ \"\$(cat /var/log/disnix/8 | grep \"activate: $lines[3]\")\" != \"\" ]");
         $testtarget2->mustSucceed("[ \"\$(cat /var/log/disnix/3 | grep \"activate: $lines[7]\")\" != \"\" ]");
         $testtarget2->mustSucceed("[ \"\$(cat /var/log/disnix/4 | grep \"activate: $lines[8]\")\" != \"\" ]");
         
