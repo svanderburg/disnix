@@ -102,11 +102,16 @@ int activate_system(const gchar *new_manifest, const gchar *old_manifest, const 
             if(old_manifest_file != NULL && status == ROLLBACK_FAILED)
             {
                 g_printerr("The rollback failed! This means the system is now inconsistent! Please\n");
-                g_printerr("diagnose the errors before doing another redeployment!\n\n");
+                g_printerr("manually diagnose the errors before doing another redeployment!\n\n");
                 
                 g_printerr("When the problems have been solved, the rollback can be triggered again, by\n");
                 g_printerr("running:\n\n");
-                g_printerr("$ disnix-activate --no-rollback -p %s --coordinator-profile-path %s -o %s %s\n\n", profile, coordinator_profile_path, new_manifest, old_manifest_file);
+                g_printerr("$ disnix-activate --no-rollback -p %s ", profile);
+                
+                if(coordinator_profile_path != NULL)
+                    g_printerr("--coordinator-profile-path %s ", coordinator_profile_path);
+                
+                g_printerr("-o %s %s\n\n", new_manifest, old_manifest_file);
             }
             
             return status;
