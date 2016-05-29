@@ -73,8 +73,8 @@ rec {
                 else if isAttrs targets then
                   map (mapping:
                     { inherit (mapping.target) properties;
-                      container = if mapping.target ? container
-                        then mapping.target.container
+                      container = if mapping ? container
+                        then getAttr mapping.container mapping.target.containers
                         else getAttr dependency.type mapping.target.containers;
                     }
                   ) targets.targets

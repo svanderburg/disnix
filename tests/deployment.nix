@@ -408,6 +408,10 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
             die "disnix-query output line 8 does not contain testService3!\n";
         }
         
+        # Test the alternative and more verbose distribution, which does
+        # the same thing as the simple distribution.
+        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-alternate.nix");
+        
         # Test multi container deployment.
         $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-multicontainer.nix");
         
