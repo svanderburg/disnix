@@ -120,7 +120,7 @@ checkTarget()
 }
 
 # Checks whether TMPDIR environment variable is set, if not it is set to
-# a default value.
+# a default value. It also creates the temp dir if needed.
 
 checkTmpDir()
 {
@@ -128,4 +128,6 @@ checkTmpDir()
     then
         export TMPDIR=/tmp
     fi
+    
+    mkdir -p "$TMPDIR"
 }
