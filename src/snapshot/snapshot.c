@@ -243,7 +243,7 @@ int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_trans
     else
     {
         int exit_status = 0;
-        GPtrArray *snapshots_array;
+        GPtrArray *snapshots_array = NULL;
         GPtrArray *old_snapshots_array = NULL;
         gchar *old_manifest_file;
         
