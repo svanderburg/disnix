@@ -6,7 +6,7 @@
 
 	<para>
 		Disnix is a distributed service deployment toolset which main
-		purpose is to deploy service oriented systems (i.e. systems that can be
+		purpose is to deploy service-oriented systems (i.e. systems that can be
 		decomposed into "distributable units") into networks of machines
 		having various characteristics (such as operating systems) and is built on top of Nix;
 		a package manager which has some unique features compared to conventional package

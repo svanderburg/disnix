@@ -103,7 +103,7 @@ services.tomcat.enable = true;
 			<title>Installing Dysnomia from source</title>
 			
 			<para>
-				The <filename>dysnomia</filename> package is autotools based,
+				The <filename>dysnomia</filename> package is GNU Autotools based,
 				which must be installed by executing the following commands:
 			</para>
 			
@@ -454,6 +454,82 @@ $ ssh-host-config
 					</imageobject>
 				</mediaobject>
 			</figure>
+		</section>
+		
+		<section>
+			<title>Configuring Dysnomia containers (optional)</title>
+			
+			<para>
+				Although not required, it is also possible to configure Dysnomia containers on every
+				target machine in the network so that the state of mutable components can be
+				managed locally.
+			</para>
+			<para>
+				For example, we can declare a MySQL DBMS server as a Dysnomia container by
+				writing the following Dysnomia container configuration file
+				(<filename>/etc/dysnomia/containers/mysql-database</filename>):
+			</para>
+			
+			<figure xml:id="fig-mysql-container">
+				<title>A Dysnomia container configuration file for a MySQL server</title>
+<programlisting>
+mysqlUsername=root
+mysqlPassword=secret
+mysqlPort=3306
+type=mysql-database
+</programlisting>
+			</figure>
+			
+			<para>
+				The configuration shown in <xref linkend="fig-mysql-container" /> states that we have a MySQL server that binds to TCP
+				port 3306 and requires some authentication credentials to connect to it.
+			</para>
+			<para>
+				We can use the above configuration in combination with a mutable component configuration
+				that defines a database:
+			</para>
+			
+			<figure xml:id="fig-mysql-database">
+				<title>A Dysnomia container configuration file for a MySQL server</title>
+				
+<programlisting>
+create table author
+( AUTHOR_ID  INTEGER       NOT NULL,
+  FirstName  VARCHAR(255)  NOT NULL,
+  LastName   VARCHAR(255)  NOT NULL,
+  PRIMARY KEY(AUTHOR_ID)
+);
+
+create table books
+( ISBN       VARCHAR(255)  NOT NULL,
+  Title      VARCHAR(255)  NOT NULL,
+  AUTHOR_ID  VARCHAR(255)  NOT NULL,
+  PRIMARY KEY(ISBN),
+  FOREIGN KEY(AUTHOR_ID) references author(AUTHOR_ID) on update cascade on delete cascade
+);
+</programlisting>
+			</figure>
+			      
+			<para>
+				With the following command-line instruction, we can deploy the database schema defined in
+				<xref linkend="fig-mysql-database" /> to the MySQL server:
+<screen>
+$ dysnomia --operation activate --component ./schema.sql --container mysql-database
+</screen>
+			</para>
+			<para>
+				When Dysnomia containers have been preconfigured on the target machines in the network, Disnix can automatically
+				capture their configurations and generate a Disnix infrastructure model from them through the
+				<xref linkend="sec-disnix-capture-infra" /> command.
+			</para>
+			<para>
+				Without preconfigured Dysnomia containers, it is still possible to deploy any service using hand written
+				infrastructure models, but this is typically tedious, time consuming and error prone.
+			</para>
+			<para>
+				More information on how to configure Dysnomia containers can be found in the Dysnomia
+				<filename>README.md</filename> file.
+			</para>
 		</section>
 	</section>
 	

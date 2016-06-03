@@ -51,7 +51,7 @@ $ export DISNIX_CLIENT_INTERFACE=disnix-soap-client
 			In some cases, also the target property must be configured. By default, Disnix uses the
 			<varname>hostname</varname> property in the infrastructure model, to determine
 			how to connect to the remote Disnix service in order to perform remote deployment steps.
-			This property is not always sufficient for every protocol. A web service interface
+			This property is not suitable for every protocol. A web service interface
 			interace, for example, requires an URL.
 		</para>
 		<para>

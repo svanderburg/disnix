@@ -34,9 +34,8 @@
 		</itemizedlist>
 		
 		<para>
-			The second parameter is a Nix path referring to a service. Moreover, all the properties defined in the infrastructure
-			model are passed as environment variables so that all relevant machine properties are known while executing any of
-			these deployment activities.
+			The second parameter is a Nix path referring to a service. Moreover, all the container properties in the infrastructure
+			model to which the service is deployed are passed as environment variables so that all relevant deployment properties are known.
 		</para>
 	</section>
 	

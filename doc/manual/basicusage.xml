@@ -393,12 +393,12 @@ stdenv.mkDerivation { <co xml:id='co-mkDerivation-service' />
 					</para>
 					<para>
 						Each inter-dependency parameter is an attribute set, which properties are taken
-						from the services model, shown in the section.
+						from the services model, shown in <xref linkend="sec-services-model" />.
 					</para>
 					<para>
 						In addition, each inter-dependency parameter provides an attribute named <varname>targets</varname> referring
 						to list of target machines to which the inter-dependency has been deployed. This mapping is
-						defined in the distribution model shown later in this chapter.
+						defined in the distribution model shown in <xref linkend="sec-infrastructure-model" />.
 						In the majority of cases, an inter-dependency only maps to one
 						machine. The attribute <varname>target</varname> refers to the first list element for convenience.
 					</para>
@@ -446,7 +446,7 @@ stdenv.mkDerivation { <co xml:id='co-mkDerivation-service' />
 		
 			<para>
 				<xref linkend="ex-zipcode-service" /> shows you how to build and configure an Apache Axis2 web service.
-				Other types of service may have different kinds configuration steps, but can also be configured and built
+				Other types of services may have different kinds configuration steps, but can also be configured and built
 				by Disnix, like ordinary Nix packages.
 				What Disnix basically provides is the locations of the inter-dependencies and the properties of
 				the services and machines.
@@ -569,7 +569,7 @@ let
 			</para>
 		</section>
 		
-		<section>
+		<section xml:id="sec-services-model">
 			<title>Services model</title>
 			
 			<para>
@@ -650,8 +650,8 @@ rec { <co xml:id='co-rec2' />
 							<listitem>
 								<simpara>
 									The <varname>distribution</varname> parameter refers to the distribution model,
-									in which services are mapped onto machines in the network (this model is explained
-									later).
+									in which services are mapped onto machines in the network (this model is
+									shown in <xref linkend="sec-distribution-model" />).
 								</simpara>
 							</listitem>
 							<listitem>
@@ -742,7 +742,7 @@ rec { <co xml:id='co-rec2' />
 			</calloutlist>
 		</section>
 	
-		<section>
+		<section xml:id="sec-infrastructure-model">
 			<title>Infrastructure model</title>
 			
 			<para>
@@ -888,7 +888,7 @@ rec { <co xml:id='co-rec2' />
 				</callout>
 				<callout arearefs='co-targetProperty'>
 					  <para>
-						This is a reserved property defining which attribute in this attribute set
+						This is a reserved property defining which attribute in the <varname>properties</varname> set
 						specifies how to connect to this machine. If this attribute is not specified
 						then the value provided by the <option>--target-property</option> parameter, or
 						<envar>DISNIX_TARGET_PROPERTY</envar> environment variable is used, which
@@ -897,7 +897,7 @@ rec { <co xml:id='co-rec2' />
 				</callout>
 				<callout arearefs='co-clientInterface'>
 					  <para>
-						This reserved property specifies which executable needs to be run to connect
+						This reserved property specifies which executable needs to be invoked to connect
 						to the target machine. If this attribute is not specified then the value provided
 						by the <option>--interface</option> parameter, or the <envar>DISNIX_CLIENT_INTERFACE</envar>
 						environment variable is used, which defaults to <command>disnix-ssh-client</command>.
@@ -914,12 +914,12 @@ rec { <co xml:id='co-rec2' />
 			<para>
 				For example, when having Dysnomia containers preconfigured on the target machines in the network, we
 				can capture their configurations and generate an infrastructure model from them using the
-				<xref linkend="sec-disnix-capture-infra" /> command. This command is driven by a simple infrastructure
+				<xref linkend="sec-disnix-capture-infra" /> command. This command is driven by a simple bootstrap infrastructure
 				model only containing connectivity attributes as shown in <xref linkend="ex-infrastructure-model-basic" />.
 			</para>
 			
 			<example xml:id="ex-infrastructure-model-basic">
-				<title>Basic infrastructure model only containing only connectivity properties</title>
+				<title>Basic infrastructure model only containing connectivity properties</title>
 			
 <programlisting>
 {
@@ -980,7 +980,7 @@ $ disnix-capture-infra infrastructure-basic.nix
 			</para>
 		</section>
 	
-		<section>
+		<section xml:id="sec-distribution-model">
 			<title>Distribution model</title>
 			
 			<para>
@@ -1063,7 +1063,7 @@ $ disnix-capture-infra infrastructure-basic.nix
 		</para>
 		
 		<section>
-			<title>Deploying the system from scratch</title>
+			<title>Deploying a system from scratch</title>
 			<para>
 				By running the following command-line instruction, the StaffTracker system can be deployed:
 <screen>
@@ -1079,7 +1079,7 @@ $ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
 		</section>
 	
 		<section>
-			<title>Upgrading the system</title>
+			<title>Upgrading a system</title>
 			
 			<para>
 				Upgrading a system can be done by changing the Disnix models and running <command>disnix-env</command> again.
@@ -1110,7 +1110,7 @@ $ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
 			<para>
 				As with the Nix package manager, Disnix retains older configurations by default unless they are explicitly
 				garbage collected.
-				If we regret the last upgrade, we can roll back to its previously deployed configuration, by running:
+				If we regret doing the last upgrade, we can roll back to its previously deployed configuration, by running:
 <screen>
 $ disnix-env --rollback
 </screen>

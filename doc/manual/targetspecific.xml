@@ -343,7 +343,9 @@ builtins.listToAttrs (map (targetName:
       webapp1 = ...
       webapp2 = ...
     };
-    hostname = "test1";
+    properties = {
+      hostname = "test1";
+    }
   };
   
   test2 = {
@@ -355,7 +357,9 @@ builtins.listToAttrs (map (targetName:
       webapp3 = ...
       webapp4 = ...
     };
-    hostname = "test2";
+    properties = {
+      hostname = "test2";
+    };
   };
 }
 </programlisting>
