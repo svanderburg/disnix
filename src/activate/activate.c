@@ -41,6 +41,8 @@ static void set_flag_on_interrupt(void)
     struct sigaction act;
     act.sa_handler = handle_sigint;
     act.sa_flags = 0;
+    sigemptyset(&act.sa_mask);
+    sigaddset(&act.sa_mask, SIGINT);
     
     sigaction(SIGINT, &act, NULL);
 }

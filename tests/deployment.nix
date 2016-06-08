@@ -78,9 +78,6 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # the services in the distribution model. This test should
         # succeed.
         
-        $testtarget1->mustSucceed("ls /var/log/disnix >&2");
-        $testtarget2->mustSucceed("ls /var/log/disnix >&2");
-        
         $testtarget1->mustSucceed("[ \"\$(cat /var/log/disnix/8 | grep \"activate: $lines[3]\")\" != \"\" ]");
         $testtarget2->mustSucceed("[ \"\$(cat /var/log/disnix/3 | grep \"activate: $lines[7]\")\" != \"\" ]");
         $testtarget2->mustSucceed("[ \"\$(cat /var/log/disnix/4 | grep \"activate: $lines[8]\")\" != \"\" ]");

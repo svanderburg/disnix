@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
     char *manifest_file;
-    int no_containers;
+    int no_containers = FALSE;
 
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "p:hv", long_options, &option_index)) != -1)
