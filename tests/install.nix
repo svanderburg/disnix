@@ -11,7 +11,10 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
       client = machine;
       server = machine;
     };
-    testScript = 
+    testScript =
+      let
+        env = "NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'";
+      in
       ''
         startAll;
         
@@ -20,7 +23,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # Generates a distributed derivation file. The closure should be
         # contain store derivation files. This test should succeed.
         
-        my $result = $client->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' disnix-instantiate -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+        my $result = $client->mustSucceed("${env} disnix-instantiate -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
         my @closure = split('\n', $client->mustSucceed("nix-store -qR $result"));
         my @derivations = grep(/\.drv/, @closure);
           
@@ -36,13 +39,13 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # which both the inter-dependency specifications and distribution 
         # is correct and complete. This test should succeed.
         
-        $client->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+        $client->mustSucceed("${env} disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
         
         # Incomplete inter-dependency test. Here we have a services model
         # in which an inter-dependency is not specified in the dependsOn
         # attribute. This test should trigger an error.
         
-        $client->mustFail("NIX_PATH='nixpkgs=${nixpkgs}' disnix-manifest -s ${manifestTests}/services-incomplete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+        $client->mustFail("${env} disnix-manifest -s ${manifestTests}/services-incomplete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
         
         # Load balancing test. Here we distribute testService1 and
         # testService2 to machines testtarget1 and testtarget2.
@@ -50,7 +53,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # and testService2 are in the closure of the testtarget1 and
         # testtarget2 profiles. This test should succeed.
         
-        my $manifest = $client->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-loadbalancing.nix");
+        my $manifest = $client->mustSucceed("${env} disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-loadbalancing.nix");
         @closure = split('\n', $client->mustSucceed("nix-store -qR $manifest"));
         
         my @target1Profile = grep(/\-testtarget1/, @closure);
@@ -100,7 +103,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # We verify this by checking whether this service is the closure
         # of the manifest. This test should succeed.
         
-        $manifest = $client->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' disnix-manifest -s ${manifestTests}/services-composition.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-composition.nix");
+        $manifest = $client->mustSucceed("${env} disnix-manifest -s ${manifestTests}/services-composition.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-composition.nix");
         my $closure = $client->mustSucceed("nix-store -qR $manifest");
         
         if($closure =~ /\-testService2B/) {
@@ -114,7 +117,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # do not distribute the service to any target.
         # This test should trigger an error.
         
-        $client->mustFail("NIX_PATH='nixpkgs=${nixpkgs}' disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-incomplete.nix");
+        $client->mustFail("${env} disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-incomplete.nix");
         
         #### Test disnix-client / disnix-service
         
@@ -269,7 +272,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # which should return the path we have given.
         # This test should succeed.
         
-        $result = $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --print-invalid /nix/store/invalid");
+        $result = $client->mustSucceed("${env} disnix-ssh-client --target server --print-invalid /nix/store/invalid");
         
         if($result =~ /\/nix\/store\/invalid/) {
             print "/nix/store/invalid is invalid\n";
@@ -281,13 +284,13 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # which should return nothing in this case.
         # This test should succeed.
         
-        $result = $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --print-invalid ${pkgs.bash}");
+        $result = $client->mustSucceed("${env} disnix-ssh-client --target server --print-invalid ${pkgs.bash}");
         
         # Query requisites test. Queries the requisites of the bash shell
         # and checks whether it is part of the closure.
         # This test should succeed.
         
-        $result = $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --query-requisites ${pkgs.bash}");
+        $result = $client->mustSucceed("${env} disnix-ssh-client --target server --query-requisites ${pkgs.bash}");
         
         if($result =~ /bash/) {
             print "${pkgs.bash} is in the closure\n";
@@ -299,17 +302,17 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # then it is realised. This test should succeed.
         
         $result = $server->mustSucceed("nix-instantiate ${nixpkgs} -A coreutils");
-        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --realise $result");
+        $client->mustSucceed("${env} disnix-ssh-client --target server --realise $result");
         
         # Export test. Exports the closure of the bash shell on the server
         # and then imports it on the client. This test should succeed.
         
-        $result = $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --export --remotefile ${pkgs.bash}");
+        $result = $client->mustSucceed("${env} disnix-ssh-client --target server --export --remotefile ${pkgs.bash}");
         $client->mustSucceed("nix-store --import < $result");
         
         # Repeat the same export operation, but now as a localfile. It should
         # export the same closure to a file. This test should succeed.
-        $result = $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --export --localfile ${pkgs.bash}");
+        $result = $client->mustSucceed("${env} disnix-ssh-client --target server --export --localfile ${pkgs.bash}");
         $server->mustSucceed("[ -e $result ]");
         
         # Import test. Creates a closure of the target2Profile on the
@@ -318,20 +321,20 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         
         $server->mustFail("nix-store --check-validity @target2Profile");
         $client->mustSucceed("nix-store --export \$(nix-store -qR @target2Profile) > /root/target2Profile.closure");
-        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --import --localfile /root/target2Profile.closure");
+        $client->mustSucceed("${env} disnix-ssh-client --target server --import --localfile /root/target2Profile.closure");
         $server->mustSucceed("nix-store --check-validity @target2Profile");
         
         # Do a remotefile import. It should import the bash closure stored
         # remotely. This test should succeed.
         $server->mustSucceed("nix-store --export \$(nix-store -qR /bin/sh) > /root/bash.closure");
-        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --import --remotefile /root/bash.closure");
+        $client->mustSucceed("${env} disnix-ssh-client --target server --import --remotefile /root/bash.closure");
         
         # Set test. Adds the testtarget2 profile as only derivation into 
         # the Disnix profile. We first set the profile, then we check
         # whether the profile is part of the closure.
         # This test should succeed.
         
-        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --set --profile default @target2Profile");
+        $client->mustSucceed("${env} disnix-ssh-client --target server --set --profile default @target2Profile");
         @defaultProfileClosure = split('\n', $server->mustSucceed("nix-store -qR /nix/var/nix/profiles/disnix/default"));
         @closure = grep("@target2Profile", @defaultProfileClosure);
         
@@ -345,7 +348,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # profile, which has been set in the previous testcase.
         # testService2 should be in there. This test should succeed.
         
-        @closure = split('\n', $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --query-installed --profile default"));
+        @closure = split('\n', $client->mustSucceed("${env} disnix-ssh-client --target server --query-installed --profile default"));
         @service = grep(/testService2/, @closure);
         
         if(scalar @service > 0) {
@@ -356,34 +359,34 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         
         # Collect garbage test. This test should succeed.
         # Testcase disabled, as this is very expensive.
-        # $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --collect-garbage");
+        # $client->mustSucceed("${env} disnix-ssh-client --target server --collect-garbage");
 
         # Lock test. This test should succeed.
-        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --lock");
+        $client->mustSucceed("${env} disnix-ssh-client --target server --lock");
           
         # Lock test. This test should fail, since the service instance is already locked
-        $client->mustFail("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --lock");
+        $client->mustFail("${env} disnix-ssh-client --target server --lock");
         
         # Unlock test. This test should succeed, so that we can release the lock
-        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --unlock");
+        $client->mustSucceed("${env} disnix-ssh-client --target server --unlock");
         
         # Unlock test. This test should fail as the lock has already been released
-        $client->mustFail("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --unlock");
+        $client->mustFail("${env} disnix-ssh-client --target server --unlock");
         
         # Use the echo type to activate a service.
         # We use the testService1 service defined in the manifest earlier
         # This test should succeed.
-        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --activate --arguments foo=foo --arguments bar=bar --type echo @testService1");
+        $client->mustSucceed("${env} disnix-ssh-client --target server --activate --arguments foo=foo --arguments bar=bar --type echo @testService1");
         
         # Deactivate the same service using the echo type. This test should succeed.
-        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --deactivate --arguments foo=foo --arguments bar=bar --type echo @testService1");
+        $client->mustSucceed("${env} disnix-ssh-client --target server --deactivate --arguments foo=foo --arguments bar=bar --type echo @testService1");
         
         # Deactivate the same service using the echo type. This test should succeed.
-        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --deactivate --arguments foo=foo --arguments bar=bar --type echo @testService1");
+        $client->mustSucceed("${env} disnix-ssh-client --target server --deactivate --arguments foo=foo --arguments bar=bar --type echo @testService1");
         
         # Capture config test. We capture a config and the tempfile should
         # contain one property: "foo" = "bar";
-        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-ssh-client --target server --capture-config | grep '\"foo\" = \"bar\"'");
+        $client->mustSucceed("${env} disnix-ssh-client --target server --capture-config | grep '\"foo\" = \"bar\"'");
         
         #### Test disnix-copy-closure
         
@@ -395,7 +398,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         my @testService3 = grep(/\-testService3/, @closure);
         
         $server->mustFail("nix-store --check-validity @testService3");
-        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-copy-closure --target server --to @testService3");
+        $client->mustSucceed("${env} disnix-copy-closure --target server --to @testService3");
         $server->mustSucceed("nix-store --check-validity @testService3");
         
         # Test copy closure. Here, we first build a package on the server,
@@ -404,7 +407,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         
         $result = $server->mustSucceed("nix-build ${nixpkgs} -A writeTextFile --argstr name test --argstr text 'Hello world'");
         $client->mustFail("nix-store --check-validity $result");
-        $client->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-copy-closure --target server --from $result");
+        $client->mustSucceed("${env} disnix-copy-closure --target server --from $result");
         $client->mustSucceed("nix-store --check-validity $result");
         
         #### Test disnix-gendist-roundrobin
@@ -413,8 +416,8 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # generated distribution model to build the system.
         # This test should succeed.
         
-        $result = $client->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' disnix-gendist-roundrobin -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix");
-        $result = $client->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d $result");
+        $result = $client->mustSucceed("${env} disnix-gendist-roundrobin -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix");
+        $result = $client->mustSucceed("${env} disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d $result");
         
         #### Test disnix-visualize
         

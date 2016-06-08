@@ -13,6 +13,9 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
       testtarget2 = machine;
     };
     testScript =
+      let
+        env = ''DYSNOMIA_STATEDIR=/root/dysnomia SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' NIX_PATH='nixpkgs=${nixpkgs}' dysnomia=\"\$(dirname \$(readlink -f \$(type -p dysnomia)))/..\"'';
+      in
       ''
         startAll;
         
@@ -31,7 +34,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         
         # Use disnix-env to perform a new installation.
         # This test should succeed.
-        $coordinator->mustSucceed("DYSNOMIA_STATEDIR=/root/dysnomia NIX_PATH='nixpkgs=${nixpkgs}' dysnomia=\"\$(dirname \$(readlink -f \$(type -p dysnomia)))/..\"  SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure.nix -d ${snapshotTests}/distribution-simple.nix");
+        $coordinator->mustSucceed("${env} disnix-env -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure.nix -d ${snapshotTests}/distribution-simple.nix");
         
         # Check if both machines have state deployed
         my $result = $testtarget1->mustSucceed("cat /var/db/testService1/state");
@@ -56,7 +59,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         $testtarget2->mustSucceed("echo 2 > /var/db/testService2/state");
         
         # Use disnix-env to reverse the location of the deployed services.
-        $coordinator->mustSucceed("DYSNOMIA_STATEDIR=/root/dysnomia NIX_PATH='nixpkgs=${nixpkgs}' dysnomia=\"\$(dirname \$(readlink -f \$(type -p dysnomia)))/..\"  SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure.nix -d ${snapshotTests}/distribution-reverse.nix --no-delete-state");
+        $coordinator->mustSucceed("${env} disnix-env -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure.nix -d ${snapshotTests}/distribution-reverse.nix --no-delete-state");
         
         # Check if the state is reversed
         $result = $testtarget1->mustSucceed("cat /var/db/testService2/state");
@@ -78,9 +81,9 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # Take a snapshot of everything and check if we have
         # the one snapshot of each service
         $coordinator->mustSucceed("rm -R /root/dysnomia");
-        $coordinator->mustSucceed("DYSNOMIA_STATEDIR=/root/dysnomia SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-snapshot");
+        $coordinator->mustSucceed("${env} disnix-snapshot");
         
-        $result = $coordinator->mustSucceed("DYSNOMIA_STATEDIR=/root/dysnomia dysnomia-snapshots --query-all --container wrapper --component testService1 | wc -l");
+        $result = $coordinator->mustSucceed("${env} dysnomia-snapshots --query-all --container wrapper --component testService1 | wc -l");
         
         if($result == 1) {
             print "result is: 1\n";
@@ -88,7 +91,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
             die "result should be: 1, but it is: $result";
         }
         
-        $result = $coordinator->mustSucceed("DYSNOMIA_STATEDIR=/root/dysnomia dysnomia-snapshots --query-all --container wrapper --component testService2 | wc -l");
+        $result = $coordinator->mustSucceed("${env} dysnomia-snapshots --query-all --container wrapper --component testService2 | wc -l");
         
         if($result == 1) {
             print "result is: 1\n";
@@ -102,14 +105,14 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         $testtarget1->mustSucceed("cat /var/db/testService1/state");
         $testtarget2->mustSucceed("cat /var/db/testService2/state");
         
-        $coordinator->mustSucceed("DYSNOMIA_STATEDIR=/root/dysnomia SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-delete-state /nix/var/nix/profiles/per-user/root/disnix-coordinator/default-1-link");
+        $coordinator->mustSucceed("${env} disnix-delete-state /nix/var/nix/profiles/per-user/root/disnix-coordinator/default-1-link");
         
         $testtarget1->mustFail("cat /var/db/testService1/state");
         $testtarget2->mustFail("cat /var/db/testService2/state");
         
         # Delete all the snapshots on the target machines
         
-        $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-clean-snapshots ${snapshotTests}/infrastructure.nix --keep 0");
+        $coordinator->mustSucceed("${env} disnix-clean-snapshots ${snapshotTests}/infrastructure.nix --keep 0");
         
         $result = $testtarget1->mustSucceed("dysnomia-snapshots --query-all --container wrapper --component testService2 | wc -l");
         
@@ -133,7 +136,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         $testtarget1->mustSucceed("echo 5 > /var/db/testService2/state");
         $testtarget2->mustSucceed("echo 6 > /var/db/testService1/state");
         
-        $coordinator->mustSucceed("DYSNOMIA_STATEDIR=/root/dysnomia SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-restore --no-upgrade");
+        $coordinator->mustSucceed("${env} disnix-restore --no-upgrade");
         
         $result = $testtarget1->mustSucceed("cat /var/db/testService2/state");
         

@@ -13,6 +13,9 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
       testtarget2 = machine;
     };
     testScript =
+      let
+        env = "NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'";
+      in
       ''
         startAll;
         
@@ -31,7 +34,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         
         # Deploy the complete environment and build all the services on
         # the target machines. This test should succeed.
-        my $result = $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env --build-on-targets -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+        my $result = $coordinator->mustSucceed("${env} disnix-env --build-on-targets -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
         
         # Checks whether the testService1 has been actually built on the
         # targets by checking the logfiles. This test should succeed.
@@ -42,7 +45,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # coordinator machine. This test should fail, since the build
         # is performed on a target machine.
         
-        my $manifest = $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+        my $manifest = $coordinator->mustSucceed("${env} disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
         my @closure = split('\n', $coordinator->mustSucceed("nix-store -qR result"));
         my @testService1 = grep(/\-testService1/, @closure);
         

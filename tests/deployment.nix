@@ -13,6 +13,9 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
       testtarget2 = machine;
     };
     testScript =
+      let
+        env = "NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'";
+      in
       ''
         startAll;
         
@@ -30,23 +33,23 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         $coordinator->mustSucceed("chmod 600 /root/.ssh/id_dsa");
         
         # Do a rollback. Since there is nothing deployed, it should fail.
-        $coordinator->mustFail("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env --rollback");
+        $coordinator->mustFail("${env} disnix-env --rollback");
         
         # Use disnix-env to perform a new installation that fails.
         # It should properly do a rollback.
-        $coordinator->mustFail("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-fail.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-fail.nix");
+        $coordinator->mustFail("${env} disnix-env -s ${manifestTests}/services-fail.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-fail.nix");
         
         # Use disnix-env to perform a new installation.
         # This test should succeed.
-        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+        $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
         
         # Do another rollback. Since there is no previous deployment, it should fail.
-        $coordinator->mustFail("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env --rollback");
+        $coordinator->mustFail("${env} disnix-env --rollback");
         
         # Use disnix-query to see if the right services are installed on
         # the right target platforms. This test should succeed.
         
-        my @lines = split('\n', $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-query ${manifestTests}/infrastructure.nix"));
+        my @lines = split('\n', $coordinator->mustSucceed("${env} disnix-query ${manifestTests}/infrastructure.nix"));
         
         if($lines[1] ne "Services on: testtarget1") {
             die "disnix-query output line 1 does not match what we expect!\n";
@@ -114,7 +117,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # performed. Moreover, we should still have one coordinator profile
         # and one target profile per machine. This test should succeed.
         
-        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+        $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
         
         $result = $coordinator->mustSucceed("ls /nix/var/nix/profiles/per-user/root/disnix-coordinator | wc -l");
         
@@ -142,9 +145,9 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         
         # We now perform an upgrade by moving testService2 to another machine.
         # This test should succeed.
-        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-reverse.nix");
+        $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-reverse.nix");
         
-        @lines = split('\n', $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-query ${manifestTests}/infrastructure.nix"));
+        @lines = split('\n', $coordinator->mustSucceed("${env} disnix-query ${manifestTests}/infrastructure.nix"));
         
         if($lines[3] =~ /\-testService1/) {
             print "Found testService1 on disnix-query output line 3\n";
@@ -192,9 +195,9 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         
         # Now we undo the upgrade again by moving testService2 back.
         # This test should succeed.
-        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+        $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
         
-        @lines = split('\n', $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-query ${manifestTests}/infrastructure.nix"));
+        @lines = split('\n', $coordinator->mustSucceed("${env} disnix-query ${manifestTests}/infrastructure.nix"));
         
         if($lines[3] =~ /\-testService1/) {
             print "Found testService1 on disnix-query output line 3\n";
@@ -217,12 +220,12 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # We now perform an upgrade. In this case testService2 is replaced
         # by testService2B. This test should succeed.
         
-        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-composition.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-composition.nix");
+        $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-composition.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-composition.nix");
         
         # Use disnix-query to see if the right services are installed on
         # the right target platforms. This test should succeed.
         
-        @lines = split('\n', $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-query ${manifestTests}/infrastructure.nix"));
+        @lines = split('\n', $coordinator->mustSucceed("${env} disnix-query ${manifestTests}/infrastructure.nix"));
         
         if($lines[1] ne "Services on: testtarget1") {
             die "disnix-query output line 1 does not match what we expect!\n";
@@ -256,7 +259,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # should not be deactivated on testTarget2. This test should
         # succeed.
         
-        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-single.nix > result");
+        $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-single.nix > result");
         $coordinator->mustSucceed("[ \"\$(grep \"Skip deactivation\" result | grep \"testService2B\" | grep \"testtarget2\")\" != \"\" ]");
         $coordinator->mustSucceed("[ \"\$(grep \"Skip deactivation\" result | grep \"testService3\" | grep \"testtarget2\")\" != \"\" ]");
         
@@ -264,7 +267,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # available on testtarget1 and testService{2B,3} are still
         # deployed on testtarget2. This test should succeed.
         
-        @lines = split('\n', $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-query ${manifestTests}/infrastructure.nix"));
+        @lines = split('\n', $coordinator->mustSucceed("${env} disnix-query ${manifestTests}/infrastructure.nix"));
         
         if($lines[1] ne "Services on: testtarget1") {
             die "disnix-query output line 1 does not match what we expect!\n";
@@ -310,12 +313,12 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # testService2 and testService3 must be redeployed.
         # This test should succeed.
         
-        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-transitivecomposition.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-transitivecomposition.nix > result");
+        $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-transitivecomposition.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-transitivecomposition.nix > result");
         
         # Use disnix-query to check whether testService{1,1B,2,3} are
         # available on testtarget1. This test should succeed.
         
-        @lines = split('\n', $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-query ${manifestTests}/infrastructure.nix"));
+        @lines = split('\n', $coordinator->mustSucceed("${env} disnix-query ${manifestTests}/infrastructure.nix"));
         
         if($lines[1] ne "Services on: testtarget1") {
             die "disnix-query output line 1 does not match what we expect!\n";
@@ -347,11 +350,11 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         
         # Do an upgrade to an environment containing only one service that's a running process.
         # This test should succeed.
-        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-echo.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-process.nix > result");
+        $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-echo.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-process.nix > result");
         
         # Do a type upgrade. We change the type of the process from 'echo' to
         # 'wrapper', triggering a redeployment. This test should succeed.
-        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-process.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-process.nix > result");
+        $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-process.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-process.nix > result");
         
         # Check if the 'process' has written the tmp file.
         # This test should succeed.
@@ -359,25 +362,25 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         
         # Do an upgrade that intentionally fails.
         # This test should fail.
-        $coordinator->mustFail("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-fail.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-fail.nix > result");
+        $coordinator->mustFail("${env} disnix-env -s ${manifestTests}/services-fail.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-fail.nix > result");
         
         # Check if the 'process' has written the tmp file again.
         # This test should succeed.
         $testtarget1->mustSucceed("sleep 10 && [ -f /tmp/process_out ] && rm /tmp/process_out");
         
         # Roll back to the previously deployed configuration
-        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env --rollback");
+        $coordinator->mustSucceed("${env} disnix-env --rollback");
         
         # We should have one service of type echo now on the testtarget1 machine
         $testtarget1->mustSucceed("[ \"\$(cat /nix/var/nix/profiles/disnix/default/manifest | tail -1)\" = \"echo\" ]");
         
         # Roll back to the first deployed configuration
-        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env --switch-to-generation 1");
+        $coordinator->mustSucceed("${env} disnix-env --switch-to-generation 1");
         
         # Use disnix-query to see if the right services are installed on
         # the right target platforms. This test should succeed.
         
-        @lines = split('\n', $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-query ${manifestTests}/infrastructure.nix"));
+        @lines = split('\n', $coordinator->mustSucceed("${env} disnix-query ${manifestTests}/infrastructure.nix"));
         
         if($lines[1] ne "Services on: testtarget1") {
             die "disnix-query output line 1 does not match what we expect!\n";
@@ -407,15 +410,15 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         
         # Test the alternative and more verbose distribution, which does
         # the same thing as the simple distribution.
-        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-alternate.nix");
+        $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-alternate.nix");
         
         # Test multi container deployment.
-        $coordinator->mustSucceed("NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-multicontainer.nix");
+        $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-multicontainer.nix");
         
         # Use disnix-query to see if the right services are installed on
         # the right target platforms. This test should succeed.
         
-        my @lines = split('\n', $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-query ${manifestTests}/infrastructure.nix"));
+        my @lines = split('\n', $coordinator->mustSucceed("${env} disnix-query ${manifestTests}/infrastructure.nix"));
         
         if($lines[1] ne "Services on: testtarget1") {
             die "disnix-query output line 1 does not match what we expect!\n";
@@ -452,7 +455,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # Test disnix-capture-infra. Capture the container properties of all
         # machines and generate an infrastructure expression from it. It should
         # contain: "foo" = "bar"; twice.
-        $result = $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-capture-infra ${manifestTests}/infrastructure.nix | grep '\"foo\" = \"bar\"' | wc -l");
+        $result = $coordinator->mustSucceed("${env} disnix-capture-infra ${manifestTests}/infrastructure.nix | grep '\"foo\" = \"bar\"' | wc -l");
         
         if($result == 2) {
            print "We have foo=bar twice in the infrastructure model!\n";
@@ -461,7 +464,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         }
         
         # It should also provide a list of supported types twice.
-        $result = $coordinator->mustSucceed("SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' disnix-capture-infra ${manifestTests}/infrastructure.nix | grep '\"supportedTypes\" = \\[ \"process\"' | wc -l");
+        $result = $coordinator->mustSucceed("${env} disnix-capture-infra ${manifestTests}/infrastructure.nix | grep '\"supportedTypes\" = \\[ \"process\"' | wc -l");
         
         if($result == 2) {
            print "We have supportedTypes twice in the infrastructure model!\n";
