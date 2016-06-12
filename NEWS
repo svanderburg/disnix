@@ -10,6 +10,8 @@ Version 0.6
 
 - Added disnix-capture-infra that consults the remote machines' Dysnomia container configurations to generate an infrastructure expression
 
+- Add package type to deploy packages as services. Packages will get installed, but not activated or deactivated.
+
 Version 0.5
 ===========
 - Services model also takes an invDistribution parameter, which refers to the infrastructure model in which each target is augmented with the services that have been mapped to it

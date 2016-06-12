@@ -249,8 +249,11 @@ rec {
    
   generateDependencyMapping = argNames: dependsOn: services:
     let
-      serviceName = (getAttr (head argNames) dependsOn).name;
-      service = getAttr serviceName services;
+      dependency = getAttr (head argNames) dependsOn;
+      serviceName = dependency.name;
+      service = if dependency.type == "package"
+        then throw "It is not allowed to refer to package: ${serviceName} as an inter-dependency!"
+        else getAttr serviceName services;
       dependencyMappingItems = map (distributionItem:
         { _key = generateServiceHashKey services service distributionItem;
           inherit (distributionItem) target container;
@@ -362,9 +365,10 @@ rec {
     else
       let
         target = getAttr targetName infrastructure;
+        mapping = head serviceActivationMapping;
       in
-      if (head serviceActivationMapping).target == getTargetProperty targetProperty target
-      then [ (head serviceActivationMapping).service (head serviceActivationMapping).container (head serviceActivationMapping).type ] ++ (generateProfileManifest (tail serviceActivationMapping) targetName infrastructure targetProperty)
+      if mapping.target == getTargetProperty targetProperty target && mapping.type != "package"
+      then [ mapping.service mapping.container mapping.type ] ++ (generateProfileManifest (tail serviceActivationMapping) targetName infrastructure targetProperty)
       else generateProfileManifest (tail serviceActivationMapping) targetName infrastructure targetProperty
   ;
   
@@ -511,11 +515,12 @@ rec {
       servicesWithTargets = augmentTargetsInDependsOn distribution initialServices;
       servicesWithDistribution = evaluatePkgFunctions distribution invDistribution servicesWithTargets servicesFun "outPath" targetProperty;
       serviceActivationMapping = generateServiceActivationMapping (attrNames servicesWithDistribution) servicesWithDistribution targetProperty;
+      snapshotsMapping = generateSnapshotsMapping (attrNames servicesWithDistribution) servicesWithDistribution deployState;
       invDistribution = generateInverseDistribution servicesWithDistribution infrastructure distribution;
     in
     { profiles = generateProfilesMapping pkgs infrastructure (attrNames infrastructure) targetProperty serviceActivationMapping;
-      activation = serviceActivationMapping;
-      snapshots = generateSnapshotsMapping (attrNames servicesWithDistribution) servicesWithDistribution deployState;
+      activation = filter (mapping: mapping.type != "package") serviceActivationMapping;
+      snapshots = filter (mapping: mapping.type != "package") snapshotsMapping;
       targets = generateTargetPropertyList infrastructure targetProperty clientInterface;
     }
   ;

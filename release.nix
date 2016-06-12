@@ -106,6 +106,9 @@ let
         datamigration = import ./tests/datamigration.nix {
           inherit nixpkgs dysnomia;
         };
+        pkgs = import ./tests/pkgs.nix {
+          inherit nixpkgs dysnomia;
+        };
       };
   };
 in
