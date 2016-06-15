@@ -110,6 +110,23 @@ let
           inherit nixpkgs dysnomia;
         };
       };
+    
+    release = pkgs.releaseTools.aggregate {
+      name = "disnix-${tarball.version}";
+      constituents = [
+        tarball
+      ]
+      ++ map (system: builtins.getAttr system build) systems
+      ++ [
+        tests.install
+        tests.deployment
+        tests.distbuild
+        tests.snapshots
+        tests.datamigration
+        tests.pkgs
+      ];
+      meta.description = "Release-critical builds";
+    };
   };
 in
 jobs
