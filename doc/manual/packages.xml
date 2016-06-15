@@ -1,0 +1,338 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="chap-packages">
+
+	<title>Using Disnix as a remote package deployer</title>
+	
+	<para>
+		As described in the previous chapters, Disnix's primary purpose is deploying <emphasis>systems</emphasis> that
+		can be decomposed into <emphasis>services</emphasis> to networks of machines.
+		However, a service deployment process is basically a superset of an "ordinary" package deployment process.
+		This chapter describes how we can do remote package deployment by instructing Disnix to only use a relevant
+		subset of features.
+	</para>
+	
+	<section>
+		<title>Specifying packages as services</title>
+		
+		<para>
+			In Nixpkgs, it it is a common habit to write each package specification as a function in which the parameters
+			denote intra-dependencies. In <xref linkend="chap-basicusage" /> we have shown that
+			Disnix services follow the same convention and extend this approach with nested functions in which the inner
+			function takes inter-dependencies into account.
+		</para>
+		
+		<para>
+			For services that have no inter-dependencies, a Disnix expression is identical to an ordinary package expression.
+			This means that, for example, an expression for a package such as the Midnight Commander
+			shown in <xref linkend="ex-package-expr" /> is also a valid Disnix
+			service with no inter-dependencies:
+			
+			<example xml:id="ex-package-expr">
+				<title>An example package expression and service expression with no inter-dependencies</title>
+<programlisting>
+{ stdenv, fetchurl, pkgconfig, glib, gpm, file, e2fsprogs
+, libX11, libICE, perl, zip, unzip, gettext, slang
+}:
+
+stdenv.mkDerivation {
+  name = "mc-4.8.12";
+  
+  src = fetchurl {
+    url = http://www.midnight-commander.org/downloads/mc-4.8.12.tar.bz2;
+    sha256 = "15lkwcis0labshq9k8c2fqdwv8az2c87qpdqwp5p31s8gb1gqm0h";
+  };
+  
+  buildInputs = [ pkgconfig perl glib gpm slang zip unzip file gettext
+      libX11 libICE e2fsprogs ];
+
+  meta = {
+    description = "File Manager and User Shell for the GNU Project";
+    homepage = http://www.midnight-commander.org;
+    license = "GPLv2+";
+    maintainers = [ stdenv.lib.maintainers.sander ];
+  };
+}  
+</programlisting>
+		      </example>
+		</para>
+	</section>
+	
+	<section>
+		<title>Composing packages locally</title>
+		
+		<para>
+			Package and service expressions are functions that do not specify the versions or variants
+			of the dependencies that should be used. To allow services to be deployed, we must
+			<emphasis>compose</emphasis> them by providing the desired versions or variants of
+			the dependencies as function parameters.
+		</para>
+		<para>
+			As shown in <xref linkend="chap-basicusage" /> we have to compose a Disnix service twice --
+			first its intra-dependencies in a composition expression and later its inter-dependencies in the
+			services model.
+		</para>
+		<example xml:id="ex-packages-composition">
+			<title>Composing packages locally</title>
+			
+			<programlisting>
+{pkgs, system}:
+
+let
+  callPackage = pkgs.lib.callPackageWith (pkgs // self);
+
+  self = {
+    pkgconfig = callPackage ./pkgs/pkgconfig { };
+  
+    gpm = callPackage ./pkgs/gpm { };
+  
+    mc = callPackage ./pkgs/mc { };
+  };
+in
+self
+			</programlisting>
+		</example>
+		
+		<para>
+			<xref linkend="ex-packages-composition" /> composes the Midnight Commander package by providing its intra-dependencies
+			as function parameters. The third attribute (<varname>mc</varname>) invokes a function named: <code>callPackage {}</code>
+			that imports the previous package expression and automatically provides the parameters having the same names as the
+			function parameters.
+			The <code>callPackage { }</code> function first consults the <varname>self</varname> attribute set
+			(that composes some of Midnight Commander's dependencies as well, such as <varname>gpm</varname> and <varname>pkgconfig</varname>)
+			and then any package from the Nixpkgs repository.
+		</para>
+	</section>
+	
+	<section>
+		<title>Writing a minimal services model</title>
+		
+		<para>
+			Previously, we have shown how to build packages from source code and its dependencies, and how to compose packages locally.
+			For the deployment of services, more information is needed. For example, we need to compose their inter-dependencies so that services know how to reach them.
+		</para>
+		<para>
+			Furthermore, Disnix's end objective is to get a running service-oriented system and carries out extra deployment activities for services to accomplish this,
+			such as activation and deactivation. The latter two steps are executed by a Dysnomia plugin that is determined by annotating a service with a <varname>type</varname>
+			attribute.
+		</para>
+		<para>
+			For package deployment, specifying these extra attributes and executing these remaining activities are in principle not required.
+			Nonetheless, we still need to provide a minimal services model so that Disnix knows which units can be deployed.
+		</para>
+		
+		<para>
+			<example xml:id="ex-package-as-service">
+			      <title>Exposing a package as a service</title>
+			      
+<programlisting>
+{pkgs, system, distribution, invDistribution}:
+
+let
+  customPkgs = import ./custom-packages.nix {
+    inherit pkgs system;
+  };
+in
+{
+  mc = {
+    name = "mc";
+    pkg = customPkgs.mc;
+    type = "package";
+  };
+}
+</programlisting>
+			</example>
+			
+			In <xref linkend="ex-package-as-service" /> we import our intra-dependency composition expression 
+			and we use the <varname>pkg</varname> sub attribute to refer to the intra-dependency composition of the Midnight Commander.
+			We annotate the Midnight Commander service with a <code>package</code> type to instruct Disnix that no additional deployment
+			steps need to be performed beyond the installation of the package, such activation or deactivation.
+		</para>
+		
+		<para>
+			Since the above pattern is common to all packages, we can also automatically <emphasis>generate</emphasis> services for
+			any package in the composition expression, as shown in <xref linkend="ex-all-packages-as-services" />:
+			
+			<example xml:id="ex-all-packages-as-services">
+				<title>Exposing all locally composed packages as services</title>
+			
+<programlisting>
+{pkgs, system, distribution, invDistribution}:
+
+let
+  customPkgs = import ./custom-packages.nix {
+    inherit pkgs system;
+  };
+in
+pkgs.lib.mapAttrs (name: pkg: {
+  inherit name pkg;
+  type = "package";
+}) customPkgs
+</programlisting>
+			</example>
+		</para>
+	</section>
+	
+	<section>
+		<title>Configuring the remote machine's search paths</title>
+	  
+		<para>
+			To allow users on the remote machines to conveniently access their packages, we must add Disnix' Nix profile to the <envar>PATH</envar> of a user on the remote machines:
+<screen>
+$ export PATH=/nix/var/nix/profiles/disnix/default/bin:$PATH
+</screen>
+		</para>
+		<para>
+			When using NixOS, this variable can be extended by adding the following line to <filename>/etc/nixos/configuration.nix</filename>:
+<screen>
+environment.variables.PATH = [ "/nix/var/nix/profiles/disnix/default/bin" ];
+</screen>
+		</para>
+	</section>
+	
+	<section>
+		<title>Deploying packages</title>
+		
+		<para>
+			By providing an infrastructure model and distribution model, we can use Disnix to deploy packages to remote machines.
+		</para>
+		
+		<example xml:id="ex-infrastructure-model-pkgs">
+			<title>A basic infrastructure model for package deployment</title>
+<programlisting>
+{
+  test1.properties.hostname = "test1";
+  test2 = {
+    properties.hostname = "test2";
+    system = "x86_64-darwin";
+  };
+}
+</programlisting>
+		</example>
+
+		<para>
+			<xref linkend="ex-infrastructure-model-pkgs" /> describes two machines that have hostname <varname>test1</varname> and <varname>test2</varname>.
+			Furthermore, machine <varname>test2</varname> has a specific system architecture: <code>x86_64-darwin</code> that corresponds to a 64-bit Intel-based Mac OS X.
+		</para>
+
+		<example xml:id="ex-distribution-model-pkgs">
+			<title>A basic distribution model for package deployment</title>
+
+<programlisting>
+{infrastructure}:
+
+{
+  gpm = [ infrastructure.test1 ];
+  pkgconfig = [ infrastructure.test2 ];
+  mc = [ infrastructure.test1 infrastructure.test2 ];
+}
+</programlisting>
+		</example>
+		<para>
+			In <xref linkend="ex-distribution-model-pkgs" />, we distribute package <varname>gpm</varname> to machine
+			<varname>test1</varname>, <varname>pkgconfig</varname> to machine <varname>test2</varname> and <varname>mc</varname>
+			to both machines.
+		</para>
+		<para>
+			When running the following command-line instruction:
+<screen>
+$ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
+</screen>
+			Disnix executes all activities to get the packages in the distribution model deployed to the machines, such as
+			building them from source code (including its dependencies), and distributing their dependency closures to the target machines.
+			Because machine <varname>test2</varname> may have a different system architecture as the coordinator machine, Disnix can
+			use Nix's delegation mechanism to forward a build to a machine that is capable of doing it.
+		</para>
+		<para>
+			Alternatively, packages can also be built on the target machines through Disnix:
+<screen>
+$ disnix-env --build-on-targets -s services.nix -i infrastructure.nix -d distribution.nix
+</screen>
+
+		</para>
+		<para>
+			After the deployment above command-line instructions have succeeded, we should be able to start the Midnight Commander
+			on any of the target machines, by running:
+<screen>
+$ mc
+</screen>
+		</para>
+	</section>
+	
+	<section>
+		<title>Deploying any package from the Nixpkgs repository</title>
+		
+		<para>
+			Besides deploying a custom set of packages, it is also possible to use Disnix to remotely deploy any package in the
+			Nixpkgs repository, but doing so is a bit tricky. The main challenge lies in the fact that the Nix packages set is
+			a nested set of attributes, whereas Disnix expects services to be addressed in one attribute set only.
+		</para>
+		<para>
+			Fortunately, the Nix expression language and Disnix models are flexible enough to implement a solution.
+			
+			<example xml:id="ex-distribution-model-nixpkgs">
+				<title>A distribution model referring to packages in Nixpkgs</title>
+<programlisting>
+{infrastructure}:
+
+{
+  mc = [ infrastructure.test1 ];
+  git = [ infrastructure.test1 ];
+  wget = [ infrastructure.test1 ];
+  "xlibs.libX11" = [ infrastructure.test1 ];
+}
+</programlisting>
+		      </example>
+		      
+		      <xref linkend="ex-distribution-model-nixpkgs" /> shows a distribution model mapping a number of packages from the
+		      Nix packages repository to machines in the network. Note that we use a dot notation: <code>xlibs.libX11</code> as an
+		      attribute name to refer to <varname>libX11</varname> that can only be referenced as a sub attribute in Nixpkgs.
+	    </para>
+		      
+	    <para>
+		      We can write a services model that uses the attribute names in the distribution model to refer to the
+		      corresponding package in Nixpkgs:
+		      
+		      <example xml:id="ex-services-model-nixpkgs">
+			      <title>A services model referring to packages in Nixpkgs</title>
+<programlisting>
+{pkgs, system, distribution, invDistribution}:
+
+pkgs.lib.mapAttrs (name: targets:
+  let
+    attrPath = pkgs.lib.splitString "." name;
+  in
+  { inherit name;
+    pkg = pkgs.lib.attrByPath attrPath
+      (throw "package: ${name} cannot be referenced in the package set")
+      pkgs;
+    type = "package";
+  }
+) distribution
+</programlisting>
+			</example>
+
+			With <xref linkend="ex-services-model-nixpkgs" /> we can deploy any Nix package to any remote machine with Disnix.
+		</para>
+	</section>
+	
+	<section>
+		<title>Multi-user package management</title>
+		
+		<para>
+			Besides supporting single user installations, Nix also supports <emphasis>multi-user installations</emphasis>
+			in which every user has its own private Nix profile with its own set of packages. With Disnix we can also
+			manage multiple profiles. For example, by adding the <replaceable>--profile</replaceable> parameter, we can
+			deploy another Nix profile that, for example, contains a set of packages for the user: <code>sander</code>:
+			
+<screen>
+$ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix --profile sander
+</screen>
+			The user: <code>sander</code> can access its own set of packages by setting the <envar>PATH</envar>
+			environment variable to:
+<screen>
+$ export PATH=/nix/var/nix/profiles/disnix/sander:$PATH
+</screen>
+		</para>
+	</section>
+</chapter>

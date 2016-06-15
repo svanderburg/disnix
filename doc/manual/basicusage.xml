@@ -738,6 +738,12 @@ rec { <co xml:id='co-rec2' />
 						UNIX process. Moreover, also a <code>wrapper</code> type exists, allowing a developer to include
 						his own activation script inside a service.
 					</para>
+					<para>
+						The <code>package</code> type can be used to indicate that the service is an ordinary Nix package
+						that should be deployed remotely. Services of this type will be installed, but no additional deployment
+						steps will be performed, such activation or deactivation. Additional steps besides installing are not
+						necessary for packages. See <xref linkend="chap-packages" /> for more information.
+					</para>
 				</callout>
 			</calloutlist>
 		</section>

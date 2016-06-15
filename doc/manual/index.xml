@@ -37,6 +37,7 @@
   <xi:include href="state.xml" />
   <xi:include href="targetspecific.xml" />
   <xi:include href="architecture.xml" />
+  <xi:include href="packages.xml" />
   <xi:include href="dysnomia-modules.xml" />
   <xi:include href="advanced-options.xml" />
   <xi:include href="extensions.xml" />
