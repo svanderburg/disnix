@@ -1,8 +1,8 @@
-{nixpkgs, dysnomia}:
+{nixpkgs, dysnomia, disnix}:
 
 let
   pkgsTests = ./pkgs;
-  machine = import ./machine.nix { inherit dysnomia; };
+  machine = import ./machine.nix { inherit dysnomia disnix; };
 in
 with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem; };
 

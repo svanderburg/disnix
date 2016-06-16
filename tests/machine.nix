@@ -1,4 +1,4 @@
-{dysnomia}:
+{dysnomia, disnix}:
 {config, pkgs, ...}:
 
 {
@@ -8,6 +8,7 @@
   virtualisation.pathsInNixDB = [ pkgs.stdenv ];
   
   services.disnixTest.enable = true;
+  services.disnixTest.package = disnix;
   services.disnixTest.dysnomia = dysnomia;
   
   users.extraUsers = [
