@@ -94,7 +94,7 @@ StaffTracker = [ infrastructure.test1 ];
 			<link xlink:href="https://github.com/svanderburg/disnix-virtualhosts-example">Disnix virtual hosts example</link>.
 		</para>
 		<para>
-			We could model the nginx reverse proxy and each web application as (component-agnostic)
+			We could model the nginx reverse proxy and each web application as (target-agnostic)
 			distributable services, and deploy them in a network with Disnix as follows:
 			<figure xml:id="fig-virtualhosts-simple">
 				<title>Deployment architecture containing a single target-agnostic reverse proxy</title>
@@ -147,7 +147,7 @@ nginx = [ infrastructure.test1 infrastructure.test2 ];
 			have an inter-dependency on the upgraded web application.
 		</para>
 		<para>
-			In a 2 machine scenario with 4 web applications, this efficiency may still be acceptable, but in a
+			In a 2 machine scenario with 4 web applications, this inefficiency may still be acceptable, but in a
 			big environment with tens of web applications and tens of machines, we most likely suffer
 			from many (hundreds of) unnecessary redeployment activities bringing the system down for a
 			unnecessary long time.
