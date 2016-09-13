@@ -1,18 +1,5 @@
 {nixpkgs, pkgs}:
 
-let
-  /* Defines all variants of Nixpkgs */
-  pkgs_i686_linux = import nixpkgs { system = "i686-linux"; };
-  pkgs_x86_64_linux = import nixpkgs { system = "x86_64-linux"; };
-  pkgs_i686_darwin = import nixpkgs { system = "i686-darwin"; };
-  pkgs_x86_64_darwin = import nixpkgs { system = "x86_64-darwin"; };
-  pkgs_i686_freebsd = import nixpkgs { system = "i686-freebsd"; };
-  pkgs_x86_64_freebsd = import nixpkgs { system = "x86_64-freebsd"; };
-  pkgs_i686_cygwin = import nixpkgs { system = "i686-cygwin"; };
-  pkgs_x86_64_cygwin = import nixpkgs { system = "x86_64-cygwin"; };
-  pkgs_x86_64-solaris = import nixpkgs { system = "x86_64-solaris"; };
-  
-in
 rec {
   inherit (builtins) attrNames getAttr listToAttrs head tail unsafeDiscardOutputDependency hashString filter elem isList isAttrs;
 
@@ -27,16 +14,7 @@ rec {
    */
   
   selectPkgs = system:
-    if system == "i686-linux" then pkgs_i686_linux
-    else if system == "x86_64-linux" then pkgs_x86_64_linux
-    else if system == "i686-darwin" then pkgs_i686_darwin
-    else if system == "x86_64-darwin" then pkgs_x86_64_darwin
-    else if system == "i686-freebsd" then pkgs_i686_freebsd
-    else if system == "x86_64-freebsd" then pkgs_x86_64_freebsd
-    else if system == "i686-cygwin" then pkgs_i686_cygwin
-    else if system == "x86_64-cygwin" then pkgs_x86_64_cygwin
-    else if system == "x86_64-solaris" then pkgs_x86_64-solaris
-    else abort "unsupported system type: ${system}";
+    import nixpkgs { inherit system; };
   
   /*
    * Iterates over each service in the distribution attributeset, adds the corresponding service
