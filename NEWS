@@ -1,3 +1,9 @@
+Version 0.7
+===========
+- Created three new tools encapsulating meaningful sets of activities: disnix-delegate, disnix-deploy and disnix-migrate
+
+- disnix-env is now a composition of disnix-delegate, disnix-manifest and disnix-deploy
+
 Version 0.6
 ===========
 - Changed the distribution internals. Now every service maps to a container on a target system. When no container is specified, it auto maps a service to the container with the type name
@@ -36,7 +42,7 @@ Version 0.4
 ===========
 - The distributed derivation and manifest generator now pass the XML input as files to support bigger ones (Nix 1.9 or newer required)
 
-- Manual pages are now generated with help2man and polyglotman
+- Manual pages are now generated with help2man and doclifter
 
 - Implemented snapshot and restore operations that can be optionally enabled
 

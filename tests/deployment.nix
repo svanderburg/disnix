@@ -418,7 +418,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # Use disnix-query to see if the right services are installed on
         # the right target platforms. This test should succeed.
         
-        my @lines = split('\n', $coordinator->mustSucceed("${env} disnix-query ${manifestTests}/infrastructure.nix"));
+        @lines = split('\n', $coordinator->mustSucceed("${env} disnix-query ${manifestTests}/infrastructure.nix"));
         
         if($lines[1] ne "Services on: testtarget1") {
             die "disnix-query output line 1 does not match what we expect!\n";

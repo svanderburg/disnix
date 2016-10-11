@@ -106,6 +106,11 @@
 		</itemizedlist>
 		
 		<para>
+			Most of the deployment activities are encapsulated by a tool named: <command>disnix-deploy</command> that carries
+			out a deployment process from a prebuilt Disnix manifest.
+		</para>
+		
+		<para>
 			Two additional tools are used when the building on targets option has been enabled:
 		</para>
 		
@@ -125,6 +130,11 @@
 				</para>
 			</listitem>
 		</itemizedlist>
+		
+		<para>
+			The build activity tools are encapsulated by a tool named: <command>disnix-delegate</command> that carries out the builds
+			on the target machines from a provided services, infrastructure and distribution model.
+		</para>
 		
 		<para>
 			When state deployment has been enabled, another three tools are invoked:
@@ -148,6 +158,11 @@
 				</para>
 			</listitem>
 		</itemizedlist>
+		
+		<para>
+			The state operations are encapsulated by a tool named: <command>disnix-migrate</command> that moves the state of services that have been
+			moved from one machine to another.
+		</para>
 	</section>
 	
 	<section>

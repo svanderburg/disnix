@@ -25,24 +25,18 @@ shopt -s nullglob
 showUsage()
 {
     cat <<EOF
-Usage: $0 -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
+Usage: $0 [OPTION] MANIFEST
   or: $0 --rollback [OPTION]
   or: $0 --switch-generation NUM [OPTION]
 
-The command \`disnix-env' is used to install, upgrade, or roll back a
-service-oriented system in a given environment.
+The command \`disnix-deploy' is used to install, upgrade, or roll back a
+service-oriented system in a given environment from a prebuilt Disnix
+configuration (a manifest file), that has been built with \`disnix-manifest'.
 
-This command requires three Nix expressions as input parameters -- a services
-model capturing the components of a distributed system and its
-inter-dependencies, an infrastructure model capturing the machines in the
-network and its properties and a distribution model which maps services to
-machines.
-
-By invoking this command, first all the services that are defined in the
-distribution model are built from source code including all its dependencies. If
-all the services are successfully built, the closures of the services are
-transferred to the target machines in the network. Finally, the services are
-activated by traversing the inter-dependency graph of all the services.
+A deployment process consists of the following activities: first it copies the
+intra-dependency closures of the services to the target machines in the network.
+Finally, the services are activated by traversing the inter-dependency graph of
+all the services.
 
 In case of a failure, a rollback is performed to bring the system back in its
 previous configuration.
@@ -52,29 +46,19 @@ performed. In this phase only the changed parts of the system are deactivated
 and activated. In this process we also deal with the inter-dependencies so that
 no services fails due to a missing inter-dependency.
 
-Since the target machines could be of a different type or architecture as the
-coordinator machine, we may not be able to build a specific service for the
-given target machine. In such cases, \`disnix-env' also provides the option to
-build the services on the target machines and to keep the build results for
-future use.
-
 If state deployment has been enabled for a service and that particular service
 has been moved from one machine to another, then a snapshot of the state is
 taken, transferred to the new machine, and finally restored.
 
+Most users don't need to use this command directly. The \`disnix-env' command
+will automatically invoke this command to activate the new configuration.
+
 Options:
-  -s, --services=services_nix
-                                  Services Nix expression which describes all
-                                  components of the distributed system
-  -i, --infrastructure=infrastructure_nix
-                                  Infrastructure Nix expression which captures
-                                  properties of machines in the network
-  -d, --distribution=distribution_nix
-                                  Distribution Nix expression which maps
-                                  services to machines in the network
-      --switch-to-generation=NUM  Switches to a specific profile generation
-      --rollback                  Switches back to the previously deployed
-                                  configuration
+      -o, --old-manifest=MANIFEST Nix profile path where the manifest should be
+                                  stored, so that Disnix knows the current
+                                  configuration of a distributed system. By
+                                  default it is stored in the profile directory
+                                  of the user.
       --target-property=PROP      The target property of an infrastructure
                                   model, that specifies how to connect to the
                                   remote Disnix interface. (Defaults to
@@ -86,9 +70,6 @@ Options:
   -m, --max-concurrent-transfers=NUM
                                   Maximum amount of concurrent closure
                                   transfers. Defauls to: 2
-      --build-on-targets          Build the services on the target machines in
-                                  the network instead of managing the build by
-                                  the coordinator
       --coordinator-profile-path=PATH
                                   Path where to store the coordinator profile
                                   generations
@@ -109,11 +90,6 @@ Options:
   -v, --version                   Shows the version of this command
 
 Environment:
-  DISNIX_CLIENT_INTERFACE    Sets the client interface (defaults to:
-                             disnix-ssh-client)
-  DISNIX_TARGET_PROPERTY     Sets the target property of an infrastructure
-                             model, that specifies how to connect to the remote
-                             Disnix interface. (Defaults to: hostname)
   DISNIX_PROFILE             Sets the name of the profile that stores the
                              manifest on the coordinator machine and the
                              deployed services per machine on each target
@@ -139,9 +115,49 @@ Copyright (C) 2008-2016 Sander van der Burg
 EOF
 }
 
+# Releases the locks
+
+releaseLocks()
+{
+    if [ "$noLock" = "1" ]
+    then
+        echo "[coordinator]: Not releasing any locks..."
+    else
+        echo "[coordinator]: Releasing locks..."
+        disnix-lock --unlock $profileArg $manifest
+    fi
+}
+
+# Displays a note indicating that the deployment failed
+
+displayFailure()
+{
+    echo "[coordinator]: The deployment failed! Please inspect the output to diagnose any problems!" >&2
+}
+
+# Displays a note indicating that data migration has failed and provide the
+# caller some notes on how to resolve it.
+
+displayStateFailure()
+{
+    cat <<EOF
+
+The problem is a data migration issue, which must be manually diagnosed. To
+attempt migrating the data again, run:
+
+$ disnix-migrate $profileArg $coordinatorProfilePathArg $noUpgradeArg $noDeleteStateArg $oldManifestFileArg $manifest
+
+If all problems have been resolved, the deployment must be made final. To
+accomplish this, run:
+
+$ disnix-set $profileArg $coordinatorProfilePathArg $noCoordinatorProfileArg $noTargetProfilesArg $manifest
+
+EOF
+}
+
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:p:m:hv -l services:,infrastructure:,distribution:,rollback,switch-to-generation:,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,no-delete-state,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o o:p:m:hv -l old-manifest:,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,no-delete-state,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -156,27 +172,12 @@ eval set -- "$PARAMS"
 while [ "$1" != "--" ]
 do
     case "$1" in
-        -s|--services)
-            servicesFile=`readlink -f $2`
-            ;;
-        -i|--infrastructure)
-            infrastructureFile=`readlink -f $2`
-            ;;
-        -d|--distribution)
-            distributionFile=`readlink -f $2`
-            ;;
-        --rollback)
-            switchGeneration=1
-            ;;
-        --switch-to-generation)
-            switchGeneration=1
-            generationId=$2
+        -o|--old-manifest)
+            oldManifestFile=$2
+            oldManifestFileArg="-o $2"
             ;;
         -m|--max-concurrent-transfers)
             maxConcurrentTransfersArg="-m $2"
-            ;;
-        --build-on-targets)
-            buildOnTargets=1
             ;;
         --show-trace)
             showTrace=1
@@ -185,7 +186,6 @@ do
             interface=$2
             ;;
         -p|--profile)
-            profile=$2
             profileArg="--profile $2"
             ;;
         --coordinator-profile-path)
@@ -200,9 +200,10 @@ do
             ;;
         --no-upgrade)
             noUpgradeArg="--no-upgrade"
+            noUpgrade=1
             ;;
         --no-lock)
-            noLockArg="--no-lock"
+            noLock=1
             ;;
         --no-coordinator-profile)
             noCoordinatorProfileArg="--no-coordinator-profile"
@@ -211,9 +212,10 @@ do
             noTargetProfilesArg="--no-target-profiles"
             ;;
         --no-migration)
-            noMigrationArg="--no-migration"
+            noMigration=1
             ;;
         --no-delete-state)
+            noDeleteState=1
             noDeleteStateArg="--no-delete-state"
             ;;
         -h|--help)
@@ -229,6 +231,11 @@ do
     shift
 done
 
+# Evaluate non-options
+
+shift
+manifest=$1
+
 # Autoconf settings
 
 export prefix=@prefix@
@@ -239,80 +246,53 @@ source @datadir@/@PACKAGE@/checks
 
 # Validate the given options
 
-if [ "$switchGeneration" != "1" ]
-then
-    checkServicesFile
-    checkInfrastructureFile
-    checkDistributionFile
-fi
-
-checkClientInterface
-checkTargetProperty
 checkShowTrace
 
 if [ "$DISNIX_NO_DELETE_STATE" = "1" ]
 then
-    noDeleteStateArg="--no-delete-state"
-fi
-
-if [ "$profile" = "" ]
-then
-    if [ "$DISNIX_PROFILE" = "" ]
-    then
-        profile=default
-    else
-        profile=$DISNIX_PROFILE
-    fi
-fi
-
-if [ "$coordinatorProfilePath" = "" ]
-then
-    profileDir="@localstatedir@/nix/profiles/per-user/$(whoami)/disnix-coordinator"
-else
-    profileDir="$coordinatorProfilePath"
+    noDeleteState=1
 fi
 
 # Execute operations
 
-if [ "$switchGeneration" = "1" ]
+echo "[coordinator]: Distributing intra-dependency closures..."
+disnix-distribute $maxConcurrentTransfersArg $manifest
+
+if [ "$noLock" = "1" ]
 then
-    # If no generation link has been requested, figure out what the previous one is
-    if [ "$generationId" = "" ]
-    then
-        if [ -d "$profileDir" ] && [ "$(echo $profileDir/$profile-*-link)" != "" ] && [ "$(ls $profileDir/$profile-*-link | wc -l)" -gt 1 ]
-        then
-            generation="$(basename $(ls $profileDir/$profile-*-link | sort -V | tail -2 | head -1))"
-        else
-            echo "[coordinator]: Unable to roll back as there are no known previous deployments!" >&2
-            exit 1
-        fi
-    else
-        generation="$profile-$generationId-link"
-    fi
-    
-    if [ -e "$profileDir/$generation" ]
-    then
-        # Retrieve the manifest of the requested profile generation
-        manifest=`readlink -f $profileDir/$generation`
-    else
-        echo "[coordinator]: Cannot switch profile generations, because the requested profile does not exist!" >&2
-        exit 1
-    fi
+    echo "[coordinator]: Not acquiring any locks..."
 else
-    if [ "$buildOnTargets" = "1" ]
-    then
-        disnix-delegate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --interface $interface $maxConcurrentTransfersArg $showTraceArg
-    fi
-
-    echo "[coordinator]: Building manifest..."
-    manifest=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link --interface $interface $deployStateArg $showTraceArg`
+    echo "[coordinator]: Acquiring locks..."
+    disnix-lock $profileArg $manifest || (displayFailure; exit 1)
 fi
 
-# Determine the name of the previous manifest file
-if [ -d "$profileDir" ] && [ "$(echo $profileDir/$profile-*-link)" != "" ]
+echo "[coordinator]: Activating new configuration..."
+disnix-activate $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest || (releaseLocks; displayFailure; exit 1)
+
+if [ "$noMigration" != "1" ]
 then
-    oldManifestArg="-o $(ls $profileDir/$profile-*-link | sort -V | tail -1)"
+    echo "[coordinator]: Migrating data..."
+    disnix-migrate $profileArg $coordinatorProfilePathArg $noUpgradeArg $noDeleteStateArg $oldManifestFileArg $manifest || (releaseLocks; displayStateFailure; exit 1)
 fi
 
-# Deploy the (pre)built Disnix configuration (implying a manifest file)
-disnix-deploy $maxConcurrentTransfersArg $noLockArg $profileArg $noUpgradeArg $noDeleteStateArg $noCoordinatorProfileArg $coordinatorProfilePathArg $noTargetProfilesArg $noMigrationArg $oldManifestArg $manifest
+echo "[coordinator]: Setting profiles..."
+disnix-set $profileArg $coordinatorProfilePathArg $noCoordinatorProfileArg $noTargetProfilesArg $manifest || (releaseLocks; displayFailure; exit 1)
+releaseLocks || (displayFailure; exit 1)
+
+if [ "$noDeleteState" = "1" ] && [ "$oldManifestFile" != "" ]
+then
+    # If we don't want to delete state, but there has been an upgrade, notify the user
+    cat <<EOF
+
+NOTE: Deleting state has been disabled! This means that the state of the
+services that have been moved from one machine to another were copied, but not
+deleted from their previous locations!
+
+To actually remove the old obsolete state, run the following command:
+
+$ disnix-delete-state $profileArg $coordinatorProfilePathArg $oldManifestFile
+
+EOF
+fi
+
+echo "[coordinator]: The system has been successfully deployed!" >&2

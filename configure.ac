@@ -108,9 +108,12 @@ data/Makefile
 maintenance/Makefile
 scripts/disnix-copy-closure
 scripts/disnix-copy-snapshots
+scripts/disnix-delegate
+scripts/disnix-deploy
 scripts/disnix-env
 scripts/disnix-instantiate
 scripts/disnix-manifest
+scripts/disnix-migrate
 scripts/disnix-gendist-roundrobin
 scripts/disnix-ssh-client
 doc/Makefile

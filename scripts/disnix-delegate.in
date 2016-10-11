@@ -1,0 +1,157 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+# Disnix - A Nix-based distributed service deployment tool
+# Copyright (C) 2008-2016  Sander van der Burg
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    cat <<EOF
+Usage: $0 -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
+
+The command \`disnix-delegate' is used to instantiate all derivations of
+the services deployed to a machine in the network and to delegate their build
+operations to the target machines.
+
+This command requires three Nix expressions as input parameters -- a services
+model capturing the components of a distributed system and its
+inter-dependencies, an infrastructure model capturing the machines in the
+network and its properties and a distribution model which maps services to
+machines.
+
+Most users don't need to use this command directly. The \`disnix-env' command
+will automatically invoke this command to activate the new configuration.
+
+Options:
+  -s, --services=services_nix
+                                  Services Nix expression which describes all
+                                  components of the distributed system
+  -i, --infrastructure=infrastructure_nix
+                                  Infrastructure Nix expression which captures
+                                  properties of machines in the network
+  -d, --distribution=distribution_nix
+                                  Distribution Nix expression which maps
+                                  services to machines in the network
+      --target-property=PROP      The target property of an infrastructure
+                                  model, that specifies how to connect to the
+                                  remote Disnix interface. (Defaults to
+                                  hostname)
+  -m, --max-concurrent-transfers=NUM
+                                  Maximum amount of concurrent closure
+                                  transfers. Defauls to: 2
+      --show-trace                Shows a trace of the output
+  -h, --help                      Shows the usage of this command
+  -v, --version                   Shows the version of this command
+
+Environment:
+  DISNIX_CLIENT_INTERFACE    Sets the client interface (defaults to:
+                             disnix-ssh-client)
+  DISNIX_TARGET_PROPERTY     Sets the target property of an infrastructure
+                             model, that specifies how to connect to the remote
+                             Disnix interface. (Defaults to: hostname)
+EOF
+}
+
+# Shows the version of this command to the user
+
+showVersion()
+{
+    cat <<EOF
+$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+
+Copyright (C) 2008-2016 Sander van der Burg
+EOF
+}
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o s:i:d:m:hv -l services:,infrastructure:,distribution:,interface:,target-property:,max-concurrent-transfers:,show-trace,help,version -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -s|--services)
+            servicesFile=`readlink -f $2`
+            ;;
+        -i|--infrastructure)
+            infrastructureFile=`readlink -f $2`
+            ;;
+        -d|--distribution)
+            distributionFile=`readlink -f $2`
+            ;;
+        -m|--max-concurrent-transfers)
+            maxConcurrentTransfersArg="-m $2"
+            ;;
+        --show-trace)
+            showTrace=1
+            ;;
+        --interface)
+            interface=$2
+            ;;
+        --target-property)
+            targetProperty=$2
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+        -v|--version)
+            showVersion
+            exit 0
+            ;;
+    esac
+    
+    shift
+done
+
+# Autoconf settings
+
+export prefix=@prefix@
+
+# Import checks
+
+source @datadir@/@PACKAGE@/checks
+
+# Validate the given options
+
+checkServicesFile
+checkInfrastructureFile
+checkDistributionFile
+checkClientInterface
+checkTargetProperty
+checkShowTrace
+
+# Execute operations
+
+echo "[coordinator]: Instantiating store derivations..."
+distributedDerivation=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --interface $interface --no-out-link $showTraceArg`
+echo "[coordinator]: Building store derivations..."
+disnix-build $maxConcurrentTransfersArg $distributedDerivation
