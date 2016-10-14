@@ -27,9 +27,9 @@ showUsage()
     cat <<EOF
 Usage: $0 -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
 
-The command \`disnix-delegate' is used to instantiate all derivations of
-the services deployed to a machine in the network and to delegate their build
-operations to the target machines.
+The command \`disnix-delegate' is used to instantiate all derivations of the
+services deployed machines in the network and to delegate their build operations
+to the target machines.
 
 This command requires three Nix expressions as input parameters -- a services
 model capturing the components of a distributed system and its
@@ -54,6 +54,9 @@ Options:
                                   model, that specifies how to connect to the
                                   remote Disnix interface. (Defaults to
                                   hostname)
+      --interface=INTERFACE       Path to executable that communicates with a
+                                  Disnix interface. Defaults to:
+                                  disnix-ssh-client
   -m, --max-concurrent-transfers=NUM
                                   Maximum amount of concurrent closure
                                   transfers. Defauls to: 2
@@ -111,7 +114,7 @@ do
             maxConcurrentTransfersArg="-m $2"
             ;;
         --show-trace)
-            showTrace=1
+            showTraceArg="--show-trace"
             ;;
         --interface)
             interface=$2
@@ -147,7 +150,6 @@ checkInfrastructureFile
 checkDistributionFile
 checkClientInterface
 checkTargetProperty
-checkShowTrace
 
 # Execute operations
 

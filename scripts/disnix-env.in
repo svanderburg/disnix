@@ -79,6 +79,9 @@ Options:
                                   model, that specifies how to connect to the
                                   remote Disnix interface. (Defaults to
                                   hostname)
+      --interface=INTERFACE       Path to executable that communicates with a
+                                  Disnix interface. Defaults to:
+                                  disnix-ssh-client
       --deploy-state              Indicates whether to globally deploy state
                                   (disabled by default)
   -p, --profile=PROFILE           Name of the profile that is used for this

@@ -26,8 +26,6 @@ showUsage()
 {
     cat <<EOF
 Usage: $0 [OPTION] MANIFEST
-  or: $0 --rollback [OPTION]
-  or: $0 --switch-generation NUM [OPTION]
 
 The command \`disnix-deploy' is used to install, upgrade, or roll back a
 service-oriented system in a given environment from a prebuilt Disnix
@@ -54,15 +52,11 @@ Most users don't need to use this command directly. The \`disnix-env' command
 will automatically invoke this command to activate the new configuration.
 
 Options:
-      -o, --old-manifest=MANIFEST Nix profile path where the manifest should be
+  -o, --old-manifest=MANIFEST     Nix profile path where the manifest should be
                                   stored, so that Disnix knows the current
                                   configuration of a distributed system. By
                                   default it is stored in the profile directory
                                   of the user.
-      --target-property=PROP      The target property of an infrastructure
-                                  model, that specifies how to connect to the
-                                  remote Disnix interface. (Defaults to
-                                  hostname)
       --deploy-state              Indicates whether to globally deploy state
                                   (disabled by default)
   -p, --profile=PROFILE           Name of the profile that is used for this
@@ -85,7 +79,6 @@ Options:
                                   machine to another, even if they have been
                                   annotated as such
       --no-delete-state           Do not remove the state of deactivated services
-      --show-trace                Shows a trace of the output
   -h, --help                      Shows the usage of this command
   -v, --version                   Shows the version of this command
 
@@ -124,7 +117,7 @@ releaseLocks()
         echo "[coordinator]: Not releasing any locks..."
     else
         echo "[coordinator]: Releasing locks..."
-        disnix-lock --unlock $profileArg $manifest
+        disnix-lock --unlock $profileArg $coordinatorProfilePathArg $manifest
     fi
 }
 
@@ -157,7 +150,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o o:p:m:hv -l old-manifest:,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,no-delete-state,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o o:p:m:hv -l old-manifest:,deploy-state,profile:,max-concurrent-transfers:,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,no-delete-state,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -179,28 +172,17 @@ do
         -m|--max-concurrent-transfers)
             maxConcurrentTransfersArg="-m $2"
             ;;
-        --show-trace)
-            showTrace=1
-            ;;
-        --interface)
-            interface=$2
-            ;;
         -p|--profile)
             profileArg="--profile $2"
             ;;
         --coordinator-profile-path)
-            coordinatorProfilePath=$2
             coordinatorProfilePathArg="--coordinator-profile-path $2"
-            ;;
-        --target-property)
-            targetProperty=$2
             ;;
         --deploy-state)
             deployStateArg="--deploy-state"
             ;;
         --no-upgrade)
             noUpgradeArg="--no-upgrade"
-            noUpgrade=1
             ;;
         --no-lock)
             noLock=1
@@ -246,11 +228,10 @@ source @datadir@/@PACKAGE@/checks
 
 # Validate the given options
 
-checkShowTrace
-
 if [ "$DISNIX_NO_DELETE_STATE" = "1" ]
 then
     noDeleteState=1
+    noDeleteStateArg="--no-delete-state"
 fi
 
 # Execute operations
@@ -263,7 +244,7 @@ then
     echo "[coordinator]: Not acquiring any locks..."
 else
     echo "[coordinator]: Acquiring locks..."
-    disnix-lock $profileArg $manifest || (displayFailure; exit 1)
+    disnix-lock $profileArg $coordinatorProfilePathArg $manifest || (displayFailure; exit 1)
 fi
 
 echo "[coordinator]: Activating new configuration..."
