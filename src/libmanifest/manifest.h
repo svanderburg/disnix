@@ -48,9 +48,11 @@ Manifest;
  * Composes a manifest struct from a manifest file.
  *
  * @param manifest_file Manifest file to open
+ * @param container_filter Name of the container to filter on, or NULL to parse all containers
+ * @param component_filter Name of the component to filter on, or NULL to parse all components
  * @return A manifest struct or NULL if an error occurred
  */
-Manifest *create_manifest(const gchar *manifest_file);
+Manifest *create_manifest(const gchar *manifest_file, const gchar *container_filter, const gchar *component_filter);
 
 /**
  * Deletes a manifest struct from heap memory.

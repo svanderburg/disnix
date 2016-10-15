@@ -42,7 +42,7 @@ static int wait_to_complete(void)
 int distribute(const gchar *manifest_file, const unsigned int max_concurrent_transfers)
 {
     /* Generate a distribution array from the manifest file */
-    Manifest *manifest = create_manifest(manifest_file);
+    Manifest *manifest = create_manifest(manifest_file, NULL, NULL);
     
     if(manifest == NULL)
     {

@@ -95,7 +95,7 @@ static int snapshot_services(GPtrArray *snapshots_array, GPtrArray *target_array
                 pidKey = g_malloc(sizeof(gint));
                 *pidKey = pid;
                 g_hash_table_insert(pids, pidKey, mapping);
-            
+              
                 /* Cleanup */
                 g_strfreev(arguments);
             }
@@ -208,7 +208,7 @@ static void cleanup(const gchar *old_manifest, char *old_manifest_file, Manifest
     delete_manifest(manifest);
 }
 
-static Manifest *open_manifest(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const char *username)
+static Manifest *open_manifest(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const char *username, const gchar *container_filter, const gchar *component_filter)
 {
     gchar *path;
     Manifest *manifest;
@@ -221,19 +221,19 @@ static Manifest *open_manifest(const gchar *manifest_file, const gchar *coordina
     if(path == NULL)
         manifest = NULL;
     else
-        manifest = create_manifest(path);
+        manifest = create_manifest(path, container_filter, component_filter);
     
     g_free(path);
     return manifest;
 }
 
-int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade)
+int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade, const gchar *container_filter, const gchar *component_filter)
 {
     /* Get current username */
     char *username = (getpwuid(geteuid()))->pw_name;
     
     /* Generate a distribution array from the manifest file */
-    Manifest *manifest = open_manifest(manifest_file, coordinator_profile_path, profile, username);
+    Manifest *manifest = open_manifest(manifest_file, coordinator_profile_path, profile, username, container_filter, component_filter);
     
     if(manifest == NULL)
     {
@@ -263,7 +263,7 @@ int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_trans
             }
             else
             {
-                old_snapshots_array = create_snapshots_array(old_manifest_file);
+                old_snapshots_array = create_snapshots_array(old_manifest_file, container_filter, component_filter);
                 g_printerr("[coordinator]: Sending snapshots of moved components using previous manifest: %s\n", old_manifest_file);
                 snapshots_array = subtract_snapshot_mappings(old_snapshots_array, manifest->snapshots_array);
             }

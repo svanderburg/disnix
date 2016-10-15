@@ -39,6 +39,10 @@ static void print_usage(const char *command)
     printf("If no manifest has been provided, the last deployed one is used.\n\n");
     
     printf("Options:\n");
+    printf("  -c, --container=CONTAINER            Name of the container in which the\n");
+    printf("                                       mutable component is deployed\n");
+    printf("  -C, --component=COMPONENT            Name of the mutable component to take\n");
+    printf("                                       snapshots from\n");
     printf("  -o, --old-manifest=MANIFEST          Nix profile path where the manifest\n");
     printf("                                       should be stored, so that Disnix knows\n");
     printf("                                       the current configuration of a\n");
@@ -78,6 +82,8 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
+        {"container", required_argument, 0, 'c'},
+        {"component", required_argument, 0, 'C'},
         {"coordinator-profile-path", required_argument, 0, 'P'},
         {"profile", required_argument, 0, 'p'},
         {"old-manifest", required_argument, 0, 'o'},
@@ -98,12 +104,20 @@ int main(int argc, char *argv[])
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
     char *manifest_file;
+    char *container = NULL;
+    char *component = NULL;
     
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "m:o:p:hv", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "c:C:m:o:p:hv", long_options, &option_index)) != -1)
     {
         switch(c)
         {
+            case 'c':
+                container = optarg;
+                break;
+            case 'C':
+                component = optarg;
+                break;
             case 'p':
                 profile = optarg;
                 break;
@@ -144,5 +158,5 @@ int main(int argc, char *argv[])
     else
         manifest_file = argv[optind];
     
-    return restore(manifest_file, max_concurrent_transfers, transfer_only, all, old_manifest, coordinator_profile_path, profile, no_upgrade); /* Execute restore operation */
+    return restore(manifest_file, max_concurrent_transfers, transfer_only, all, old_manifest, coordinator_profile_path, profile, no_upgrade, container, component); /* Execute restore operation */
 }

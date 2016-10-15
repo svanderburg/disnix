@@ -24,7 +24,7 @@
 #include "snapshotmapping.h"
 #include "targets.h"
 
-Manifest *create_manifest(const gchar *manifest_file)
+Manifest *create_manifest(const gchar *manifest_file, const gchar *container_filter, const gchar *component_filter)
 {
     GPtrArray *distribution_array, *activation_array, *snapshots_array, *target_array;
     Manifest *manifest;
@@ -39,7 +39,7 @@ Manifest *create_manifest(const gchar *manifest_file)
         delete_distribution_array(distribution_array);
         return NULL;
     }
-    snapshots_array = create_snapshots_array(manifest_file);
+    snapshots_array = create_snapshots_array(manifest_file, container_filter, component_filter);
     if(snapshots_array == NULL)
     {
         delete_distribution_array(distribution_array);

@@ -67,9 +67,11 @@ SnapshotMapping;
  * Creates an array with activation mappings from a manifest XML file.
  *
  * @param manifest_file Path to the manifest XML file
+ * @param container_filter Name of the container to filter on, or NULL to parse all containers
+ * @param component_filter Name of the component to filter on, or NULL to parse all components
  * @return GPtrArray containing activation mappings
  */
-GPtrArray *create_snapshots_array(const gchar *manifest_file);
+GPtrArray *create_snapshots_array(const gchar *manifest_file, const gchar *container_filter, const gchar *component_filter);
 
 /**
  * Deletes an array with snapshot mappings including its contents.

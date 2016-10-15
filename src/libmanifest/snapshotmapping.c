@@ -50,7 +50,12 @@ static gint compare_snapshot_mapping(const SnapshotMapping **l, const SnapshotMa
     return compare_snapshot_mapping_keys((const SnapshotMappingKey **)l, (const SnapshotMappingKey **)r);
 }
 
-GPtrArray *create_snapshots_array(const gchar *manifest_file)
+static int mapping_is_selected(const SnapshotMapping *mapping, const gchar *container, const gchar *component)
+{
+    return (container == NULL || g_strcmp0(container, mapping->container) == 0) && (component == NULL || g_strcmp0(component, mapping->component) == 0);
+}
+
+GPtrArray *create_snapshots_array(const gchar *manifest_file, const gchar *container_filter, const gchar *component_filter)
 {
     xmlDocPtr doc;
     xmlNodePtr node_root;
@@ -126,7 +131,9 @@ GPtrArray *create_snapshots_array(const gchar *manifest_file)
 	    mapping->transferred = FALSE;
 	    
 	    /* Add the mapping to the array */
-	    g_ptr_array_add(snapshots_array, mapping);
+	    
+	    if(mapping_is_selected(mapping, container_filter, component_filter))
+	        g_ptr_array_add(snapshots_array, mapping);
 	}
     }
 

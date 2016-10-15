@@ -56,7 +56,7 @@ static void cleanup(gchar *old_manifest_file, Manifest *manifest, GPtrArray *old
 
 int activate_system(const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade, const gboolean no_rollback, const gboolean dry_run)
 {
-    Manifest *manifest = create_manifest(new_manifest);
+    Manifest *manifest = create_manifest(new_manifest, NULL, NULL);
     
     if(manifest == NULL)
     {

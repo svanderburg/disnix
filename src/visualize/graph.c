@@ -45,12 +45,12 @@ int generate_graph(const gchar *manifest_file, const gchar *coordinator_profile_
         }
         else
         {
-            manifest = create_manifest(old_manifest_file);
+            manifest = create_manifest(old_manifest_file, NULL, NULL);
             g_free(old_manifest_file);
         }
     }
     else
-        manifest = create_manifest(manifest_file); /* Open the provided manifest */
+        manifest = create_manifest(manifest_file, NULL, NULL); /* Open the provided manifest */
 
     if(manifest == NULL)
     {

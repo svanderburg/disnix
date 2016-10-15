@@ -111,7 +111,7 @@ static int delete_obsolete_state(GPtrArray *snapshots_array, GPtrArray *target_a
     return status;
 }
 
-int delete_state(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile)
+int delete_state(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container, const gchar *component)
 {
     Manifest *manifest;
     
@@ -131,7 +131,7 @@ int delete_state(const gchar *manifest_file, const gchar *coordinator_profile_pa
         else
         {
             g_printerr("[coordinator]: Deleting obsolete state of all components of the previous generation: %s\n", old_manifest_file);
-            manifest = create_manifest(old_manifest_file);
+            manifest = create_manifest(old_manifest_file, container, component);
             g_free(old_manifest_file);
         }
     }
@@ -139,7 +139,7 @@ int delete_state(const gchar *manifest_file, const gchar *coordinator_profile_pa
     {
         /* Open the provided manifest */
         g_printerr("[coordinator]: Deleting obsolete state of all components...\n");
-        manifest = create_manifest(manifest_file);
+        manifest = create_manifest(manifest_file, container, component);
     }
     
     if(manifest == NULL)

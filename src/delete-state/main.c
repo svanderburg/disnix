@@ -36,6 +36,10 @@ static void print_usage(const char *command)
     printf("deployed.\n\n");
     
     printf("Options:\n");
+    printf("  -c, --container=CONTAINER      Name of the container in which the mutable\n");
+    printf("                                 component is deployed\n");
+    printf("  -C, --component=COMPONENT      Name of the mutable component to take snapshots\n");
+    printf("                                 from\n");
     printf("  -p, --profile=PROFILE          Name of the profile in which the services are\n");
     printf("                                 registered. Defaults to: default\n");
     printf("      --coordinator-profile-path=PATH\n");
@@ -59,6 +63,8 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
+        {"container", required_argument, 0, 'c'},
+        {"component", required_argument, 0, 'C'},
         {"coordinator-profile-path", required_argument, 0, 'P'},
         {"profile", required_argument, 0, 'p'},
         {"help", no_argument, 0, 'h'},
@@ -69,12 +75,20 @@ int main(int argc, char *argv[])
     char *manifest_file;
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
+    char *container = NULL;
+    char *component = NULL;
     
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "p:hv", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "c:C:p:hv", long_options, &option_index)) != -1)
     {
         switch(c)
         {
+            case 'c':
+                container = optarg;
+                break;
+            case 'C':
+                component = optarg;
+                break;
             case 'p':
                 profile = optarg;
                 break;
@@ -100,5 +114,5 @@ int main(int argc, char *argv[])
     else
         manifest_file = argv[optind];
     
-    return delete_state(manifest_file, coordinator_profile_path, profile); /* Execute snapshot operation */
+    return delete_state(manifest_file, coordinator_profile_path, profile, container, component); /* Execute snapshot operation */
 }
