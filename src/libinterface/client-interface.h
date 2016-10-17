@@ -201,9 +201,11 @@ pid_t exec_copy_snapshots_to(gchar *interface, gchar *target, gchar *container, 
  * @param interface Path to the interface executable
  * @param target Target Address of the remote interface
  * @param keep Number of snapshot generations to keep
+ * @param container Name of the container to filter on, or NULL to consult all containers
+ * @param component Name of the component to filter on, or NULL to consult all components
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_clean_snapshots(gchar *interface, gchar *target, int keep);
+pid_t exec_clean_snapshots(gchar *interface, gchar *target, int keep, char *container, char *component);
 
 /**
  * Invokes the realise operation through a Disnix client interface

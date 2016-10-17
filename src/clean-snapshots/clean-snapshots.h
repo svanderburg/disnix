@@ -29,8 +29,10 @@
  *                        how to connect to the Disnix service
  * @param infrastructure_expr Path to the infrastructure expression
  * @param keep Number of snapshot generations to keep
+ * @param container Name of the container to filter on, or NULL to consult all containers
+ * @param component Name of the component to filter on, or NULL to consult all components
  * @return 0 if everything succeeds, else a non-zero exit value
  */
-int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, int keep);
+int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, int keep, gchar *container, gchar *component);
 
 #endif

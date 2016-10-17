@@ -37,6 +37,8 @@ static void print_usage(const char *command)
     printf("                              that specifies how to connect to the remote Disnix\n");
     printf("      --keep=NUM              Amount of snapshot generations to keep. Defaults\n");
     printf("                              to: 1\n");
+    printf("  -C, --container=CONTAINER   Name of the container to filter on\n");
+    printf("  -c, --component=COMPONENT   Name of the component to filter on\n");
     printf("  -h, --help                  Shows the usage of this command to the user\n");
     printf("  -v, --version               Shows the version of this command to the user\n");
     
@@ -57,6 +59,8 @@ int main(int argc, char *argv[])
         {"interface", required_argument, 0, 'i'},
         {"target-property", required_argument, 0, 't'},
         {"keep", required_argument, 0, 'z'},
+        {"container", required_argument, 0, 'C'},
+        {"component", required_argument, 0, 'c'},
         {"version", no_argument, 0, 'v'},
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}
@@ -64,9 +68,11 @@ int main(int argc, char *argv[])
     char *interface = NULL;
     char *target_property = NULL;
     int keep = 1;
+    char *container = NULL;
+    char *component = NULL;
     
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "hv", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "c:C:hv", long_options, &option_index)) != -1)
     {
         switch(c)
         {
@@ -78,6 +84,12 @@ int main(int argc, char *argv[])
                 break;
             case 'z':
                 keep = atoi(optarg);
+                break;
+            case 'C':
+                container = optarg;
+                break;
+            case 'c':
+                component = optarg;
                 break;
             case 'h':
             case '?':
@@ -100,5 +112,5 @@ int main(int argc, char *argv[])
         return 1;
     }
     else
-        return clean_snapshots(interface, target_property, argv[optind], keep); /* Execute clean snapshots operation */
+        return clean_snapshots(interface, target_property, argv[optind], keep, container, component); /* Execute clean snapshots operation */
 }

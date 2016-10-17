@@ -127,6 +127,8 @@ Query all snapshots/Query latest snapshot options:
 Clean snapshots options:
   --keep=NUM                 Amount of snapshot generations to keep. Defaults
                              to: 1
+  -C, --container=CONTAINER  Name of the container to filter on
+  -c, --component=COMPONENT  Name of the component to filter on
 
 Environment:
   SSH_USER                   Username that should be used to connect to remote
@@ -464,7 +466,17 @@ case "$operation" in
         ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --resolve-snapshots "$@"
         ;;
     clean-snapshots)
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --clean-snapshots --keep $keep "$@"
+        if [ "$container" != "" ]
+        then
+            containerArg="--container $container"
+        fi
+        
+        if [ "$component" != "" ]
+        then
+            componentArg="--component $component"
+        fi
+        
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --clean-snapshots --keep $keep $containerArg $componentArg "$@"
         ;;
     capture-config)
         tempfile=`ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --capture-config`

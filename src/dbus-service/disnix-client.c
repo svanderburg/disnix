@@ -339,7 +339,13 @@ int run_disnix_client(Operation operation, gchar **derivation, gboolean session_
 		org_nixos_disnix_disnix_call_resolve_snapshots_sync(proxy, pid, (const gchar**) derivation, NULL, &error);
 	    break;
 	case OP_CLEAN_SNAPSHOTS:
-	    org_nixos_disnix_disnix_call_clean_snapshots_sync(proxy, pid, keep, NULL, &error);
+	    if(container == NULL)
+	        container = "";
+	    
+	    if(component == NULL)
+	        component = "";
+	        
+	    org_nixos_disnix_disnix_call_clean_snapshots_sync(proxy, pid, keep, container, component, NULL, &error);
 	    break;
 	case OP_CAPTURE_CONFIG:
 	    org_nixos_disnix_disnix_call_capture_config_sync(proxy, pid, NULL, &error);

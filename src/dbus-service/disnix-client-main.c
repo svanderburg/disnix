@@ -121,6 +121,8 @@ static void print_usage(const char *command)
     printf("\nClean snapshots options:\n");
     printf("  --keep=NUM                 Amount of snapshot generations to keep. Defaults\n");
     printf("                             to: 1\n");
+    printf("  -C, --container=CONTAINER  Name of the container to filter on\n");
+    printf("  -c, --component=COMPONENT  Name of the component to filter on\n");
 
     printf("\nEnvironment:\n");
     printf("  DISNIX_PROFILE    Sets the name of the profile that stores the manifest on the\n");

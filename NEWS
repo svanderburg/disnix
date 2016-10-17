@@ -1,6 +1,6 @@
 Version 0.7
 ===========
-- disnix-snapshot/disnix-restore/disnix-delete-state: allow filtering on container and component level
+- disnix-snapshot/disnix-restore/disnix-delete-state/disnix-clean-snapshots: allow filtering on container and component level
 
 - Created three new tools encapsulating meaningful sets of activities: disnix-delegate, disnix-deploy and disnix-migrate
 

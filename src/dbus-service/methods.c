@@ -1749,6 +1749,8 @@ typedef struct
     OrgNixosDisnixDisnix *object;
     gint arg_pid;
     gint arg_keep;
+    gchar *arg_container;
+    gchar *arg_component;
 }
 CleanSnapshotsParams;
 
@@ -1785,7 +1787,32 @@ static gpointer disnix_clean_snapshots_thread_func(gpointer data)
         }
         else if(status == 0)
         {
-            char *args[] = {"dysnomia-snapshots", "--gc", "--keep", keepStr, NULL};
+            char **args = (char**)g_malloc(9 * sizeof(gchar*));
+            unsigned int count = 4;
+            
+            args[0] = "dysnomia-snapshots";
+            args[1] = "--gc";
+            args[2] = "--keep";
+            args[3] = keepStr;
+            
+            if(g_strcmp0(params->arg_container, "") != 0)
+            {
+                args[count] = "--container";
+                count++;
+                args[count] = params->arg_container;
+                count++;
+            }
+            
+            if(g_strcmp0(params->arg_component, "") != 0)
+            {
+                args[count] = "--component";
+                count++;
+                args[count] = params->arg_component;
+                count++;
+            }
+            
+            args[count] = NULL;
+            
             dup2(log_fd, 1);
             dup2(log_fd, 2);
             execvp("dysnomia-snapshots", args);
@@ -1806,11 +1833,13 @@ static gpointer disnix_clean_snapshots_thread_func(gpointer data)
     }
     
     /* Cleanup */
+    g_free(params->arg_container);
+    g_free(params->arg_component);
     g_free(params);
     return NULL;
 }
 
-gboolean on_handle_clean_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, gint arg_keep)
+gboolean on_handle_clean_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, gint arg_keep, const gchar *arg_container, const char *arg_component)
 {
     GThread *thread;
     
@@ -1818,6 +1847,8 @@ gboolean on_handle_clean_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvo
     params->object = object;
     params->arg_pid = arg_pid;
     params->arg_keep = arg_keep;
+    params->arg_container = g_strdup(arg_container);
+    params->arg_component = g_strdup(arg_component);
     
     thread = g_thread_new("clean-snapshots", disnix_clean_snapshots_thread_func, params);
     org_nixos_disnix_disnix_complete_clean_snapshots(object, invocation);

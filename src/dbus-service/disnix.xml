@@ -130,6 +130,8 @@
 		<method name="clean_snapshots">
 			<arg type="i" name="pid" direction="in" />
 			<arg type="i" name="keep" direction="in" />
+			<arg type="s" name="container" direction="in" />
+			<arg type="s" name="component" direction="in" />
 		</method>
 		
 		<method name="get_logdir">

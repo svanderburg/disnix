@@ -249,7 +249,7 @@ pid_t exec_copy_snapshots_to(gchar *interface, gchar *target, gchar *container, 
     return exec_copy_snapshots("--to", interface, target, container, component, all);
 }
 
-pid_t exec_clean_snapshots(gchar *interface, gchar *target, int keep)
+pid_t exec_clean_snapshots(gchar *interface, gchar *target, int keep, char *container, char *component)
 {
     char keepStr[15];
     pid_t pid = fork();
@@ -258,7 +258,34 @@ pid_t exec_clean_snapshots(gchar *interface, gchar *target, int keep)
     
     if(pid == 0)
     {
-	char *const args[] = {interface, "--target", target, "--clean-snapshots", "--keep", keepStr, NULL};
+	char **args = (char**)g_malloc(11 * sizeof(char*));
+	unsigned int count = 6;
+	
+	args[0] = interface;
+	args[1] = "--target";
+	args[2] = target;
+	args[3] = "--clean-snapshots";
+	args[4] = "--keep";
+	args[5] = keepStr;
+	
+	if(container != NULL)
+	{
+	    args[count] = "--container";
+	    count++;
+	    args[count] = container;
+	    count++;
+	}
+	
+	if(component != NULL)
+	{
+	    args[count] = "--component";
+	    count++;
+	    args[count] = component;
+	    count++;
+	}
+	
+	args[count] = NULL;
+	
 	execvp(interface, args);
 	_exit(1);
     }
