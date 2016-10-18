@@ -30,6 +30,8 @@
 #include "logging.h"
 #include "profilemanifest.h"
 #include "jobmanagement.h"
+#include "package-management.h"
+#include "state-management.h"
 
 #define BUFFER_SIZE 1024
 
@@ -44,6 +46,65 @@ static gchar **allocate_empty_array_if_null(gchar **arr)
     }
     
     return arr;
+}
+
+static void evaluate_boolean_process(pid_t pid, OrgNixosDisnixDisnix *object, gint jid)
+{
+    if(pid == -1)
+        org_nixos_disnix_disnix_emit_failure(object, jid);
+    else
+    {
+        wait(&pid);
+        
+        if(WEXITSTATUS(pid) == 0)
+            org_nixos_disnix_disnix_emit_finish(object, jid);
+        else
+            org_nixos_disnix_disnix_emit_failure(object, jid);
+    }
+}
+
+static void evaluate_strv_process(gchar **result, OrgNixosDisnixDisnix *object, gint jid)
+{
+    if(result == NULL)
+        org_nixos_disnix_disnix_emit_failure(object, jid);
+    else
+    {
+        org_nixos_disnix_disnix_emit_success(object, jid, (const gchar**)result);
+        g_strfreev(result);
+    }
+}
+
+static void evaluate_output_process(pid_t pid, int pipefd[2], OrgNixosDisnixDisnix *object, gint jid)
+{
+    if(pid == -1)
+    {
+        close(pipefd[0]);
+        close(pipefd[1]);
+        org_nixos_disnix_disnix_emit_failure(object, jid);
+    }
+    else if(pid > 0)
+    {
+        char line[BUFFER_SIZE];
+        ssize_t line_size;
+        gchar **result = NULL;
+
+        close(pipefd[1]); /* Close write-end of pipe */
+        
+        while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
+        {
+            line[line_size] = '\0';
+            result = update_lines_vector(result, line);
+        }
+
+        close(pipefd[0]);
+
+        wait(&pid);
+
+        if(WEXITSTATUS(pid) == 0)
+            result = allocate_empty_array_if_null(result);
+        
+        evaluate_strv_process(result, object, jid);
+    }
 }
 
 /* Get job id method */
@@ -78,51 +139,16 @@ static gpointer disnix_import_thread_func(gpointer data)
     }
     else
     {
-        /* Declarations */
         int closure_fd;
         
         /* Print log entry */
         dprintf(log_fd, "Importing: %s\n", params->arg_closure);
-    
+        
         /* Execute command */
         closure_fd = open(params->arg_closure, O_RDONLY);
-    
-        if(closure_fd == -1)
-        {
-            dprintf(log_fd, "Cannot open closure file!\n");
-            org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-        }
-        else
-        {
-            int status = fork();
+        evaluate_boolean_process(pkgmgmt_import_closure(closure_fd, log_fd, log_fd), params->object, params->arg_pid);
 
-            if(status == -1)
-            {
-                dprintf(log_fd, "Error with forking nix-store process!\n");
-                org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-            }
-            else if(status == 0)
-            {
-                char *args[] = {"nix-store", "--import", NULL};
-                dup2(closure_fd, 0);
-                dup2(log_fd, 1);
-                dup2(log_fd, 2);
-                execvp("nix-store", args);
-                _exit(1);
-            }
-            else
-            {
-                wait(&status);
-
-                if(WEXITSTATUS(status) == 0)
-                    org_nixos_disnix_disnix_emit_finish(params->object, params->arg_pid);
-                else
-                    org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-            }
-    
-            close(closure_fd);
-        }
-        
+        close(closure_fd);
         close(log_fd);
     }
     
@@ -170,75 +196,15 @@ static gpointer disnix_export_thread_func(gpointer data)
     }
     else
     {
-        /* Declarations */
-        gchar *tempfilename = g_strconcat(tmpdir, "/disnix.XXXXXX", NULL);
-        int closure_fd;
-        
         /* Print log entry */
         dprintf(log_fd, "Exporting: ");
         print_paths(log_fd, params->arg_derivation);
         dprintf(log_fd, "\n");
     
         /* Execute command */
-    
-        closure_fd = mkstemp(tempfilename);
-    
-        if(closure_fd == -1)
-        {
-            dprintf(log_fd, "Error opening tempfile!\n");
-            org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-        }
-        else
-        {
-            int status = fork();
-
-            if(status == -1)
-            {
-                dprintf(log_fd, "Error with forking nix-store process!\n");
-                org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-            }
-            else if(status == 0)
-            {
-                unsigned int i, derivation_length = g_strv_length(params->arg_derivation);
-                gchar **args = (char**)g_malloc((3 + derivation_length) * sizeof(gchar*));
-
-                args[0] = "nix-store";
-                args[1] = "--export";
-
-                for(i = 0; i < derivation_length; i++)
-                    args[i + 2] = params->arg_derivation[i];
-
-                args[i + 2] = NULL;
-
-                dup2(closure_fd, 1);
-                dup2(log_fd, 2);
-                execvp("nix-store", args);
-                _exit(1);
-            }
-            else
-            {
-                wait(&status);
-
-                if(WEXITSTATUS(status) == 0)
-                {
-                    const gchar *tempfilepaths[] = { tempfilename, NULL };
-                    
-                    if(fchmod(closure_fd, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) == 1)
-                        dprintf(log_fd, "Cannot change permissions on exported closure: %s\n", tempfilename);
-                    
-                    org_nixos_disnix_disnix_emit_success(params->object, params->arg_pid, (const gchar**)tempfilepaths);
-                }
-                else
-                    org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-            }
-
-            close(closure_fd);
-        }
+        evaluate_strv_process(pkgmgmt_export_closure(tmpdir, params->arg_derivation, log_fd), params->object, params->arg_pid);
         
         close(log_fd);
-    
-        /* Cleanup */
-        g_free(tempfilename);
     }
     
     /* Cleanup */
@@ -285,7 +251,6 @@ static gpointer disnix_print_invalid_thread_func(gpointer data)
     }
     else
     {
-        /* Declarations */
         int pipefd[2];
         
         /* Print log entry */
@@ -294,73 +259,8 @@ static gpointer disnix_print_invalid_thread_func(gpointer data)
         dprintf(log_fd, "\n");
         
         /* Execute command */
-    
-        if(pipe(pipefd) == 0)
-        {
-            int status = fork();
-
-            if(status == -1)
-            {
-                dprintf(log_fd, "Error with forking nix-store process!\n");
-                close(pipefd[0]);
-                close(pipefd[1]);
-                org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-            }
-            else if(status == 0)
-            {
-                unsigned int i, derivation_length = g_strv_length(params->arg_derivation);
-                gchar **args = (char**)g_malloc((4 + derivation_length) * sizeof(gchar*));
-
-                close(pipefd[0]); /* Close read-end of the pipe */
-
-                args[0] = "nix-store";
-                args[1] = "--check-validity";
-                args[2] = "--print-invalid";
-
-                for(i = 0; i < derivation_length; i++)
-                    args[i + 3] = params->arg_derivation[i];
-
-                args[i + 3] = NULL;
-                
-                dup2(pipefd[1], 1); /* Attach write-end to stdout */
-                dup2(log_fd, 2); /* Attach logger to stderr */
-                execvp("nix-store", args);
-                _exit(1);
-            }
-            else
-            {
-                char line[BUFFER_SIZE];
-                ssize_t line_size;
-                gchar **missing_paths = NULL;
-
-                close(pipefd[1]); /* Close write-end of the pipe */
-
-                while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
-                {
-                    line[line_size] = '\0';
-                    missing_paths = update_lines_vector(missing_paths, line);
-                }
-
-                close(pipefd[0]);
-
-                wait(&status);
-                
-                if(WEXITSTATUS(status) == 0)
-                {
-                    missing_paths = allocate_empty_array_if_null(missing_paths);
-                    org_nixos_disnix_disnix_emit_success(params->object, params->arg_pid, (const gchar**)missing_paths);
-                }
-                else
-                    org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-
-                g_strfreev(missing_paths);
-            }
-        }
-        else
-        {
-            dprintf(log_fd, "Error with creating a pipe!\n");
-            org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-        }
+        
+        evaluate_output_process(pkgmgmt_print_invalid_packages(params->arg_derivation, pipefd, log_fd), pipefd, params->object, params->arg_pid);
         
         close(log_fd);
     }
@@ -408,7 +308,6 @@ static gpointer disnix_realise_thread_func(gpointer data)
     }
     else
     {
-        /* Declarations */
         int pipefd[2];
         
         /* Print log entry */
@@ -417,70 +316,8 @@ static gpointer disnix_realise_thread_func(gpointer data)
         dprintf(log_fd, "\n");
         
         /* Execute command */
-
-        if(pipe(pipefd) == 0)
-        {
-            int status = fork();
-
-            if(status == -1)
-            {
-                dprintf(log_fd, "Error with forking nix-store process!\n");
-                org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-            }
-            else if(status == 0)
-            {
-                unsigned int i, derivation_size = g_strv_length(params->arg_derivation);
-                gchar **args = (gchar**)g_malloc((3 + derivation_size) * sizeof(gchar*));
-
-                close(pipefd[0]); /* Close read-end of pipe */
-
-                args[0] = "nix-store";
-                args[1] = "-r";
-
-                for(i = 0; i < derivation_size; i++)
-                    args[i + 2] = params->arg_derivation[i];
-
-                args[i + 2] = NULL;
-
-                dup2(pipefd[1], 1);
-                dup2(log_fd, 2);
-                execvp("nix-store", args);
-                _exit(1);
-            }
-            else
-            {
-                char line[BUFFER_SIZE];
-                ssize_t line_size;
-                gchar **realised = NULL;
-
-                close(pipefd[1]); /* Close write-end of pipe */
-
-                while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
-                {
-                    line[line_size] = '\0';
-                    realised = update_lines_vector(realised, line);
-                }
-
-                close(pipefd[0]);
-
-                wait(&status);
-
-                if(WEXITSTATUS(status) == 0)
-                {
-                    realised = allocate_empty_array_if_null(realised);
-                    org_nixos_disnix_disnix_emit_success(params->object, params->arg_pid, (const gchar**)realised);
-                }
-                else
-                    org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-
-                g_strfreev(realised);
-            }
-        }
-        else
-        {
-            dprintf(log_fd, "Error with creating a pipe\n");
-            org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-        }
+        
+        evaluate_output_process(pkgmgmt_realise(params->arg_derivation, pipefd, log_fd), pipefd, params->object, params->arg_pid);
         
         close(log_fd);
     }
@@ -529,69 +366,14 @@ static gpointer disnix_set_thread_func(gpointer data)
     }
     else
     {
-        /* Declarations */
-        gchar *profile_path;
-        int status;
-        char resolved_path[BUFFER_SIZE];
-        ssize_t resolved_path_size;
-        
         /* Print log entry */
         dprintf(log_fd, "Set profile: %s with derivation: %s\n", params->arg_profile, params->arg_derivation);
     
         /* Execute command */
-        mkdir(LOCALSTATEDIR "/nix/profiles/disnix", 0755);
-        profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", params->arg_profile, NULL);
-    
-        /* Resolve the manifest file to which the disnix profile points */
-        resolved_path_size = readlink(profile_path, resolved_path, BUFFER_SIZE);
-    
-        if(resolved_path_size != -1 && (strlen(profile_path) != resolved_path_size || strncmp(resolved_path, profile_path, resolved_path_size) != 0)) /* If the symlink resolves not to itself, we get a generation symlink that we must resolve again */
-        {
-            gchar *generation_path;
-
-            resolved_path[resolved_path_size] = '\0';
-            
-            generation_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", resolved_path, NULL);
-            resolved_path_size = readlink(generation_path, resolved_path, BUFFER_SIZE);
-            
-            g_free(generation_path);
-        }
-
-        if(resolved_path_size == -1 || (strlen(params->arg_derivation) == resolved_path_size && strncmp(resolved_path, params->arg_derivation, resolved_path_size) != 0)) /* Only configure the configurator profile if the given manifest is not identical to the previous manifest */
-        {
-            status = fork();
-    
-            if(status == -1)
-            {
-                dprintf(log_fd, "Error with forking nix-env process!\n");
-                org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-            }
-            else if(status == 0)
-            {
-                gchar *args[] = {"nix-env", "-p", profile_path, "--set", params->arg_derivation, NULL};
-                dup2(log_fd, 1);
-                dup2(log_fd, 2);
-                execvp("nix-env", args);
-                dprintf(log_fd, "Error with executing nix-env\n");
-                _exit(1);
-            }
-            else
-            {
-                wait(&status);
-                
-                if(WEXITSTATUS(status) == 0)
-                    org_nixos_disnix_disnix_emit_finish(params->object, params->arg_pid);
-                else
-                    org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-            }
-        }
-        else
-            org_nixos_disnix_disnix_emit_finish(params->object, params->arg_pid);
-    
+        
+        evaluate_boolean_process(pkgmgmt_set_profile(params->arg_profile, params->arg_derivation, log_fd, log_fd), params->object, params->arg_pid);
+        
         close(log_fd);
-    
-        /* Free variables */
-        g_free(profile_path);
     }
     
     /* Cleanup */
@@ -639,16 +421,15 @@ static gpointer disnix_query_installed_thread_func(gpointer data)
     }
     else
     {
-        /* Declarations */
         GPtrArray *profile_manifest_array;
-        
+    
         /* Print log entry */
         dprintf(log_fd, "Query installed derivations from profile: %s\n", params->arg_profile);
     
         /* Execute command */
-    
-        profile_manifest_array = create_profile_manifest_array(params->arg_profile);
         
+        profile_manifest_array = create_profile_manifest_array(params->arg_profile);
+    
         if(profile_manifest_array == NULL)
             org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
         else
@@ -656,7 +437,6 @@ static gpointer disnix_query_installed_thread_func(gpointer data)
             gchar **derivations = query_derivations(profile_manifest_array);
             org_nixos_disnix_disnix_emit_success(params->object, params->arg_pid, (const gchar**)derivations);
             
-            /* Cleanup */
             g_strfreev(derivations);
             delete_profile_manifest_array(profile_manifest_array);
         }
@@ -707,7 +487,6 @@ static gpointer disnix_query_requisites_thread_func(gpointer data)
     }
     else
     {
-        /* Declarations */
         int pipefd[2];
         
         /* Print log entry */
@@ -716,72 +495,8 @@ static gpointer disnix_query_requisites_thread_func(gpointer data)
         dprintf(log_fd, "\n");
     
         /* Execute command */
-    
-        if(pipe(pipefd) == 0)
-        {
-            int status = fork();
-
-            if(status == -1)
-            {
-                dprintf(log_fd, "Error with forking nix-store process!\n");
-                close(pipefd[0]);
-                close(pipefd[1]);
-                org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-            }
-            else if(status == 0)
-            {
-                unsigned int i, derivation_size = g_strv_length(params->arg_derivation);
-                char **args = (char**)g_malloc((3 + derivation_size) * sizeof(char*));
-
-                close(pipefd[0]); /* Close read-end of pipe */
-
-                args[0] = "nix-store";
-                args[1] = "-qR";
-                
-                for(i = 0; i < derivation_size; i++)
-                    args[i + 2] = params->arg_derivation[i];
-
-                args[i + 2] = NULL;
-
-                dup2(pipefd[1], 1);
-                dup2(log_fd, 2);
-                execvp("nix-store", args);
-                _exit(1);
-            }
-            else
-            {
-                char line[BUFFER_SIZE];
-                ssize_t line_size;
-                gchar **requisites = NULL;
-
-                close(pipefd[1]); /* Close write-end of pipe */
-
-                while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
-                {
-                    line[line_size] = '\0';
-                    requisites = update_lines_vector(requisites, line);
-                }
-
-                close(pipefd[0]);
-
-                wait(&status);
-                
-                if(WEXITSTATUS(status) == 0)
-                {
-                    requisites = allocate_empty_array_if_null(requisites);
-                    org_nixos_disnix_disnix_emit_success(params->object, params->arg_pid, (const gchar**)requisites);
-                }
-                else
-                    org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-
-               g_strfreev(requisites);
-            }
-        }
-        else
-        {
-            dprintf(log_fd, "Error with creating pipe!\n");
-            org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-        }
+        
+        evaluate_output_process(pkgmgmt_query_requisites(params->arg_derivation, pipefd, log_fd), pipefd, params->object, params->arg_pid);
         
         close(log_fd);
     }
@@ -829,9 +544,6 @@ static gpointer disnix_collect_garbage_thread_func(gpointer data)
     }
     else
     {
-        /* Declarations */
-        int status;
-        
         /* Print log entry */
         if(params->arg_delete_old)
             dprintf(log_fd, "Garbage collect and remove old derivations\n");
@@ -839,40 +551,7 @@ static gpointer disnix_collect_garbage_thread_func(gpointer data)
             dprintf(log_fd, "Garbage collect\n");
     
         /* Execute command */
-        status = fork();
-    
-        if(status == -1)
-        {
-            dprintf(log_fd, "Error with forking garbage collect process!\n");
-            org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-        }
-        else if(status == 0)
-        {
-            dup2(log_fd, 1);
-            dup2(log_fd, 2);
-            
-            if(params->arg_delete_old)
-            {
-                char *args[] = {"nix-collect-garbage", "-d", NULL};
-                execvp("nix-collect-garbage", args);
-            }
-            else
-            {
-                char *args[] = {"nix-collect-garbage", NULL};
-                execvp("nix-collect-garbage", args);
-            }
-            dprintf(log_fd, "Error with executing garbage collect process\n");
-            _exit(1);
-        }
-        else
-        {
-            wait(&status);
-
-            if(WEXITSTATUS(status) == 0)
-                org_nixos_disnix_disnix_emit_finish(params->object, params->arg_pid);
-            else
-                org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-        }
+        evaluate_boolean_process(pkgmgmt_collect_garbage(params->arg_delete_old, log_fd, log_fd), params->object, params->arg_pid);
         
         close(log_fd);
     }
@@ -938,51 +617,13 @@ static gpointer disnix_dysnomia_activity_thread_func(gpointer data)
     }
     else
     {
-        /* Declarations */
-        int status;
-        
         /* Print log entry */
         dprintf(log_fd, "%s: %s of type: %s in container: %s with arguments: ", params->activity, params->arg_derivation, params->arg_type, params->arg_container);
         print_paths(log_fd, params->arg_arguments);
         dprintf(log_fd, "\n");
     
         /* Execute command */
-        
-        status = fork();
-    
-        if(status == -1)
-        {
-            dprintf(log_fd, "Error forking %s process!\n", params->activity);
-            org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-        }
-        else if(status == 0)
-        {
-            unsigned int i;
-            char *cmd = "dysnomia";
-            char *args[] = {cmd, "--type", params->arg_type, "--operation", params->activity, "--component", params->arg_derivation, "--container", params->arg_container, "--environment", NULL};
-
-            /* Compose environment variables out of the arguments */
-            for(i = 0; i < g_strv_length(params->arg_arguments); i++)
-            {
-                gchar **name_value_pair = g_strsplit(params->arg_arguments[i], "=", 2);
-                setenv(name_value_pair[0], name_value_pair[1], FALSE);
-                g_strfreev(name_value_pair);
-            }
-            
-            dup2(log_fd, 1);
-            dup2(log_fd, 2);
-            execvp(cmd, args);
-            _exit(1);
-        }
-        else
-        {
-            wait(&status);
-
-            if(WEXITSTATUS(status) == 0)
-                org_nixos_disnix_disnix_emit_finish(params->object, params->arg_pid);
-            else
-                org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-        }
+        evaluate_boolean_process(statemgmt_run_dysnomia_activity(params->arg_type, params->activity, params->arg_derivation, params->arg_container, params->arg_arguments, log_fd, log_fd), params->object, params->arg_pid);
     
         close(log_fd);
     }
@@ -1201,63 +842,7 @@ static gpointer disnix_query_all_snapshots_thread_func(gpointer data)
         dprintf(log_fd, "Query all snapshots from container: %s and component: %s\n", params->arg_container, params->arg_component);
     
         /* Execute command */
-        
-        if(pipe(pipefd) == 0)
-        {
-            int status = fork();
-
-            if(status == -1)
-            {
-                dprintf(log_fd, "Error with forking dysnomia-snapshots process!\n");
-                close(pipefd[0]);
-                close(pipefd[1]);
-                org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-            }
-            else if(status == 0)
-            {
-                char *args[] = {"dysnomia-snapshots", "--query-all", "--container", params->arg_container, "--component", params->arg_component, NULL};
-
-                close(pipefd[0]); /* Close read-end of pipe */
-
-                dup2(pipefd[1], 1);
-                dup2(log_fd, 2);
-                execvp("dysnomia-snapshots", args);
-                _exit(1);
-            }
-            else
-            {
-                char line[BUFFER_SIZE];
-                ssize_t line_size;
-                gchar **snapshots = NULL;
-
-                close(pipefd[1]); /* Close write-end of pipe */
-
-                while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
-                {
-                    line[line_size] = '\0';
-                    snapshots = update_lines_vector(snapshots, line);
-                }
-
-                close(pipefd[0]);
-
-                wait(&status);
-
-                if(WEXITSTATUS(status) == 0)
-                {
-                    snapshots = allocate_empty_array_if_null(snapshots);
-                    org_nixos_disnix_disnix_emit_success(params->object, params->arg_pid, (const gchar **)snapshots);
-                }
-                else
-                    org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-
-                g_strfreev(snapshots);
-            }
-        }
-        else
-        {
-            dprintf(log_fd, "Error with creating pipe!\n");
-            org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-        }
+        evaluate_output_process(statemgmt_query_all_snapshots(params->arg_container, params->arg_component, pipefd, log_fd), pipefd, params->object, params->arg_pid);
     
         close(log_fd);
     }
@@ -1315,63 +900,7 @@ static gpointer disnix_query_latest_snapshot_thread_func(gpointer data)
         dprintf(log_fd, "Query latest snapshot from container: %s and component: %s\n", params->arg_container, params->arg_component);
     
         /* Execute command */
-    
-        if(pipe(pipefd) == 0)
-        {
-            int status = fork();
-
-            if(status == -1)
-            {
-                dprintf(log_fd, "Error with forking dysnomia-snapshots process!\n");
-                close(pipefd[0]);
-                close(pipefd[1]);
-                org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-            }
-            else if(status == 0)
-            {
-                char *args[] = {"dysnomia-snapshots", "--query-latest", "--container", params->arg_container, "--component", params->arg_component, NULL};
-
-                close(pipefd[0]); /* Close read-end of pipe */
-
-                dup2(pipefd[1], 1);
-                dup2(log_fd, 2);
-                execvp("dysnomia-snapshots", args);
-                _exit(1);
-            }
-            else
-            {
-                char line[BUFFER_SIZE];
-                ssize_t line_size;
-                gchar **snapshots = NULL;
-
-                close(pipefd[1]); /* Close write-end of pipe */
-
-                while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
-                {
-                    line[line_size] = '\0';
-                    snapshots = update_lines_vector(snapshots, line);
-                }
-
-                close(pipefd[0]);
-
-                wait(&status);
-
-                if(WEXITSTATUS(status) == 0)
-                {
-                    snapshots = allocate_empty_array_if_null(snapshots);
-                    org_nixos_disnix_disnix_emit_success(params->object, params->arg_pid, (const gchar **)snapshots);
-                }
-                else
-                    org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-
-                g_strfreev(snapshots);
-            }
-        }
-        else
-        {
-            dprintf(log_fd, "Error with creating pipe!\n");
-            org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-        }
+        evaluate_output_process(statemgmt_query_latest_snapshot(params->arg_container, params->arg_component, pipefd, log_fd), pipefd, params->object, params->arg_pid);
         
         close(log_fd);
     }
@@ -1431,72 +960,7 @@ static gpointer disnix_print_missing_snapshots_thread_func(gpointer data)
         dprintf(log_fd, "\n");
         
         /* Execute command */
-        
-        if(pipe(pipefd) == 0)
-        {
-            int status = fork();
-
-            if(status == -1)
-            {
-                dprintf(log_fd, "Error with forking dysnomia-snapshots process!\n");
-                close(pipefd[0]);
-                close(pipefd[1]);
-                org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-            }
-            else if(status == 0)
-            {
-                unsigned int i, component_size = g_strv_length(params->arg_component);
-                gchar **args = (gchar**)g_malloc((component_size + 3) * sizeof(gchar*));
-
-                args[0] = "dysnomia-snapshots";
-                args[1] = "--print-missing";
-
-                for(i = 0; i < component_size; i++)
-                    args[i + 2] = params->arg_component[i];
-                
-                args[i + 2] = NULL;
-
-                close(pipefd[0]); /* Close read-end of pipe */
-
-                dup2(pipefd[1], 1);
-                dup2(log_fd, 2);
-                execvp("dysnomia-snapshots", args);
-               _exit(1);
-            }
-            else
-            {
-                char line[BUFFER_SIZE];
-                ssize_t line_size;
-                gchar **snapshots = NULL;
-
-                close(pipefd[1]); /* Close write-end of pipe */
-
-                while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
-                {
-                    line[line_size] = '\0';
-                    snapshots = update_lines_vector(snapshots, line);
-                }
-
-                close(pipefd[0]);
-
-                wait(&status);
-
-                if(WEXITSTATUS(status) == 0)
-                {
-                    snapshots = allocate_empty_array_if_null(snapshots);
-                    org_nixos_disnix_disnix_emit_success(params->object, params->arg_pid, (const gchar **)snapshots);
-                }
-                else
-                    org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-
-                g_strfreev(snapshots);
-            }
-        }
-        else
-        {
-            dprintf(log_fd, "Error with creating pipe!\n");
-            org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-        }
+        evaluate_output_process(statemgmt_print_missing_snapshots(params->arg_component, pipefd, log_fd), pipefd, params->object, params->arg_pid);
         
         close(log_fd);
     }
@@ -1552,46 +1016,8 @@ static gpointer disnix_import_snapshots_thread_func(gpointer data)
         dprintf(log_fd, "\n");
         
         /* Execute command */
-        
-        int status = fork();
-        
-        if(status == -1)
-        {
-            dprintf(log_fd, "Error with forking dysnomia-snapshots process!\n");
-            org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-        }
-        else if(status == 0)
-        {
-            unsigned int i, snapshots_size = g_strv_length(params->arg_snapshots);
-            gchar **args = (gchar**)g_malloc((snapshots_size + 6) * sizeof(gchar*));
-            
-            args[0] = "dysnomia-snapshots";
-            args[1] = "--import";
-            args[2] = "--container";
-            args[3] = params->arg_container;
-            args[4] = "--component";
-            args[5] = params->arg_component;
-            
-            for(i = 0; i < snapshots_size; i++)
-                args[i + 6] = params->arg_snapshots[i];
-            
-            args[i + 6] = NULL;
-            
-            dup2(log_fd, 1);
-            dup2(log_fd, 2);
-            execvp("dysnomia-snapshots", args);
-            _exit(1);
-        }
-        else
-        {
-            wait(&status);
+        evaluate_boolean_process(statemgmt_import_snapshots(params->arg_container, params->arg_component, params->arg_snapshots, log_fd, log_fd), params->object, params->arg_pid);
 
-            if(WEXITSTATUS(status) == 0)
-                org_nixos_disnix_disnix_emit_finish(params->object, params->arg_pid);
-            else
-                org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-        }
-        
         close(log_fd);
     }
     
@@ -1651,73 +1077,8 @@ static gpointer disnix_resolve_snapshots_thread_func(gpointer data)
         dprintf(log_fd, "\n");
         
         /* Execute command */
+        evaluate_output_process(statemgmt_resolve_snapshots(params->arg_snapshots, pipefd, log_fd), pipefd, params->object, params->arg_pid);
         
-        if(pipe(pipefd) == 0)
-        {
-            int status = fork();
-
-            if(status == -1)
-            {
-                dprintf(log_fd, "Error with forking dysnomia-snapshots process!\n");
-                close(pipefd[0]);
-                close(pipefd[1]);
-                org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-            }
-            else if(status == 0)
-            {
-                unsigned int i, snapshots_size = g_strv_length(params->arg_snapshots);
-                gchar **args = (gchar**)g_malloc((snapshots_size + 3) * sizeof(gchar*));
-
-                args[0] = "dysnomia-snapshots";
-                args[1] = "--resolve";
-                
-                for(i = 0; i < snapshots_size; i++)
-                    args[i + 2] = params->arg_snapshots[i];
-
-                args[i + 2] = NULL;
-
-                close(pipefd[0]); /* Close read-end of pipe */
-
-                dup2(pipefd[1], 1);
-                dup2(log_fd, 2);
-                execvp("dysnomia-snapshots", args);
-                _exit(1);
-            }
-            else
-            {
-                char line[BUFFER_SIZE];
-                ssize_t line_size;
-                gchar **snapshots = NULL;
-
-                close(pipefd[1]); /* Close write-end of pipe */
-
-                while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
-                {
-                    line[line_size] = '\0';
-                    snapshots = update_lines_vector(snapshots, line);
-                }
-
-                close(pipefd[0]);
-
-                wait(&status);
-                
-                if(WEXITSTATUS(status) == 0)
-                {
-                    snapshots = allocate_empty_array_if_null(snapshots);
-                    org_nixos_disnix_disnix_emit_success(params->object, params->arg_pid, (const gchar **)snapshots);
-                }
-                else
-                    org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-
-                g_strfreev(snapshots);
-            }
-        }
-        else
-        {
-            dprintf(log_fd, "Error with creating pipe!\n");
-            org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-        }
-    
         close(log_fd);
     }
     
@@ -1767,68 +1128,25 @@ static gpointer disnix_clean_snapshots_thread_func(gpointer data)
     else
     {
         /* Declarations */
-        int status;
         char keepStr[15];
         
         /* Convert keep value to string */
         sprintf(keepStr, "%d", params->arg_keep);
         
         /* Print log entry */
-        dprintf(log_fd, "Clean old snapshots, num of generations to keep: %s!\n", keepStr);
+        dprintf(log_fd, "Clean old snapshots");
+        
+        if(g_strcmp0(params->arg_container, "") != 0)
+            dprintf(log_fd, " for container: %s", params->arg_container);
+        
+        if(g_strcmp0(params->arg_component, "") != 0)
+            dprintf(log_fd, " for component: %s", params->arg_component);
+        
+        dprintf(log_fd, " num of generations to keep: %s!\n", keepStr);
         
         /* Execute command */
-    
-        status = fork();
-    
-        if(status == -1)
-        {
-            dprintf(log_fd, "Error with forking garbage collect process!\n");
-            org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-        }
-        else if(status == 0)
-        {
-            char **args = (char**)g_malloc(9 * sizeof(gchar*));
-            unsigned int count = 4;
-            
-            args[0] = "dysnomia-snapshots";
-            args[1] = "--gc";
-            args[2] = "--keep";
-            args[3] = keepStr;
-            
-            if(g_strcmp0(params->arg_container, "") != 0)
-            {
-                args[count] = "--container";
-                count++;
-                args[count] = params->arg_container;
-                count++;
-            }
-            
-            if(g_strcmp0(params->arg_component, "") != 0)
-            {
-                args[count] = "--component";
-                count++;
-                args[count] = params->arg_component;
-                count++;
-            }
-            
-            args[count] = NULL;
-            
-            dup2(log_fd, 1);
-            dup2(log_fd, 2);
-            execvp("dysnomia-snapshots", args);
-            dprintf(log_fd, "Error with executing clean snapshots process\n");
-            _exit(1);
-        }
-        else
-        {
-            wait(&status);
+        evaluate_boolean_process(statemgmt_clean_snapshots(keepStr, params->arg_container, params->arg_component, log_fd, log_fd), params->object, params->arg_pid);
 
-            if(WEXITSTATUS(status) == 0)
-                org_nixos_disnix_disnix_emit_finish(params->object, params->arg_pid);
-            else
-                org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-        }
-        
         close(log_fd);
     }
     
@@ -1895,64 +1213,9 @@ static gpointer disnix_capture_config_thread_func(gpointer data)
     }
     else
     {
-        /* Declarations */
-        gchar *tempfilename = g_strconcat(tmpdir, "/disnix.XXXXXX", NULL);
-        int closure_fd;
-        
-        /* Print log entry */
-        dprintf(log_fd, "Capture config\n");
-    
-        /* Execute command */
-    
-        closure_fd = mkstemp(tempfilename);
-    
-        if(closure_fd == -1)
-        {
-            dprintf(log_fd, "Error opening tempfile!\n");
-            org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-        }
-        else
-        {
-            int status = fork();
-
-            if(status == -1)
-            {
-                dprintf(log_fd, "Error with forking dysnomia-containers process!\n");
-                org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-            }
-            else if(status == 0)
-            {
-                char *args[] = { "dysnomia-containers", "--generate-expr", NULL };
-                
-                dup2(closure_fd, 1);
-                dup2(log_fd, 2);
-                execvp("dysnomia-containers", args);
-                _exit(1);
-            }
-            else
-            {
-                wait(&status);
-
-                if(WEXITSTATUS(status) == 0)
-                {
-                    const gchar *tempfilepaths[] = { tempfilename, NULL };
-                    
-                    if(fchmod(closure_fd, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) == 1)
-                        dprintf(log_fd, "Cannot change permissions on captured expression: %s\n", tempfilename);
-                    
-                    org_nixos_disnix_disnix_emit_success(params->object, params->arg_pid, (const gchar**)tempfilepaths);
-                }
-                else
-                    org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
-            }
-
-            close(closure_fd);
-        }
+        evaluate_strv_process(statemgmt_capture_config(tmpdir, log_fd), params->object, params->arg_pid);
         
         close(log_fd);
-    
-        /* Cleanup */
-        g_free(tempfilename);
     }
     
     /* Cleanup */
