@@ -37,4 +37,8 @@ pid_t pkgmgmt_query_requisites(gchar **derivation, int pipefd[2], int stderr);
 
 pid_t pkgmgmt_collect_garbage(int delete_old, int stdout, int stderr);
 
+pid_t pkgmgmt_instantiate(gchar *infrastructure_expr, int pipefd[2]);
+
+pid_t pkgmgmt_set_coordinator_profile(gchar *profile_path, gchar *manifest_file_path);
+
 #endif

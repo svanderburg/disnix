@@ -222,7 +222,7 @@ static void wait_for_activation_or_deactivation(const int activate, GHashTable *
         g_hash_table_remove(pids, &pid);
     
         /* Change the status of the mapping, if the process returns success */
-        if(WEXITSTATUS(status) == 0)
+        if(WIFEXITED(status) && WEXITSTATUS(status) == 0)
         {
             if(activate)
                 mapping->status = ACTIVATIONMAPPING_ACTIVATED;

@@ -50,7 +50,7 @@ static int wait_to_complete_delete(GHashTable *pids, GPtrArray *target_array)
         signal_available_target_core(target);
         
         /* Return the status */
-        if(WEXITSTATUS(status) == 0)
+        if(WIFEXITED(status) && WEXITSTATUS(status) == 0)
             return TRUE;
         else
         {

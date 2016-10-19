@@ -280,7 +280,7 @@ gchar **statemgmt_capture_config(gchar *tmpdir, int stderr)
             gchar **tempfilepaths;
             wait(&pid);
 
-            if(WEXITSTATUS(pid) == 0)
+            if(WIFEXITED(pid) && WEXITSTATUS(pid) == 0)
             {
                 tempfilepaths = (gchar**)g_malloc(2 * sizeof(gchar*));
                 tempfilepaths[0] = tempfilename;
@@ -299,4 +299,31 @@ gchar **statemgmt_capture_config(gchar *tmpdir, int stderr)
             return tempfilepaths;
         }
     }
+}
+
+static pid_t lock_or_unlock_component(gchar *operation, gchar *type, gchar *container, gchar *component, int stdout, int stderr)
+{
+    pid_t pid = fork();
+    
+    if(pid == 0)
+    {
+        char *cmd = "dysnomia";
+        char *args[] = {cmd, "--type", type, "--operation", operation, "--container", container, "--component", component, "--environment", NULL};
+        dup2(stdout, 1);
+        dup2(stderr, 2);
+        execvp(cmd, args);
+        _exit(1);
+    }
+    
+    return pid;
+}
+
+pid_t statemgmt_lock_component(gchar *type, gchar *container, gchar *component, int stdout, int stderr)
+{
+    return lock_or_unlock_component("lock", type, container, component, stdout, stderr);
+}
+
+pid_t statemgmt_unlock_component(gchar *type, gchar *container, gchar *component, int stdout, int stderr)
+{
+    return lock_or_unlock_component("unlock", type, container, component, stdout, stderr);
 }

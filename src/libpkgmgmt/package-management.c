@@ -27,6 +27,9 @@
 #include <sys/types.h>
 
 #define BUFFER_SIZE 1024
+#define NIX_STORE_CMD "nix-store"
+#define NIX_COLLECT_GARBAGE_CMD "nix-collect-garbage"
+#define NIX_ENV_CMD "nix-env"
 
 pid_t pkgmgmt_import_closure(int closure_fd, int stdout, int stderr)
 {
@@ -38,12 +41,12 @@ pid_t pkgmgmt_import_closure(int closure_fd, int stdout, int stderr)
         
         if(pid == 0)
         {
-            char *args[] = {"nix-store", "--import", NULL};
+            char *args[] = {NIX_STORE_CMD, "--import", NULL};
             
             dup2(closure_fd, 0);
             dup2(stdout, 1);
             dup2(stderr, 2);
-            execvp("nix-store", args);
+            execvp(NIX_STORE_CMD, args);
             _exit(1);
         }
         
@@ -76,7 +79,7 @@ gchar **pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr)
             unsigned int i, derivation_length = g_strv_length(derivation);
             gchar **args = (char**)g_malloc((3 + derivation_length) * sizeof(gchar*));
 
-            args[0] = "nix-store";
+            args[0] = NIX_STORE_CMD;
             args[1] = "--export";
 
             for(i = 0; i < derivation_length; i++)
@@ -86,7 +89,7 @@ gchar **pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr)
 
             dup2(closure_fd, 1);
             dup2(stderr, 2);
-            execvp("nix-store", args);
+            execvp(NIX_STORE_CMD, args);
             _exit(1);
         }
         else
@@ -95,7 +98,7 @@ gchar **pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr)
             
             wait(&pid);
 
-            if(WEXITSTATUS(pid) == 0)
+            if(WIFEXITED(pid) && WEXITSTATUS(pid) == 0)
             {
                 tempfilepaths = (gchar**)g_malloc(2 * sizeof(gchar*));
                 tempfilepaths[0] = tempfilename;
@@ -130,7 +133,7 @@ pid_t pkgmgmt_print_invalid_packages(gchar **derivation, int pipefd[2], int stde
 
             close(pipefd[0]); /* Close read-end of the pipe */
 
-            args[0] = "nix-store";
+            args[0] = NIX_STORE_CMD;
             args[1] = "--check-validity";
             args[2] = "--print-invalid";
 
@@ -141,7 +144,7 @@ pid_t pkgmgmt_print_invalid_packages(gchar **derivation, int pipefd[2], int stde
             
             dup2(pipefd[1], 1); /* Attach write-end to stdout */
             dup2(stderr, 2); /* Attach logger to stderr */
-            execvp("nix-store", args);
+            execvp(NIX_STORE_CMD, args);
             _exit(1);
         }
         
@@ -164,7 +167,7 @@ pid_t pkgmgmt_realise(gchar **derivation, int pipefd[2], int stderr)
 
             close(pipefd[0]); /* Close read-end of pipe */
 
-            args[0] = "nix-store";
+            args[0] = NIX_STORE_CMD;
             args[1] = "-r";
 
             for(i = 0; i < derivation_size; i++)
@@ -174,7 +177,7 @@ pid_t pkgmgmt_realise(gchar **derivation, int pipefd[2], int stderr)
 
             dup2(pipefd[1], 1);
             dup2(stderr, 2);
-            execvp("nix-store", args);
+            execvp(NIX_STORE_CMD, args);
             _exit(1);
         }
         
@@ -215,10 +218,10 @@ pid_t pkgmgmt_set_profile(gchar *profile, gchar *derivation, int stdout, int std
     {
         if(resolved_path_size == -1 || (strlen(derivation) == resolved_path_size && strncmp(resolved_path, derivation, resolved_path_size) != 0)) /* Only configure the configurator profile if the given manifest is not identical to the previous manifest */
         {
-            gchar *args[] = {"nix-env", "-p", profile_path, "--set", derivation, NULL};
+            gchar *args[] = {NIX_ENV_CMD, "-p", profile_path, "--set", derivation, NULL};
             dup2(stdout, 1);
             dup2(stderr, 2);
-            execvp("nix-env", args);
+            execvp(NIX_ENV_CMD, args);
             dprintf(stderr, "Error with executing nix-env\n");
             _exit(1);
         }
@@ -243,7 +246,7 @@ pid_t pkgmgmt_query_requisites(gchar **derivation, int pipefd[2], int stderr)
 
             close(pipefd[0]); /* Close read-end of pipe */
 
-            args[0] = "nix-store";
+            args[0] = NIX_STORE_CMD;
             args[1] = "-qR";
             
             for(i = 0; i < derivation_size; i++)
@@ -253,7 +256,7 @@ pid_t pkgmgmt_query_requisites(gchar **derivation, int pipefd[2], int stderr)
 
             dup2(pipefd[1], 1);
             dup2(stderr, 2);
-            execvp("nix-store", args);
+            execvp(NIX_STORE_CMD, args);
             _exit(1);
         }
         
@@ -274,16 +277,52 @@ pid_t pkgmgmt_collect_garbage(int delete_old, int stdout, int stderr)
         
         if(delete_old)
         {
-            char *args[] = {"nix-collect-garbage", "-d", NULL};
-            execvp("nix-collect-garbage", args);
+            char *args[] = {NIX_COLLECT_GARBAGE_CMD, "-d", NULL};
+            execvp(NIX_COLLECT_GARBAGE_CMD, args);
         }
         else
         {
-            char *args[] = {"nix-collect-garbage", NULL};
-            execvp("nix-collect-garbage", args);
+            char *args[] = {NIX_COLLECT_GARBAGE_CMD, NULL};
+            execvp(NIX_COLLECT_GARBAGE_CMD, args);
         }
         
         dprintf(stderr, "Error with executing garbage collect process\n");
+        _exit(1);
+    }
+    
+    return pid;
+}
+
+pid_t pkgmgmt_instantiate(gchar *infrastructure_expr, int pipefd[2])
+{
+    if(pipe(pipefd) == 0)
+    {
+        pid_t pid = fork();
+    
+        if(pid == 0)
+        {
+            char *cmd = "nix-instantiate";
+            char *const args[] = {cmd, "--eval-only", "--strict", "--xml", infrastructure_expr, NULL};
+            close(pipefd[0]); /* Close read-end of pipe */
+            dup2(pipefd[1], 1); /* Attach write-end to stdout */
+            execvp(cmd, args);
+            _exit(1);
+        }
+    
+        return pid;
+    }
+    else
+        return -1;
+}
+
+pid_t pkgmgmt_set_coordinator_profile(gchar *profile_path, gchar *manifest_file_path)
+{
+    pid_t pid = fork();
+    
+    if(pid == 0)
+    {
+        char *const args[] = {NIX_ENV_CMD, "-p", profile_path, "--set", manifest_file_path, NULL};
+        execvp(NIX_ENV_CMD, args);
         _exit(1);
     }
     

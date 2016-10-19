@@ -26,6 +26,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include "state-management.h"
 
 #define BUFFER_SIZE 1024
 
@@ -39,30 +40,21 @@ static int unlock_services(int log_fd, GPtrArray *profile_manifest_array)
     for(i = 0; i < profile_manifest_array->len; i++)
     {
         ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
-        int status;
+        pid_t pid;
         
         dprintf(log_fd, "Notifying unlock on %s: of type: %s in container: %s\n", entry->derivation, entry->type, entry->container);
-        status = fork();
+        pid = statemgmt_lock_component(entry->type, entry->container, entry->derivation, log_fd, log_fd);
         
-        if(status == -1)
+        if(pid == -1)
         {
             dprintf(log_fd, "Error forking unlock process!\n");
             exit_status = FALSE;
         }
-        else if(status == 0)
+        else if(pid > 0)
         {
-            char *cmd = "dysnomia";
-            char *args[] = {cmd, "--type", entry->type, "--operation", "unlock", "--container", entry->container, "--component", entry->derivation, "--environment", NULL};
-            dup2(log_fd, 1);
-            dup2(log_fd, 2);
-            execvp(cmd, args);
-            _exit(1);
-        }
-        else
-        {
-            wait(&status);
+            wait(&pid);
         
-            if(WEXITSTATUS(status) != 0)
+            if(!WIFEXITED(pid) || WEXITSTATUS(pid) != 0)
             {
                 dprintf(log_fd, "Unlock failed!\n");
                 exit_status = FALSE;
@@ -82,31 +74,22 @@ static int lock_services(int log_fd, GPtrArray *profile_manifest_array)
     for(i = 0; i < profile_manifest_array->len; i++)
     {
         ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
-        int status;
+        pid_t pid;
     
         dprintf(log_fd, "Notifying lock on %s: of type: %s in container: %s\n", entry->derivation, entry->type, entry->container);
         
-        status = fork();
+        pid = statemgmt_unlock_component(entry->type, entry->container, entry->derivation, log_fd, log_fd);
 
-        if(status == -1)
+        if(pid == -1)
         {
             dprintf(log_fd, "Error forking lock process!\n");
             exit_status = -1;
         }
-        else if(status == 0)
+        else if(pid > 0)
         {
-            char *cmd = "dysnomia";
-            char *args[] = {cmd, "--type", entry->type, "--operation", "lock", "--container", entry->container, "--component", entry->derivation, "--environment", NULL};
-            dup2(log_fd, 1);
-            dup2(log_fd, 2);
-            execvp(cmd, args);
-            _exit(1);
-        }
-        else
-        {
-            wait(&status);
+            wait(&pid);
 
-            if(WEXITSTATUS(status) != 0)
+            if(!WIFEXITED(pid) || WEXITSTATUS(pid) != 0)
             {
                 dprintf(log_fd, "Lock rejected!\n");
                 exit_status = -1;

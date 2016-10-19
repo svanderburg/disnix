@@ -32,13 +32,13 @@ static int wait_to_complete_retrieve(void)
     int status;
     pid_t pid = wait(&status);
     
-    if(pid == -1 || WEXITSTATUS(status) != 0)
+    if(pid != -1 && WIFEXITED(status) && WEXITSTATUS(status) == 0)
+        return 0;
+    else
     {
         g_printerr("Cannot send snapshots!\n");
         return 1;
     }
-    else
-        return 0;
 }
 
 static int send_snapshots_per_target(GPtrArray *snapshots_array, Target *target, const int all)
@@ -134,7 +134,7 @@ static int wait_to_complete_restore(GHashTable *pids, GPtrArray *target_array)
         signal_available_target_core(target);
         
         /* Return the status */
-        if(WEXITSTATUS(status) == 0)
+        if(WIFEXITED(status) && WEXITSTATUS(status) == 0)
             return TRUE;
         else
         {

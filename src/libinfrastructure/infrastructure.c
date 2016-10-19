@@ -26,6 +26,7 @@
 #include <sys/wait.h>
 #include <libxslt/xslt.h>
 #include <libxslt/transform.h>
+#include "package-management.h"
 #define BUFFER_SIZE 4096
 
 static gint compare_target_property(const TargetProperty **l, const TargetProperty **r)
@@ -114,68 +115,53 @@ static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
 static gchar *create_infrastructure_xml(gchar *infrastructure_expr)
 {
     int pipefd[2];
-        
+    
     /* 
      * Execute nix-instantiate command to retrieve XML representation of the 
      * infrastructure model
-     */     
+     */
     
-    if(pipe(pipefd) == 0)
+    pid_t pid = pkgmgmt_instantiate(infrastructure_expr, pipefd);
+    
+    if(pid == -1)
     {
-	int status = fork();
-    
-	if(status == -1)
-	{
-	    g_printerr("Error with forking nix-instantiate process!\n");
-	    close(pipefd[0]);
-	    close(pipefd[1]);
-	    return NULL;
-	}
-	else if(status == 0)
-	{
-	    char *const args[] = {"nix-instantiate", "--eval-only", "--strict", "--xml", infrastructure_expr, NULL};
-	    close(pipefd[0]); /* Close read-end of pipe */
-	    dup2(pipefd[1], 1); /* Attach write-end to stdout */
-	    execvp("nix-instantiate", args);
-	    _exit(1);
-	    return NULL;
-	}
-	else
-	{
-	    gchar *infrastructureXML = g_strdup("");
-	    ssize_t line_size;
-	    char line[BUFFER_SIZE];
-	    
-	    close(pipefd[1]); /* Close write-end of pipe */
-		
-	    while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
-	    {
-	        gchar *old_infrastructureXML = infrastructureXML;
+        g_printerr("Error with forking nix-instantiate process!\n");
+        close(pipefd[0]);
+        close(pipefd[1]);
+        return NULL;
+    }
+    else if(pid > 0)
+    {
+        gchar *infrastructureXML = g_strdup("");
+        ssize_t line_size;
+        char line[BUFFER_SIZE];
+        
+        close(pipefd[1]); /* Close write-end of pipe */
+        
+        while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
+        {
+            gchar *old_infrastructureXML = infrastructureXML;
 
-	        line[line_size] = '\0';
-		infrastructureXML = g_strconcat(old_infrastructureXML, line, NULL);
-		g_free(old_infrastructureXML);
-	    }
-	    
-	    close(pipefd[0]);
-	    
-	    wait(&status);
+            line[line_size] = '\0';
+            infrastructureXML = g_strconcat(old_infrastructureXML, line, NULL);
+            g_free(old_infrastructureXML);
+        }
+        
+        close(pipefd[0]);
+        
+        wait(&pid);
 
-	    if(WEXITSTATUS(status) == 0)
-		return infrastructureXML;
-	    else
-	    {
-		g_printerr("Error with executing nix-instantiate!\n");
-		g_free(infrastructureXML);
-		return NULL;
-	    }
-	}    
+        if(WIFEXITED(pid) && WEXITSTATUS(pid) == 0)
+            return infrastructureXML;
+        else
+        {
+             g_printerr("Error with executing nix-instantiate!\n");
+             g_free(infrastructureXML);
+             return NULL;
+        }
     }
     else
-    {
-	g_printerr("Error with creating pipe!\n");
-	return NULL;
-    }
+        return NULL;
 }
 
 GPtrArray *create_target_array_from_doc(xmlDocPtr doc)

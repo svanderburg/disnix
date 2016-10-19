@@ -56,7 +56,7 @@ static void evaluate_boolean_process(pid_t pid, OrgNixosDisnixDisnix *object, gi
     {
         wait(&pid);
         
-        if(WEXITSTATUS(pid) == 0)
+        if(WIFEXITED(pid) && WEXITSTATUS(pid) == 0)
             org_nixos_disnix_disnix_emit_finish(object, jid);
         else
             org_nixos_disnix_disnix_emit_failure(object, jid);
@@ -100,7 +100,7 @@ static void evaluate_output_process(pid_t pid, int pipefd[2], OrgNixosDisnixDisn
 
         wait(&pid);
 
-        if(WEXITSTATUS(pid) == 0)
+        if(WIFEXITED(pid) && WEXITSTATUS(pid) == 0)
             result = allocate_empty_array_if_null(result);
         
         evaluate_strv_process(result, object, jid);

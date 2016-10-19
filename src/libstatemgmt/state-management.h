@@ -39,4 +39,8 @@ pid_t statemgmt_clean_snapshots(gchar *keepStr, gchar *container, gchar *compone
 
 gchar **statemgmt_capture_config(gchar *tmpdir, int stderr);
 
+pid_t statemgmt_lock_component(gchar *type, gchar *container, gchar *component, int stdout, int stderr);
+
+pid_t statemgmt_unlock_component(gchar *type, gchar *container, gchar *component, int stdout, int stderr);
+
 #endif

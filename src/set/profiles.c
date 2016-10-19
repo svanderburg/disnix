@@ -30,6 +30,7 @@
 #include <distributionmapping.h>
 #include <targets.h>
 #include <client-interface.h>
+#include <package-management.h>
 
 #define RESOLVED_PATH_MAX_SIZE 4096
 
@@ -137,26 +138,23 @@ static int set_coordinator_profile(const gchar *coordinator_profile_path, const 
          * that the new configuration is known
          */
          
-        int status = fork();
-    
-        if(status == 0)
-        {
-            char *const args[] = {"nix-env", "-p", profile_path, "--set", manifest_file_path, NULL};
-            execvp("nix-env", args);
-            _exit(1);
-        }
+        pid_t pid = pkgmgmt_set_coordinator_profile(profile_path, manifest_file_path);
     
         /* Cleanup */
         g_free(profile_path);
         g_free(manifest_file_path);
     
         /* If the process suceeds the the operation succeeded */
-        if(status == -1)
+        if(pid == -1)
             return -1;
         else
         {
-            wait(&status);
-            return WEXITSTATUS(status);
+            wait(&pid);
+    
+            if(WIFEXITED(pid))
+                return WEXITSTATUS(pid);
+            else
+                return 1;
         }
     }
     else

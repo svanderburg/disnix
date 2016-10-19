@@ -30,13 +30,13 @@ static int wait_to_complete(void)
     int status;
     pid_t pid = wait(&status);
     
-    if(pid == -1 || WEXITSTATUS(status) != 0)
+    if(pid != -1 && WIFEXITED(status) && WEXITSTATUS(status) == 0)
+        return 0;
+    else
     {
         g_printerr("Cannot transfer intra-dependency closure!\n");
         return 1;
     }
-    else
-        return 0;
 }
 
 int distribute(const gchar *manifest_file, const unsigned int max_concurrent_transfers)

@@ -36,8 +36,12 @@ int wait_to_finish(const pid_t pid)
     {
 	int status;
 	wait(&status);
-	return WEXITSTATUS(status);
-    }    
+	
+	if(WIFEXITED(status))
+	    return WEXITSTATUS(status);
+	else
+	    return 1;
+    }
 }
 
 static pid_t exec_activate_or_deactivate(gchar *operation, gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)

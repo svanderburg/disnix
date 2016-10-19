@@ -12,7 +12,7 @@ noinst_DATA = disnix-set.1.xml
 man1_MANS = disnix-set.1
 
 disnix_set_SOURCES = profiles.c main.c
-disnix_set_CFLAGS = $(GLIB2_CFLAGS) -I../libmanifest -I../libmain -I../libinterface
-disnix_set_LDADD = $(GLIB2_LIBS) ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la
+disnix_set_CFLAGS = $(GLIB2_CFLAGS) -I../libmanifest -I../libmain -I../libinterface -I../libpkgmgmt
+disnix_set_LDADD = $(GLIB2_LIBS) ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la ../libpkgmgmt/libpkgmgmt.la
 
 EXTRA_DIST = disnix-set.1 disnix-set.1.xml
