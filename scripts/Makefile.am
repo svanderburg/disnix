@@ -45,7 +45,7 @@ disnix-delegate.1.xml: disnix-delegate.1
 	$(SHELL) ../maintenance/man2docbook.bash $<
 
 disnix-deploy.1: disnix-deploy.in
-	$(HELP2MAN) --output=$@ --no-info --name 'Deploys a prebuild Disnix manifest' "$(SHELL) disnix-deploy"
+	$(HELP2MAN) --output=$@ --no-info --name 'Deploys a prebuilt Disnix manifest' "$(SHELL) disnix-deploy"
 
 disnix-deploy.1.xml: disnix-deploy.1
 	$(SHELL) ../maintenance/man2docbook.bash $<

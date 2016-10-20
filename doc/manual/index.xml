@@ -56,6 +56,9 @@
     <section>
       <title>Utilities</title>
       
+      <xi:include href="../../scripts/disnix-delegate.1.xml" />
+      <xi:include href="../../scripts/disnix-deploy.1.xml" />
+      <xi:include href="../../scripts/disnix-migrate.1.xml" />
       <xi:include href="../../src/capture-infra/disnix-capture-infra.1.xml" />
       <xi:include href="../../src/activate/disnix-activate.1.xml" />
       <xi:include href="../../src/build/disnix-build.1.xml" />
