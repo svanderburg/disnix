@@ -22,17 +22,12 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/stat.h>
-#include <pwd.h>
-#include <errno.h>
 #include <string.h>
 
 #include <distributionmapping.h>
 #include <targets.h>
 #include <client-interface.h>
 #include <package-management.h>
-
-#define RESOLVED_PATH_MAX_SIZE 4096
 
 static int set_target_profiles(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
 {
@@ -74,93 +69,6 @@ static int set_target_profiles(const GPtrArray *distribution_array, const GPtrAr
     return exit_status;
 }
 
-static int set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *manifest_file, const gchar *profile)
-{
-    gchar *profile_path, *manifest_file_path;
-    char resolved_path[RESOLVED_PATH_MAX_SIZE];
-    ssize_t resolved_path_size;
-    
-    /* Get current username */
-    char *username = (getpwuid(geteuid()))->pw_name;
-
-    /* Determine which profile path to use, if a coordinator profile path is given use this value otherwise the default */
-    if(coordinator_profile_path == NULL)
-        profile_path = g_strconcat(LOCALSTATEDIR, "/nix/profiles/per-user/", username, "/disnix-coordinator", NULL);
-    else
-        profile_path = g_strdup(coordinator_profile_path);
-    
-    /* Create the profile directory */
-    if(mkdir(profile_path, 0755) == -1 && errno != EEXIST)
-        g_printerr("[coordinator]: Cannot create profile directory: %s\n", profile_path);
-    
-    /* Profile path is not needed anymore */
-    g_free(profile_path);
-    
-    /* If the manifest file is an absolute path or a relative path starting
-     * with ./ then the path is OK
-     */
-     
-    if((strlen(manifest_file) >= 1 && manifest_file[0] == '/') ||
-       (strlen(manifest_file) >= 2 && (manifest_file[0] == '.' || manifest_file[1] == '/')))
-        manifest_file_path = g_strdup(manifest_file);
-    else
-        manifest_file_path = g_strconcat("./", manifest_file, NULL); /* Otherwise add ./ in front of the path */
-    
-    /* Determine the path to the profile */
-    if(coordinator_profile_path == NULL)
-        profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
-    else
-        profile_path = g_strconcat(coordinator_profile_path, "/", profile, NULL);
-    
-    /* Resolve the manifest file to which the coordinator profile points */
-    
-    resolved_path_size = readlink(profile_path, resolved_path, RESOLVED_PATH_MAX_SIZE);
-    
-    if(resolved_path_size != -1 && (strlen(profile_path) != resolved_path_size || strncmp(resolved_path, profile_path, resolved_path_size) != 0)) /* If the symlink resolves not to itself, we get a generation symlink that we must resolve again */
-    {
-        gchar *generation_path;
-        
-        resolved_path[resolved_path_size] = '\0';
-        
-        if(coordinator_profile_path == NULL)
-            generation_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", resolved_path, NULL);
-        else
-            generation_path = g_strconcat(coordinator_profile_path, "/", resolved_path, NULL);
-        
-        resolved_path_size = readlink(generation_path, resolved_path, RESOLVED_PATH_MAX_SIZE);
-        
-        g_free(generation_path);
-    }
-    
-    if(resolved_path_size == -1 || (strlen(manifest_file) == resolved_path_size && strncmp(resolved_path, manifest_file, resolved_path_size) != 0)) /* Only configure the configurator profile if the given manifest is not identical to the previous manifest */
-    {
-        /* Execute nix-env --set operation to change the coordinator profile so
-         * that the new configuration is known
-         */
-         
-        pid_t pid = pkgmgmt_set_coordinator_profile(profile_path, manifest_file_path);
-    
-        /* Cleanup */
-        g_free(profile_path);
-        g_free(manifest_file_path);
-    
-        /* If the process suceeds the the operation succeeded */
-        if(pid == -1)
-            return -1;
-        else
-        {
-            wait(&pid);
-    
-            if(WIFEXITED(pid))
-                return WEXITSTATUS(pid);
-            else
-                return 1;
-        }
-    }
-    else
-        return 0;
-}
-
 static void cleanup(GPtrArray *target_array, GPtrArray *distribution_array)
 {
     delete_target_array(target_array);
@@ -179,7 +87,7 @@ int set_profiles(const gchar *manifest_file, const gchar *coordinator_profile_pa
         return status;
     }
     
-    if(!no_coordinator_profile && (status = set_coordinator_profile(coordinator_profile_path, manifest_file, profile)) != 0)
+    if(!no_coordinator_profile && (status = pkgmgmt_set_coordinator_profile(coordinator_profile_path, manifest_file, profile)) != 0)
     {
         cleanup(target_array, distribution_array);
         return status;
