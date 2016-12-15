@@ -1,0 +1,7 @@
+Run the following commands to integrate libprocreact from the upstream
+repository:
+
+cp -av ~/libprocreact/src/libprocreact/* .
+sed -i \
+  -e "s|lib_LTLIBRARIES|pkglib_LTLIBRARIES|" \
+  -e "s|include_HEADERS|pkginclude_HEADERS|" Makefile.am

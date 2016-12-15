@@ -25,6 +25,7 @@
 #include <manifest.h>
 #include <targets.h>
 #include <client-interface.h>
+#include <procreact_pid_iterator.h>
 
 volatile int interrupted;
 
@@ -44,45 +45,52 @@ static void set_flag_on_interrupt(void)
     sigaction(SIGINT, &act, NULL);
 }
 
+typedef struct
+{
+    unsigned int index;
+    unsigned int length;
+    const GPtrArray *distribution_array;
+    const GPtrArray *target_array;
+    gchar *profile;
+    int success;
+    GPtrArray *lock_array;
+}
+DistributionIteratorData;
+
+static int has_next_distribution_item(void *data)
+{
+    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
+    return distribution_iterator_data->index < distribution_iterator_data->length;
+}
+
+static pid_t next_unlock_process(void *data)
+{
+    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
+    pid_t pid;
+    DistributionItem *item = g_ptr_array_index(distribution_iterator_data->distribution_array, distribution_iterator_data->index);
+    Target *target = find_target(distribution_iterator_data->target_array, item->target);
+    
+    g_print("[target: %s]: Releasing a lock!\n", item->target);
+    pid = exec_unlock(target->client_interface, item->target, distribution_iterator_data->profile);
+    distribution_iterator_data->index++;
+    return pid;
+}
+
+static void complete_unlock_process(void *data, pid_t pid, ProcReact_Status status, int result)
+{
+    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
+    
+    if(status != PROCREACT_STATUS_OK || !result)
+        distribution_iterator_data->success = FALSE;
+}
+
 static int unlock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
 {
-    unsigned int i, running_processes = 0;
-    int exit_status = 0;
-    int status;
+    DistributionIteratorData data = { 0, distribution_array->len, distribution_array, target_array, profile, TRUE };
+    ProcReact_PidIterator iterator = procreact_initialize_pid_iterator(has_next_distribution_item, next_unlock_process, procreact_retrieve_boolean, complete_unlock_process, &data);
+    procreact_fork_in_parallel_and_wait(&iterator);
     
-    /* For each locked machine, release the lock */
-    for(i = 0; i < distribution_array->len; i++)
-    {
-        DistributionItem *item = g_ptr_array_index(distribution_array, i);
-        Target *target = find_target(target_array, item->target);
-        
-        g_print("[target: %s]: Releasing a lock!\n", item->target);
-        status = exec_unlock(target->client_interface, item->target, profile);
-        
-        if(status == -1)
-        {
-            g_printerr("[target: %s]: Error with forking unlock process!\n", item->target);
-            exit_status = -1;
-        }
-        else
-            running_processes++;
-    }
-    
-    /* Wait until every lock is released */
-    for(i = 0; i < running_processes; i++)
-    {
-        status = wait_to_finish(0);
-        
-        /* If a process fails, change the exit status */
-        if(status != 0)
-        {
-            g_printerr("Failed to release the lock!\n");
-            exit_status = status;
-        }
-    }
-    
-    /* Return exit status, which is 0 if everything succeeds */
-    return exit_status;
+    return (!data.success);
 }
 
 static int lock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)

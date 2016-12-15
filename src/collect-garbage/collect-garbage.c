@@ -19,7 +19,54 @@
 
 #include "collect-garbage.h"
 #include <infrastructure.h>
-#include <client-interface.h> 
+#include <client-interface.h>
+#include <procreact_pid_iterator.h>
+
+typedef struct
+{
+    unsigned int index;
+    unsigned int length;
+    GPtrArray *target_array;
+    const gchar *target_property;
+    gchar *interface;
+    const gboolean delete_old;
+    int success;
+}
+TargetIteratorData;
+
+static int has_next_target(void *data)
+{
+    TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
+    return target_iterator_data->index < target_iterator_data->length;
+}
+
+static pid_t next_collect_garbage_process(void *data)
+{
+    pid_t pid;
+    TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
+    
+    Target *target = g_ptr_array_index(target_iterator_data->target_array, target_iterator_data->index);
+    gchar *client_interface = target->client_interface;
+    gchar *target_key = find_target_key(target, target_iterator_data->target_property);
+
+    /* If no client interface is provided by the infrastructure model, use global one */
+    if(client_interface == NULL)
+        client_interface = target_iterator_data->interface;
+    
+    g_print("[target: %s]: Running garbage collector\n", target_key);
+    pid = exec_collect_garbage(client_interface, target_key, target_iterator_data->delete_old);
+    target_iterator_data->index++;
+    
+    return pid;
+}
+
+static void complete_collect_garbage_process(void *data, pid_t pid, ProcReact_Status status, int result)
+{
+    TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
+    
+    if(status != PROCREACT_STATUS_OK || !result)
+        target_iterator_data->success = FALSE;
+}
 
 int collect_garbage(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, const gboolean delete_old)
 {
@@ -33,52 +80,16 @@ int collect_garbage(gchar *interface, const gchar *target_property, gchar *infra
     }
     else
     {
-        unsigned int i, running_processes = 0;
-        int exit_status = 0;
+        /* Iterate over all targets and run collect garbage operation in parallel */
+        TargetIteratorData data = { 0, target_array->len, target_array, target_property, interface, delete_old, TRUE };
+        ProcReact_PidIterator iterator = procreact_initialize_pid_iterator(has_next_target, next_collect_garbage_process, procreact_retrieve_boolean, complete_collect_garbage_process, &data);
         
-        /* Spawn garbage collection processes */
-        for(i = 0; i < target_array->len; i++)
-        {
-            Target *target = g_ptr_array_index(target_array, i);
-            gchar *client_interface = target->client_interface;
-            gchar *target_key = find_target_key(target, target_property);
-            int pid;
-            
-            /* If no client interface is provided by the infrastructure model, use global one */
-            if(client_interface == NULL)
-                client_interface = interface;
-            
-            g_print("[target: %s]: Running garbage collector\n", target_key);
-            
-            pid = exec_collect_garbage(client_interface, target_key, delete_old);
-        
-            /* If an operation failed, change the exit status */
-            if(pid == -1)
-            {
-                g_printerr("[target: %s]: Error forking garbage collection operation!\n", target_key);
-                exit_status = -1;
-            }
-            else
-                running_processes++;
-        }
-        
-        /* Check statusses of the running processes */
-        for(i = 0; i < running_processes; i++)
-        {
-            int status = wait_to_finish(0);
-            
-            /* If one of the processes fail, change the exit status */
-            if(status != 0)
-            {
-                g_printerr("Error executing garbage collection operation!\n");
-                exit_status = status;
-            }
-        }
+        procreact_fork_in_parallel_and_wait(&iterator);
         
         /* Delete the target array from memory */
         delete_target_array(target_array);
         
         /* Return the exit status, which is 0 if everything succeeds */
-        return exit_status;
+        return (!data.success);
     }
 }

@@ -28,45 +28,55 @@
 #include <targets.h>
 #include <client-interface.h>
 #include <package-management.h>
+#include <procreact_pid_iterator.h>
+
+typedef struct
+{
+    unsigned int index;
+    unsigned int length;
+    const GPtrArray *distribution_array;
+    const GPtrArray *target_array;
+    gchar *profile;
+    int success;
+}
+DistributionIteratorData;
+
+static int has_next_distribution_item(void *data)
+{
+    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
+    return distribution_iterator_data->index < distribution_iterator_data->length;
+}
+
+static pid_t next_set_process(void *data)
+{
+    pid_t pid;
+    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
+    
+    DistributionItem *item = g_ptr_array_index(distribution_iterator_data->distribution_array, distribution_iterator_data->index);
+    Target *target = find_target(distribution_iterator_data->target_array, item->target);
+    
+    g_print("[target: %s]: Setting Disnix profile: %s\n", item->target, item->profile);
+    pid = exec_set(target->client_interface, item->target, distribution_iterator_data->profile, item->profile);
+    distribution_iterator_data->index++;
+    return pid;
+}
+
+static void complete_set_process(void *data, pid_t pid, ProcReact_Status status, int result)
+{
+    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
+    
+    if(status != PROCREACT_STATUS_OK || !result)
+        distribution_iterator_data->success = FALSE;
+}
 
 static int set_target_profiles(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
 {
-    unsigned int i;
-    int exit_status = 0, running_processes = 0;
+    /* Iterate over the distribution mappings, limiting concurrency to the desired concurrent transfers and distribute them */
+    DistributionIteratorData data = { 0, distribution_array->len, distribution_array, target_array, profile, TRUE };
+    ProcReact_PidIterator iterator = procreact_initialize_pid_iterator(has_next_distribution_item, next_set_process, procreact_retrieve_boolean, complete_set_process, &data);
+    procreact_fork_in_parallel_and_wait(&iterator);
     
-    for(i = 0; i < distribution_array->len; i++)
-    {
-        pid_t pid;
-        DistributionItem *item = g_ptr_array_index(distribution_array, i);
-        Target *target = find_target(target_array, item->target);
-        
-        g_print("[target: %s]: Setting Disnix profile: %s\n", item->target, item->profile);
-        
-        pid = exec_set(target->client_interface, item->target, profile, item->profile);
-        
-        if(pid == -1)
-        {
-            g_print("[target: %s]: Error forking nix-env --set process!\n", item->target);
-            exit_status = -1;
-        }
-        else
-            running_processes++;
-    }
-    
-    /* Check statusses of the running processes */
-    for(i = 0; i < running_processes; i++)
-    {
-        int status = wait_to_finish(0);
-
-        /* If one of the processes fail, change the exit status */
-        if(status != 0)
-        {
-            g_printerr("Cannot set profile!\n");
-            exit_status = status;
-        }
-    }
-
-    return exit_status;
+    return (!data.success);
 }
 
 static void cleanup(GPtrArray *target_array, GPtrArray *distribution_array)

@@ -297,34 +297,19 @@ pid_t exec_clean_snapshots(gchar *interface, gchar *target, int keep, char *cont
 	return pid;
 }
 
-pid_t exec_realise(gchar *interface, gchar *target, gchar *derivation, int pipefd[2])
+ProcReact_Future exec_realise(gchar *interface, gchar *target, gchar *derivation)
 {
-    if(pipe(pipefd) == 0)
+    ProcReact_Future future = procreact_initialize_future(procreact_create_string_type());
+
+    if(future.pid == 0)
     {
-        pid_t pid = fork();
-	
-	if(pid == 0)
-	{
-	    char *const args[] = {interface, "--realise", "--target", target, derivation, NULL};
-	    close(pipefd[0]); /* Close read-end */
-	    dup2(pipefd[1], 1); /* Attach pipe to the stdout */
-	    execvp(interface, args); /* Run process */
-	    _exit(1);
-	}
-	else if(pid == -1)
-	{
-	    close(pipefd[0]); /* Close read-end */
-	    close(pipefd[1]); /* Close write-end */
-	    return pid;
-	}
-	else
-	{
-	    close(pipefd[1]); /* Close write-end */
-	    return pid;
-	}
+        char *const args[] = {interface, "--realise", "--target", target, derivation, NULL};
+        dup2(future.fd, 1);
+        execvp(interface, args); /* Run process */
+        _exit(1);
     }
-    else
-	return -1;
+    
+    return future;
 }
 
 pid_t exec_capture_config(gchar *interface, gchar *target, int pipefd[2])

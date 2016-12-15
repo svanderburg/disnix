@@ -24,19 +24,43 @@
 #include <manifest.h>
 #include <distributionmapping.h>
 #include <targets.h>
+#include <procreact_pid_iterator.h>
 
-static int wait_to_complete(void)
+typedef struct
 {
-    int status;
-    pid_t pid = wait(&status);
+    unsigned int index;
+    unsigned int length;
+    Manifest *manifest;
+    int success;
+}
+DistributionIteratorData;
+
+static int has_next_distribution_item(void *data)
+{
+    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
+    return distribution_iterator_data->index < distribution_iterator_data->length;
+}
+
+static pid_t next_distribution_process(void *data)
+{
+    pid_t pid;
+    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
     
-    if(pid != -1 && WIFEXITED(status) && WEXITSTATUS(status) == 0)
-        return 0;
-    else
-    {
-        g_printerr("Cannot transfer intra-dependency closure!\n");
-        return 1;
-    }
+    DistributionItem *item = g_ptr_array_index(distribution_iterator_data->manifest->distribution_array, distribution_iterator_data->index);
+    Target *target = find_target(distribution_iterator_data->manifest->target_array, item->target);
+    
+    g_print("[target: %s]: Receiving intra-dependency closure of profile: %s\n", item->target, item->profile);
+    pid = exec_copy_closure_to(target->client_interface, item->target, item->profile);
+    distribution_iterator_data->index++;
+    return pid;
+}
+
+static void complete_distribution_process(void *data, pid_t pid, ProcReact_Status status, int result)
+{
+    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
+    
+    if(status != PROCREACT_STATUS_OK || !result)
+        distribution_iterator_data->success = FALSE;
 }
 
 int distribute(const gchar *manifest_file, const unsigned int max_concurrent_transfers)
@@ -51,44 +75,15 @@ int distribute(const gchar *manifest_file, const unsigned int max_concurrent_tra
     }
     else
     {
-        unsigned int i;
-        int exit_status;
-        unsigned int running_processes = 0;
-        
-        /* Iterate over the distribution array and distribute the profiles to the target machines */
-        for(i = 0; i < manifest->distribution_array->len; i++)
-        {
-            DistributionItem *item = g_ptr_array_index(manifest->distribution_array, i);
-            Target *target = find_target(manifest->target_array, item->target);
-            
-            /* Invoke copy closure operation */
-            g_print("[target: %s]: Receiving intra-dependency closure of profile: %s\n", item->target, item->profile);
-            exec_copy_closure_to(target->client_interface, item->target, item->profile);
-            running_processes++;
-            
-            /* If limit has been reached, wait until one of the transfers finishes */
-            if(running_processes >= max_concurrent_transfers)
-            {
-                exit_status = wait_to_complete();
-                running_processes--;
-                
-                if(exit_status != 0)
-                    break;
-            }
-        }
-        
-        /* Wait for remaining transfers to finish */
-        for(i = 0; i < running_processes; i++)
-        {
-            exit_status = wait_to_complete();
-            if(exit_status != 0)
-                break;
-        }
+        /* Iterate over the distribution mappings, limiting concurrency to the desired concurrent transfers and distribute them */
+        DistributionIteratorData data = { 0, manifest->distribution_array->len, manifest, TRUE };
+        ProcReact_PidIterator iterator = procreact_initialize_pid_iterator(has_next_distribution_item, next_distribution_process, procreact_retrieve_boolean, complete_distribution_process, &data);
+        procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
         
         /* Delete manifest from memory */
         delete_manifest(manifest);
         
         /* Return the exit status, which is 0 if everything succeeds */
-        return exit_status;
+        return (!data.success);
     }
 }

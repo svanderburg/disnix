@@ -22,6 +22,7 @@
 
 #include <unistd.h>
 #include <glib.h>
+#include <procreact_future.h>
 
 /**
  * Waits until the given PID is finished and then returns the exit status
@@ -213,10 +214,9 @@ pid_t exec_clean_snapshots(gchar *interface, gchar *target, int keep, char *cont
  * @param interface Path to the interface executable
  * @param target Target Address of the remote interface
  * @param derivation Derivation to build
- * @param pipefd Pipe which can be used to capture the output of the process
- * @return PID of the client interface process performing the operation, or -1 in case of a failure
+ * @return Future struct of the client interface process performing the operation
  */
-pid_t exec_realise(gchar *interface, gchar *target, gchar *derivation, int pipefd[2]);
+ProcReact_Future exec_realise(gchar *interface, gchar *target, gchar *derivation);
 
 /**
  * Captures the configuration from the Dysnomia container configuration files

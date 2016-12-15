@@ -145,7 +145,7 @@ gchar **generate_activation_arguments(const Target *target, const gchar *contain
 int request_available_target_core(Target *target);
 
 /**
- * Signals the availability of an adiitional CPU core for deployment utilisation.
+ * Signals the availability of an additional CPU core for deployment utilisation.
  *
  * @param target A target struct containing properties of a target machine
  */

@@ -10,7 +10,7 @@ noinst_DATA = disnix-activate.1.xml
 man1_MANS = disnix-activate.1
 
 disnix_activate_SOURCES = transition.c activate.c main.c
-disnix_activate_CFLAGS = $(GLIB2_CFLAGS) -I../libmanifest -I../libmain -I../libinterface
-disnix_activate_LDADD = $(GLIB2_LIBS) ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la
+disnix_activate_CFLAGS = $(GLIB2_CFLAGS) -I../libprocreact -I../libmanifest -I../libmain -I../libinterface
+disnix_activate_LDADD = $(GLIB2_LIBS) ../libprocreact/libprocreact.la ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la
 
 EXTRA_DIST = disnix-activate.1 disnix-activate.1.xml
