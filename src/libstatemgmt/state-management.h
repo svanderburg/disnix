@@ -22,18 +22,19 @@
 
 #include <glib.h>
 #include <unistd.h>
+#include <procreact_future.h>
 
 pid_t statemgmt_run_dysnomia_activity(gchar *type, gchar *activity, gchar *component, gchar *container, gchar **arguments, int stdout, int stderr);
 
-pid_t statemgmt_query_all_snapshots(gchar *container, gchar *component, int pipefd[2], int stderr);
+ProcReact_Future statemgmt_query_all_snapshots(gchar *container, gchar *component, int stderr);
 
-pid_t statemgmt_query_latest_snapshot(gchar *container, gchar *component, int pipefd[2], int stderr);
+ProcReact_Future statemgmt_query_latest_snapshot(gchar *container, gchar *component, int stderr);
 
-pid_t statemgmt_print_missing_snapshots(gchar **component, int pipefd[2], int stderr);
+ProcReact_Future statemgmt_print_missing_snapshots(gchar **component, int stderr);
 
 pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **snapshots, int stdout, int stderr);
 
-pid_t statemgmt_resolve_snapshots(gchar **snapshots, int pipefd[2], int stderr);
+ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr);
 
 pid_t statemgmt_clean_snapshots(gchar *keepStr, gchar *container, gchar *component, int stdout, int stderr);
 

@@ -124,71 +124,57 @@ gchar **pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr)
     }
 }
 
-pid_t pkgmgmt_print_invalid_packages(gchar **derivation, int pipefd[2], int stderr)
+ProcReact_Future pkgmgmt_print_invalid_packages(gchar **derivation, int stderr)
 {
-    if(pipe(pipefd) == 0)
+    ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
+
+    if(future.pid == 0)
     {
-        pid_t pid = fork();
+        unsigned int i, derivation_length = g_strv_length(derivation);
+        gchar **args = (char**)g_malloc((4 + derivation_length) * sizeof(gchar*));
 
-        if(pid == 0)
-        {
-            unsigned int i, derivation_length = g_strv_length(derivation);
-            gchar **args = (char**)g_malloc((4 + derivation_length) * sizeof(gchar*));
+        args[0] = NIX_STORE_CMD;
+        args[1] = "--check-validity";
+        args[2] = "--print-invalid";
 
-            close(pipefd[0]); /* Close read-end of the pipe */
+        for(i = 0; i < derivation_length; i++)
+            args[i + 3] = derivation[i];
 
-            args[0] = NIX_STORE_CMD;
-            args[1] = "--check-validity";
-            args[2] = "--print-invalid";
-
-            for(i = 0; i < derivation_length; i++)
-                args[i + 3] = derivation[i];
-
-            args[i + 3] = NULL;
-            
-            dup2(pipefd[1], 1); /* Attach write-end to stdout */
-            dup2(stderr, 2); /* Attach logger to stderr */
-            execvp(NIX_STORE_CMD, args);
-            _exit(1);
-        }
+        args[i + 3] = NULL;
         
-        return pid;
+        dup2(future.fd, 1); /* Attach write-end to stdout */
+        dup2(stderr, 2); /* Attach logger to stderr */
+        execvp(NIX_STORE_CMD, args);
+        _exit(1);
     }
-    else
-        return -1;
+    
+    return future;
 }
 
-pid_t pkgmgmt_realise(gchar **derivation, int pipefd[2], int stderr)
+ProcReact_Future pkgmgmt_realise(gchar **derivation, int stderr)
 {
-    if(pipe(pipefd) == 0)
+    ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
+
+    if(future.pid == 0)
     {
-        pid_t pid = fork();
+        unsigned int i, derivation_size = g_strv_length(derivation);
+        gchar **args = (gchar**)g_malloc((3 + derivation_size) * sizeof(gchar*));
 
-        if(pid == 0)
-        {
-            unsigned int i, derivation_size = g_strv_length(derivation);
-            gchar **args = (gchar**)g_malloc((3 + derivation_size) * sizeof(gchar*));
+        args[0] = NIX_STORE_CMD;
+        args[1] = "-r";
 
-            close(pipefd[0]); /* Close read-end of pipe */
+        for(i = 0; i < derivation_size; i++)
+            args[i + 2] = derivation[i];
 
-            args[0] = NIX_STORE_CMD;
-            args[1] = "-r";
+        args[i + 2] = NULL;
 
-            for(i = 0; i < derivation_size; i++)
-                args[i + 2] = derivation[i];
-
-            args[i + 2] = NULL;
-
-            dup2(pipefd[1], 1);
-            dup2(stderr, 2);
-            execvp(NIX_STORE_CMD, args);
-            _exit(1);
-        }
-        
-        return pid;
+        dup2(future.fd, 1); /* Attach write-end to stdout */
+        dup2(stderr, 2); /* Attach logger to stderr */
+        execvp(NIX_STORE_CMD, args);
+        _exit(1);
     }
-    else
-        return -1;
+    
+    return future;
 }
 
 pid_t pkgmgmt_set_profile(gchar *profile, gchar *derivation, int stdout, int stderr)
@@ -237,37 +223,30 @@ pid_t pkgmgmt_set_profile(gchar *profile, gchar *derivation, int stdout, int std
     return pid;
 }
 
-pid_t pkgmgmt_query_requisites(gchar **derivation, int pipefd[2], int stderr)
+ProcReact_Future pkgmgmt_query_requisites(gchar **derivation, int stderr)
 {
-    if(pipe(pipefd) == 0)
+    ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
+
+    if(future.pid == 0)
     {
-        pid_t pid = fork();
+        unsigned int i, derivation_size = g_strv_length(derivation);
+        char **args = (char**)g_malloc((3 + derivation_size) * sizeof(char*));
 
-        if(pid == 0)
-        {
-            unsigned int i, derivation_size = g_strv_length(derivation);
-            char **args = (char**)g_malloc((3 + derivation_size) * sizeof(char*));
-
-            close(pipefd[0]); /* Close read-end of pipe */
-
-            args[0] = NIX_STORE_CMD;
-            args[1] = "-qR";
-            
-            for(i = 0; i < derivation_size; i++)
-                args[i + 2] = derivation[i];
-
-            args[i + 2] = NULL;
-
-            dup2(pipefd[1], 1);
-            dup2(stderr, 2);
-            execvp(NIX_STORE_CMD, args);
-            _exit(1);
-        }
+        args[0] = NIX_STORE_CMD;
+        args[1] = "-qR";
         
-        return pid;
+        for(i = 0; i < derivation_size; i++)
+            args[i + 2] = derivation[i];
+
+        args[i + 2] = NULL;
+
+        dup2(future.fd, 1);
+        dup2(stderr, 2);
+        execvp(NIX_STORE_CMD, args);
+        _exit(1);
     }
-    else
-        return -1;
+    
+    return future;
 }
 
 pid_t pkgmgmt_collect_garbage(int delete_old, int stdout, int stderr)

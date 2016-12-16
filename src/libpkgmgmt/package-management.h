@@ -22,18 +22,19 @@
 
 #include <glib.h>
 #include <unistd.h>
+#include <procreact_future.h>
 
 pid_t pkgmgmt_import_closure(int closure_fd, int stdout, int stderr);
 
 gchar **pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr);
 
-pid_t pkgmgmt_print_invalid_packages(gchar **derivation, int pipefd[2], int stderr);
+ProcReact_Future pkgmgmt_print_invalid_packages(gchar **derivation, int stderr);
 
-pid_t pkgmgmt_realise(gchar **derivation, int pipefd[2], int stderr);
+ProcReact_Future pkgmgmt_realise(gchar **derivation, int stderr);
 
 pid_t pkgmgmt_set_profile(gchar *profile, gchar *derivation, int stdout, int stderr);
 
-pid_t pkgmgmt_query_requisites(gchar **derivation, int pipefd[2], int stderr);
+ProcReact_Future pkgmgmt_query_requisites(gchar **derivation, int stderr);
 
 pid_t pkgmgmt_collect_garbage(int delete_old, int stdout, int stderr);
 

@@ -20,6 +20,9 @@
 #include "disnix-client.h"
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <string.h>
+
 #include "disnix-dbus.h"
 #define BUFFER_SIZE 1024
 
@@ -71,8 +74,14 @@ static void disnix_success_signal_handler(GDBusProxy *proxy, const gint pid, gch
         unsigned int i;
     
         for(i = 0; i < g_strv_length(derivation); i++)
+        {
             g_print("%s", derivation[i]);
             
+            /* Add linefeed if it does not end with a linefeed. TODO: get rid of this */
+            if(strlen(derivation[i]) > 0 && derivation[i][strlen(derivation[i]) - 1] != '\n')
+                g_print("\n");
+        }
+        
         exit(0);
     }
 }

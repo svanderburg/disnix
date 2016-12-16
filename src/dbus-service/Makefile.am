@@ -19,7 +19,7 @@ man1_MANS = disnix-client.1
 man8_MANS = disnix-service.8
 
 disnix_service_SOURCES = methods.c logging.c profilemanifest.c jobmanagement.c disnix-service.c disnix-service-main.c disnix-dbus.c
-disnix_service_CFLAGS = $(GLIB2_CFLAGS) $(GIO2_CFLAGS) -I../libpkgmgmt -I../libstatemgmt
+disnix_service_CFLAGS = $(GLIB2_CFLAGS) $(GIO2_CFLAGS) -I../libprocreact -I../libpkgmgmt -I../libstatemgmt
 disnix_service_LDADD = $(GLIB2_LIBS) $(GIO2_LIBS) ../libpkgmgmt/libpkgmgmt.la ../libstatemgmt/libstatemgmt.la
 
 disnix_client_SOURCES = disnix-client.c disnix-client-main.c disnix-dbus.c

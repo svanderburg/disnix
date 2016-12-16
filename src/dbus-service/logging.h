@@ -29,16 +29,6 @@
 void set_logdir(char *log_path);
 
 /**
- * Takes a string buffer, delimits the lines into arrays and appends it
- * to existing lines vector.
- *
- * @param lines An array of strings corresponding to a line of text
- * @param buf A string buffer that may contain linefeeds
- * @return An array of strings in which each element corresponds to a line
- */
-gchar **update_lines_vector(gchar **lines, char *buf);
-
-/**
  * Opens a writable file descriptor for the logfile of a given process id.
  * It also creates the log directory if it does not exists.
  *

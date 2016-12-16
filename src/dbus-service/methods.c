@@ -31,34 +31,17 @@
 #include "package-management.h"
 #include "state-management.h"
 
-#define BUFFER_SIZE 1024
-
 extern char *tmpdir, *logdir;
-
-static gchar **allocate_empty_array_if_null(gchar **arr)
-{
-    if(arr == NULL)
-    {
-        arr = (gchar**)g_malloc(sizeof(gchar*));
-        arr[0] = NULL;
-    }
-    
-    return arr;
-}
 
 static void evaluate_boolean_process(pid_t pid, OrgNixosDisnixDisnix *object, gint jid)
 {
-    if(pid == -1)
-        org_nixos_disnix_disnix_emit_failure(object, jid);
+    ProcReact_Status status;
+    int result = procreact_wait_for_boolean(pid, &status);
+    
+    if(status == PROCREACT_STATUS_OK && result)
+        org_nixos_disnix_disnix_emit_finish(object, jid);
     else
-    {
-        wait(&pid);
-        
-        if(WIFEXITED(pid) && WEXITSTATUS(pid) == 0)
-            org_nixos_disnix_disnix_emit_finish(object, jid);
-        else
-            org_nixos_disnix_disnix_emit_failure(object, jid);
-    }
+        org_nixos_disnix_disnix_emit_failure(object, jid);
 }
 
 static void evaluate_strv_process(gchar **result, OrgNixosDisnixDisnix *object, gint jid)
@@ -69,39 +52,6 @@ static void evaluate_strv_process(gchar **result, OrgNixosDisnixDisnix *object, 
     {
         org_nixos_disnix_disnix_emit_success(object, jid, (const gchar**)result);
         g_strfreev(result);
-    }
-}
-
-static void evaluate_output_process(pid_t pid, int pipefd[2], OrgNixosDisnixDisnix *object, gint jid)
-{
-    if(pid == -1)
-    {
-        close(pipefd[0]);
-        close(pipefd[1]);
-        org_nixos_disnix_disnix_emit_failure(object, jid);
-    }
-    else if(pid > 0)
-    {
-        char line[BUFFER_SIZE];
-        ssize_t line_size;
-        gchar **result = NULL;
-
-        close(pipefd[1]); /* Close write-end of pipe */
-        
-        while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
-        {
-            line[line_size] = '\0';
-            result = update_lines_vector(result, line);
-        }
-
-        close(pipefd[0]);
-
-        wait(&pid);
-
-        if(WIFEXITED(pid) && WEXITSTATUS(pid) == 0)
-            result = allocate_empty_array_if_null(result);
-        
-        evaluate_strv_process(result, object, jid);
     }
 }
 
@@ -249,7 +199,9 @@ static gpointer disnix_print_invalid_thread_func(gpointer data)
     }
     else
     {
-        int pipefd[2];
+        ProcReact_Future future;
+        ProcReact_Status status;
+        gchar **result;
         
         /* Print log entry */
         dprintf(log_fd, "Print invalid: ");
@@ -258,7 +210,10 @@ static gpointer disnix_print_invalid_thread_func(gpointer data)
         
         /* Execute command */
         
-        evaluate_output_process(pkgmgmt_print_invalid_packages(params->arg_derivation, pipefd, log_fd), pipefd, params->object, params->arg_pid);
+        future = pkgmgmt_print_invalid_packages(params->arg_derivation, log_fd);
+        result = procreact_future_get(&future, &status);
+        
+        evaluate_strv_process(result, params->object, params->arg_pid);
         
         close(log_fd);
     }
@@ -306,7 +261,9 @@ static gpointer disnix_realise_thread_func(gpointer data)
     }
     else
     {
-        int pipefd[2];
+        ProcReact_Future future;
+        ProcReact_Status status;
+        gchar **result;
         
         /* Print log entry */
         dprintf(log_fd, "Realising: ");
@@ -315,7 +272,10 @@ static gpointer disnix_realise_thread_func(gpointer data)
         
         /* Execute command */
         
-        evaluate_output_process(pkgmgmt_realise(params->arg_derivation, pipefd, log_fd), pipefd, params->object, params->arg_pid);
+        future = pkgmgmt_realise(params->arg_derivation, log_fd);
+        result = procreact_future_get(&future, &status);
+        
+        evaluate_strv_process(result, params->object, params->arg_pid);
         
         close(log_fd);
     }
@@ -485,7 +445,9 @@ static gpointer disnix_query_requisites_thread_func(gpointer data)
     }
     else
     {
-        int pipefd[2];
+        ProcReact_Future future;
+        ProcReact_Status status;
+        gchar **result;
         
         /* Print log entry */
         dprintf(log_fd, "Query requisites from derivations: ");
@@ -494,7 +456,10 @@ static gpointer disnix_query_requisites_thread_func(gpointer data)
     
         /* Execute command */
         
-        evaluate_output_process(pkgmgmt_query_requisites(params->arg_derivation, pipefd, log_fd), pipefd, params->object, params->arg_pid);
+        future = pkgmgmt_query_requisites(params->arg_derivation, log_fd);
+        result = procreact_future_get(&future, &status);
+        
+        evaluate_strv_process(result, params->object, params->arg_pid);
         
         close(log_fd);
     }
@@ -834,14 +799,19 @@ static gpointer disnix_query_all_snapshots_thread_func(gpointer data)
     else
     {
         /* Declarations */
-        int pipefd[2];
+        ProcReact_Future future;
+        ProcReact_Status status;
+        gchar **result;
         
         /* Print log entry */
         dprintf(log_fd, "Query all snapshots from container: %s and component: %s\n", params->arg_container, params->arg_component);
     
         /* Execute command */
-        evaluate_output_process(statemgmt_query_all_snapshots(params->arg_container, params->arg_component, pipefd, log_fd), pipefd, params->object, params->arg_pid);
-    
+        future = statemgmt_query_all_snapshots(params->arg_container, params->arg_component, log_fd);
+        result = procreact_future_get(&future, &status);
+        
+        evaluate_strv_process(result, params->object, params->arg_pid);
+        
         close(log_fd);
     }
     
@@ -892,13 +862,18 @@ static gpointer disnix_query_latest_snapshot_thread_func(gpointer data)
     else
     {
         /* Declarations */
-        int pipefd[2];
+        ProcReact_Future future;
+        ProcReact_Status status;
+        gchar **result;
         
         /* Print log entry */
         dprintf(log_fd, "Query latest snapshot from container: %s and component: %s\n", params->arg_container, params->arg_component);
     
         /* Execute command */
-        evaluate_output_process(statemgmt_query_latest_snapshot(params->arg_container, params->arg_component, pipefd, log_fd), pipefd, params->object, params->arg_pid);
+        future = statemgmt_query_latest_snapshot(params->arg_container, params->arg_component, log_fd);
+        result = procreact_future_get(&future, &status);
+        
+        evaluate_strv_process(result, params->object, params->arg_pid);
         
         close(log_fd);
     }
@@ -950,7 +925,9 @@ static gpointer disnix_print_missing_snapshots_thread_func(gpointer data)
     else
     {
         /* Declarations */
-        int pipefd[2];
+        ProcReact_Future future;
+        ProcReact_Status status;
+        gchar **result;
         
         /* Print log entry */
         dprintf(log_fd, "Print missing snapshots: ");
@@ -958,7 +935,10 @@ static gpointer disnix_print_missing_snapshots_thread_func(gpointer data)
         dprintf(log_fd, "\n");
         
         /* Execute command */
-        evaluate_output_process(statemgmt_print_missing_snapshots(params->arg_component, pipefd, log_fd), pipefd, params->object, params->arg_pid);
+        future = statemgmt_print_missing_snapshots(params->arg_component, log_fd);
+        result = procreact_future_get(&future, &status);
+        
+        evaluate_strv_process(result, params->object, params->arg_pid);
         
         close(log_fd);
     }
@@ -1067,7 +1047,9 @@ static gpointer disnix_resolve_snapshots_thread_func(gpointer data)
     else
     {
         /* Declarations */
-        int pipefd[2];
+        ProcReact_Future future;
+        ProcReact_Status status;
+        gchar **result;
         
         /* Print log entry */
         dprintf(log_fd, "Resolve snapshots: ");
@@ -1075,7 +1057,10 @@ static gpointer disnix_resolve_snapshots_thread_func(gpointer data)
         dprintf(log_fd, "\n");
         
         /* Execute command */
-        evaluate_output_process(statemgmt_resolve_snapshots(params->arg_snapshots, pipefd, log_fd), pipefd, params->object, params->arg_pid);
+        future = statemgmt_resolve_snapshots(params->arg_snapshots, log_fd);
+        result = procreact_future_get(&future, &status);
+
+        evaluate_strv_process(result, params->object, params->arg_pid);
         
         close(log_fd);
     }
