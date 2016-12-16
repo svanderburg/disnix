@@ -276,26 +276,19 @@ pid_t pkgmgmt_collect_garbage(int delete_old, int stdout, int stderr)
     return pid;
 }
 
-pid_t pkgmgmt_instantiate(gchar *infrastructure_expr, int pipefd[2])
+ProcReact_Future pkgmgmt_instantiate(gchar *infrastructure_expr)
 {
-    if(pipe(pipefd) == 0)
+    ProcReact_Future future = procreact_initialize_future(procreact_create_string_type());
+
+    if(future.pid == 0)
     {
-        pid_t pid = fork();
-    
-        if(pid == 0)
-        {
-            char *cmd = "nix-instantiate";
-            char *const args[] = {cmd, "--eval-only", "--strict", "--xml", infrastructure_expr, NULL};
-            close(pipefd[0]); /* Close read-end of pipe */
-            dup2(pipefd[1], 1); /* Attach write-end to stdout */
-            execvp(cmd, args);
-            _exit(1);
-        }
-    
-        return pid;
+        char *const args[] = {"nix-instantiate", "--eval-only", "--strict", "--xml", infrastructure_expr, NULL};
+        dup2(future.fd, 1); /* Attach write-end to stdout */
+        execvp(args[0], args);
+        _exit(1);
     }
-    else
-        return -1;
+
+    return future;
 }
 
 static pid_t execute_set_coordinator_profile(gchar *profile_path, gchar *manifest_file_path)

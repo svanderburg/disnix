@@ -27,7 +27,6 @@
 #include <libxslt/xslt.h>
 #include <libxslt/transform.h>
 #include "package-management.h"
-#define BUFFER_SIZE 4096
 
 static gint compare_target_property(const TargetProperty **l, const TargetProperty **r)
 {
@@ -112,56 +111,16 @@ static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
     return transform_doc;
 }
 
-static gchar *create_infrastructure_xml(gchar *infrastructure_expr)
+static char *create_infrastructure_xml(gchar *infrastructure_expr)
 {
-    int pipefd[2];
-    
-    /* 
-     * Execute nix-instantiate command to retrieve XML representation of the 
+    /*
+     * Execute nix-instantiate command to retrieve XML representation of the
      * infrastructure model
      */
     
-    pid_t pid = pkgmgmt_instantiate(infrastructure_expr, pipefd);
-    
-    if(pid == -1)
-    {
-        g_printerr("Error with forking nix-instantiate process!\n");
-        close(pipefd[0]);
-        close(pipefd[1]);
-        return NULL;
-    }
-    else if(pid > 0)
-    {
-        gchar *infrastructureXML = g_strdup("");
-        ssize_t line_size;
-        char line[BUFFER_SIZE];
-        
-        close(pipefd[1]); /* Close write-end of pipe */
-        
-        while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
-        {
-            gchar *old_infrastructureXML = infrastructureXML;
-
-            line[line_size] = '\0';
-            infrastructureXML = g_strconcat(old_infrastructureXML, line, NULL);
-            g_free(old_infrastructureXML);
-        }
-        
-        close(pipefd[0]);
-        
-        wait(&pid);
-
-        if(WIFEXITED(pid) && WEXITSTATUS(pid) == 0)
-            return infrastructureXML;
-        else
-        {
-             g_printerr("Error with executing nix-instantiate!\n");
-             g_free(infrastructureXML);
-             return NULL;
-        }
-    }
-    else
-        return NULL;
+    ProcReact_Status status;
+    ProcReact_Future future = pkgmgmt_instantiate(infrastructure_expr);
+    return procreact_future_get(&future, &status);
 }
 
 GPtrArray *create_target_array_from_doc(xmlDocPtr doc)
@@ -354,7 +313,7 @@ GPtrArray *create_target_array(char *infrastructure_expr)
     GPtrArray *targets_array = NULL;
     
     /* Open the XML output of nix-instantiate */
-    gchar *infrastructureXML = create_infrastructure_xml(infrastructure_expr);
+    char *infrastructureXML = create_infrastructure_xml(infrastructure_expr);
     
     if(infrastructureXML == NULL)
     {
@@ -364,12 +323,12 @@ GPtrArray *create_target_array(char *infrastructure_expr)
     
     /* Parse the infrastructure XML file */
     doc = create_infrastructure_doc(infrastructureXML);
-    g_free(infrastructureXML);
     
     /* Create a target array from the XML document */
     targets_array = create_target_array_from_doc(doc);
 
     /* Cleanup */
+    free(infrastructureXML);
     xmlFreeDoc(doc);
     xmlCleanupParser();
 

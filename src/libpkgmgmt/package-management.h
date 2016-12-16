@@ -38,7 +38,7 @@ ProcReact_Future pkgmgmt_query_requisites(gchar **derivation, int stderr);
 
 pid_t pkgmgmt_collect_garbage(int delete_old, int stdout, int stderr);
 
-pid_t pkgmgmt_instantiate(gchar *infrastructure_expr, int pipefd[2]);
+ProcReact_Future pkgmgmt_instantiate(gchar *infrastructure_expr);
 
 int pkgmgmt_set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *manifest_file, const gchar *profile);
 
