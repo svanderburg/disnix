@@ -362,7 +362,7 @@ int pkgmgmt_set_coordinator_profile(const gchar *coordinator_profile_path, const
     gchar *profile_base_dir, *profile_path;
     char resolved_path[RESOLVED_PATH_MAX_SIZE];
     ssize_t resolved_path_size;
-    int status;
+    int exit_status;
     
     /* Determine which profile path to use, if a coordinator profile path is given use this value otherwise the default */
     profile_base_dir = compose_coordinator_profile_basedir(coordinator_profile_path);
@@ -390,30 +390,22 @@ int pkgmgmt_set_coordinator_profile(const gchar *coordinator_profile_path, const
         
         gchar *manifest_file_path = normalize_manifest_path(manifest_file); /* Normalize manifest file path */
         pid_t pid = execute_set_coordinator_profile(profile_path, manifest_file_path);
+        ProcReact_Status status;
+        int result = procreact_wait_for_boolean(pid, &status);
         
         /* If the process suceeds the the operation succeeded */
-        if(pid == -1)
-            status = -1;
-        else
-        {
-            wait(&pid);
-    
-            if(WIFEXITED(pid))
-                status = WEXITSTATUS(pid);
-            else
-                status = 1;
-        }
+        exit_status = !(status == PROCREACT_STATUS_OK && result);
         
         /* Cleanup */
         g_free(manifest_file_path);
     }
     else
-        status = 0;
+        exit_status = 0;
     
     /* Cleanup */
     g_free(profile_base_dir);
     g_free(profile_path);
     
     /* Return status */
-    return status;
+    return exit_status;
 }
