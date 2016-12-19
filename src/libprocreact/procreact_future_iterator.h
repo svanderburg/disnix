@@ -105,6 +105,6 @@ void procreact_fork_in_parallel_buffer_and_wait(ProcReact_FutureIterator *iterat
  * @param iterator Future iterator
  * @param limit Amount of processes that are allowed to run concurrently
  */
-void procreact_fork_buffer_and_wait_in_parallel_limit(ProcReact_FutureIterator *iterator, unsigned int limit);
+void procreact_fork_buffer_and_wait_in_parallel_limit(ProcReact_FutureIterator *iterator, const unsigned int limit);
 
 #endif

@@ -372,7 +372,7 @@ int pkgmgmt_set_coordinator_profile(const gchar *coordinator_profile_path, const
     {
         g_printerr("[coordinator]: Cannot create profile directory: %s\n", profile_base_dir);
         g_free(profile_base_dir);
-        return 1;
+        return FALSE;
     }
     
     /* Determine the path to the profile */
@@ -394,13 +394,13 @@ int pkgmgmt_set_coordinator_profile(const gchar *coordinator_profile_path, const
         int result = procreact_wait_for_boolean(pid, &status);
         
         /* If the process suceeds the the operation succeeded */
-        exit_status = !(status == PROCREACT_STATUS_OK && result);
+        exit_status = (status == PROCREACT_STATUS_OK && result);
         
         /* Cleanup */
         g_free(manifest_file_path);
     }
     else
-        exit_status = 0;
+        exit_status = TRUE;
     
     /* Cleanup */
     g_free(profile_base_dir);

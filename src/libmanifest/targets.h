@@ -86,7 +86,7 @@ GPtrArray *generate_target_array(const gchar *manifest_file);
 /**
  * Deletes an array with targets.
  *
- * @param target_array Array with distribution items
+ * @param target_array Array with target items
  */
 void delete_target_array(GPtrArray *target_array);
 

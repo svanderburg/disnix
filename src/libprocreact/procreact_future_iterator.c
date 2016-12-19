@@ -79,7 +79,7 @@ void procreact_fork_in_parallel_buffer_and_wait(ProcReact_FutureIterator *iterat
     while(procreact_buffer(iterator) > 0);
 }
 
-void procreact_fork_buffer_and_wait_in_parallel_limit(ProcReact_FutureIterator *iterator, unsigned int limit)
+void procreact_fork_buffer_and_wait_in_parallel_limit(ProcReact_FutureIterator *iterator, const unsigned int limit)
 {
     /* Repeat this until all processes have been spawned and finished */
     

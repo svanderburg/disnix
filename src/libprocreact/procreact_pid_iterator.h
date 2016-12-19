@@ -105,6 +105,6 @@ void procreact_fork_in_parallel_and_wait(ProcReact_PidIterator *iterator);
  * @param iterator PID iterator
  * @param limit Amount of processes that are allowed to run concurrently
  */
-void procreact_fork_and_wait_in_parallel_limit(ProcReact_PidIterator *iterator, unsigned int limit);
+void procreact_fork_and_wait_in_parallel_limit(ProcReact_PidIterator *iterator, const unsigned int limit);
 
 #endif

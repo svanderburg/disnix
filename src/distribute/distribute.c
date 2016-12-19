@@ -18,49 +18,21 @@
  */
 
 #include "distribute.h"
-#include <sys/types.h>
-#include <sys/wait.h>
 #include <client-interface.h>
 #include <manifest.h>
 #include <distributionmapping.h>
 #include <targets.h>
-#include <procreact_pid_iterator.h>
 
-typedef struct
+static pid_t transfer_distribution_item_to(void *data, DistributionItem *item, Target *target)
 {
-    unsigned int index;
-    unsigned int length;
-    Manifest *manifest;
-    int success;
-}
-DistributionIteratorData;
-
-static int has_next_distribution_item(void *data)
-{
-    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
-    return distribution_iterator_data->index < distribution_iterator_data->length;
-}
-
-static pid_t next_distribution_process(void *data)
-{
-    pid_t pid;
-    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
-    
-    DistributionItem *item = g_ptr_array_index(distribution_iterator_data->manifest->distribution_array, distribution_iterator_data->index);
-    Target *target = find_target(distribution_iterator_data->manifest->target_array, item->target);
-    
     g_print("[target: %s]: Receiving intra-dependency closure of profile: %s\n", item->target, item->profile);
-    pid = exec_copy_closure_to(target->client_interface, item->target, item->profile);
-    distribution_iterator_data->index++;
-    return pid;
+    return exec_copy_closure_to(target->client_interface, item->target, item->profile);
 }
 
-static void complete_distribution_process(void *data, pid_t pid, ProcReact_Status status, int result)
+static void complete_transfer_distribution_item_to(void *data, DistributionItem *item, ProcReact_Status status, int result)
 {
-    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
-    
     if(status != PROCREACT_STATUS_OK || !result)
-        distribution_iterator_data->success = FALSE;
+        g_printerr("[target: %s]: Cannot receive intra-dependency closure of profile: %s\n", item->target, item->profile);
 }
 
 int distribute(const gchar *manifest_file, const unsigned int max_concurrent_transfers)
@@ -76,14 +48,16 @@ int distribute(const gchar *manifest_file, const unsigned int max_concurrent_tra
     else
     {
         /* Iterate over the distribution mappings, limiting concurrency to the desired concurrent transfers and distribute them */
-        DistributionIteratorData data = { 0, manifest->distribution_array->len, manifest, TRUE };
-        ProcReact_PidIterator iterator = procreact_initialize_pid_iterator(has_next_distribution_item, next_distribution_process, procreact_retrieve_boolean, complete_distribution_process, &data);
+        int success;
+        ProcReact_PidIterator iterator = create_distribution_iterator(manifest->distribution_array, manifest->target_array, transfer_distribution_item_to, complete_transfer_distribution_item_to, NULL);
         procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
+        success = distribution_iterator_has_succeeded(&iterator);
         
-        /* Delete manifest from memory */
+        /* Delete resources */
+        destroy_distribution_iterator(&iterator);
         delete_manifest(manifest);
         
         /* Return the exit status, which is 0 if everything succeeds */
-        return (!data.success);
+        return (!success);
     }
 }
