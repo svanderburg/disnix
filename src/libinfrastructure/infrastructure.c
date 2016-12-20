@@ -406,3 +406,96 @@ gchar *find_target_key(const Target *target, const gchar *global_target_property
     else
         return find_target_property(target, target->target_property);
 }
+
+static int has_next_target(void *data)
+{
+    TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
+    return target_iterator_data->index < target_iterator_data->length;
+}
+
+static pid_t next_target_process(void *data)
+{
+    /* Declarations */
+    pid_t pid;
+    TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
+    
+    /* Retrieve distributionitem, target pair */
+    Target *target = g_ptr_array_index(target_iterator_data->target_array, target_iterator_data->index);
+    gchar *client_interface = target->client_interface;
+    gchar *target_key = find_target_key(target, target_iterator_data->target_property);
+
+    /* If no client interface is provided by the infrastructure model, use global one */
+    if(client_interface == NULL)
+        client_interface = target_iterator_data->interface;
+    
+    /* Invoke the next distribution item operation process */
+    pid = target_iterator_data->map_target(target_iterator_data->data, target, client_interface, target_key);
+    
+    /* Increase the iterator index */
+    target_iterator_data->index++;
+    
+    if(pid > 0)
+    {
+        /* Add pid to the pid table so that we know what the corresponding target is */
+        gint *pid_ptr = g_malloc(sizeof(gint));
+        *pid_ptr = pid;
+        g_hash_table_insert(target_iterator_data->pid_table, pid_ptr, target);
+    }
+    
+    /* Return the pid of the invoked process */
+    return pid;
+}
+
+static void complete_target_process(void *data, pid_t pid, ProcReact_Status status, int result)
+{
+    TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
+    
+    /* Retrieve corresponding target and properties of the pid */
+    gint *pid_ptr = &pid;
+    Target *target = g_hash_table_lookup(target_iterator_data->pid_table, pid_ptr);
+    gchar *target_key = find_target_key(target, target_iterator_data->target_property);
+    
+    /* If anything failed set the overall success status to FALSE */
+    if(status != PROCREACT_STATUS_OK || !result)
+        target_iterator_data->success = FALSE;
+    
+    /* Invoke callback that handles completion of the target */
+    target_iterator_data->complete_target_mapping(target_iterator_data->data, target, target_key, status, result);
+}
+
+static void destroy_pid_key(gpointer data)
+{
+    gint *pid = (gint*)data;
+    g_free(pid);
+}
+
+ProcReact_PidIterator create_target_iterator(GPtrArray *target_array, const gchar *target_property, gchar *interface, map_target_function map_target, complete_target_mapping_function complete_target_mapping, void *data)
+{
+    TargetIteratorData *target_iterator_data = (TargetIteratorData*)g_malloc(sizeof(TargetIteratorData));
+    
+    target_iterator_data->index = 0;
+    target_iterator_data->length = target_array->len;
+    target_iterator_data->success = TRUE;
+    target_iterator_data->target_array = target_array;
+    target_iterator_data->target_property = target_property;
+    target_iterator_data->interface = interface;
+    target_iterator_data->pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pid_key, NULL);
+    target_iterator_data->map_target = map_target;
+    target_iterator_data->complete_target_mapping = complete_target_mapping;
+    target_iterator_data->data = data;
+    
+    return procreact_initialize_pid_iterator(has_next_target, next_target_process, procreact_retrieve_boolean, complete_target_process, target_iterator_data);
+}
+
+void destroy_target_iterator(ProcReact_PidIterator *iterator)
+{
+    TargetIteratorData *target_iterator_data = (TargetIteratorData*)iterator->data;
+    g_hash_table_destroy(target_iterator_data->pid_table);
+    g_free(target_iterator_data);
+}
+
+int target_iterator_has_succeeded(const ProcReact_PidIterator *iterator)
+{
+    TargetIteratorData *target_iterator_data = (TargetIteratorData*)iterator->data;
+    return target_iterator_data->success;
+}

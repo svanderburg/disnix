@@ -20,54 +20,27 @@
 #include "clean-snapshots.h"
 #include <infrastructure.h>
 #include <client-interface.h>
-#include <procreact_pid_iterator.h>
 
 typedef struct
 {
-    unsigned int index;
-    unsigned int length;
-    GPtrArray *target_array;
-    const gchar *target_property;
-    gchar *interface;
     int keep;
     gchar *container;
     gchar *component;
-    int success;
 }
-TargetIteratorData;
+CleanSnapshotsData;
 
-static int has_next_target(void *data)
+static pid_t clean_snapshots_on_target(void *data, Target *target, gchar *client_interface, gchar *target_key)
 {
-    TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
-    return target_iterator_data->index < target_iterator_data->length;
-}
-
-static pid_t next_clean_snapshot_process(void *data)
-{
-    pid_t pid;
-    TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
-    
-    Target *target = g_ptr_array_index(target_iterator_data->target_array, target_iterator_data->index);
-    gchar *client_interface = target->client_interface;
-    gchar *target_key = find_target_key(target, target_iterator_data->target_property);
-
-    /* If no client interface is provided by the infrastructure model, use global one */
-    if(client_interface == NULL)
-        client_interface = target_iterator_data->interface;
+    CleanSnapshotsData *clean_snapshots_data = (CleanSnapshotsData*)data;
     
     g_print("[target: %s]: Running snapshot garbage collector!\n", target_key);
-    pid = exec_clean_snapshots(client_interface, target_key, target_iterator_data->keep, target_iterator_data->container, target_iterator_data->component);
-    target_iterator_data->index++;
-    
-    return pid;
+    return exec_clean_snapshots(client_interface, target_key, clean_snapshots_data->keep, clean_snapshots_data->container, clean_snapshots_data->component);
 }
 
-static void complete_clean_snapshot_process(void *data, pid_t pid, ProcReact_Status status, int result)
+static void complete_clean_snapshots_on_target(void *data, Target *target, gchar *target_key, ProcReact_Status status, int result)
 {
-    TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
-    
     if(status != PROCREACT_STATUS_OK || !result)
-        target_iterator_data->success = FALSE;
+        g_printerr("[target: %s]: Snapshot garbage collection failed\n", target_key);
 }
 
 int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, int keep, gchar *container, gchar *component)
@@ -83,15 +56,18 @@ int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infra
     else
     {
         /* Iterate over all targets and run clean snapshots operation in parallel */
-        TargetIteratorData data = { 0, target_array->len, target_array, target_property, interface, keep, container, component, TRUE };
-        ProcReact_PidIterator iterator = procreact_initialize_pid_iterator(has_next_target, next_clean_snapshot_process, procreact_retrieve_boolean, complete_clean_snapshot_process, &data);
+        int success;
+        CleanSnapshotsData data = { keep, container, component };
+        ProcReact_PidIterator iterator = create_target_iterator(target_array, target_property, interface, clean_snapshots_on_target, complete_clean_snapshots_on_target, &data);
         
         procreact_fork_in_parallel_and_wait(&iterator);
+        success = target_iterator_has_succeeded(&iterator);
         
-        /* Delete the target array from memory */
+        /* Cleanup */
+        destroy_target_iterator(&iterator);
         delete_target_array(target_array);
         
         /* Return the exit status, which is 0 if everything succeeds */
-        return (!data.success);
+        return (!success);
     }
 }

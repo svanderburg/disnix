@@ -21,6 +21,7 @@
 #define __DISNIX_INFRASTRUCTURE_H
 #include <glib.h>
 #include <xmlutil.h>
+#include <procreact_pid_iterator.h>
 
 /**
  * @brief Encapsulates a property of a machine
@@ -79,6 +80,27 @@ typedef struct
 }
 Target;
 
+typedef pid_t (*map_target_function) (void *data, Target *target, gchar *client_interface, gchar *target_key);
+
+typedef void (*complete_target_mapping_function) (void *data, Target *target, gchar *target_key, ProcReact_Status status, int result);
+
+typedef struct
+{
+    unsigned int index;
+    unsigned int length;
+    int success;
+    GPtrArray *target_array;
+    const gchar *target_property;
+    gchar *interface;
+    GHashTable *pid_table;
+    
+    map_target_function map_target;
+    complete_target_mapping_function complete_target_mapping;
+    
+    void *data;
+}
+TargetIteratorData;
+
 /**
  * Creaes an array with targets from an XML document
  *
@@ -111,5 +133,11 @@ void delete_target_array(GPtrArray *target_array);
  * @return The key value of identifying the machine or NULL if it does not exists
  */
 gchar *find_target_key(const Target *target, const gchar *global_target_property);
+
+ProcReact_PidIterator create_target_iterator(GPtrArray *target_array, const gchar *target_property, gchar *interface, map_target_function map_target, complete_target_mapping_function complete_target_mapping, void *data);
+
+void destroy_target_iterator(ProcReact_PidIterator *iterator);
+
+int target_iterator_has_succeeded(const ProcReact_PidIterator *iterator);
 
 #endif
