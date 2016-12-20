@@ -42,7 +42,7 @@ typedef pid_t (*map_distribution_item_function) (void *data, DistributionItem *i
 typedef void (*complete_distribution_item_mapping_function) (void *data, DistributionItem *item, ProcReact_Status status, int result);
 
 /**
- * @brief Iterator that can be used to execute process for each distribution item
+ * @brief Iterator that can be used to execute a process for each distribution item
  */
 typedef struct
 {
@@ -75,7 +75,7 @@ typedef struct
      * @param data An arbitrary data structure
      * @param item A distribution item from the manifest
      * @param status Indicates whether the process terminated abnormally or not
-     * @param int TRUE if the operation succeeded, else FALSE
+     * @param result TRUE if the operation succeeded, else FALSE
      */
     complete_distribution_item_mapping_function complete_distribution_item_mapping;
 
@@ -124,6 +124,6 @@ void destroy_distribution_iterator(ProcReact_PidIterator *iterator);
  *
  * @return TRUE if all the operations of the iterator have succeeded else FALSE.
  */
-int distribution_iterator_has_succeeded(ProcReact_PidIterator *iterator);
+int distribution_iterator_has_succeeded(const ProcReact_PidIterator *iterator);
 
 #endif

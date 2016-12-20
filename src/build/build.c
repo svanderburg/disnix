@@ -18,163 +18,81 @@
  */
 
 #include "build.h"
-
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-
 #include <distributedderivation.h>
 #include <derivationmapping.h>
 #include <interfaces.h>
 #include <client-interface.h>
-#include <procreact_pid_iterator.h>
-#include <procreact_future_iterator.h>
 
-typedef struct
+static pid_t copy_derivation_item_to(void *data, DerivationItem *item, Interface *interface)
 {
-    unsigned int index;
-    unsigned int length;
-    const GPtrArray *derivation_array;
-    const GPtrArray *interface_array;
-    int success;
-}
-DistributionIteratorData;
-
-static int has_next_derivation_item(void *data)
-{
-    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
-    return distribution_iterator_data->index < distribution_iterator_data->length;
-}
-
-static pid_t next_distribution_process(void *data)
-{
-    pid_t pid;
-    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
-    
-    /* Retrieve derivation item from array */
-    DerivationItem *item = g_ptr_array_index(distribution_iterator_data->derivation_array, distribution_iterator_data->index);
-    Interface *interface = find_interface(distribution_iterator_data->interface_array, item->target);
-    
-    /* Execute copy closure process */
     g_print("[target: %s]: Receiving intra-dependency closure of store derivation: %s\n", item->target, item->derivation);
-    pid = exec_copy_closure_to(interface->clientInterface, item->target, item->derivation);
-    
-    distribution_iterator_data->index++;
-    return pid;
+    return exec_copy_closure_to(interface->clientInterface, item->target, item->derivation);
 }
 
-static void complete_distribution_process(void *data, pid_t pid, ProcReact_Status status, int result)
+static void complete_copy_derivation_item_to(void *data, DerivationItem *item, ProcReact_Status status, int result)
 {
-    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
-    
     if(status != PROCREACT_STATUS_OK || !result)
-        distribution_iterator_data->success = FALSE;
+        g_printerr("[target: %s]: Cannot receive intra-dependency closure of store derivation: %s\n", item->target, item->derivation);
 }
 
 static int distribute_derivations(const GPtrArray *derivation_array, const GPtrArray *interface_array, const unsigned int max_concurrent_transfers)
 {
-    DistributionIteratorData data = { 0, derivation_array->len, derivation_array, interface_array, TRUE };
-    ProcReact_PidIterator iterator = procreact_initialize_pid_iterator(has_next_derivation_item, next_distribution_process, procreact_retrieve_boolean, complete_distribution_process, &data);
-    procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
-    
-    return (!data.success);
-}
-
-typedef struct
-{
-    unsigned int index;
-    unsigned int length;
-    const GPtrArray *derivation_array;
-    const GPtrArray *interface_array;
     int success;
-    GPtrArray *result_array;
-}
-RealiseIteratorData;
-
-static ProcReact_Future next_realise_process(void *data)
-{
-    RealiseIteratorData *realise_iterator_data = (RealiseIteratorData*)data;
-    ProcReact_Future future;
-    
-    DerivationItem *item = g_ptr_array_index(realise_iterator_data->derivation_array, realise_iterator_data->index);
-    Interface *interface = find_interface(realise_iterator_data->interface_array, item->target);
-    g_print("[target: %s]: Realising derivation: %s\n", item->target, item->derivation);
-    future = exec_realise(interface->clientInterface, item->target, item->derivation);
-    realise_iterator_data->index++;
-    return future;
-}
-
-static void complete_realise(void *data, ProcReact_Future *future, ProcReact_Status status)
-{
-    RealiseIteratorData *realise_iterator_data = (RealiseIteratorData*)data;
-    
-    if(status == PROCREACT_STATUS_OK && future->result != NULL)
-    {
-        gchar *result = future->result;
-        g_ptr_array_add(realise_iterator_data->result_array, result);
-    }
-    else
-        realise_iterator_data->success = FALSE;
-}
-
-static int realise(const GPtrArray *derivation_array, const GPtrArray *interface_array, GPtrArray *result_array)
-{
-    RealiseIteratorData data = { 0, derivation_array->len, derivation_array, interface_array, TRUE, result_array };
-    ProcReact_FutureIterator iterator = procreact_initialize_future_iterator(has_next_derivation_item, next_realise_process, complete_realise, &data);
-    
-    procreact_fork_in_parallel_buffer_and_wait(&iterator);
-    
-    procreact_destroy_future_iterator(&iterator);
-    return (!data.success);
-}
-
-static pid_t next_retrieve_process(void *data)
-{
-    pid_t pid;
-    RealiseIteratorData *realise_iterator_data = (RealiseIteratorData*)data;
-    
-    gchar *result = g_ptr_array_index(realise_iterator_data->result_array, realise_iterator_data->index);
-    DerivationItem *item = g_ptr_array_index(realise_iterator_data->derivation_array, realise_iterator_data->index);
-    Interface *interface = find_interface(realise_iterator_data->interface_array, item->target);
-    
-    g_print("[target: %s]: Sending build result to coordinator: %s\n", item->target, result);
-    
-    pid = exec_copy_closure_from(interface->clientInterface, item->target, result);
-    
-    realise_iterator_data->index++;
-    return pid;
-}
-
-static int retrieve_results(const GPtrArray *derivation_array, const GPtrArray *interface_array, GPtrArray *result_array, const unsigned int max_concurrent_transfers)
-{
-    RealiseIteratorData data = { 0, derivation_array->len, derivation_array, interface_array, TRUE, result_array };
-    ProcReact_PidIterator iterator = procreact_initialize_pid_iterator(has_next_derivation_item, next_retrieve_process, procreact_retrieve_boolean, complete_distribution_process, &data);
+    ProcReact_PidIterator iterator = create_derivation_pid_iterator(derivation_array, interface_array, copy_derivation_item_to, complete_copy_derivation_item_to, NULL);
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
+    success = derivation_iterator_has_succeeded(iterator.data);
     
-    return (!data.success);
+    destroy_derivation_iterator_data(iterator.data);
+    return success;
 }
 
-static void delete_result_array(GPtrArray *result_array)
+static ProcReact_Future realise_derivation_item(void *data, DerivationItem *item, Interface *interface)
 {
-    if(result_array != NULL)
-    {
-        unsigned int i;
-        
-        for(i = 0; i < result_array->len; i++)
-        {
-            gchar *result = g_ptr_array_index(result_array, i);
-            g_free(result);
-        }
-    
-        g_ptr_array_free(result_array, TRUE);
-    }
+    g_print("[target: %s]: Realising derivation: %s\n", item->target, item->derivation);
+    return exec_realise(interface->clientInterface, item->target, item->derivation);
 }
 
-static void cleanup(GPtrArray *result_array, DistributedDerivation *distributed_derivation)
+static void complete_realise_derivation_item(void *data, DerivationItem *item, ProcReact_Future *future, ProcReact_Status status)
 {
-    delete_result_array(result_array);
-    delete_distributed_derivation(distributed_derivation);
+    if(status == PROCREACT_STATUS_OK && future->result != NULL)
+        item->result = future->result;
+    else
+        g_printerr("[target: %s]: Realising derivation: %s has failed!\n", item->target, item->derivation);
+}
+
+static int realise(const GPtrArray *derivation_array, const GPtrArray *interface_array)
+{
+    int success;
+    ProcReact_FutureIterator iterator = create_derivation_future_iterator(derivation_array, interface_array, realise_derivation_item, complete_realise_derivation_item, NULL);
+    procreact_fork_in_parallel_buffer_and_wait(&iterator);
+    success = derivation_iterator_has_succeeded(iterator.data);
+    
+    destroy_derivation_iterator_data(iterator.data);
+    procreact_destroy_future_iterator(&iterator);
+    return success;
+}
+
+static pid_t copy_result_from(void *data, DerivationItem *item, Interface *interface)
+{
+    g_print("[target: %s]: Sending build result to coordinator: %s\n", item->target, item->result);
+    return exec_copy_closure_from(interface->clientInterface, item->target, item->result);
+}
+
+static void complete_copy_result_from(void *data, DerivationItem *item, ProcReact_Status status, int result)
+{
+    if(status != PROCREACT_STATUS_OK || !result)
+        g_print("[target: %s]: Cannot send build result of store derivation: %s\n", item->target, item->derivation);
+}
+
+static int retrieve_results(const GPtrArray *derivation_array, const GPtrArray *interface_array, const unsigned int max_concurrent_transfers)
+{
+    int success;
+    ProcReact_PidIterator iterator = create_derivation_pid_iterator(derivation_array, interface_array, copy_result_from, complete_copy_result_from, NULL);
+    procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
+    success = derivation_iterator_has_succeeded(iterator.data);
+    
+    destroy_derivation_iterator_data(iterator.data);
+    return success;
 }
 
 int build(const gchar *distributed_derivation_file, const unsigned int max_concurrent_transfers)
@@ -189,33 +107,18 @@ int build(const gchar *distributed_derivation_file, const unsigned int max_concu
     else
     {
         int status;
-        GPtrArray *result_array = g_ptr_array_new();
         
-        /* Distribute derivations to target machines */
-        if((status = distribute_derivations(distributed_derivation->derivation_array, distributed_derivation->interface_array, max_concurrent_transfers)) != 0)
-        {
-             cleanup(result_array, distributed_derivation);
-             return status;
-        }
-        
-        /* Realise derivations on target machines */
-        if((status = realise(distributed_derivation->derivation_array, distributed_derivation->interface_array, result_array)) != 0)
-        {
-            cleanup(result_array, distributed_derivation);
-            return status;
-        }
-        
-        /* Retrieve back the build results */
-        if((status = retrieve_results(distributed_derivation->derivation_array, distributed_derivation->interface_array, result_array, max_concurrent_transfers)) != 0)
-        {
-            cleanup(result_array, distributed_derivation);
-            return status;
-        }
-        
+        if(!distribute_derivations(distributed_derivation->derivation_array, distributed_derivation->interface_array, max_concurrent_transfers) /* Distribute derivations to target machines */
+          || !realise(distributed_derivation->derivation_array, distributed_derivation->interface_array) /* Realise derivations on target machines */
+          || !retrieve_results(distributed_derivation->derivation_array, distributed_derivation->interface_array, max_concurrent_transfers)) /* Retrieve back the build results */
+            status = 1;
+        else
+            status = 0;
+            
         /* Cleanup */
-        cleanup(result_array, distributed_derivation);
+        delete_distributed_derivation(distributed_derivation);
         
         /* Return the exit status, which is 0 if everything succeeds */
-        return 0;
+        return status;
     }
 }

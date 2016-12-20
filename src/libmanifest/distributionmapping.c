@@ -125,8 +125,6 @@ static int has_next_distribution_item(void *data)
 static pid_t next_distribution_process(void *data)
 {
     /* Declarations */
-    pid_t pid;
-    gint *pid_ptr;
     DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
     
     /* Retrieve distributionitem, target pair */
@@ -134,7 +132,7 @@ static pid_t next_distribution_process(void *data)
     Target *target = find_target(distribution_iterator_data->target_array, item->target);
     
     /* Invoke the next distribution item operation process */
-    pid = distribution_iterator_data->map_distribution_item(distribution_iterator_data->data, item, target);
+    pid_t pid = distribution_iterator_data->map_distribution_item(distribution_iterator_data->data, item, target);
     
     /* Increase the iterator index */
     distribution_iterator_data->index++;
@@ -142,7 +140,7 @@ static pid_t next_distribution_process(void *data)
     if(pid > 0)
     {
         /* Add pid to the pid table so that we know what the corresponding distribution item is */
-        pid_ptr = g_malloc(sizeof(gint));
+        gint *pid_ptr = g_malloc(sizeof(gint));
         *pid_ptr = pid;
         g_hash_table_insert(distribution_iterator_data->pid_table, pid_ptr, item);
     }
@@ -157,7 +155,7 @@ static void complete_distribution_process(void *data, pid_t pid, ProcReact_Statu
     
     /* Retrieve corresponding distribution item of the pid */
     gint *pid_ptr = &pid;
-    DistributionItem *item = g_hash_table_lookup(distribution_iterator_data->pid_table, &pid_ptr);
+    DistributionItem *item = g_hash_table_lookup(distribution_iterator_data->pid_table, pid_ptr);
     
     /* If anything failed set the overall success status to FALSE */
     if(status != PROCREACT_STATUS_OK || !result)
@@ -197,7 +195,7 @@ void destroy_distribution_iterator(ProcReact_PidIterator *iterator)
     g_free(distribution_iterator_data);
 }
 
-int distribution_iterator_has_succeeded(ProcReact_PidIterator *iterator)
+int distribution_iterator_has_succeeded(const ProcReact_PidIterator *iterator)
 {
     DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)iterator->data;
     return distribution_iterator_data->success;
