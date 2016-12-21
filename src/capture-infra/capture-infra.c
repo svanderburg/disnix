@@ -18,11 +18,93 @@
  */
 
 #include "capture-infra.h"
-#include <stdio.h>
-#include <unistd.h>
+#include <stdlib.h>
 #include <infrastructure.h>
-#include <client-interface.h> 
-#define BUFFER_SIZE 4096
+#include <client-interface.h>
+
+typedef struct
+{
+    gchar *target_name;
+    char **config;
+}
+CapturedConfig;
+
+static ProcReact_Future capture_infra_on_target(void *data, Target *target, gchar *client_interface, gchar *target_key)
+{
+    return exec_capture_config(client_interface, target_key);
+}
+
+static void complete_capture_infra_on_target(void *data, Target *target, gchar *target_key, ProcReact_Future *future, ProcReact_Status status)
+{
+    GPtrArray *configs_array = (GPtrArray*)data;
+    
+    if(status != PROCREACT_STATUS_OK || future->result == NULL)
+        g_printerr("[target: %s]: Cannot capture the infrastructure!\n", target_key);
+    else
+    {
+        CapturedConfig *config = (CapturedConfig*)g_malloc(sizeof(CapturedConfig));
+        config->target_name = target->name;
+        config->config = future->result;
+        
+        g_ptr_array_add(configs_array, config);
+    }
+}
+
+static gint compare_captured_config(const void *l, const void *r)
+{
+    const CapturedConfig *left = *((CapturedConfig **)l);
+    const CapturedConfig *right = *((CapturedConfig **)r);
+    
+    return g_strcmp0(left->target_name, right->target_name);
+}
+
+static void print_configs_array(GPtrArray *configs_array)
+{
+    unsigned int i;
+    
+    /* Sort the captured configs so that the overall result is always displayed in a deterministic order */
+    g_ptr_array_sort(configs_array, compare_captured_config);
+    
+    /* Print the captured configs per machine */
+    g_print("{\n");
+    
+    for(i = 0; i < configs_array->len; i++)
+    {
+        CapturedConfig *config = g_ptr_array_index(configs_array, i);
+        char *line;
+        unsigned int count = 0;
+        
+        g_print("  \"%s\" = ", config->target_name);
+        
+        /* Iterate over each line of the captured config */
+        while((line = config->config[count]) != NULL)
+        {
+            g_print("%s", line);
+            count++;
+            
+            if(config->config[count] != NULL)
+                g_print("\n  ");
+        }
+        
+        g_print(";\n");
+    }
+    
+    g_print("}\n");
+}
+
+static void delete_configs_array(GPtrArray *configs_array)
+{
+    unsigned int i;
+    
+    for(i = 0; i < configs_array->len; i++)
+    {
+        CapturedConfig *config = g_ptr_array_index(configs_array, i);
+        procreact_free_string_array(config->config);
+        g_free(config);
+    }
+    
+    g_ptr_array_free(configs_array, TRUE);
+}
 
 int capture_infra(gchar *interface, const gchar *target_property, gchar *infrastructure_expr)
 {
@@ -36,79 +118,24 @@ int capture_infra(gchar *interface, const gchar *target_property, gchar *infrast
     }
     else
     {
-        int exit_status = 0;
-        unsigned int i;
+        int success;
+        GPtrArray *configs_array = g_ptr_array_new();
         
-        g_print("{\n");
+        /* Iterate over targets and capture their infrastructure configurations */
+        ProcReact_FutureIterator iterator = create_target_future_iterator(target_array, target_property, interface, capture_infra_on_target, complete_capture_infra_on_target, configs_array);
+        procreact_fork_in_parallel_buffer_and_wait(&iterator);
+        success = target_iterator_has_succeeded(iterator.data);
         
-        /* For each target execute the query operation and display the results */
-        for(i = 0; i < target_array->len; i++)
-        {
-            Target *target = g_ptr_array_index(target_array, i);
-            gchar *client_interface = target->client_interface;
-            gchar *target_key = find_target_key(target, target_property);
-            int status;
-            int pipefd[2];
-            
-            g_print("  \"%s\" = ", target->name);
-            
-            /* If no client interface is provided by the infrastructure model, use global one */
-            if(client_interface == NULL)
-                client_interface = interface;
-            
-            status = exec_capture_config(client_interface, target_key, pipefd);
-            
-            if(status == -1)
-            {
-                g_printerr("[target: %s]: Failed executing the capture config!\n", target_key);
-                exit_status = status;
-            }
-            else
-            {
-                char line[BUFFER_SIZE];
-                ssize_t line_size;
+        /* Print the captured configurations */
+        print_configs_array(configs_array);
         
-                while((line_size = read(pipefd[0], line, BUFFER_SIZE - 1)) > 0)
-                {
-                    gchar **tokens;
-                    unsigned int i, length;
-                    
-                    line[line_size] = '\0';
-                    tokens = g_strsplit(line, "\n", 0);
-                    
-                    length = g_strv_length(tokens);
-                    
-                    for(i = 0; i < length; i++)
-                    {
-                        g_print("%s", tokens[i]);
-                        
-                        if(i < length - 1)
-                            g_print("\n  ");
-                    }
-                    
-                    g_strfreev(tokens);
-                }
-        
-                close(pipefd[0]);
-            }
-            
-            status = wait_to_finish(0);
-        
-            if(status != 0)
-            {
-                g_printerr("[target: %s]: Failed finishing the capture config operation!\n", target_key);
-                exit_status = status;
-            }
-            
-            g_print(";\n");
-        }
-        
-        g_print("}\n");
-        
-        /* Delete the target array from memory */
+        /* Cleanup */
+        destroy_target_iterator_data(iterator.data);
+        procreact_destroy_future_iterator(&iterator);
         delete_target_array(target_array);
+        delete_configs_array(configs_array);
         
-        /* Return the exit status, which is 0 if everything succeeds */
-        return exit_status;
+        /* Return exit status */
+        return (!success);
     }
 }

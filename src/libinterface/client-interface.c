@@ -47,7 +47,7 @@ int wait_to_finish(const pid_t pid)
 static pid_t exec_activate_or_deactivate(gchar *operation, gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
 {
     pid_t pid = fork();
-	
+
     if(pid == 0)
     {
 	unsigned int i;
@@ -74,8 +74,8 @@ static pid_t exec_activate_or_deactivate(gchar *operation, gchar *interface, gch
         execvp(interface, args);
         _exit(1);
     }
-    else
-	return pid;
+    
+    return pid;
 }
 
 pid_t exec_activate(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
@@ -98,8 +98,8 @@ static pid_t exec_lock_or_unlock(gchar *operation, gchar *interface, gchar *targ
 	execvp(interface, args);
 	_exit(1);
     }
-    else
-	return pid;
+
+    return pid;
 }
 
 pid_t exec_lock(gchar *interface, gchar *target, gchar *profile)
@@ -148,8 +148,8 @@ pid_t exec_collect_garbage(gchar *interface, gchar *target, const gboolean delet
 	execvp(interface, args);
 	_exit(1);
     }
-    else
-	return pid;
+    
+    return pid;
 }
 
 pid_t exec_set(gchar *interface, gchar *target, gchar *profile, gchar *component)
@@ -162,22 +162,23 @@ pid_t exec_set(gchar *interface, gchar *target, gchar *profile, gchar *component
         execvp(interface, args);
         _exit(1);
     }
-    else
-	return pid;
+    
+    return pid;
 }
 
-pid_t exec_query_installed(gchar *interface, gchar *target, gchar *profile)
+ProcReact_Future exec_query_installed(gchar *interface, gchar *target, gchar *profile)
 {
-    pid_t pid = fork();
-    
-    if(pid == 0)
+    ProcReact_Future future = procreact_initialize_future(procreact_create_string_type());
+
+    if(future.pid == 0)
     {
-	char *const args[] = {interface, "--target", target, "--profile", profile, "--query-installed", NULL};
-	execvp(interface, args);
-	_exit(1);
+        char *const args[] = {interface, "--target", target, "--profile", profile, "--query-installed", NULL};
+        dup2(future.fd, 1); /* Attach pipe to the stdout */
+        execvp(interface, args); /* Run process */
+        _exit(1);
     }
-    else
-	return pid;
+
+    return future;
 }
 
 static pid_t exec_copy_closure(gchar *operation, gchar *interface, gchar *target, gchar *component)
@@ -186,12 +187,12 @@ static pid_t exec_copy_closure(gchar *operation, gchar *interface, gchar *target
     
     if(pid == 0)
     {
-	char *const args[] = {"disnix-copy-closure", operation, "--target", target, "--interface", interface, component, NULL};
-	execvp("disnix-copy-closure", args);
-	_exit(1);
+        char *const args[] = {"disnix-copy-closure", operation, "--target", target, "--interface", interface, component, NULL};
+        execvp(args[0], args);
+        _exit(1);
     }
-    else
-	return pid;
+    
+    return pid;
 }
 
 pid_t exec_copy_closure_from(gchar *interface, gchar *target, gchar *component)
@@ -236,11 +237,11 @@ static pid_t exec_copy_snapshots(gchar *operation, gchar *interface, gchar *targ
 	else
 	    args[10] = NULL;
 	
-	execvp("disnix-copy-snapshots", args);
+	execvp(args[0], args);
 	_exit(1);
     }
-    else
-	return pid;
+
+    return pid;
 }
 
 pid_t exec_copy_snapshots_from(gchar *interface, gchar *target, gchar *container, gchar *component, gboolean all)
@@ -293,8 +294,8 @@ pid_t exec_clean_snapshots(gchar *interface, gchar *target, int keep, char *cont
 	execvp(interface, args);
 	_exit(1);
     }
-    else
-	return pid;
+
+    return pid;
 }
 
 ProcReact_Future exec_realise(gchar *interface, gchar *target, gchar *derivation)
@@ -304,7 +305,7 @@ ProcReact_Future exec_realise(gchar *interface, gchar *target, gchar *derivation
     if(future.pid == 0)
     {
         char *const args[] = {interface, "--realise", "--target", target, derivation, NULL};
-        dup2(future.fd, 1);
+        dup2(future.fd, 1); /* Attach pipe to the stdout */
         execvp(interface, args); /* Run process */
         _exit(1);
     }
@@ -312,34 +313,19 @@ ProcReact_Future exec_realise(gchar *interface, gchar *target, gchar *derivation
     return future;
 }
 
-pid_t exec_capture_config(gchar *interface, gchar *target, int pipefd[2])
+ProcReact_Future exec_capture_config(gchar *interface, gchar *target)
 {
-    if(pipe(pipefd) == 0)
+    ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
+
+    if(future.pid == 0)
     {
-        pid_t pid = fork();
-	
-	if(pid == 0)
-	{
-	    char *const args[] = {interface, "--capture-config", "--target", target, NULL};
-	    close(pipefd[0]); /* Close read-end */
-	    dup2(pipefd[1], 1); /* Attach pipe to the stdout */
-	    execvp(interface, args); /* Run process */
-	    _exit(1);
-	}
-	else if(pid == -1)
-	{
-	    close(pipefd[0]); /* Close read-end */
-	    close(pipefd[1]); /* Close write-end */
-	    return pid;
-	}
-	else
-	{
-	    close(pipefd[1]); /* Close write-end */
-	    return pid;
-	}
+        char *const args[] = {interface, "--capture-config", "--target", target, NULL};
+        dup2(future.fd, 1); /* Attach pipe to the stdout */
+        execvp(interface, args); /* Run process */
+        _exit(1);
     }
-    else
-	return -1;
+    
+    return future;
 }
 
 pid_t exec_true(void)
@@ -348,10 +334,10 @@ pid_t exec_true(void)
     
     if(pid == 0)
     {
-	char *const args[] = {"true", NULL};
-	execvp("true", args);
-	_exit(1);
+        char *const args[] = {"true", NULL};
+        execvp(args[0], args);
+        _exit(1);
     }
-    else
-	return pid;
+    
+    return pid;
 }

@@ -429,7 +429,7 @@ static pid_t next_target_process(void *data)
         client_interface = target_iterator_data->interface;
     
     /* Invoke the next distribution item operation process */
-    pid = target_iterator_data->map_target(target_iterator_data->data, target, client_interface, target_key);
+    pid = target_iterator_data->map_target_function.pid(target_iterator_data->data, target, client_interface, target_key);
     
     /* Increase the iterator index */
     target_iterator_data->index++;
@@ -460,7 +460,57 @@ static void complete_target_process(void *data, pid_t pid, ProcReact_Status stat
         target_iterator_data->success = FALSE;
     
     /* Invoke callback that handles completion of the target */
-    target_iterator_data->complete_target_mapping(target_iterator_data->data, target, target_key, status, result);
+    target_iterator_data->complete_target_mapping_function.pid(target_iterator_data->data, target, target_key, status, result);
+}
+
+static ProcReact_Future next_target_future(void *data)
+{
+    /* Declarations */
+    ProcReact_Future future;
+    TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
+    
+    /* Retrieve distributionitem, target pair */
+    Target *target = g_ptr_array_index(target_iterator_data->target_array, target_iterator_data->index);
+    gchar *client_interface = target->client_interface;
+    gchar *target_key = find_target_key(target, target_iterator_data->target_property);
+
+    /* If no client interface is provided by the infrastructure model, use global one */
+    if(client_interface == NULL)
+        client_interface = target_iterator_data->interface;
+    
+    /* Invoke the next distribution item operation process */
+    future = target_iterator_data->map_target_function.future(target_iterator_data->data, target, client_interface, target_key);
+    
+    /* Increase the iterator index */
+    target_iterator_data->index++;
+    
+    if(future.pid > 0)
+    {
+        /* Add pid to the pid table so that we know what the corresponding target is */
+        gint *pid_ptr = g_malloc(sizeof(gint));
+        *pid_ptr = future.pid;
+        g_hash_table_insert(target_iterator_data->pid_table, pid_ptr, target);
+    }
+    
+    /* Return the future of the invoked process */
+    return future;
+}
+
+static void complete_target_future(void *data, ProcReact_Future *future, ProcReact_Status status)
+{
+    TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
+    
+    /* Retrieve corresponding target and properties of the pid */
+    gint *pid_ptr = &future->pid;
+    Target *target = g_hash_table_lookup(target_iterator_data->pid_table, pid_ptr);
+    gchar *target_key = find_target_key(target, target_iterator_data->target_property);
+    
+    /* If anything failed set the overall success status to FALSE */
+    if(status != PROCREACT_STATUS_OK || future->result == NULL)
+        target_iterator_data->success = FALSE;
+    
+    /* Invoke callback that handles completion of the target */
+    target_iterator_data->complete_target_mapping_function.future(target_iterator_data->data, target, target_key, future, status);
 }
 
 static void destroy_pid_key(gpointer data)
@@ -469,7 +519,7 @@ static void destroy_pid_key(gpointer data)
     g_free(pid);
 }
 
-ProcReact_PidIterator create_target_iterator(GPtrArray *target_array, const gchar *target_property, gchar *interface, map_target_function map_target, complete_target_mapping_function complete_target_mapping, void *data)
+static TargetIteratorData *create_common_iterator(GPtrArray *target_array, const gchar *target_property, gchar *interface, void *data)
 {
     TargetIteratorData *target_iterator_data = (TargetIteratorData*)g_malloc(sizeof(TargetIteratorData));
     
@@ -480,22 +530,38 @@ ProcReact_PidIterator create_target_iterator(GPtrArray *target_array, const gcha
     target_iterator_data->target_property = target_property;
     target_iterator_data->interface = interface;
     target_iterator_data->pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pid_key, NULL);
-    target_iterator_data->map_target = map_target;
-    target_iterator_data->complete_target_mapping = complete_target_mapping;
     target_iterator_data->data = data;
+    
+    return target_iterator_data;
+}
+
+ProcReact_PidIterator create_target_pid_iterator(GPtrArray *target_array, const gchar *target_property, gchar *interface, map_target_pid_function map_target, complete_target_mapping_pid_function complete_target_mapping, void *data)
+{
+    TargetIteratorData *target_iterator_data = create_common_iterator(target_array, target_property, interface, data);
+    
+    target_iterator_data->map_target_function.pid = map_target;
+    target_iterator_data->complete_target_mapping_function.pid = complete_target_mapping;
     
     return procreact_initialize_pid_iterator(has_next_target, next_target_process, procreact_retrieve_boolean, complete_target_process, target_iterator_data);
 }
 
-void destroy_target_iterator(ProcReact_PidIterator *iterator)
+ProcReact_FutureIterator create_target_future_iterator(GPtrArray *target_array, const gchar *target_property, gchar *interface, map_target_future_function map_target, complete_target_mapping_future_function complete_target_mapping, void *data)
 {
-    TargetIteratorData *target_iterator_data = (TargetIteratorData*)iterator->data;
+    TargetIteratorData *target_iterator_data = create_common_iterator(target_array, target_property, interface, data);
+    
+    target_iterator_data->map_target_function.future = map_target;
+    target_iterator_data->complete_target_mapping_function.future = complete_target_mapping;
+    
+    return procreact_initialize_future_iterator(has_next_target, next_target_future, complete_target_future, target_iterator_data);
+}
+
+void destroy_target_iterator_data(TargetIteratorData *target_iterator_data)
+{
     g_hash_table_destroy(target_iterator_data->pid_table);
     g_free(target_iterator_data);
 }
 
-int target_iterator_has_succeeded(const ProcReact_PidIterator *iterator)
+int target_iterator_has_succeeded(const TargetIteratorData *target_iterator_data)
 {
-    TargetIteratorData *target_iterator_data = (TargetIteratorData*)iterator->data;
     return target_iterator_data->success;
 }

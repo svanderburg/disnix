@@ -8,6 +8,10 @@ Version 0.7
 
 - disnix-env is now a composition of disnix-delegate, disnix-manifest and disnix-deploy
 
+- Process orchestration is now handled by libprocreact
+
+- disnix-capture-infra, disnix-query now capture data in parallel
+
 Version 0.6
 ===========
 - Changed the distribution internals. Now every service maps to a container on a target system. When no container is specified, it auto maps a service to the container with the type name

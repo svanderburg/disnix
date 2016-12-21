@@ -148,9 +148,9 @@ pid_t exec_set(gchar *interface, gchar *target, gchar *profile, gchar *component
  * @param interface Path to the interface executable
  * @param target Target Address of the remote interface
  * @param profile Identifier of the distributed profile
- * @return PID of the client interface process performing the operation, or -1 in case of a failure
+ * @return Future struct of the client interface process performing the operation
  */
-pid_t exec_query_installed(gchar *interface, gchar *target, gchar *profile);
+ProcReact_Future exec_query_installed(gchar *interface, gchar *target, gchar *profile);
 
 /**
  * Invokes the copy closure process to copy a closure from a machine
@@ -224,10 +224,9 @@ ProcReact_Future exec_realise(gchar *interface, gchar *target, gchar *derivation
  *
  * @param interface Path to the interface executable
  * @param target Target Address of the remote interface
- * @param pipefd Pipe which can be used to capture the output of the process
- * @return PID of the client interface process performing the operation, or -1 in case of a failure
+ * @return Future struct of the client interface process performing the operation
  */
-pid_t exec_capture_config(gchar *interface, gchar *target, int pipefd[2]);
+ProcReact_Future exec_capture_config(gchar *interface, gchar *target);
 
 /**
  * Invokes the true command for testing purposes.

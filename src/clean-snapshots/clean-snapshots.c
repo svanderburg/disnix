@@ -58,13 +58,13 @@ int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infra
         /* Iterate over all targets and run clean snapshots operation in parallel */
         int success;
         CleanSnapshotsData data = { keep, container, component };
-        ProcReact_PidIterator iterator = create_target_iterator(target_array, target_property, interface, clean_snapshots_on_target, complete_clean_snapshots_on_target, &data);
+        ProcReact_PidIterator iterator = create_target_pid_iterator(target_array, target_property, interface, clean_snapshots_on_target, complete_clean_snapshots_on_target, &data);
         
         procreact_fork_in_parallel_and_wait(&iterator);
-        success = target_iterator_has_succeeded(&iterator);
+        success = target_iterator_has_succeeded(iterator.data);
         
         /* Cleanup */
-        destroy_target_iterator(&iterator);
+        destroy_target_iterator_data(iterator.data);
         delete_target_array(target_array);
         
         /* Return the exit status, which is 0 if everything succeeds */
