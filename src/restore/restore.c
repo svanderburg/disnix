@@ -22,93 +22,77 @@
 #include <sys/wait.h>
 #include <pwd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <client-interface.h>
 #include <manifest.h>
 #include <snapshotmapping.h>
 #include <targets.h>
 
-static int wait_to_complete_retrieve(void)
+typedef struct
 {
-    int status;
-    pid_t pid = wait(&status);
+    GPtrArray *snapshots_array;
+    int all;
+}
+SendSnapshotsData;
+
+pid_t send_snapshots_to_target(void *data, Target *target)
+{
+    pid_t pid = fork();
     
-    if(pid != -1 && WIFEXITED(status) && WEXITSTATUS(status) == 0)
-        return 0;
-    else
+    if(pid == 0)
     {
-        g_printerr("Cannot send snapshots!\n");
-        return 1;
+        SendSnapshotsData *send_snapshots_data = (SendSnapshotsData*)data;
+        
+        gchar *target_key = find_target_key(target);
+        GPtrArray *snapshots_per_target_array = find_snapshot_mappings_per_target(send_snapshots_data->snapshots_array, target_key);
+        unsigned int i;
+        int exit_status = 0;
+        ProcReact_Status status;
+        
+        for(i = 0; i < snapshots_per_target_array->len; i++)
+        {
+            SnapshotMapping *mapping = g_ptr_array_index(snapshots_per_target_array, i);
+        
+            g_print("[target: %s]: Sending snapshots of component: %s deployed to container: %s\n", mapping->target, mapping->component, mapping->container);
+            exit_status = procreact_wait_for_exit_status(exec_copy_snapshots_to(target->client_interface, mapping->target, mapping->container, mapping->component, send_snapshots_data->all), &status);
+        
+            if(status != PROCREACT_STATUS_OK)
+            {
+                exit_status = 1;
+                break;
+            }
+            else if(exit_status != 0)
+                break;
+        }
+    
+        g_ptr_array_free(snapshots_per_target_array, TRUE);
+        
+        exit(exit_status);
     }
+    
+    return pid;
 }
 
-static int send_snapshots_per_target(GPtrArray *snapshots_array, Target *target, const int all)
+void complete_send_snapshots_to_target(void *data, Target *target, ProcReact_Status status, int result)
 {
-    gchar *target_key = find_target_key(target);
-    GPtrArray *snapshots_per_target_array = find_snapshot_mappings_per_target(snapshots_array, target_key);
-    unsigned int i;
-    int status = 0;
-    
-    for(i = 0; i < snapshots_per_target_array->len; i++)
+    if(status != PROCREACT_STATUS_OK || !result)
     {
-        SnapshotMapping *mapping = g_ptr_array_index(snapshots_per_target_array, i);
-        
-        g_print("[target: %s]: Sending snapshots of component: %s deployed to container: %s\n", mapping->target, mapping->component, mapping->container);
-        status = wait_to_finish(exec_copy_snapshots_to(target->client_interface, mapping->target, mapping->container, mapping->component, all));
-        
-        if(status != 0)
-            break;
+        gchar *target_key = find_target_key(target);
+        g_printerr("[target: %s]: Cannot retrieve snapshots!\n", target_key);
     }
-    
-    g_ptr_array_free(snapshots_per_target_array, TRUE);
-    
-    return status;
 }
 
 static int send_snapshots(GPtrArray *snapshots_array, GPtrArray *target_array, const unsigned int max_concurrent_transfers, const int all)
 {
-    unsigned int i, running_processes = 0;
-    int exit_status = 0;
+    int success;
+    SendSnapshotsData data = { snapshots_array, all };
+    ProcReact_PidIterator iterator = create_target_iterator(target_array, send_snapshots_to_target, complete_send_snapshots_to_target, &data);
+    procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
+    success = target_iterator_has_succeeded(&iterator);
     
-    for(i = 0; i < target_array->len; i++)
-    {
-        Target *target = g_ptr_array_index(target_array, i);
-        pid_t pid = fork();
-        
-        if(pid == 0)
-        {
-            int status = send_snapshots_per_target(snapshots_array, target, all);
-            _exit(status);
-        }
-        else if(pid == -1)
-        {
-            g_printerr("Cannot fork send process!\n");
-            exit_status = -1;
-        }
-        else
-        {
-            running_processes++;
-        
-            /* If limit has been reached, wait until one of the transfers finishes */
-            if(running_processes >= max_concurrent_transfers)
-            {
-                exit_status = wait_to_complete_retrieve();
-                running_processes--;
-                
-                if(exit_status != 0)
-                    break;
-            }
-        }
-    }
-
-    /* Wait for remaining transfers to finish */
-    for(i = 0; i < running_processes; i++)
-    {
-        exit_status = wait_to_complete_retrieve();
-        if(exit_status != 0)
-            break;
-    }
+    destroy_target_iterator(&iterator);
     
-    return exit_status;
+    return (!success);
 }
 
 static int wait_to_complete_restore(GHashTable *pids, GPtrArray *target_array)

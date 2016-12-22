@@ -25,14 +25,6 @@
 #include <procreact_future.h>
 
 /**
- * Waits until the given PID is finished and then returns the exit status
- *
- * @param pid PID of a process
- * @return Non-zero value in case of a failure
- */
-int wait_to_finish(const pid_t pid);
-
-/**
  * Invokes the activate operation through a Disnix client interface
  *
  * @param interface Path to the interface executable

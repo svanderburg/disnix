@@ -20,6 +20,7 @@
 #ifndef __DISNIX_TARGETS_H
 #define __DISNIX_TARGETS_H
 #include <glib.h>
+#include <procreact_pid_iterator.h>
 
 /**
  * @brief Contains a property of a specific target machine.
@@ -74,6 +75,31 @@ typedef struct
     int available_cores;
 }
 Target;
+
+typedef pid_t (*map_target_function) (void *data, Target *target);
+
+typedef void (*complete_target_mapping_function) (void *data, Target *target, ProcReact_Status status, int result);
+
+/**
+ * @brief Iterator that can be used to execute a process for each target
+ */
+typedef struct
+{
+    /** Indicates which element in the array to process */
+    unsigned int index;
+    /** Contains the length of the array */
+    unsigned int length;
+    /** Indicates the success status of the iteration */
+    int success;
+    /** Array with targets */
+    const GPtrArray *target_array;
+    /** Hash table keeping track with PID belongs to which target */
+    GHashTable *pid_table;
+    map_target_function map_target;
+    complete_target_mapping_function complete_target_mapping;
+    void *data;
+}
+TargetIteratorData;
 
 /**
  * Creates a new array with targets from a manifest file
@@ -150,5 +176,11 @@ int request_available_target_core(Target *target);
  * @param target A target struct containing properties of a target machine
  */
 void signal_available_target_core(Target *target);
+
+ProcReact_PidIterator create_target_iterator(const GPtrArray *target_array, map_target_function map_target, complete_target_mapping_function complete_target_mapping, void *data);
+
+void destroy_target_iterator(ProcReact_PidIterator *iterator);
+
+int target_iterator_has_succeeded(const ProcReact_PidIterator *iterator);
 
 #endif

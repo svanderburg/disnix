@@ -25,25 +25,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-int wait_to_finish(const pid_t pid)
-{
-    if(pid == -1)
-    {
-	g_printerr("Error with forking process!\n");
-	return -1;
-    }
-    else
-    {
-	int status;
-	wait(&status);
-	
-	if(WIFEXITED(status))
-	    return WEXITSTATUS(status);
-	else
-	    return 1;
-    }
-}
-
 static pid_t exec_activate_or_deactivate(gchar *operation, gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
 {
     pid_t pid = fork();
