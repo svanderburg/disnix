@@ -130,8 +130,7 @@ int capture_infra(gchar *interface, const gchar *target_property, gchar *infrast
         print_configs_array(configs_array);
         
         /* Cleanup */
-        destroy_target_iterator_data(iterator.data);
-        procreact_destroy_future_iterator(&iterator);
+        destroy_target_future_iterator(&iterator);
         delete_target_array(target_array);
         delete_configs_array(configs_array);
         

@@ -42,7 +42,7 @@ static int distribute_derivations(const GPtrArray *derivation_array, const GPtrA
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
     success = derivation_iterator_has_succeeded(iterator.data);
     
-    destroy_derivation_iterator_data(iterator.data);
+    destroy_derivation_pid_iterator(&iterator);
     return success;
 }
 
@@ -67,8 +67,7 @@ static int realise(const GPtrArray *derivation_array, const GPtrArray *interface
     procreact_fork_in_parallel_buffer_and_wait(&iterator);
     success = derivation_iterator_has_succeeded(iterator.data);
     
-    destroy_derivation_iterator_data(iterator.data);
-    procreact_destroy_future_iterator(&iterator);
+    destroy_derivation_future_iterator(&iterator);
     return success;
 }
 
@@ -91,7 +90,7 @@ static int retrieve_results(const GPtrArray *derivation_array, const GPtrArray *
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
     success = derivation_iterator_has_succeeded(iterator.data);
     
-    destroy_derivation_iterator_data(iterator.data);
+    destroy_derivation_pid_iterator(&iterator);
     return success;
 }
 

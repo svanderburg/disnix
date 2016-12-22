@@ -64,7 +64,7 @@ int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infra
         success = target_iterator_has_succeeded(iterator.data);
         
         /* Cleanup */
-        destroy_target_iterator_data(iterator.data);
+        destroy_target_pid_iterator(&iterator);
         delete_target_array(target_array);
         
         /* Return the exit status, which is 0 if everything succeeds */

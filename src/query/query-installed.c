@@ -118,8 +118,7 @@ int query_installed(gchar *interface, const gchar *target_property, gchar *infra
         print_installed_services(&data);
         
         /* Cleanup */
-        destroy_target_iterator_data(iterator.data);
-        procreact_destroy_future_iterator(&iterator);
+        destroy_target_future_iterator(&iterator);
         delete_queried_services_data(&data);
         delete_target_array(target_array);
         

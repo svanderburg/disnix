@@ -164,11 +164,18 @@ ProcReact_PidIterator create_derivation_pid_iterator(const GPtrArray *derivation
 ProcReact_FutureIterator create_derivation_future_iterator(const GPtrArray *derivation_array, const GPtrArray *interface_array, map_derivation_item_future_function map_derivation_item, complete_derivation_item_mapping_future_function complete_derivation_item_mapping, void *data);
 
 /**
- * Destroys all resources allocated with the provided derivation iterator data
+ * Destroys all resources allocated with the provided derivation PID iterator
  *
- * @param derivation_iterator_data Struct with properties that facilitate iteration over derivation items
+ * @param iterator A derivation PID iterator instance
  */
-void destroy_derivation_iterator_data(DerivationIteratorData *derivation_iterator_data);
+void destroy_derivation_pid_iterator(ProcReact_PidIterator *iterator);
+
+/**
+ * Destroys all resources allocated with the provided derivation future iterator
+ *
+ * @param iterator A derivation future iterator instance
+ */
+void destroy_derivation_future_iterator(ProcReact_FutureIterator *iterator);
 
 /**
  * Checks whether all iteration steps have succeeded.

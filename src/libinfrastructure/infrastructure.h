@@ -232,11 +232,18 @@ ProcReact_PidIterator create_target_pid_iterator(GPtrArray *target_array, const 
 ProcReact_FutureIterator create_target_future_iterator(GPtrArray *target_array, const gchar *target_property, gchar *interface, map_target_future_function map_target, complete_target_mapping_future_function complete_target_mapping, void *data);
 
 /**
- * Destroys all resources allocated with the target iterator data
+ * Destroys all resources allocated with a target PID iterator
  *
- * @param target_iterator_data Struct with properties that facilitate iteration over targets
+ * @param iterator A PID iterator instance
  */
-void destroy_target_iterator_data(TargetIteratorData *target_iterator_data);
+void destroy_target_pid_iterator(ProcReact_PidIterator *iterator);
+
+/**
+ * Destroys all resources allocated with a target future iterator
+ *
+ * @param iterator A future iterator instance
+ */
+void destroy_target_future_iterator(ProcReact_FutureIterator *iterator);
 
 /**
  * Checks whether all iteration steps have succeeded.

@@ -246,10 +246,23 @@ ProcReact_FutureIterator create_derivation_future_iterator(const GPtrArray *deri
     return procreact_initialize_future_iterator(has_next_derivation_item, next_derivation_future, complete_derivation_future, derivation_iterator_data);
 }
 
-void destroy_derivation_iterator_data(DerivationIteratorData *derivation_iterator_data)
+static void destroy_derivation_iterator_data(DerivationIteratorData *derivation_iterator_data)
 {
     g_hash_table_destroy(derivation_iterator_data->pid_table);
     g_free(derivation_iterator_data);
+}
+
+void destroy_derivation_pid_iterator(ProcReact_PidIterator *iterator)
+{
+    DerivationIteratorData *derivation_iterator_data = (DerivationIteratorData*)iterator->data;
+    destroy_derivation_iterator_data(derivation_iterator_data);
+}
+
+void destroy_derivation_future_iterator(ProcReact_FutureIterator *iterator)
+{
+    DerivationIteratorData *derivation_iterator_data = (DerivationIteratorData*)iterator->data;
+    destroy_derivation_iterator_data(derivation_iterator_data);
+    procreact_destroy_future_iterator(iterator);
 }
 
 int derivation_iterator_has_succeeded(const DerivationIteratorData *derivation_iterator_data)

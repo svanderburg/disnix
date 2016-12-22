@@ -555,10 +555,23 @@ ProcReact_FutureIterator create_target_future_iterator(GPtrArray *target_array, 
     return procreact_initialize_future_iterator(has_next_target, next_target_future, complete_target_future, target_iterator_data);
 }
 
-void destroy_target_iterator_data(TargetIteratorData *target_iterator_data)
+static void destroy_target_iterator_data(TargetIteratorData *target_iterator_data)
 {
     g_hash_table_destroy(target_iterator_data->pid_table);
     g_free(target_iterator_data);
+}
+
+void destroy_target_pid_iterator(ProcReact_PidIterator *iterator)
+{
+    TargetIteratorData *target_iterator_data = (TargetIteratorData*)iterator->data;
+    destroy_target_iterator_data(target_iterator_data);
+}
+
+void destroy_target_future_iterator(ProcReact_FutureIterator *iterator)
+{
+    TargetIteratorData *target_iterator_data = (TargetIteratorData*)iterator->data;
+    destroy_target_iterator_data(target_iterator_data);
+    procreact_destroy_future_iterator(iterator);
 }
 
 int target_iterator_has_succeeded(const TargetIteratorData *target_iterator_data)
