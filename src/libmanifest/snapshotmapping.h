@@ -20,6 +20,7 @@
 #ifndef __DISNIX_SNAPSHOTMAPPING_H
 #define __DISNIX_SNAPSHOTMAPPING_H
 #include <glib.h>
+#include "targets.h"
 
 /**
  * @brief Contains the values that constitute a key uniquely referring to a snapshot mapping.
@@ -64,6 +65,26 @@ typedef struct
 SnapshotMapping;
 
 /**
+ * Function that spawns a process for a snapshot mapping.
+ *
+ * @param mapping A snapshot mapping from a snapshots array
+ * @param target Target machine to which the snapshot is mapped
+ * @param arguments Arguments passed to the client interface
+ * @param arguments_length Length of the arguments array
+ * @return PID of the spawned process
+ */
+typedef pid_t (*map_snapshot_item_function) (SnapshotMapping *mapping, Target *target, gchar **arguments, unsigned int arguments_length);
+
+/**
+ * Function that gets executed when a mapping function completes.
+ *
+ * @param mapping A snapshot mapping from a snapshots array
+ * @param status Indicates whether the process terminated abnormally or not
+ * @param result TRUE if the mapping operation succeeded, else FALSE
+ */
+typedef void (*complete_snapshot_item_mapping_function) (SnapshotMapping *mapping, ProcReact_Status status, int result);
+
+/**
  * Creates an array with activation mappings from a manifest XML file.
  *
  * @param manifest_file Path to the manifest XML file
@@ -106,5 +127,18 @@ GPtrArray *subtract_snapshot_mappings(GPtrArray *snapshots_array1, GPtrArray *sn
  * @return An array with snapshot mappings linked to the given target
  */
 GPtrArray *find_snapshot_mappings_per_target(const GPtrArray *snapshots_array, const gchar *target);
+
+/**
+ * Maps over each snapshot mapping, asynchronously executes a function for each
+ * item and ensures that for each machine only the allowed number of processes
+ * are executed concurrently.
+ *
+ * @param snapshots_array Snapshots array
+ * @param target_array Targets array
+ * @param map_snapshot_item Function that gets executed for each snapshot item
+ * @param complete_snapshot_item_mapping Function that gets executed when a mapping function completes
+ * @return TRUE if all mappings were successfully executed, else FALSE
+ */
+int map_snapshot_items(GPtrArray *snapshots_array, GPtrArray *target_array, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping);
 
 #endif

@@ -22,6 +22,9 @@
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <xmlutil.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
 static gint compare_snapshot_mapping_keys(const SnapshotMappingKey **l, const SnapshotMappingKey **r)
@@ -210,4 +213,82 @@ GPtrArray *find_snapshot_mappings_per_target(const GPtrArray *snapshots_array, c
     }
     
     return return_array;
+}
+
+static void destroy_pids_key(gpointer data)
+{
+    gint *key = (gint*)data;
+    g_free(key);
+}
+
+static int wait_to_complete_snapshot_item(GHashTable *pid_table, GPtrArray *target_array, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
+{
+    int wstatus;
+    pid_t pid = wait(&wstatus);
+    
+    if(pid == -1)
+        return FALSE;
+    else
+    {
+        Target *target;
+        ProcReact_Status status;
+        
+        /* Find the corresponding snapshot mapping and remove it from the pids table */
+        SnapshotMapping *mapping = g_hash_table_lookup(pid_table, &pid);
+        g_hash_table_remove(pid_table, &pid);
+        
+        /* Mark mapping as transferred to prevent it from snapshotting again */
+        mapping->transferred = TRUE;
+        
+        /* Signal the target to make the CPU core available again */
+        target = find_target(target_array, mapping->target);
+        signal_available_target_core(target);
+        
+        /* Return the status */
+        int result = procreact_retrieve_boolean(pid, wstatus, &status);
+        complete_snapshot_item_mapping(mapping, status, result);
+        return(status == PROCREACT_STATUS_OK && result);
+    }
+}
+
+int map_snapshot_items(GPtrArray *snapshots_array, GPtrArray *target_array, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
+{
+    unsigned int num_processed = 0;
+    int status = TRUE;
+    GHashTable *pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
+    
+    while(num_processed < snapshots_array->len)
+    {
+        unsigned int i;
+    
+        for(i = 0; i < snapshots_array->len; i++)
+        {
+            SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
+            Target *target = find_target(target_array, mapping->target);
+            
+            if(!mapping->transferred && request_available_target_core(target)) /* Check if machine has any cores available, if not wait and try again later */
+            {
+                gchar **arguments = generate_activation_arguments(target, mapping->container); /* Generate an array of key=value pairs from container properties */
+                unsigned int arguments_length = g_strv_length(arguments); /* Determine length of the activation arguments array */
+                pid_t pid = map_snapshot_item(mapping, target, arguments, arguments_length);
+                gint *pid_ptr;
+                
+                /* Add pid and mapping to the hash table */
+                pid_ptr = g_malloc(sizeof(gint));
+                *pid_ptr = pid;
+                g_hash_table_insert(pid_table, pid_ptr, mapping);
+              
+                /* Cleanup */
+                g_strfreev(arguments);
+            }
+        }
+    
+        if(!wait_to_complete_snapshot_item(pid_table, target_array, complete_snapshot_item_mapping))
+            status = FALSE;
+        
+        num_processed++;
+    }
+    
+    g_hash_table_destroy(pid_table);
+    return status;
 }

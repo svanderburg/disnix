@@ -21,95 +21,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include <sys/wait.h>
+#include <unistd.h>
 #include <pwd.h>
 #include <client-interface.h>
 #include <manifest.h>
 #include <snapshotmapping.h>
 #include <targets.h>
 
-static int wait_to_complete_snapshot(GHashTable *pids, GPtrArray *target_array)
+static pid_t take_snapshot_on_target(SnapshotMapping *mapping, Target *target, gchar **arguments, unsigned int arguments_length)
 {
-    int status;
-    pid_t pid = wait(&status);
-    
-    if(pid == -1)
-        return FALSE;
-    else
-    {
-        Target *target;
-        
-        /* Find the corresponding snapshot mapping and remove it from the pids table */
-        SnapshotMapping *mapping = g_hash_table_lookup(pids, &pid);
-        g_hash_table_remove(pids, &pid);
-        
-        /* Mark mapping as transferred to prevent it from snapshotting again */
-        mapping->transferred = TRUE;
-        
-        /* Signal the target to make the CPU core available again */
-        target = find_target(target_array, mapping->target);
-        signal_available_target_core(target);
-        
-        /* Return the status */
-        if(WIFEXITED(status) && WEXITSTATUS(status) == 0)
-            return TRUE;
-        else
-        {
-            g_printerr("Cannot snapshot state!\n");
-            return FALSE;
-        }
-    }
+    g_print("[target: %s]: Snapshotting state of service: %s\n", mapping->target, mapping->component);
+    return exec_snapshot(target->client_interface, mapping->target, mapping->container, mapping->type, arguments, arguments_length, mapping->service);
 }
 
-static void destroy_pids_key(gpointer data)
+static void complete_take_snapshot_on_target(SnapshotMapping *mapping, ProcReact_Status status, int result)
 {
-    gint *key = (gint*)data;
-    g_free(key);
+    if(status != PROCREACT_STATUS_OK || !result)
+        g_printerr("[target: %s]: Cannot snapshot state of service: %s\n", mapping->target, mapping->component);
 }
 
 static int snapshot_services(GPtrArray *snapshots_array, GPtrArray *target_array)
 {
-    unsigned int num_snapshotted = 0;
-    int status = TRUE;
-    GHashTable *pids = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
-    
-    while(num_snapshotted < snapshots_array->len)
-    {
-        unsigned int i;
-    
-        for(i = 0; i < snapshots_array->len; i++)
-        {
-            SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
-            Target *target = find_target(target_array, mapping->target);
-            
-            if(!mapping->transferred && request_available_target_core(target)) /* Check if machine has any cores available, if not wait and try again later */
-            {
-                gchar **arguments = generate_activation_arguments(target, mapping->container); /* Generate an array of key=value pairs from container properties */
-                unsigned int arguments_size = g_strv_length(arguments); /* Determine length of the activation arguments array */
-                pid_t pid;
-                gint *pidKey;
-                
-                g_print("[target: %s]: Snapshotting state of service: %s\n", mapping->target, mapping->component);
-                pid = exec_snapshot(target->client_interface, mapping->target, mapping->container, mapping->type, arguments, arguments_size, mapping->service);
-                
-                /* Add pid and mapping to the hash table */
-                pidKey = g_malloc(sizeof(gint));
-                *pidKey = pid;
-                g_hash_table_insert(pids, pidKey, mapping);
-              
-                /* Cleanup */
-                g_strfreev(arguments);
-            }
-        }
-    
-        if(!wait_to_complete_snapshot(pids, target_array))
-            status = FALSE;
-        
-        num_snapshotted++;
-    }
-    
-    g_hash_table_destroy(pids);
-    return status;
+    return map_snapshot_items(snapshots_array, target_array, take_snapshot_on_target, complete_take_snapshot_on_target);
 }
 
 typedef struct
