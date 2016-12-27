@@ -50,29 +50,22 @@ static int set_target_profiles(const GPtrArray *distribution_array, const GPtrAr
     return success;
 }
 
-static void cleanup(GPtrArray *target_array, GPtrArray *distribution_array)
-{
-    delete_target_array(target_array);
-    delete_distribution_array(distribution_array);
-}
-
 int set_profiles(const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const int no_coordinator_profile, const int no_target_profiles)
 {
     GPtrArray *distribution_array = generate_distribution_array(manifest_file);
     GPtrArray *target_array = generate_target_array(manifest_file);
+    int exit_status;
     
-    if(!no_target_profiles && !set_target_profiles(distribution_array, target_array, profile))
-    {
-        cleanup(target_array, distribution_array);
-        return 1;
-    }
+    if((!no_target_profiles && !set_target_profiles(distribution_array, target_array, profile)) || /* First, attempt to set the target profiles */
+      (!no_coordinator_profile && !pkgmgmt_set_coordinator_profile(coordinator_profile_path, manifest_file, profile))) /* Then try to set the coordinator profile */
+        exit_status = 1;
+    else
+        exit_status = 0;
     
-    if(!no_coordinator_profile && !pkgmgmt_set_coordinator_profile(coordinator_profile_path, manifest_file, profile))
-    {
-        cleanup(target_array, distribution_array);
-        return 1;
-    }
-    
-    cleanup(target_array, distribution_array);
-    return 0;
+    /* Cleanup */
+    delete_target_array(target_array);
+    delete_distribution_array(distribution_array);
+
+    /* Return exit status */
+    return exit_status;
 }

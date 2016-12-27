@@ -131,8 +131,8 @@ int capture_infra(gchar *interface, const gchar *target_property, gchar *infrast
         
         /* Cleanup */
         destroy_target_future_iterator(&iterator);
-        delete_target_array(target_array);
         delete_configs_array(configs_array);
+        delete_target_array(target_array);
         
         /* Return exit status */
         return (!success);
