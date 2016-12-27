@@ -165,12 +165,6 @@ static void complete_distribution_process(void *data, pid_t pid, ProcReact_Statu
     distribution_iterator_data->complete_distribution_item_mapping(distribution_iterator_data->data, item, status, result);
 }
 
-static void destroy_pid_key(gpointer data)
-{
-    gint *pid = (gint*)data;
-    g_free(pid);
-}
-
 ProcReact_PidIterator create_distribution_iterator(const GPtrArray *distribution_array, const GPtrArray *target_array, map_distribution_item_function map_distribution_item, complete_distribution_item_mapping_function complete_distribution_item_mapping, void *data)
 {
     DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)g_malloc(sizeof(DistributionIteratorData));
@@ -180,7 +174,7 @@ ProcReact_PidIterator create_distribution_iterator(const GPtrArray *distribution
     distribution_iterator_data->success = TRUE;
     distribution_iterator_data->distribution_array = distribution_array;
     distribution_iterator_data->target_array = target_array;
-    distribution_iterator_data->pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pid_key, NULL);
+    distribution_iterator_data->pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, NULL);
     distribution_iterator_data->map_distribution_item = map_distribution_item;
     distribution_iterator_data->complete_distribution_item_mapping = complete_distribution_item_mapping;
     distribution_iterator_data->data = data;

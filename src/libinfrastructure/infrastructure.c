@@ -513,12 +513,6 @@ static void complete_target_future(void *data, ProcReact_Future *future, ProcRea
     target_iterator_data->complete_target_mapping_function.future(target_iterator_data->data, target, target_key, future, status);
 }
 
-static void destroy_pid_key(gpointer data)
-{
-    gint *pid = (gint*)data;
-    g_free(pid);
-}
-
 static TargetIteratorData *create_common_iterator(GPtrArray *target_array, const gchar *target_property, gchar *interface, void *data)
 {
     TargetIteratorData *target_iterator_data = (TargetIteratorData*)g_malloc(sizeof(TargetIteratorData));
@@ -529,7 +523,7 @@ static TargetIteratorData *create_common_iterator(GPtrArray *target_array, const
     target_iterator_data->target_array = target_array;
     target_iterator_data->target_property = target_property;
     target_iterator_data->interface = interface;
-    target_iterator_data->pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pid_key, NULL);
+    target_iterator_data->pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, NULL);
     target_iterator_data->data = data;
     
     return target_iterator_data;

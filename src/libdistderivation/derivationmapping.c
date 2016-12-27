@@ -164,12 +164,6 @@ static void complete_derivation_process(void *data, pid_t pid, ProcReact_Status 
     derivation_iterator_data->complete_derivation_item_mapping_function.pid(derivation_iterator_data->data, item, status, result);
 }
 
-static void destroy_pid_key(gpointer data)
-{
-    gint *pid = (gint*)data;
-    g_free(pid);
-}
-
 static DerivationIteratorData *create_common_iterator(const GPtrArray *derivation_array, const GPtrArray *interface_array, void *data)
 {
     DerivationIteratorData *derivation_iterator_data = (DerivationIteratorData*)g_malloc(sizeof(DerivationIteratorData));
@@ -179,7 +173,7 @@ static DerivationIteratorData *create_common_iterator(const GPtrArray *derivatio
     derivation_iterator_data->success = TRUE;
     derivation_iterator_data->derivation_array = derivation_array;
     derivation_iterator_data->interface_array = interface_array;
-    derivation_iterator_data->pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pid_key, NULL);
+    derivation_iterator_data->pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, NULL);
     derivation_iterator_data->data = data;
     
     return derivation_iterator_data;

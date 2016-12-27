@@ -215,12 +215,6 @@ GPtrArray *find_snapshot_mappings_per_target(const GPtrArray *snapshots_array, c
     return return_array;
 }
 
-static void destroy_pids_key(gpointer data)
-{
-    gint *key = (gint*)data;
-    g_free(key);
-}
-
 static int wait_to_complete_snapshot_item(GHashTable *pid_table, GPtrArray *target_array, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
 {
     int wstatus;
@@ -255,7 +249,7 @@ int map_snapshot_items(GPtrArray *snapshots_array, GPtrArray *target_array, map_
 {
     unsigned int num_processed = 0;
     int status = TRUE;
-    GHashTable *pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
+    GHashTable *pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, NULL);
     
     while(num_processed < snapshots_array->len)
     {

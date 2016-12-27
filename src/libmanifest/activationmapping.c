@@ -432,12 +432,6 @@ static void wait_for_activation_mapping_to_complete(GHashTable *pid_table, GPtrA
     }
 }
 
-static void destroy_pids_key(gpointer data)
-{
-    gint *key = (gint*)data;
-    g_free(key);
-}
-
 ActivationStatus traverse_inter_dependency_mappings(GPtrArray *union_array, const ActivationMappingKey *key, GPtrArray *target_array, GHashTable *pid_table, map_activation_mapping_function map_activation_mapping)
 {
     /* Retrieve the mapping from the union array */
@@ -528,7 +522,7 @@ ActivationStatus traverse_interdependent_mappings(GPtrArray *union_array, const 
 
 int traverse_activation_mappings(GPtrArray *mappings, GPtrArray *union_array, GPtrArray *target_array, iterate_strategy_function iterate_strategy, map_activation_mapping_function map_activation_mapping, complete_activation_mapping_function complete_activation_mapping)
 {
-    GHashTable *pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
+    GHashTable *pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, NULL);
     unsigned int num_done = 0;
     int success = TRUE;
     

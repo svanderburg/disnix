@@ -27,12 +27,6 @@ static void destroy_cluster_value(gpointer data)
     g_hash_table_destroy(container_table);
 }
 
-static void destroy_container_key(gpointer data)
-{
-    gchar *key = (gchar*)data;
-    g_free(key);
-}
-
 static void destroy_container_value(gpointer data)
 {
     GPtrArray *services_array = (GPtrArray*)data;
@@ -68,7 +62,7 @@ GHashTable *generate_cluster_table(GPtrArray *activation_array, GPtrArray *targe
 	
 	if(containers_table == NULL)
 	{
-	    containers_table = g_hash_table_new_full(g_str_hash, g_str_equal, destroy_container_key, destroy_container_value);
+	    containers_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, destroy_container_value);
 	    g_hash_table_insert(cluster_table, target_key, containers_table);
 	}
 	

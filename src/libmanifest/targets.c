@@ -500,12 +500,6 @@ static void complete_target_process(void *data, pid_t pid, ProcReact_Status stat
     target_iterator_data->complete_target_mapping(target_iterator_data->data, target, status, result);
 }
 
-static void destroy_pid_key(gpointer data)
-{
-    gint *pid = (gint*)data;
-    g_free(pid);
-}
-
 ProcReact_PidIterator create_target_iterator(const GPtrArray *target_array, map_target_function map_target, complete_target_mapping_function complete_target_mapping, void *data)
 {
     TargetIteratorData *target_iterator_data = (TargetIteratorData*)g_malloc(sizeof(TargetIteratorData));
@@ -514,7 +508,7 @@ ProcReact_PidIterator create_target_iterator(const GPtrArray *target_array, map_
     target_iterator_data->length = target_array->len;
     target_iterator_data->success = TRUE;
     target_iterator_data->target_array = target_array;
-    target_iterator_data->pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pid_key, NULL);
+    target_iterator_data->pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, NULL);
     target_iterator_data->map_target = map_target;
     target_iterator_data->complete_target_mapping = complete_target_mapping;
     target_iterator_data->data = data;

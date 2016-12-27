@@ -21,12 +21,6 @@
 #include <activationmapping.h>
 #include <targets.h>
 
-static void destroy_key(gpointer data)
-{
-    gchar *mapping_key = (gchar*)data;
-    g_free(mapping_key);
-}
-
 static void destroy_value(gpointer data)
 {
     GPtrArray *dependency_array = (GPtrArray*)data;
@@ -51,7 +45,7 @@ GHashTable *generate_edges_table(const GPtrArray *activation_array, GPtrArray *t
     unsigned int i;
     
     /* Create empty hash table */
-    GHashTable *edges_table = g_hash_table_new_full(g_str_hash, g_str_equal, destroy_key, destroy_value);
+    GHashTable *edges_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, destroy_value);
 
     for(i = 0; i < activation_array->len; i++)
     {
