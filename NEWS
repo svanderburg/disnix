@@ -10,7 +10,9 @@ Version 0.7
 
 - Process orchestration is now handled by libprocreact
 
-- disnix-capture-infra, disnix-query now capture data in parallel
+- Iterating or traversing over data structures is now handled by libmanifest, libdistderivation and libinfrastructure
+
+- disnix-capture-infra, disnix-query now capture data in parallel to speed up the entire operation
 
 Version 0.6
 ===========

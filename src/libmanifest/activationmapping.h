@@ -20,6 +20,7 @@
 #ifndef __DISNIX_ACTIVATIONMAPPING_H
 #define __DISNIX_ACTIVATIONMAPPING_H
 #include <glib.h>
+#include "targets.h"
 
 /**
  * @brief Contains the values that constitute a key uniquely referring to an activation mapping.
@@ -36,7 +37,7 @@ typedef struct
 ActivationMappingKey;
 
 /**
- * Enumeration of possible states for an activation mapping.
+ * @brief Enumeration of possible states for an activation mapping.
  */
 typedef enum
 {
@@ -71,6 +72,53 @@ typedef struct
     ActivationMappingStatus status;
 }
 ActivationMapping;
+
+/**
+ * @brief Enumerates the possible outcomes of an operation on activation mapping
+ */
+typedef enum
+{
+    ACTIVATION_ERROR,
+    ACTIVATION_IN_PROGRESS,
+    ACTIVATION_WAIT,
+    ACTIVATION_DONE
+}
+ActivationStatus;
+
+/**
+ * Pointer to a function that executes an operation to modify an activation
+ * mapping's state.
+ *
+ * @param mapping An activation mapping to change the state for
+ * @param target The properties of the target machine where the activation is mapped to
+ * @param arguments Arguments to pass to the process
+ * @param arguments_length Length of the arguments array
+ * @return The PID of the process invoked
+ */
+typedef pid_t (*map_activation_mapping_function) (ActivationMapping *mapping, Target *target, gchar **arguments, unsigned int arguments_length);
+
+/**
+ * Pointer to a function that gets executed when an operation on activation
+ * mapping completes.
+ *
+ * @param mapping An activation mapping to change the state for
+ * @param status Indicates whether the process terminated abnormally or not
+ * @param result TRUE if the operation succeeded, else FALSE
+ */
+typedef void (*complete_activation_mapping_function) (ActivationMapping *mapping, ProcReact_Status status, int result);
+
+/**
+ * Pointer to a function that traverses the collection of activation mappings
+ * according to some strategy.
+ *
+ * @param union_array An array of activation mappings containing mappings from the current deployment state and the desired deployment state
+ * @param key The key values of an activation mapping to visit
+ * @param target_array An array of target machine configurations
+ * @param pid_table Hash table translating PIDs to activation mappings
+ * @param map_activation_mapping Pointer to a function that executes an operation modifying the deployment state of an activation mapping
+ * @return Any of the activation status codes
+ */
+typedef ActivationStatus (*iterate_strategy_function) (GPtrArray *union_array, const ActivationMappingKey *key, GPtrArray *target_array, GHashTable *pid_table, map_activation_mapping_function map_activation_mapping);
 
 /**
  * Creates an array with activation mappings from a manifest XML file.
@@ -158,5 +206,50 @@ GPtrArray *find_interdependent_mappings(const GPtrArray *activation_array, const
  * @param activation_array Activation array to print
  */
 void print_activation_array(const GPtrArray *activation_array);
+
+/**
+ * Traverses the collection of activation mappings by recursively visiting the
+ * inter-dependencies first and then the activation mapping with the provided
+ * key. This strategy is, for example, useful to reliably activate services
+ * without breaking dependencies.
+ *
+ * @param union_array An array of activation mappings containing mappings from the current deployment state and the desired deployment state
+ * @param key The key values of an activation mapping to visit
+ * @param target_array An array of target machine configurations
+ * @param pid_table Hash table translating PIDs to activation mappings
+ * @param map_activation_mapping Pointer to a function that executes an operation modifying the deployment state of an activation mapping
+ * @return Any of the activation status codes
+ */
+ActivationStatus traverse_inter_dependency_mappings(GPtrArray *union_array, const ActivationMappingKey *key, GPtrArray *target_array, GHashTable *pid_table, map_activation_mapping_function map_activation_mapping);
+
+/**
+ * Traverses the collection of activation mappings by recursively visting the
+ * inter-dependent mappings first (reverse dependencies) and then the activation
+ * with the provided key. This strategy is, for example, useful to reliably
+ * deactivate services without breaking dependencies.
+ *
+ * @param union_array An array of activation mappings containing mappings from the current deployment state and the desired deployment state
+ * @param key The key values of an activation mapping to visit
+ * @param target_array An array of target machine configurations
+ * @param pid_table Hash table translating PIDs to activation mappings
+ * @param map_activation_mapping Pointer to a function that executes an operation modifying the deployment state of an activation mapping
+ * @return Any of the activation status codes
+ */
+ActivationStatus traverse_interdependent_mappings(GPtrArray *union_array, const ActivationMappingKey *key, GPtrArray *target_array, GHashTable *pid_table, map_activation_mapping_function map_activation_mapping);
+
+/**
+ * Traverses the provided activation mappings according to some strategy,
+ * asynchronously executing operations for each encountered activation mapping
+ * that has not yet been executed. Furthermore, it also limits the amount of
+ * operations executed concurrently to a specified amount per machine.
+ *
+ * @param mappings An array of activation mappings whose state needs to be changed.
+ * @param union_array An array of activation mappings containing mappings from the current deployment state and the desired deployment state
+ * @param iterate_strategy Pointer to a function that traverses the activation mappings according to some strategy
+ * @param map_activation_mapping Pointer to a function that executes an operation modifying the deployment state of an activation mapping
+ * @param complete_activation_mapping Pointer to function that gets executed when an operation on activation mapping completes
+ * @return TRUE if all the activation mappings' states have been successfully changed, else FALSE
+ */
+int traverse_activation_mappings(GPtrArray *mappings, GPtrArray *union_array, GPtrArray *target_array, iterate_strategy_function iterate_strategy, map_activation_mapping_function map_activation_mapping, complete_activation_mapping_function complete_activation_mapping);
 
 #endif

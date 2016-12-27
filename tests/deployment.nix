@@ -260,8 +260,8 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # succeed.
         
         $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure-single.nix -d ${manifestTests}/distribution-single.nix > result");
-        $coordinator->mustSucceed("[ \"\$(grep \"Skip deactivation\" result | grep \"testService2B\" | grep \"testtarget2\")\" != \"\" ]");
-        $coordinator->mustSucceed("[ \"\$(grep \"Skip deactivation\" result | grep \"testService3\" | grep \"testtarget2\")\" != \"\" ]");
+        $coordinator->mustSucceed("[ \"\$(grep \"Skip service\" result | grep \"testService2B\" | grep \"testtarget2\")\" != \"\" ]");
+        $coordinator->mustSucceed("[ \"\$(grep \"Skip service\" result | grep \"testService3\" | grep \"testtarget2\")\" != \"\" ]");
         
         # Use disnix-query to check whether testService{1,2,3} are
         # available on testtarget1 and testService{2B,3} are still

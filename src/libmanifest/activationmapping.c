@@ -19,6 +19,8 @@
 
 #include "activationmapping.h"
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <xmlutil.h>
@@ -373,4 +375,186 @@ void print_activation_array(const GPtrArray *activation_array)
 	
 	g_print("\n");
     }
+}
+
+static ActivationStatus attempt_to_map_activation_mapping(ActivationMapping *mapping, Target *target, GHashTable *pid_table, map_activation_mapping_function map_activation_mapping)
+{
+    if(request_available_target_core(target)) /* Check if machine has any cores available, if not wait and try again later */
+    {
+        gchar **arguments = generate_activation_arguments(target, mapping->container); /* Generate an array of key=value pairs from container properties */
+        unsigned int arguments_size = g_strv_length(arguments); /* Determine length of the activation arguments array */
+        pid_t pid = map_activation_mapping(mapping, target, arguments, arguments_size); /* Execute the activation operation asynchronously */
+        
+        /* Cleanup */
+        g_strfreev(arguments);
+        
+        if(pid == -1)
+        {
+            g_printerr("[target: %s]: Cannot fork process for service: %s!\n", mapping->target, mapping->key);
+            return ACTIVATION_ERROR;
+        }
+        else
+        {
+            gint *pid_ptr = g_malloc(sizeof(gint));
+            *pid_ptr = pid;
+            
+            mapping->status = ACTIVATIONMAPPING_IN_PROGRESS; /* Mark activation mapping as in progress */
+            g_hash_table_insert(pid_table, pid_ptr, mapping); /* Add mapping to the pids table so that we can retrieve its status later */
+            return ACTIVATION_IN_PROGRESS;
+        }
+    }
+    else
+        return ACTIVATION_WAIT;
+}
+
+static void wait_for_activation_mapping_to_complete(GHashTable *pid_table, GPtrArray *target_array, complete_activation_mapping_function complete_activation_mapping)
+{
+    int wstatus;
+    Target *target;
+    
+    /* Wait for an activation/deactivation process to finish */
+    pid_t pid = wait(&wstatus);
+    
+    if(pid > 0)
+    {
+        /* Find the corresponding activation mapping and remove it from the pids table */
+        ProcReact_Status status;
+        int result = procreact_retrieve_boolean(pid, wstatus, &status);
+        ActivationMapping *mapping = g_hash_table_lookup(pid_table, &pid);
+        g_hash_table_remove(pid_table, &pid);
+    
+        /* Complete the activation mapping */
+        complete_activation_mapping(mapping, status, result);
+    
+        /* Signal the target to make the CPU core available again */
+        target = find_target(target_array, mapping->target);
+        signal_available_target_core(target);
+    }
+}
+
+static void destroy_pids_key(gpointer data)
+{
+    gint *key = (gint*)data;
+    g_free(key);
+}
+
+ActivationStatus traverse_inter_dependency_mappings(GPtrArray *union_array, const ActivationMappingKey *key, GPtrArray *target_array, GHashTable *pid_table, map_activation_mapping_function map_activation_mapping)
+{
+    /* Retrieve the mapping from the union array */
+    ActivationMapping *actual_mapping = find_activation_mapping(union_array, key);
+    
+    /* First, activate all inter-dependency mappings */
+    if(actual_mapping->depends_on != NULL)
+    {
+        unsigned int i;
+        ActivationStatus status;
+        
+        for(i = 0; i < actual_mapping->depends_on->len; i++)
+        {
+            ActivationMappingKey *dependency = g_ptr_array_index(actual_mapping->depends_on, i);
+            status = traverse_inter_dependency_mappings(union_array, dependency, target_array, pid_table, map_activation_mapping);
+            
+            if(status != ACTIVATION_DONE)
+                return status; /* If any of the inter-dependencies has not been activated yet, relay its status */
+        }
+    }
+
+    /* Finally, activate the mapping itself if it is not activated yet */
+    switch(actual_mapping->status)
+    {
+        case ACTIVATIONMAPPING_DEACTIVATED:
+            {
+                Target *target = find_target(target_array, actual_mapping->target);
+                return attempt_to_map_activation_mapping(actual_mapping, target, pid_table, map_activation_mapping);
+            }
+        case ACTIVATIONMAPPING_ACTIVATED:
+            return ACTIVATION_DONE;
+        case ACTIVATIONMAPPING_IN_PROGRESS:
+            return ACTIVATION_IN_PROGRESS;
+        default:
+            return ACTIVATION_ERROR; /* Should never happen */
+    }
+}
+
+ActivationStatus traverse_interdependent_mappings(GPtrArray *union_array, const ActivationMappingKey *key, GPtrArray *target_array, GHashTable *pid_table, map_activation_mapping_function map_activation_mapping)
+{
+    /* Retrieve the mapping from the union array */
+    ActivationMapping *actual_mapping = find_activation_mapping(union_array, key);
+    
+    /* Find all interdependent mapping on this mapping */
+    GPtrArray *interdependent_mappings = find_interdependent_mappings(union_array, actual_mapping);
+    
+    /* First deactivate all mappings which have an inter-dependency on this mapping */
+    unsigned int i;
+    
+    for(i = 0; i < interdependent_mappings->len; i++)
+    {
+        ActivationMapping *dependency_mapping = g_ptr_array_index(interdependent_mappings, i);
+        ActivationStatus status = traverse_interdependent_mappings(union_array, (ActivationMappingKey*)dependency_mapping, target_array, pid_table, map_activation_mapping);
+    
+        if(status != ACTIVATION_DONE)
+        {
+            g_ptr_array_free(interdependent_mappings, TRUE);
+            return status; /* If any inter-dependency is not deactivated, relay its status */
+        }
+    }
+    
+    g_ptr_array_free(interdependent_mappings, TRUE);
+    
+    /* Finally deactivate the mapping itself if it has not been deactivated yet */
+    switch(actual_mapping->status)
+    {
+        case ACTIVATIONMAPPING_ACTIVATED:
+            {
+                Target *target = find_target(target_array, actual_mapping->target);
+        
+                if(target == NULL)
+                {
+                    g_print("[target: %s]: Skip service with key: %s deploying service: %s since machine is no longer present!\n", actual_mapping->key, actual_mapping->target, actual_mapping->service);
+                    actual_mapping->status = ACTIVATIONMAPPING_DEACTIVATED;
+                    return ACTIVATION_DONE;
+                }
+                else
+                    return attempt_to_map_activation_mapping(actual_mapping, target, pid_table, map_activation_mapping);
+            }
+        case ACTIVATIONMAPPING_DEACTIVATED:
+            return ACTIVATION_DONE;
+        case ACTIVATIONMAPPING_IN_PROGRESS:
+            return ACTIVATION_IN_PROGRESS;
+        default:
+            return ACTIVATION_ERROR; /* Should never happen */
+    }
+}
+
+int traverse_activation_mappings(GPtrArray *mappings, GPtrArray *union_array, GPtrArray *target_array, iterate_strategy_function iterate_strategy, map_activation_mapping_function map_activation_mapping, complete_activation_mapping_function complete_activation_mapping)
+{
+    GHashTable *pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, destroy_pids_key, NULL);
+    unsigned int num_done = 0;
+    int success = TRUE;
+    
+    do
+    {
+        unsigned int i;
+        num_done = 0;
+        
+        for(i = 0; i < mappings->len; i++)
+        {
+            ActivationMapping *mapping = g_ptr_array_index(mappings, i);
+            ActivationStatus status = iterate_strategy(union_array, (ActivationMappingKey*)mapping, target_array, pid_table, map_activation_mapping);
+            
+            if(status == ACTIVATION_ERROR)
+            {
+                success = FALSE;
+                num_done++;
+            }
+            else if(status == ACTIVATION_DONE)
+                num_done++;
+            
+            wait_for_activation_mapping_to_complete(pid_table, target_array, complete_activation_mapping);
+        }
+    }
+    while(num_done < mappings->len);
+    
+    g_hash_table_destroy(pid_table);
+    return success;
 }
