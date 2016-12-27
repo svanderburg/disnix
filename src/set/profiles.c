@@ -56,11 +56,11 @@ int set_profiles(const gchar *manifest_file, const gchar *coordinator_profile_pa
     GPtrArray *target_array = generate_target_array(manifest_file);
     int exit_status;
     
-    if((!no_target_profiles && !set_target_profiles(distribution_array, target_array, profile)) || /* First, attempt to set the target profiles */
-      (!no_coordinator_profile && !pkgmgmt_set_coordinator_profile(coordinator_profile_path, manifest_file, profile))) /* Then try to set the coordinator profile */
-        exit_status = 1;
-    else
+    if((no_target_profiles || set_target_profiles(distribution_array, target_array, profile)) /* First, attempt to set the target profiles */
+      && (no_coordinator_profile || pkgmgmt_set_coordinator_profile(coordinator_profile_path, manifest_file, profile))) /* Then try to set the coordinator profile */
         exit_status = 0;
+    else
+        exit_status = 1;
     
     /* Cleanup */
     delete_target_array(target_array);
