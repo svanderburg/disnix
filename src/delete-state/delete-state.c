@@ -18,10 +18,6 @@
  */
 
 #include "delete-state.h"
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <pwd.h>
 #include <client-interface.h>
 #include <manifest.h>
 #include <snapshotmapping.h>
@@ -50,11 +46,8 @@ int delete_state(const gchar *manifest_file, const gchar *coordinator_profile_pa
     
     if(manifest_file == NULL)
     {
-        /* Get current username */
-        char *username = (getpwuid(geteuid()))->pw_name;
-        
         /* If no manifest file has been provided, try opening the last deployed one */
-        gchar *old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, username, profile);
+        gchar *old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, profile);
         
         if(old_manifest_file == NULL)
         {

@@ -20,9 +20,8 @@
 #include "activate.h"
 #include "transition.h"
 
-#include <unistd.h>
 #include <sys/types.h>
-#include <pwd.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <signal.h>
 
@@ -69,12 +68,9 @@ int activate_system(const gchar *new_manifest, const gchar *old_manifest, const 
         gchar *old_manifest_file;
         GPtrArray *old_activation_mappings;
         
-        /* Get current username */
-        char *username = (getpwuid(geteuid()))->pw_name;
-
         /* If no previous configuration is given, check whether we have one in the coordinator profile, otherwise use the given one */
         if(old_manifest == NULL)
-            old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, username, profile);
+            old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, profile);
         else
             old_manifest_file = g_strdup(old_manifest);
 

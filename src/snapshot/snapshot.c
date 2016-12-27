@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <pwd.h>
 #include <client-interface.h>
 #include <manifest.h>
 #include <snapshotmapping.h>
@@ -125,13 +124,13 @@ static void cleanup(const gchar *old_manifest, char *old_manifest_file, Manifest
     delete_manifest(manifest);
 }
 
-static Manifest *open_manifest(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const char *username, const gchar *container_filter, const gchar *component_filter)
+static Manifest *open_manifest(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container_filter, const gchar *component_filter)
 {
     gchar *path;
     Manifest *manifest;
     
     if(manifest_file == NULL)
-        path = determine_previous_manifest_file(coordinator_profile_path, username, profile);
+        path = determine_previous_manifest_file(coordinator_profile_path, profile);
     else
         path = g_strdup(manifest_file);
     
@@ -146,11 +145,8 @@ static Manifest *open_manifest(const gchar *manifest_file, const gchar *coordina
 
 int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade, const gchar *container_filter, const gchar *component_filter)
 {
-    /* Get current username */
-    char *username = (getpwuid(geteuid()))->pw_name;
-    
     /* Generate a distribution array from the manifest file */
-    Manifest *manifest = open_manifest(manifest_file, coordinator_profile_path, profile, username, container_filter, component_filter);
+    Manifest *manifest = open_manifest(manifest_file, coordinator_profile_path, profile, container_filter, component_filter);
     
     if(manifest == NULL)
     {
@@ -165,7 +161,7 @@ int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_trans
         gchar *old_manifest_file;
         
         if(old_manifest == NULL)
-            old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, username, profile);
+            old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, profile);
         else
             old_manifest_file = g_strdup(old_manifest);
         

@@ -19,7 +19,6 @@
 
 #include "locking.h"
 #include <sys/types.h>
-#include <pwd.h>
 #include <unistd.h>
 #include <distributionmapping.h>
 #include <manifest.h>
@@ -126,11 +125,8 @@ int lock_or_unlock(const int do_lock, const gchar *manifest_file, const gchar *c
     
     if(manifest_file == NULL)
     {
-        /* Get current username */
-        char *username = (getpwuid(geteuid()))->pw_name;
-        
         /* If no manifest file has been provided, try opening the last deployed one */
-        gchar *old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, username, profile);
+        gchar *old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, profile);
         
         if(old_manifest_file == NULL)
         {

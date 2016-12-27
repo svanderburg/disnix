@@ -66,11 +66,10 @@ void delete_manifest(Manifest *manifest);
  * corresponds to the manifest of the last deployed configuration.
  *
  * @param coordinator_profile_path Path to the coordinator profile or NULL to consult the default profile path
- * @param username Name of the user invoking the deployment command
  * @param profile Name of the Disnix profile that identifies the deployment (typically: default)
  * @return The path to the latest coordinator profile generation or NULL if no previous deployment exists.
  *   The resulting string is allocated on the heap and should eventually be freed with g_free()
  */
-gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, const char *username, const gchar *profile);
+gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, const gchar *profile);
 
 #endif

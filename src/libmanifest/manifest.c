@@ -19,6 +19,9 @@
 
 #include "manifest.h"
 #include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <pwd.h>
 #include "distributionmapping.h"
 #include "activationmapping.h"
 #include "snapshotmapping.h"
@@ -76,10 +79,11 @@ void delete_manifest(Manifest *manifest)
     }
 }
 
-gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, const char *username, const gchar *profile)
+gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, const gchar *profile)
 {
     gchar *old_manifest_file;
     FILE *file;
+    char *username = (getpwuid(geteuid()))->pw_name; /* Get current username */
     
     if(coordinator_profile_path == NULL)
         old_manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
