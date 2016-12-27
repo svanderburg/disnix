@@ -459,7 +459,14 @@ ActivationStatus traverse_inter_dependency_mappings(GPtrArray *union_array, cons
         case ACTIVATIONMAPPING_DEACTIVATED:
             {
                 Target *target = find_target(target_array, actual_mapping->target);
-                return attempt_to_map_activation_mapping(actual_mapping, target, pid_table, map_activation_mapping);
+                
+                if(target == NULL)
+                {
+                    g_print("[target: %s]: Cannot map service with key: %s deploying service: %s since the machine is not present!\n", actual_mapping->key, actual_mapping->target, actual_mapping->service);
+                    return ACTIVATION_ERROR;
+                }
+                else
+                    return attempt_to_map_activation_mapping(actual_mapping, target, pid_table, map_activation_mapping);
             }
         case ACTIVATIONMAPPING_ACTIVATED:
             return ACTIVATION_DONE;

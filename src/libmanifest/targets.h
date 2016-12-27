@@ -157,7 +157,7 @@ gchar *find_target_key(const Target *target);
  * from memory with g_strfreev()
  *
  * @param target Struct with target properties
- * @param container Name of the container to deploy to
+ * @param container_name Name of the container to deploy to
  * @return String with environment variable settings
  */
 gchar **generate_activation_arguments(const Target *target, const gchar *container_name);

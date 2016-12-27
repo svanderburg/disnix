@@ -116,6 +116,13 @@ GPtrArray *create_interface_array(const gchar *distributed_derivation_file)
     return interface_array;
 }
 
+static void delete_interface(Interface *interface)
+{
+    g_free(interface->target);
+    g_free(interface->clientInterface);
+    g_free(interface);
+}
+
 void delete_interface_array(GPtrArray *interface_array)
 {
     if(interface_array != NULL)
@@ -125,7 +132,7 @@ void delete_interface_array(GPtrArray *interface_array)
         for(i = 0; i < interface_array->len; i++)
         {
             Interface *interface = g_ptr_array_index(interface_array, i);
-            g_free(interface);
+            delete_interface(interface);
         }
     
         g_ptr_array_free(interface_array, TRUE);

@@ -366,6 +366,7 @@ static void delete_containers(GPtrArray *containers)
             Container *container = g_ptr_array_index(containers, i);
             g_free(container->name);
             delete_properties(container->properties);
+            g_free(container);
         }
         
         g_ptr_array_free(containers, TRUE);
@@ -377,6 +378,7 @@ static void delete_target(Target *target)
     delete_properties(target->properties);
     delete_containers(target->containers);
     
+    g_free(target->name);
     g_free(target->system);
     g_free(target->client_interface);
     g_free(target->target_property);

@@ -245,6 +245,7 @@ ActivationStatus traverse_interdependent_mappings(GPtrArray *union_array, const 
  *
  * @param mappings An array of activation mappings whose state needs to be changed.
  * @param union_array An array of activation mappings containing mappings from the current deployment state and the desired deployment state
+ * @param target_array An array of target machine configurations
  * @param iterate_strategy Pointer to a function that traverses the activation mappings according to some strategy
  * @param map_activation_mapping Pointer to a function that executes an operation modifying the deployment state of an activation mapping
  * @param complete_activation_mapping Pointer to function that gets executed when an operation on activation mapping completes

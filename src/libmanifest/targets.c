@@ -257,6 +257,7 @@ static void delete_containers(GPtrArray *containers)
             Container *container = g_ptr_array_index(containers, i);
             g_free(container->name);
             delete_properties(container->properties);
+            g_free(container);
         }
         
         g_ptr_array_free(containers, TRUE);
