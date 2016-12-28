@@ -103,19 +103,22 @@ static int retrieve_snapshots(GPtrArray *snapshots_array, GPtrArray *target_arra
     int success;
     RetrieveSnapshotsData data = { snapshots_array, all };
     ProcReact_PidIterator iterator = create_target_iterator(target_array, retrieve_snapshots_from_target, complete_retrieve_snapshots_from_target, &data);
+    
+    g_print("[coordinator]: Retrieving snapshots...\n");
+    
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
     success = target_iterator_has_succeeded(&iterator);
     
     destroy_target_iterator(&iterator);
     
-    return (!success);
+    return success;
 }
 
-static void cleanup(const gchar *old_manifest, char *old_manifest_file, Manifest *manifest, GPtrArray *snapshots_array, GPtrArray *old_snapshots_array)
+static void cleanup(const gboolean no_upgrade, const gchar *manifest_file, char *old_manifest_file, Manifest *manifest, GPtrArray *snapshots_array, GPtrArray *old_snapshots_array)
 {
     g_free(old_manifest_file);
     
-    if(old_manifest != NULL)
+    if(!no_upgrade && manifest_file != NULL)
     {
         delete_snapshots_array(old_snapshots_array);
         g_ptr_array_free(snapshots_array, TRUE);
@@ -136,7 +139,6 @@ int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_trans
     }
     else
     {
-        int exit_status = 0;
         GPtrArray *snapshots_array = NULL;
         GPtrArray *old_snapshots_array = NULL;
         gchar *old_manifest_file;
@@ -162,22 +164,15 @@ int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_trans
                 snapshots_array = subtract_snapshot_mappings(old_snapshots_array, manifest->snapshots_array);
             }
         
-            if(!transfer_only && !snapshot_services(snapshots_array, manifest->target_array))
+            if((!transfer_only && !snapshot_services(snapshots_array, manifest->target_array)) /* First, take snapshots on the remote machines */
+              || (!retrieve_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, all))) /* Then transfer the snapshots to the coordinator machine */
             {
-                cleanup(old_manifest, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
+                cleanup(no_upgrade, manifest_file, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
                 return 1;
-            }
-        
-            g_print("[coordinator]: Retrieving snapshots...\n");
-        
-            if((exit_status = retrieve_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, all)) != 0)
-            {
-                cleanup(old_manifest, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
-                return exit_status;
             }
         }
         
-        cleanup(old_manifest, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
-        return exit_status;
+        cleanup(no_upgrade, manifest_file, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
+        return 0;
     }
 }

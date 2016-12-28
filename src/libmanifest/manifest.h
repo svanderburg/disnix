@@ -72,4 +72,17 @@ void delete_manifest(Manifest *manifest);
  */
 gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, const gchar *profile);
 
+/**
+ * Opens the provided manifest or (if NULL) it attempts to open the manifest of
+ * the last deployed configuration.
+ *
+ * @param manifest_file Manifest file to open
+ * @param coordinator_profile_path Path to the coordinator profile or NULL to consult the default profile path
+ * @param profile Name of the Disnix profile that identifies the deployment (typically: default)
+ * @param container Name of the container to filter on, or NULL to parse all containers
+ * @param component Name of the component to filter on, or NULL to parse all components
+ * @return The provided manifest, previous manifest, or NULL in case of an error
+ */
+Manifest *open_provided_or_previous_manifest_file(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container, const gchar *component);
+
 #endif

@@ -91,7 +91,7 @@ static int send_snapshots(GPtrArray *snapshots_array, GPtrArray *target_array, c
     
     destroy_target_iterator(&iterator);
     
-    return (!success);
+    return success;
 }
 
 static pid_t restore_snapshot_on_target(SnapshotMapping *mapping, Target *target, gchar **arguments, unsigned int arguments_length)
@@ -108,17 +108,8 @@ static void complete_restore_snapshot_on_target(SnapshotMapping *mapping, ProcRe
 
 static int restore_services(GPtrArray *snapshots_array, GPtrArray *target_array)
 {
+    g_print("[coordinator]: Restoring state of services...\n");
     return map_snapshot_items(snapshots_array, target_array, restore_snapshot_on_target, complete_restore_snapshot_on_target);
-}
-
-static void cleanup(const gchar *old_manifest, char *old_manifest_file, Manifest *manifest, GPtrArray *snapshots_array)
-{
-    g_free(old_manifest_file);
-    
-    if(old_manifest != NULL)
-        g_ptr_array_free(snapshots_array, TRUE);
-    
-    delete_manifest(manifest);
 }
 
 int restore(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade, const gchar *container_filter, const gchar *component_filter)
@@ -133,7 +124,7 @@ int restore(const gchar *manifest_file, const unsigned int max_concurrent_transf
     }
     else
     {
-        int exit_status = 0;
+        int exit_status;
         GPtrArray *snapshots_array;
         gchar *old_manifest_file;
         
@@ -155,21 +146,21 @@ int restore(const gchar *manifest_file, const unsigned int max_concurrent_transf
             delete_snapshots_array(old_snapshots_array);
         }
         
-        if((exit_status = send_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, all)) != 0)
-        {
-            cleanup(old_manifest, old_manifest_file, manifest, snapshots_array);
-            return exit_status;
-        }
+        if(send_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, all) /* First, send the snapshots to the remote machines */
+          && (transfer_only || restore_services(snapshots_array, manifest->target_array))) /* Then, restore them on the remote machines */
+            exit_status = 0;
+        else
+            exit_status = 1;
         
-        g_print("[coordinator]: Restoring state of services...\n");
+        /* Cleanup */
+        g_free(old_manifest_file);
         
-        if(!transfer_only && !restore_services(snapshots_array, manifest->target_array))
-        {
-            cleanup(old_manifest, old_manifest_file, manifest, snapshots_array);
-            return 1;
-        }
-        
-        cleanup(old_manifest, old_manifest_file, manifest, snapshots_array);
+        if(!no_upgrade && old_manifest_file != NULL)
+            g_ptr_array_free(snapshots_array, TRUE);
+    
+        delete_manifest(manifest);
+
+        /* Return the exit status */
         return exit_status;
     }
 }
