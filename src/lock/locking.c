@@ -119,55 +119,31 @@ static int lock(const GPtrArray *distribution_array, const GPtrArray *target_arr
 
 int lock_or_unlock(const int do_lock, const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile)
 {
-    GPtrArray *distribution_array;
-    GPtrArray *target_array;
-    int exit_status;
-    
-    if(manifest_file == NULL)
+    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, NULL, NULL);
+
+    if(manifest == NULL)
     {
-        /* If no manifest file has been provided, try opening the last deployed one */
-        gchar *old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, profile);
-        
-        if(old_manifest_file == NULL)
-        {
-            g_printerr("[coordinator]: No previous manifest file exists, so no locking operations will be executed!\n");
-            return 0;
-        }
-        else
-        {
-            distribution_array = generate_distribution_array(old_manifest_file);
-            target_array = generate_target_array(old_manifest_file);
-            g_free(old_manifest_file);
-        }
+        g_printerr("Cannot open any manifest file!\n");
+        g_printerr("Please provide a valid manifest as command-line parameter!\n");
+        return 1;
     }
     else
     {
-        /* Open the provided manifest */
-        distribution_array = generate_distribution_array(manifest_file);
-        target_array = generate_target_array(manifest_file);
-    }
-    
-    if(distribution_array == NULL || target_array == NULL)
-    {
-        g_printerr("ERROR: Cannot open manifest file!\n");
-        exit_status = 1;
-    }
-    else
-    {
+        int exit_status;
+
         /* Override SIGINT's behaviour to allow stuff to be rollbacked in case of an interruption */
         set_flag_on_interrupt();
         
         /* Do the locking */
         if(do_lock)
-            exit_status = lock(distribution_array, target_array, profile);
+            exit_status = lock(manifest->distribution_array, manifest->target_array, profile);
         else
-            exit_status = unlock(distribution_array, target_array, profile);
-    }
-    
-    /* Cleanup */
-    delete_target_array(target_array);
-    delete_distribution_array(distribution_array);
+            exit_status = unlock(manifest->distribution_array, manifest->target_array, profile);
+        
+        /* Cleanup */
+        delete_manifest(manifest);
 
-    /* Return exit status */
-    return exit_status;
+        /* Return exit status */
+        return exit_status;
+    }
 }

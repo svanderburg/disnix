@@ -103,3 +103,24 @@ gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, c
     
     return old_manifest_file;
 }
+
+Manifest *open_provided_or_previous_manifest_file(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container, const gchar *component)
+{
+    if(manifest_file == NULL)
+    {
+        /* If no manifest file has been provided, try opening the last deployed one */
+        gchar *old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, profile);
+        
+        if(old_manifest_file == NULL)
+            return NULL; /* There is no previously deployed manifest */
+        else
+        {
+            /* Open the previously deployed manifest */
+            Manifest *manifest = create_manifest(old_manifest_file, container, component);
+            g_free(old_manifest_file);
+            return manifest;
+        }
+    }
+    else
+        return create_manifest(manifest_file, container, component); /* Open the provided manifest file */
+}

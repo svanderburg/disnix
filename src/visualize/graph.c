@@ -25,30 +25,12 @@
 
 int generate_graph(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, int no_containers)
 {
-    Manifest *manifest;
-    
-    if(manifest_file == NULL)
-    {
-        /* If no manifest file has been provided, try opening the last deployed one */
-        gchar *old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, profile);
-        
-        if(old_manifest_file == NULL)
-        {
-            g_printerr("[coordinator]: No previous manifest file exists, so no visualization will be provided!\n");
-            return 0;
-        }
-        else
-        {
-            manifest = create_manifest(old_manifest_file, NULL, NULL);
-            g_free(old_manifest_file);
-        }
-    }
-    else
-        manifest = create_manifest(manifest_file, NULL, NULL); /* Open the provided manifest */
+    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, NULL, NULL);
 
     if(manifest == NULL)
     {
-        g_printerr("Error with opening manifest file!\n");
+        g_printerr("Cannot open any manifest file!\n");
+        g_printerr("Please provide a valid manifest as command-line parameter!\n");
         return 1;
     }
     else

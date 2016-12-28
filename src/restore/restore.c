@@ -111,25 +111,6 @@ static int restore_services(GPtrArray *snapshots_array, GPtrArray *target_array)
     return map_snapshot_items(snapshots_array, target_array, restore_snapshot_on_target, complete_restore_snapshot_on_target);
 }
 
-static Manifest *open_manifest(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container_filter, const gchar *component_filter)
-{
-    gchar *path;
-    Manifest *manifest;
-    
-    if(manifest_file == NULL)
-        path = determine_previous_manifest_file(coordinator_profile_path, profile);
-    else
-        path = g_strdup(manifest_file);
-    
-    if(path == NULL)
-        manifest = NULL;
-    else
-        manifest = create_manifest(path, container_filter, component_filter);
-    
-    g_free(path);
-    return manifest;
-}
-
 static void cleanup(const gchar *old_manifest, char *old_manifest_file, Manifest *manifest, GPtrArray *snapshots_array)
 {
     g_free(old_manifest_file);
@@ -143,7 +124,7 @@ static void cleanup(const gchar *old_manifest, char *old_manifest_file, Manifest
 int restore(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade, const gchar *container_filter, const gchar *component_filter)
 {
     /* Generate a distribution array from the manifest file */
-    Manifest *manifest = open_manifest(manifest_file, coordinator_profile_path, profile, container_filter, component_filter);
+    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, container_filter, component_filter);
     
     if(manifest == NULL)
     {

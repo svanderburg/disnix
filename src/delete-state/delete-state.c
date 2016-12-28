@@ -42,41 +42,21 @@ static int delete_obsolete_state(GPtrArray *snapshots_array, GPtrArray *target_a
 
 int delete_state(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container, const gchar *component)
 {
-    Manifest *manifest;
-    
-    if(manifest_file == NULL)
-    {
-        /* If no manifest file has been provided, try opening the last deployed one */
-        gchar *old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, profile);
-        
-        if(old_manifest_file == NULL)
-        {
-            g_printerr("[coordinator]: No previous manifest file exists, so no state will be deleted!\n");
-            return 0;
-        }
-        else
-        {
-            g_printerr("[coordinator]: Deleting obsolete state of all components of the previous generation: %s\n", old_manifest_file);
-            manifest = create_manifest(old_manifest_file, container, component);
-            g_free(old_manifest_file);
-        }
-    }
-    else
-    {
-        /* Open the provided manifest */
-        g_printerr("[coordinator]: Deleting obsolete state of all components...\n");
-        manifest = create_manifest(manifest_file, container, component);
-    }
+    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, container, component);
     
     if(manifest == NULL)
     {
-        g_print("[coordinator]: Error while opening manifest file!\n");
+        g_printerr("[coordinator]: Error while opening manifest file!\n");
+        g_printerr("Please provde a valid manifest file as a command-line parameter.\n");
         return 1;
     }
     else
     {
+        int exit_status;
+        
         /* Delete the obsolete state */
-        int exit_status = !delete_obsolete_state(manifest->snapshots_array, manifest->target_array);
+        g_printerr("[coordinator]: Deleting obsolete state of services...\n");
+        exit_status = !delete_obsolete_state(manifest->snapshots_array, manifest->target_array);
         delete_manifest(manifest);
         return exit_status;
     }
