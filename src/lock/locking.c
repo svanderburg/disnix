@@ -65,7 +65,7 @@ static int unlock(const GPtrArray *distribution_array, const GPtrArray *target_a
     
     destroy_distribution_iterator(&iterator);
     
-    return (!success);
+    return success;
 }
 
 typedef struct
@@ -114,7 +114,7 @@ static int lock(const GPtrArray *distribution_array, const GPtrArray *target_arr
     g_ptr_array_free(lock_array, TRUE);
     destroy_distribution_iterator(&iterator);
     
-    return (!success);
+    return success;
 }
 
 int lock_or_unlock(const int do_lock, const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile)
@@ -136,9 +136,9 @@ int lock_or_unlock(const int do_lock, const gchar *manifest_file, const gchar *c
         
         /* Do the locking */
         if(do_lock)
-            exit_status = lock(manifest->distribution_array, manifest->target_array, profile);
+            exit_status = !lock(manifest->distribution_array, manifest->target_array, profile);
         else
-            exit_status = unlock(manifest->distribution_array, manifest->target_array, profile);
+            exit_status = !unlock(manifest->distribution_array, manifest->target_array, profile);
         
         /* Cleanup */
         delete_manifest(manifest);
