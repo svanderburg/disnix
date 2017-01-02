@@ -27,8 +27,8 @@
  * @param manifest_file Path to the manifest file which maps services to machines
  * @param coordinator_profile_path Path where the current deployment state is stored for future reference
  * @param profile Name of the distributed profile
- * @param container_filter Snapshot operations will be restricted to the given container, NULL indicates all containers
- * @param component_filter Snapshot operations will be restricted to the given component, NULL indicates all components
+ * @param container Snapshot operations will be restricted to the given container, NULL indicates all containers
+ * @param component Snapshot operations will be restricted to the given component, NULL indicates all components
  * @return 0 if everything succeeds, else a non-zero exit status
  */
 int delete_state(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container, const gchar *component);

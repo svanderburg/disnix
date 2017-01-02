@@ -19,15 +19,13 @@
 
 #include "profilemanifest.h"
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/types.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include "state-management.h"
-
-#define BUFFER_SIZE 1024
+#include "procreact_pid.h"
 
 extern char *tmpdir;
 
@@ -40,24 +38,17 @@ static int unlock_services(int log_fd, GPtrArray *profile_manifest_array)
     {
         ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
         pid_t pid;
+        ProcReact_Status status;
+        int result;
         
         dprintf(log_fd, "Notifying unlock on %s: of type: %s in container: %s\n", entry->derivation, entry->type, entry->container);
         pid = statemgmt_lock_component(entry->type, entry->container, entry->derivation, log_fd, log_fd);
+        result = procreact_wait_for_boolean(pid, &status);
         
-        if(pid == -1)
+        if(status != PROCREACT_STATUS_OK || !result)
         {
-            dprintf(log_fd, "Error forking unlock process!\n");
+            dprintf(log_fd, "Cannot unlock service!\n");
             exit_status = FALSE;
-        }
-        else if(pid > 0)
-        {
-            wait(&pid);
-        
-            if(!WIFEXITED(pid) || WEXITSTATUS(pid) != 0)
-            {
-                dprintf(log_fd, "Unlock failed!\n");
-                exit_status = FALSE;
-            }
         }
     }
     
@@ -74,25 +65,18 @@ static int lock_services(int log_fd, GPtrArray *profile_manifest_array)
     {
         ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
         pid_t pid;
+        ProcReact_Status status;
+        int result;
     
         dprintf(log_fd, "Notifying lock on %s: of type: %s in container: %s\n", entry->derivation, entry->type, entry->container);
         
         pid = statemgmt_unlock_component(entry->type, entry->container, entry->derivation, log_fd, log_fd);
-
-        if(pid == -1)
+        result = procreact_wait_for_boolean(pid, &status);
+        
+        if(status != PROCREACT_STATUS_OK || !result)
         {
-            dprintf(log_fd, "Error forking lock process!\n");
-            exit_status = -1;
-        }
-        else if(pid > 0)
-        {
-            wait(&pid);
-
-            if(!WIFEXITED(pid) || WEXITSTATUS(pid) != 0)
-            {
-                dprintf(log_fd, "Lock rejected!\n");
-                exit_status = -1;
-            }
+            dprintf(log_fd, "Cannot acquire lock!\n");
+            exit_status = FALSE;
         }
     }
     
@@ -156,49 +140,57 @@ LineType;
 GPtrArray *create_profile_manifest_array(gchar *profile)
 {
     gchar *manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, "/manifest", NULL);
-    FILE *fp = fopen(manifest_file, "r");
+    int fd = open(manifest_file, O_RDONLY);
     g_free(manifest_file);
     
-    if(fp == NULL)
-        return g_ptr_array_new();
+    if(fd == -1)
+        return g_ptr_array_new(); /* If the manifest does not exist, we have an empty configuration */
     else
     {
-        char line[BUFFER_SIZE];
+        unsigned int i;
         LineType line_type = LINE_DERIVATION;
-        GPtrArray *profile_manifest_array = g_ptr_array_new();
         ProfileManifestEntry *entry = NULL;
-
-        /* Read the output */
-
-        while(fgets(line, BUFFER_SIZE - 1, fp) != NULL)
+        GPtrArray *profile_manifest_array = g_ptr_array_new();
+        
+        /* Initialize a string array type composing a string array from the read file */
+        ProcReact_Type type = procreact_create_string_array_type('\n');
+        ProcReact_StringArrayState *state = (ProcReact_StringArrayState*)type.initialize();
+        
+        /* Read from the file and compose a string array from it */
+        while(type.append(&type, state, fd) > 0);
+        
+        /* Process the resulting string array and compose a profile manifest array from it */
+        if(state->result_length > 1)
         {
-            unsigned int line_length = strlen(line);
-            
-            /* Chop off the linefeed at the end */
-            if(line > 0)
-                line[line_length - 1] = '\0';
-            
-            /* Compose derivation and type pairs and add them to an array */
-            switch(line_type)
+            for(i = 0; i < state->result_length - 1; i++)
             {
-                case LINE_DERIVATION:
-                    entry = (ProfileManifestEntry*)g_malloc(sizeof(ProfileManifestEntry));
-                    entry->derivation = g_strdup(line);
-                    line_type = LINE_CONTAINER;
-                    break;
-                case LINE_CONTAINER:
-                    entry->container = g_strdup(line);
-                    line_type = LINE_TYPE;
-                    break;
-                case LINE_TYPE:
-                    entry->type = g_strdup(line);
-                    g_ptr_array_add(profile_manifest_array, entry);
-                    line_type = LINE_DERIVATION;
-                    break;
+                char *line = state->result[i];
+                
+                /* Compose derivation, container, type triples and add them to an array */
+                switch(line_type)
+                {
+                    case LINE_DERIVATION:
+                        entry = (ProfileManifestEntry*)g_malloc(sizeof(ProfileManifestEntry));
+                        entry->derivation = line;
+                        line_type = LINE_CONTAINER;
+                        break;
+                    case LINE_CONTAINER:
+                        entry->container = line;
+                        line_type = LINE_TYPE;
+                        break;
+                    case LINE_TYPE:
+                        entry->type = line;
+                        g_ptr_array_add(profile_manifest_array, entry);
+                        line_type = LINE_DERIVATION;
+                        break;
+                }
             }
         }
-
-        fclose(fp);
+        
+        /* Cleanup */
+        free(state->result);
+        free(state);
+        close(fd);
         
         /* We should have the right number of lines */
         if(line_type == LINE_DERIVATION)
@@ -274,7 +266,7 @@ gchar **query_derivations(GPtrArray *profile_manifest_array)
     for(i = 0; i < profile_manifest_array->len; i++)
     {
         ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
-        derivations[i] = g_strconcat(entry->derivation, "\n", NULL);
+        derivations[i] = entry->derivation;
     }
     
     derivations[i] = NULL;

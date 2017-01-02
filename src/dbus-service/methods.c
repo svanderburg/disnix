@@ -395,7 +395,7 @@ static gpointer disnix_query_installed_thread_func(gpointer data)
             gchar **derivations = query_derivations(profile_manifest_array);
             org_nixos_disnix_disnix_emit_success(params->object, params->arg_pid, (const gchar**)derivations);
             
-            g_strfreev(derivations);
+            g_free(derivations);
             delete_profile_manifest_array(profile_manifest_array);
         }
         

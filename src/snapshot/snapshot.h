@@ -32,8 +32,8 @@
  * @param coordinator_profile_path Path where the current deployment state is stored for future reference
  * @param profile Name of the distributed profile
  * @param no_upgrade Force Disnix to not look at the previous configuration
- * @param container_filter Snapshot operations will be restricted to the given container, NULL indicates all containers
- * @param component_filter Snapshot operations will be restricted to the given component, NULL indicates all components
+ * @param container Snapshot operations will be restricted to the given container, NULL indicates all containers
+ * @param component Snapshot operations will be restricted to the given component, NULL indicates all components
  * @return 0 if everything succeeds, else a non-zero exit status
  */
 int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int all, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade, const gchar *container, const gchar *component);

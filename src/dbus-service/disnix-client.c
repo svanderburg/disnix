@@ -42,12 +42,10 @@ static void print_log(const gint pid)
         fprintf(stderr, "Cannot display logfile of pid: %d\n", pid);
     else
     {
-        while(!feof(file))
-        {
-            fgets(buf, BUFFER_SIZE - 1, file);
-            buf[BUFFER_SIZE - 1] = '\0';
-            fputs(buf, stderr);
-        }
+        size_t bytes_read;
+        
+        while(!feof(file) && (bytes_read = fread(buf, 1, BUFFER_SIZE, file)) > 0)
+            fwrite(buf, 1, bytes_read, stderr);
         
         fclose(file);
     }
