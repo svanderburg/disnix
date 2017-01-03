@@ -35,8 +35,7 @@ pid_t statemgmt_run_dysnomia_activity(gchar *type, gchar *activity, gchar *compo
     if(pid == 0)
     {
         unsigned int i;
-        char *cmd = "dysnomia";
-        char *args[] = {cmd, "--type", type, "--operation", activity, "--component", component, "--container", container, "--environment", NULL};
+        char *const args[] = {"dysnomia", "--type", type, "--operation", activity, "--component", component, "--container", container, "--environment", NULL};
 
         /* Compose environment variables out of the arguments */
         for(i = 0; i < g_strv_length(arguments); i++)
@@ -48,7 +47,7 @@ pid_t statemgmt_run_dysnomia_activity(gchar *type, gchar *activity, gchar *compo
         
         dup2(stdout, 1);
         dup2(stderr, 2);
-        execvp(cmd, args);
+        execvp(args[0], args);
         _exit(1);
     }
     
@@ -61,7 +60,7 @@ ProcReact_Future statemgmt_query_all_snapshots(gchar *container, gchar *componen
     
     if(future.pid == 0)
     {
-        char *args[] = {"dysnomia-snapshots", "--query-all", "--container", container, "--component", component, NULL};
+        char *const args[] = {"dysnomia-snapshots", "--query-all", "--container", container, "--component", component, NULL};
 
         dup2(future.fd, 1);
         dup2(stderr, 2);
@@ -78,7 +77,7 @@ ProcReact_Future statemgmt_query_latest_snapshot(gchar *container, gchar *compon
     
     if(future.pid == 0)
     {
-        char *args[] = {"dysnomia-snapshots", "--query-latest", "--container", container, "--component", component, NULL};
+        char *const args[] = {"dysnomia-snapshots", "--query-latest", "--container", container, "--component", component, NULL};
 
         dup2(future.fd, 1);
         dup2(stderr, 2);
@@ -171,7 +170,7 @@ ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr)
     return future;
 }
 
-pid_t statemgmt_clean_snapshots(gchar *keepStr, gchar *container, gchar *component, int stdout, int stderr)
+pid_t statemgmt_clean_snapshots(gint keep, gchar *container, gchar *component, int stdout, int stderr)
 {
     pid_t pid = fork();
     
@@ -179,11 +178,16 @@ pid_t statemgmt_clean_snapshots(gchar *keepStr, gchar *container, gchar *compone
     {
         char **args = (char**)g_malloc(9 * sizeof(gchar*));
         unsigned int count = 4;
+        char keep_str[15];
         
+        /* Convert keep value to string */
+        sprintf(keep_str, "%d", keep);
+        
+        /* Compose command-line arguments */
         args[0] = "dysnomia-snapshots";
         args[1] = "--gc";
         args[2] = "--keep";
-        args[3] = keepStr;
+        args[3] = keep_str;
         
         if(g_strcmp0(container, "") != 0) /* Add container parameter, if requested */
         {
@@ -241,7 +245,7 @@ gchar **statemgmt_capture_config(gchar *tmpdir, int stderr)
         }
         else if(pid == 0)
         {
-            char *args[] = { "dysnomia-containers", "--generate-expr", NULL };
+            char *const args[] = { "dysnomia-containers", "--generate-expr", NULL };
             
             dup2(closure_fd, 1);
             dup2(stderr, 2);
@@ -251,9 +255,10 @@ gchar **statemgmt_capture_config(gchar *tmpdir, int stderr)
         else
         {
             gchar **tempfilepaths;
-            wait(&pid);
+            ProcReact_Status status;
+            int result = procreact_wait_for_boolean(pid, &status);
 
-            if(WIFEXITED(pid) && WEXITSTATUS(pid) == 0)
+            if(status == PROCREACT_STATUS_OK && result)
             {
                 tempfilepaths = (gchar**)g_malloc(2 * sizeof(gchar*));
                 tempfilepaths[0] = tempfilename;
@@ -280,7 +285,7 @@ static pid_t lock_or_unlock_component(gchar *operation, gchar *type, gchar *cont
     
     if(pid == 0)
     {
-        char *args[] = {"dysnomia", "--type", type, "--operation", operation, "--container", container, "--component", component, "--environment", NULL};
+        char *const args[] = {"dysnomia", "--type", type, "--operation", operation, "--container", container, "--component", component, "--environment", NULL};
         dup2(stdout, 1);
         dup2(stderr, 2);
         execvp(args[0], args);

@@ -35,8 +35,10 @@
 
 #define RESOLVED_PATH_MAX_SIZE 4096
 
-pid_t pkgmgmt_import_closure(int closure_fd, int stdout, int stderr)
+pid_t pkgmgmt_import_closure(const char *closure, int stdout, int stderr)
 {
+    int closure_fd = open(closure, O_RDONLY);
+    
     if(closure_fd == -1)
         return -1;
     else
@@ -45,7 +47,7 @@ pid_t pkgmgmt_import_closure(int closure_fd, int stdout, int stderr)
         
         if(pid == 0)
         {
-            char *args[] = {NIX_STORE_CMD, "--import", NULL};
+            char *const args[] = {NIX_STORE_CMD, "--import", NULL};
             
             dup2(closure_fd, 0);
             dup2(stdout, 1);
@@ -99,10 +101,10 @@ gchar **pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr)
         else
         {
             gchar **tempfilepaths;
+            ProcReact_Status status;
+            int result = procreact_wait_for_boolean(pid, &status);
             
-            wait(&pid);
-
-            if(WIFEXITED(pid) && WEXITSTATUS(pid) == 0)
+            if(status == PROCREACT_STATUS_OK && result)
             {
                 tempfilepaths = (gchar**)g_malloc(2 * sizeof(gchar*));
                 tempfilepaths[0] = tempfilename;
@@ -208,7 +210,7 @@ pid_t pkgmgmt_set_profile(gchar *profile, gchar *derivation, int stdout, int std
     {
         if(resolved_path_size == -1 || (strlen(derivation) == resolved_path_size && strncmp(resolved_path, derivation, resolved_path_size) != 0)) /* Only configure the configurator profile if the given manifest is not identical to the previous manifest */
         {
-            gchar *args[] = {NIX_ENV_CMD, "-p", profile_path, "--set", derivation, NULL};
+            char *const args[] = {NIX_ENV_CMD, "-p", profile_path, "--set", derivation, NULL};
             dup2(stdout, 1);
             dup2(stderr, 2);
             execvp(NIX_ENV_CMD, args);
@@ -260,12 +262,12 @@ pid_t pkgmgmt_collect_garbage(int delete_old, int stdout, int stderr)
         
         if(delete_old)
         {
-            char *args[] = {NIX_COLLECT_GARBAGE_CMD, "-d", NULL};
+            char *const args[] = {NIX_COLLECT_GARBAGE_CMD, "-d", NULL};
             execvp(NIX_COLLECT_GARBAGE_CMD, args);
         }
         else
         {
-            char *args[] = {NIX_COLLECT_GARBAGE_CMD, NULL};
+            char *const args[] = {NIX_COLLECT_GARBAGE_CMD, NULL};
             execvp(NIX_COLLECT_GARBAGE_CMD, args);
         }
         

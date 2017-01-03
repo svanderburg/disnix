@@ -33,15 +33,45 @@
 
 extern char *tmpdir, *logdir;
 
-static void evaluate_boolean_process(pid_t pid, OrgNixosDisnixDisnix *object, gint jid)
+typedef struct
+{
+    OrgNixosDisnixDisnix *object;
+    gint jid;
+    int log_fd;
+    pid_t pid;
+}
+BooleanThreadData;
+
+static gpointer evaluate_boolean_process_thread_func(gpointer data)
 {
     ProcReact_Status status;
-    int result = procreact_wait_for_boolean(pid, &status);
+    BooleanThreadData *boolean_data = (BooleanThreadData*)data;
+    int result = procreact_wait_for_boolean(boolean_data->pid, &status);
     
     if(status == PROCREACT_STATUS_OK && result)
-        org_nixos_disnix_disnix_emit_finish(object, jid);
+        org_nixos_disnix_disnix_emit_finish(boolean_data->object, boolean_data->jid);
     else
-        org_nixos_disnix_disnix_emit_failure(object, jid);
+        org_nixos_disnix_disnix_emit_failure(boolean_data->object, boolean_data->jid);
+    
+    /* Cleanup */
+    g_free(boolean_data);
+    close(boolean_data->log_fd);
+    
+    return NULL;
+}
+
+static void evaluate_boolean_process(pid_t pid, OrgNixosDisnixDisnix *object, gint jid, int log_fd)
+{
+    GThread *thread;
+    BooleanThreadData *data = (BooleanThreadData*)g_malloc(sizeof(BooleanThreadData));
+    
+    data->object = object;
+    data->jid = jid;
+    data->log_fd = log_fd;
+    data->pid = pid;
+    
+    thread = g_thread_new("evaluate-boolean", evaluate_boolean_process_thread_func, data);
+    g_thread_unref(thread);
 }
 
 static void evaluate_strv_process(gchar **result, OrgNixosDisnixDisnix *object, gint jid)
@@ -53,6 +83,50 @@ static void evaluate_strv_process(gchar **result, OrgNixosDisnixDisnix *object, 
         org_nixos_disnix_disnix_emit_success(object, jid, (const gchar**)result);
         g_strfreev(result);
     }
+}
+
+typedef struct
+{
+    OrgNixosDisnixDisnix *object;
+    gint jid;
+    int log_fd;
+    ProcReact_Future future;
+}
+StrvThreadData;
+
+static gpointer evaluate_strv_process2_thread_func(gpointer data)
+{
+    StrvThreadData *strv_data = (StrvThreadData*)data;
+    ProcReact_Status status;
+    char **result = procreact_future_get(&strv_data->future, &status);
+    
+    if(status != PROCREACT_STATUS_OK || result == NULL)
+        org_nixos_disnix_disnix_emit_failure(strv_data->object, strv_data->jid);
+    else
+    {
+        org_nixos_disnix_disnix_emit_success(strv_data->object, strv_data->jid, (const gchar**)result);
+        procreact_free_string_array(result);
+    }
+    
+    /* Cleanup */
+    g_free(strv_data);
+    close(strv_data->log_fd);
+    
+    return NULL;
+}
+
+static void evaluate_strv_process2(ProcReact_Future future, OrgNixosDisnixDisnix *object, gint jid, int log_fd)
+{
+    GThread *thread;
+    StrvThreadData *data = (StrvThreadData*)g_malloc(sizeof(StrvThreadData));
+    
+    data->object = object;
+    data->jid = jid;
+    data->log_fd = log_fd;
+    data->future = future;
+    
+    thread = g_thread_new("evaluate-strv", evaluate_strv_process2_thread_func, data);
+    g_thread_unref(thread);
 }
 
 /* Get job id method */
@@ -67,58 +141,25 @@ gboolean on_handle_get_job_id(OrgNixosDisnixDisnix *object, GDBusMethodInvocatio
 
 /* Import method */
 
-typedef struct
+gboolean on_handle_import(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_closure)
 {
-    OrgNixosDisnixDisnix *object;
-    gint arg_pid;
-    gchar *arg_closure;
-}
-ImportParams;
-
-static gpointer disnix_import_thread_func(gpointer data)
-{
-    ImportParams *params = (ImportParams*)data;
-    int log_fd = open_log_file(params->arg_pid);
+    int log_fd = open_log_file(arg_pid);
     
     if(log_fd == -1)
     {
         g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
+        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
     }
     else
     {
-        int closure_fd;
-        
         /* Print log entry */
-        dprintf(log_fd, "Importing: %s\n", params->arg_closure);
+        dprintf(log_fd, "Importing: %s\n", arg_closure);
         
         /* Execute command */
-        closure_fd = open(params->arg_closure, O_RDONLY);
-        evaluate_boolean_process(pkgmgmt_import_closure(closure_fd, log_fd, log_fd), params->object, params->arg_pid);
-
-        close(closure_fd);
-        close(log_fd);
+        evaluate_boolean_process(pkgmgmt_import_closure(arg_closure, log_fd, log_fd), object, arg_pid, log_fd);
     }
     
-    /* Cleanup */
-    g_free(params->arg_closure);
-    g_free(params);
-    
-    return NULL;
-}
-
-gboolean on_handle_import(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_closure)
-{
-    GThread *thread;
-    
-    ImportParams *params = (ImportParams*)g_malloc(sizeof(ImportParams));
-    params->object = object;
-    params->arg_pid = arg_pid;
-    params->arg_closure = g_strdup(arg_closure);
-
-    thread = g_thread_new("import", disnix_import_thread_func, params);
     org_nixos_disnix_disnix_complete_import(object, invocation);
-    g_thread_unref(thread);
     return TRUE;
 }
 
@@ -179,181 +220,77 @@ gboolean on_handle_export(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *i
 
 /* Print invalid paths method */
 
-typedef struct
+gboolean on_handle_print_invalid(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_derivation)
 {
-    OrgNixosDisnixDisnix *object;
-    gint arg_pid;
-    gchar **arg_derivation;
-}
-PrintInvalidParams;
-
-static gpointer disnix_print_invalid_thread_func(gpointer data)
-{
-    PrintInvalidParams *params = (PrintInvalidParams*)data;
-    int log_fd = open_log_file(params->arg_pid);
+    int log_fd = open_log_file(arg_pid);
     
     if(log_fd == -1)
     {
-        g_printerr("Cannot write logfile of pid: %d!\n", params->arg_pid);
-        org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
+        g_printerr("Cannot write logfile of pid: %d!\n", arg_pid);
+        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
     }
     else
     {
-        ProcReact_Future future;
-        ProcReact_Status status;
-        gchar **result;
-        
         /* Print log entry */
         dprintf(log_fd, "Print invalid: ");
-        print_paths(log_fd, params->arg_derivation);
+        print_paths(log_fd, (gchar**)arg_derivation);
         dprintf(log_fd, "\n");
         
         /* Execute command */
-        
-        future = pkgmgmt_print_invalid_packages(params->arg_derivation, log_fd);
-        result = procreact_future_get(&future, &status);
-        
-        evaluate_strv_process(result, params->object, params->arg_pid);
-        
-        close(log_fd);
+        evaluate_strv_process2(pkgmgmt_print_invalid_packages((gchar**)arg_derivation, log_fd), object, arg_pid, log_fd);
     }
     
-    /* Cleanup */
-    g_strfreev(params->arg_derivation);
-    g_free(params);
-    return NULL;
-}
-
-gboolean on_handle_print_invalid(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_derivation)
-{
-    GThread *thread;
-    
-    PrintInvalidParams *params = (PrintInvalidParams*)g_malloc(sizeof(PrintInvalidParams));
-    params->object = object;
-    params->arg_pid = arg_pid;
-    params->arg_derivation = g_strdupv((gchar**)arg_derivation);
-
-    thread = g_thread_new("export", disnix_print_invalid_thread_func, params);
     org_nixos_disnix_disnix_complete_print_invalid(object, invocation);
-    g_thread_unref(thread);
     return TRUE;
 }
 
 /* Realise method */
 
-typedef struct
+gboolean on_handle_realise(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_derivation)
 {
-    OrgNixosDisnixDisnix *object;
-    gint arg_pid;
-    gchar **arg_derivation;
-}
-RealiseParams;
-
-static gpointer disnix_realise_thread_func(gpointer data)
-{
-    RealiseParams *params = (RealiseParams*)data;
-    int log_fd = open_log_file(params->arg_pid);
+    int log_fd = open_log_file(arg_pid);
     
     if(log_fd == -1)
     {
         g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
+        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
     }
     else
     {
-        ProcReact_Future future;
-        ProcReact_Status status;
-        gchar **result;
-        
         /* Print log entry */
         dprintf(log_fd, "Realising: ");
-        print_paths(log_fd, params->arg_derivation);
+        print_paths(log_fd, (gchar**)arg_derivation);
         dprintf(log_fd, "\n");
         
-        /* Execute command */
-        
-        future = pkgmgmt_realise(params->arg_derivation, log_fd);
-        result = procreact_future_get(&future, &status);
-        
-        evaluate_strv_process(result, params->object, params->arg_pid);
-        
-        close(log_fd);
+        /* Execute command and wait and asychronously propagate its end result */
+        evaluate_strv_process2(pkgmgmt_realise((gchar**)arg_derivation, log_fd), object, arg_pid, log_fd);
     }
     
-    /* Cleanup */
-    g_strfreev(params->arg_derivation);
-    g_free(params);
-    return NULL;
-}
-
-gboolean on_handle_realise(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_derivation)
-{
-    GThread *thread;
-    
-    RealiseParams *params = (RealiseParams*)g_malloc(sizeof(RealiseParams));
-    params->object = object;
-    params->arg_pid = arg_pid;
-    params->arg_derivation = g_strdupv((gchar**)arg_derivation);
-    
-    thread = g_thread_new("realise", disnix_realise_thread_func, params);
     org_nixos_disnix_disnix_complete_realise(object, invocation);
-    g_thread_unref(thread);
     return TRUE;
 }
 
 /* Set method */
 
-typedef struct
+gboolean on_handle_set(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_profile, const gchar *arg_derivation)
 {
-    OrgNixosDisnixDisnix *object;
-    gint arg_pid;
-    gchar *arg_profile;
-    gchar *arg_derivation;
-}
-SetParams;
-
-static gpointer disnix_set_thread_func(gpointer data)
-{
-    SetParams *params = (SetParams*)data;
-    int log_fd = open_log_file(params->arg_pid);
+    int log_fd = open_log_file(arg_pid);
     
     if(log_fd == -1)
     {
         g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
+        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
     }
     else
     {
         /* Print log entry */
-        dprintf(log_fd, "Set profile: %s with derivation: %s\n", params->arg_profile, params->arg_derivation);
+        dprintf(log_fd, "Set profile: %s with derivation: %s\n", arg_profile, arg_derivation);
     
         /* Execute command */
-        
-        evaluate_boolean_process(pkgmgmt_set_profile(params->arg_profile, params->arg_derivation, log_fd, log_fd), params->object, params->arg_pid);
-        
-        close(log_fd);
+        evaluate_boolean_process(pkgmgmt_set_profile((gchar*)arg_profile, (gchar*)arg_derivation, log_fd, log_fd), object, arg_pid, log_fd);
     }
     
-    /* Cleanup */
-    g_free(params->arg_profile);
-    g_free(params->arg_derivation);
-    g_free(params);
-    return NULL;
-}
-
-gboolean on_handle_set(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_profile, const gchar *arg_derivation)
-{
-    GThread *thread;
-    
-    SetParams *params = (SetParams*)g_malloc(sizeof(SetParams));
-    params->object = object;
-    params->arg_pid = arg_pid;
-    params->arg_profile = g_strdup(arg_profile);
-    params->arg_derivation = g_strdup(arg_derivation);
-
-    thread = g_thread_new("set", disnix_set_thread_func, params);
     org_nixos_disnix_disnix_complete_set(object, invocation);
-    g_thread_unref(thread);
     return TRUE;
 }
 
@@ -425,202 +362,95 @@ gboolean on_handle_query_installed(OrgNixosDisnixDisnix *object, GDBusMethodInvo
 
 /* Query requisites method */
 
-typedef struct
+gboolean on_handle_query_requisites(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_derivation)
 {
-    OrgNixosDisnixDisnix *object;
-    gint arg_pid;
-    gchar **arg_derivation;
-}
-QueryRequisitesParams;
-
-static gpointer disnix_query_requisites_thread_func(gpointer data)
-{
-    QueryRequisitesParams *params = (QueryRequisitesParams*)data;
-    int log_fd = open_log_file(params->arg_pid);
+    int log_fd = open_log_file(arg_pid);
     
     if(log_fd == -1)
     {
         g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
+        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
     }
     else
     {
-        ProcReact_Future future;
-        ProcReact_Status status;
-        gchar **result;
-        
         /* Print log entry */
         dprintf(log_fd, "Query requisites from derivations: ");
-        print_paths(log_fd, params->arg_derivation);
+        print_paths(log_fd, (gchar**)arg_derivation);
         dprintf(log_fd, "\n");
-    
+        
         /* Execute command */
-        
-        future = pkgmgmt_query_requisites(params->arg_derivation, log_fd);
-        result = procreact_future_get(&future, &status);
-        
-        evaluate_strv_process(result, params->object, params->arg_pid);
-        
-        close(log_fd);
+        evaluate_strv_process2(pkgmgmt_query_requisites((gchar**)arg_derivation, log_fd), object, arg_pid, log_fd);
     }
     
-    /* Cleanup */
-    g_strfreev(params->arg_derivation);
-    g_free(params);
-    return NULL;
-}
-
-gboolean on_handle_query_requisites(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_derivation)
-{
-    GThread *thread;
-    
-    QueryRequisitesParams *params = (QueryRequisitesParams*)g_malloc(sizeof(QueryRequisitesParams));
-    params->object = object;
-    params->arg_pid = arg_pid;
-    params->arg_derivation = g_strdupv((gchar**)arg_derivation);
-    
-    thread = g_thread_new("query-requisites", disnix_query_requisites_thread_func, params);
     org_nixos_disnix_disnix_complete_query_requisites(object, invocation);
-    g_thread_unref(thread);
     return TRUE;
 }
 
 /* Garbage collect method */
 
-typedef struct
+gboolean on_handle_collect_garbage(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, gboolean arg_delete_old)
 {
-    OrgNixosDisnixDisnix *object;
-    gint arg_pid;
-    gboolean arg_delete_old;
-}
-CollectGarbageParams;
-
-static gpointer disnix_collect_garbage_thread_func(gpointer data)
-{
-    CollectGarbageParams *params = (CollectGarbageParams*)data;
-    int log_fd = open_log_file(params->arg_pid);
+    int log_fd = open_log_file(arg_pid);
     
     if(log_fd == -1)
     {
         g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
+        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
     }
     else
     {
         /* Print log entry */
-        if(params->arg_delete_old)
+        if(arg_delete_old)
             dprintf(log_fd, "Garbage collect and remove old derivations\n");
         else
             dprintf(log_fd, "Garbage collect\n");
     
         /* Execute command */
-        evaluate_boolean_process(pkgmgmt_collect_garbage(params->arg_delete_old, log_fd, log_fd), params->object, params->arg_pid);
-        
-        close(log_fd);
+        evaluate_boolean_process(pkgmgmt_collect_garbage(arg_delete_old, log_fd, log_fd), object, arg_pid, log_fd);
     }
     
-    /* Cleanup */
-    g_free(params);
-    return NULL;
-}
-
-gboolean on_handle_collect_garbage(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, gboolean arg_delete_old)
-{
-    GThread *thread;
-    
-    CollectGarbageParams *params = (CollectGarbageParams*)g_malloc(sizeof(CollectGarbageParams));
-    params->object = object;
-    params->arg_pid = arg_pid;
-    params->arg_delete_old = arg_delete_old;
-    
-    thread = g_thread_new("collect_garbage", disnix_collect_garbage_thread_func, params);
     org_nixos_disnix_disnix_complete_collect_garbage(object, invocation);
-    g_thread_unref(thread);
     return TRUE;
 }
 
 /* Common dysnomia invocation function */
 
-typedef struct
+static gboolean on_handle_dysnomia_activity(gchar *activity, OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    OrgNixosDisnixDisnix *object;
-    gchar *activity;
-    gint arg_pid;
-    gchar *arg_derivation;
-    gchar *arg_container;
-    gchar *arg_type;
-    gchar **arg_arguments;
-}
-ActivityParams;
-
-static ActivityParams *create_activity_params(OrgNixosDisnixDisnix *object, gchar *activity, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
-{
-    ActivityParams *params = (ActivityParams*)g_malloc(sizeof(ActivityParams));
-    
-    params->object = object;
-    params->activity = g_strdup(activity);
-    params->arg_pid = arg_pid;
-    params->arg_derivation = g_strdup(arg_derivation);
-    params->arg_container = g_strdup(arg_container);
-    params->arg_type = g_strdup(arg_type);
-    params->arg_arguments = g_strdupv((gchar**)arg_arguments);
-    
-    return params;
-}
-
-static gpointer disnix_dysnomia_activity_thread_func(gpointer data)
-{
-    ActivityParams *params = (ActivityParams*)data;
-    int log_fd = open_log_file(params->arg_pid);
+    int log_fd = open_log_file(arg_pid);
     
     if(log_fd == -1)
     {
         g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
+        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
     }
     else
     {
         /* Print log entry */
-        dprintf(log_fd, "%s: %s of type: %s in container: %s with arguments: ", params->activity, params->arg_derivation, params->arg_type, params->arg_container);
-        print_paths(log_fd, params->arg_arguments);
+        dprintf(log_fd, "%s: %s of type: %s in container: %s with arguments: ", activity, arg_derivation, arg_type, arg_container);
+        print_paths(log_fd, (gchar**)arg_arguments);
         dprintf(log_fd, "\n");
     
         /* Execute command */
-        evaluate_boolean_process(statemgmt_run_dysnomia_activity(params->arg_type, params->activity, params->arg_derivation, params->arg_container, params->arg_arguments, log_fd, log_fd), params->object, params->arg_pid);
-    
-        close(log_fd);
+        evaluate_boolean_process(statemgmt_run_dysnomia_activity((gchar*)arg_type, activity, (gchar*)arg_derivation, (gchar*)arg_container, (gchar**)arg_arguments, log_fd, log_fd), object, arg_pid, log_fd);
     }
     
-    /* Cleanup */
-    g_free(params->activity);
-    g_free(params->arg_derivation);
-    g_free(params->arg_container);
-    g_free(params->arg_type);
-    g_strfreev(params->arg_arguments);
-    g_free(params);
-    return NULL;
+    org_nixos_disnix_disnix_complete_activate(object, invocation);
+    return TRUE;
 }
 
 /* Activate method */
 
 gboolean on_handle_activate(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    ActivityParams *params = create_activity_params(object, "activate", arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
-    GThread *thread = g_thread_new("activate", disnix_dysnomia_activity_thread_func, params);
-    org_nixos_disnix_disnix_complete_activate(object, invocation);
-    g_thread_unref(thread);
-    return TRUE;
+    return on_handle_dysnomia_activity("activate", object, invocation, arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
 }
 
 /* Deactivate method */
 
 gboolean on_handle_deactivate(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    ActivityParams *params = create_activity_params(object, "deactivate", arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
-    GThread *thread = g_thread_new("deactivate", disnix_dysnomia_activity_thread_func, params);
-    org_nixos_disnix_disnix_complete_deactivate(object, invocation);
-    g_thread_unref(thread);
-    return TRUE;
+    return on_handle_dysnomia_activity("deactivate", object, invocation, arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
 }
 
 /* Lock method */
@@ -757,403 +587,171 @@ gboolean on_handle_unlock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *i
 
 gboolean on_handle_snapshot(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    ActivityParams *params = create_activity_params(object, "snapshot", arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
-    GThread *thread = g_thread_new("snapshot", disnix_dysnomia_activity_thread_func, params);
-    org_nixos_disnix_disnix_complete_snapshot(object, invocation);
-    g_thread_unref(thread);
-    return TRUE;
+    return on_handle_dysnomia_activity("snapshot", object, invocation, arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
 }
 
 /* Restore method */
 
 gboolean on_handle_restore(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    ActivityParams *params = create_activity_params(object, "restore", arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
-    GThread *thread = g_thread_new("restore", disnix_dysnomia_activity_thread_func, params);
-    org_nixos_disnix_disnix_complete_restore(object, invocation);
-    g_thread_unref(thread);
-    return TRUE;
+    return on_handle_dysnomia_activity("restore", object, invocation, arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
 }
 
 /* Query all snapshots method */
 
-typedef struct
+gboolean on_handle_query_all_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_container, const gchar *arg_component)
 {
-    OrgNixosDisnixDisnix *object;
-    gint arg_pid;
-    gchar *arg_container;
-    gchar *arg_component;
-}
-QueryAllSnapshotsParams;
-
-static gpointer disnix_query_all_snapshots_thread_func(gpointer data)
-{
-    QueryAllSnapshotsParams *params = (QueryAllSnapshotsParams*)data;
-    int log_fd = open_log_file(params->arg_pid);
+    int log_fd = open_log_file(arg_pid);
     
     if(log_fd == -1)
     {
         g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
+        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
     }
     else
     {
-        /* Declarations */
-        ProcReact_Future future;
-        ProcReact_Status status;
-        gchar **result;
-        
         /* Print log entry */
-        dprintf(log_fd, "Query all snapshots from container: %s and component: %s\n", params->arg_container, params->arg_component);
-    
+        dprintf(log_fd, "Query all snapshots from container: %s and component: %s\n", arg_container, arg_component);
+        
         /* Execute command */
-        future = statemgmt_query_all_snapshots(params->arg_container, params->arg_component, log_fd);
-        result = procreact_future_get(&future, &status);
-        
-        evaluate_strv_process(result, params->object, params->arg_pid);
-        
-        close(log_fd);
+        evaluate_strv_process2(statemgmt_query_all_snapshots((gchar*)arg_container, (gchar*)arg_component, log_fd), object, arg_pid, log_fd);
     }
     
-    /* Cleanup */
-    g_free(params->arg_container);
-    g_free(params->arg_component);
-    g_free(params);
-    return NULL;
-}
-
-gboolean on_handle_query_all_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_container, const gchar *arg_component)
-{
-    GThread *thread;
-    
-    QueryAllSnapshotsParams *params = (QueryAllSnapshotsParams*)g_malloc(sizeof(QueryAllSnapshotsParams));
-    params->object = object;
-    params->arg_pid = arg_pid;
-    params->arg_container = g_strdup(arg_container);
-    params->arg_component = g_strdup(arg_component);
-    
-    thread = g_thread_new("query-all-snapshots", disnix_query_all_snapshots_thread_func, params);
     org_nixos_disnix_disnix_complete_query_all_snapshots(object, invocation);
-    g_thread_unref(thread);
     return TRUE;
 }
 
 /* Query latest snapshot method */
 
-typedef struct
+gboolean on_handle_query_latest_snapshot(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_container, const gchar *arg_component)
 {
-    OrgNixosDisnixDisnix *object;
-    gint arg_pid;
-    gchar *arg_container;
-    gchar *arg_component;
-}
-QueryLatestSnapshotParams;
-
-static gpointer disnix_query_latest_snapshot_thread_func(gpointer data)
-{
-    QueryLatestSnapshotParams *params = (QueryLatestSnapshotParams*)data;
-    int log_fd = open_log_file(params->arg_pid);
+    int log_fd = open_log_file(arg_pid);
     
     if(log_fd == -1)
     {
         g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
+        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
     }
     else
     {
-        /* Declarations */
-        ProcReact_Future future;
-        ProcReact_Status status;
-        gchar **result;
-        
         /* Print log entry */
-        dprintf(log_fd, "Query latest snapshot from container: %s and component: %s\n", params->arg_container, params->arg_component);
+        dprintf(log_fd, "Query latest snapshot from container: %s and component: %s\n", arg_container, arg_component);
     
         /* Execute command */
-        future = statemgmt_query_latest_snapshot(params->arg_container, params->arg_component, log_fd);
-        result = procreact_future_get(&future, &status);
-        
-        evaluate_strv_process(result, params->object, params->arg_pid);
-        
-        close(log_fd);
+        evaluate_strv_process2(statemgmt_query_latest_snapshot((gchar*)arg_container, (gchar*)arg_component, log_fd), object, arg_pid, log_fd);
     }
     
-    /* Cleanup */
-    g_free(params->arg_container);
-    g_free(params->arg_component);
-    g_free(params);
-    
-    return NULL;
-}
-
-gboolean on_handle_query_latest_snapshot(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_container, const gchar *arg_component)
-{
-    GThread *thread;
-    
-    QueryLatestSnapshotParams *params = (QueryLatestSnapshotParams*)g_malloc(sizeof(QueryLatestSnapshotParams));
-    params->object = object;
-    params->arg_pid = arg_pid;
-    params->arg_container = g_strdup(arg_container);
-    params->arg_component = g_strdup(arg_component);
-
-    thread = g_thread_new("query-latest-snapshot", disnix_query_latest_snapshot_thread_func, params);
     org_nixos_disnix_disnix_complete_query_latest_snapshot(object, invocation);
-    g_thread_unref(thread);
     return TRUE;
 }
 
 /* Query missing snapshots method */
 
-typedef struct
+gboolean on_handle_print_missing_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_component)
 {
-    OrgNixosDisnixDisnix *object;
-    gint arg_pid;
-    gchar **arg_component;
-}
-PrintMissingSnapshotsParams;
-
-static gpointer disnix_print_missing_snapshots_thread_func(gpointer data)
-{
-    PrintMissingSnapshotsParams *params = (PrintMissingSnapshotsParams*)data;
-    int log_fd = open_log_file(params->arg_pid);
+    int log_fd = open_log_file(arg_pid);
     
     if(log_fd == -1)
     {
         g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
+        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
     }
     else
     {
-        /* Declarations */
-        ProcReact_Future future;
-        ProcReact_Status status;
-        gchar **result;
-        
         /* Print log entry */
         dprintf(log_fd, "Print missing snapshots: ");
-        print_paths(log_fd, params->arg_component);
+        print_paths(log_fd, (gchar**)arg_component);
         dprintf(log_fd, "\n");
         
         /* Execute command */
-        future = statemgmt_print_missing_snapshots(params->arg_component, log_fd);
-        result = procreact_future_get(&future, &status);
-        
-        evaluate_strv_process(result, params->object, params->arg_pid);
-        
-        close(log_fd);
+        evaluate_strv_process2(statemgmt_print_missing_snapshots((gchar**)arg_component, log_fd), object, arg_pid, log_fd);
     }
     
-    /* Cleanup */
-    g_strfreev(params->arg_component);
-    g_free(params);
-    return NULL;
-}
-
-gboolean on_handle_print_missing_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_component)
-{
-    GThread *thread;
-    
-    PrintMissingSnapshotsParams *params = (PrintMissingSnapshotsParams*)g_malloc(sizeof(PrintMissingSnapshotsParams));
-    params->object = object;
-    params->arg_pid = arg_pid;
-    params->arg_component = g_strdupv((gchar**)arg_component);
-
-    thread = g_thread_new("print-missing-snapshots", disnix_print_missing_snapshots_thread_func, params);
     org_nixos_disnix_disnix_complete_print_missing_snapshots(object, invocation);
-    g_thread_unref(thread);
     return TRUE;
 }
 
 /* Import snapshots operation */
 
-typedef struct
+gboolean on_handle_import_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_container, const gchar *arg_component, const gchar *const *arg_snapshots)
 {
-    OrgNixosDisnixDisnix *object;
-    gint arg_pid;
-    gchar *arg_container;
-    gchar *arg_component;
-    gchar **arg_snapshots;
-}
-ImportSnapshotsParams;
-
-static gpointer disnix_import_snapshots_thread_func(gpointer data)
-{
-    ImportSnapshotsParams *params = (ImportSnapshotsParams*)data;
-    int log_fd = open_log_file(params->arg_pid);
+    int log_fd = open_log_file(arg_pid);
     
     if(log_fd == -1)
     {
         g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
+        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
     }
     else
     {
         /* Print log entry */
         dprintf(log_fd, "Import snapshots: ");
-        print_paths(log_fd, params->arg_snapshots);
+        print_paths(log_fd, (gchar**)arg_snapshots);
         dprintf(log_fd, "\n");
         
         /* Execute command */
-        evaluate_boolean_process(statemgmt_import_snapshots(params->arg_container, params->arg_component, params->arg_snapshots, log_fd, log_fd), params->object, params->arg_pid);
-
-        close(log_fd);
+        evaluate_boolean_process(statemgmt_import_snapshots((gchar*)arg_container, (gchar*)arg_component, (gchar**)arg_snapshots, log_fd, log_fd), object, arg_pid, log_fd);
     }
     
-    /* Cleanup */
-    g_free(params->arg_container);
-    g_free(params->arg_component);
-    g_strfreev(params->arg_snapshots);
-    g_free(params);
-    return NULL;
-}
-
-gboolean on_handle_import_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_container, const gchar *arg_component, const gchar *const *arg_snapshots)
-{
-    GThread *thread;
-    
-    ImportSnapshotsParams *params = (ImportSnapshotsParams*)g_malloc(sizeof(ImportSnapshotsParams));
-    params->object = object;
-    params->arg_pid = arg_pid;
-    params->arg_container = g_strdup(arg_container);
-    params->arg_component = g_strdup(arg_component);
-    params->arg_snapshots = g_strdupv((gchar**)arg_snapshots);
-    
-    thread = g_thread_new("import-snapshots", disnix_import_snapshots_thread_func, params);
     org_nixos_disnix_disnix_complete_import_snapshots(object, invocation);
-    g_thread_unref(thread);
     return TRUE;
 }
 
 /* Resolve snapshots operation */
 
-typedef struct
+gboolean on_handle_resolve_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_snapshots)
 {
-    OrgNixosDisnixDisnix *object;
-    gint arg_pid;
-    gchar **arg_snapshots;
-}
-ResolveSnapshotsParams;
-
-static gpointer disnix_resolve_snapshots_thread_func(gpointer data)
-{
-    ResolveSnapshotsParams *params = (ResolveSnapshotsParams*)data;
-    int log_fd = open_log_file(params->arg_pid);
+    int log_fd = open_log_file(arg_pid);
     
     if(log_fd == -1)
     {
         g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
+        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
     }
     else
     {
-        /* Declarations */
-        ProcReact_Future future;
-        ProcReact_Status status;
-        gchar **result;
-        
         /* Print log entry */
         dprintf(log_fd, "Resolve snapshots: ");
-        print_paths(log_fd, params->arg_snapshots);
+        print_paths(log_fd, (gchar**)arg_snapshots);
         dprintf(log_fd, "\n");
         
         /* Execute command */
-        future = statemgmt_resolve_snapshots(params->arg_snapshots, log_fd);
-        result = procreact_future_get(&future, &status);
-
-        evaluate_strv_process(result, params->object, params->arg_pid);
-        
-        close(log_fd);
+        evaluate_strv_process2(statemgmt_resolve_snapshots((gchar**)arg_snapshots, log_fd), object, arg_pid, log_fd);
     }
     
-    /* Cleanup */
-    g_strfreev(params->arg_snapshots);
-    g_free(params);
-    return NULL;
-}
-
-gboolean on_handle_resolve_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_snapshots)
-{
-    GThread *thread;
-    
-    ResolveSnapshotsParams *params = (ResolveSnapshotsParams*)g_malloc(sizeof(ResolveSnapshotsParams));
-    params->object = object;
-    params->arg_pid = arg_pid;
-    params->arg_snapshots = g_strdupv((gchar**)arg_snapshots);
-    
-    thread = g_thread_new("resolve-snapshots", disnix_resolve_snapshots_thread_func, params);
     org_nixos_disnix_disnix_complete_resolve_snapshots(object, invocation);
-    g_thread_unref(thread);
     return TRUE;
 }
 
 /* Clean snapshots method */
 
-typedef struct
+gboolean on_handle_clean_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, gint arg_keep, const gchar *arg_container, const char *arg_component)
 {
-    OrgNixosDisnixDisnix *object;
-    gint arg_pid;
-    gint arg_keep;
-    gchar *arg_container;
-    gchar *arg_component;
-}
-CleanSnapshotsParams;
-
-static gpointer disnix_clean_snapshots_thread_func(gpointer data)
-{
-    CleanSnapshotsParams *params = (CleanSnapshotsParams*)data;
-    int log_fd = open_log_file(params->arg_pid);
+    int log_fd = open_log_file(arg_pid);
     
     if(log_fd == -1)
     {
         g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(params->object, params->arg_pid);
+        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
     }
     else
     {
-        /* Declarations */
-        char keepStr[15];
-        
-        /* Convert keep value to string */
-        sprintf(keepStr, "%d", params->arg_keep);
-        
         /* Print log entry */
         dprintf(log_fd, "Clean old snapshots");
         
-        if(g_strcmp0(params->arg_container, "") != 0)
-            dprintf(log_fd, " for container: %s", params->arg_container);
+        if(g_strcmp0(arg_container, "") != 0)
+            dprintf(log_fd, " for container: %s", arg_container);
         
-        if(g_strcmp0(params->arg_component, "") != 0)
-            dprintf(log_fd, " for component: %s", params->arg_component);
+        if(g_strcmp0(arg_component, "") != 0)
+            dprintf(log_fd, " for component: %s", arg_component);
         
-        dprintf(log_fd, " num of generations to keep: %s!\n", keepStr);
+        dprintf(log_fd, " num of generations to keep: %d!\n", arg_keep);
         
         /* Execute command */
-        evaluate_boolean_process(statemgmt_clean_snapshots(keepStr, params->arg_container, params->arg_component, log_fd, log_fd), params->object, params->arg_pid);
-
-        close(log_fd);
+        evaluate_boolean_process(statemgmt_clean_snapshots(arg_keep, (gchar*)arg_container, (gchar*)arg_component, log_fd, log_fd), object, arg_pid, log_fd);
     }
     
-    /* Cleanup */
-    g_free(params->arg_container);
-    g_free(params->arg_component);
-    g_free(params);
-    return NULL;
-}
-
-gboolean on_handle_clean_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, gint arg_keep, const gchar *arg_container, const char *arg_component)
-{
-    GThread *thread;
-    
-    CleanSnapshotsParams *params = (CleanSnapshotsParams*)g_malloc(sizeof(CleanSnapshotsParams));
-    params->object = object;
-    params->arg_pid = arg_pid;
-    params->arg_keep = arg_keep;
-    params->arg_container = g_strdup(arg_container);
-    params->arg_component = g_strdup(arg_component);
-    
-    thread = g_thread_new("clean-snapshots", disnix_clean_snapshots_thread_func, params);
     org_nixos_disnix_disnix_complete_clean_snapshots(object, invocation);
-    g_thread_unref(thread);
     return TRUE;
 }
 
@@ -1161,14 +759,11 @@ gboolean on_handle_clean_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvo
 
 gboolean on_handle_delete_state(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    ActivityParams *params = create_activity_params(object, "collect-garbage", arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
-    GThread *thread = g_thread_new("delete-state", disnix_dysnomia_activity_thread_func, params);
-    org_nixos_disnix_disnix_complete_delete_state(object, invocation);
-    g_thread_unref(thread);
-    return TRUE;
+    return on_handle_dysnomia_activity("collect-garbage", object, invocation, arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
 }
 
 /* Get logdir operation */
+
 gboolean on_handle_get_logdir(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation)
 {
     org_nixos_disnix_disnix_complete_get_logdir(object, invocation, logdir);
@@ -1204,7 +799,6 @@ static gpointer disnix_capture_config_thread_func(gpointer data)
     /* Cleanup */
     g_free(params);
     return NULL;
-
 }
 
 gboolean on_handle_capture_config(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid)

@@ -36,7 +36,7 @@ pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **sna
 
 ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr);
 
-pid_t statemgmt_clean_snapshots(gchar *keepStr, gchar *container, gchar *component, int stdout, int stderr);
+pid_t statemgmt_clean_snapshots(gint keep, gchar *container, gchar *component, int stdout, int stderr);
 
 gchar **statemgmt_capture_config(gchar *tmpdir, int stderr);
 

@@ -121,7 +121,8 @@ static void cleanup(const gboolean no_upgrade, const gchar *manifest_file, char 
     if(!no_upgrade && manifest_file != NULL)
     {
         delete_snapshots_array(old_snapshots_array);
-        g_ptr_array_free(snapshots_array, TRUE);
+        if(snapshots_array != NULL)
+            g_ptr_array_free(snapshots_array, TRUE);
     }
     
     delete_manifest(manifest);

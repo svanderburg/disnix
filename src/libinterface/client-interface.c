@@ -25,7 +25,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-static pid_t exec_activate_or_deactivate(gchar *operation, gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
+static pid_t exec_dysnomia_activity(gchar *operation, gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
 {
     pid_t pid = fork();
 
@@ -48,10 +48,10 @@ static pid_t exec_activate_or_deactivate(gchar *operation, gchar *interface, gch
 	    args[i + 8] = "--arguments";
 	    args[i + 9] = arguments[i / 2];
         }
-	    
+	
         args[i + 8] = service;
         args[i + 9] = NULL;
-	    
+	
         execvp(interface, args);
         _exit(1);
     }
@@ -61,12 +61,12 @@ static pid_t exec_activate_or_deactivate(gchar *operation, gchar *interface, gch
 
 pid_t exec_activate(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
 {
-    return exec_activate_or_deactivate("--activate", interface, target, container, type, arguments, arguments_size, service);
+    return exec_dysnomia_activity("--activate", interface, target, container, type, arguments, arguments_size, service);
 }
 
 pid_t exec_deactivate(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
 {
-    return exec_activate_or_deactivate("--deactivate", interface, target, container, type, arguments, arguments_size, service);
+    return exec_dysnomia_activity("--deactivate", interface, target, container, type, arguments, arguments_size, service);
 }
 
 static pid_t exec_lock_or_unlock(gchar *operation, gchar *interface, gchar *target, gchar *profile)
@@ -95,17 +95,17 @@ pid_t exec_unlock(gchar *interface, gchar *target, gchar *profile)
 
 pid_t exec_snapshot(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
 {
-    return exec_activate_or_deactivate("--snapshot", interface, target, container, type, arguments, arguments_size, service);
+    return exec_dysnomia_activity("--snapshot", interface, target, container, type, arguments, arguments_size, service);
 }
 
 pid_t exec_restore(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
 {
-    return exec_activate_or_deactivate("--restore", interface, target, container, type, arguments, arguments_size, service);
+    return exec_dysnomia_activity("--restore", interface, target, container, type, arguments, arguments_size, service);
 }
 
 pid_t exec_delete_state(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
 {
-    return exec_activate_or_deactivate("--delete-state", interface, target, container, type, arguments, arguments_size, service);
+    return exec_dysnomia_activity("--delete-state", interface, target, container, type, arguments, arguments_size, service);
 }
 
 pid_t exec_collect_garbage(gchar *interface, gchar *target, const gboolean delete_old)

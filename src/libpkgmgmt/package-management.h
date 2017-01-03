@@ -24,7 +24,7 @@
 #include <unistd.h>
 #include <procreact_future.h>
 
-pid_t pkgmgmt_import_closure(int closure_fd, int stdout, int stderr);
+pid_t pkgmgmt_import_closure(const char *closure, int stdout, int stderr);
 
 gchar **pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr);
 
