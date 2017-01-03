@@ -72,13 +72,7 @@ static void disnix_success_signal_handler(GDBusProxy *proxy, const gint pid, gch
         unsigned int i;
     
         for(i = 0; i < g_strv_length(derivation); i++)
-        {
-            g_print("%s", derivation[i]);
-            
-            /* Add linefeed if it does not end with a linefeed. TODO: get rid of this */
-            if(strlen(derivation[i]) > 0 && derivation[i][strlen(derivation[i]) - 1] != '\n')
-                g_print("\n");
-        }
+            g_print("%s\n", derivation[i]);
         
         exit(0);
     }
