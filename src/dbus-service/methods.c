@@ -43,14 +43,9 @@ gboolean on_handle_get_job_id(OrgNixosDisnixDisnix *object, GDBusMethodInvocatio
 
 gboolean on_handle_import(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_closure)
 {
-    int log_fd = open_log_file(arg_pid);
+    int log_fd = open_log_file(object, arg_pid);
     
-    if(log_fd == -1)
-    {
-        g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-    }
-    else
+    if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Importing: %s\n", arg_closure);
@@ -67,14 +62,9 @@ gboolean on_handle_import(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *i
 
 gboolean on_handle_export(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_derivation)
 {
-    int log_fd = open_log_file(arg_pid);
+    int log_fd = open_log_file(object, arg_pid);
     
-    if(log_fd == -1)
-    {
-        g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-    }
-    else
+    if(log_fd != -1)
     {
         pid_t pid;
         int temp_fd;
@@ -98,14 +88,9 @@ gboolean on_handle_export(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *i
 
 gboolean on_handle_print_invalid(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_derivation)
 {
-    int log_fd = open_log_file(arg_pid);
+    int log_fd = open_log_file(object, arg_pid);
     
-    if(log_fd == -1)
-    {
-        g_printerr("Cannot write logfile of pid: %d!\n", arg_pid);
-        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-    }
-    else
+    if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Print invalid: ");
@@ -124,14 +109,9 @@ gboolean on_handle_print_invalid(OrgNixosDisnixDisnix *object, GDBusMethodInvoca
 
 gboolean on_handle_realise(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_derivation)
 {
-    int log_fd = open_log_file(arg_pid);
+    int log_fd = open_log_file(object, arg_pid);
     
-    if(log_fd == -1)
-    {
-        g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-    }
-    else
+    if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Realising: ");
@@ -150,14 +130,9 @@ gboolean on_handle_realise(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *
 
 gboolean on_handle_set(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_profile, const gchar *arg_derivation)
 {
-    int log_fd = open_log_file(arg_pid);
+    int log_fd = open_log_file(object, arg_pid);
     
-    if(log_fd == -1)
-    {
-        g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-    }
-    else
+    if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Set profile: %s with derivation: %s\n", arg_profile, arg_derivation);
@@ -174,14 +149,9 @@ gboolean on_handle_set(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invo
 
 gboolean on_handle_query_installed(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_profile)
 {
-    int log_fd = open_log_file(arg_pid);
+    int log_fd = open_log_file(object, arg_pid);
     
-    if(log_fd == -1)
-    {
-        g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-    }
-    else
+    if(log_fd != -1)
     {
         GPtrArray *profile_manifest_array;
     
@@ -208,14 +178,9 @@ gboolean on_handle_query_installed(OrgNixosDisnixDisnix *object, GDBusMethodInvo
 
 gboolean on_handle_query_requisites(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_derivation)
 {
-    int log_fd = open_log_file(arg_pid);
+    int log_fd = open_log_file(object, arg_pid);
     
-    if(log_fd == -1)
-    {
-        g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-    }
-    else
+    if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Query requisites from derivations: ");
@@ -234,14 +199,9 @@ gboolean on_handle_query_requisites(OrgNixosDisnixDisnix *object, GDBusMethodInv
 
 gboolean on_handle_collect_garbage(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, gboolean arg_delete_old)
 {
-    int log_fd = open_log_file(arg_pid);
+    int log_fd = open_log_file(object, arg_pid);
     
-    if(log_fd == -1)
-    {
-        g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-    }
-    else
+    if(log_fd != -1)
     {
         /* Print log entry */
         if(arg_delete_old)
@@ -261,14 +221,9 @@ gboolean on_handle_collect_garbage(OrgNixosDisnixDisnix *object, GDBusMethodInvo
 
 static gboolean on_handle_dysnomia_activity(gchar *activity, OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    int log_fd = open_log_file(arg_pid);
+    int log_fd = open_log_file(object, arg_pid);
     
-    if(log_fd == -1)
-    {
-        g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-    }
-    else
+    if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "%s: %s of type: %s in container: %s with arguments: ", activity, arg_derivation, arg_type, arg_container);
@@ -301,14 +256,9 @@ gboolean on_handle_deactivate(OrgNixosDisnixDisnix *object, GDBusMethodInvocatio
 
 gboolean on_handle_lock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_profile)
 {
-    int log_fd = open_log_file(arg_pid);
+    int log_fd = open_log_file(object, arg_pid);
     
-    if(log_fd == -1)
-    {
-        g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-    }
-    else
+    if(log_fd != -1)
     {
         GPtrArray *profile_manifest_array;
         
@@ -340,14 +290,9 @@ gboolean on_handle_lock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *inv
 
 gboolean on_handle_unlock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_profile)
 {
-    int log_fd = open_log_file(arg_pid);
+    int log_fd = open_log_file(object, arg_pid);
     
-    if(log_fd == -1)
-    {
-        g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-    }
-    else
+    if(log_fd != -1)
     {
         GPtrArray *profile_manifest_array;
         
@@ -384,14 +329,9 @@ gboolean on_handle_restore(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *
 
 gboolean on_handle_query_all_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_container, const gchar *arg_component)
 {
-    int log_fd = open_log_file(arg_pid);
+    int log_fd = open_log_file(object, arg_pid);
     
-    if(log_fd == -1)
-    {
-        g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-    }
-    else
+    if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Query all snapshots from container: %s and component: %s\n", arg_container, arg_component);
@@ -408,14 +348,9 @@ gboolean on_handle_query_all_snapshots(OrgNixosDisnixDisnix *object, GDBusMethod
 
 gboolean on_handle_query_latest_snapshot(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_container, const gchar *arg_component)
 {
-    int log_fd = open_log_file(arg_pid);
+    int log_fd = open_log_file(object, arg_pid);
     
-    if(log_fd == -1)
-    {
-        g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-    }
-    else
+    if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Query latest snapshot from container: %s and component: %s\n", arg_container, arg_component);
@@ -432,14 +367,9 @@ gboolean on_handle_query_latest_snapshot(OrgNixosDisnixDisnix *object, GDBusMeth
 
 gboolean on_handle_print_missing_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_component)
 {
-    int log_fd = open_log_file(arg_pid);
+    int log_fd = open_log_file(object, arg_pid);
     
-    if(log_fd == -1)
-    {
-        g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-    }
-    else
+    if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Print missing snapshots: ");
@@ -458,14 +388,9 @@ gboolean on_handle_print_missing_snapshots(OrgNixosDisnixDisnix *object, GDBusMe
 
 gboolean on_handle_import_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_container, const gchar *arg_component, const gchar *const *arg_snapshots)
 {
-    int log_fd = open_log_file(arg_pid);
+    int log_fd = open_log_file(object, arg_pid);
     
-    if(log_fd == -1)
-    {
-        g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-    }
-    else
+    if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Import snapshots: ");
@@ -484,14 +409,9 @@ gboolean on_handle_import_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInv
 
 gboolean on_handle_resolve_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_snapshots)
 {
-    int log_fd = open_log_file(arg_pid);
+    int log_fd = open_log_file(object, arg_pid);
     
-    if(log_fd == -1)
-    {
-        g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-    }
-    else
+    if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Resolve snapshots: ");
@@ -510,14 +430,9 @@ gboolean on_handle_resolve_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodIn
 
 gboolean on_handle_clean_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, gint arg_keep, const gchar *arg_container, const char *arg_component)
 {
-    int log_fd = open_log_file(arg_pid);
+    int log_fd = open_log_file(object, arg_pid);
     
-    if(log_fd == -1)
-    {
-        g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-    }
-    else
+    if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Clean old snapshots");
@@ -557,14 +472,9 @@ gboolean on_handle_get_logdir(OrgNixosDisnixDisnix *object, GDBusMethodInvocatio
 
 gboolean on_handle_capture_config(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid)
 {
-    int log_fd = open_log_file(arg_pid);
+    int log_fd = open_log_file(object, arg_pid);
     
-    if(log_fd == -1)
-    {
-        g_printerr("Cannot write logfile!\n");
-        org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-    }
-    else
+    if(log_fd != -1)
     {
         pid_t pid;
         int temp_fd;

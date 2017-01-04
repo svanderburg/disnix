@@ -32,7 +32,7 @@ void set_logdir(char *log_path)
     logdir = log_path;
 }
 
-int open_log_file(const gint pid)
+int open_log_file(OrgNixosDisnixDisnix *object, const gint pid)
 {
     gchar pidStr[15];
     gchar *log_path;
@@ -43,6 +43,12 @@ int open_log_file(const gint pid)
     mkdir(logdir, 0755);
     log_path = g_strconcat(logdir, "/", pidStr, NULL);
     log_fd = open(log_path, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    
+    if(log_fd == -1)
+    {
+        g_printerr("Cannot write logfile for job id: %d\n", pid);
+        org_nixos_disnix_disnix_emit_failure(object, pid);
+    }
     
     g_free(log_path);
     return log_fd;

@@ -20,6 +20,7 @@
 #ifndef __DISNIX_LOGGING_H
 #define __DISNIX_LOGGING_H
 #include <glib.h>
+#include "disnix-dbus.h"
 
 /**
  * Configures the log directory.
@@ -32,10 +33,11 @@ void set_logdir(char *log_path);
  * Opens a writable file descriptor for the logfile of a given process id.
  * It also creates the log directory if it does not exists.
  *
+ * @param object A Disnix DBus interface object
  * @param pid PID of the job that needs to be logged
  * @return A file descriptor that can be written to
  */
-int open_log_file(const gint pid);
+int open_log_file(OrgNixosDisnixDisnix *object, const gint pid);
 
 /**
  * Prints the derivation paths to a given file descriptor
