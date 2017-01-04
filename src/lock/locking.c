@@ -46,7 +46,7 @@ static void set_flag_on_interrupt(void)
 static pid_t unlock_distribution_item(void *data, DistributionItem *item, Target *target)
 {
     char *profile = (char*)data;
-    g_print("[target: %s]: Releasing a lock on profile:%s\n", item->target, item->profile);
+    g_print("[target: %s]: Releasing a lock on profile: %s\n", item->target, item->profile);
     return exec_unlock(target->client_interface, item->target, profile);
 }
 
@@ -78,7 +78,7 @@ LockData;
 static pid_t lock_distribution_item(void *data, DistributionItem *item, Target *target)
 {
     LockData *lock_data = (LockData*)data;
-    g_print("[target: %s]: Acquiring a lock on profile:%s\n", item->target, item->profile);
+    g_print("[target: %s]: Acquiring a lock on profile: %s\n", item->target, item->profile);
     return exec_lock(target->client_interface, item->target, lock_data->profile);
 }
 

@@ -109,7 +109,6 @@ static int lock_disnix(int log_fd)
     return status;
 }
 
-
 static int unlock_disnix(int log_fd)
 {
     gchar *lock_filename = create_lock_filename();
@@ -234,6 +233,16 @@ int acquire_locks(int log_fd, GPtrArray *profile_manifest_array)
     }
 }
 
+pid_t acquire_locks_async(int log_fd, GPtrArray *profile_manifest_array)
+{
+    pid_t pid = fork();
+    
+    if(pid == 0)
+        _exit(!acquire_locks(log_fd, profile_manifest_array));
+    
+    return pid;
+}
+
 int release_locks(int log_fd, GPtrArray *profile_manifest_array)
 {
     int status = TRUE;
@@ -258,18 +267,32 @@ int release_locks(int log_fd, GPtrArray *profile_manifest_array)
     return status;
 }
 
-gchar **query_derivations(GPtrArray *profile_manifest_array)
+pid_t release_locks_async(int log_fd, GPtrArray *profile_manifest_array)
 {
-    gchar **derivations = (gchar**)g_malloc((profile_manifest_array->len + 1) * sizeof(gchar*));
-    unsigned int i;
+    pid_t pid = fork();
     
-    for(i = 0; i < profile_manifest_array->len; i++)
+    if(pid == 0)
+        _exit(!release_locks(log_fd, profile_manifest_array));
+    
+    return pid;
+}
+
+ProcReact_Future query_derivations(GPtrArray *profile_manifest_array)
+{
+    ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
+    
+    if(future.pid == 0)
     {
-        ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
-        derivations[i] = entry->derivation;
+        unsigned int i;
+        
+        for(i = 0; i < profile_manifest_array->len; i++)
+        {
+            ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
+            dprintf(future.fd, "%s\n", entry->derivation);
+        }
+        
+        _exit(0);
     }
     
-    derivations[i] = NULL;
-    
-    return derivations;
+    return future;
 }

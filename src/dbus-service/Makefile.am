@@ -13,12 +13,12 @@ disnix-service.8.xml: disnix-service.8
 AM_CPPFLAGS=-DLOCALSTATEDIR=\"$(localstatedir)\"
 
 bin_PROGRAMS = disnix-service disnix-client
-noinst_HEADERS = methods.h logging.h profilemanifest.h jobmanagement.h disnix-client.h disnix-service.h
+noinst_HEADERS = methods.h signaling.h logging.h profilemanifest.h jobmanagement.h disnix-client.h disnix-service.h
 noinst_DATA = disnix-client.1.xml disnix-service.8.xml
 man1_MANS = disnix-client.1
 man8_MANS = disnix-service.8
 
-disnix_service_SOURCES = methods.c logging.c profilemanifest.c jobmanagement.c disnix-service.c disnix-service-main.c disnix-dbus.c
+disnix_service_SOURCES = methods.c signaling.c logging.c profilemanifest.c jobmanagement.c disnix-service.c disnix-service-main.c disnix-dbus.c
 disnix_service_CFLAGS = $(GLIB2_CFLAGS) $(GIO2_CFLAGS) -I../libprocreact -I../libpkgmgmt -I../libstatemgmt
 disnix_service_LDADD = $(GLIB2_LIBS) $(GIO2_LIBS) ../libpkgmgmt/libpkgmgmt.la ../libstatemgmt/libstatemgmt.la
 

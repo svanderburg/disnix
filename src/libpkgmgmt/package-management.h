@@ -26,7 +26,7 @@
 
 pid_t pkgmgmt_import_closure(const char *closure, int stdout, int stderr);
 
-gchar **pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr);
+gchar *pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr, pid_t *pid, int *temp_fd);
 
 ProcReact_Future pkgmgmt_print_invalid_packages(gchar **derivation, int stderr);
 

@@ -18,15 +18,8 @@
  */
 
 #include "state-management.h"
-#include <fcntl.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdio.h>
-#include <sys/stat.h>
-#include <sys/wait.h>
-#include <sys/types.h>
-
-#define BUFFER_SIZE 1024
 
 pid_t statemgmt_run_dysnomia_activity(gchar *type, gchar *activity, gchar *component, gchar *container, gchar **arguments, int stdout, int stderr)
 {
@@ -210,23 +203,20 @@ pid_t statemgmt_clean_snapshots(gint keep, gchar *container, gchar *component, i
         dup2(stdout, 1);
         dup2(stderr, 2);
         execvp("dysnomia-snapshots", args);
-        dprintf(stderr, "Error with executing clean snapshots process\n");
         _exit(1);
     }
     
     return pid;
 }
 
-gchar **statemgmt_capture_config(gchar *tmpdir, int stderr)
+gchar *statemgmt_capture_config(gchar *tmpdir, int stderr, pid_t *pid, int *temp_fd)
 {
-    /* Declarations */
     gchar *tempfilename = g_strconcat(tmpdir, "/disnix.XXXXXX", NULL);
-    int closure_fd;
     
-    /* Execute command */
-    closure_fd = mkstemp(tempfilename);
+    /* Compose a temp file */
+    *temp_fd = mkstemp(tempfilename);
     
-    if(closure_fd == -1)
+    if(*temp_fd == -1)
     {
         dprintf(stderr, "Error opening tempfile!\n");
         g_free(tempfilename);
@@ -234,48 +224,20 @@ gchar **statemgmt_capture_config(gchar *tmpdir, int stderr)
     }
     else
     {
-        int pid = fork();
+        /* Execute process capturing the config and writing it to a temp file */
+        *pid = fork();
 
-        if(pid == -1)
-        {
-            dprintf(stderr, "Error with forking dysnomia-containers process!\n");
-            g_free(tempfilename);
-            close(closure_fd);
-            return NULL;
-        }
-        else if(pid == 0)
+        if(*pid == 0)
         {
             char *const args[] = { "dysnomia-containers", "--generate-expr", NULL };
             
-            dup2(closure_fd, 1);
+            dup2(*temp_fd, 1);
             dup2(stderr, 2);
             execvp("dysnomia-containers", args);
             _exit(1);
         }
-        else
-        {
-            gchar **tempfilepaths;
-            ProcReact_Status status;
-            int result = procreact_wait_for_boolean(pid, &status);
-
-            if(status == PROCREACT_STATUS_OK && result)
-            {
-                tempfilepaths = (gchar**)g_malloc(2 * sizeof(gchar*));
-                tempfilepaths[0] = tempfilename;
-                tempfilepaths[1] = NULL;
-                
-                if(fchmod(closure_fd, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) == 1)
-                    dprintf(stderr, "Cannot change permissions on captured expression: %s\n", tempfilename);
-            }
-            else
-            {
-                tempfilepaths = NULL;
-                g_free(tempfilename);
-            }
-            
-            close(closure_fd);
-            return tempfilepaths;
-        }
+        
+        return tempfilename;
     }
 }
 

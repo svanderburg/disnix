@@ -38,7 +38,7 @@ ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr);
 
 pid_t statemgmt_clean_snapshots(gint keep, gchar *container, gchar *component, int stdout, int stderr);
 
-gchar **statemgmt_capture_config(gchar *tmpdir, int stderr);
+gchar *statemgmt_capture_config(gchar *tmpdir, int stderr, pid_t *pid, int *temp_fd);
 
 pid_t statemgmt_lock_component(gchar *type, gchar *container, gchar *component, int stdout, int stderr);
 

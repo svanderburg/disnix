@@ -60,27 +60,21 @@ pid_t pkgmgmt_import_closure(const char *closure, int stdout, int stderr)
     }
 }
 
-gchar **pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr)
+gchar *pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr, pid_t *pid, int *temp_fd)
 {
     gchar *tempfilename = g_strconcat(tmpdir, "/disnix.XXXXXX", NULL);
-    int closure_fd = mkstemp(tempfilename);
+    *temp_fd = mkstemp(tempfilename);
     
-    if(closure_fd == -1)
+    if(*temp_fd == -1)
     {
         g_free(tempfilename);
         return NULL;
     }
     else
     {
-        pid_t pid = fork();
+        *pid = fork();
         
-        if(pid == -1)
-        {
-            close(closure_fd);
-            g_free(tempfilename);
-            return NULL;
-        }
-        else if(pid == 0)
+        if(*pid == 0)
         {
             unsigned int i, derivation_length = g_strv_length(derivation);
             gchar **args = (char**)g_malloc((3 + derivation_length) * sizeof(gchar*));
@@ -93,36 +87,13 @@ gchar **pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr)
 
             args[i + 2] = NULL;
 
-            dup2(closure_fd, 1);
+            dup2(*temp_fd, 1);
             dup2(stderr, 2);
             execvp(NIX_STORE_CMD, args);
             _exit(1);
         }
-        else
-        {
-            gchar **tempfilepaths;
-            ProcReact_Status status;
-            int result = procreact_wait_for_boolean(pid, &status);
-            
-            if(status == PROCREACT_STATUS_OK && result)
-            {
-                tempfilepaths = (gchar**)g_malloc(2 * sizeof(gchar*));
-                tempfilepaths[0] = tempfilename;
-                tempfilepaths[1] = NULL;
-                
-                if(fchmod(closure_fd, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) == 1)
-                    dprintf(stderr, "Cannot change permissions on exported closure: %s\n", tempfilename);
-            }
-            else
-            {
-                tempfilepaths = NULL;
-                g_free(tempfilename);
-            }
-            
-            close(closure_fd);
-            
-            return tempfilepaths;
-        }
+        
+        return tempfilename;
     }
 }
 

@@ -19,7 +19,10 @@
 
 #ifndef __DISNIX_PROFILEMANIFEST_H
 #define __DISNIX_PROFILEMANIFEST_H
+
+#include <unistd.h>
 #include <glib.h>
+#include <procreact_future.h>
 
 /**
  * @brief Contains properties of a deployed service on a target machine
@@ -62,6 +65,11 @@ void delete_profile_manifest_array(GPtrArray *profile_manifest_array);
 int acquire_locks(int log_fd, GPtrArray *profile_manifest_array);
 
 /**
+ * Asynchronously executes the acquire_locks() operation in a child process.
+ */
+pid_t acquire_locks_async(int log_fd, GPtrArray *profile_manifest_array);
+
+/**
  * Attempts to unlock the disnix service by consulting the services in the
  * profile manifest and by unlocking the Disnix service itself.
  *
@@ -72,12 +80,18 @@ int acquire_locks(int log_fd, GPtrArray *profile_manifest_array);
 int release_locks(int log_fd, GPtrArray *profile_manifest_array);
 
 /**
+ * Asynchronously executes the release_locks() operation in a child process.
+ */
+pid_t release_locks_async(int log_fd, GPtrArray *profile_manifest_array);
+
+/**
  * Queries all the derivation names of the entries stored in the profile
  * manifest.
  *
  * @param profile_manifest_array An array of profile manifest entries
- * @return A NULL-terminated string vector with derivation names
+ * @return A future that can be used to retrieve a NULL-terminated string array
+ *   of derivation names
  */
-gchar **query_derivations(GPtrArray *profile_manifest_array);
+ProcReact_Future query_derivations(GPtrArray *profile_manifest_array);
 
 #endif
