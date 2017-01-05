@@ -14,6 +14,8 @@ Version 0.7
 
 - disnix-capture-infra, disnix-query now capture data in parallel to speed up the entire operation
 
+- Added a check for the name attributes in the services model
+
 Version 0.6
 ===========
 - Changed the distribution internals. Now every service maps to a container on a target system. When no container is specified, it auto maps a service to the container with the type name

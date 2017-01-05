@@ -142,8 +142,8 @@ static gpointer evaluate_tempfile_process_thread_func(gpointer data)
         else
             org_nixos_disnix_disnix_emit_success(tempfile_data->object, tempfile_data->jid, tempfilepaths);
     }
-    else
-        g_free(tempfile_data->tempfilename);
+    
+    g_free(tempfile_data->tempfilename);
     
     /* Cleanup */
     close(tempfile_data->log_fd);

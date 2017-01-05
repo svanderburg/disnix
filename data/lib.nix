@@ -1,9 +1,31 @@
 {nixpkgs, pkgs}:
 
-rec {
+let
   inherit (builtins) attrNames getAttr listToAttrs head tail unsafeDiscardOutputDependency hashString filter elem isList isAttrs;
+in
+rec {
+  /**
+   * Checks whether the convention for the name attributes is followed properly.
+   *
+   * Parameters:
+   * services: Services attribute set
+   *
+   * Returns:
+   * The services model or an exception if the naming convention is violated
+   */
+  checkServiceNames = services:
+    listToAttrs (map (serviceName:
+      let service = getAttr serviceName services;
+      in
+      { name = serviceName;
+        value =  if !(service ? name) then throw "Mandatory name attribute for service: ${serviceName} missing"
+          else if service.name != serviceName then throw "The name attribute for service: ${serviceName} should be: ${serviceName}, instead it is: ${service.name}"
+          else service;
+      }
+    ) (attrNames services))
+  ;
 
-  /* 
+  /*
    * Determines the right pkgs collection from the system identifier.
    *
    * Parameters:
@@ -18,7 +40,7 @@ rec {
   
   /*
    * Iterates over each service in the distribution attributeset, adds the corresponding service
-   * declaration in the attributeset and augements the targets of every inter-dependency
+   * declaration in the attributeset and augments the targets of every inter-dependency
    * in the dependsOn attributeset
    * 
    * Parameters:
@@ -146,7 +168,7 @@ rec {
    * Parameters:
    * distribution: Distribution attribute set
    * invDistribution: Inverse distribution attribute set
-   * services: Services attribute set, augemented with targets in dependsOn
+   * services: Services attribute set, augmented with targets in dependsOn
    * servicesFun: Function that returns a services attributeset (defined in the services.nix file)
    * serviceProperty: Defines which property we need of a derivation (either "outPath" or "drvPath")
    * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
@@ -490,7 +512,8 @@ rec {
     let
       distribution = distributionFun { inherit infrastructure; };
       initialServices = servicesFun { inherit distribution invDistribution; system = null; inherit pkgs; };
-      servicesWithTargets = augmentTargetsInDependsOn distribution initialServices;
+      checkedServices = checkServiceNames initialServices;
+      servicesWithTargets = augmentTargetsInDependsOn distribution checkedServices;
       servicesWithDistribution = evaluatePkgFunctions distribution invDistribution servicesWithTargets servicesFun "outPath" targetProperty;
       serviceActivationMapping = generateServiceActivationMapping (attrNames servicesWithDistribution) servicesWithDistribution targetProperty;
       snapshotsMapping = generateSnapshotsMapping (attrNames servicesWithDistribution) servicesWithDistribution deployState;
@@ -523,7 +546,8 @@ rec {
     let
       distribution = distributionFun { inherit infrastructure; };
       initialServices = servicesFun { inherit distribution invDistribution; system = null; inherit pkgs; };
-      servicesWithTargets = augmentTargetsInDependsOn distribution initialServices;
+      checkedServices = checkServiceNames initialServices;
+      servicesWithTargets = augmentTargetsInDependsOn distribution checkedServices;
       servicesWithDistribution = evaluatePkgFunctions distribution invDistribution servicesWithTargets servicesFun "drvPath" targetProperty;
       serviceActivationMapping = generateServiceActivationMapping (attrNames servicesWithDistribution) servicesWithDistribution targetProperty;
       targets = generateTargetPropertyList infrastructure targetProperty clientInterface;

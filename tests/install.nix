@@ -41,6 +41,11 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         
         $client->mustSucceed("${env} disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
         
+        # Wrong name test. Here we have a services model with an incorrect name
+        # attribute. This test should trigger an error.
+        
+        $client->mustFail("${env} disnix-manifest -s ${manifestTests}/services-wrongname.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
+        
         # Incomplete inter-dependency test. Here we have a services model
         # in which an inter-dependency is not specified in the dependsOn
         # attribute. This test should trigger an error.
