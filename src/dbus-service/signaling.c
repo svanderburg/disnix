@@ -132,9 +132,7 @@ static gpointer evaluate_tempfile_process_thread_func(gpointer data)
 
     if(status == PROCREACT_STATUS_OK && result)
     {
-        gchar **tempfilepaths = (gchar**)g_malloc(2 * sizeof(gchar*));
-        tempfilepaths[0] = tempfile_data->tempfilename;
-        tempfilepaths[1] = NULL;
+        const gchar *tempfilepaths[] = { tempfile_data->tempfilename, NULL };
         
         if(fchmod(tempfile_data->temp_fd, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) == 1)
         {
@@ -142,9 +140,7 @@ static gpointer evaluate_tempfile_process_thread_func(gpointer data)
             org_nixos_disnix_disnix_emit_failure(tempfile_data->object, tempfile_data->jid);
         }
         else
-            org_nixos_disnix_disnix_emit_success(tempfile_data->object, tempfile_data->jid, (const gchar**)tempfilepaths);
-        
-        g_strfreev(tempfilepaths);
+            org_nixos_disnix_disnix_emit_success(tempfile_data->object, tempfile_data->jid, tempfilepaths);
     }
     else
         g_free(tempfile_data->tempfilename);
