@@ -33,8 +33,8 @@ typedef struct
     gchar *derivation;
     /** Address of a disnix service */
     gchar *target;
-    /** Nix store path of the build result, or NULL if it has not yet been realised */
-    gchar *result;
+    /** Nix store paths of the build result, or NULL if it has not yet been realised */
+    gchar **result;
 }
 DerivationItem;
 

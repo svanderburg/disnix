@@ -23,10 +23,13 @@
 #include <interfaces.h>
 #include <client-interface.h>
 
+/* Distribute store derivations infrastructure */
+
 static pid_t copy_derivation_item_to(void *data, DerivationItem *item, Interface *interface)
 {
+    char *paths[] = { item->derivation, NULL };
     g_print("[target: %s]: Receiving intra-dependency closure of store derivation: %s\n", item->target, item->derivation);
-    return exec_copy_closure_to(interface->clientInterface, item->target, item->derivation);
+    return exec_copy_closure_to(interface->clientInterface, item->target, paths);
 }
 
 static void complete_copy_derivation_item_to(void *data, DerivationItem *item, ProcReact_Status status, int result)
@@ -45,6 +48,8 @@ static int distribute_derivations(const GPtrArray *derivation_array, const GPtrA
     destroy_derivation_pid_iterator(&iterator);
     return success;
 }
+
+/* Realisation infrastructure */
 
 static ProcReact_Future realise_derivation_item(void *data, DerivationItem *item, Interface *interface)
 {
@@ -71,16 +76,30 @@ static int realise(const GPtrArray *derivation_array, const GPtrArray *interface
     return success;
 }
 
+/* Build result retrieval infrastructure */
+
 static pid_t copy_result_from(void *data, DerivationItem *item, Interface *interface)
 {
-    g_print("[target: %s]: Sending build result to coordinator: %s\n", item->target, item->result);
+    char *path;
+    unsigned int count = 0;
+    
+    g_print("[target: %s]: Sending build results to coordinator:", item->target);
+    
+    while((path = item->result[count]) != NULL)
+    {
+        g_print(" %s", path);
+        count++;
+    }
+    
+    g_print("\n");
+    
     return exec_copy_closure_from(interface->clientInterface, item->target, item->result);
 }
 
 static void complete_copy_result_from(void *data, DerivationItem *item, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
-        g_print("[target: %s]: Cannot send build result of store derivation: %s\n", item->target, item->derivation);
+        g_print("[target: %s]: Cannot send build result of store derivation to coordinator: %s\n", item->target, item->derivation);
 }
 
 static int retrieve_results(const GPtrArray *derivation_array, const GPtrArray *interface_array, const unsigned int max_concurrent_transfers)
@@ -93,6 +112,8 @@ static int retrieve_results(const GPtrArray *derivation_array, const GPtrArray *
     destroy_derivation_pid_iterator(&iterator);
     return success;
 }
+
+/* The entire build operation */
 
 int build(const gchar *distributed_derivation_file, const unsigned int max_concurrent_transfers)
 {

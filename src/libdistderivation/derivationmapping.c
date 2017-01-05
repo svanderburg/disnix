@@ -108,7 +108,7 @@ void delete_derivation_array(GPtrArray *derivation_array)
             DerivationItem *item = g_ptr_array_index(derivation_array, i);
             free(item->derivation);
             g_free(item->target);
-            g_free(item->result);
+            g_strfreev(item->result);
             g_free(item);
         }
     

@@ -162,13 +162,27 @@ ProcReact_Future exec_query_installed(gchar *interface, gchar *target, gchar *pr
     return future;
 }
 
-static pid_t exec_copy_closure(gchar *operation, gchar *interface, gchar *target, gchar *component)
+static pid_t exec_copy_closure(gchar *operation, gchar *interface, gchar *target, gchar **paths)
 {
     pid_t pid = fork();
     
     if(pid == 0)
     {
-        char *const args[] = {"disnix-copy-closure", operation, "--target", target, "--interface", interface, component, NULL};
+        unsigned int i, paths_length = g_strv_length(paths);
+        gchar **args = (gchar**)g_malloc((7 + paths_length) * sizeof(gchar*));
+        
+        args[0] = "disnix-copy-closure";
+        args[1] = operation;
+        args[2] = "--target";
+        args[3] = target;
+        args[4] = "--interface";
+        args[5] = interface;
+        
+        for(i = 0; i < paths_length; i++)
+            args[i + 6] = paths[i];
+        
+        args[i + 6] = NULL;
+        
         execvp(args[0], args);
         _exit(1);
     }
@@ -176,14 +190,14 @@ static pid_t exec_copy_closure(gchar *operation, gchar *interface, gchar *target
     return pid;
 }
 
-pid_t exec_copy_closure_from(gchar *interface, gchar *target, gchar *component)
+pid_t exec_copy_closure_from(gchar *interface, gchar *target, gchar **paths)
 {
-    return exec_copy_closure("--from", interface, target, component);
+    return exec_copy_closure("--from", interface, target, paths);
 }
 
-pid_t exec_copy_closure_to(gchar *interface, gchar *target, gchar *component)
+pid_t exec_copy_closure_to(gchar *interface, gchar *target, gchar **paths)
 {
-    return exec_copy_closure("--to", interface, target, component);
+    return exec_copy_closure("--to", interface, target, paths);
 }
 
 static pid_t exec_copy_snapshots(gchar *operation, gchar *interface, gchar *target, gchar *container, gchar *component, gboolean all)
@@ -281,7 +295,7 @@ pid_t exec_clean_snapshots(gchar *interface, gchar *target, int keep, char *cont
 
 ProcReact_Future exec_realise(gchar *interface, gchar *target, gchar *derivation)
 {
-    ProcReact_Future future = procreact_initialize_future(procreact_create_string_type());
+    ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
     if(future.pid == 0)
     {
