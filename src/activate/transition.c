@@ -19,26 +19,17 @@
 
 #include "transition.h"
 #include <signal.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 #include <activationmapping.h>
 #include <targets.h>
 #include <client-interface.h>
 
 extern volatile int interrupted;
 
-static void print_activation_step(const int activate, const ActivationMapping *mapping, gchar **arguments, const unsigned int arguments_length)
+static void print_activation_step(const gchar *activity, const ActivationMapping *mapping, gchar **arguments, const unsigned int arguments_length)
 {
     unsigned int i;
     
-    g_print("[target: %s]: ", mapping->target);
-    
-    if(activate)
-        g_print("Activating");
-    else
-        g_print("Deactivating");
-    
-    g_print(" service with key: %s and package: %s of type: %s in container: %s, arguments: ", mapping->key, mapping->service, mapping->type, mapping->container);
+    g_print("[target: %s]: %s service with key: %s and package: %s of type: %s in container: %s, arguments: ", mapping->target, activity, mapping->key, mapping->service, mapping->type, mapping->container);
     
     for(i = 0; i < arguments_length; i++)
         g_print("%s ", arguments[i]);
@@ -46,27 +37,27 @@ static void print_activation_step(const int activate, const ActivationMapping *m
     g_print("\n");
 }
 
-static pid_t activate_mapping(ActivationMapping *mapping, Target *target, gchar **arguments, unsigned int arguments_length)
+static pid_t activate_mapping(ActivationMapping *mapping, Target *target, gchar **arguments, const unsigned int arguments_length)
 {
-    print_activation_step(TRUE, mapping, arguments, arguments_length); /* Print debug message */
+    print_activation_step("Activating", mapping, arguments, arguments_length); /* Print debug message */
     return exec_activate(target->client_interface, mapping->target, mapping->container, mapping->type, arguments, arguments_length, mapping->service);
 }
 
-static pid_t dry_run_activate_mapping(ActivationMapping *mapping, Target *target, gchar **arguments, unsigned int arguments_length)
+static pid_t dry_run_activate_mapping(ActivationMapping *mapping, Target *target, gchar **arguments, const unsigned int arguments_length)
 {
-    print_activation_step(TRUE, mapping, arguments, arguments_length); /* Print debug message */
+    print_activation_step("Dry-run activating", mapping, arguments, arguments_length); /* Print debug message */
     return exec_true(); /* Execute dummy process */
 }
 
-static pid_t deactivate_mapping(ActivationMapping *mapping, Target *target, gchar **arguments, unsigned int arguments_length)
+static pid_t deactivate_mapping(ActivationMapping *mapping, Target *target, gchar **arguments, const unsigned int arguments_length)
 {
-    print_activation_step(FALSE, mapping, arguments, arguments_length); /* Print debug message */
+    print_activation_step("Deactivating", mapping, arguments, arguments_length); /* Print debug message */
     return exec_deactivate(target->client_interface, mapping->target, mapping->container, mapping->type, arguments, arguments_length, mapping->service);
 }
 
-static pid_t dry_run_deactivate_mapping(ActivationMapping *mapping, Target *target, gchar **arguments, unsigned int arguments_length)
+static pid_t dry_run_deactivate_mapping(ActivationMapping *mapping, Target *target, gchar **arguments, const unsigned int arguments_length)
 {
-    print_activation_step(FALSE, mapping, arguments, arguments_length); /* Print debug message */
+    print_activation_step("Dry-run deactivating", mapping, arguments, arguments_length); /* Print debug message */
     return exec_true(); /* Execute dummy process */
 }
 
@@ -116,19 +107,15 @@ static int rollback_to_old_mappings(GPtrArray *union_array, GPtrArray *old_activ
     
     mark_erroneous_mappings(union_array, ACTIVATIONMAPPING_ACTIVATED); /* Mark erroneous mappings as activated */
     
-    if(traverse_activation_mappings(old_activation_mappings, union_array, target_array, traverse_inter_dependency_mappings, map_activation_mapping, complete_activation))
-        return 1;
-    else
-    {
-        g_printerr("[coordinator]: Rollback failed!\n\n");
-        return ROLLBACK_FAILED;
-    }
+    return (traverse_activation_mappings(old_activation_mappings, union_array, target_array, traverse_inter_dependency_mappings, map_activation_mapping, complete_activation));
 }
 
-static int deactivate_obsolete_mappings(GPtrArray *deactivation_array, GPtrArray *union_array, GPtrArray *target_array, GPtrArray *old_activation_mappings, const gboolean no_rollback, const gboolean dry_run)
+static TransitionStatus deactivate_obsolete_mappings(GPtrArray *deactivation_array, GPtrArray *union_array, GPtrArray *target_array, GPtrArray *old_activation_mappings, const gboolean no_rollback, const gboolean dry_run)
 {
+    g_print("[coordinator]: Executing deactivation of services:\n");
+    
     if(deactivation_array == NULL)
-        return 0;
+        return TRANSITION_SUCCESS;
     else
     {
         map_activation_mapping_function map_activation_mapping;
@@ -139,20 +126,26 @@ static int deactivate_obsolete_mappings(GPtrArray *deactivation_array, GPtrArray
             map_activation_mapping = deactivate_mapping;
         
         if(traverse_activation_mappings(deactivation_array, union_array, target_array, traverse_interdependent_mappings, map_activation_mapping, complete_deactivation))
-            return 0;
+            return TRANSITION_SUCCESS;
         else
         {
             if(no_rollback)
             {
                 g_printerr("[coordinator]: Deactivation failed, but not performing a rollback because it has\n");
                 g_printerr("been disabled! Please manually diagnose the problems!\n");
-                return 1;
+                return TRANSITION_FAILED;
             }
             else
             {
                 /* If the deactivation fails, perform a rollback */
                 g_printerr("[coordinator]: Deactivation failed! Doing a rollback...\n");
-                return rollback_to_old_mappings(union_array, old_activation_mappings, target_array, dry_run);
+                if(rollback_to_old_mappings(union_array, old_activation_mappings, target_array, dry_run))
+                    return TRANSITION_FAILED;
+                else
+                {
+                    g_printerr("[coordinator]: Rollback failed!\n\n");
+                    return TRANSITION_ROLLBACK_FAILED;
+                }
             }
         }
     }
@@ -168,18 +161,15 @@ static int rollback_new_mappings(GPtrArray *activation_array, GPtrArray *union_a
         map_activation_mapping = deactivate_mapping;
     
     mark_erroneous_mappings(union_array, ACTIVATIONMAPPING_DEACTIVATED); /* Mark erroneous mappings as deactivated */
-    if(traverse_activation_mappings(activation_array, union_array, target_array, traverse_interdependent_mappings, map_activation_mapping, complete_deactivation))
-        return 0;
-    else
-    {
-        g_printerr("[coordinator]: Rollback failed!\n\n");
-        return ROLLBACK_FAILED;
-    }
+    
+    return (traverse_activation_mappings(activation_array, union_array, target_array, traverse_interdependent_mappings, map_activation_mapping, complete_deactivation));
 }
 
-static int activate_new_mappings(GPtrArray *activation_array, GPtrArray *union_array, GPtrArray *target_array, GPtrArray *old_activation_mappings, const gboolean no_rollback, const gboolean dry_run)
+static TransitionStatus activate_new_mappings(GPtrArray *activation_array, GPtrArray *union_array, GPtrArray *target_array, GPtrArray *old_activation_mappings, const gboolean no_rollback, const gboolean dry_run)
 {
     map_activation_mapping_function map_activation_mapping;
+    
+    g_print("[coordinator]: Executing activation of services:\n");
     
     if(dry_run)
         map_activation_mapping = dry_run_activate_mapping;
@@ -187,53 +177,48 @@ static int activate_new_mappings(GPtrArray *activation_array, GPtrArray *union_a
         map_activation_mapping = activate_mapping;
     
     if(traverse_activation_mappings(activation_array, union_array, target_array, traverse_inter_dependency_mappings, map_activation_mapping, complete_activation))
-        return 0;
+        return TRANSITION_SUCCESS;
     else
     {
         if(no_rollback)
         {
             g_printerr("[coordinator]: Activation failed, but not doing a rollback as it has been\n");
             g_printerr("disabled! Please manually diagnose the errors!\n");
-            return 1;
+            return TRANSITION_FAILED;
         }
         else
         {
-            int status;
-            
             /* If the activation fails, perform a rollback */
             g_printerr("[coordinator]: Activation failed! Doing a rollback...\n");
             
             /* Roll back the new mappings */
-            status = rollback_new_mappings(activation_array, union_array, target_array, dry_run);
+            if(!rollback_new_mappings(activation_array, union_array, target_array, dry_run))
+            {
+                g_printerr("[coordinator]: Rollback failed!\n\n");
+                return TRANSITION_ROLLBACK_FAILED; // If the rollback failed, stop and notify the user to take manual action
+            }
             
-            if(status != 0)
-                return status; // If the roll back failed, stop and notify the user to take manual action
-            
-            /* If the new mappings have been rolled backed, roll back to the old mappings */
-            if(old_activation_mappings != NULL)
-                return rollback_to_old_mappings(union_array, old_activation_mappings, target_array, dry_run);
+            if(old_activation_mappings == NULL)
+                return TRANSITION_FAILED;
             else
-                return 1;
+            {
+                /* If the new mappings have been rolled backed, roll back to the old mappings */
+                
+                if(rollback_to_old_mappings(union_array, old_activation_mappings, target_array, dry_run))
+                    return TRANSITION_FAILED;
+                else
+                    return TRANSITION_ROLLBACK_FAILED;
+            }
         }
     }
 }
 
-static void cleanup(const GPtrArray *old_activation_mappings, GPtrArray *deactivation_array, GPtrArray *activation_array, GPtrArray *union_array)
-{
-    if(old_activation_mappings != NULL)
-    {
-        g_ptr_array_free(deactivation_array, TRUE);
-        g_ptr_array_free(activation_array, TRUE);
-        g_ptr_array_free(union_array, TRUE);
-    }
-}
-
-int transition(GPtrArray *new_activation_mappings, GPtrArray *old_activation_mappings, GPtrArray *target_array, const gboolean no_rollback, const gboolean dry_run)
+TransitionStatus transition(GPtrArray *new_activation_mappings, GPtrArray *old_activation_mappings, GPtrArray *target_array, const gboolean no_rollback, const gboolean dry_run)
 {
     GPtrArray *union_array;
     GPtrArray *deactivation_array;
     GPtrArray *activation_array;
-    int status;
+    TransitionStatus status;
     
     /* Print configurations */
     
@@ -264,27 +249,19 @@ int transition(GPtrArray *new_activation_mappings, GPtrArray *old_activation_map
         g_ptr_array_free(intersection_array, TRUE);
     }
 
-    /* Execute deactivation process */
-    g_print("[coordinator]: Executing deactivation of services:\n");
+    /* Execute transition steps */
     
-    if((status = deactivate_obsolete_mappings(deactivation_array, union_array, target_array, old_activation_mappings, no_rollback, dry_run)) != 0)
-    {
-        cleanup(old_activation_mappings, deactivation_array, activation_array, union_array);
-        return status;
-    }
-    
-    g_print("[coordinator]: Executing activation of services:\n");
-
-    /* Execute activation process (if deactivation process did not fail) */
-    if((status = activate_new_mappings(activation_array, union_array, target_array, old_activation_mappings, no_rollback, dry_run)) != 0)
-    {
-        cleanup(old_activation_mappings, deactivation_array, activation_array, union_array);
-        return status;
-    }
+    if((status = deactivate_obsolete_mappings(deactivation_array, union_array, target_array, old_activation_mappings, no_rollback, dry_run)) == TRANSITION_SUCCESS
+      && (status = activate_new_mappings(activation_array, union_array, target_array, old_activation_mappings, no_rollback, dry_run)) == TRANSITION_SUCCESS);
     
     /* Cleanup */
-    cleanup(old_activation_mappings, deactivation_array, activation_array, union_array);
-    
-    /* Returns the exit status, which is 0 if everything succeeded */
-    return 0;
+    if(old_activation_mappings != NULL)
+    {
+        g_ptr_array_free(deactivation_array, TRUE);
+        g_ptr_array_free(activation_array, TRUE);
+        g_ptr_array_free(union_array, TRUE);
+    }
+
+    /* Returns the transition status */
+    return status;
 }

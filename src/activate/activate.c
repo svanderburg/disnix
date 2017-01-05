@@ -46,13 +46,6 @@ static void set_flag_on_interrupt(void)
     sigaction(SIGINT, &act, NULL);
 }
 
-static void cleanup(gchar *old_manifest_file, Manifest *manifest, GPtrArray *old_activation_mappings)
-{
-    g_free(old_manifest_file);
-    delete_manifest(manifest);
-    delete_activation_array(old_activation_mappings);
-}
-
 int activate_system(const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade, const gboolean no_rollback, const gboolean dry_run)
 {
     Manifest *manifest = create_manifest(new_manifest, NULL, NULL);
@@ -64,7 +57,7 @@ int activate_system(const gchar *new_manifest, const gchar *old_manifest, const 
     }
     else
     {
-        int status;
+        TransitionStatus status;
         gchar *old_manifest_file;
         GPtrArray *old_activation_mappings;
         
@@ -92,12 +85,13 @@ int activate_system(const gchar *new_manifest, const gchar *old_manifest, const 
         /* Execute transition */
         g_print("[coordinator]: Executing the transition to the new deployment state\n");
         
-        if((status = transition(manifest->activation_array, old_activation_mappings, manifest->target_array, no_rollback, dry_run)) != 0)
+        if((status = transition(manifest->activation_array, old_activation_mappings, manifest->target_array, no_rollback, dry_run)) == TRANSITION_SUCCESS)
+            g_printerr("[coordinator]: The new configuration has been successfully activated!\n");
+        else
         {
-            cleanup(old_manifest_file, manifest, old_activation_mappings);
             g_printerr("[coordinator]: ERROR: Transition phase execution failed!\n");
             
-            if(old_manifest_file != NULL && status == ROLLBACK_FAILED)
+            if(old_manifest_file != NULL && status == TRANSITION_ROLLBACK_FAILED)
             {
                 g_printerr("The rollback failed! This means the system is now inconsistent! Please\n");
                 g_printerr("manually diagnose the errors before doing another redeployment!\n\n");
@@ -111,15 +105,14 @@ int activate_system(const gchar *new_manifest, const gchar *old_manifest, const 
                 
                 g_printerr("-o %s %s\n\n", new_manifest, old_manifest_file);
             }
-            
-            return status;
         }
         
         /* Cleanup */
-        cleanup(old_manifest_file, manifest, old_activation_mappings);
-        
-        /* Everything succeeded */
-        g_printerr("[coordinator]: The new configuration has been successfully activated!\n");
-        return 0;
+        g_free(old_manifest_file);
+        delete_manifest(manifest);
+        delete_activation_array(old_activation_mappings);
+
+        /* Return the transition status */
+        return status;
     }
 }

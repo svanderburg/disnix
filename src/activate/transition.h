@@ -20,7 +20,17 @@
 #ifndef __DISNIX_TRANSITION_H
 #define __DISNIX_TRANSITION_H
 #include <glib.h>
-#define ROLLBACK_FAILED 2
+
+/**
+ * @brief Possible outcomes for the transition process
+ */
+typedef enum
+{
+    TRANSITION_SUCCESS = 0,
+    TRANSITION_FAILED = 1,
+    TRANSITION_ROLLBACK_FAILED = 2
+}
+TransitionStatus;
 
 /**
  * Performs the transition phase, in which obsolete services are deactivated and
@@ -31,8 +41,8 @@
  * @param target_array Array containing all the targets of the new configuration
  * @param no_rollback Do not roll back if an error occurs in the transition phase
  * @param dry_run Only prints the steps to be executed but does not actually perform them
- * @return 0 if the phase succeeds, else a non-zero exit status
+ * @return A status value from the transition status enumeration
  */
-int transition(GPtrArray *new_activation_mappings, GPtrArray *old_activation_mappings, GPtrArray *target_array, const gboolean no_rollback, const gboolean dry_run);
+TransitionStatus transition(GPtrArray *new_activation_mappings, GPtrArray *old_activation_mappings, GPtrArray *target_array, const gboolean no_rollback, const gboolean dry_run);
 
 #endif
