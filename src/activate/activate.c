@@ -48,11 +48,11 @@ static void set_flag_on_interrupt(void)
 
 int activate_system(const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade, const gboolean no_rollback, const gboolean dry_run)
 {
-    Manifest *manifest = create_manifest(new_manifest, NULL, NULL);
+    Manifest *manifest = create_manifest(new_manifest, MANIFEST_ACTIVATION_FLAG, NULL, NULL);
     
     if(manifest == NULL)
     {
-        g_printerr("[coordinator]: Error opening manifest_file!\n");
+        g_printerr("[coordinator]: Error opening manifest file!\n");
         return 1;
     }
     else

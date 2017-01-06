@@ -42,7 +42,7 @@ static int delete_obsolete_state(GPtrArray *snapshots_array, GPtrArray *target_a
 
 int delete_state(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container, const gchar *component)
 {
-    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, container, component);
+    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_SNAPSHOT_FLAG, container, component);
     
     if(manifest == NULL)
     {

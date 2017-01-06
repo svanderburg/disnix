@@ -119,7 +119,7 @@ static int lock(const GPtrArray *distribution_array, const GPtrArray *target_arr
 
 int lock_or_unlock(const int do_lock, const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile)
 {
-    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, NULL, NULL);
+    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_DISTRIBUTION_FLAG, NULL, NULL);
 
     if(manifest == NULL)
     {

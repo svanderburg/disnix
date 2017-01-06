@@ -27,44 +27,58 @@
 #include "snapshotmapping.h"
 #include "targets.h"
 
-Manifest *create_manifest(const gchar *manifest_file, const gchar *container_filter, const gchar *component_filter)
+Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, const gchar *container_filter, const gchar *component_filter)
 {
-    GPtrArray *distribution_array, *activation_array, *snapshots_array, *target_array;
-    Manifest *manifest;
+    Manifest *manifest = (Manifest*)g_malloc(sizeof(Manifest));
     
-    distribution_array = generate_distribution_array(manifest_file);
-    if(distribution_array == NULL)
-        return NULL;
-    
-    activation_array = create_activation_array(manifest_file);
-    if(activation_array == NULL)
+    if(flags & MANIFEST_DISTRIBUTION_FLAG)
     {
-        delete_distribution_array(distribution_array);
+        manifest->distribution_array = generate_distribution_array(manifest_file);
+        
+        if(manifest->distribution_array == NULL)
+        {
+            delete_manifest(manifest);
+            return NULL;
+        }
+    }
+    else
+        manifest->distribution_array = NULL;
+    
+    if(flags & MANIFEST_ACTIVATION_FLAG)
+    {
+        manifest->activation_array = create_activation_array(manifest_file);
+        
+        if(manifest->activation_array == NULL)
+        {
+            delete_manifest(manifest);
+            return NULL;
+        }
+    }
+    else
+        manifest->activation_array = NULL;
+    
+    if(flags & MANIFEST_SNAPSHOT_FLAG)
+    {
+        manifest->snapshots_array = create_snapshots_array(manifest_file, container_filter, component_filter);
+        
+        if(manifest->snapshots_array == NULL)
+        {
+            delete_manifest(manifest);
+            return NULL;
+        }
+    }
+    else
+        manifest->snapshots_array = NULL;
+
+    manifest->target_array = generate_target_array(manifest_file);
+    
+    if(manifest->target_array == NULL)
+    {
+        delete_manifest(manifest);
         return NULL;
     }
-    snapshots_array = create_snapshots_array(manifest_file, container_filter, component_filter);
-    if(snapshots_array == NULL)
-    {
-        delete_distribution_array(distribution_array);
-        delete_activation_array(activation_array);
-        return NULL;
-    }
-    target_array = generate_target_array(manifest_file);
-    if(target_array == NULL)
-    {
-        delete_distribution_array(distribution_array);
-        delete_activation_array(activation_array);
-        delete_snapshots_array(snapshots_array);
-        return NULL;
-    }
-    
-    manifest = (Manifest*)g_malloc(sizeof(Manifest));
-    manifest->distribution_array = distribution_array;
-    manifest->activation_array = activation_array;
-    manifest->snapshots_array = snapshots_array;
-    manifest->target_array = target_array;
-    
-    return manifest;
+    else
+        return manifest;
 }
 
 void delete_manifest(Manifest *manifest)
@@ -104,7 +118,7 @@ gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, c
     return old_manifest_file;
 }
 
-Manifest *open_provided_or_previous_manifest_file(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container, const gchar *component)
+Manifest *open_provided_or_previous_manifest_file(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const unsigned int flags, const gchar *container, const gchar *component)
 {
     if(manifest_file == NULL)
     {
@@ -116,11 +130,11 @@ Manifest *open_provided_or_previous_manifest_file(const gchar *manifest_file, co
         else
         {
             /* Open the previously deployed manifest */
-            Manifest *manifest = create_manifest(old_manifest_file, container, component);
+            Manifest *manifest = create_manifest(old_manifest_file, flags, container, component);
             g_free(old_manifest_file);
             return manifest;
         }
     }
     else
-        return create_manifest(manifest_file, container, component); /* Open the provided manifest file */
+        return create_manifest(manifest_file, flags, container, component); /* Open the provided manifest file */
 }

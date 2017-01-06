@@ -42,6 +42,9 @@ static int distribute_derivations(const GPtrArray *derivation_array, const GPtrA
 {
     int success;
     ProcReact_PidIterator iterator = create_derivation_pid_iterator(derivation_array, interface_array, copy_derivation_item_to, complete_copy_derivation_item_to, NULL);
+    
+    g_print("[coordinator]: Distributing store derivation files...\n");
+    
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
     success = derivation_iterator_has_succeeded(iterator.data);
     
@@ -70,6 +73,9 @@ static int realise(const GPtrArray *derivation_array, const GPtrArray *interface
     int success;
     ProcReact_FutureIterator iterator = create_derivation_future_iterator(derivation_array, interface_array, realise_derivation_item, complete_realise_derivation_item, NULL);
     procreact_fork_in_parallel_buffer_and_wait(&iterator);
+    
+    g_print("[coordinator]: Realising store derivation files...\n");
+    
     success = derivation_iterator_has_succeeded(iterator.data);
     
     destroy_derivation_future_iterator(&iterator);
@@ -106,6 +112,9 @@ static int retrieve_results(const GPtrArray *derivation_array, const GPtrArray *
 {
     int success;
     ProcReact_PidIterator iterator = create_derivation_pid_iterator(derivation_array, interface_array, copy_result_from, complete_copy_result_from, NULL);
+    
+    g_print("[coordinator]: Retrieving build results...\n");
+    
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
     success = derivation_iterator_has_succeeded(iterator.data);
     

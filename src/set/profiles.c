@@ -19,6 +19,7 @@
 
 #include "profiles.h"
 
+#include <manifest.h>
 #include <distributionmapping.h>
 #include <targets.h>
 #include <client-interface.h>
@@ -52,20 +53,27 @@ static int set_target_profiles(const GPtrArray *distribution_array, const GPtrAr
 
 int set_profiles(const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const int no_coordinator_profile, const int no_target_profiles)
 {
-    GPtrArray *distribution_array = generate_distribution_array(manifest_file);
-    GPtrArray *target_array = generate_target_array(manifest_file);
-    int exit_status;
+    Manifest *manifest = create_manifest(manifest_file, MANIFEST_DISTRIBUTION_FLAG, NULL, NULL);
     
-    if((no_target_profiles || set_target_profiles(distribution_array, target_array, profile)) /* First, attempt to set the target profiles */
-      && (no_coordinator_profile || pkgmgmt_set_coordinator_profile(coordinator_profile_path, manifest_file, profile))) /* Then try to set the coordinator profile */
-        exit_status = 0;
+    if(manifest == NULL)
+    {
+        g_printerr("[coordinator]: Error opening manifest file!\n");
+        return 1;
+    }
     else
-        exit_status = 1;
-    
-    /* Cleanup */
-    delete_target_array(target_array);
-    delete_distribution_array(distribution_array);
+    {
+        int exit_status;
+        
+        if((no_target_profiles || set_target_profiles(manifest->distribution_array, manifest->target_array, profile)) /* First, attempt to set the target profiles */
+          && (no_coordinator_profile || pkgmgmt_set_coordinator_profile(coordinator_profile_path, manifest_file, profile))) /* Then try to set the coordinator profile */
+            exit_status = 0;
+        else
+            exit_status = 1;
+        
+        /* Cleanup */
+        delete_manifest(manifest);
 
-    /* Return exit status */
-    return exit_status;
+        /* Return exit status */
+        return exit_status;
+    }
 }

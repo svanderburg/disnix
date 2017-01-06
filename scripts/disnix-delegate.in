@@ -155,5 +155,5 @@ checkTargetProperty
 
 echo "[coordinator]: Instantiating store derivations..."
 distributedDerivation=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --interface $interface --no-out-link $showTraceArg`
-echo "[coordinator]: Building store derivations..."
+echo "[coordinator]: Remotely building services..."
 disnix-build $maxConcurrentTransfersArg $distributedDerivation

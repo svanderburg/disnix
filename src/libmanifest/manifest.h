@@ -21,6 +21,11 @@
 #define __DISNIX_MANIFEST_H
 #include <glib.h>
 
+#define MANIFEST_DISTRIBUTION_FLAG 0x1
+#define MANIFEST_ACTIVATION_FLAG 0x2
+#define MANIFEST_SNAPSHOT_FLAG 0x4
+#define MANIFEST_ALL_FLAGS (MANIFEST_DISTRIBUTION_FLAG | MANIFEST_ACTIVATION_FLAG | MANIFEST_SNAPSHOT_FLAG)
+
 /**
  * @brief Contains all properties of a manifest file that is used for distribution and activation
  *
@@ -48,11 +53,12 @@ Manifest;
  * Composes a manifest struct from a manifest file.
  *
  * @param manifest_file Manifest file to open
+ * @param flags Flags indicating which portions of the manifest should be parsed
  * @param container_filter Name of the container to filter on, or NULL to parse all containers
  * @param component_filter Name of the component to filter on, or NULL to parse all components
  * @return A manifest struct or NULL if an error occurred
  */
-Manifest *create_manifest(const gchar *manifest_file, const gchar *container_filter, const gchar *component_filter);
+Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, const gchar *container_filter, const gchar *component_filter);
 
 /**
  * Deletes a manifest struct from heap memory.
@@ -79,10 +85,11 @@ gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, c
  * @param manifest_file Manifest file to open
  * @param coordinator_profile_path Path to the coordinator profile or NULL to consult the default profile path
  * @param profile Name of the Disnix profile that identifies the deployment (typically: default)
+ * @param flags Flags indicating which portions of the manifest should be parsed
  * @param container Name of the container to filter on, or NULL to parse all containers
  * @param component Name of the component to filter on, or NULL to parse all components
  * @return The provided manifest, previous manifest, or NULL in case of an error
  */
-Manifest *open_provided_or_previous_manifest_file(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container, const gchar *component);
+Manifest *open_provided_or_previous_manifest_file(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const unsigned int flags, const gchar *container, const gchar *component);
 
 #endif
