@@ -18,7 +18,6 @@
  */
 
 #include "transition.h"
-#include <signal.h>
 #include <activationmapping.h>
 #include <targets.h>
 #include <client-interface.h>
@@ -125,10 +124,13 @@ static TransitionStatus deactivate_obsolete_mappings(GPtrArray *deactivation_arr
         else
             map_activation_mapping = deactivate_mapping;
         
-        if(traverse_activation_mappings(deactivation_array, union_array, target_array, traverse_interdependent_mappings, map_activation_mapping, complete_deactivation))
+        if(traverse_activation_mappings(deactivation_array, union_array, target_array, traverse_interdependent_mappings, map_activation_mapping, complete_deactivation) && !interrupted)
             return TRANSITION_SUCCESS;
         else
         {
+            if(interrupted)
+                g_printerr("[coordinator]: The deactivation phase has been interrupted, reactivating services again...\n");
+            
             if(no_rollback)
             {
                 g_printerr("[coordinator]: Deactivation failed, but not performing a rollback because it has\n");
@@ -176,10 +178,13 @@ static TransitionStatus activate_new_mappings(GPtrArray *activation_array, GPtrA
     else
         map_activation_mapping = activate_mapping;
     
-    if(traverse_activation_mappings(activation_array, union_array, target_array, traverse_inter_dependency_mappings, map_activation_mapping, complete_activation))
+    if(traverse_activation_mappings(activation_array, union_array, target_array, traverse_inter_dependency_mappings, map_activation_mapping, complete_activation) && !interrupted)
         return TRANSITION_SUCCESS;
     else
     {
+        if(interrupted)
+            g_printerr("[coordinator]: The activation has been interrupted, reverting back to the old state...\n");
+        
         if(no_rollback)
         {
             g_printerr("[coordinator]: Activation failed, but not doing a rollback as it has been\n");

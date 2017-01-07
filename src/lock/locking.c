@@ -18,30 +18,13 @@
  */
 
 #include "locking.h"
-#include <sys/types.h>
-#include <unistd.h>
 #include <distributionmapping.h>
 #include <manifest.h>
 #include <targets.h>
 #include <client-interface.h>
+#include <interrupt.h>
 
-volatile int interrupted;
-
-static void handle_sigint(int signum)
-{
-    interrupted = TRUE;
-}
-
-static void set_flag_on_interrupt(void)
-{
-    struct sigaction act;
-    act.sa_handler = handle_sigint;
-    act.sa_flags = 0;
-    sigemptyset(&act.sa_mask);
-    sigaddset(&act.sa_mask, SIGINT);
-    
-    sigaction(SIGINT, &act, NULL);
-}
+extern volatile int interrupted;
 
 static pid_t unlock_distribution_item(void *data, DistributionItem *item, Target *target)
 {

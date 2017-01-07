@@ -19,32 +19,9 @@
 
 #include "activate.h"
 #include "transition.h"
-
-#include <sys/types.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <signal.h>
-
 #include <manifest.h>
 #include <activationmapping.h>
-
-volatile int interrupted = FALSE;
-
-static void handle_sigint(int signum)
-{
-    interrupted = TRUE;
-}
-
-static void set_flag_on_interrupt(void)
-{
-    struct sigaction act;
-    act.sa_handler = handle_sigint;
-    act.sa_flags = 0;
-    sigemptyset(&act.sa_mask);
-    sigaddset(&act.sa_mask, SIGINT);
-    
-    sigaction(SIGINT, &act, NULL);
-}
+#include <interrupt.h>
 
 int activate_system(const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade, const gboolean no_rollback, const gboolean dry_run)
 {

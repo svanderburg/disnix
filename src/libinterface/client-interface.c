@@ -31,27 +31,33 @@ static pid_t exec_dysnomia_activity(gchar *operation, gchar *interface, gchar *t
 
     if(pid == 0)
     {
-	unsigned int i;
-	char **args = (char**)g_malloc((10 + 2 * arguments_size) * sizeof(char*));
-	    
-	args[0] = interface;
-	args[1] = operation;
-	args[2] = "--target";
-	args[3] = target;
-	args[4] = "--container";
-	args[5] = container;
-	args[6] = "--type";
-	args[7] = type;
-	    
-	for(i = 0; i < arguments_size * 2; i += 2)
-	{
-	    args[i + 8] = "--arguments";
-	    args[i + 9] = arguments[i / 2];
+        unsigned int i;
+        char **args = (char**)g_malloc((10 + 2 * arguments_size) * sizeof(char*));
+        
+        args[0] = interface;
+        args[1] = operation;
+        args[2] = "--target";
+        args[3] = target;
+        args[4] = "--container";
+        args[5] = container;
+        args[6] = "--type";
+        args[7] = type;
+            
+        for(i = 0; i < arguments_size * 2; i += 2)
+        {
+            args[i + 8] = "--arguments";
+            args[i + 9] = arguments[i / 2];
         }
-	
+        
         args[i + 8] = service;
         args[i + 9] = NULL;
-	
+        
+        /*
+         * Attach process to its own process group to prevent them from being
+         * interrupted by the shell session starting the process
+         */
+        setpgid(0, 0);
+        
         execvp(interface, args);
         _exit(1);
     }
@@ -75,9 +81,16 @@ static pid_t exec_lock_or_unlock(gchar *operation, gchar *interface, gchar *targ
     
     if(pid == 0)
     {
-	char *const args[] = {interface, operation, "--target", target, "--profile", profile, NULL};
-	execvp(interface, args);
-	_exit(1);
+        char *const args[] = {interface, operation, "--target", target, "--profile", profile, NULL};
+        
+        /*
+         * Attach process to its own process group to prevent them from being
+         * interrupted by the shell session starting the process
+         */
+        setpgid(0, 0);
+        
+        execvp(interface, args);
+        _exit(1);
     }
 
     return pid;
@@ -116,18 +129,18 @@ pid_t exec_collect_garbage(gchar *interface, gchar *target, const gboolean delet
     
     /* Determine whether to use the delete old option */
     if(delete_old)
-	delete_old_arg = "-d";
+        delete_old_arg = "-d";
     else
-	delete_old_arg = NULL;
+        delete_old_arg = NULL;
 
     /* Fork and execute the collect garbage process */
     pid = fork();
     
     if(pid == 0)
     {
-	char *const args[] = {interface, "--target", target, "--collect-garbage", delete_old_arg, NULL};
-	execvp(interface, args);
-	_exit(1);
+        char *const args[] = {interface, "--target", target, "--collect-garbage", delete_old_arg, NULL};
+        execvp(interface, args);
+        _exit(1);
     }
     
     return pid;
@@ -206,34 +219,34 @@ static pid_t exec_copy_snapshots(gchar *operation, gchar *interface, gchar *targ
     
     if(pid == 0)
     {
-	unsigned int args_length = 11;
-	char **args;
-	
-	if(all)
-	    args_length++;
-	    
-	args = (char**)g_malloc(args_length * sizeof(char*));
-	args[0] = "disnix-copy-snapshots";
-	args[1] = operation;
-	args[2] = "--target";
-	args[3] = target;
-	args[4] = "--interface";
-	args[5] = interface;
-	args[6] = "--container";
-	args[7] = container;
-	args[8] = "--component";
-	args[9] = component;
-	
-	if(all)
-	{
-	    args[10] = "--all";
-	    args[11] = NULL;
-	}
-	else
-	    args[10] = NULL;
-	
-	execvp(args[0], args);
-	_exit(1);
+        unsigned int args_length = 11;
+        char **args;
+        
+        if(all)
+            args_length++;
+            
+        args = (char**)g_malloc(args_length * sizeof(char*));
+        args[0] = "disnix-copy-snapshots";
+        args[1] = operation;
+        args[2] = "--target";
+        args[3] = target;
+        args[4] = "--interface";
+        args[5] = interface;
+        args[6] = "--container";
+        args[7] = container;
+        args[8] = "--component";
+        args[9] = component;
+        
+        if(all)
+        {
+            args[10] = "--all";
+            args[11] = NULL;
+        }
+        else
+            args[10] = NULL;
+        
+        execvp(args[0], args);
+        _exit(1);
     }
 
     return pid;
@@ -258,36 +271,36 @@ pid_t exec_clean_snapshots(gchar *interface, gchar *target, int keep, char *cont
     
     if(pid == 0)
     {
-	char **args = (char**)g_malloc(11 * sizeof(char*));
-	unsigned int count = 6;
-	
-	args[0] = interface;
-	args[1] = "--target";
-	args[2] = target;
-	args[3] = "--clean-snapshots";
-	args[4] = "--keep";
-	args[5] = keepStr;
-	
-	if(container != NULL)
-	{
-	    args[count] = "--container";
-	    count++;
-	    args[count] = container;
-	    count++;
-	}
-	
-	if(component != NULL)
-	{
-	    args[count] = "--component";
-	    count++;
-	    args[count] = component;
-	    count++;
-	}
-	
-	args[count] = NULL;
-	
-	execvp(interface, args);
-	_exit(1);
+        char **args = (char**)g_malloc(11 * sizeof(char*));
+        unsigned int count = 6;
+        
+        args[0] = interface;
+        args[1] = "--target";
+        args[2] = target;
+        args[3] = "--clean-snapshots";
+        args[4] = "--keep";
+        args[5] = keepStr;
+        
+        if(container != NULL)
+        {
+            args[count] = "--container";
+            count++;
+            args[count] = container;
+            count++;
+        }
+        
+        if(component != NULL)
+        {
+            args[count] = "--component";
+            count++;
+            args[count] = component;
+            count++;
+        }
+        
+        args[count] = NULL;
+        
+        execvp(interface, args);
+        _exit(1);
     }
 
     return pid;
