@@ -264,6 +264,13 @@ ProcReact_Future pkgmgmt_instantiate(gchar *infrastructure_expr)
     return future;
 }
 
+char *pkgmgmt_instantiate_sync(gchar *infrastructure_expr)
+{
+    ProcReact_Status status;
+    ProcReact_Future future = pkgmgmt_instantiate(infrastructure_expr);
+    return procreact_future_get(&future, &status);
+}
+
 static pid_t execute_set_coordinator_profile(gchar *profile_path, gchar *manifest_file_path)
 {
     pid_t pid = fork();

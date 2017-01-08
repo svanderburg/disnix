@@ -36,3 +36,11 @@ xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, const char *xpath)
     else
 	return result;
 }
+
+gchar *duplicate_node_text(xmlNodePtr node)
+{
+    if(node->children != NULL && node->children->type == XML_TEXT_NODE)
+        return g_strdup((gchar*)node->children->content);
+    else
+        return NULL;
+}

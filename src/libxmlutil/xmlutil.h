@@ -22,6 +22,7 @@
 
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
+#include <glib.h>
 
 /**
  * Creates an XML XPath object pointer from a XPath query on a
@@ -32,5 +33,13 @@
  * @return XML XPath object pointer
  */
 xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, const char *xpath);
+
+/**
+ * Checks whether a given XML node has a text sub node and duplicates the text.
+ *
+ * @param node Pointer to XML node
+ * @return Duplicated string contents, or NULL if the node is incorrect
+ */
+gchar *duplicate_node_text(xmlNodePtr node);
 
 #endif

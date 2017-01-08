@@ -114,15 +114,15 @@ GPtrArray *create_snapshots_array(const gchar *manifest_file, const gchar *conta
 	    while(mapping_children != NULL)
 	    {
 		if(xmlStrcmp(mapping_children->name, (xmlChar*) "component") == 0)
-		    component = g_strdup((gchar*)mapping_children->children->content);
+		    component = duplicate_node_text(mapping_children);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "container") == 0)
-		    container = g_strdup((gchar*)mapping_children->children->content);
+		    container = duplicate_node_text(mapping_children);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "target") == 0)
-		    target = g_strdup((gchar*)mapping_children->children->content);
+		    target = duplicate_node_text(mapping_children);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "service") == 0)
-		    service = g_strdup((gchar*)mapping_children->children->content);
+		    service = duplicate_node_text(mapping_children);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "type") == 0)
-		    type = g_strdup((gchar*)mapping_children->children->content);
+		    type = duplicate_node_text(mapping_children);
 		
 		mapping_children = mapping_children->next;
 	    }

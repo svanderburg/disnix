@@ -111,18 +111,6 @@ static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
     return transform_doc;
 }
 
-static char *create_infrastructure_xml(gchar *infrastructure_expr)
-{
-    /*
-     * Execute nix-instantiate command to retrieve XML representation of the
-     * infrastructure model
-     */
-    
-    ProcReact_Status status;
-    ProcReact_Future future = pkgmgmt_instantiate(infrastructure_expr);
-    return procreact_future_get(&future, &status);
-}
-
 GPtrArray *create_target_array_from_doc(xmlDocPtr doc)
 {
     xmlXPathObjectPtr result;
@@ -168,8 +156,8 @@ GPtrArray *create_target_array_from_doc(xmlDocPtr doc)
 	        /* Parse the name attribute */
 	        if(xmlStrcmp(target_properties->name, (xmlChar*) "name") == 0)
 	        {
-	            if(target_properties->children != NULL)
-	                name = g_strdup((gchar*)target_properties->children->content);
+	           if(target_properties->children != NULL)
+	               name = g_strdup((gchar*)target_properties->children->content);
 	        }
 	        
 	        target_properties = target_properties->next;
@@ -179,26 +167,20 @@ GPtrArray *create_target_array_from_doc(xmlDocPtr doc)
 	    while(targets_children != NULL)
 	    {
 	        if(xmlStrcmp(targets_children->name, (xmlChar*) "system") == 0)
-	        {
-	            if(targets_children->children != NULL)
-	                system = g_strdup((gchar*)targets_children->children->content);
-	        }
+	            system = duplicate_node_text(targets_children);
 	        else if(xmlStrcmp(targets_children->name, (xmlChar*) "clientInterface") == 0)
-	        {
-	            if(targets_children->children != NULL)
-	                client_interface = g_strdup((gchar*)targets_children->children->content);
-	        }
+	            client_interface = duplicate_node_text(targets_children);
 	        else if(xmlStrcmp(targets_children->name, (xmlChar*) "targetProperty") == 0)
-	        {
-	            if(targets_children->children != NULL)
-	                target_property = g_strdup((gchar*)targets_children->children->content);
-	        }
+	            target_property = duplicate_node_text(targets_children);
 	        else if(xmlStrcmp(targets_children->name, (xmlChar*) "numOfCores") == 0)
 	        {
-	            if(targets_children->children != NULL)
+	            gchar *num_of_cores_str = duplicate_node_text(targets_children);
+	            
+	            if(num_of_cores_str != NULL)
 	            {
-	                num_of_cores = atoi((char*)targets_children->children->content);
+	                num_of_cores = atoi((char*)num_of_cores_str);
 	                available_cores = num_of_cores;
+	                g_free(num_of_cores_str);
 	            }
 	        }
 	        else if(xmlStrcmp(targets_children->name, (xmlChar*) "properties") == 0)
@@ -211,11 +193,7 @@ GPtrArray *create_target_array_from_doc(xmlDocPtr doc)
 	            {
 	                TargetProperty *target_property = (TargetProperty*)g_malloc(sizeof(TargetProperty));
 	                target_property->name = g_strdup((gchar*)properties_children->name);
-	                
-	                if(properties_children->children == NULL)
-	                    target_property->value = NULL;
-	                else
-	                    target_property->value = g_strdup((gchar*)properties_children->children->content);
+	                target_property->value = duplicate_node_text(properties_children);
 	                
 	                g_ptr_array_add(properties, target_property);
 	                
@@ -248,11 +226,7 @@ GPtrArray *create_target_array_from_doc(xmlDocPtr doc)
 	                    {
 	                        TargetProperty *target_property = (TargetProperty*)g_malloc(sizeof(TargetProperty));
 	                        target_property->name = g_strdup((gchar*)properties_children->name);
-	                        
-	                        if(properties_children->children == NULL)
-	                            target_property->value = NULL;
-	                        else
-	                            target_property->value = g_strdup((gchar*)properties_children->children->content);
+	                        target_property->value = duplicate_node_text(properties_children);
 	                
 	                        g_ptr_array_add(properties, target_property);
 	                
@@ -313,7 +287,7 @@ GPtrArray *create_target_array(char *infrastructure_expr)
     GPtrArray *targets_array = NULL;
     
     /* Open the XML output of nix-instantiate */
-    char *infrastructureXML = create_infrastructure_xml(infrastructure_expr);
+    char *infrastructureXML = pkgmgmt_instantiate_sync(infrastructure_expr);
     
     if(infrastructureXML == NULL)
     {

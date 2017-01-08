@@ -111,17 +111,17 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 	    while(mapping_children != NULL)
 	    {
 		if(xmlStrcmp(mapping_children->name, (xmlChar*) "key") == 0)
-		    key = g_strdup((gchar*)mapping_children->children->content);
+		    key = duplicate_node_text(mapping_children);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "service") == 0)
-		    service = g_strdup((gchar*)mapping_children->children->content);
+		    service = duplicate_node_text(mapping_children);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "name") == 0)
-		    name = g_strdup((gchar*)mapping_children->children->content);
+		    name = duplicate_node_text(mapping_children);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "type") == 0)
-		    type = g_strdup((gchar*)mapping_children->children->content);
+		    type = duplicate_node_text(mapping_children);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "target") == 0)
-		    target = g_strdup((gchar*)mapping_children->children->content);
+		    target = duplicate_node_text(mapping_children);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "container") == 0)
-		    container = g_strdup((gchar*)mapping_children->children->content);
+		    container = duplicate_node_text(mapping_children);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "dependsOn") == 0)
 		{
 		    xmlNodePtr depends_on_children = mapping_children->children;
@@ -142,11 +142,11 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 			    while(dependency_children != NULL)
 			    {
 				if(xmlStrcmp(dependency_children->name, (xmlChar*) "key") == 0)
-				    key = g_strdup((gchar*)dependency_children->children->content);
+				    key = duplicate_node_text(dependency_children);
 				else if(xmlStrcmp(dependency_children->name, (xmlChar*) "target") == 0)
-				    target = g_strdup((gchar*)dependency_children->children->content);
+				    target = duplicate_node_text(dependency_children);
 				else if(xmlStrcmp(dependency_children->name, (xmlChar*) "container") == 0)
-				    container = g_strdup((gchar*)dependency_children->children->content);
+				    container = duplicate_node_text(dependency_children);
 				
 				dependency_children = dependency_children->next;
 			    }
