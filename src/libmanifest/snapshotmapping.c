@@ -58,6 +58,16 @@ static int mapping_is_selected(const SnapshotMapping *mapping, const gchar *cont
     return (container == NULL || g_strcmp0(container, mapping->container) == 0) && (component == NULL || g_strcmp0(component, mapping->component) == 0);
 }
 
+static void delete_snapshot_mapping(SnapshotMapping *mapping)
+{
+    g_free(mapping->component);
+    g_free(mapping->container);
+    g_free(mapping->target);
+    g_free(mapping->service);
+    g_free(mapping->type);
+    g_free(mapping);
+}
+
 GPtrArray *create_snapshots_array(const gchar *manifest_file, const gchar *container_filter, const gchar *component_filter)
 {
     xmlDocPtr doc;
@@ -133,20 +143,34 @@ GPtrArray *create_snapshots_array(const gchar *manifest_file, const gchar *conta
 	    mapping->type = type;
 	    mapping->transferred = FALSE;
 	    
-	    /* Add the mapping to the array */
-	    
 	    if(mapping_is_selected(mapping, container_filter, component_filter))
-	        g_ptr_array_add(snapshots_array, mapping);
+	    {
+	        if(component == NULL || container == NULL || target == NULL || service == NULL || type == NULL)
+	        {
+	            /* Check if all mandatory properties have been provided */
+	            g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
+	            g_printerr("manifest file?\n");
+	            delete_snapshots_array(snapshots_array);
+	            snapshots_array = NULL;
+	            break;
+	        }
+	        else
+	            g_ptr_array_add(snapshots_array, mapping); /* Add the mapping to the array */
+	    }
+	    else
+	        delete_snapshot_mapping(mapping);
 	}
+	
+	xmlXPathFreeObject(result);
     }
 
     /* Cleanup */
-    xmlXPathFreeObject(result);
     xmlFreeDoc(doc);
     xmlCleanupParser();
 
     /* Sort the snapshots array */
-    g_ptr_array_sort(snapshots_array, (GCompareFunc)compare_snapshot_mapping);
+    if(snapshots_array != NULL)
+        g_ptr_array_sort(snapshots_array, (GCompareFunc)compare_snapshot_mapping);
     
     /* Return the snapshots array */
     return snapshots_array;
@@ -161,12 +185,7 @@ void delete_snapshots_array(GPtrArray *snapshots_array)
         for(i = 0; i < snapshots_array->len; i++)
         {
             SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
-            g_free(mapping->component);
-            g_free(mapping->container);
-            g_free(mapping->target);
-            g_free(mapping->service);
-            g_free(mapping->type);
-            g_free(mapping);
+            delete_snapshot_mapping(mapping);
         }
     
         g_ptr_array_free(snapshots_array, TRUE);

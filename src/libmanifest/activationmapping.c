@@ -176,18 +176,29 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 	    mapping->depends_on = depends_on;
 	    mapping->status = status;
 	    
-	    /* Add the mapping to the array */
-	    g_ptr_array_add(activation_array, mapping);
+	    if(mapping->key == NULL || mapping->target == NULL || mapping->container == NULL || mapping->service == NULL || mapping->name == NULL || mapping->type == NULL)
+	    {
+	        /* Check if all mandatory properties have been provided */
+	        g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
+	        g_printerr("manifest file?\n");
+	        delete_activation_array(activation_array);
+	        activation_array = NULL;
+	        break;
+	    }
+	    else
+	        g_ptr_array_add(activation_array, mapping); /* Add the mapping to the array */
 	}
+	
+	xmlXPathFreeObject(result);
     }
 
     /* Cleanup */
-    xmlXPathFreeObject(result);
     xmlFreeDoc(doc);
     xmlCleanupParser();
 
     /* Sort the activation array */
-    g_ptr_array_sort(activation_array, (GCompareFunc)compare_activation_mapping);
+    if(activation_array != NULL)
+        g_ptr_array_sort(activation_array, (GCompareFunc)compare_activation_mapping);
     
     /* Return the activation array */
     return activation_array;

@@ -205,12 +205,22 @@ GPtrArray *generate_target_array(const gchar *manifest_file)
 	    target->properties = properties;
 	    target->containers = containers;
 	    
-	    /* Add target item to the targets array */
-	    g_ptr_array_add(targets_array, target);
+	    if(target->system == NULL || target->client_interface == NULL || target->target_property == NULL)
+	    {
+	        /* Check if all mandatory properties have been provided */
+	        g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
+	        g_printerr("manifest file?\n");
+	        delete_target_array(targets_array);
+	        targets_array = NULL;
+	        break;
+	    }
+	    else
+	        g_ptr_array_add(targets_array, target); /* Add target item to the targets array */
 	}
 	
 	/* Sort the targets array */
-	g_ptr_array_sort(targets_array, (GCompareFunc)compare_target);
+	if(targets_array != NULL)
+	    g_ptr_array_sort(targets_array, (GCompareFunc)compare_target);
 	
 	/* Cleanup */
 	xmlXPathFreeObject(result);
@@ -220,7 +230,11 @@ GPtrArray *generate_target_array(const gchar *manifest_file)
     xmlFreeDoc(doc);
     xmlCleanupParser();
     
-    /* Return the distribution array */
+    /* Sort the targets array */
+    if(targets_array != NULL)
+        g_ptr_array_sort(targets_array, (GCompareFunc)compare_target);
+    
+    /* Return the targets array */
     return targets_array;
 }
 

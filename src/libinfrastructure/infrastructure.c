@@ -260,12 +260,22 @@ GPtrArray *create_target_array_from_doc(xmlDocPtr doc)
 	    target->properties = properties;
 	    target->containers = containers;
 	    
-	    /* Add target item to the targets array */
-	    g_ptr_array_add(targets_array, target);
+	    if(target->name == NULL || target->properties == NULL)
+	    {
+	        /* Check if all mandatory properties have been provided */
+	        g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
+	        g_printerr("infrastrucure file?\n");
+	        delete_target_array(targets_array);
+	        targets_array = NULL;
+	        break;
+	    }
+	    else
+	        g_ptr_array_add(targets_array, target); /* Add target item to the targets array */
 	}
 	
 	/* Sort the targets array */
-	g_ptr_array_sort(targets_array, (GCompareFunc)compare_target);
+	if(targets_array != NULL)
+	    g_ptr_array_sort(targets_array, (GCompareFunc)compare_target);
 
 	/* Cleanup */
 	xmlXPathFreeObject(result);

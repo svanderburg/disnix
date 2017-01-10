@@ -84,15 +84,27 @@ GPtrArray *create_derivation_array(const gchar *distributed_derivation_file)
 	    item->derivation = derivation;
 	    item->target = target;
 	    item->result = NULL;
-	    g_ptr_array_add(derivation_array, item);
+	    
+	    if(item->derivation == NULL || item->target == NULL)
+	    {
+	        /* Check if all mandatory properties have been provided */
+	        g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
+	        g_printerr("distributed derivation file?\n");
+	        delete_derivation_array(derivation_array);
+	        derivation_array = NULL;
+	        break;
+	    }
+	    else
+	        g_ptr_array_add(derivation_array, item); /* Add item to the array */
         }
+        
+        xmlXPathFreeObject(result);
     }
     
     /* Cleanup */
-    xmlXPathFreeObject(result);
     xmlFreeDoc(doc);
     xmlCleanupParser();
-
+    
     /* Return the derivation array */
     return derivation_array;
 }

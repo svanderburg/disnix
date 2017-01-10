@@ -80,10 +80,20 @@ GPtrArray *generate_distribution_array(const gchar *manifest_file)
 		mapping_children = mapping_children->next;
 	    }
 	    
-	    /* Add the mapping to the array */
 	    item->profile = profile;
 	    item->target = target;
-	    g_ptr_array_add(distribution_array, item);
+	    
+	    if(item->profile == NULL || item->target == NULL)
+	    {
+	        /* Check if all mandatory properties have been provided */
+	        g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
+	        g_printerr("manifest file?\n");
+	        delete_distribution_array(distribution_array);
+	        distribution_array = NULL;
+	        break;
+	    }
+	    else
+	        g_ptr_array_add(distribution_array, item); /* Add the mapping to the array */
         }
 	
 	xmlXPathFreeObject(result);
@@ -92,7 +102,7 @@ GPtrArray *generate_distribution_array(const gchar *manifest_file)
     /* Cleanup */
     xmlFreeDoc(doc);
     xmlCleanupParser();
-
+    
     /* Return the distribution array */
     return distribution_array;
 }
