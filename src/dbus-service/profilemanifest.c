@@ -42,7 +42,7 @@ static int unlock_services(int log_fd, GPtrArray *profile_manifest_array)
         int result;
         
         dprintf(log_fd, "Notifying unlock on %s: of type: %s in container: %s\n", entry->derivation, entry->type, entry->container);
-        pid = statemgmt_lock_component(entry->type, entry->container, entry->derivation, log_fd, log_fd);
+        pid = statemgmt_unlock_component(entry->type, entry->container, entry->derivation, log_fd, log_fd);
         result = procreact_wait_for_boolean(pid, &status);
         
         if(status != PROCREACT_STATUS_OK || !result)
@@ -70,7 +70,7 @@ static int lock_services(int log_fd, GPtrArray *profile_manifest_array)
     
         dprintf(log_fd, "Notifying lock on %s: of type: %s in container: %s\n", entry->derivation, entry->type, entry->container);
         
-        pid = statemgmt_unlock_component(entry->type, entry->container, entry->derivation, log_fd, log_fd);
+        pid = statemgmt_lock_component(entry->type, entry->container, entry->derivation, log_fd, log_fd);
         result = procreact_wait_for_boolean(pid, &status);
         
         if(status != PROCREACT_STATUS_OK || !result)

@@ -10,14 +10,8 @@ stdenv.mkDerivation {
     
     source ${dysnomia}/share/dysnomia/util
     
-    determineComponentName "${name}"
-    checkStateDir
-    determineTypeIdentifier "wrapper"
-    determineContainerName $3
-    composeSnapshotsPath
-    composeGarbagePath
-    composeGenerationsPath
-    
+    composeUtilityVariables "wrapper" "${name}" $3
+
     case "$1" in
         activate)
             if [ ! -d /var/db/${name} ]
@@ -39,6 +33,8 @@ stdenv.mkDerivation {
             hash=$(cat state | sha256sum)
             hash=''${hash:0:64}
             
+            snapshotsPath=$(composeSnapshotsPath)
+            
             if [ -d $snapshotsPath/$hash ]
             then
                 rm -Rf $tmpdir
@@ -48,18 +44,18 @@ stdenv.mkDerivation {
                 rmdir $tmpdir
             fi
             
-            createGenerationSymlink $snapshotsPath/$hash
+            createGenerationSymlink $hash
             ;;
         restore)
-            determineLastSnapshot
+            lastSnapshot=$(determineLastSnapshot)
         
             if [ "$lastSnapshot" != "" ]
             then
-                cp $snapshotsPath/$lastSnapshot/state /var/db/${name}
+                cp $lastSnapshot/state /var/db/${name}
             fi
             ;;
         collect-garbage)
-            if [ -f $garbagePath ]
+            if componentMarkedAsGarbage
             then
                 rm /var/db/${name}/state
                 rmdir /var/db/${name}
