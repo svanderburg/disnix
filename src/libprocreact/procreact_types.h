@@ -117,14 +117,14 @@ ProcReact_Type procreact_create_bytes_type(void);
 ProcReact_Type procreact_create_string_type(void);
 
 /**
- * Creates a type struct configured for a string array
+ * Creates a type struct configured for a NULL-terminated string array
  *
  * @return A type struct
  */
 ProcReact_Type procreact_create_string_array_type(char delimiter);
 
 /**
- * Frees a string array from memory
+ * Frees a NULL-terminated string array from memory including its contents
  *
  * @param arr String array to free
  */

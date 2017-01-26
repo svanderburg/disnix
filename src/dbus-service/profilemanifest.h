@@ -60,14 +60,15 @@ void delete_profile_manifest_array(GPtrArray *profile_manifest_array);
  *
  * @param log_fd File descriptor of the log file that shows the output
  * @param profile_manifest_array An array of profile manifest entries
+ * @param profile Name of the profile to take the manifest from
  * @return TRUE if and only if the locking succeeded
  */
-int acquire_locks(int log_fd, GPtrArray *profile_manifest_array);
+int acquire_locks(int log_fd, GPtrArray *profile_manifest_array, gchar *profile);
 
 /**
  * Asynchronously executes the acquire_locks() operation in a child process.
  */
-pid_t acquire_locks_async(int log_fd, GPtrArray *profile_manifest_array);
+pid_t acquire_locks_async(int log_fd, GPtrArray *profile_manifest_array, gchar *profile);
 
 /**
  * Attempts to unlock the disnix service by consulting the services in the
@@ -75,14 +76,15 @@ pid_t acquire_locks_async(int log_fd, GPtrArray *profile_manifest_array);
  *
  * @param log_fd File descriptor of the log file that shows the output
  * @param profile_manifest_array An array of profile manifest entries
+ * @param profile Name of the profile to take the manifest from
  * @return TRUE if and only if the unlocking succeeded
  */
-int release_locks(int log_fd, GPtrArray *profile_manifest_array);
+int release_locks(int log_fd, GPtrArray *profile_manifest_array, gchar *profile);
 
 /**
  * Asynchronously executes the release_locks() operation in a child process.
  */
-pid_t release_locks_async(int log_fd, GPtrArray *profile_manifest_array);
+pid_t release_locks_async(int log_fd, GPtrArray *profile_manifest_array, gchar *profile);
 
 /**
  * Queries all the derivation names of the entries stored in the profile

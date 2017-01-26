@@ -40,7 +40,7 @@ ssize_t procreact_type_append_bytes(ProcReact_Type *type, void *state, int fd)
     {
         bytes_state->data = realloc(bytes_state->data, (bytes_state->data_size + bytes_read));
         memcpy(bytes_state->data + bytes_state->data_size, buffer, bytes_read);
-        bytes_state->data_size = bytes_state->data_size + bytes_read;
+        bytes_state->data_size += bytes_read;
     }
     
     return bytes_read;

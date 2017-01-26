@@ -83,15 +83,15 @@ static int lock_services(int log_fd, GPtrArray *profile_manifest_array)
     return exit_status;
 }
 
-static gchar *create_lock_filename(void)
+static gchar *create_lock_filename(gchar *profile)
 {
-    return g_strconcat(tmpdir, "/disnix.lock", NULL);
+    return g_strconcat(tmpdir, "/disnix-", profile, ".lock", NULL);
 }
 
-static int lock_disnix(int log_fd)
+static int lock_profile(int log_fd, gchar *profile)
 {
     int fd, status;
-    gchar *lock_filename = create_lock_filename();
+    gchar *lock_filename = create_lock_filename(profile);
 
     /* If no lock exists, try to create one */
     if((fd = open(lock_filename, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR)) == -1)
@@ -109,9 +109,9 @@ static int lock_disnix(int log_fd)
     return status;
 }
 
-static int unlock_disnix(int log_fd)
+static int unlock_profile(int log_fd, gchar *profile)
 {
-    gchar *lock_filename = create_lock_filename();
+    gchar *lock_filename = create_lock_filename(profile);
     int status;
     
     if(unlink(lock_filename) == -1)
@@ -222,10 +222,10 @@ void delete_profile_manifest_array(GPtrArray *profile_manifest_array)
     g_ptr_array_free(profile_manifest_array, TRUE);
 }
 
-int acquire_locks(int log_fd, GPtrArray *profile_manifest_array)
+int acquire_locks(int log_fd, GPtrArray *profile_manifest_array, gchar *profile)
 {
     if(lock_services(log_fd, profile_manifest_array) == 0) /* Attempt to acquire locks from the services */
-        return lock_disnix(log_fd); /* Finally, lock disnix itself */
+        return lock_profile(log_fd, profile); /* Finally, lock the profile */
     else
     {
         unlock_services(log_fd, profile_manifest_array);
@@ -233,17 +233,17 @@ int acquire_locks(int log_fd, GPtrArray *profile_manifest_array)
     }
 }
 
-pid_t acquire_locks_async(int log_fd, GPtrArray *profile_manifest_array)
+pid_t acquire_locks_async(int log_fd, GPtrArray *profile_manifest_array, gchar *profile)
 {
     pid_t pid = fork();
     
     if(pid == 0)
-        _exit(!acquire_locks(log_fd, profile_manifest_array));
+        _exit(!acquire_locks(log_fd, profile_manifest_array, profile));
     
     return pid;
 }
 
-int release_locks(int log_fd, GPtrArray *profile_manifest_array)
+int release_locks(int log_fd, GPtrArray *profile_manifest_array, gchar *profile)
 {
     int status = TRUE;
     
@@ -261,18 +261,18 @@ int release_locks(int log_fd, GPtrArray *profile_manifest_array)
         }
     }
     
-    if(!unlock_disnix(log_fd))
+    if(!unlock_profile(log_fd, profile))
         status = FALSE; /* There was no lock -> fail */
     
     return status;
 }
 
-pid_t release_locks_async(int log_fd, GPtrArray *profile_manifest_array)
+pid_t release_locks_async(int log_fd, GPtrArray *profile_manifest_array, gchar *profile)
 {
     pid_t pid = fork();
     
     if(pid == 0)
-        _exit(!release_locks(log_fd, profile_manifest_array));
+        _exit(!release_locks(log_fd, profile_manifest_array, profile));
     
     return pid;
 }

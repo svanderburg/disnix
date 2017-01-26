@@ -275,7 +275,7 @@ gboolean on_handle_lock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *inv
         }
         else
         {
-            signal_boolean_result(acquire_locks_async(log_fd, profile_manifest_array), object, arg_pid, log_fd);
+            signal_boolean_result(acquire_locks_async(log_fd, profile_manifest_array, (gchar*)arg_profile), object, arg_pid, log_fd);
             
             /* Cleanup */
             delete_profile_manifest_array(profile_manifest_array);
@@ -301,7 +301,7 @@ gboolean on_handle_unlock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *i
 
         /* Unlock the Disnix instance */
         profile_manifest_array = create_profile_manifest_array((gchar*)arg_profile);
-        signal_boolean_result(release_locks_async(log_fd, profile_manifest_array), object, arg_pid, log_fd);
+        signal_boolean_result(release_locks_async(log_fd, profile_manifest_array, (gchar*)arg_profile), object, arg_pid, log_fd);
         
        /* Cleanup */
        delete_profile_manifest_array(profile_manifest_array);
