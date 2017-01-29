@@ -16,6 +16,8 @@ Version 0.7
 
 - Added a check for the name attributes in the services model
 
+- disnix-snapshot and disnix-restore now provide an alternative depth-first approach which is more space efficient, but slower
+
 Version 0.6
 ===========
 - Changed the distribution internals. Now every service maps to a container on a target system. When no container is specified, it auto maps a service to the container with the type name

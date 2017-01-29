@@ -264,15 +264,15 @@ pid_t exec_copy_snapshots_to(gchar *interface, gchar *target, gchar *container, 
 
 pid_t exec_clean_snapshots(gchar *interface, gchar *target, int keep, char *container, char *component)
 {
-    char keepStr[15];
     pid_t pid = fork();
-    
-    sprintf(keepStr, "%d", keep);
     
     if(pid == 0)
     {
         char **args = (char**)g_malloc(11 * sizeof(char*));
         unsigned int count = 6;
+        char keepStr[15];
+        
+        sprintf(keepStr, "%d", keep);
         
         args[0] = interface;
         args[1] = "--target";

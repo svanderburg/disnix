@@ -79,6 +79,11 @@ Options:
                                   machine to another, even if they have been
                                   annotated as such
       --no-delete-state           Do not remove the state of deactivated services
+      --depth-first               Snapshots components depth-first as opposed to
+                                  breadth-first. This approach is more space
+                                  efficient, but slower.
+      --keep=NUM                  Amount of snapshot generations to keep.
+                                  Defaults to: 1
   -h, --help                      Shows the usage of this command
   -v, --version                   Shows the version of this command
 
@@ -150,7 +155,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o o:p:m:hv -l old-manifest:,deploy-state,profile:,max-concurrent-transfers:,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,no-delete-state,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o o:p:m:hv -l old-manifest:,deploy-state,profile:,max-concurrent-transfers:,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,no-delete-state,depth-first,keep:,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -199,6 +204,12 @@ do
         --no-delete-state)
             noDeleteState=1
             noDeleteStateArg="--no-delete-state"
+            ;;
+        --depth-first)
+            depthFirstArg="--depth-first"
+            ;;
+        --keep)
+            keepArg="--keep $2"
             ;;
         -h|--help)
             showUsage
@@ -253,7 +264,7 @@ disnix-activate $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest |
 if [ "$noMigration" != "1" ]
 then
     echo "[coordinator]: Migrating data..."
-    disnix-migrate $profileArg $coordinatorProfilePathArg $noUpgradeArg $noDeleteStateArg $oldManifestFileArg $manifest || (releaseLocks; displayStateFailure; exit 1)
+    disnix-migrate $profileArg $coordinatorProfilePathArg $noUpgradeArg $noDeleteStateArg $oldManifestFileArg $depthFirstArg $keepArg $manifest || (releaseLocks; displayStateFailure; exit 1)
 fi
 
 echo "[coordinator]: Setting profiles..."

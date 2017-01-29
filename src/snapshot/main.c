@@ -57,8 +57,13 @@ static void print_usage(const char *command)
     printf("      --transfer-only                  Transfers the snapshot from the target\n");
     printf("                                       machines, but does not actually restore\n");
     printf("                                       them\n");
+    printf("      --depth-first                    Snapshots components depth-first as\n");
+    printf("                                       opposed to breadth-first. This approach\n");
+    printf("                                       is more space efficient, but slower.\n");
     printf("      --all                            Transfers all snapshot generations of the\n");
     printf("                                       target machines, not the latest\n");
+    printf("      --keep=NUM                       Amount of snapshot generations to keep.\n");
+    printf("                                       Defaults to: 1\n");
     printf("  -p, --profile=PROFILE                Name of the profile in which the services\n");
     printf("                                       are registered. Defaults to: default\n");
     printf("      --coordinator-profile-path=PATH  Path to the manifest of the previous\n");
@@ -91,7 +96,9 @@ int main(int argc, char *argv[])
         {"old-manifest", required_argument, 0, 'o'},
         {"no-upgrade", no_argument, 0, 'u'},
         {"transfer-only", no_argument, 0, 't'},
+        {"depth-first", no_argument, 0, 'D'},
         {"all", no_argument, 0, 'a'},
+        {"keep", required_argument, 0, 'k'},
         {"max-concurrent-transfers", required_argument, 0, 'm'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
@@ -100,7 +107,9 @@ int main(int argc, char *argv[])
     
     unsigned int max_concurrent_transfers = 2;
     int transfer_only = FALSE;
+    int depth_first = FALSE;
     int all = FALSE;
+    int keep = 1;
     int no_upgrade = FALSE;
     char *manifest_file;
     char *old_manifest = NULL;
@@ -135,8 +144,14 @@ int main(int argc, char *argv[])
             case 'a':
                 all = TRUE;
                 break;
+            case 'k':
+                keep = atoi(optarg);
+                break;
             case 't':
                 transfer_only = TRUE;
+                break;
+            case 'D':
+                depth_first = TRUE;
                 break;
             case 'm':
                 max_concurrent_transfers = atoi(optarg);
@@ -160,5 +175,5 @@ int main(int argc, char *argv[])
     else
         manifest_file = argv[optind];
     
-    return snapshot(manifest_file, max_concurrent_transfers, transfer_only, all, old_manifest, coordinator_profile_path, profile, no_upgrade, container, component); /* Execute snapshot operation */
+    return snapshot(manifest_file, max_concurrent_transfers, transfer_only, depth_first, all, keep, old_manifest, coordinator_profile_path, profile, no_upgrade, container, component); /* Execute snapshot operation */
 }

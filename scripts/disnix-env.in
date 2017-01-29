@@ -107,6 +107,12 @@ Options:
                                   machine to another, even if they have been
                                   annotated as such
       --no-delete-state           Do not remove the state of deactivated services
+      --depth-first               Snapshots components depth-first as opposed to
+                                  breadth-first. This approach is more space
+                                  efficient, but slower.
+      --keep=NUM                  Amount of snapshot generations to keep.
+                                  Defaults to: 1
+
       --show-trace                Shows a trace of the output
   -h, --help                      Shows the usage of this command
   -v, --version                   Shows the version of this command
@@ -144,7 +150,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:p:m:hv -l services:,infrastructure:,distribution:,rollback,switch-to-generation:,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,no-delete-state,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:p:m:hv -l services:,infrastructure:,distribution:,rollback,switch-to-generation:,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,no-delete-state,depth-first,keep:,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -218,6 +224,12 @@ do
             ;;
         --no-delete-state)
             noDeleteStateArg="--no-delete-state"
+            ;;
+        --depth-first)
+            depthFirstArg="--depth-first"
+            ;;
+        --keep)
+            keepArg="--keep $2"
             ;;
         -h|--help)
             showUsage
@@ -318,4 +330,4 @@ then
 fi
 
 # Deploy the (pre)built Disnix configuration (implying a manifest file)
-disnix-deploy $maxConcurrentTransfersArg $noLockArg $profileArg $noUpgradeArg $noDeleteStateArg $noCoordinatorProfileArg $coordinatorProfilePathArg $noTargetProfilesArg $noMigrationArg $oldManifestArg $manifest
+disnix-deploy $maxConcurrentTransfersArg $noLockArg $profileArg $noUpgradeArg $noDeleteStateArg $noCoordinatorProfileArg $coordinatorProfilePathArg $noTargetProfilesArg $noMigrationArg $oldManifestArg $depthFirstArg $keepArg $manifest

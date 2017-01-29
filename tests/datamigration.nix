@@ -243,5 +243,25 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         $testtarget1->mustSucceed("cat /var/db/testService2/state");
         $testtarget2->mustFail("cat /var/db/testService1/state");
         $testtarget2->mustSucceed("cat /var/db/testService2/state");
+        
+        # Clean all snapshots on the coordinator and target machines 
+        $coordinator->mustSucceed("${env} dysnomia-snapshots --gc --keep 0");
+        $coordinator->mustSucceed("${env} disnix-clean-snapshots --keep 0 ${snapshotTests}/infrastructure.nix");
+        
+        # Capture snapshots depth-first.
+        $testtarget1->mustSucceed("echo 1 > /var/db/testService1/state");
+        $coordinator->mustSucceed("${env} disnix-snapshot --depth-first");
+        
+        # Change the state of testService1, restore depth first and check
+        # whether it has successfully restored the old state.
+        $testtarget1->mustSucceed("echo 2 > /var/db/testService1/state");
+        $coordinator->mustSucceed("${env} disnix-restore --depth-first --no-upgrade");
+        $result = $testtarget1->mustSucceed("cat /var/db/testService1/state");
+        
+        if($result == 1) {
+            print "testService1 state is: $result";
+        } else {
+            die "testService1 state should be: 1, instead it is: $result";
+        }
       '';
   }

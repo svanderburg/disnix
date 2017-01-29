@@ -50,6 +50,11 @@ Options:
       --no-upgrade                Do not perform an upgrade, but activate all
                                   services of the new configuration
       --no-delete-state           Do not remove the state of deactivated services
+      --depth-first               Snapshots components depth-first as opposed to
+                                  breadth-first. This approach is more space
+                                  efficient, but slower.
+      --keep=NUM                  Amount of snapshot generations to keep.
+                                  Defaults to: 1
   -h, --help                      Shows the usage of this command
   -v, --version                   Shows the version of this command
 
@@ -79,7 +84,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o o:p:m:hv -l old-manifest:,interface:,profile:,max-concurrent-transfers:,coordinator-profile-path:,no-upgrade,no-delete-state,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o o:p:m:hv -l old-manifest:,interface:,profile:,max-concurrent-transfers:,coordinator-profile-path:,no-upgrade,no-delete-state,depth-first,keep:,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -117,6 +122,12 @@ do
         --no-delete-state)
             noDeleteState=1
             ;;
+        --depth-first)
+            depthFirstArg="--depth-first"
+            ;;
+        --keep)
+            keepArg="--keep $2"
+            ;;
         -h|--help)
             showUsage
             exit 0
@@ -151,9 +162,9 @@ fi
 # Execute operations
 
 echo "[coordinator]: Snapshotting state of annotated services..."
-disnix-snapshot $profileArg $maxConcurrentTransfersArg $coordinatorProfilePathArg $noUpgradeArg $manifest
+disnix-snapshot $profileArg $maxConcurrentTransfersArg $coordinatorProfilePathArg $noUpgradeArg $depthFirstArg $keepArg $manifest
 echo "[coordinator]: Restoring state of annotated services..."
-disnix-restore $profileArg $maxConcurrentTransfersArg $coordinatorProfilePathArg $noUpgradeArg $manifest
+disnix-restore $profileArg $maxConcurrentTransfersArg $coordinatorProfilePathArg $noUpgradeArg $depthFirstArg $keepArg $manifest
 
 if [ "$noDeleteState" != "1" ] && [ "$noUpgrade" != "1" ] && [ "$oldManifestFile" != "" ]
 then
