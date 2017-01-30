@@ -145,8 +145,8 @@ static TransitionStatus deactivate_obsolete_mappings(GPtrArray *deactivation_arr
                     return TRANSITION_FAILED;
                 else
                 {
-                    g_printerr("[coordinator]: Rollback failed!\n\n");
-                    return TRANSITION_ROLLBACK_FAILED;
+                    g_printerr("[coordinator]: Obsolete mappings rollback failed!\n\n");
+                    return TRANSITION_OBSOLETE_MAPPINGS_ROLLBACK_FAILED;
                 }
             }
         }
@@ -199,8 +199,8 @@ static TransitionStatus activate_new_mappings(GPtrArray *activation_array, GPtrA
             /* Roll back the new mappings */
             if(!rollback_new_mappings(activation_array, union_array, target_array, dry_run))
             {
-                g_printerr("[coordinator]: Rollback failed!\n\n");
-                return TRANSITION_ROLLBACK_FAILED; // If the rollback failed, stop and notify the user to take manual action
+                g_printerr("[coordinator]: New mappings rollback failed!\n\n");
+                return TRANSITION_NEW_MAPPINGS_ROLLBACK_FAILED; /* If the rollback failed, stop and notify the user to take manual action */
             }
             
             if(old_activation_mappings == NULL)
@@ -212,7 +212,7 @@ static TransitionStatus activate_new_mappings(GPtrArray *activation_array, GPtrA
                 if(rollback_to_old_mappings(union_array, old_activation_mappings, target_array, dry_run))
                     return TRANSITION_FAILED;
                 else
-                    return TRANSITION_ROLLBACK_FAILED;
+                    return TRANSITION_OBSOLETE_MAPPINGS_ROLLBACK_FAILED;
             }
         }
     }

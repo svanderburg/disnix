@@ -68,19 +68,37 @@ int activate_system(const gchar *new_manifest, const gchar *old_manifest, const 
         {
             g_printerr("[coordinator]: ERROR: Transition phase execution failed!\n");
             
-            if(old_manifest_file != NULL && status == TRANSITION_ROLLBACK_FAILED)
+            if(old_manifest_file != NULL)
             {
-                g_printerr("The rollback failed! This means the system is now inconsistent! Please\n");
-                g_printerr("manually diagnose the errors before doing another redeployment!\n\n");
-                
-                g_printerr("When the problems have been solved, the rollback can be triggered again, by\n");
-                g_printerr("running:\n\n");
-                g_printerr("$ disnix-activate --no-rollback -p %s ", profile);
-                
-                if(coordinator_profile_path != NULL)
-                    g_printerr("--coordinator-profile-path %s ", coordinator_profile_path);
-                
-                g_printerr("-o %s %s\n\n", new_manifest, old_manifest_file);
+                if(status == TRANSITION_NEW_MAPPINGS_ROLLBACK_FAILED)
+                {
+                    g_printerr("The new mappings rollback failed! This means the system is now inconsistent!\n");
+                    g_printerr("Please manually diagnose the errors before doing another redeployment!\n\n");
+                    
+                    g_printerr("When the problems have been solved, the rollback can be triggered again, by\n");
+                    g_printerr("running:\n\n");
+                    g_printerr("$ disnix-activate --no-rollback -p %s ", profile);
+                    
+                    if(coordinator_profile_path != NULL)
+                        g_printerr("--coordinator-profile-path %s ", coordinator_profile_path);
+                    
+                    g_printerr("-o %s %s\n\n", new_manifest, old_manifest_file);
+                }
+                else if(status == TRANSITION_OBSOLETE_MAPPINGS_ROLLBACK_FAILED)
+                {
+                    g_printerr("The obsolete mappings rollback failed! This means the system is now\n");
+                    g_printerr("inconsistent! Please manually diagnose the errors before doing another\n");
+                    g_printerr("redeployment!\n\n");
+                    
+                    g_printerr("When the problems have been solved, the rollback can be triggered again, by\n");
+                    g_printerr("running:\n\n");
+                    g_printerr("$ disnix-activate --no-upgrade --no-rollback -p %s ", profile);
+                    
+                    if(coordinator_profile_path != NULL)
+                        g_printerr("--coordinator-profile-path %s ", coordinator_profile_path);
+                    
+                    g_printerr("%s\n\n", old_manifest_file);
+                }
             }
         }
         
