@@ -41,8 +41,8 @@ static int unlock_services(int log_fd, GPtrArray *profile_manifest_array)
         ProcReact_Status status;
         int result;
         
-        dprintf(log_fd, "Notifying unlock on %s: of type: %s in container: %s\n", entry->derivation, entry->type, entry->container);
-        pid = statemgmt_unlock_component(entry->type, entry->container, entry->derivation, log_fd, log_fd);
+        dprintf(log_fd, "Notifying unlock on %s: of type: %s in container: %s\n", entry->service, entry->type, entry->container);
+        pid = statemgmt_unlock_component(entry->type, entry->container, entry->service, log_fd, log_fd);
         result = procreact_wait_for_boolean(pid, &status);
         
         if(status != PROCREACT_STATUS_OK || !result)
@@ -68,9 +68,9 @@ static int lock_services(int log_fd, GPtrArray *profile_manifest_array)
         ProcReact_Status status;
         int result;
     
-        dprintf(log_fd, "Notifying lock on %s: of type: %s in container: %s\n", entry->derivation, entry->type, entry->container);
+        dprintf(log_fd, "Notifying lock on %s: of type: %s in container: %s\n", entry->service, entry->type, entry->container);
         
-        pid = statemgmt_lock_component(entry->type, entry->container, entry->derivation, log_fd, log_fd);
+        pid = statemgmt_lock_component(entry->type, entry->container, entry->service, log_fd, log_fd);
         result = procreact_wait_for_boolean(pid, &status);
         
         if(status != PROCREACT_STATUS_OK || !result)
@@ -130,9 +130,13 @@ static int unlock_profile(int log_fd, gchar *profile)
 
 typedef enum
 {
-    LINE_DERIVATION,
+    LINE_NAME,
+    LINE_SERVICE,
     LINE_CONTAINER,
-    LINE_TYPE
+    LINE_TYPE,
+    LINE_KEY,
+    LINE_STATEFUL,
+    LINE_DEPENDS_ON
 }
 LineType;
 
@@ -147,7 +151,7 @@ GPtrArray *create_profile_manifest_array(gchar *profile)
     else
     {
         unsigned int i;
-        LineType line_type = LINE_DERIVATION;
+        LineType line_type = LINE_NAME;
         ProfileManifestEntry *entry = NULL;
         GPtrArray *profile_manifest_array = g_ptr_array_new();
         
@@ -165,12 +169,16 @@ GPtrArray *create_profile_manifest_array(gchar *profile)
             {
                 char *line = state->result[i];
                 
-                /* Compose derivation, container, type triples and add them to an array */
+                /* Compose profile manifest entries and add them to an array */
                 switch(line_type)
                 {
-                    case LINE_DERIVATION:
+                    case LINE_NAME:
                         entry = (ProfileManifestEntry*)g_malloc(sizeof(ProfileManifestEntry));
-                        entry->derivation = line;
+                        entry->name = line;
+                        line_type = LINE_SERVICE;
+                        break;
+                    case LINE_SERVICE:
+                        entry->service = line;
                         line_type = LINE_CONTAINER;
                         break;
                     case LINE_CONTAINER:
@@ -179,8 +187,20 @@ GPtrArray *create_profile_manifest_array(gchar *profile)
                         break;
                     case LINE_TYPE:
                         entry->type = line;
+                        line_type = LINE_KEY;
+                        break;
+                    case LINE_KEY:
+                        entry->key = line;
+                        line_type = LINE_STATEFUL;
+                        break;
+                    case LINE_STATEFUL:
+                        entry->stateful = line;
+                        line_type = LINE_DEPENDS_ON;
+                        break;
+                    case LINE_DEPENDS_ON:
+                        entry->depends_on = line;
+                        line_type = LINE_NAME;
                         g_ptr_array_add(profile_manifest_array, entry);
-                        line_type = LINE_DERIVATION;
                         break;
                 }
             }
@@ -192,7 +212,7 @@ GPtrArray *create_profile_manifest_array(gchar *profile)
         close(fd);
         
         /* We should have the right number of lines */
-        if(line_type == LINE_DERIVATION)
+        if(line_type == LINE_NAME)
             return profile_manifest_array; /* Return the generate profile manifest array */
         else
         {
@@ -213,9 +233,14 @@ void delete_profile_manifest_array(GPtrArray *profile_manifest_array)
         for(i = 0; i < profile_manifest_array->len; i++)
         {
             ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
-            g_free(entry->derivation);
+            g_free(entry->name);
+            g_free(entry->service);
             g_free(entry->container);
             g_free(entry->type);
+            g_free(entry->key);
+            g_free(entry->stateful);
+            g_free(entry->depends_on);
+            g_free(entry);
         }
     }
     
@@ -288,7 +313,7 @@ ProcReact_Future query_derivations(GPtrArray *profile_manifest_array)
         for(i = 0; i < profile_manifest_array->len; i++)
         {
             ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
-            dprintf(future.fd, "%s\n", entry->derivation);
+            dprintf(future.fd, "%s\n", entry->service);
         }
         
         _exit(0);

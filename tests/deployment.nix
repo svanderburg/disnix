@@ -372,7 +372,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         $coordinator->mustSucceed("${env} disnix-env --rollback");
         
         # We should have one service of type echo now on the testtarget1 machine
-        $testtarget1->mustSucceed("[ \"\$(cat /nix/var/nix/profiles/disnix/default/manifest | tail -1)\" = \"echo\" ]");
+        $testtarget1->mustSucceed("[ \"\$(cat /nix/var/nix/profiles/disnix/default/manifest | grep \"echo\" | wc -l)\" = \"2\" ]");
         
         # Roll back to the first deployed configuration
         $coordinator->mustSucceed("${env} disnix-env --switch-to-generation 1");

@@ -29,12 +29,20 @@
  */
 typedef struct
 {
+    /** Canonical name of the deployed service */
+    gchar *name;
     /** Nix store path to a deployed service */
-    gchar *derivation;
+    gchar *service;
     /** Name of the container to which the service has been deployed */
     gchar *container;
     /** Dysnomia module type used for executing certain deployment activities */
     gchar *type;
+    /** Hash code that uniquely identifies the deployment of this service */
+    gchar *key;
+    /** Indicates whether the service has state that needs to be managed by Dysnomia */
+    gchar *stateful;
+    /** Array of Nix attribute sets containing references to the service's inter dependencies */
+    gchar *depends_on;
 }
 ProfileManifestEntry;
 

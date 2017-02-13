@@ -366,9 +366,11 @@ rec {
       let
         target = getAttr targetName infrastructure;
         mapping = head serviceActivationMapping;
+        stateful = if mapping ? deployState && mapping.deployState then "true" else "false";
+        dependsOn = "[${toString (map (dependency: "{ target = \"${dependency.target}\"; container = \"${dependency.container}\"; _key = \"${dependency._key}\" }") (mapping.dependsOn))}]";
       in
       if mapping.target == getTargetProperty targetProperty target && mapping.type != "package"
-      then [ mapping.service mapping.container mapping.type ] ++ (generateProfileManifest (tail serviceActivationMapping) targetName infrastructure targetProperty)
+      then [ mapping.name mapping.service mapping.container mapping.type mapping._key stateful dependsOn ] ++ (generateProfileManifest (tail serviceActivationMapping) targetName infrastructure targetProperty)
       else generateProfileManifest (tail serviceActivationMapping) targetName infrastructure targetProperty
   ;
   
