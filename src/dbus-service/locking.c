@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "profilemanifest.h"
+#include "locking.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -128,18 +128,6 @@ static int unlock_profile(int log_fd, gchar *profile)
     return status;
 }
 
-typedef enum
-{
-    LINE_NAME,
-    LINE_SERVICE,
-    LINE_CONTAINER,
-    LINE_TYPE,
-    LINE_KEY,
-    LINE_STATEFUL,
-    LINE_DEPENDS_ON
-}
-LineType;
-
 GPtrArray *create_profile_manifest_array(gchar *profile)
 {
     gchar *manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, "/manifest", NULL);
@@ -150,10 +138,7 @@ GPtrArray *create_profile_manifest_array(gchar *profile)
         return g_ptr_array_new(); /* If the manifest does not exist, we have an empty configuration */
     else
     {
-        unsigned int i;
-        LineType line_type = LINE_NAME;
-        ProfileManifestEntry *entry = NULL;
-        GPtrArray *profile_manifest_array = g_ptr_array_new();
+        GPtrArray *profile_manifest_array;
         
         /* Initialize a string array type composing a string array from the read file */
         ProcReact_Type type = procreact_create_string_array_type('\n');
@@ -162,89 +147,21 @@ GPtrArray *create_profile_manifest_array(gchar *profile)
         /* Read from the file and compose a string array from it */
         while(type.append(&type, state, fd) > 0);
         
-        /* Process the resulting string array and compose a profile manifest array from it */
-        if(state->result_length > 1)
-        {
-            for(i = 0; i < state->result_length - 1; i++)
-            {
-                char *line = state->result[i];
-                
-                /* Compose profile manifest entries and add them to an array */
-                switch(line_type)
-                {
-                    case LINE_NAME:
-                        entry = (ProfileManifestEntry*)g_malloc(sizeof(ProfileManifestEntry));
-                        entry->name = line;
-                        line_type = LINE_SERVICE;
-                        break;
-                    case LINE_SERVICE:
-                        entry->service = line;
-                        line_type = LINE_CONTAINER;
-                        break;
-                    case LINE_CONTAINER:
-                        entry->container = line;
-                        line_type = LINE_TYPE;
-                        break;
-                    case LINE_TYPE:
-                        entry->type = line;
-                        line_type = LINE_KEY;
-                        break;
-                    case LINE_KEY:
-                        entry->key = line;
-                        line_type = LINE_STATEFUL;
-                        break;
-                    case LINE_STATEFUL:
-                        entry->stateful = line;
-                        line_type = LINE_DEPENDS_ON;
-                        break;
-                    case LINE_DEPENDS_ON:
-                        entry->depends_on = line;
-                        line_type = LINE_NAME;
-                        g_ptr_array_add(profile_manifest_array, entry);
-                        break;
-                }
-            }
-        }
+        /* Append NULL termination */
+        state->result = (char**)realloc(state->result, (state->result_length + 1) * sizeof(char*));
+        state->result[state->result_length] = NULL;
+        
+        /* Parse the array for manifest data */
+        profile_manifest_array = create_profile_manifest_array_from_string_array(state->result);
         
         /* Cleanup */
         free(state->result);
         free(state);
         close(fd);
         
-        /* We should have the right number of lines */
-        if(line_type == LINE_NAME)
-            return profile_manifest_array; /* Return the generate profile manifest array */
-        else
-        {
-            /* If not => the manifest is invalid */
-            g_free(entry);
-            delete_profile_manifest_array(profile_manifest_array);
-            return NULL;
-        }
+        /* Returns the corresponding array */
+        return profile_manifest_array;
     }
-}
-
-void delete_profile_manifest_array(GPtrArray *profile_manifest_array)
-{
-    if(profile_manifest_array != NULL)
-    {
-        unsigned int i;
-    
-        for(i = 0; i < profile_manifest_array->len; i++)
-        {
-            ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
-            g_free(entry->name);
-            g_free(entry->service);
-            g_free(entry->container);
-            g_free(entry->type);
-            g_free(entry->key);
-            g_free(entry->stateful);
-            g_free(entry->depends_on);
-            g_free(entry);
-        }
-    }
-    
-    g_ptr_array_free(profile_manifest_array, TRUE);
 }
 
 int acquire_locks(int log_fd, GPtrArray *profile_manifest_array, gchar *profile)
@@ -302,7 +219,9 @@ pid_t release_locks_async(int log_fd, GPtrArray *profile_manifest_array, gchar *
     return pid;
 }
 
-ProcReact_Future query_derivations(GPtrArray *profile_manifest_array)
+// TODO: maybe in libprofilemanifest??
+
+ProcReact_Future query_installed_services(GPtrArray *profile_manifest_array)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
     
@@ -313,7 +232,13 @@ ProcReact_Future query_derivations(GPtrArray *profile_manifest_array)
         for(i = 0; i < profile_manifest_array->len; i++)
         {
             ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
+            dprintf(future.fd, "%s\n", entry->name);
             dprintf(future.fd, "%s\n", entry->service);
+            dprintf(future.fd, "%s\n", entry->container);
+            dprintf(future.fd, "%s\n", entry->type);
+            dprintf(future.fd, "%s\n", entry->key);
+            dprintf(future.fd, "%s\n", entry->stateful);
+            dprintf(future.fd, "%s\n", entry->depends_on);
         }
         
         _exit(0);

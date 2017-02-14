@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <glib.h>
 #include "logging.h"
-#include "profilemanifest.h"
+#include "locking.h"
 #include "jobmanagement.h"
 #include "signaling.h"
 #include "package-management.h"
@@ -165,7 +165,7 @@ gboolean on_handle_query_installed(OrgNixosDisnixDisnix *object, GDBusMethodInvo
             org_nixos_disnix_disnix_emit_failure(object, arg_pid);
         else
         {
-            signal_strv_result(query_derivations(profile_manifest_array), object, arg_pid, log_fd);
+            signal_strv_result(query_installed_services(profile_manifest_array), object, arg_pid, log_fd);
             delete_profile_manifest_array(profile_manifest_array);
         }
     }

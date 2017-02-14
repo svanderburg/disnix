@@ -19,11 +19,12 @@
 #include "query-installed.h"
 #include <infrastructure.h>
 #include <client-interface.h>
+#include <profilemanifest.h>
 
 typedef struct
 {
     gchar *target_key;
-    char *services;
+    GPtrArray *profile_manifest_array;
 }
 CapturedConfig;
 
@@ -50,9 +51,11 @@ static void complete_query_installed_services_on_target(void *data, Target *targ
     {
         CapturedConfig *config = (CapturedConfig*)g_malloc(sizeof(CapturedConfig));
         config->target_key = target_key;
-        config->services = future->result;
+        config->profile_manifest_array = create_profile_manifest_array_from_string_array(future->result);
         
         g_ptr_array_add(query_installed_services_data->configs_array, config);
+        
+        free(future->result);
     }
 }
 
@@ -74,8 +77,17 @@ static void print_installed_services(QueryInstalledServicesData *query_installed
     /* Display the services for each target */
     for(i = 0; i < query_installed_services_data->configs_array->len; i++)
     {
+        unsigned int j;
+        
         CapturedConfig *config = g_ptr_array_index(query_installed_services_data->configs_array, i);
-        g_print("\nServices on: %s\n\n%s", config->target_key, config->services);
+        g_print("\nServices on: %s\n\n", config->target_key);
+        
+        /* Display the service properties */
+        for(j = 0; j < config->profile_manifest_array->len; j++)
+        {
+            ProfileManifestEntry *entry = g_ptr_array_index(config->profile_manifest_array, j);
+            g_print("%s\n", entry->service);
+        }
     }
 }
 
@@ -86,7 +98,7 @@ static void delete_queried_services_data(QueryInstalledServicesData *query_insta
     for(i = 0; i < query_installed_services_data->configs_array->len; i++)
     {
         CapturedConfig *config = g_ptr_array_index(query_installed_services_data->configs_array, i);
-        free(config->services);
+        delete_profile_manifest_array(config->profile_manifest_array);
         g_free(config);
     }
     

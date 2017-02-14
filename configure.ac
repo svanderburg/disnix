@@ -96,6 +96,7 @@ src/libinfrastructure/Makefile
 src/libinterface/Makefile
 src/libpkgmgmt/Makefile
 src/libstatemgmt/Makefile
+src/libprofilemanifest/Makefile
 src/distribute/Makefile
 src/lock/Makefile
 src/set/Makefile

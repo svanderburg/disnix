@@ -19,10 +19,7 @@
 
 #ifndef __DISNIX_PROFILEMANIFEST_H
 #define __DISNIX_PROFILEMANIFEST_H
-
-#include <unistd.h>
 #include <glib.h>
-#include <procreact_future.h>
 
 /**
  * @brief Contains properties of a deployed service on a target machine
@@ -50,10 +47,10 @@ ProfileManifestEntry;
  * Composes an array of profile manifest entries from the manifest configuration
  * file stored in the given profile.
  *
- * @param profile Name of the profile to take the manifest from
+ * @param result An NULL-terminated array of text lines
  * @return An array of pointers to profile manifest entries or NULL if an error has occured
  */
-GPtrArray *create_profile_manifest_array(gchar *profile);
+GPtrArray *create_profile_manifest_array_from_string_array(char **result);
 
 /**
  * Deletes a profile manifest array and its contents from heap memory.
@@ -61,47 +58,5 @@ GPtrArray *create_profile_manifest_array(gchar *profile);
  * @param profile_manifest_array An array of profile manifest entries
  */
 void delete_profile_manifest_array(GPtrArray *profile_manifest_array);
-
-/**
- * Attempts to lock the disnix service instance by consulting the services in
- * the profile manifest and by locking the Disnix service itself.
- *
- * @param log_fd File descriptor of the log file that shows the output
- * @param profile_manifest_array An array of profile manifest entries
- * @param profile Name of the profile to take the manifest from
- * @return TRUE if and only if the locking succeeded
- */
-int acquire_locks(int log_fd, GPtrArray *profile_manifest_array, gchar *profile);
-
-/**
- * Asynchronously executes the acquire_locks() operation in a child process.
- */
-pid_t acquire_locks_async(int log_fd, GPtrArray *profile_manifest_array, gchar *profile);
-
-/**
- * Attempts to unlock the disnix service by consulting the services in the
- * profile manifest and by unlocking the Disnix service itself.
- *
- * @param log_fd File descriptor of the log file that shows the output
- * @param profile_manifest_array An array of profile manifest entries
- * @param profile Name of the profile to take the manifest from
- * @return TRUE if and only if the unlocking succeeded
- */
-int release_locks(int log_fd, GPtrArray *profile_manifest_array, gchar *profile);
-
-/**
- * Asynchronously executes the release_locks() operation in a child process.
- */
-pid_t release_locks_async(int log_fd, GPtrArray *profile_manifest_array, gchar *profile);
-
-/**
- * Queries all the derivation names of the entries stored in the profile
- * manifest.
- *
- * @param profile_manifest_array An array of profile manifest entries
- * @return A future that can be used to retrieve a NULL-terminated string array
- *   of derivation names
- */
-ProcReact_Future query_derivations(GPtrArray *profile_manifest_array);
 
 #endif

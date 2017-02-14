@@ -787,6 +787,7 @@ INPUT                  = activate \
                          libpkgmgmt \
                          libstatemgmt \
                          libxmlutil \
+                         libprofilemanifest \
                          lock \
                          query \
                          restore \
