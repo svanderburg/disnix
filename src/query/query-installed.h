@@ -22,6 +22,17 @@
 #include <glib.h>
 
 /**
+ * @brief Possible formatting options for displaying the output
+ */
+typedef enum
+{
+    FORMAT_SERVICES,
+    FORMAT_CONTAINERS,
+    FORMAT_NIX
+}
+OutputFormat;
+
+/**
  * Iterates over targets defined in an infrastructure Nix expression and
  * performs the query-installed operation on each target.
  *
@@ -30,8 +41,9 @@
  *                        how to connect to the Disnix service
  * @param infrastructure_expr Path to the infrastructure expression
  * @param profile Name of the distributed profile
+ * @param format Specifies the formatting of the output
  * @return 0 if all the operations succeed, else a non-zero value
  */
-int query_installed(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile);
+int query_installed(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile, OutputFormat format);
 
 #endif

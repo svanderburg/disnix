@@ -117,3 +117,70 @@ void delete_profile_manifest_array(GPtrArray *profile_manifest_array)
     
     g_ptr_array_free(profile_manifest_array, TRUE);
 }
+
+void print_services_in_profile_manifest_array(const GPtrArray *profile_manifest_array)
+{
+    unsigned int i;
+    
+    for(i = 0; i < profile_manifest_array->len; i++)
+    {
+        ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
+        g_print("%s\n", entry->service);
+    }
+}
+
+static gint compare_profile_manifest_entry(gconstpointer l, gconstpointer r)
+{
+    const ProfileManifestEntry *left = *((ProfileManifestEntry **)l);
+    const ProfileManifestEntry *right = *((ProfileManifestEntry **)r);
+    
+    int result = g_strcmp0(left->container, right->container);
+    
+    if(result == 0)
+        return g_strcmp0(left->name, right->name);
+    else
+        return result;
+}
+
+void print_services_per_container_in_profile_manifest_array(GPtrArray *profile_manifest_array)
+{
+    unsigned int i;
+    gchar *last_container = "";
+    
+    g_ptr_array_sort(profile_manifest_array, compare_profile_manifest_entry);
+    
+    for(i = 0; i < profile_manifest_array->len; i++)
+    {
+        ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
+        
+        if(g_strcmp0(entry->container, last_container) != 0)
+        {
+            last_container = entry->container;
+            g_print("  Container: %s\n", last_container);
+        }
+        
+        g_print("    %s\n", entry->service);
+    }
+}
+
+void print_nix_expression_from_profile_manifest_array(const GPtrArray *profile_manifest_array)
+{
+    unsigned int i;
+    
+    g_print("[\n");
+    
+    for(i = 0; i < profile_manifest_array->len; i++)
+    {
+        ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
+        g_print("      { name = \"%s\";\n", entry->name);
+        g_print("        service = builtins.storePath %s;\n", entry->service);
+        g_print("        container = \"%s\";\n", entry->container);
+        g_print("        type = \"%s\";\n", entry->type);
+        g_print("        _key = \"%s\";\n", entry->key);
+        g_print("        stateful = %s;\n", entry->stateful);
+        g_print("        dependsOn = %s;\n", entry->depends_on);
+        g_print("      }\n");
+    }
+    
+    g_print("    ]");
+}

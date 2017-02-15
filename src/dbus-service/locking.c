@@ -219,8 +219,6 @@ pid_t release_locks_async(int log_fd, GPtrArray *profile_manifest_array, gchar *
     return pid;
 }
 
-// TODO: maybe in libprofilemanifest??
-
 ProcReact_Future query_installed_services(GPtrArray *profile_manifest_array)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));

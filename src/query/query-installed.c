@@ -67,28 +67,44 @@ static gint compare_captured_config(const void *l, const void *r)
     return g_strcmp0(left->target_key, right->target_key);
 }
 
-static void print_installed_services(QueryInstalledServicesData *query_installed_services_data)
+static void print_installed_services(QueryInstalledServicesData *query_installed_services_data, OutputFormat format)
 {
     unsigned int i;
     
     /* Sort the captured configs so that the overall result is always displayed in a deterministic order */
     g_ptr_array_sort(query_installed_services_data->configs_array, compare_captured_config); 
     
+    if(format == FORMAT_NIX)
+        g_print("[\n");
+    
     /* Display the services for each target */
     for(i = 0; i < query_installed_services_data->configs_array->len; i++)
     {
-        unsigned int j;
-        
         CapturedConfig *config = g_ptr_array_index(query_installed_services_data->configs_array, i);
-        g_print("\nServices on: %s\n\n", config->target_key);
         
         /* Display the service properties */
-        for(j = 0; j < config->profile_manifest_array->len; j++)
+        switch(format)
         {
-            ProfileManifestEntry *entry = g_ptr_array_index(config->profile_manifest_array, j);
-            g_print("%s\n", entry->service);
+            case FORMAT_SERVICES:
+                g_print("\nServices on: %s\n\n", config->target_key);
+                print_services_in_profile_manifest_array(config->profile_manifest_array);
+                break;
+            case FORMAT_CONTAINERS:
+                g_print("\nServices on: %s\n\n", config->target_key);
+                print_services_per_container_in_profile_manifest_array(config->profile_manifest_array);
+                break;
+            case FORMAT_NIX:
+                g_print("  { target = \"%s\";\n", config->target_key);
+                g_print("    services = ");
+                print_nix_expression_from_profile_manifest_array(config->profile_manifest_array);
+                g_print(";\n");
+                g_print("  }\n");
+                break;
         }
     }
+    
+    if(format == FORMAT_NIX)
+        g_print("]\n");
 }
 
 static void delete_queried_services_data(QueryInstalledServicesData *query_installed_services_data)
@@ -105,7 +121,7 @@ static void delete_queried_services_data(QueryInstalledServicesData *query_insta
     g_ptr_array_free(query_installed_services_data->configs_array, TRUE);
 }
 
-int query_installed(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile)
+int query_installed(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile, OutputFormat format)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
     GPtrArray *target_array = create_target_array(infrastructure_expr);
@@ -127,7 +143,7 @@ int query_installed(gchar *interface, const gchar *target_property, gchar *infra
         success = target_iterator_has_succeeded(iterator.data);
         
         /* Print the captured configurations */
-        print_installed_services(&data);
+        print_installed_services(&data, format);
         
         /* Cleanup */
         destroy_target_future_iterator(&iterator);

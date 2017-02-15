@@ -18,6 +18,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <getopt.h>
 #include <defaultoptions.h>
 #include "query-installed.h"
@@ -37,6 +38,8 @@ static void print_usage(const char *command)
     printf("      --target-property=PROP  The target property of an infrastructure model,\n");
     printf("                              that specifies how to connect to the remote Disnix\n");
     printf("                              interface. (Defaults to hostname)\n");
+    printf("  -f, --format=FORMAT         Output format. Options are: services (default),\n");
+    printf("                              containers and nix\n");
     printf("  -h, --help                  Shows the usage of this command to the user\n");
     printf("  -v, --version               Shows the version of this command to the user\n");
     
@@ -58,6 +61,7 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
+        {"format", required_argument, 0, 'f'},
         {"interface", required_argument, 0, 'i'},
         {"target-property", required_argument, 0, 't'},
         {"profile", required_argument, 0, 'p'},
@@ -68,12 +72,22 @@ int main(int argc, char *argv[])
     char *interface = NULL;
     char *target_property = NULL;
     char *profile = NULL;
+    OutputFormat format = FORMAT_SERVICES;
     
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "p:hv", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "f:p:hv", long_options, &option_index)) != -1)
     {
         switch(c)
         {
+            case 'f':
+                if(strcmp(optarg, "services") == 0)
+                    format = FORMAT_SERVICES;
+                else if(strcmp(optarg, "containers") == 0)
+                    format = FORMAT_CONTAINERS;
+                else if(strcmp(optarg, "nix") == 0)
+                    format = FORMAT_NIX;
+                    
+                break;
             case 'i':
                 interface = optarg;
                 break;
@@ -105,5 +119,5 @@ int main(int argc, char *argv[])
         return 1;
     }
     else
-        return query_installed(interface, target_property, argv[optind], profile); /* Execute query operation */
+        return query_installed(interface, target_property, argv[optind], profile, format); /* Execute query operation */
 }

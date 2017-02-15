@@ -59,4 +59,27 @@ GPtrArray *create_profile_manifest_array_from_string_array(char **result);
  */
 void delete_profile_manifest_array(GPtrArray *profile_manifest_array);
 
+/**
+ * Prints the deployed services for the given profile manifest.
+ *
+ * @param profile_manifest_array An array of profile manifest entries
+ */
+void print_services_in_profile_manifest_array(const GPtrArray *profile_manifest_array);
+
+/**
+ * Prints the deployed services grouped by container for the given profile
+ * manifest.
+ *
+ * @param profile_manifest_array An array of profile manifest entries
+ */
+void print_services_per_container_in_profile_manifest_array(GPtrArray *profile_manifest_array);
+
+/**
+ * Prints a Nix expression containing all properties of all deployed services
+ * for the given profile manifest.
+ *
+ * @param profile_manifest_array An array of profile manifest entries
+ */
+void print_nix_expression_from_profile_manifest_array(const GPtrArray *profile_manifest_array);
+
 #endif
