@@ -131,37 +131,9 @@ static int unlock_profile(int log_fd, gchar *profile)
 GPtrArray *create_profile_manifest_array(gchar *profile)
 {
     gchar *manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, "/manifest", NULL);
-    int fd = open(manifest_file, O_RDONLY);
+    GPtrArray *profile_manifest_array = create_profile_manifest_array_from_file(manifest_file);
     g_free(manifest_file);
-    
-    if(fd == -1)
-        return g_ptr_array_new(); /* If the manifest does not exist, we have an empty configuration */
-    else
-    {
-        GPtrArray *profile_manifest_array;
-        
-        /* Initialize a string array type composing a string array from the read file */
-        ProcReact_Type type = procreact_create_string_array_type('\n');
-        ProcReact_StringArrayState *state = (ProcReact_StringArrayState*)type.initialize();
-        
-        /* Read from the file and compose a string array from it */
-        while(type.append(&type, state, fd) > 0);
-        
-        /* Append NULL termination */
-        state->result = (char**)realloc(state->result, (state->result_length + 1) * sizeof(char*));
-        state->result[state->result_length] = NULL;
-        
-        /* Parse the array for manifest data */
-        profile_manifest_array = create_profile_manifest_array_from_string_array(state->result);
-        
-        /* Cleanup */
-        free(state->result);
-        free(state);
-        close(fd);
-        
-        /* Returns the corresponding array */
-        return profile_manifest_array;
-    }
+    return profile_manifest_array;
 }
 
 int acquire_locks(int log_fd, GPtrArray *profile_manifest_array, gchar *profile)

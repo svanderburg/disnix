@@ -18,6 +18,13 @@
  */
 
 #include "profilemanifest.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <procreact_types.h>
 
 typedef enum
 {
@@ -92,6 +99,40 @@ GPtrArray *create_profile_manifest_array_from_string_array(char **result)
         g_free(entry);
         delete_profile_manifest_array(profile_manifest_array);
         return NULL;
+    }
+}
+
+GPtrArray *create_profile_manifest_array_from_file(gchar *manifest_file)
+{
+    int fd = open(manifest_file, O_RDONLY);
+    
+    if(fd == -1)
+        return g_ptr_array_new(); /* If the manifest does not exist, we have an empty configuration */
+    else
+    {
+        GPtrArray *profile_manifest_array;
+        
+        /* Initialize a string array type composing a string array from the read file */
+        ProcReact_Type type = procreact_create_string_array_type('\n');
+        ProcReact_StringArrayState *state = (ProcReact_StringArrayState*)type.initialize();
+        
+        /* Read from the file and compose a string array from it */
+        while(type.append(&type, state, fd) > 0);
+        
+        /* Append NULL termination */
+        state->result = (char**)realloc(state->result, (state->result_length + 1) * sizeof(char*));
+        state->result[state->result_length] = NULL;
+        
+        /* Parse the array for manifest data */
+        profile_manifest_array = create_profile_manifest_array_from_string_array(state->result);
+        
+        /* Cleanup */
+        free(state->result);
+        free(state);
+        close(fd);
+        
+        /* Returns the corresponding array */
+        return profile_manifest_array;
     }
 }
 

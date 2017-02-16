@@ -221,6 +221,16 @@ ProcReact_Future exec_realise(gchar *interface, gchar *target, gchar *derivation
 ProcReact_Future exec_capture_config(gchar *interface, gchar *target);
 
 /**
+ * Queries the requisites of a given derivation
+ *
+ * @param interface Path to the interface executable
+ * @param target Target Address of the remote interface
+ * @param derivation Derivation to query the requisities from
+ * @return Future struct of the client interface process performing the operation
+ */
+ProcReact_Future exec_query_requisites(gchar *interface, gchar *target, gchar *derivation);
+
+/**
  * Invokes the true command for testing purposes.
  */
 pid_t exec_true(void);

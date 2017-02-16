@@ -53,6 +53,15 @@ ProfileManifestEntry;
 GPtrArray *create_profile_manifest_array_from_string_array(char **result);
 
 /**
+ * Composes an array of profile manifest entries from the provide manifest
+ * configuration file.
+ *
+ * @param manifest_file Path to a profile manifest file
+ * @return An array of pointers to profile manifest entries or NULL if an error has occured
+ */
+GPtrArray *create_profile_manifest_array_from_file(gchar *manifest_file);
+
+/**
  * Deletes a profile manifest array and its contents from heap memory.
  *
  * @param profile_manifest_array An array of profile manifest entries
@@ -76,7 +85,7 @@ void print_services_per_container_in_profile_manifest_array(GPtrArray *profile_m
 
 /**
  * Prints a Nix expression containing all properties of all deployed services
- * for the given profile manifest.
+ * for the given profile manifest to a given file descriptor
  *
  * @param profile_manifest_array An array of profile manifest entries
  */

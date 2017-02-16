@@ -1,7 +1,7 @@
 {nixpkgs, pkgs}:
 
 let
-  inherit (builtins) attrNames getAttr listToAttrs head tail unsafeDiscardOutputDependency hashString filter elem isList isAttrs;
+  inherit (builtins) attrNames getAttr listToAttrs head tail unsafeDiscardOutputDependency hashString filter elem isList isAttrs sort;
 in
 rec {
   /**
@@ -351,27 +351,31 @@ rec {
    * services and types that are distributed to a specific target.
    *
    * Parameters:
+   *
+   * services: Services attribute set, augmented with targets in dependsOn
    * serviceActivationMapping: List of activation mappings
    * targetName: Name of the target in the infrastructure model to filter on 
    * infrastructure: Infrastructure attributeset
    * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
-   * 
+   * deployState: Indicates whether to globally deploy state
+   *
    * Returns:
    * List of services and types that are distributed to the given target name
    */
   
-  generateProfileManifest = serviceActivationMapping: targetName: infrastructure: targetProperty:
+  generateProfileManifest = services: serviceActivationMapping: targetName: infrastructure: targetProperty: deployState:
     if serviceActivationMapping == [] then []
     else
       let
         target = getAttr targetName infrastructure;
         mapping = head serviceActivationMapping;
-        stateful = if mapping ? deployState && mapping.deployState then "true" else "false";
+        service = getAttr (mapping.name) services;
+        stateful = if deployState || (service ? deployState && service.deployState) then "true" else "false";
         dependsOn = "[${toString (map (dependency: "{ target = \"${dependency.target}\"; container = \"${dependency.container}\"; _key = \"${dependency._key}\"; }") (mapping.dependsOn))}]";
       in
       if mapping.target == getTargetProperty targetProperty target && mapping.type != "package"
-      then [ mapping.name mapping.service mapping.container mapping.type mapping._key stateful dependsOn ] ++ (generateProfileManifest (tail serviceActivationMapping) targetName infrastructure targetProperty)
-      else generateProfileManifest (tail serviceActivationMapping) targetName infrastructure targetProperty
+      then [ mapping.name mapping.service mapping.container mapping.type mapping._key stateful dependsOn ] ++ (generateProfileManifest services (tail serviceActivationMapping) targetName infrastructure targetProperty deployState)
+      else generateProfileManifest services (tail serviceActivationMapping) targetName infrastructure targetProperty deployState
   ;
   
   /*
@@ -384,16 +388,17 @@ rec {
    * targetNames: Names of the targets in the infrastructure attributeset
    * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
    * serviceActivationMapping: List of activation mappings
+   * deployState: Indicates whether to globally deploy state
    *
    * Returns:
    * List of machine profiles mapping to targets in the network
    */
    
-  generateProfilesMapping = pkgs: infrastructure: targetNames: targetProperty: serviceActivationMapping:
+  generateProfilesMapping = pkgs: infrastructure: targetNames: targetProperty: serviceActivationMapping: services: deployState:
     let
       target = getAttr (head targetNames) infrastructure;
       servicesPerTarget = queryServicesByTargetName serviceActivationMapping (head targetNames) infrastructure targetProperty;
-      profileManifest = generateProfileManifest serviceActivationMapping (head targetNames) infrastructure targetProperty;
+      profileManifest = generateProfileManifest services serviceActivationMapping (head targetNames) infrastructure targetProperty deployState;
       mappingItem = {
         profile = (pkgs.buildEnv {
           name = head targetNames;
@@ -408,7 +413,7 @@ rec {
       };
     in
     if targetNames == [] then []
-    else [ mappingItem ] ++ generateProfilesMapping pkgs infrastructure (tail targetNames) targetProperty serviceActivationMapping
+    else [ mappingItem ] ++ generateProfilesMapping pkgs infrastructure (tail targetNames) targetProperty serviceActivationMapping services deployState
   ;
   
   /**
@@ -521,7 +526,7 @@ rec {
       snapshotsMapping = generateSnapshotsMapping (attrNames servicesWithDistribution) servicesWithDistribution deployState;
       invDistribution = generateInverseDistribution servicesWithDistribution infrastructure distribution;
     in
-    { profiles = generateProfilesMapping pkgs infrastructure (attrNames infrastructure) targetProperty serviceActivationMapping;
+    { profiles = generateProfilesMapping pkgs infrastructure (attrNames infrastructure) targetProperty serviceActivationMapping servicesWithDistribution deployState;
       activation = filter (mapping: mapping.type != "package") serviceActivationMapping;
       snapshots = filter (mapping: mapping.type != "package") snapshotsMapping;
       targets = generateTargetPropertyList infrastructure targetProperty clientInterface;
@@ -540,7 +545,7 @@ rec {
    * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
    * clientInterface: Path to the executable used to connect to the Disnix interface
    *
-   * Returns: 
+   * Returns:
    * An attributeset which should be exported to XML representing the distributed derivation
    */
 
@@ -608,5 +613,71 @@ rec {
       {
       ${generateDistributionModelBody (attrNames services) (attrNames infrastructure) (attrNames infrastructure)}}
     ''
+  ;
+  
+  reconstructActivationMappingsFromServices = target: services:
+    map (service:
+      { inherit (service) service container name type dependsOn _key;
+        inherit target;
+      }
+    ) services
+  ;
+  
+  reconstructActivationMappings = servicesPerTarget:
+    if servicesPerTarget == [] then []
+    else
+      let
+        config = head servicesPerTarget;
+        mappings = reconstructActivationMappingsFromServices (config.target) (config.services);
+      in
+      mappings ++ reconstructActivationMappings (tail servicesPerTarget)
+  ;
+  
+  reconstructSnapshotMappingsFromServices = target: services:
+    map (service:
+      { inherit (service) service container type;
+        inherit target;
+        component = builtins.substring 33 (builtins.stringLength (service.service)) (builtins.baseNameOf (service.service)); # DUPLICATE LINE FROM DISNIX
+      }
+    ) services
+  ;
+  
+  reconstructSnapshotMappings = servicesPerTarget:
+    if servicesPerTarget == [] then []
+    else
+      let
+        statefulServices = filter (service: service.stateful) (config.services);
+        config = head servicesPerTarget;
+        mappings = reconstructSnapshotMappingsFromServices (config.target) statefulServices;
+      in
+      mappings ++ reconstructSnapshotMappings (tail servicesPerTarget)
+  ;
+  
+  compareActivationMappings = left: right:
+    if left.name == right.name then
+      if left.container == right.container then
+        left.target < right.target
+      else
+        left.container < right.container
+    else
+      left.name < right.name
+  ;
+  
+  compareSnapshotMappings = left: right:
+    if left.component == right.component then
+      if left.container == right.container then
+        left.target < right.target
+      else
+        left.container < right.container
+    else
+      left.component < right.component
+  ;
+  
+  reconstructManifest = infrastructure: capturedProperties: targetProperty: clientInterface:
+    { inherit (capturedProperties) profiles;
+      activation = sort compareActivationMappings (reconstructActivationMappings capturedProperties.servicesPerTarget);
+      snapshots = sort compareSnapshotMappings (reconstructSnapshotMappings capturedProperties.servicesPerTarget);
+      targets = generateTargetPropertyList infrastructure targetProperty clientInterface;
+    }
   ;
 }

@@ -336,6 +336,21 @@ ProcReact_Future exec_capture_config(gchar *interface, gchar *target)
     return future;
 }
 
+ProcReact_Future exec_query_requisites(gchar *interface, gchar *target, gchar *derivation)
+{
+    ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
+
+    if(future.pid == 0)
+    {
+        char *const args[] = {interface, "--query-requisites", "--target", target, derivation, NULL};
+        dup2(future.fd, 1); /* Attach pipe to the stdout */
+        execvp(interface, args); /* Run process */
+        _exit(1);
+    }
+    
+    return future;
+}
+
 pid_t exec_true(void)
 {
     pid_t pid = fork();
