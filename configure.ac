@@ -120,6 +120,7 @@ scripts/disnix-instantiate
 scripts/disnix-manifest
 scripts/disnix-migrate
 scripts/disnix-gendist-roundrobin
+scripts/disnix-reconstruct
 scripts/disnix-ssh-client
 doc/Makefile
 doc/manual/Makefile

@@ -53,6 +53,23 @@ checkTargetProperty()
     fi
 }
 
+# Checks the profile property.
+# If not set it will use the value of the of the DISNIX_PROFILE environment
+# variable or else a default value.
+
+checkProfile()
+{
+    if [ "$profile" = "" ]
+    then
+        if [ "$DISNIX_PROFILE" = "" ]
+        then
+            profile=default
+        else
+            profile=$DISNIX_PROFILE
+        fi
+    fi
+}
+
 # Checks whether a service expression is given. Exits with status 1 if not set.
 
 checkServicesFile()

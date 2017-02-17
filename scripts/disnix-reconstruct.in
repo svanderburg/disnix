@@ -1,0 +1,192 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+# Disnix - A Nix-based distributed service deployment tool
+# Copyright (C) 2008-2016  Sander van der Burg
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    cat <<EOF
+Usage: $0 [OPTION] infrastructure_expr
+
+Reconstructs the deployment manifest of the coodinator by consulting the
+manifests of the target profiles, retrieving their intra-dependency closures
+and rebuilding the manifest.
+
+Options:
+      --target-property=PROP  The target property of an infrastructure model,
+                              that specifies how to connect to the remote Disnix
+                              interface. (Defaults to hostname)
+      --interface=INTERFACE   Path to executable that communicates with a Disnix
+                              interface. Defaults to: disnix-ssh-client
+      --deploy-state          Indicates whether to globally deploy state
+                              (disabled by default)
+  -p, --profile=PROFILE       Name of the profile that is used for this system.
+                              Defaults to: default
+  -m, --max-concurrent-transfers=NUM
+                              Maximum amount of concurrent closure transfers.
+                              Defauls to: 2
+      --coordinator-profile-path=PATH
+                              Path where to store the coordinator profile
+                              generations
+      --no-coordinator-profile
+                              Specifies that the coordinator profile should not
+                              be updated
+      --show-trace            Shows a trace of the output
+  -h, --help                  Shows the usage of this command to the user
+  -v, --version               Shows the version of this command to the user
+
+Environment:
+  DISNIX_CLIENT_INTERFACE    Sets the client interface (defaults to:
+                             disnix-ssh-client)
+  DISNIX_TARGET_PROPERTY     Sets the target property of an infrastructure
+                             model, that specifies how to connect to the remote
+                             Disnix interface. (Defaults to: hostname)
+  DISNIX_DEPLOY_STATE        If set to 1 it also deploys the state of all
+                             components. (defaults to: 0)
+EOF
+}
+
+# Shows the version of this command to the user
+
+showVersion()
+{
+    cat <<EOF
+$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+
+Copyright (C) 2008-2016 Sander van der Burg
+EOF
+}
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o p:m:hv -l interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,coordinator-profile-path:,no-coordinator-profile,show-trace,help,version -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        --interface)
+            interface=$2
+            interfaceArg="--interface $2"
+            ;;
+        --target-property)
+            targetProperty=$2
+            targetPropertyArg="--target-property $2"
+            ;;
+        -m|--max-concurrent-transfers)
+            maxConcurrentTransfersArg="-m $2"
+            ;;
+        -p|--profile)
+            profile=$2
+            profileArg="--profile $2"
+            ;;
+        --coordinator-profile-path)
+            coordinatorProfilePath=$2
+            coordinatorProfilePathArg="--coordinator-profile-path $2"
+            ;;
+        --deploy-state)
+            deployState=1
+            ;;
+        --no-coordinator-profile)
+            noCoordinatorProfileArg="--no-coordinator-profile"
+            ;;
+        --show-trace)
+            showTrace=1
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+        -v|--version)
+            showVersion
+            exit 0
+            ;;
+    esac
+    
+    shift
+done
+
+shift
+
+# Autoconf settings
+
+export prefix=@prefix@
+
+# Import checks
+
+source @datadir@/@PACKAGE@/checks
+
+# Validate the given options
+
+checkClientInterface
+checkTargetProperty
+checkProfile
+checkShowTrace
+checkTmpDir
+
+if [ "$coordinatorProfilePath" = "" ]
+then
+    profileDir="@localstatedir@/nix/profiles/per-user/$(whoami)/disnix-coordinator"
+else
+    profileDir="$coordinatorProfilePath"
+fi
+
+if [ -z "$1" ]
+then
+    echo "An infrastructure model must be provided!" >&2
+    exit 1
+else
+    infrastructureFile="$1"
+fi
+
+# Reconstruct the manifest, build and install it
+
+tempExpr=`mktemp -p $TMPDIR`
+disnix-capture-manifest $profileArg $targetPropertyArg $interfaceArg $maxConcurrentTransfersArg $infrastructureFile > $tempExpr
+
+echo "[coordinator]: Building captured manifest..." >&2
+reconstructedManifest=`nix-build --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
+    --argstr capturedPropertiesFile "$(readlink -f $tempExpr)" \
+    --argstr targetProperty $targetProperty \
+    --argstr clientInterface $interface \
+    --no-out-link \
+    $deployStateArg \
+    $showTraceArg \
+    "$(readlink -f @datadir@/@PACKAGE@/reconstructmanifest.nix)"`
+
+if [ -f $profileDir/$profile ] && (cmp $profileDir/$profile $reconstructedManifest 2> /dev/null)
+then
+    echo "[coordinator]: Not setting the profile as the manifest has not changed..." >&2
+else
+    echo "[coordinator]: Setting profiles..." >&2
+    disnix-set --no-target-profiles $profileArg $coordinatorProfilePathArg $noCoordinatorProfileArg $reconstructedManifest || (rm -f $tempExpr; false)
+    rm -f $tempExpr
+fi

@@ -1,7 +1,7 @@
 AM_CPPFLAGS = -DLOCALSTATEDIR=\"$(localstatedir)\" -DDATADIR=\"$(datadir)/$(PACKAGE)\"
 
 disnix-capture-manifest.1: main.c
-	$(HELP2MAN) --output=$@ --no-info --name 'Reconstructs the coordinator manifest from the manifest of the target profiles' --libtool ./disnix-capture-manifest
+	$(HELP2MAN) --output=$@ --no-info --name 'Captures all the ingredients for reconstructing a deployment manifest from the manifests of the target profiles' --libtool ./disnix-capture-manifest
 
 disnix-capture-manifest.1.xml: disnix-capture-manifest.1
 	$(SHELL) ../../maintenance/man2docbook.bash $<

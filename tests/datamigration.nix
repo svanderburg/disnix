@@ -263,5 +263,31 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         } else {
             die "testService1 state should be: 1, instead it is: $result";
         }
+        
+        # Test disnix-reconstruct. Because nothing has changed the coordinator
+        # profile should remain identical.
+        
+        my $oldNumOfGenerations = $coordinator->mustSucceed("ls /nix/var/nix/profiles/per-user/root/disnix-coordinator | wc -l");
+        $coordinator->mustSucceed("${env} disnix-reconstruct ${snapshotTests}/infrastructure.nix");
+        my $newNumOfGenerations = $coordinator->mustSucceed("ls /nix/var/nix/profiles/per-user/root/disnix-coordinator | wc -l");
+        
+        if($oldNumOfGenerations == $newNumOfGenerations) {
+            print "The amount of manifest generations remained the same!\n";
+        } else {
+            die "The amount of manifest generations should remain the same!";
+        }
+        
+        # Test disnix-reconstruct. First, we remove the old manifests. They
+        # should have been reconstructed.
+        
+        $coordinator->mustSucceed("rm /nix/var/nix/profiles/per-user/root/disnix-coordinator/*");
+        $coordinator->mustSucceed("${env} disnix-reconstruct ${snapshotTests}/infrastructure.nix");
+        $result = $coordinator->mustSucceed("ls /nix/var/nix/profiles/per-user/root/disnix-coordinator | wc -l");
+        
+        if($result == 2) {
+            print "We have a reconstructed manifest!\n";
+        } else {
+            die "We don't have any reconstructed manifests!";
+        }
       '';
   }

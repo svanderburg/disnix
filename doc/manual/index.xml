@@ -78,6 +78,8 @@
       <xi:include href="../../src/snapshot/disnix-snapshot.1.xml" />
       <xi:include href="../../scripts/disnix-ssh-client.1.xml" />
       <xi:include href="../../src/visualize/disnix-visualize.1.xml" />
+      <xi:include href="../../src/capture-manifest/disnix-capture-manifest.1.xml" />
+      <xi:include href="../../scripts/disnix-reconstruct.1.xml" />
     </section>
   </appendix>
 </book>

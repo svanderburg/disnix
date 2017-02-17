@@ -1,5 +1,5 @@
 { infrastructureFile
-, capturedProperties
+, capturedPropertiesFile
 , targetProperty
 , clientInterface
 , deployState ? false
@@ -11,6 +11,7 @@ let
   lib = import ./lib.nix { inherit nixpkgs pkgs; };
 
   infrastructure = import infrastructureFile;
+  capturedProperties = import capturedPropertiesFile;
   reconstructedManifest = lib.reconstructManifest infrastructure capturedProperties targetProperty clientInterface;
   
   generateManifestXSL = ./generatemanifest.xsl;

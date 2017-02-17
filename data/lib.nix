@@ -1,7 +1,7 @@
 {nixpkgs, pkgs}:
 
 let
-  inherit (builtins) attrNames getAttr listToAttrs head tail unsafeDiscardOutputDependency hashString filter elem isList isAttrs sort;
+  inherit (builtins) attrNames getAttr listToAttrs head tail unsafeDiscardOutputDependency hashString filter elem isList isAttrs sort substring stringLength baseNameOf;
 in
 rec {
   /**
@@ -291,6 +291,18 @@ rec {
     if serviceNames == [] then [] else mappingItem ++ (generateServiceActivationMapping (tail serviceNames) services targetProperty)
   ;
  
+   /**
+    * Derives the component name from a Nix store path
+    *
+    * Parameters:
+    * service: Nix store path of a service
+    *
+    * Returns:
+    * String with the component name
+    */
+   deriveComponentName = service:
+     substring 33 (stringLength service) (baseNameOf service);
+ 
   /**
    * For a selected subset of distribution items of every service, a snapshot
    * mapping is created which is a list of attributesets containing a component
@@ -312,7 +324,7 @@ rec {
       distribution = if deployState || (service ? deployState && service.deployState) then service.distribution else []; # Only do state deployment with services that are annotated as such
       
       mappingItem = map (distributionItem:
-        { component = builtins.substring 33 (builtins.stringLength (distributionItem.service)) (builtins.baseNameOf (distributionItem.service));
+        { component = deriveComponentName (distributionItem.service);
           inherit (service) type;
           inherit (distributionItem) target container service;
         }
@@ -615,6 +627,17 @@ rec {
     ''
   ;
   
+  /**
+   * Reconstructs activation mappings from a list of services from a profile
+   * manifest.
+   *
+   * Parameters:
+   * target: An attribute set representing a target machine from the infrastructure model
+   * services: A list of services originating from a profile manifest
+   *
+   * Returns:
+   * A list of activation mappings
+   */
   reconstructActivationMappingsFromServices = target: services:
     map (service:
       { inherit (service) service container name type dependsOn _key;
@@ -623,6 +646,16 @@ rec {
     ) services
   ;
   
+  /**
+   * Reconstructs activation mappings from a list of deployed services per
+   * target machine.
+   *
+   * Parameters:
+   * servicesPerTarget: A list of attribute sets containing the deployed services per machine.
+   *
+   * Returns:
+   * A list of activation mappings
+   */
   reconstructActivationMappings = servicesPerTarget:
     if servicesPerTarget == [] then []
     else
@@ -633,15 +666,36 @@ rec {
       mappings ++ reconstructActivationMappings (tail servicesPerTarget)
   ;
   
+  /**
+   * Reconstructs snapshot mappings from a list of services from a profile
+   * manifest.
+   *
+   * Parameters:
+   * target: An attribute set representing a target machine from the infrastructure model
+   * services: A list of services originating from a profile manifest
+   *
+   * Returns:
+   * A list of snapshot mappings
+   */
   reconstructSnapshotMappingsFromServices = target: services:
     map (service:
       { inherit (service) service container type;
         inherit target;
-        component = builtins.substring 33 (builtins.stringLength (service.service)) (builtins.baseNameOf (service.service)); # DUPLICATE LINE FROM DISNIX
+        component = deriveComponentName (service.service);
       }
     ) services
   ;
   
+  /**
+   * Reconstructs activation mappings from a list of deployed services per
+   * target machine.
+   *
+   * Parameters:
+   * servicesPerTarget: A list of attribute sets containing the deployed services per machine.
+   *
+   * Returns:
+   * A list of activation mappings
+   */
   reconstructSnapshotMappings = servicesPerTarget:
     if servicesPerTarget == [] then []
     else
@@ -653,6 +707,16 @@ rec {
       mappings ++ reconstructSnapshotMappings (tail servicesPerTarget)
   ;
   
+  /**
+   * Compares two activation mappings for ordering.
+   *
+   * Parameters:
+   * left: An activation mapping
+   * right: An activation mapping
+   *
+   * Returns:
+   * true if left comes before right
+   */
   compareActivationMappings = left: right:
     if left.name == right.name then
       if left.container == right.container then
@@ -663,6 +727,16 @@ rec {
       left.name < right.name
   ;
   
+  /**
+   * Compares two snapshot mappings for ordering.
+   *
+   * Parameters:
+   * left: A snapshot mapping
+   * right: A snapshot mapping
+   *
+   * Returns:
+   * true if left comes before right
+   */
   compareSnapshotMappings = left: right:
     if left.component == right.component then
       if left.container == right.container then
@@ -673,6 +747,18 @@ rec {
       left.component < right.component
   ;
   
+  /**
+   * Reconstructs the manifest from the profile manifests of the target machines.
+   *
+   * Parameters:
+   * infrastructure: Infrastructure attributeset
+   * capturedProperties: A attribute set containing the captured properties and services per target
+   * targetProperty: Attribute from the infrastructure model that is used to connect to the Disnix interface
+   * clientInterface: Path to the executable used to connect to the Disnix interface
+   *
+   * Returns:
+   * A manifest representation that can be transformed into XML
+   */
   reconstructManifest = infrastructure: capturedProperties: targetProperty: clientInterface:
     { inherit (capturedProperties) profiles;
       activation = sort compareActivationMappings (reconstructActivationMappings capturedProperties.servicesPerTarget);

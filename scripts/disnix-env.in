@@ -263,21 +263,12 @@ fi
 
 checkClientInterface
 checkTargetProperty
+checkProfile
 checkShowTrace
 
 if [ "$DISNIX_NO_DELETE_STATE" = "1" ]
 then
     noDeleteStateArg="--no-delete-state"
-fi
-
-if [ "$profile" = "" ]
-then
-    if [ "$DISNIX_PROFILE" = "" ]
-    then
-        profile=default
-    else
-        profile=$DISNIX_PROFILE
-    fi
 fi
 
 if [ "$coordinatorProfilePath" = "" ]

@@ -75,6 +75,14 @@ static void delete_requisites_data(QueryRequisitesData *query_requisites_data)
     g_free(query_requisites_data->profile_path);
 }
 
+static gint compare_profile_derivation(const void *l, const void *r)
+{
+    const ProfileDerivation *left = *((ProfileDerivation **)l);
+    const ProfileDerivation *right = *((ProfileDerivation **)r);
+    
+    return g_strcmp0(left->target_key, right->target_key);
+}
+
 static int resolve_profiles(GPtrArray *target_array, gchar *interface, const gchar *target_property, gchar *profile, GPtrArray *profiles_array)
 {
     int success;
@@ -88,6 +96,9 @@ static int resolve_profiles(GPtrArray *target_array, gchar *interface, const gch
     
     procreact_fork_in_parallel_buffer_and_wait(&iterator);
     success = target_iterator_has_succeeded(iterator.data);
+    
+    /* Sort the profiles array to make the outcome deterministic */
+    g_ptr_array_sort(data.profiles_array, compare_profile_derivation);
     
     destroy_target_future_iterator(&iterator);
     delete_requisites_data(&data);
