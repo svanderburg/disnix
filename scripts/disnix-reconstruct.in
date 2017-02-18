@@ -27,9 +27,9 @@ showUsage()
     cat <<EOF
 Usage: $0 [OPTION] infrastructure_expr
 
-Reconstructs the deployment manifest of the coodinator by consulting the
-manifests of the target profiles, retrieving their intra-dependency closures
-and rebuilding the manifest.
+The command \`disnix-reconstruct' reconstructs the deployment manifest of the
+coodinator by consulting the manifests of the target profiles, retrieving their
+intra-dependency closures and rebuilding the manifest.
 
 Options:
       --target-property=PROP  The target property of an infrastructure model,

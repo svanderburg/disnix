@@ -27,9 +27,10 @@ static void print_usage(const char *command)
 {
     printf("Usage: %s [OPTION] infrastructure_nix\n\n", command);
     
-    printf("Consults the manifests of the target Disnix profiles, retrieves their\n");
-    printf("intra-dependency closures and composes a Nix expression that can be used to\n");
-    printf("reconstruct the deployment manifest on the coordinator machine.\n\n");
+    printf("The command `disnix-capture-manifest' captures the manifests of the target\n");
+    printf("Disnix profiles, retrieves their intra-dependency closures and composes a Nix\n");
+    printf("expression that can be used to reconstruct the deployment manifest on the\n");
+    printf("coordinator machine.\n\n");
     
     printf("Options:\n");
     printf("  -p, --profile=PROFILE       Name of the profile in which the services are\n");
