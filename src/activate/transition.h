@@ -19,6 +19,11 @@
 
 #ifndef __DISNIX_TRANSITION_H
 #define __DISNIX_TRANSITION_H
+
+#define FLAG_NO_UPGRADE 0x1
+#define FLAG_NO_ROLLBACK 0x2
+#define FLAG_DRY_RUN 0x4
+
 #include <glib.h>
 
 /**
@@ -40,10 +45,9 @@ TransitionStatus;
  * @param new_activation_mappings Array containing the activation mappings of the new configuration
  * @param old_activation_mappings Array containing the activation mappings of the old configuration
  * @param target_array Array containing all the targets of the new configuration
- * @param no_rollback Do not roll back if an error occurs in the transition phase
- * @param dry_run Only prints the steps to be executed but does not actually perform them
+ * @param flags Option flags
  * @return A status value from the transition status enumeration
  */
-TransitionStatus transition(GPtrArray *new_activation_mappings, GPtrArray *old_activation_mappings, GPtrArray *target_array, const gboolean no_rollback, const gboolean dry_run);
+TransitionStatus transition(GPtrArray *new_activation_mappings, GPtrArray *old_activation_mappings, GPtrArray *target_array, const unsigned int flags);
 
 #endif

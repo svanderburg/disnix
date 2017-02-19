@@ -18,12 +18,11 @@
  */
 
 #include "activate.h"
-#include "transition.h"
 #include <manifest.h>
 #include <activationmapping.h>
 #include <interrupt.h>
 
-int activate_system(const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade, const gboolean no_rollback, const gboolean dry_run)
+int activate_system(const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const unsigned int flags)
 {
     Manifest *manifest = create_manifest(new_manifest, MANIFEST_ACTIVATION_FLAG, NULL, NULL);
     
@@ -45,7 +44,7 @@ int activate_system(const gchar *new_manifest, const gchar *old_manifest, const 
             old_manifest_file = g_strdup(old_manifest);
 
         /* If we have an old configuration -> open it */
-        if(!no_upgrade && old_manifest_file != NULL)
+        if(!(flags & FLAG_NO_UPGRADE) && old_manifest_file != NULL)
         {
             g_print("[coordinator]: Doing an upgrade from previous manifest file: %s\n", old_manifest_file);
             old_activation_mappings = create_activation_array(old_manifest_file);
@@ -62,7 +61,7 @@ int activate_system(const gchar *new_manifest, const gchar *old_manifest, const 
         /* Execute transition */
         g_print("[coordinator]: Executing the transition to the new deployment state\n");
         
-        if((status = transition(manifest->activation_array, old_activation_mappings, manifest->target_array, no_rollback, dry_run)) == TRANSITION_SUCCESS)
+        if((status = transition(manifest->activation_array, old_activation_mappings, manifest->target_array, flags)) == TRANSITION_SUCCESS)
             g_printerr("[coordinator]: The new configuration has been successfully activated!\n");
         else
         {

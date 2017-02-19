@@ -19,6 +19,12 @@
 
 #ifndef __DISNIX_SNAPSHOT_H
 #define __DISNIX_SNAPSHOT_H
+
+#define FLAG_TRANSFER_ONLY 0x1
+#define FLAG_DEPTH_FIRST 0x2
+#define FLAG_ALL 0x4
+#define FLAG_NO_UPGRADE 0x8
+
 #include <glib.h>
 
 /**
@@ -26,18 +32,15 @@
  *
  * @param manifest_file Path to the manifest file which maps services to machines
  * @param max_concurrent_transfers Specifies the maximum amount of concurrent transfers
- * @param transfer_only Indicates the only snapshots must transferred but not taken
- * @param depth_first Indicates whether to use the depth first strategy or not
- * @param all Indicates whether all snapshot generations must be transferred
  * @param keep Indicates how many snapshot generations should be kept
+ * @param flags Option flags
  * @param old_manifest Manifest file representing the old deployment configuration
  * @param coordinator_profile_path Path where the current deployment state is stored for future reference
  * @param profile Name of the distributed profile
- * @param no_upgrade Force Disnix to not look at the previous configuration
  * @param container Snapshot operations will be restricted to the given container, NULL indicates all containers
  * @param component Snapshot operations will be restricted to the given component, NULL indicates all components
  * @return 0 if everything succeeds, else a non-zero exit status
  */
-int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int depth_first, const int all, const int keep, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade, const gchar *container, const gchar *component);
+int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gchar *container, const gchar *component);
 
 #endif

@@ -95,9 +95,7 @@ int main(int argc, char *argv[])
     char *old_manifest = NULL;
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
-    int no_upgrade = FALSE;
-    int no_rollback = FALSE;
-    int dry_run = FALSE;
+    unsigned int flags = 0;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "o:p:hv", long_options, &option_index)) != -1)
@@ -114,13 +112,13 @@ int main(int argc, char *argv[])
                 coordinator_profile_path = optarg;
                 break;
             case 'r':
-                no_rollback = TRUE;
+                flags |= FLAG_NO_ROLLBACK;
                 break;
             case 'u':
-                no_upgrade = TRUE;
+                flags |= FLAG_NO_UPGRADE;
                 break;
             case 'd':
-                dry_run = TRUE;
+                flags |= FLAG_DRY_RUN;
                 break;
             case 'h':
             case '?':
@@ -142,5 +140,5 @@ int main(int argc, char *argv[])
         return 1;
     }
     else
-        return activate_system(argv[optind], old_manifest, coordinator_profile_path, profile, no_upgrade, no_rollback, dry_run); /* Execute activation operation */
+        return activate_system(argv[optind], old_manifest, coordinator_profile_path, profile, flags); /* Execute activation operation */
 }

@@ -47,14 +47,14 @@ static int snapshot_services(GPtrArray *snapshots_array, GPtrArray *target_array
 typedef struct
 {
     GPtrArray *snapshots_array;
-    int all;
+    unsigned int flags;
 }
 RetrieveSnapshotsData;
 
-static pid_t retrieve_snapshot_mapping(SnapshotMapping *mapping, Target *target, int all)
+static pid_t retrieve_snapshot_mapping(SnapshotMapping *mapping, Target *target, const unsigned int flags)
 {
     g_print("[target: %s]: Retrieving snapshots of component: %s deployed to container: %s\n", mapping->target, mapping->component, mapping->container);
-    return exec_copy_snapshots_from(target->client_interface, mapping->target, mapping->container, mapping->component, all);
+    return exec_copy_snapshots_from(target->client_interface, mapping->target, mapping->container, mapping->component, (flags & FLAG_ALL));
 }
 
 pid_t retrieve_snapshots_from_target(void *data, Target *target)
@@ -74,7 +74,7 @@ pid_t retrieve_snapshots_from_target(void *data, Target *target)
         for(i = 0; i < snapshots_per_target_array->len; i++)
         {
             SnapshotMapping *mapping = g_ptr_array_index(snapshots_per_target_array, i);
-            exit_status = procreact_wait_for_exit_status(retrieve_snapshot_mapping(mapping, target, retrieve_snapshots_data->all), &status);
+            exit_status = procreact_wait_for_exit_status(retrieve_snapshot_mapping(mapping, target, retrieve_snapshots_data->flags), &status);
         
             if(status != PROCREACT_STATUS_OK)
             {
@@ -102,10 +102,10 @@ void complete_retrieve_snapshots_from_target(void *data, Target *target, ProcRea
     }
 }
 
-static int retrieve_snapshots(GPtrArray *snapshots_array, GPtrArray *target_array, const unsigned int max_concurrent_transfers, const int all)
+static int retrieve_snapshots(GPtrArray *snapshots_array, GPtrArray *target_array, const unsigned int max_concurrent_transfers, const unsigned int flags)
 {
     int success;
-    RetrieveSnapshotsData data = { snapshots_array, all };
+    RetrieveSnapshotsData data = { snapshots_array, flags };
     ProcReact_PidIterator iterator = create_target_iterator(target_array, retrieve_snapshots_from_target, complete_retrieve_snapshots_from_target, &data);
     
     g_print("[coordinator]: Retrieving snapshots...\n");
@@ -118,11 +118,11 @@ static int retrieve_snapshots(GPtrArray *snapshots_array, GPtrArray *target_arra
     return success;
 }
 
-static void cleanup(const gboolean no_upgrade, const gchar *manifest_file, char *old_manifest_file, Manifest *manifest, GPtrArray *snapshots_array, GPtrArray *old_snapshots_array)
+static void cleanup(const unsigned int flags, const gchar *manifest_file, char *old_manifest_file, Manifest *manifest, GPtrArray *snapshots_array, GPtrArray *old_snapshots_array)
 {
     g_free(old_manifest_file);
     
-    if(!no_upgrade && manifest_file != NULL)
+    if(!(flags & FLAG_NO_UPGRADE) && manifest_file != NULL)
     {
         delete_snapshots_array(old_snapshots_array);
         if(snapshots_array != NULL)
@@ -141,7 +141,7 @@ static pid_t clean_snapshot_mapping(SnapshotMapping *mapping, Target *target, in
 typedef struct
 {
     GPtrArray *snapshots_array;
-    int all;
+    unsigned int flags;
     int keep;
 }
 TakeRetrieveAndCleanSnapshotsData;
@@ -167,7 +167,7 @@ static pid_t take_retrieve_and_clean_snapshot_on_target(void *data, Target *targ
             unsigned int arguments_length = g_strv_length(arguments); /* Determine length of the activation arguments array */
             
             if(!procreact_wait_for_boolean(take_snapshot_on_target(mapping, target, arguments, arguments_length), &status) || (status != PROCREACT_STATUS_OK)
-              || !procreact_wait_for_boolean(retrieve_snapshot_mapping(mapping, target, retrieve_snapshots_data->all), &status) || (status != PROCREACT_STATUS_OK)
+              || !procreact_wait_for_boolean(retrieve_snapshot_mapping(mapping, target, retrieve_snapshots_data->flags), &status) || (status != PROCREACT_STATUS_OK)
               || !procreact_wait_for_boolean(clean_snapshot_mapping(mapping, target, retrieve_snapshots_data->keep), &status) || (status != PROCREACT_STATUS_OK))
             {
                 exit_status = 1;
@@ -195,10 +195,10 @@ void complete_take_retrieve_and_clean_snapshots_on_target(void *data, Target *ta
     }
 }
 
-static int snapshot_depth_first(GPtrArray *snapshots_array, GPtrArray *target_array, const unsigned int max_concurrent_transfers, const int all, const int keep)
+static int snapshot_depth_first(GPtrArray *snapshots_array, GPtrArray *target_array, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)
 {
     int success;
-    TakeRetrieveAndCleanSnapshotsData data = { snapshots_array, all, keep };
+    TakeRetrieveAndCleanSnapshotsData data = { snapshots_array, flags, keep };
     ProcReact_PidIterator iterator = create_target_iterator(target_array, take_retrieve_and_clean_snapshot_on_target, complete_take_retrieve_and_clean_snapshots_on_target, &data);
     
     g_print("[coordinator]: Snapshotting, retrieving and cleaning snapshots...\n");
@@ -211,7 +211,7 @@ static int snapshot_depth_first(GPtrArray *snapshots_array, GPtrArray *target_ar
     return success;
 }
 
-int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const int transfer_only, const int depth_first, const int all, const int keep, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade, const gchar *container_filter, const gchar *component_filter)
+int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gchar *container_filter, const gchar *component_filter)
 {
     /* Generate a distribution array from the manifest file */
     Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_SNAPSHOT_FLAG, container_filter, component_filter);
@@ -232,11 +232,11 @@ int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_trans
         else
             old_manifest_file = g_strdup(old_manifest);
         
-        if(!no_upgrade && old_manifest_file == NULL)
+        if(!(flags & FLAG_NO_UPGRADE) && old_manifest_file == NULL)
             g_printerr("[coordinator]: No snapshots are taken since an upgrade is requested and no previous deployment state is known\n");
         else
         {
-            if(no_upgrade || manifest_file == NULL)
+            if((flags & FLAG_NO_UPGRADE) || manifest_file == NULL)
             {
                 g_printerr("[coordinator]: Snapshotting state of all components...\n");
                 snapshots_array = manifest->snapshots_array;
@@ -248,30 +248,30 @@ int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_trans
                 snapshots_array = subtract_snapshot_mappings(old_snapshots_array, manifest->snapshots_array);
             }
         
-            if(depth_first)
+            if(flags & FLAG_DEPTH_FIRST)
             {
                 int exit_status;
                 
-                if(snapshot_depth_first(snapshots_array, manifest->target_array, max_concurrent_transfers, all, keep))
+                if(snapshot_depth_first(snapshots_array, manifest->target_array, max_concurrent_transfers, flags, keep))
                     exit_status = 0;
                 else
                     exit_status = 1;
                 
-                cleanup(no_upgrade, manifest_file, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
+                cleanup(flags, manifest_file, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
                 return exit_status;
             }
             else
             {
-                if((!transfer_only && !snapshot_services(snapshots_array, manifest->target_array)) /* First, take snapshots on the remote machines */
-                  || (!retrieve_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, all))) /* Then transfer the snapshots to the coordinator machine */
+                if((!(flags & FLAG_TRANSFER_ONLY) && !snapshot_services(snapshots_array, manifest->target_array)) /* First, take snapshots on the remote machines */
+                  || (!retrieve_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, flags))) /* Then transfer the snapshots to the coordinator machine */
                 {
-                    cleanup(no_upgrade, manifest_file, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
+                    cleanup(flags, manifest_file, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
                     return 1;
                 }
             }
         }
         
-        cleanup(no_upgrade, manifest_file, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
+        cleanup(flags, manifest_file, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
         return 0;
     }
 }

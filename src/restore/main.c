@@ -104,11 +104,8 @@ int main(int argc, char *argv[])
     };
     
     unsigned int max_concurrent_transfers = 2;
-    int transfer_only = FALSE;
-    int depth_first = FALSE;
-    int all = FALSE;
+    unsigned int flags = 0;
     int keep = 1;
-    int no_upgrade = FALSE;
     char *old_manifest = NULL;
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
@@ -137,19 +134,19 @@ int main(int argc, char *argv[])
                 old_manifest = optarg;
                 break;
             case 'u':
-                no_upgrade = TRUE;
+                flags |= FLAG_NO_UPGRADE;
                 break;
             case 'a':
-                all = TRUE;
+                flags |= FLAG_ALL;
                 break;
             case 'k':
                 keep = atoi(optarg);
                 break;
             case 't':
-                transfer_only = TRUE;
+                flags |= FLAG_TRANSFER_ONLY;
                 break;
             case 'D':
-                depth_first = TRUE;
+                flags |= FLAG_DEPTH_FIRST;
                 break;
             case 'm':
                 max_concurrent_transfers = atoi(optarg);
@@ -173,5 +170,5 @@ int main(int argc, char *argv[])
     else
         manifest_file = argv[optind];
     
-    return restore(manifest_file, max_concurrent_transfers, transfer_only, depth_first, all, keep, old_manifest, coordinator_profile_path, profile, no_upgrade, container, component); /* Execute restore operation */
+    return restore(manifest_file, max_concurrent_transfers, flags, keep, old_manifest, coordinator_profile_path, profile, container, component); /* Execute restore operation */
 }

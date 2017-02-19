@@ -20,6 +20,7 @@
 #ifndef __DISNIX_ACTIVATE_H
 #define __DISNIX_ACTIVATE_H
 #include <glib.h>
+#include "transition.h"
 
 /**
  * Activates a distributed system deployment state defined in a manifest file.
@@ -34,11 +35,9 @@
  * @param old_manifest Manifest file representing the old deployment configuration
  * @param coordinator_profile_path Path where the current deployment state is stored for future reference
  * @param profile Name of the distributed profile
- * @param no_upgrade Force Disnix to not look at the previous configuration
- * @param no_rollback Do not roll back if an error occurs in the transition phase
- * @param dry_run Only prints the steps to be executed but does not actually perform them
+ * @param flags Option flags
  * @return 0 if the process succeeds, else a non-zero exit value
  */
-int activate_system(const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gboolean no_upgrade, const gboolean no_rollback, const gboolean dry_run);
+int activate_system(const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const unsigned int flags);
 
 #endif
