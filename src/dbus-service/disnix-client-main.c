@@ -178,8 +178,8 @@ int main(int argc, char *argv[])
     Operation operation = OP_NONE;
     char *profile = NULL, *type = NULL, *container = NULL, *component = NULL;
     gchar **derivation = NULL, **arguments = NULL;
-    unsigned int derivation_size = 0, arguments_size = 0;
-    int delete_old = FALSE, session_bus = FALSE, keep = 1;
+    unsigned int derivation_size = 0, arguments_size = 0, flags = 0;
+    int keep = 1;
     
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "rqt:p:dC:c:hv", long_options, &option_index)) != -1)
@@ -262,7 +262,7 @@ int main(int argc, char *argv[])
                 profile = optarg;
                 break;
             case 'd':
-                delete_old = TRUE;
+                flags |= FLAG_DELETE_OLD;
                 break;
             case 'T':
                 type = optarg;
@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
                 component = optarg;
                 break;
             case 'b':
-                session_bus = TRUE;
+                flags |= FLAG_SESSION_BUS;
                 break;
             case 'z':
                 keep = atoi(optarg);
@@ -314,5 +314,5 @@ int main(int argc, char *argv[])
     arguments[arguments_size] = NULL;
     
     /* Execute Disnix client */
-    return run_disnix_client(operation, derivation, session_bus, profile, delete_old, arguments, type, container, component, keep);
+    return run_disnix_client(operation, derivation, flags, profile, arguments, type, container, component, keep);
 }

@@ -19,6 +19,10 @@
 
 #ifndef __DISNIX_CLIENT_H
 #define __DISNIX_CLIENT_H
+
+#define FLAG_DELETE_OLD 0x1
+#define FLAG_SESSION_BUS 0x2
+
 #include <glib.h>
 
 /**
@@ -57,9 +61,8 @@ Operation;
  *
  * @param operation Operation number to execute
  * @param derivation List of paths to Nix store components
- * @param session_bus Indicates whether to use the session bus of D-Bus
+ * @param flags Option flags
  * @param profile Identifier of a distributed profile
- * @param delete_old Indicates whether to delete old profile generations
  * @param arguments List of activation arguments in key=value format
  * @param type Type of the service
  * @param container Name of the container in which snapshots must be deployed
@@ -67,6 +70,6 @@ Operation;
  * @param keep Amount of snapshot generations to keep
  * @return 0 if the operation succeeds, else a non-zero exit value
  */
-int run_disnix_client(Operation operation, gchar **derivation, gboolean session_bus, char *profile, gboolean delete_old, gchar **arguments, char *type, char *container, char *component, int keep);
+int run_disnix_client(Operation operation, gchar **derivation, const unsigned int flags, char *profile, gchar **arguments, char *type, char *container, char *component, int keep);
 
 #endif
