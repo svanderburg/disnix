@@ -27,6 +27,8 @@
 #include <snapshotmapping.h>
 #include <targets.h>
 
+/* Send snapshots infrastructure */
+
 typedef struct
 {
     GPtrArray *snapshots_array;
@@ -98,6 +100,8 @@ static int send_snapshots(GPtrArray *snapshots_array, GPtrArray *target_array, c
     return success;
 }
 
+/* Restore snapshot infrastructure */
+
 static pid_t restore_snapshot_on_target(SnapshotMapping *mapping, Target *target, gchar **arguments, unsigned int arguments_length)
 {
     g_print("[target: %s]: Restoring state of service: %s\n", mapping->target, mapping->component);
@@ -116,6 +120,8 @@ static int restore_services(GPtrArray *snapshots_array, GPtrArray *target_array)
     return map_snapshot_items(snapshots_array, target_array, restore_snapshot_on_target, complete_restore_snapshot_on_target);
 }
 
+/* Clean snapshot mapping infrastructure */
+
 static pid_t clean_snapshot_mapping(SnapshotMapping *mapping, Target *target, int keep)
 {
     g_print("[target: %s]: Cleaning snapshots of component: %s deployed to container: %s\n", mapping->target, mapping->component, mapping->container);
@@ -129,6 +135,8 @@ typedef struct
     int keep;
 }
 SendRestoreAndCleanSnapshotsData;
+
+/* Restore depth-first infrastructure */
 
 static pid_t send_restore_and_clean_snapshot_on_target(void *data, Target *target)
 {
@@ -194,6 +202,8 @@ static int restore_depth_first(GPtrArray *snapshots_array, GPtrArray *target_arr
     
     return success;
 }
+
+/* The entire restore operation */
 
 int restore(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gchar *container_filter, const gchar *component_filter)
 {

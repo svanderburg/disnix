@@ -291,7 +291,7 @@ static gchar *compose_coordinator_profile_basedir(const gchar *coordinator_profi
     char *username = (getpwuid(geteuid()))->pw_name;
     
     if(coordinator_profile_path == NULL)
-        return g_strconcat(LOCALSTATEDIR, "/nix/profiles/per-user/", username, "/disnix-coordinator", NULL);
+        return g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator", NULL);
     else
         return g_strdup(coordinator_profile_path);
 }

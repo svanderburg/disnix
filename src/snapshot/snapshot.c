@@ -27,6 +27,8 @@
 #include <snapshotmapping.h>
 #include <targets.h>
 
+/* Snapshot services infrastructure */
+
 static pid_t take_snapshot_on_target(SnapshotMapping *mapping, Target *target, gchar **arguments, unsigned int arguments_length)
 {
     g_print("[target: %s]: Snapshotting state of service: %s\n", mapping->target, mapping->component);
@@ -43,6 +45,8 @@ static int snapshot_services(GPtrArray *snapshots_array, GPtrArray *target_array
 {
     return map_snapshot_items(snapshots_array, target_array, take_snapshot_on_target, complete_take_snapshot_on_target);
 }
+
+/* Retrieve snapshots infrastructure */
 
 typedef struct
 {
@@ -118,19 +122,7 @@ static int retrieve_snapshots(GPtrArray *snapshots_array, GPtrArray *target_arra
     return success;
 }
 
-static void cleanup(const unsigned int flags, const gchar *manifest_file, char *old_manifest_file, Manifest *manifest, GPtrArray *snapshots_array, GPtrArray *old_snapshots_array)
-{
-    g_free(old_manifest_file);
-    
-    if(!(flags & FLAG_NO_UPGRADE) && manifest_file != NULL)
-    {
-        delete_snapshots_array(old_snapshots_array);
-        if(snapshots_array != NULL)
-            g_ptr_array_free(snapshots_array, TRUE);
-    }
-    
-    delete_manifest(manifest);
-}
+/* Clean snapshot mapping infrastructure */
 
 static pid_t clean_snapshot_mapping(SnapshotMapping *mapping, Target *target, int keep)
 {
@@ -145,6 +137,8 @@ typedef struct
     int keep;
 }
 TakeRetrieveAndCleanSnapshotsData;
+
+/* Snapshot depth-first infrastructure */
 
 static pid_t take_retrieve_and_clean_snapshot_on_target(void *data, Target *target)
 {
@@ -210,6 +204,22 @@ static int snapshot_depth_first(GPtrArray *snapshots_array, GPtrArray *target_ar
     
     return success;
 }
+
+static void cleanup(const unsigned int flags, const gchar *manifest_file, char *old_manifest_file, Manifest *manifest, GPtrArray *snapshots_array, GPtrArray *old_snapshots_array)
+{
+    g_free(old_manifest_file);
+    
+    if(!(flags & FLAG_NO_UPGRADE) && manifest_file != NULL)
+    {
+        delete_snapshots_array(old_snapshots_array);
+        if(snapshots_array != NULL)
+            g_ptr_array_free(snapshots_array, TRUE);
+    }
+    
+    delete_manifest(manifest);
+}
+
+/* The entire snapshot operation */
 
 int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gchar *container_filter, const gchar *component_filter)
 {

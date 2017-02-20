@@ -35,4 +35,7 @@ disnix-dbus.c: disnix.xml
 BUILT_SOURCES = disnix-dbus.c disnix-dbus.h
 
 CLEANFILES = $(BUILT_SOURCES)
-EXTRA_DIST = disnix.xml disnix-client.1 disnix-service.8 disnix-client.1.xml disnix-service.8.xml
+EXTRA_DIST = disnix.xml \
+  $(man1_MANS) \
+  $(man8_MANS) \
+  $(noinst_DATA)

@@ -13,4 +13,4 @@ disnix_snapshot_SOURCES = snapshot.c main.c
 disnix_snapshot_CFLAGS = $(GLIB2_CFLAGS) -I../libprocreact -I../libmanifest -I../libmain -I../libinterface
 disnix_snapshot_LDADD = $(GLIB2_LIBS) ../libprocreact/libprocreact.la ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la
 
-EXTRA_DIST = disnix-snapshot.1 disnix-snapshot.1.xml
+EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

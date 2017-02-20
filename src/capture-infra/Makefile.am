@@ -13,4 +13,4 @@ disnix_capture_infra_SOURCES = capture-infra.c main.c
 disnix_capture_infra_LDADD = ../libprocreact/libprocreact.la ../libinfrastructure/libinfrastructure.la ../libmain/libmain.la ../libinterface/libinterface.la
 disnix_capture_infra_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) $(LIBXSLT_CFLAGS) -I../libprocreact -I../libinfrastructure -I../libmain -I../libinterface -I../libxmlutil
 
-EXTRA_DIST = disnix-capture-infra.1 disnix-capture-infra.1.xml
+EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

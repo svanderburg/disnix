@@ -13,4 +13,4 @@ disnix_delete_state_SOURCES = delete-state.c main.c
 disnix_delete_state_CFLAGS = $(GLIB2_CFLAGS) -I../libprocreact -I../libmanifest -I../libmain -I../libinterface
 disnix_delete_state_LDADD = $(GLIB2_LIBS) ../libprocreact/libprocreact.la ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la
 
-EXTRA_DIST = disnix-delete-state.1 disnix-delete-state.1.xml
+EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

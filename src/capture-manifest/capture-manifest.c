@@ -36,6 +36,8 @@ typedef struct
 }
 QueryRequisitesData;
 
+/* Query requisites infrastructure */
+
 static ProcReact_Future query_requisites_on_target(void *data, Target *target, gchar *client_interface, gchar *target_key)
 {
     QueryRequisitesData *query_requisites_data = (QueryRequisitesData*)data;
@@ -75,6 +77,8 @@ static void delete_requisites_data(QueryRequisitesData *query_requisites_data)
     g_free(query_requisites_data->profile_path);
 }
 
+/* Resolve profiles infrastructure */
+
 static gint compare_profile_derivation(const void *l, const void *r)
 {
     const ProfileDerivation *left = *((ProfileDerivation **)l);
@@ -87,7 +91,7 @@ static int resolve_profiles(GPtrArray *target_array, gchar *interface, const gch
 {
     int success;
     
-    gchar *profile_path = g_strconcat(LOCALSTATEDIR, "/nix/profiles/disnix/", profile, NULL);
+    gchar *profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, NULL);
     QueryRequisitesData data = { profile_path, profiles_array };
     
     ProcReact_FutureIterator iterator = create_target_future_iterator(target_array, target_property, interface, query_requisites_on_target, complete_query_requisites_on_target, &data);
@@ -100,10 +104,15 @@ static int resolve_profiles(GPtrArray *target_array, gchar *interface, const gch
     /* Sort the profiles array to make the outcome deterministic */
     g_ptr_array_sort(data.profiles_array, compare_profile_derivation);
     
+    /* Cleanup */
     destroy_target_future_iterator(&iterator);
     delete_requisites_data(&data);
+    
+    /* Return success status */
     return success;
 }
+
+/* Retrieve profiles infrastructure */
 
 typedef struct
 {
@@ -154,6 +163,8 @@ static int retrieve_profiles(gchar *interface, GPtrArray *profiles_array, const 
     
     return data.success;
 }
+
+/* Print captured manifest infrastructure */
 
 static void print_profiles_array(GPtrArray *profiles_array)
 {
@@ -224,6 +235,8 @@ static void delete_profiles_array(GPtrArray *profiles_array)
     
     g_ptr_array_free(profiles_array, TRUE);
 }
+
+/* The entire capture manifest operation */
 
 int capture_manifest(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile, const unsigned int max_concurrent_transfers)
 {

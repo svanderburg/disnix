@@ -135,19 +135,19 @@ int build(const gchar *distributed_derivation_file, const unsigned int max_concu
     }
     else
     {
-        int status;
+        int exit_status;
         
         if(distribute_derivations(distributed_derivation->derivation_array, distributed_derivation->interface_array, max_concurrent_transfers) /* Distribute derivations to target machines */
           && realise(distributed_derivation->derivation_array, distributed_derivation->interface_array) /* Realise derivations on target machines */
           && retrieve_results(distributed_derivation->derivation_array, distributed_derivation->interface_array, max_concurrent_transfers)) /* Retrieve back the build results */
-            status = 0;
+            exit_status = 0;
         else
-            status = 1;
+            exit_status = 1;
             
         /* Cleanup */
         delete_distributed_derivation(distributed_derivation);
         
         /* Return the exit status, which is 0 if everything succeeds */
-        return status;
+        return exit_status;
     }
 }

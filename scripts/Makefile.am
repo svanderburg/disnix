@@ -70,7 +70,7 @@ disnix-reconstruct.1.xml: disnix-reconstruct.1
 
 man1_MANS = disnix-instantiate.1 disnix-manifest.1 disnix-migrate.1 disnix-gendist-roundrobin.1 disnix-copy-closure.1 disnix-copy-snapshots.1 disnix-delegate.1 disnix-deploy.1 disnix-env.1 disnix-ssh-client.1 disnix-reconstruct.1
 
-EXTRA_DIST = checks disnix-instantiate.in disnix-manifest.in disnix-gendist-roundrobin.in disnix-copy-closure.in disnix-copy-snapshots.in disnix-delegate.in disnix-deploy.in disnix-env.in disnix-ssh-client.in \
-  disnix-instantiate.1 disnix-manifest.1 disnix-migrate.1 disnix-gendist-roundrobin.1 disnix-copy-closure.1 disnix-copy-snapshots.1 disnix-delegate.1 disnix-deploy.1 disnix-env.1 disnix-ssh-client.1 disnix-reconstruct.1 \
-  disnix-instantiate.1.xml disnix-manifest.1.xml disnix-migrate.1.xml disnix-gendist-roundrobin.1.xml disnix-copy-closure.1.xml disnix-copy-snapshots.1.xml disnix-delegate.1.xml disnix-deploy.1.xml disnix-env.1.xml \
-  disnix-ssh-client.1.xml disnix-reconstruct.1.xml
+EXTRA_DIST = disnix-instantiate.in disnix-manifest.in disnix-gendist-roundrobin.in disnix-copy-closure.in disnix-copy-snapshots.in disnix-delegate.in disnix-deploy.in disnix-env.in disnix-ssh-client.in \
+  $(pkgdata_SCRIPTS) \
+  $(man1_MANS) \
+  $(noinst_DATA)

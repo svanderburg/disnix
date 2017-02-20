@@ -13,4 +13,4 @@ disnix_visualize_SOURCES = main.c clustertable.c edgestable.c graph.c
 disnix_visualize_CFLAGS = $(GLIB2_CFLAGS) -I../libprocreact -I../libmanifest -I../libmain
 disnix_visualize_LDADD = $(GLIB2_LIBS) ../libmanifest/libmanifest.la ../libmain/libmain.la
 
-EXTRA_DIST = disnix-visualize.1 disnix-visualize.1.xml
+EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

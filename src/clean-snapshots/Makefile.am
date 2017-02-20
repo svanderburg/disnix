@@ -13,4 +13,4 @@ disnix_clean_snapshots_SOURCES = clean-snapshots.c main.c
 disnix_clean_snapshots_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) $(LIBXSLT_CFLAGS) -I../libprocreact -I../libinfrastructure -I../libmain -I../libinterface -I../libxmlutil
 disnix_clean_snapshots_LDADD = $(GLIB2_LIBS) ../libprocreact/libprocreact.la ../libinfrastructure/libinfrastructure.la ../libmain/libmain.la ../libinterface/libinterface.la
 
-EXTRA_DIST = disnix-clean-snapshots.1 disnix-clean-snapshots.1.xml
+EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

@@ -13,4 +13,4 @@ disnix_collect_garbage_SOURCES = collect-garbage.c main.c
 disnix_collect_garbage_LDADD = ../libprocreact/libprocreact.la ../libinfrastructure/libinfrastructure.la ../libmain/libmain.la ../libinterface/libinterface.la
 disnix_collect_garbage_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) $(LIBXSLT_CFLAGS) -I../libprocreact -I../libinfrastructure -I../libmain -I../libinterface -I../libxmlutil
 
-EXTRA_DIST = disnix-collect-garbage.1 disnix-collect-garbage.1.xml
+EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

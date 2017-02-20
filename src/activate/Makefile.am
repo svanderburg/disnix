@@ -13,4 +13,4 @@ disnix_activate_SOURCES = transition.c activate.c main.c
 disnix_activate_CFLAGS = $(GLIB2_CFLAGS) -I../libprocreact -I../libmanifest -I../libmain -I../libinterface
 disnix_activate_LDADD = $(GLIB2_LIBS) ../libprocreact/libprocreact.la ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la
 
-EXTRA_DIST = disnix-activate.1 disnix-activate.1.xml
+EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

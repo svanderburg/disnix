@@ -15,4 +15,4 @@ disnix_set_SOURCES = profiles.c main.c
 disnix_set_CFLAGS = $(GLIB2_CFLAGS) -I../libprocreact -I../libmanifest -I../libmain -I../libinterface -I../libpkgmgmt
 disnix_set_LDADD = $(GLIB2_LIBS) ../libprocreact/libprocreact.la ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la ../libpkgmgmt/libpkgmgmt.la
 
-EXTRA_DIST = disnix-set.1 disnix-set.1.xml
+EXTRA_DIST = $(man1_MANS) $(noinst_DATA)
