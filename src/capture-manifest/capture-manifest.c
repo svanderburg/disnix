@@ -21,22 +21,16 @@
 #include <infrastructure.h>
 #include <client-interface.h>
 #include <profilemanifest.h>
+#include <profilemanifesttarget.h>
 
-typedef struct
-{
-    gchar *target_key;
-    gchar *derivation;
-}
-ProfileDerivation;
+/* Resolve profiles infrastructure */
 
 typedef struct
 {
     gchar *profile_path;
-    GPtrArray *profiles_array;
+    GPtrArray *profile_manifest_target_array;
 }
 QueryRequisitesData;
-
-/* Query requisites infrastructure */
 
 static ProcReact_Future query_requisites_on_target(void *data, Target *target, gchar *client_interface, gchar *target_key)
 {
@@ -52,47 +46,34 @@ static void complete_query_requisites_on_target(void *data, Target *target, gcha
         g_printerr("[target: %s]: Cannot query the requisites of the profile!\n", target_key);
     else
     {
-        ProfileDerivation *derivation = (ProfileDerivation*)g_malloc(sizeof(ProfileDerivation));
+        ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)g_malloc(sizeof(ProfileManifestTarget));
         char **result = (char**)future->result;
         gint result_length = g_strv_length(result);
         
-        derivation->target_key = target_key;
+        profile_manifest_target->target_key = target_key;
         
         if(result_length > 0)
         {
-            derivation->derivation = result[result_length - 1];
+            profile_manifest_target->derivation = result[result_length - 1];
             result[result_length - 1] = NULL;
         }
         else
-            derivation->derivation = NULL;
+            profile_manifest_target->derivation = NULL;
         
-        g_ptr_array_add(query_requisites_data->profiles_array, derivation);
+        parse_manifest(profile_manifest_target);
+        
+        g_ptr_array_add(query_requisites_data->profile_manifest_target_array, profile_manifest_target);
         
         procreact_free_string_array(future->result);
     }
 }
 
-static void delete_requisites_data(QueryRequisitesData *query_requisites_data)
-{
-    g_free(query_requisites_data->profile_path);
-}
-
-/* Resolve profiles infrastructure */
-
-static gint compare_profile_derivation(const void *l, const void *r)
-{
-    const ProfileDerivation *left = *((ProfileDerivation **)l);
-    const ProfileDerivation *right = *((ProfileDerivation **)r);
-    
-    return g_strcmp0(left->target_key, right->target_key);
-}
-
-static int resolve_profiles(GPtrArray *target_array, gchar *interface, const gchar *target_property, gchar *profile, GPtrArray *profiles_array)
+static int resolve_profiles(GPtrArray *target_array, gchar *interface, const gchar *target_property, gchar *profile, GPtrArray *profile_manifest_target_array)
 {
     int success;
     
     gchar *profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, NULL);
-    QueryRequisitesData data = { profile_path, profiles_array };
+    QueryRequisitesData data = { profile_path, profile_manifest_target_array };
     
     ProcReact_FutureIterator iterator = create_target_future_iterator(target_array, target_property, interface, query_requisites_on_target, complete_query_requisites_on_target, &data);
     
@@ -102,11 +83,11 @@ static int resolve_profiles(GPtrArray *target_array, gchar *interface, const gch
     success = target_iterator_has_succeeded(iterator.data);
     
     /* Sort the profiles array to make the outcome deterministic */
-    g_ptr_array_sort(data.profiles_array, compare_profile_derivation);
+    g_ptr_array_sort(data.profile_manifest_target_array, compare_profile_manifest_target);
     
     /* Cleanup */
     destroy_target_future_iterator(&iterator);
-    delete_requisites_data(&data);
+    g_free(data.profile_path);
     
     /* Return success status */
     return success;
@@ -114,126 +95,32 @@ static int resolve_profiles(GPtrArray *target_array, gchar *interface, const gch
 
 /* Retrieve profiles infrastructure */
 
-typedef struct
+pid_t retrieve_profile_manifest_target(void *data, ProfileManifestTarget *profile_manifest_target)
 {
-    unsigned int index;
-    unsigned int length;
-    int success;
-    gchar *interface;
-    GPtrArray *profiles_array;
-}
-RetrieveProfilesIteratorData;
-
-static int has_next_profile_derivation(void *data)
-{
-    RetrieveProfilesIteratorData *iterator_data = (RetrieveProfilesIteratorData*)data;
-    return iterator_data->index < iterator_data->length;
-}
-
-static pid_t next_profile_derivation(void *data)
-{
-    RetrieveProfilesIteratorData *iterator_data = (RetrieveProfilesIteratorData*)data;
-    ProfileDerivation *derivation = g_ptr_array_index(iterator_data->profiles_array, iterator_data->index);
-    gchar *paths[] = { derivation->derivation, NULL };
+    gchar *interface = (gchar*)data;
+    gchar *paths[] = { profile_manifest_target->derivation, NULL };
     
-    pid_t pid = exec_copy_closure_from(iterator_data->interface, derivation->target_key, paths);
-    iterator_data->index++;
-    return pid;
+    return exec_copy_closure_from(interface, profile_manifest_target->target_key, paths);
 }
 
-static void complete_profile_derivation(void *data, pid_t pid, ProcReact_Status status, int result)
+void complete_retrieve_profile_manifest_target(void *data, ProfileManifestTarget *profile_manifest_target, ProcReact_Status status, int result)
 {
-    RetrieveProfilesIteratorData *iterator_data = (RetrieveProfilesIteratorData*)data;
-
     if(status != PROCREACT_STATUS_OK || !result)
-    {
-        g_printerr("Cannot retrieve profile derivation!\n");
-        iterator_data->success = FALSE;
-    }
+        g_printerr("[target: %s]: Cannot retrieve intra-dependency closure of profile!\n", profile_manifest_target->target_key);
 }
 
-static int retrieve_profiles(gchar *interface, GPtrArray *profiles_array, const unsigned int max_concurrent_transfers)
+static int retrieve_profiles(gchar *interface, GPtrArray *profile_manifest_target_array, const unsigned int max_concurrent_transfers)
 {
-    RetrieveProfilesIteratorData data = { 0, profiles_array->len, TRUE, interface, profiles_array };
-    ProcReact_PidIterator iterator = procreact_initialize_pid_iterator(has_next_profile_derivation, next_profile_derivation, procreact_retrieve_boolean, complete_profile_derivation, &data);
+    int success;
+    ProcReact_PidIterator iterator = create_profile_manifest_target_iterator(profile_manifest_target_array, retrieve_profile_manifest_target, complete_retrieve_profile_manifest_target, interface);
     
     g_printerr("[coordinator]: Retrieving intra-dependency closures of the profiles...\n");
     
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
+    success = profile_manifest_target_iterator_has_succeeded(&iterator);
+    destroy_profile_manifest_target_iterator(&iterator);
     
-    return data.success;
-}
-
-/* Print captured manifest infrastructure */
-
-static void print_profiles_array(GPtrArray *profiles_array)
-{
-    unsigned int i;
-    
-    g_print("[\n");
-    
-    for(i = 0; i < profiles_array->len; i++)
-    {
-        ProfileDerivation *derivation = g_ptr_array_index(profiles_array, i);
-        g_print("  { profile = builtins.storePath %s; target = \"%s\"; }\n", derivation->derivation, derivation->target_key);
-    }
-    
-    g_print("]");
-}
-
-static void print_services_per_target(GPtrArray *profiles_array)
-{
-    unsigned int i;
-    
-    g_print("[\n");
-    
-    for(i = 0; i < profiles_array->len; i++)
-    {
-        ProfileDerivation *derivation = g_ptr_array_index(profiles_array, i);
-        
-        if(derivation->derivation != NULL)
-        {
-            gchar *manifest_file = g_strconcat(derivation->derivation, "/manifest", NULL);
-            GPtrArray *profile_manifest_array = create_profile_manifest_array_from_file(manifest_file);
-            
-            g_print("    { target = \"%s\";\n", derivation->target_key);
-            g_print("      services = ");
-            print_nix_expression_from_profile_manifest_array(profile_manifest_array);
-            g_print(";\n");
-            g_print("    }\n");
-            
-            delete_profile_manifest_array(profile_manifest_array);
-            g_free(manifest_file);
-        }
-    }
-    
-    g_print("  ]");
-}
-
-static void print_captured_config(GPtrArray *profiles_array, gchar *interface, const gchar *target_property, gchar *infrastructure_expr)
-{
-    g_print("{\n");
-    g_print("  profiles = ");
-    print_profiles_array(profiles_array);
-    g_print(";\n");
-    g_print("  servicesPerTarget = ");
-    print_services_per_target(profiles_array);
-    g_print(";\n");
-    g_print("}\n");
-}
-
-static void delete_profiles_array(GPtrArray *profiles_array)
-{
-    unsigned int i;
-    
-    for(i = 0; i < profiles_array->len; i++)
-    {
-        ProfileDerivation *derivation = g_ptr_array_index(profiles_array, i);
-        free(derivation->derivation);
-        g_free(derivation);
-    }
-    
-    g_ptr_array_free(profiles_array, TRUE);
+    return success;
 }
 
 /* The entire capture manifest operation */
@@ -250,20 +137,20 @@ int capture_manifest(gchar *interface, const gchar *target_property, gchar *infr
     }
     else
     {
-        GPtrArray *profiles_array = g_ptr_array_new();
+        GPtrArray *profile_manifest_target_array = g_ptr_array_new();
         int exit_status;
         
-        if(resolve_profiles(target_array, interface, target_property, profile, profiles_array)
-          && retrieve_profiles(interface, profiles_array, max_concurrent_transfers))
+        if(resolve_profiles(target_array, interface, target_property, profile, profile_manifest_target_array)
+          && retrieve_profiles(interface, profile_manifest_target_array, max_concurrent_transfers))
         {
-            print_captured_config(profiles_array, interface, target_property, infrastructure_expr);
+            print_nix_expression_for_profile_manifest_target_array(profile_manifest_target_array);
             exit_status = 0;
         }
         else
             exit_status = 1;
         
         /* Cleanup */
-        delete_profiles_array(profiles_array);
+        delete_profile_manifest_target_array(profile_manifest_target_array);
         delete_target_array(target_array);
         
         /* Return exit status */

@@ -19,19 +19,13 @@
 #include "query-installed.h"
 #include <infrastructure.h>
 #include <client-interface.h>
+#include <profilemanifesttarget.h>
 #include <profilemanifest.h>
 
 typedef struct
 {
-    gchar *target_key;
-    GPtrArray *profile_manifest_array;
-}
-CapturedConfig;
-
-typedef struct
-{
     gchar *profile;
-    GPtrArray *configs_array;
+    GPtrArray *profile_manifest_target_array;
 }
 QueryInstalledServicesData;
 
@@ -49,76 +43,34 @@ static void complete_query_installed_services_on_target(void *data, Target *targ
         g_printerr("[target: %s]: Cannot query the installed services!\n", target_key);
     else
     {
-        CapturedConfig *config = (CapturedConfig*)g_malloc(sizeof(CapturedConfig));
-        config->target_key = target_key;
-        config->profile_manifest_array = create_profile_manifest_array_from_string_array(future->result);
+        ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)g_malloc(sizeof(ProfileManifestTarget));
+        profile_manifest_target->target_key = target_key;
+        profile_manifest_target->derivation = NULL;
+        profile_manifest_target->profile_manifest_array = create_profile_manifest_array_from_string_array(future->result);
         
-        g_ptr_array_add(query_installed_services_data->configs_array, config);
+        g_ptr_array_add(query_installed_services_data->profile_manifest_target_array, profile_manifest_target);
         
         free(future->result);
     }
 }
 
-static gint compare_captured_config(const void *l, const void *r)
-{
-    const CapturedConfig *left = *((CapturedConfig **)l);
-    const CapturedConfig *right = *((CapturedConfig **)r);
-    
-    return g_strcmp0(left->target_key, right->target_key);
-}
-
 static void print_installed_services(QueryInstalledServicesData *query_installed_services_data, OutputFormat format)
 {
-    unsigned int i;
-    
     /* Sort the captured configs so that the overall result is always displayed in a deterministic order */
-    g_ptr_array_sort(query_installed_services_data->configs_array, compare_captured_config); 
+    g_ptr_array_sort(query_installed_services_data->profile_manifest_target_array, compare_profile_manifest_target);
     
-    if(format == FORMAT_NIX)
-        g_print("[\n");
-    
-    /* Display the services for each target */
-    for(i = 0; i < query_installed_services_data->configs_array->len; i++)
+    switch(format)
     {
-        CapturedConfig *config = g_ptr_array_index(query_installed_services_data->configs_array, i);
-        
-        /* Display the service properties */
-        switch(format)
-        {
-            case FORMAT_SERVICES:
-                g_print("\nServices on: %s\n\n", config->target_key);
-                print_services_in_profile_manifest_array(config->profile_manifest_array);
-                break;
-            case FORMAT_CONTAINERS:
-                g_print("\nServices on: %s\n\n", config->target_key);
-                print_services_per_container_in_profile_manifest_array(config->profile_manifest_array);
-                break;
-            case FORMAT_NIX:
-                g_print("  { target = \"%s\";\n", config->target_key);
-                g_print("    services = ");
-                print_nix_expression_from_profile_manifest_array(config->profile_manifest_array);
-                g_print(";\n");
-                g_print("  }\n");
-                break;
-        }
+        case FORMAT_SERVICES:
+            print_services_in_profile_manifest_target(query_installed_services_data->profile_manifest_target_array);
+            break;
+        case FORMAT_CONTAINERS:
+            print_services_per_container_in_profile_manifest_target(query_installed_services_data->profile_manifest_target_array);
+            break;
+        case FORMAT_NIX:
+            print_nix_expression_from_services_in_profile_manifest_target(query_installed_services_data->profile_manifest_target_array);
+            break;
     }
-    
-    if(format == FORMAT_NIX)
-        g_print("]\n");
-}
-
-static void delete_queried_services_data(QueryInstalledServicesData *query_installed_services_data)
-{
-    unsigned int i;
-    
-    for(i = 0; i < query_installed_services_data->configs_array->len; i++)
-    {
-        CapturedConfig *config = g_ptr_array_index(query_installed_services_data->configs_array, i);
-        delete_profile_manifest_array(config->profile_manifest_array);
-        g_free(config);
-    }
-    
-    g_ptr_array_free(query_installed_services_data->configs_array, TRUE);
 }
 
 int query_installed(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile, OutputFormat format)
@@ -136,8 +88,8 @@ int query_installed(gchar *interface, const gchar *target_property, gchar *infra
         int success;
 
         /* Iterate over targets and capture their installed services */
-        GPtrArray *configs_array = g_ptr_array_new();
-        QueryInstalledServicesData data = { profile, configs_array };
+        GPtrArray *profile_manifest_target_array = g_ptr_array_new();
+        QueryInstalledServicesData data = { profile, profile_manifest_target_array };
         ProcReact_FutureIterator iterator = create_target_future_iterator(target_array, target_property, interface, query_installed_services_on_target, complete_query_installed_services_on_target, &data);
         procreact_fork_in_parallel_buffer_and_wait(&iterator);
         success = target_iterator_has_succeeded(iterator.data);
@@ -147,7 +99,7 @@ int query_installed(gchar *interface, const gchar *target_property, gchar *infra
         
         /* Cleanup */
         destroy_target_future_iterator(&iterator);
-        delete_queried_services_data(&data);
+        delete_profile_manifest_target_array(profile_manifest_target_array);
         delete_target_array(target_array);
         
         /* Return exit status */
