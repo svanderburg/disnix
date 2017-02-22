@@ -26,6 +26,8 @@
 
 extern volatile int interrupted;
 
+/* Unlock infrastructure */
+
 static pid_t unlock_distribution_item(void *data, DistributionItem *item, Target *target)
 {
     char *profile = (char*)data;
@@ -50,6 +52,8 @@ static int unlock(const GPtrArray *distribution_array, const GPtrArray *target_a
     
     return success;
 }
+
+/* Lock infrastructure */
 
 typedef struct
 {
@@ -99,6 +103,8 @@ static int lock(const GPtrArray *distribution_array, const GPtrArray *target_arr
     
     return success;
 }
+
+/* The entire lock or unlock operation */
 
 int lock_or_unlock(const int do_lock, const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile)
 {

@@ -93,7 +93,7 @@ void print_nix_expression_from_services_in_profile_manifest_target(const GPtrArr
         g_print("  }\n");
     }
 
-    g_print("]\n");
+    g_print("]");
 }
 
 void print_nix_expression_from_derivations_in_profile_manifest_array(const GPtrArray *profile_manifest_target_array)

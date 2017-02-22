@@ -30,6 +30,10 @@
 Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, const gchar *container_filter, const gchar *component_filter)
 {
     Manifest *manifest = (Manifest*)g_malloc(sizeof(Manifest));
+    manifest->distribution_array = NULL;
+    manifest->activation_array = NULL;
+    manifest->snapshots_array = NULL;
+    manifest->target_array = NULL;
     
     if(flags & MANIFEST_DISTRIBUTION_FLAG)
     {
@@ -41,8 +45,6 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
             return NULL;
         }
     }
-    else
-        manifest->distribution_array = NULL;
     
     if(flags & MANIFEST_ACTIVATION_FLAG)
     {
@@ -54,8 +56,6 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
             return NULL;
         }
     }
-    else
-        manifest->activation_array = NULL;
     
     if(flags & MANIFEST_SNAPSHOT_FLAG)
     {
@@ -67,8 +67,6 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
             return NULL;
         }
     }
-    else
-        manifest->snapshots_array = NULL;
 
     manifest->target_array = generate_target_array(manifest_file);
     

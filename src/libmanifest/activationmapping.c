@@ -209,11 +209,10 @@ void delete_activation_array(GPtrArray *activation_array)
     if(activation_array != NULL)
     {
         unsigned int i;
-    
+        
         for(i = 0; i < activation_array->len; i++)
         {
             ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
-            unsigned int j;
             
             g_free(mapping->key);
             g_free(mapping->target);
@@ -224,17 +223,21 @@ void delete_activation_array(GPtrArray *activation_array)
 
             if(mapping->depends_on != NULL)
             {
+                unsigned int j;
+                
                 for(j = 0; j < mapping->depends_on->len; j++)
                 {
                     ActivationMappingKey *dependency = g_ptr_array_index(mapping->depends_on, j);
+                    
                     g_free(dependency->key);
                     g_free(dependency->target);
                     g_free(dependency->container);
                     g_free(dependency);
                 }
+                
+                g_ptr_array_free(mapping->depends_on, TRUE);
             }
             
-            g_ptr_array_free(mapping->depends_on, TRUE);
             g_free(mapping);
         }
     

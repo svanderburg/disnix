@@ -26,7 +26,7 @@ GPtrArray *generate_distribution_array(const gchar *manifest_file)
     xmlDocPtr doc;
     xmlNodePtr node_root;
     xmlXPathObjectPtr result;
-    GPtrArray *distribution_array = NULL;
+    GPtrArray *distribution_array;
     
     /* Parse the XML document */
     
@@ -47,6 +47,9 @@ GPtrArray *generate_distribution_array(const gchar *manifest_file)
 	xmlCleanupParser();
 	return NULL;
     }
+
+    /* Create a distribution array */
+    distribution_array = g_ptr_array_new();
     
     /* Query the distribution elements */
     result = executeXPathQuery(doc, "/manifest/distribution/mapping");
@@ -58,12 +61,9 @@ GPtrArray *generate_distribution_array(const gchar *manifest_file)
 	unsigned int i;
 	xmlNodeSetPtr nodeset = result->nodesetval;
 	
-	/* Create a distribution array */
-	distribution_array = g_ptr_array_new();
-    
 	/* Iterate over all the mapping elements */
 	for(i = 0; i < nodeset->nodeNr; i++)
-        {
+	{
 	    xmlNodePtr mapping_children = nodeset->nodeTab[i]->children;
 	    DistributionItem *item = (DistributionItem*)g_malloc(sizeof(DistributionItem));
 	    gchar *profile = NULL, *target = NULL;

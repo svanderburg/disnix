@@ -70,8 +70,6 @@ static void complete_query_requisites_on_target(void *data, Target *target, gcha
 
 static int resolve_profiles(GPtrArray *target_array, gchar *interface, const gchar *target_property, gchar *profile, GPtrArray *profile_manifest_target_array)
 {
-    int success;
-    
     gchar *profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, NULL);
     QueryRequisitesData data = { profile_path, profile_manifest_target_array };
     
@@ -80,7 +78,6 @@ static int resolve_profiles(GPtrArray *target_array, gchar *interface, const gch
     g_printerr("[coordinator]: Resolving target profile paths...\n");
     
     procreact_fork_in_parallel_buffer_and_wait(&iterator);
-    success = target_iterator_has_succeeded(iterator.data);
     
     /* Sort the profiles array to make the outcome deterministic */
     g_ptr_array_sort(data.profile_manifest_target_array, compare_profile_manifest_target);
@@ -89,8 +86,8 @@ static int resolve_profiles(GPtrArray *target_array, gchar *interface, const gch
     destroy_target_future_iterator(&iterator);
     g_free(data.profile_path);
     
-    /* Return success status */
-    return success;
+    /* Return success status. Ignore failures. They get reported, but they are not critical */
+    return TRUE;
 }
 
 /* Retrieve profiles infrastructure */
