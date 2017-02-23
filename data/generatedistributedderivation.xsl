@@ -2,7 +2,7 @@
 
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <xsl:template match="/expr/attrs">
-    <distributedderivation>
+    <distributedderivation version="1">
       <build>
         <xsl:for-each select="attr[@name='build']/list/attrs">
           <mapping>

@@ -2,7 +2,7 @@
 
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <xsl:template match="/expr/attrs">
-    <infrastructure>
+    <infrastructure version="1">
       <xsl:for-each select="attr">
 	<target name="{@name}">
 	  <xsl:for-each select="attrs/attr[@name='properties']/attrs">
