@@ -1,6 +1,6 @@
 /*
  * Disnix - A Nix-based distributed service deployment tool
- * Copyright (C) 2008-2016  Sander van der Burg
+ * Copyright (C) 2008-2017  Sander van der Burg
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,7 @@
 
 static void print_usage(const char *command)
 {
-    printf("Usage: %s [--unlock] [MANIFEST]\n\n", command);
+    printf("Usage: %s [--unlock] [OPTION] [MANIFEST]\n\n", command);
     
     printf("Notifies all services on the machines that the transition phase starts or ends,\n");
     printf("so that they can temporarily lock or unlock themselves (or take other\n");
