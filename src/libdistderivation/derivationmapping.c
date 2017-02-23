@@ -131,7 +131,7 @@ void delete_derivation_array(GPtrArray *derivation_array)
 static int has_next_derivation_item(void *data)
 {
     DerivationIteratorData *derivation_iterator_data = (DerivationIteratorData*)data;
-    return derivation_iterator_data->index < derivation_iterator_data->length;
+    return has_next_iteration_process(&derivation_iterator_data->model_iterator_data);
 }
 
 static pid_t next_derivation_process(void *data)
@@ -140,22 +140,14 @@ static pid_t next_derivation_process(void *data)
     DerivationIteratorData *derivation_iterator_data = (DerivationIteratorData*)data;
     
     /* Retrieve derivation item, interface pair */
-    DerivationItem *item = g_ptr_array_index(derivation_iterator_data->derivation_array, derivation_iterator_data->index);
+    DerivationItem *item = g_ptr_array_index(derivation_iterator_data->derivation_array, derivation_iterator_data->model_iterator_data.index);
     Interface *interface = find_interface(derivation_iterator_data->interface_array, item->target);
     
     /* Invoke the next derivation item operation process */
     pid_t pid = derivation_iterator_data->map_derivation_item_function.pid(derivation_iterator_data->data, item, interface);
     
-    /* Increase the iterator index */
-    derivation_iterator_data->index++;
-    
-    if(pid > 0)
-    {
-        /* Add pid to the pid table so that we know what the corresponding derivation item is */
-        gint *pid_ptr = g_malloc(sizeof(gint));
-        *pid_ptr = pid;
-        g_hash_table_insert(derivation_iterator_data->pid_table, pid_ptr, item);
-    }
+    /* Increase the iterator index and update the pid table */
+    next_iteration_process(&derivation_iterator_data->model_iterator_data, pid, item);
     
     /* Return the pid of the invoked process */
     return pid;
@@ -165,13 +157,8 @@ static void complete_derivation_process(void *data, pid_t pid, ProcReact_Status 
 {
     DerivationIteratorData *derivation_iterator_data = (DerivationIteratorData*)data;
     
-    /* Retrieve corresponding derivation item of the pid */
-    gint *pid_ptr = &pid;
-    DerivationItem *item = g_hash_table_lookup(derivation_iterator_data->pid_table, pid_ptr);
-    
-    /* If anything failed, set the overall success status to FALSE */
-    if(status != PROCREACT_STATUS_OK || !result)
-        derivation_iterator_data->success = FALSE;
+    /* Retrieve the completed item */
+    DerivationItem *item = complete_iteration_process(&derivation_iterator_data->model_iterator_data, pid, status, result);
     
     /* Invoke callback that handles the completion of derivation item mapping */
     derivation_iterator_data->complete_derivation_item_mapping_function.pid(derivation_iterator_data->data, item, status, result);
@@ -181,12 +168,9 @@ static DerivationIteratorData *create_common_iterator(const GPtrArray *derivatio
 {
     DerivationIteratorData *derivation_iterator_data = (DerivationIteratorData*)g_malloc(sizeof(DerivationIteratorData));
     
-    derivation_iterator_data->index = 0;
-    derivation_iterator_data->length = derivation_array->len;
-    derivation_iterator_data->success = TRUE;
+    init_model_iterator_data(&derivation_iterator_data->model_iterator_data, derivation_array->len);
     derivation_iterator_data->derivation_array = derivation_array;
     derivation_iterator_data->interface_array = interface_array;
-    derivation_iterator_data->pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, NULL);
     derivation_iterator_data->data = data;
     
     return derivation_iterator_data;
@@ -207,22 +191,14 @@ static ProcReact_Future next_derivation_future(void *data)
     DerivationIteratorData *derivation_iterator_data = (DerivationIteratorData*)data;
     
     /* Retrieve derivation item, interface pair */
-    DerivationItem *item = g_ptr_array_index(derivation_iterator_data->derivation_array, derivation_iterator_data->index);
+    DerivationItem *item = g_ptr_array_index(derivation_iterator_data->derivation_array, derivation_iterator_data->model_iterator_data.index);
     Interface *interface = find_interface(derivation_iterator_data->interface_array, item->target);
     
     /* Invoke the next derivation item operation process */
     ProcReact_Future future = derivation_iterator_data->map_derivation_item_function.future(derivation_iterator_data->data, item, interface);
     
-    /* Increase the iterator index */
-    derivation_iterator_data->index++;
-    
-    if(future.pid > 0)
-    {
-        /* Add pid to the pid table so that we know what the corresponding derivation item is */
-        gint *pid_ptr = g_malloc(sizeof(gint));
-        *pid_ptr = future.pid;
-        g_hash_table_insert(derivation_iterator_data->pid_table, pid_ptr, item);
-    }
+    /* Increase the iterator and update the pid table */
+    next_iteration_future(&derivation_iterator_data->model_iterator_data, &future, item);
     
     /* Return the pid of the invoked process */
     return future;
@@ -232,13 +208,8 @@ static void complete_derivation_future(void *data, ProcReact_Future *future, Pro
 {
     DerivationIteratorData *derivation_iterator_data = (DerivationIteratorData*)data;
     
-    /* Retrieve corresponding derivation item of the pid */
-    gint *pid_ptr = &future->pid;
-    DerivationItem *item = g_hash_table_lookup(derivation_iterator_data->pid_table, pid_ptr);
-    
-    /* If anything failed, set the overall success status to FALSE */
-    if(status != PROCREACT_STATUS_OK || future->result == NULL)
-        derivation_iterator_data->success = FALSE;
+    /* Retrieve the completed item */
+    DerivationItem *item = complete_iteration_future(&derivation_iterator_data->model_iterator_data, future, status);
     
     /* Invoke callback that handles the completion of derivation item mapping */
     derivation_iterator_data->complete_derivation_item_mapping_function.future(derivation_iterator_data->data, item, future, status);
@@ -255,7 +226,7 @@ ProcReact_FutureIterator create_derivation_future_iterator(const GPtrArray *deri
 
 static void destroy_derivation_iterator_data(DerivationIteratorData *derivation_iterator_data)
 {
-    g_hash_table_destroy(derivation_iterator_data->pid_table);
+    destroy_model_iterator_data(&derivation_iterator_data->model_iterator_data);
     g_free(derivation_iterator_data);
 }
 
@@ -274,5 +245,5 @@ void destroy_derivation_future_iterator(ProcReact_FutureIterator *iterator)
 
 int derivation_iterator_has_succeeded(const DerivationIteratorData *derivation_iterator_data)
 {
-    return derivation_iterator_data->success;
+    return derivation_iterator_data->model_iterator_data.success;
 }

@@ -88,7 +88,7 @@ src/collect-garbage/Makefile
 src/query/Makefile
 src/dbus-service/Makefile
 src/libprocreact/Makefile
-src/libxmlutil/Makefile
+src/libmodel/Makefile
 src/libdistderivation/Makefile
 src/libmain/Makefile
 src/libmanifest/Makefile

@@ -126,7 +126,7 @@ void print_nix_expression_for_profile_manifest_target_array(const GPtrArray *pro
 static int has_next_profile_manifest_target_process(void *data)
 {
     ProfileManifestTargetIteratorData *iterator_data = (ProfileManifestTargetIteratorData*)data;
-    return iterator_data->index < iterator_data->length;
+    return has_next_iteration_process(&iterator_data->model_iterator_data);
 }
 
 static pid_t next_profile_manifest_target_process(void *data)
@@ -135,21 +135,13 @@ static pid_t next_profile_manifest_target_process(void *data)
     ProfileManifestTargetIteratorData *iterator_data = (ProfileManifestTargetIteratorData*)data;
     
     /* Retrieve profile manifest target */
-    ProfileManifestTarget *profile_manifest_target = g_ptr_array_index(iterator_data->profile_manifest_target_array, iterator_data->index);
+    ProfileManifestTarget *profile_manifest_target = g_ptr_array_index(iterator_data->profile_manifest_target_array, iterator_data->model_iterator_data.index);
     
     /* Invoke the next profile manifest target item operation process */
     pid_t pid = iterator_data->map_profilemanifesttarget_item(iterator_data->data, profile_manifest_target);
     
-    /* Increase the iterator index */
-    iterator_data->index++;
-    
-    if(pid > 0)
-    {
-        /* Add pid to the pid table so that we know what the corresponding distribution item is */
-        gint *pid_ptr = g_malloc(sizeof(gint));
-        *pid_ptr = pid;
-        g_hash_table_insert(iterator_data->pid_table, pid_ptr, profile_manifest_target);
-    }
+    /* Increase the iterator index and update the pid table */
+    next_iteration_process(&iterator_data->model_iterator_data, pid, profile_manifest_target);
     
     /* Return the pid of the invoked process */
     return pid;
@@ -159,13 +151,8 @@ static void complete_profile_manifest_target_process(void *data, pid_t pid, Proc
 {
     ProfileManifestTargetIteratorData *iterator_data = (ProfileManifestTargetIteratorData*)data;
     
-    /* Retrieve corresponding distribution item of the pid */
-    gint *pid_ptr = &pid;
-    ProfileManifestTarget *item = g_hash_table_lookup(iterator_data->pid_table, pid_ptr);
-    
-    /* If anything failed set the overall success status to FALSE */
-    if(status != PROCREACT_STATUS_OK || !result)
-        iterator_data->success = FALSE;
+    /* Retrieve the completed item */
+    ProfileManifestTarget *item = complete_iteration_process(&iterator_data->model_iterator_data, pid, status, result);
     
     /* Invoke callback that handles completion of distribution item */
     iterator_data->complete_profilemanifesttarget_item_mapping(iterator_data->data, item, status, result);
@@ -175,11 +162,8 @@ ProcReact_PidIterator create_profile_manifest_target_iterator(GPtrArray *profile
 {
     ProfileManifestTargetIteratorData *profile_manifest_target_iterator_data = (ProfileManifestTargetIteratorData*)g_malloc(sizeof(ProfileManifestTargetIteratorData));
     
-    profile_manifest_target_iterator_data->index = 0;
-    profile_manifest_target_iterator_data->length = profile_manifest_target_array->len;
-    profile_manifest_target_iterator_data->success = TRUE;
+    init_model_iterator_data(&profile_manifest_target_iterator_data->model_iterator_data, profile_manifest_target_array->len);
     profile_manifest_target_iterator_data->profile_manifest_target_array = profile_manifest_target_array;
-    profile_manifest_target_iterator_data->pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, NULL);
     profile_manifest_target_iterator_data->map_profilemanifesttarget_item = map_profilemanifesttarget_item;
     profile_manifest_target_iterator_data->complete_profilemanifesttarget_item_mapping = complete_profilemanifesttarget_item_mapping;
     profile_manifest_target_iterator_data->data = data;
@@ -190,12 +174,12 @@ ProcReact_PidIterator create_profile_manifest_target_iterator(GPtrArray *profile
 void destroy_profile_manifest_target_iterator(ProcReact_PidIterator *iterator)
 {
     ProfileManifestTargetIteratorData *iterator_data = (ProfileManifestTargetIteratorData*)iterator->data;
-    g_hash_table_destroy(iterator_data->pid_table);
+    destroy_model_iterator_data(&iterator_data->model_iterator_data);
     g_free(iterator_data);
 }
 
 int profile_manifest_target_iterator_has_succeeded(const ProcReact_PidIterator *iterator)
 {
     ProfileManifestTargetIteratorData *iterator_data = (ProfileManifestTargetIteratorData*)iterator->data;
-    return iterator_data->success;
+    return iterator_data->model_iterator_data.success;
 }

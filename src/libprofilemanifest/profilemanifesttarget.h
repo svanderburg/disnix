@@ -22,7 +22,7 @@
 
 #include <glib.h>
 #include <procreact_pid_iterator.h>
-
+#include <modeliterator.h>
 /**
  * @brief Contains all runtime properties of a target machine's deployment configuration
  */
@@ -48,16 +48,10 @@ typedef void (*complete_profilemanifesttarget_item_mapping_function) (void *data
  */
 typedef struct
 {
-    /** Indicates which element in the array to process */
-    unsigned int index;
-    /** Contains the length of the array */
-    unsigned int length;
-    /** Indicates the success status of the iteration */
-    int success;
+    /** Common properties for all model iterators */
+    ModelIteratorData model_iterator_data;
     /** Array with profile manifest targets */
     GPtrArray *profile_manifest_target_array;
-    /** Hash table keeping track with PID belongs to which profile manifest target */
-    GHashTable *pid_table;
     
     /**
      * Pointer to a function that executes an operation for each profile manifest target

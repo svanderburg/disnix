@@ -21,6 +21,7 @@
 #define __DISNIX_INFRASTRUCTURE_H
 #include <glib.h>
 #include <xmlutil.h>
+#include <modeliterator.h>
 #include <procreact_pid_iterator.h>
 #include <procreact_future_iterator.h>
 
@@ -96,20 +97,14 @@ typedef void (*complete_target_mapping_future_function) (void *data, Target *tar
  */
 typedef struct
 {
-    /** Indicates which element in the array to process */
-    unsigned int index;
-    /** Contains the length of the array */
-    unsigned int length;
-    /** Indicates the success status of the iteration */
-    int success;
+    /** Common properties for all model iterators */
+    ModelIteratorData model_iterator_data;
     /** Array with targets */
     GPtrArray *target_array;
     /** Global key that is used if no target property is defined by the target machine */
     const gchar *target_property;
     /** Command-line tool that is invoked to reach the target machine */
     gchar *interface;
-    /** Hash table keeping track with PID belongs to which target */
-    GHashTable *pid_table;
     
     /** Function that executes a process for each target */
     union

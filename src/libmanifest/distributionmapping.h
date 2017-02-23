@@ -21,6 +21,7 @@
 #define __DISNIX_DISTRIBUTIONMAPPING_H
 #include <glib.h>
 #include <procreact_pid_iterator.h>
+#include <modeliterator.h>
 #include "targets.h"
 
 /**
@@ -46,18 +47,12 @@ typedef void (*complete_distribution_item_mapping_function) (void *data, Distrib
  */
 typedef struct
 {
-    /** Indicates which element in the array to process */
-    unsigned int index;
-    /** Contains the length of the array */
-    unsigned int length;
-    /** Indicates the success status of the iteration */
-    int success;
+    /** Common properties for all model iterators */
+    ModelIteratorData model_iterator_data;
     /** Array with distribution items */
     const GPtrArray *distribution_array;
     /** Array with target items */
     const GPtrArray *target_array;
-    /** Hash table keeping track with PID belongs to which distribution item */
-    GHashTable *pid_table;
     
     /**
      * Pointer to a function that executes an operation for each distribution item

@@ -10,7 +10,7 @@ noinst_DATA = disnix-build.1.xml
 man1_MANS = disnix-build.1
 
 disnix_build_SOURCES = build.c main.c
-disnix_build_CFLAGS = $(GLIB2_CFLAGS) -I../libprocreact -I../libdistderivation -I../libmain -I../libinterface
+disnix_build_CFLAGS = $(GLIB2_CFLAGS) -I../libprocreact -I../libdistderivation -I../libmain -I../libinterface -I../libmodel
 disnix_build_LDADD = $(GLIB2_LIBS) ../libprocreact/libprocreact.la ../libdistderivation/libdistderivation.la ../libmain/libmain.la ../libinterface/libinterface.la
 
 EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

@@ -786,7 +786,7 @@ INPUT                  = activate \
                          libmanifest \
                          libpkgmgmt \
                          libstatemgmt \
-                         libxmlutil \
+                         libmodel \
                          libprofilemanifest \
                          lock \
                          query \

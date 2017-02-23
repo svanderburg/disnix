@@ -396,7 +396,7 @@ gchar *find_target_key(const Target *target, const gchar *global_target_property
 static int has_next_target(void *data)
 {
     TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
-    return target_iterator_data->index < target_iterator_data->length;
+    return has_next_iteration_process(&target_iterator_data->model_iterator_data);
 }
 
 static pid_t next_target_process(void *data)
@@ -406,7 +406,7 @@ static pid_t next_target_process(void *data)
     TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
     
     /* Retrieve distributionitem, target pair */
-    Target *target = g_ptr_array_index(target_iterator_data->target_array, target_iterator_data->index);
+    Target *target = g_ptr_array_index(target_iterator_data->target_array, target_iterator_data->model_iterator_data.index);
     gchar *client_interface = target->client_interface;
     gchar *target_key = find_target_key(target, target_iterator_data->target_property);
 
@@ -417,16 +417,8 @@ static pid_t next_target_process(void *data)
     /* Invoke the next distribution item operation process */
     pid = target_iterator_data->map_target_function.pid(target_iterator_data->data, target, client_interface, target_key);
     
-    /* Increase the iterator index */
-    target_iterator_data->index++;
-    
-    if(pid > 0)
-    {
-        /* Add pid to the pid table so that we know what the corresponding target is */
-        gint *pid_ptr = g_malloc(sizeof(gint));
-        *pid_ptr = pid;
-        g_hash_table_insert(target_iterator_data->pid_table, pid_ptr, target);
-    }
+    /* Increase the iterator index and update the pid table */
+    next_iteration_process(&target_iterator_data->model_iterator_data, pid, target);
     
     /* Return the pid of the invoked process */
     return pid;
@@ -436,14 +428,9 @@ static void complete_target_process(void *data, pid_t pid, ProcReact_Status stat
 {
     TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
     
-    /* Retrieve corresponding target and properties of the pid */
-    gint *pid_ptr = &pid;
-    Target *target = g_hash_table_lookup(target_iterator_data->pid_table, pid_ptr);
+    /* Retrieve the completed item */
+    Target *target = complete_iteration_process(&target_iterator_data->model_iterator_data, pid, status, result);
     gchar *target_key = find_target_key(target, target_iterator_data->target_property);
-    
-    /* If anything failed set the overall success status to FALSE */
-    if(status != PROCREACT_STATUS_OK || !result)
-        target_iterator_data->success = FALSE;
     
     /* Invoke callback that handles completion of the target */
     target_iterator_data->complete_target_mapping_function.pid(target_iterator_data->data, target, target_key, status, result);
@@ -456,7 +443,7 @@ static ProcReact_Future next_target_future(void *data)
     TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
     
     /* Retrieve distributionitem, target pair */
-    Target *target = g_ptr_array_index(target_iterator_data->target_array, target_iterator_data->index);
+    Target *target = g_ptr_array_index(target_iterator_data->target_array, target_iterator_data->model_iterator_data.index);
     gchar *client_interface = target->client_interface;
     gchar *target_key = find_target_key(target, target_iterator_data->target_property);
 
@@ -467,16 +454,8 @@ static ProcReact_Future next_target_future(void *data)
     /* Invoke the next distribution item operation process */
     future = target_iterator_data->map_target_function.future(target_iterator_data->data, target, client_interface, target_key);
     
-    /* Increase the iterator index */
-    target_iterator_data->index++;
-    
-    if(future.pid > 0)
-    {
-        /* Add pid to the pid table so that we know what the corresponding target is */
-        gint *pid_ptr = g_malloc(sizeof(gint));
-        *pid_ptr = future.pid;
-        g_hash_table_insert(target_iterator_data->pid_table, pid_ptr, target);
-    }
+    /* Increase the iterator index and update the pid table */
+    next_iteration_future(&target_iterator_data->model_iterator_data, &future, target);
     
     /* Return the future of the invoked process */
     return future;
@@ -487,13 +466,8 @@ static void complete_target_future(void *data, ProcReact_Future *future, ProcRea
     TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
     
     /* Retrieve corresponding target and properties of the pid */
-    gint *pid_ptr = &future->pid;
-    Target *target = g_hash_table_lookup(target_iterator_data->pid_table, pid_ptr);
+    Target *target = complete_iteration_future(&target_iterator_data->model_iterator_data, future, status);
     gchar *target_key = find_target_key(target, target_iterator_data->target_property);
-    
-    /* If anything failed set the overall success status to FALSE */
-    if(status != PROCREACT_STATUS_OK || future->result == NULL)
-        target_iterator_data->success = FALSE;
     
     /* Invoke callback that handles completion of the target */
     target_iterator_data->complete_target_mapping_function.future(target_iterator_data->data, target, target_key, future, status);
@@ -503,13 +477,10 @@ static TargetIteratorData *create_common_iterator(GPtrArray *target_array, const
 {
     TargetIteratorData *target_iterator_data = (TargetIteratorData*)g_malloc(sizeof(TargetIteratorData));
     
-    target_iterator_data->index = 0;
-    target_iterator_data->length = target_array->len;
-    target_iterator_data->success = TRUE;
+    init_model_iterator_data(&target_iterator_data->model_iterator_data, target_array->len);
     target_iterator_data->target_array = target_array;
     target_iterator_data->target_property = target_property;
     target_iterator_data->interface = interface;
-    target_iterator_data->pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, NULL);
     target_iterator_data->data = data;
     
     return target_iterator_data;
@@ -537,7 +508,7 @@ ProcReact_FutureIterator create_target_future_iterator(GPtrArray *target_array, 
 
 static void destroy_target_iterator_data(TargetIteratorData *target_iterator_data)
 {
-    g_hash_table_destroy(target_iterator_data->pid_table);
+    destroy_model_iterator_data(&target_iterator_data->model_iterator_data);
     g_free(target_iterator_data);
 }
 
@@ -556,5 +527,5 @@ void destroy_target_future_iterator(ProcReact_FutureIterator *iterator)
 
 int target_iterator_has_succeeded(const TargetIteratorData *target_iterator_data)
 {
-    return target_iterator_data->success;
+    return target_iterator_data->model_iterator_data.success;
 }

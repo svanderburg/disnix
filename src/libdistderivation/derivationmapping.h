@@ -22,6 +22,7 @@
 #include <glib.h>
 #include <procreact_pid_iterator.h>
 #include <procreact_future_iterator.h>
+#include <modeliterator.h>
 #include "interfaces.h"
 
 /**
@@ -53,18 +54,12 @@ typedef void (*complete_derivation_item_mapping_future_function) (void *data, De
  */
 typedef struct
 {
-    /** Indicates which element in the array to process */
-    unsigned int index;
-    /** Contains the length of the array */
-    unsigned int length;
-    /** Indicates the success status of the iteration */
-    int success;
+    /** Common properties for all model iterators */
+    ModelIteratorData model_iterator_data;
     /** Array with derivation items */
     const GPtrArray *derivation_array;
     /** Array with interface items */
     const GPtrArray *interface_array;
-    /** Hash table keeping track with PID belongs to which distribution item */
-    GHashTable *pid_table;
     
     /** Function that maps over each item in the derivation array */
     union
