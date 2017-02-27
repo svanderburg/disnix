@@ -70,6 +70,14 @@ static void print_usage(const char *command)
     printf("  -h, --help                     Shows the usage of this command to the user\n");
     printf("  -v, --version                  Shows the version of this command to the user\n");
     
+    printf("\nExit status:\n");
+    printf(" 0                  Transition succeeded.\n");
+    printf(" 1                  Transition failed, but was successfully roll backed.\n");
+    printf(" 2                  Transition failed and the rollback of the obsolete mappings\n");
+    printf("                    failed.\n");
+    printf(" 3                  Transition failed and the rollback of the new mappings\n");
+    printf("                    failed.\n");
+    
     printf("\nEnvironment:\n");
     printf("  DISNIX_PROFILE    Sets the name of the profile that stores the manifest on the\n");
     printf("                    coordinator machine and the deployed services per machine on\n");
