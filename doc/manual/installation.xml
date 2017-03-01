@@ -159,6 +159,13 @@ $ ./configure --help
 					library and means to communicate through D-Bus.
 				</para>
 				<para>
+					When building directly from a Git repository you also need
+					<link xlink:href="https://www.gnu.org/software/help2man">help2man</link> to generate
+					manual pages and
+					<link xlink:href="http://www.catb.org/esr/doclifter">doclifter</link> to generate
+					docbook pages from the generated manual pages.
+				</para>
+				<para>
 					Since Disnix is built on top of the 
 					<link xlink:href="http://nixos.org/nix">Nix package manager</link> it also requires
 					Nix to be installed on the same machine. Consult the Nix homepage for more details

@@ -18,6 +18,11 @@ In order to build Disnix from source code, the following packages are required:
 * [libxslt](http://xmlsoft.org)
 * [glib](https://developer.gnome.org/glib)
 
+When building directly from a Git clone, you also need:
+
+* [help2man](https://www.gnu.org/software/help2man)
+* [doclifter](http://www.catb.org/esr/doclifter)
+
 To be able to build software with Disnix, Nix and Nixpkgs are required:
 
 * [Nix](http://www.nixos.org/nix)
