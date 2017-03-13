@@ -57,12 +57,8 @@ export prefix=@prefix@
 # Import utility functions
 source @datadir@/@PACKAGE@/util
 
-determineComponentName $2
-checkStateDir
-determineTypeIdentifier $0
-composeSnapshotsPath
-composeGarbagePath
-composeGenerationsPath
+# Sets a number of common utility environment variables
+composeUtilityVariables $0 $2 $3
 
 case "$1" in
     activate) <co xml:id='co-activate' />
@@ -78,10 +74,10 @@ case "$1" in
               fi
             ) | @mysql@ --user=$mysqlUsername --password=$mysqlPassword -N
         fi
-        unmarkStateAsGarbage
+        markComponentAsActive
         ;;
     deactivate) <co xml:id='co-deactivate' />
-        markStateAsGarbage
+        markComponentAsGarbage
         ;;
     snapshot) <co xml:id='co-snapshot' />
         tmpdir=$(mktemp -d)
@@ -102,7 +98,7 @@ case "$1" in
         createGenerationSymlink $snapshotsPath/$hash
         ;;
     restore) <co xml:id='co-restore' />
-        determineLastSnapshot
+        lastSnapshot=$(determineLastSnapshot)
         
         if [ "$lastSnapshot" != "" ]
         then
@@ -112,10 +108,10 @@ case "$1" in
         fi
         ;;
     collect-garbage) <co xml:id='co-collect-garbage' />
-        if [ -f $garbagePath ]
+        if componentMarkedAsGarbage
         then
             echo "drop database $componentName;" | @mysql@ --user=$mysqlUsername --password=$mysqlPassword -N
-            unmarkStateAsGarbage
+            unmarkComponentAsGarbage
         fi
         ;;
 esac

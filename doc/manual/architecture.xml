@@ -5,7 +5,7 @@
 	<title>Architecture</title>
 	
 	<para>
-		Disnix is not a self-contained toolset and has a modular and extensible architecture.
+		Disnix is not a self-contained toolset. Instead, it has a modular and extensible architecture.
 		This chapter describes the architecture of Disnix and shows how certain low-level
 		activities can be performed.
 	</para>

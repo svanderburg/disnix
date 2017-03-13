@@ -62,7 +62,7 @@
 			a <emphasis>data layer</emphasis>, <emphasis>service layer</emphasis> and <emphasis>presentation layer</emphasis>.
 			The database layer contains MySQL databases,
 			storing data records such as zipcodes and staff members.
-			The web service layer contains web service components, which expose
+			The web service layer contains web service components exposing
 			create, read, update and delete operations for each data set
 			(the <code>GeolocationService</code> uses GeoIP to track a location).
 			In the presentation layer, the <code>StaffTracker</code>
@@ -78,7 +78,7 @@
 			the <code>StaffTracker</code> web application front-end.
 			The arrows denote inter-dependency relationships. Inter-dependency
 			correspond to network links between services. In this particular example, they
-			are SOAP/HTTP or plain TCP connections.
+			are SOAP/HTTP or "plain" TCP connections.
 		</para>
 	</section>
 	
@@ -194,8 +194,8 @@ stdenv.mkDerivation { <co xml:id='co-mkDerivation' />
 				
 				<callout arearefs='co-meta'>
 					<para>
-						We can also specify some meta data for a package, so that we have a description
-						and other useful information, such as the homepage and a license. These properties are not used
+						We can also specify meta data attributes for a package, so that we have a description
+						and other kinds of useful information, such as the homepage and a license. These properties are not used
 						while building the package.
 					</para>
 				</callout>
@@ -248,7 +248,7 @@ rec { <co xml:id='co-rec' />
 				<callout arearefs='co-importHello'>
 					<para>
 						Here, the expression defined in <xref linkend="ex-hello" /> is imported and called
-						with the its required function parameters. The corresponding dependencies are
+						with its required function parameters. The corresponding dependencies are
 						composed in the same composition expression shown in <xref linkend="ex-all-packages" />.
 					</para>
 					<para>
@@ -347,7 +347,7 @@ stdenv.mkDerivation { <co xml:id='co-mkDerivation-service' />
 			<para>
 				<xref linkend="ex-zipcode-service" /> shows a Disnix expression for
 				a particular web service component of the <code>StaffTracker</code>
-				system, called <code>ZipcodeService</code>, which provides access
+				system, called <code>ZipcodeService</code>, providing access
 				to records in the <code>zipcode</code> database.
 				A Disnix expression is a nested function (having two
 				function headers instead of one).
@@ -363,7 +363,7 @@ stdenv.mkDerivation { <co xml:id='co-mkDerivation-service' />
 						<itemizedlist>
 							<listitem>
 								<simpara>
-									<varname>stdenv</varname> is provides an environment containing
+									<varname>stdenv</varname> provides an environment containing
 									basic UNIX utilities and build environment.
 								</simpara>
 							</listitem>
@@ -405,7 +405,7 @@ stdenv.mkDerivation { <co xml:id='co-mkDerivation-service' />
 					<para>
 						Each target attribute set defines two properties. The <varname>properties</varname> attribute refers to general
 						machine properties and correspond to the properties attribute defined in the infrastructure model.
-						The <varname>container</varname> attribute refers to the set of container properties to which the services
+						The <varname>container</varname> attribute refers to the set of container properties to which the service
 						has been deployed.
 					</para>
 				</callout>
@@ -461,7 +461,7 @@ stdenv.mkDerivation { <co xml:id='co-mkDerivation-service' />
 				Like ordinary Nix expressions, we cannot use the expression in <xref linkend="ex-zipcode-service" /> directly to build the
 				service. We need to <emphasis>compose</emphasis> it by calling the function with its required arguments.
 				With Disnix, we need to compose a service twice. First, we have to compose this expression locally,
-				by calling it with the required intra-dependency arguments. Later, we have to compose it
+				by calling it with the required intra-dependency arguments. Later, we also have to compose it
 				using the inter-dependency arguments.
 			</para>
 			
@@ -590,7 +590,7 @@ rec { <co xml:id='co-rec2' />
   zipcodes = { 
     name = "zipcodes"; 
     pkg = customPkgs.zipcodes; 
-    dependsOn = {};    
+    dependsOn = {};
     type = "mysql-database";
   };
   ...
@@ -698,7 +698,7 @@ rec { <co xml:id='co-rec2' />
 				
 				<callout arearefs='co-pkg'>
 					<para>
-						For every service, we must know how to build it and what their intra- and inter-dependencies are. 
+						For every service, we must know how to build it and what their intra- and inter-dependencies are.
 						This attribute refers to the intra-dependency closure of the service, which is composed in
 						<xref linkend="ex-intra-dependency-composition-simplified" />.
 					</para>
@@ -706,7 +706,7 @@ rec { <co xml:id='co-rec2' />
 				
 				<callout arearefs='co-dependsOn'>
 					<para>
-						We also need to know for each service what the inter-dependencies actually are. 
+						We also need to know for each service what the inter-dependencies actually are.
 						Inter-dependencies correspond to the arrows shown in <xref linkend="fig-stafftracker" />.
 					</para>
 					<para>
@@ -741,8 +741,8 @@ rec { <co xml:id='co-rec2' />
 					<para>
 						The <code>package</code> type can be used to indicate that the service is an ordinary Nix package
 						that should be deployed remotely. Services of this type will be installed, but no additional deployment
-						steps will be performed, such activation or deactivation. Additional steps besides installing are not
-						necessary for packages. See <xref linkend="chap-packages" /> for more information.
+						steps will be performed, such activation or deactivation. Additional activities beyond installing are not
+						required for packages. See <xref linkend="chap-packages" /> for more information.
 					</para>
 				</callout>
 			</calloutlist>
@@ -854,7 +854,7 @@ rec { <co xml:id='co-rec2' />
 			
 			<para>
 				The infrastructure model also allows you to specify a number of advanced system properties. These properties are
-				optional and typically reasonable default values are provided for them. They only need to be specified in special circumstances:
+				optional. In most scenarios, reasonable default values are provided for them. They only need to be specified in special circumstances:
 			</para>
 			
 			<calloutlist>
@@ -876,7 +876,7 @@ rec { <co xml:id='co-rec2' />
 					<para>
 						This property is particularly useful when deploying to a heterogeneous network consisting of
 						machines running various kinds of operating systems having various kinds of system architectures.
-						You do not need a dedicated cluster of machines to build for these architecture, but you can
+						You do not need a dedicated cluster of machines to build for these architectures, but you can
 						reuse the existing deployment infrastructure.
 					</para>
 				</callout>

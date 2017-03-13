@@ -9,7 +9,7 @@ disnix-instantiate.1.xml: disnix-instantiate.1
 	$(SHELL) ../maintenance/man2docbook.bash $<
 
 disnix-manifest.1: disnix-manifest.in
-	$(HELP2MAN) --output=$@ --no-info --name 'Generate a manifest file from Disnix expressions' "$(SHELL) disnix-manifest"
+	$(HELP2MAN) --output=$@ --no-info --name 'Generate a deployment manifest file from Disnix expressions' "$(SHELL) disnix-manifest"
 
 disnix-manifest.1.xml: disnix-manifest.1
 	$(SHELL) ../maintenance/man2docbook.bash $<

@@ -1,11 +1,11 @@
 disnix-client.1: disnix-client.c
-	$(HELP2MAN) --output=$@ --no-info --name 'Build store derivations on target machines in a network' --libtool ./disnix-client
+	$(HELP2MAN) --output=$@ --no-info --name 'Provides access to the disnix-service through the DBus system or session bus' --libtool ./disnix-client
 
 disnix-client.1.xml: disnix-client.1
 	$(SHELL) ../../maintenance/man2docbook.bash $<
 
 disnix-service.8: disnix-service-main.c
-	$(HELP2MAN) --output=$@ --no-info --name 'Build store derivations on target machines in a network' --section 8 --libtool ./disnix-service
+	$(HELP2MAN) --output=$@ --no-info --name 'Exposes Nix/Dysnomia deployment operations as a DBus service' --section 8 --libtool ./disnix-service
 
 disnix-service.8.xml: disnix-service.8
 	$(SHELL) ../../maintenance/man2docbook.bash $<

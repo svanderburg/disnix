@@ -5,7 +5,7 @@
 	<title>Extensions</title>
 
         <para>
-		Although Disnix makes the deployment of a distributed system more convenient and
+		Although Disnix makes it possible to automate the deployment of a service-oriented system and
 		offers various kinds of features to make this process reliable and efficient, some extensions have been
 		developed to make deployment processes more convenient.
         </para>

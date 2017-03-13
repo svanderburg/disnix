@@ -18,7 +18,7 @@
 	</para>
 	<para>
 		In a large network of machines it can be quite costly to manage state manually. Disnix also provides
-		experimental state management facilities to cope with this. However, they are disabled by default.
+		experimental state management facilities to cope with this. However, state management is disabled by default.
 		To manage state for a specific subset of services, they must be annotated as such in the services model.
 	</para>
 	

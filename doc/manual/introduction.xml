@@ -8,8 +8,8 @@
 		Disnix is a distributed service deployment toolset which main
 		purpose is to deploy service-oriented systems (i.e. systems that can be
 		decomposed into "distributable units") into networks of machines
-		having various characteristics (such as operating systems) and is built on top of Nix;
-		a package manager which has some unique features compared to conventional package
+		having various characteristics (such as operating systems). Disnix is built on top of Nix --
+		a package manager that has a number of powerful and unique advantages over conventional package
 		managers to make deployment safe, reliable, and reproducible.
 	</para>
 
@@ -58,7 +58,7 @@
 
 	<para>
 		Moreover, Nix uses a purely functional domain-specific language called the Nix expression language
-		to specify build actions. Using a purely functional language makes builds deterministic and reproducable.
+		to specify build actions. Using a purely functional language makes builds deterministic and reproducible.
 		A garbage collector is included to safely remove packages that are no longer in use.
 	</para>
 
@@ -84,7 +84,7 @@
 			<para>
 				Like the standard Nix deployment system, Disnix uses
 				the Nix expression language, which is used to write
-				specifications for the deployment of distributed
+				specifications for the deployment of service-oriented
 				systems.
 			</para>
 			<para>
@@ -171,7 +171,7 @@
 				Apart from the portability of Disnix itself, Disnix also allows a user to deploy
 				a service oriented system into a heterogeneous network (i.e. a network consisting
 				of various types of machines, running various operating systems). Disnix reuses
-				Nix's delegation mechanism to build a component for an alien target platform.
+				Nix's delegation mechanism to build a package for an alien target platform.
 				Optionally, it can also delegate builds to the target machines in the network.
 			</para>
 		</simplesect>

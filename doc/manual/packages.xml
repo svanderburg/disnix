@@ -16,7 +16,7 @@
 		<title>Specifying packages as services</title>
 		
 		<para>
-			In Nixpkgs, it it is a common habit to write each package specification as a function in which the parameters
+			In Nixpkgs, it is a common habit to write each package specification as a function in which the parameters
 			denote intra-dependencies. In <xref linkend="chap-basicusage" /> we have shown that
 			Disnix services follow the same convention and extend this approach with nested functions in which the inner
 			function takes inter-dependencies into account.

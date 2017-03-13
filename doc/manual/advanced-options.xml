@@ -277,7 +277,7 @@ ZipcodeService = {
 			</callout>
 			<callout arearefs='co-multi-containers'>
 				<para>
-					It also possible to map a service to multple containers on multiple machines. This line states that the <varname>StaffTracker</varname> service should be deployed
+					It also possible to map a service to multiple containers on multiple machines. This line states that the <varname>StaffTracker</varname> service should be deployed
 					to both the first and second Apache Tomcat container on machine <varname>test1</varname>.
 				</para>
 			</callout>

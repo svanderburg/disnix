@@ -23,7 +23,7 @@
 		<para>
 			Deploying NixOS-based configurations is quite straight forward. A coordinator machine simply
 			requires the presence of the Dysnomia and Disnix utilities in the system environment or a Nix user
-			profile. Each target machine requires the Disnix service to be deployed and a number of
+			profile. Each target machine requires the presence of a Disnix service instance and (optionally) a number of
 			container services.
 		</para>
 		<section>
@@ -69,7 +69,7 @@ services.openssh.enable = true;
 			
 			<para>
 				Besides SSH it also possible to use other kinds of communication protocols.
-				<xref linkend="chap-advanced-options" /> has more information on this.
+				<xref linkend="chap-advanced-options" /> provides more information on this.
 			</para>
 			
 			<para>
@@ -103,8 +103,8 @@ services.tomcat.enable = true;
 			<title>Installing Dysnomia from source</title>
 			
 			<para>
-				The <filename>dysnomia</filename> package is GNU Autotools based,
-				which must be installed by executing the following commands:
+				The <filename>dysnomia</filename> package is GNU Autotools based
+				and must be installed by executing the following commands:
 			</para>
 			
 <screen>
@@ -163,7 +163,7 @@ $ ./configure --help
 					<link xlink:href="https://www.gnu.org/software/help2man">help2man</link> to generate
 					manual pages and
 					<link xlink:href="http://www.catb.org/esr/doclifter">doclifter</link> to generate
-					docbook pages from the generated manual pages.
+					Docbook pages from the generated manual pages.
 				</para>
 				<para>
 					Since Disnix is built on top of the 
@@ -341,13 +341,13 @@ exit 0
 				<para>
 					Refer to your distribution's <code>init.d</code> script style to see how services
 					are configured and launched. For convenience, a Debian-compatible init.d script named
-					<filename>disnix-service.initd</filename> has been placed in the <filename>$PREFIX/share/doc</filename> folder
-					of this package.
+					<filename>disnix-service.initd</filename> has been placed in the <filename>$PREFIX/share/doc</filename>
+					sub folder of this package.
 				</para>
 				<para>
 					An important aspect to keep in mind is that both Nix and Dysnomia should be in the <envar>PATH</envar>
 					of the <code>init.d</code> script so that the service can execute all required deployment activities.
-					Another important thing is that the Disnix service should be started after the D-Bus system service and stopped
+					Moreover, the Disnix service should be started after the D-Bus system service and stopped
 					in exactly the opposite order.
 				</para>
 				<para>
@@ -387,7 +387,7 @@ $ cygrunsrv -I disnix -p /usr/local/bin/disnix-service.exe \
 
 				<para>
 					The <option>-u</option> parameter specifies under which the Disnix
-					service runs. If a single user Nix installation has been performed, 
+					service runs. If a single user Nix installation has been performed,
 					this username should be substituted by the
 					actual username under which Disnix has been installed.
 					In multi-user Nix installations, the <option>-u</option> parameter should
@@ -497,7 +497,7 @@ type=mysql-database
 			</para>
 			
 			<figure xml:id="fig-mysql-database">
-				<title>A Dysnomia container configuration file for a MySQL server</title>
+				<title>A Dysnomia component configuration file for a MySQL server</title>
 				
 <programlisting>
 create table author
