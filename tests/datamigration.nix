@@ -289,5 +289,12 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         } else {
             die "We don't have any reconstructed manifests!";
         }
+        
+        # We pretend that testTarget2 has disappeared and we redeploy all
+        # services to one single machine (testTarget1). Deployment should still
+        # succeed as the disappeared machine is not in the infrastructure model
+        # anymore.
+
+        $coordinator->mustSucceed("${env} disnix-env -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure-single.nix -d ${snapshotTests}/distribution-single.nix --no-delete-state");
       '';
   }

@@ -260,12 +260,7 @@ int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_trans
         
             if(flags & FLAG_DEPTH_FIRST)
             {
-                int exit_status;
-                
-                if(snapshot_depth_first(snapshots_array, manifest->target_array, max_concurrent_transfers, flags, keep))
-                    exit_status = 0;
-                else
-                    exit_status = 1;
+                int exit_status = !snapshot_depth_first(snapshots_array, manifest->target_array, max_concurrent_transfers, flags, keep);
                 
                 cleanup(flags, manifest_file, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
                 return exit_status;

@@ -525,7 +525,7 @@ ActivationStatus traverse_interdependent_mappings(GPtrArray *union_array, const 
         
                 if(target == NULL)
                 {
-                    g_print("[target: %s]: Skip service with key: %s deploying service: %s since machine is no longer present!\n", actual_mapping->key, actual_mapping->target, actual_mapping->service);
+                    g_print("[target: %s]: Skip service with key: %s deploying service: %s since machine is no longer present!\n", actual_mapping->target, actual_mapping->key, actual_mapping->service);
                     actual_mapping->status = ACTIVATIONMAPPING_DEACTIVATED;
                     return ACTIVATION_DONE;
                 }

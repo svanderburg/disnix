@@ -236,32 +236,37 @@ GPtrArray *find_snapshot_mappings_per_target(const GPtrArray *snapshots_array, c
 
 static int wait_to_complete_snapshot_item(GHashTable *pid_table, GPtrArray *target_array, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
 {
-    int wstatus;
-    pid_t pid = wait(&wstatus);
-    
-    if(pid == -1)
-        return FALSE;
-    else
+    if(g_hash_table_size(pid_table) > 0)
     {
-        Target *target;
-        ProcReact_Status status;
-        
-        /* Find the corresponding snapshot mapping and remove it from the pids table */
-        SnapshotMapping *mapping = g_hash_table_lookup(pid_table, &pid);
-        g_hash_table_remove(pid_table, &pid);
-        
-        /* Mark mapping as transferred to prevent it from snapshotting again */
-        mapping->transferred = TRUE;
-        
-        /* Signal the target to make the CPU core available again */
-        target = find_target(target_array, mapping->target);
-        signal_available_target_core(target);
-        
-        /* Return the status */
-        int result = procreact_retrieve_boolean(pid, wstatus, &status);
-        complete_snapshot_item_mapping(mapping, status, result);
-        return(status == PROCREACT_STATUS_OK && result);
+        int wstatus;
+        pid_t pid = wait(&wstatus);
+
+        if(pid == -1)
+            return FALSE;
+        else
+        {
+            Target *target;
+            ProcReact_Status status;
+
+            /* Find the corresponding snapshot mapping and remove it from the pids table */
+            SnapshotMapping *mapping = g_hash_table_lookup(pid_table, &pid);
+            g_hash_table_remove(pid_table, &pid);
+
+            /* Mark mapping as transferred to prevent it from snapshotting again */
+            mapping->transferred = TRUE;
+
+            /* Signal the target to make the CPU core available again */
+            target = find_target(target_array, mapping->target);
+            signal_available_target_core(target);
+
+            /* Return the status */
+            int result = procreact_retrieve_boolean(pid, wstatus, &status);
+            complete_snapshot_item_mapping(mapping, status, result);
+            return(status == PROCREACT_STATUS_OK && result);
+        }
     }
+    else
+        return TRUE;
 }
 
 int map_snapshot_items(GPtrArray *snapshots_array, GPtrArray *target_array, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
@@ -279,7 +284,9 @@ int map_snapshot_items(GPtrArray *snapshots_array, GPtrArray *target_array, map_
             SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
             Target *target = find_target(target_array, mapping->target);
             
-            if(!mapping->transferred && request_available_target_core(target)) /* Check if machine has any cores available, if not wait and try again later */
+            if(target == NULL)
+                g_print("[target: %s]: Skip state of component: %s deployed to container: %s since machine is no longer present!\n", mapping->target, mapping->component, mapping->container);
+            else if(!mapping->transferred && request_available_target_core(target)) /* Check if machine has any cores available, if not wait and try again later */
             {
                 gchar **arguments = generate_activation_arguments(target, mapping->container); /* Generate an array of key=value pairs from container properties */
                 unsigned int arguments_length = g_strv_length(arguments); /* Determine length of the activation arguments array */
