@@ -67,7 +67,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         $testtarget2->mustSucceed("echo 2 > /var/db/testService2/state");
         
         # Use disnix-env to reverse the location of the deployed services.
-        $coordinator->mustSucceed("${env} disnix-env -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure.nix -d ${snapshotTests}/distribution-reverse.nix --no-delete-state");
+        $coordinator->mustSucceed("${env} disnix-env -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure.nix -d ${snapshotTests}/distribution-reverse.nix");
         
         # Check if the state is reversed
         $result = $testtarget1->mustSucceed("cat /var/db/testService2/state");
@@ -236,7 +236,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # had testService1 deployed has removed its state, while the other
         # machine has the states of both testService1 and testService2.
         
-        $coordinator->mustSucceed("${env} disnix-env -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure.nix -d ${snapshotTests}/distribution-simple.nix --no-delete-state");
+        $coordinator->mustSucceed("${env} disnix-env -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure.nix -d ${snapshotTests}/distribution-simple.nix");
         $coordinator->mustSucceed("${env} disnix-delete-state --component testService1 /nix/var/nix/profiles/per-user/root/disnix-coordinator/default-2-link");
         
         $testtarget1->mustSucceed("cat /var/db/testService1/state");
@@ -295,6 +295,6 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # succeed as the disappeared machine is not in the infrastructure model
         # anymore.
 
-        $coordinator->mustSucceed("${env} disnix-env -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure-single.nix -d ${snapshotTests}/distribution-single.nix --no-delete-state");
+        $coordinator->mustSucceed("${env} disnix-env -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure-single.nix -d ${snapshotTests}/distribution-single.nix");
       '';
   }

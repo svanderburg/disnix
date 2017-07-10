@@ -78,7 +78,8 @@ Options:
       --no-migration              Do not migrate the state of services from one
                                   machine to another, even if they have been
                                   annotated as such
-      --no-delete-state           Do not remove the state of deactivated services
+      --delete-state              Remove the obsolete state of deactivated
+                                  services
       --depth-first               Snapshots components depth-first as opposed to
                                   breadth-first. This approach is more space
                                   efficient, but slower.
@@ -94,8 +95,8 @@ Environment:
                              (Defaults to: default).
   DISNIX_DEPLOY_STATE        If set to 1 it also deploys the state of all
                              components. (defaults to: 0)
-  DISNIX_NO_DELETE_STATE     If set to 1 it does not delete the obsolete state
-                             after upgrading. (defaults to: 0)
+  DISNIX_DELETE_STATE        If set to 1 it automatically deletes the obsolete
+                             state after upgrading. (defaults to: 0)
   DYSNOMIA_STATEDIR          Specifies where the snapshots must be stored on the
                              coordinator machine (defaults to:
                              /var/state/dysnomia)
@@ -143,7 +144,7 @@ displayStateFailure()
 The problem is a data migration issue, which must be manually diagnosed. To
 attempt migrating the data again, run:
 
-$ disnix-migrate $profileArg $coordinatorProfilePathArg $noUpgradeArg $noDeleteStateArg $oldManifestFileArg $manifest
+$ disnix-migrate $profileArg $coordinatorProfilePathArg $noUpgradeArg $deleteStateArg $oldManifestFileArg $manifest
 
 If all problems have been resolved, the deployment must be made final. To
 accomplish this, run:
@@ -155,7 +156,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o o:p:m:hv -l old-manifest:,deploy-state,profile:,max-concurrent-transfers:,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,no-delete-state,depth-first,keep:,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o o:p:m:hv -l old-manifest:,deploy-state,profile:,max-concurrent-transfers:,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,delete-state,depth-first,keep:,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -201,9 +202,9 @@ do
         --no-migration)
             noMigration=1
             ;;
-        --no-delete-state)
-            noDeleteState=1
-            noDeleteStateArg="--no-delete-state"
+        --delete-state)
+            deleteState=1
+            deleteStateArg="--delete-state"
             ;;
         --depth-first)
             depthFirstArg="--depth-first"
@@ -239,10 +240,10 @@ source @datadir@/@PACKAGE@/checks
 
 # Validate the given options
 
-if [ "$DISNIX_NO_DELETE_STATE" = "1" ]
+if [ "$DISNIX_DELETE_STATE" = "1" ]
 then
-    noDeleteState=1
-    noDeleteStateArg="--no-delete-state"
+    deleteState=1
+    deleteStateArg="--delete-state"
 fi
 
 # Execute operations
@@ -264,14 +265,14 @@ disnix-activate $profileArg $coordinatorProfilePathArg $noUpgradeArg $manifest |
 if [ "$noMigration" != "1" ]
 then
     echo "[coordinator]: Migrating data..."
-    disnix-migrate $profileArg $coordinatorProfilePathArg $noUpgradeArg $noDeleteStateArg $oldManifestFileArg $depthFirstArg $keepArg $manifest || (releaseLocks; displayStateFailure; exit 1)
+    disnix-migrate $profileArg $coordinatorProfilePathArg $noUpgradeArg $deleteStateArg $oldManifestFileArg $depthFirstArg $keepArg $manifest || (releaseLocks; displayStateFailure; exit 1)
 fi
 
 echo "[coordinator]: Setting profiles..."
 disnix-set $profileArg $coordinatorProfilePathArg $noCoordinatorProfileArg $noTargetProfilesArg $manifest || (releaseLocks; displayFailure; exit 1)
 releaseLocks || (displayFailure; exit 1)
 
-if [ "$noDeleteState" = "1" ] && [ "$oldManifestFile" != "" ]
+if [ "$deleteState" != "1" ] && [ "$oldManifestFile" != "" ]
 then
     # If we don't want to delete state, but there has been an upgrade, notify the user
     cat <<EOF

@@ -1,5 +1,7 @@
 Version 0.7
 ===========
+- When moving state it will no longer be deleted by default. Instead, the user must provide --delete-state
+
 - Add disnix-reconstruct that can reconstruct a deployment configuration on the coordinator if the data gets lost
 
 - disnix-query can now also group services per container and display all its properties defined in the profile manifest
