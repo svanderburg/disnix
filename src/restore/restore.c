@@ -240,12 +240,7 @@ int restore(const gchar *manifest_file, const unsigned int max_concurrent_transf
         }
         
         if(flags & FLAG_DEPTH_FIRST)
-        {
-            if(restore_depth_first(snapshots_array, manifest->target_array, max_concurrent_transfers, flags, keep))
-                exit_status = 0;
-            else
-                exit_status = 1;
-        }
+            exit_status = !restore_depth_first(snapshots_array, manifest->target_array, max_concurrent_transfers, flags, keep);
         else
         {
             if(send_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, flags) /* First, send the snapshots to the remote machines */

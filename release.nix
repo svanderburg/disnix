@@ -106,6 +106,9 @@ let
         datamigration = import ./tests/datamigration.nix {
           inherit nixpkgs dysnomia disnix;
         };
+        locking = import ./tests/locking.nix {
+          inherit nixpkgs dysnomia disnix;
+        };
         pkgs = import ./tests/pkgs.nix {
           inherit nixpkgs dysnomia disnix;
         };
@@ -123,6 +126,7 @@ let
         tests.distbuild
         tests.snapshots
         tests.datamigration
+        tests.locking
         tests.pkgs
       ];
       meta.description = "Release-critical builds";

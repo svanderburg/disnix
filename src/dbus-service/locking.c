@@ -29,58 +29,41 @@
 
 extern char *tmpdir;
 
-static int unlock_services(int log_fd, GPtrArray *profile_manifest_array)
+static int lock_or_unlock_services(int log_fd, GPtrArray *profile_manifest_array, gchar *action, pid_t (*notify_function) (gchar *type, gchar *container, gchar *component, int stdout, int stderr))
 {
     unsigned int i;
     int exit_status = TRUE;
-    
+
+    /* Notify all services for a lock or unlock */
     for(i = 0; i < profile_manifest_array->len; i++)
     {
         ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
         pid_t pid;
         ProcReact_Status status;
         int result;
-        
-        dprintf(log_fd, "Notifying unlock on %s: of type: %s in container: %s\n", entry->service, entry->type, entry->container);
-        pid = statemgmt_unlock_component(entry->type, entry->container, entry->service, log_fd, log_fd);
+
+        dprintf(log_fd, "Notifying %s on %s: of type: %s in container: %s\n", action, entry->service, entry->type, entry->container);
+        pid = notify_function(entry->type, entry->container, entry->service, log_fd, log_fd);
         result = procreact_wait_for_boolean(pid, &status);
-        
+
         if(status != PROCREACT_STATUS_OK || !result)
         {
-            dprintf(log_fd, "Cannot unlock service!\n");
+            dprintf(log_fd, "Cannot %s service!\n", action);
             exit_status = FALSE;
         }
     }
-    
+
     return exit_status;
+}
+
+static int unlock_services(int log_fd, GPtrArray *profile_manifest_array)
+{
+    return lock_or_unlock_services(log_fd, profile_manifest_array, "unlock", statemgmt_unlock_component);
 }
 
 static int lock_services(int log_fd, GPtrArray *profile_manifest_array)
 {
-    unsigned int i;
-    int exit_status = 0;
-
-    /* Notify all currently running services that we want to acquire a lock */
-    for(i = 0; i < profile_manifest_array->len; i++)
-    {
-        ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
-        pid_t pid;
-        ProcReact_Status status;
-        int result;
-    
-        dprintf(log_fd, "Notifying lock on %s: of type: %s in container: %s\n", entry->service, entry->type, entry->container);
-        
-        pid = statemgmt_lock_component(entry->type, entry->container, entry->service, log_fd, log_fd);
-        result = procreact_wait_for_boolean(pid, &status);
-        
-        if(status != PROCREACT_STATUS_OK || !result)
-        {
-            dprintf(log_fd, "Cannot acquire lock!\n");
-            exit_status = FALSE;
-        }
-    }
-    
-    return exit_status;
+    return lock_or_unlock_services(log_fd, profile_manifest_array, "lock", statemgmt_lock_component);
 }
 
 static gchar *create_lock_filename(gchar *profile)
@@ -138,7 +121,7 @@ GPtrArray *create_profile_manifest_array(gchar *profile)
 
 int acquire_locks(int log_fd, GPtrArray *profile_manifest_array, gchar *profile)
 {
-    if(lock_services(log_fd, profile_manifest_array) == 0) /* Attempt to acquire locks from the services */
+    if(lock_services(log_fd, profile_manifest_array)) /* Attempt to acquire locks from the services */
         return lock_profile(log_fd, profile); /* Finally, lock the profile */
     else
     {
