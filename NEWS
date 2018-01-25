@@ -1,3 +1,9 @@
+Version 0.8
+===========
+- Added disnix-diagnose that can be used to spawn remote shell sessions to execute diagnoses and maintenance tasks
+
+- Added disnix-run-activity that can be used to directly execute Disnix activities without a multi-user installation
+
 Version 0.7
 ===========
 - When moving state it will no longer be deleted by default. Instead, the user must provide --delete-state

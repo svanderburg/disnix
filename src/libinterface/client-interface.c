@@ -121,6 +121,40 @@ pid_t exec_delete_state(gchar *interface, gchar *target, gchar *container, gchar
     return exec_dysnomia_activity("--delete-state", interface, target, container, type, arguments, arguments_size, service);
 }
 
+pid_t exec_dysnomia_shell(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
+{
+    pid_t pid = fork();
+
+    if(pid == 0)
+    {
+        unsigned int i;
+        char **args = (char**)g_malloc((10 + 2 * arguments_size) * sizeof(char*));
+
+        args[0] = interface;
+        args[1] = "--shell";
+        args[2] = "--target";
+        args[3] = target;
+        args[4] = "--container";
+        args[5] = container;
+        args[6] = "--type";
+        args[7] = type;
+
+        for(i = 0; i < arguments_size * 2; i += 2)
+        {
+            args[i + 8] = "--arguments";
+            args[i + 9] = arguments[i / 2];
+        }
+
+        args[i + 8] = service;
+        args[i + 9] = NULL;
+
+        execvp(interface, args);
+        _exit(1);
+    }
+
+    return pid;
+}
+
 pid_t exec_collect_garbage(gchar *interface, gchar *target, const gboolean delete_old)
 {
     /* Declarations */

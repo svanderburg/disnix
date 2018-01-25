@@ -85,6 +85,7 @@ src/Makefile
 src/disnix.pc
 src/build/Makefile
 src/collect-garbage/Makefile
+src/diagnose/Makefile
 src/query/Makefile
 src/dbus-service/Makefile
 src/libprocreact/Makefile
@@ -108,6 +109,7 @@ src/clean-snapshots/Makefile
 src/delete-state/Makefile
 src/capture-infra/Makefile
 src/capture-manifest/Makefile
+src/run-activity/Makefile
 scripts/Makefile
 data/Makefile
 maintenance/Makefile

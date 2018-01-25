@@ -778,6 +778,7 @@ INPUT                  = activate \
                          collect-garbage \
                          dbus-service \
                          delete-state \
+                         diagnose \
                          distribute \
                          libdistderivation \
                          libinfrastructure \
@@ -791,6 +792,7 @@ INPUT                  = activate \
                          lock \
                          query \
                          restore \
+                         run-activity \
                          set \
                          snapshot \
                          visualize

@@ -114,6 +114,8 @@ pid_t exec_restore(gchar *interface, gchar *target, gchar *container, gchar *typ
  */
 pid_t exec_delete_state(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
 
+pid_t exec_dysnomia_shell(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
+
 /**
  * Invokes the collect garbage operation through a Disnix client interface
  *

@@ -59,6 +59,7 @@
       
       <xi:include href="../../scripts/disnix-delegate.1.xml" />
       <xi:include href="../../scripts/disnix-deploy.1.xml" />
+      <xi:include href="../../src/diagnose/disnix-diagnose.1.xml" />
       <xi:include href="../../scripts/disnix-migrate.1.xml" />
       <xi:include href="../../src/capture-infra/disnix-capture-infra.1.xml" />
       <xi:include href="../../src/activate/disnix-activate.1.xml" />
@@ -81,6 +82,7 @@
       <xi:include href="../../src/visualize/disnix-visualize.1.xml" />
       <xi:include href="../../src/capture-manifest/disnix-capture-manifest.1.xml" />
       <xi:include href="../../scripts/disnix-reconstruct.1.xml" />
+      <xi:include href="../../src/run-activity/disnix-run-activity.1.xml" />
     </section>
   </appendix>
 </book>
