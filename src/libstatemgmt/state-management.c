@@ -267,16 +267,15 @@ pid_t statemgmt_unlock_component(gchar *type, gchar *container, gchar *component
     return lock_or_unlock_component("unlock", type, container, component, stdout, stderr);
 }
 
-pid_t statemgmt_spawn_dysnomia_shell(gchar *type, gchar *component, gchar *container, gchar **arguments)
+pid_t statemgmt_spawn_dysnomia_shell(gchar *type, gchar *component, gchar *container, gchar **arguments, gchar *command)
 {
     pid_t pid = fork();
 
     if(pid == 0)
     {
-        unsigned int i;
-        char *const args[] = {"dysnomia", "--type", type, "--shell", "--component", component, "--container", container, "--environment", NULL};
-
         /* Compose environment variables out of the arguments */
+        unsigned int i;
+
         for(i = 0; i < g_strv_length(arguments); i++)
         {
             gchar **name_value_pair = g_strsplit(arguments[i], "=", 2);
@@ -284,7 +283,17 @@ pid_t statemgmt_spawn_dysnomia_shell(gchar *type, gchar *component, gchar *conta
             g_strfreev(name_value_pair);
         }
 
-        execvp(args[0], args);
+        if(command == NULL)
+        {
+            char *const args[] = {"dysnomia", "--type", type, "--shell", "--component", component, "--container", container, "--environment", NULL};
+            execvp(args[0], args);
+        }
+        else
+        {
+            char *const args[] = {"dysnomia", "--type", type, "--shell", "--component", component, "--container", container, "--environment", "--command", command, NULL};
+            execvp(args[0], args);
+        }
+
         _exit(1);
     }
 

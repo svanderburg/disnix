@@ -88,6 +88,8 @@ Operations:
   --clean-snapshots          Removes older snapshots from the snapshot store
   --capture-config           Captures the configuration of the machine from the
                              Dysnomia container properties in a Nix expression
+  --shell                    Spawns a Dysnomia shell to run arbitrary
+                             maintenance tasks
   --help                     Shows the usage of this command to the user
   --version                  Shows the version of this command to the user
 
@@ -111,7 +113,7 @@ Collect garbage options:
   -d, --delete-old           Indicates whether all older generations of Nix
                              profiles must be removed as well
 
-Activation/Deactivation/Snapshot/Restore/Delete state options:
+Activation/Deactivation/Snapshot/Restore/Delete state/Shell options:
   --type=TYPE                Specifies the activation module that should be
                              used, such as echo or process.
   --arguments=ARGUMENTS      Specifies the arguments passed to the Dysnomia
@@ -119,6 +121,9 @@ Activation/Deactivation/Snapshot/Restore/Delete state options:
   --container=CONTAINER      Name of the container in which the component is
                              managed. If omitted it will default to the same
                              value as the type.
+
+Shell options:
+  --command=COMMAND          Commands to execute in the shell session
 
 Query all snapshots/Query latest snapshot options:
   -C, --container=CONTAINER  Name of the container in which the component is managed
@@ -184,7 +189,7 @@ checkContainer()
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o rqp:dC:c:hv -l import,export,print-invalid,realise,set,query-installed,query-requisites,collect-garbage,activate,deactivate,lock,unlock,snapshot,restore,delete-state,query-all-snapshots,query-latest-snapshot,print-missing-snapshots,import-snapshots,export-snapshots,resolve-snapshots,clean-snapshots,capture-config,shell,target:,localfile,remotefile,profile:,delete-old,type:,arguments:,container:,component:,keep:,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o rqp:dC:c:hv -l import,export,print-invalid,realise,set,query-installed,query-requisites,collect-garbage,activate,deactivate,lock,unlock,snapshot,restore,delete-state,query-all-snapshots,query-latest-snapshot,print-missing-snapshots,import-snapshots,export-snapshots,resolve-snapshots,clean-snapshots,capture-config,shell,target:,localfile,remotefile,profile:,delete-old,type:,arguments:,container:,component:,keep:,command:,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -303,6 +308,9 @@ do
             ;;
         -c|--component)
             component=$2
+            ;;
+        --command)
+            command="$2"
             ;;
         --keep)
             keep=$2
@@ -436,7 +444,13 @@ case "$operation" in
     shell)
         checkType
         checkContainer
-        ssh -p $targetPort $SSH_OPTS -t $SSH_USER$targetHostname bash -i -c "disnix-run-activity --type $type --container $container $argsArg --shell $@"
+
+        if [ "$command" = "" ]
+        then
+            ssh -p $targetPort $SSH_OPTS -tt $SSH_USER$targetHostname "bash -i -c \"disnix-run-activity --type $type --container $container $argsArg --shell $@\""
+        else
+            ssh -p $targetPort $SSH_OPTS -tt $SSH_USER$targetHostname "bash -i -c \"disnix-run-activity --type $type --container $container $argsArg --command \\\"$command\\\" --shell $@\""
+        fi
         ;;
     query-all-snapshots)
         ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --query-all-snapshots --container $container --component $component

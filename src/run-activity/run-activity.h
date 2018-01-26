@@ -68,8 +68,9 @@ Operation;
  * @param container Name of the container in which snapshots must be deployed
  * @param component Name of a mutable component in a container
  * @param keep Amount of snapshot generations to keep
+ * @param command Shell command to execute
  * @return 0 if the operation succeeds, else a non-zero exit value
  */
-int run_disnix_activity(Operation operation, gchar **derivation, const unsigned int flags, char *profile, gchar **arguments, char *type, char *container, char *component, int keep);
+int run_disnix_activity(Operation operation, gchar **derivation, const unsigned int flags, char *profile, gchar **arguments, char *type, char *container, char *component, int keep, char *command);
 
 #endif

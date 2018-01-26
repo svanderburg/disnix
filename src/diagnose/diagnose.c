@@ -24,7 +24,7 @@
 #include "client-interface.h"
 #include "procreact_pid.h"
 
-int diagnose(char *service_name, const char *manifest_file, const gchar *coordinator_profile_path, gchar *profile)
+int diagnose(char *service_name, const char *manifest_file, const gchar *coordinator_profile_path, gchar *profile, char *container_filter, char *target_filter, char *command)
 {
     int exit_status;
     Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_ACTIVATION_FLAG, NULL, NULL);
@@ -43,13 +43,15 @@ int diagnose(char *service_name, const char *manifest_file, const gchar *coordin
         {
             ActivationMapping *mapping = (ActivationMapping*)g_ptr_array_index(manifest->activation_array, i);
 
-            if(g_strcmp0(service_name, mapping->name) == 0)
+            if(g_strcmp0(service_name, mapping->name) == 0 &&
+              (container_filter == NULL || g_strcmp0(container_filter, mapping->container) == 0) &&
+              (target_filter == NULL || g_strcmp0(target_filter, mapping->target) == 0))
                 g_ptr_array_add(candidate_mappings_array, mapping);
         }
 
         if(candidate_mappings_array->len == 0)
         {
-            g_printerr("No mapping found with the given service name!\n");
+            g_printerr("No mapping found that matches the provided selection criteria!\n");
             exit_status = 1;
         }
         else if(candidate_mappings_array->len == 1)
@@ -61,12 +63,13 @@ int diagnose(char *service_name, const char *manifest_file, const gchar *coordin
 
             g_printerr("[%s]: Connecting to service: %s deployed to container: %s\n", mapping->target, mapping->service, mapping->container);
 
-            exit_status = procreact_wait_for_exit_status(exec_dysnomia_shell(target->client_interface, mapping->target, mapping->container, mapping->type, arguments, g_strv_length(arguments), mapping->service), &status);
+            exit_status = procreact_wait_for_exit_status(exec_dysnomia_shell(target->client_interface, mapping->target, mapping->container, mapping->type, arguments, g_strv_length(arguments), mapping->service, command), &status);
             g_strfreev(arguments);
         }
         else
         {
-            g_printerr("Multiple mappings found! Please specify a target and, optionally, a container:\n\n");
+            g_printerr("Multiple mappings found! Please specify a --target and, optionally, a --container parameter!\n\n");
+            g_printerr("This service has been mapped to:\n\n");
 
             for(i = 0; i < candidate_mappings_array->len; i++)
             {

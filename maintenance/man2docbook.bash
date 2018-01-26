@@ -23,5 +23,6 @@ sed -i -e "s|&copy;|(C)|" \
     -e "s|xml:id='activationdeactivationsnapshotrestoredel'||" \
     -e "s|xml:id='query_all_snapshotsquery_latest_snapshot'||" \
     -e "s|xml:id='clean_snapshots_options'||" \
+    -e "s|xml:id='shell_options'||" \
     -e "s|${command^^}|$command|" \
     $command.$section.xml

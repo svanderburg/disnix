@@ -76,8 +76,8 @@ static void print_usage(const char *command)
     printf("  --clean-snapshots          Removes older snapshots from the snapshot store\n");
     printf("  --capture-config           Captures the configuration of the machine from the\n");
     printf("                             Dysnomia container properties in a Nix expression\n");
-    printf("  --shell                    Spawn a Dysnomia shell to run arbitrary maintenance\n");
-    printf("                             tasks\n");
+    printf("  --shell                    Spawns a Dysnomia shell to run arbitrary\n");
+    printf("                             maintenance tasks\n");
     printf("  --help                     Shows the usage of this command to the user\n");
     printf("  --version                  Shows the version of this command to the user\n");
 
@@ -101,7 +101,7 @@ static void print_usage(const char *command)
     printf("  -d, --delete-old           Indicates whether all older generations of Nix\n");
     printf("                             profiles must be removed as well\n");
 
-    printf("\nActivation/Deactivation/Snapshot/Restore/Delete state options:\n");
+    printf("\nActivation/Deactivation/Snapshot/Restore/Delete state/Shell options:\n");
     printf("  --type=TYPE                Specifies the activation module that should be\n");
     printf("                             used, such as echo or process.\n");
     printf("  --arguments=ARGUMENTS      Specifies the arguments passed to the Dysnomia\n");
@@ -109,6 +109,9 @@ static void print_usage(const char *command)
     printf("  --container=CONTAINER      Name of the container in which the component is\n");
     printf("                             managed. If omitted it will default to the same\n");
     printf("                             value as the type.\n");
+
+    printf("\nShell options:\n");
+    printf("  --command=COMMAND          Commands to execute in the shell session\n");
 
     printf("\nQuery all snapshots/Query latest snapshot options:\n");
     printf("  -C, --container=CONTAINER  Name of the container in which the component is managed\n");
@@ -165,6 +168,7 @@ int main(int argc, char *argv[])
         {"container", required_argument, 0, 'C'},
         {"component", required_argument, 0, 'c'},
         {"keep", required_argument, 0, 'z'},
+        {"command", required_argument, 0, '3'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
@@ -172,7 +176,7 @@ int main(int argc, char *argv[])
 
     /* Option value declarations */
     Operation operation = OP_NONE;
-    char *profile = NULL, *type = NULL, *container = NULL, *component = NULL;
+    char *profile = NULL, *type = NULL, *container = NULL, *component = NULL, *command = NULL;
     gchar **derivation = NULL, **arguments = NULL;
     unsigned int derivation_size = 0, arguments_size = 0, flags = 0;
     int keep = 1;
@@ -280,6 +284,9 @@ int main(int argc, char *argv[])
             case 'z':
                 keep = atoi(optarg);
                 break;
+            case '3':
+                command = optarg;
+                break;
             case 'h':
             case '?':
                 print_usage(argv[0]);
@@ -310,5 +317,5 @@ int main(int argc, char *argv[])
     arguments[arguments_size] = NULL;
     
     /* Execute Disnix activity */
-    return run_disnix_activity(operation, derivation, flags, profile, arguments, type, container, component, keep);
+    return run_disnix_activity(operation, derivation, flags, profile, arguments, type, container, component, keep, command);
 }

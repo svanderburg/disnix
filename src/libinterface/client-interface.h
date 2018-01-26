@@ -114,7 +114,20 @@ pid_t exec_restore(gchar *interface, gchar *target, gchar *container, gchar *typ
  */
 pid_t exec_delete_state(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
 
-pid_t exec_dysnomia_shell(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
+/**
+ * Spawns a remote shell session with a Dysnomia shell.
+ *
+ * @param interface Path to the interface executable
+ * @param target Target Address of the remote interface
+ * @param container Name of the container in which the component is deployed
+ * @param type Type Type of the service
+ * @param arguments String vector with activation arguments in the form key=value
+ * @param arguments_size Size of the arguments string vector
+ * @param service Service to activate
+ * @param command Shell command to execute or NULL to spawn an interactive session
+ * @return PID of the client interface process performing the operation, or -1 in case of a failure
+ */
+pid_t exec_dysnomia_shell(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service, gchar *command);
 
 /**
  * Invokes the collect garbage operation through a Disnix client interface

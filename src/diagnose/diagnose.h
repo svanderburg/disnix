@@ -21,6 +21,19 @@
 #define __DISNIX_RUN_DIAGNOSE_H
 #include <glib.h>
 
-int diagnose(char *service_name, const char *manifest_file, const gchar *coordinator_profile_path, gchar *profile);
+/**
+ * Searches for a service that match the service name, container and target and
+ * spawns a diagnostic shell for them.
+ *
+ * @param service_name Name of the service to connect to
+ * @param manifest_file Path to the manifest file
+ * @param coordinator_profile_path Path where the current deployment state is stored for future reference
+ * @param profile Identifier of the distributed profile
+ * @param container_filter Container to which a service is deployed or NULL to consider all possible containers
+ * @param target_filter Target to which a service is deployed or NULL to consider all possible targets
+ * @param command Command to execute in the shell or NULL to spawn an interactive shell
+ * @return 0 if the operation succeeded, else a non-zero exit status
+ */
+int diagnose(char *service_name, const char *manifest_file, const gchar *coordinator_profile_path, gchar *profile, char *container_filter, char *target_filter, char *command);
 
 #endif

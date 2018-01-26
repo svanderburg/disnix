@@ -121,14 +121,14 @@ pid_t exec_delete_state(gchar *interface, gchar *target, gchar *container, gchar
     return exec_dysnomia_activity("--delete-state", interface, target, container, type, arguments, arguments_size, service);
 }
 
-pid_t exec_dysnomia_shell(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
+pid_t exec_dysnomia_shell(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service, gchar *command)
 {
     pid_t pid = fork();
 
     if(pid == 0)
     {
         unsigned int i;
-        char **args = (char**)g_malloc((10 + 2 * arguments_size) * sizeof(char*));
+        char **args = (char**)g_malloc((12 + 2 * arguments_size) * sizeof(char*));
 
         args[0] = interface;
         args[1] = "--shell";
@@ -146,7 +146,15 @@ pid_t exec_dysnomia_shell(gchar *interface, gchar *target, gchar *container, gch
         }
 
         args[i + 8] = service;
-        args[i + 9] = NULL;
+
+        if(command == NULL)
+            args[i + 9] = NULL;
+        else
+        {
+            args[i + 9] = "--command";
+            args[i + 10] = command;
+            args[i + 11] = NULL;
+        }
 
         execvp(interface, args);
         _exit(1);

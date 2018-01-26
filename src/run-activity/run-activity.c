@@ -18,6 +18,7 @@
  */
 
 #include "run-activity.h"
+#include <stdlib.h>
 #include "procreact_pid.h"
 #include "procreact_future.h"
 #include "package-management.h"
@@ -68,14 +69,20 @@ static int print_strv(ProcReact_Future future)
     }
 }
 
-int run_disnix_activity(Operation operation, gchar **derivation, const unsigned int flags, char *profile, gchar **arguments, char *type, char *container, char *component, int keep)
+int run_disnix_activity(Operation operation, gchar **derivation, const unsigned int flags, char *profile, gchar **arguments, char *type, char *container, char *component, int keep, char *command)
 {
     int exit_status = 0;
     ProcReact_Status status;
-    gchar *tmpdir = "/tmp"; // HACK
+    gchar *tmpdir;
     int temp_fd;
     pid_t pid;
     gchar *tempfilename;
+
+    /* Determine the temp directory */
+    tmpdir = getenv("TMPDIR");
+
+    if(tmpdir == NULL)
+        tmpdir = "/tmp";
 
     /* Execute operation */
 
@@ -209,7 +216,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
             if(container == NULL)
                 exit_status = 1;
             else
-                exit_status = procreact_wait_for_exit_status(statemgmt_spawn_dysnomia_shell((gchar*)type, derivation[0], (gchar*)container, arguments), &status);
+                exit_status = procreact_wait_for_exit_status(statemgmt_spawn_dysnomia_shell((gchar*)type, derivation[0], (gchar*)container, arguments, command), &status);
             break;
         case OP_NONE:
             g_printerr("ERROR: No operation specified!\n");

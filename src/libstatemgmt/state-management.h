@@ -44,6 +44,6 @@ pid_t statemgmt_lock_component(gchar *type, gchar *container, gchar *component, 
 
 pid_t statemgmt_unlock_component(gchar *type, gchar *container, gchar *component, int stdout, int stderr);
 
-pid_t statemgmt_spawn_dysnomia_shell(gchar *type, gchar *component, gchar *container, gchar **arguments);
+pid_t statemgmt_spawn_dysnomia_shell(gchar *type, gchar *component, gchar *container, gchar **arguments, gchar *command);
 
 #endif
