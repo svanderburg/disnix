@@ -395,8 +395,8 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         
         # Shell test. We run a shell session in which we create a tempfile,
         # then we check whether the file exists and contains 'foo'
-        $client->mustSucceed("${env} disnix-ssh-client --target server --shell --arguments foo=foo --arguments bar=bar --type echo --command 'echo 1 > /tmp/tmpfile' @testService1 >&2");
-        $server->mustSucceed("grep '1' /tmp/tmpfile");
+        $client->mustSucceed("${env} disnix-ssh-client --target server --shell --arguments foo=foo --arguments bar=bar --type echo --command 'echo \$foo > /tmp/tmpfile' @testService1 >&2");
+        $server->mustSucceed("grep 'foo' /tmp/tmpfile");
         
         #### Test disnix-copy-closure
         

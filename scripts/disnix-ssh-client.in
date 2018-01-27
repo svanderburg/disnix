@@ -447,9 +447,9 @@ case "$operation" in
 
         if [ "$command" = "" ]
         then
-            ssh -p $targetPort $SSH_OPTS -tt $SSH_USER$targetHostname "bash -i -c \"disnix-run-activity --type $type --container $container $argsArg --shell $@\""
+            ssh -p $targetPort $SSH_OPTS -tt $SSH_USER$targetHostname "disnix-run-activity --type $type --container $container $argsArg --shell $@"
         else
-            ssh -p $targetPort $SSH_OPTS -tt $SSH_USER$targetHostname "bash -i -c \"disnix-run-activity --type $type --container $container $argsArg --command \\\"$command\\\" --shell $@\""
+            ssh -p $targetPort $SSH_OPTS -tt $SSH_USER$targetHostname "disnix-run-activity --type $type --container $container $argsArg --command '$command' --shell $@"
         fi
         ;;
     query-all-snapshots)
