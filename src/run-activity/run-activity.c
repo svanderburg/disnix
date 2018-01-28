@@ -19,10 +19,11 @@
 
 #include "run-activity.h"
 #include <stdlib.h>
-#include "procreact_pid.h"
-#include "procreact_future.h"
-#include "package-management.h"
-#include "state-management.h"
+#include <procreact_pid.h>
+#include <procreact_future.h>
+#include <package-management.h>
+#include <state-management.h>
+#include <profilemanifest.h>
 
 static gchar *check_dysnomia_activity_parameters(gchar *type, gchar **derivation, gchar *container, gchar **arguments)
 {
@@ -77,6 +78,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
     int temp_fd;
     pid_t pid;
     gchar *tempfilename;
+    GPtrArray *profile_manifest_array;
 
     /* Determine the temp directory */
     tmpdir = getenv("TMPDIR");
@@ -113,7 +115,19 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
             exit_status = procreact_wait_for_exit_status(pkgmgmt_set_profile((gchar*)profile, derivation[0], 1, 2), &status);
             break;
         case OP_QUERY_INSTALLED:
-            // TODO: need to make locking functionality reusable
+            profile_manifest_array = create_profile_manifest_array_from_current_deployment(LOCALSTATEDIR, (gchar*)profile);
+
+            if(profile_manifest_array == NULL)
+            {
+                g_printerr("Cannot query installed services!\n");
+                exit_status = 1;
+            }
+            else
+            {
+                print_text_from_profile_manifest_array(profile_manifest_array, 1);
+                delete_profile_manifest_array(profile_manifest_array);
+                exit_status = 0;
+            }
             break;
         case OP_QUERY_REQUISITES:
             exit_status = print_strv(pkgmgmt_query_requisites(derivation, 2));

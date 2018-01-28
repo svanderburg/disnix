@@ -26,15 +26,6 @@
 #include <profilemanifest.h>
 
 /**
- * Composes an array of profile manifest entries from the manifest configuration
- * file stored in the given profile.
- *
- * @param profile Name of the profile to take the manifest from
- * @return An array of pointers to profile manifest entries or NULL if an error has occured
- */
-GPtrArray *create_profile_manifest_array(gchar *profile);
-
-/**
  * Attempts to lock the disnix service instance by consulting the services in
  * the profile manifest and by locking the Disnix service itself.
  *

@@ -111,14 +111,6 @@ static int unlock_profile(int log_fd, gchar *profile)
     return status;
 }
 
-GPtrArray *create_profile_manifest_array(gchar *profile)
-{
-    gchar *manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, "/manifest", NULL);
-    GPtrArray *profile_manifest_array = create_profile_manifest_array_from_file(manifest_file);
-    g_free(manifest_file);
-    return profile_manifest_array;
-}
-
 int acquire_locks(int log_fd, GPtrArray *profile_manifest_array, gchar *profile)
 {
     if(lock_services(log_fd, profile_manifest_array)) /* Attempt to acquire locks from the services */
@@ -180,20 +172,7 @@ ProcReact_Future query_installed_services(GPtrArray *profile_manifest_array)
     
     if(future.pid == 0)
     {
-        unsigned int i;
-        
-        for(i = 0; i < profile_manifest_array->len; i++)
-        {
-            ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
-            dprintf(future.fd, "%s\n", entry->name);
-            dprintf(future.fd, "%s\n", entry->service);
-            dprintf(future.fd, "%s\n", entry->container);
-            dprintf(future.fd, "%s\n", entry->type);
-            dprintf(future.fd, "%s\n", entry->key);
-            dprintf(future.fd, "%s\n", entry->stateful);
-            dprintf(future.fd, "%s\n", entry->depends_on);
-        }
-        
+        print_text_from_profile_manifest_array(profile_manifest_array, future.fd);
         _exit(0);
     }
     

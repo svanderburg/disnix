@@ -159,7 +159,7 @@ gboolean on_handle_query_installed(OrgNixosDisnixDisnix *object, GDBusMethodInvo
         dprintf(log_fd, "Query installed derivations from profile: %s\n", arg_profile);
     
         /* Execute command */
-        profile_manifest_array = create_profile_manifest_array((gchar*)arg_profile);
+        profile_manifest_array = create_profile_manifest_array_from_current_deployment(LOCALSTATEDIR, (gchar*)arg_profile);
     
         if(profile_manifest_array == NULL)
             org_nixos_disnix_disnix_emit_failure(object, arg_pid);
@@ -266,7 +266,7 @@ gboolean on_handle_lock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *inv
         dprintf(log_fd, "Acquiring lock on profile: %s\n", arg_profile);
         
         /* Lock the disnix instance */
-        profile_manifest_array = create_profile_manifest_array((gchar*)arg_profile);
+        profile_manifest_array = create_profile_manifest_array_from_current_deployment(LOCALSTATEDIR, (gchar*)arg_profile);
         
         if(profile_manifest_array == NULL)
         {
@@ -300,7 +300,7 @@ gboolean on_handle_unlock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *i
         dprintf(log_fd, "Releasing lock on profile: %s\n", arg_profile);
 
         /* Unlock the Disnix instance */
-        profile_manifest_array = create_profile_manifest_array((gchar*)arg_profile);
+        profile_manifest_array = create_profile_manifest_array_from_current_deployment(LOCALSTATEDIR, (gchar*)arg_profile);
         signal_boolean_result(release_locks_async(log_fd, profile_manifest_array, (gchar*)arg_profile), object, arg_pid, log_fd);
         
        /* Cleanup */

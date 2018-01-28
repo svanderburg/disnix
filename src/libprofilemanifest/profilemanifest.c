@@ -136,6 +136,14 @@ GPtrArray *create_profile_manifest_array_from_file(gchar *manifest_file)
     }
 }
 
+GPtrArray *create_profile_manifest_array_from_current_deployment(gchar *localstatedir, gchar *profile)
+{
+    gchar *manifest_file = g_strconcat(localstatedir, "/nix/profiles/disnix/", profile, "/manifest", NULL);
+    GPtrArray *profile_manifest_array = create_profile_manifest_array_from_file(manifest_file);
+    g_free(manifest_file);
+    return profile_manifest_array;
+}
+
 void delete_profile_manifest_array(GPtrArray *profile_manifest_array)
 {
     if(profile_manifest_array != NULL)
@@ -201,6 +209,23 @@ void print_services_per_container_in_profile_manifest_array(GPtrArray *profile_m
         }
         
         g_print("    %s\n", entry->service);
+    }
+}
+
+void print_text_from_profile_manifest_array(const GPtrArray *profile_manifest_array, int fd)
+{
+    unsigned int i;
+
+    for(i = 0; i < profile_manifest_array->len; i++)
+    {
+        ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
+        dprintf(fd, "%s\n", entry->name);
+        dprintf(fd, "%s\n", entry->service);
+        dprintf(fd, "%s\n", entry->container);
+        dprintf(fd, "%s\n", entry->type);
+        dprintf(fd, "%s\n", entry->key);
+        dprintf(fd, "%s\n", entry->stateful);
+        dprintf(fd, "%s\n", entry->depends_on);
     }
 }
 

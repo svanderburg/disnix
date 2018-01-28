@@ -62,6 +62,16 @@ GPtrArray *create_profile_manifest_array_from_string_array(char **result);
 GPtrArray *create_profile_manifest_array_from_file(gchar *manifest_file);
 
 /**
+ * Composes an array of profile manifest entries from the manifest configuration
+ * file stored in the given profile.
+ *
+ * @param localstatedir Directory if which Nix's state files are stored
+ * @param profile Name of the profile to take the manifest from
+ * @return An array of pointers to profile manifest entries or NULL if an error has occured
+ */
+GPtrArray *create_profile_manifest_array_from_current_deployment(gchar *localstatedir, gchar *profile);
+
+/**
  * Deletes a profile manifest array and its contents from heap memory.
  *
  * @param profile_manifest_array An array of profile manifest entries
@@ -82,6 +92,14 @@ void print_services_in_profile_manifest_array(const GPtrArray *profile_manifest_
  * @param profile_manifest_array An array of profile manifest entries
  */
 void print_services_per_container_in_profile_manifest_array(GPtrArray *profile_manifest_array);
+
+/**
+ * Prints a raw textual representation of the profile manifest file.
+ *
+ * @param profile_manifest_array An array of profile manifest entries
+ * @param fd File descriptor to print to
+ */
+void print_text_from_profile_manifest_array(const GPtrArray *profile_manifest_array, int fd);
 
 /**
  * Prints a Nix expression containing all properties of all deployed services
