@@ -19,6 +19,12 @@
 
 #include "run-activity.h"
 #include <stdlib.h>
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include <procreact_pid.h>
 #include <procreact_future.h>
 #include <package-management.h>
@@ -68,6 +74,123 @@ static int print_strv(ProcReact_Future future)
 
         return 0;
     }
+}
+
+static int lock_or_unlock_services(int log_fd, GPtrArray *profile_manifest_array, gchar *action, pid_t (*notify_function) (gchar *type, gchar *container, gchar *component, int stdout, int stderr))
+{
+    unsigned int i;
+    int exit_status = TRUE;
+
+    /* Notify all services for a lock or unlock */
+    for(i = 0; i < profile_manifest_array->len; i++)
+    {
+        ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
+        pid_t pid;
+        ProcReact_Status status;
+        int result;
+
+        dprintf(log_fd, "Notifying %s on %s: of type: %s in container: %s\n", action, entry->service, entry->type, entry->container);
+        pid = notify_function(entry->type, entry->container, entry->service, log_fd, log_fd);
+        result = procreact_wait_for_boolean(pid, &status);
+
+        if(status != PROCREACT_STATUS_OK || !result)
+        {
+            dprintf(log_fd, "Cannot %s service!\n", action);
+            exit_status = FALSE;
+        }
+    }
+
+    return exit_status;
+}
+
+static int unlock_services(int log_fd, GPtrArray *profile_manifest_array)
+{
+    return lock_or_unlock_services(log_fd, profile_manifest_array, "unlock", statemgmt_unlock_component);
+}
+
+static int lock_services(int log_fd, GPtrArray *profile_manifest_array)
+{
+    return lock_or_unlock_services(log_fd, profile_manifest_array, "lock", statemgmt_lock_component);
+}
+
+static gchar *create_lock_filename(gchar *tmpdir, gchar *profile)
+{
+    return g_strconcat(tmpdir, "/disnix-", profile, ".lock", NULL);
+}
+
+static int lock_profile(int log_fd, gchar *tmpdir, gchar *profile)
+{
+    int fd, status;
+    gchar *lock_filename = create_lock_filename(tmpdir, profile);
+
+    /* If no lock exists, try to create one */
+    if((fd = open(lock_filename, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR)) == -1)
+    {
+        dprintf(log_fd, "Cannot exclusively open the lock file!\n");
+        status = FALSE;
+    }
+    else
+    {
+        close(fd);
+        status = TRUE;
+    }
+
+    g_free(lock_filename);
+    return status;
+}
+
+static int unlock_profile(int log_fd, gchar *tmpdir, gchar *profile)
+{
+    gchar *lock_filename = create_lock_filename(tmpdir, profile);
+    int status;
+    
+    if(unlink(lock_filename) == -1)
+    {
+        dprintf(log_fd, "There is no lock file!\n");
+        status = FALSE;
+    }
+    else
+        status = TRUE;
+    
+    /* Cleanup */
+    g_free(lock_filename);
+    
+    return status;
+}
+
+static int acquire_locks(int log_fd, gchar *tmpdir, GPtrArray *profile_manifest_array, gchar *profile)
+{
+    if(lock_services(log_fd, profile_manifest_array)) /* Attempt to acquire locks from the services */
+        return lock_profile(log_fd, tmpdir, profile); /* Finally, lock the profile */
+    else
+    {
+        unlock_services(log_fd, profile_manifest_array);
+        return FALSE;
+    }
+}
+
+static int release_locks(int log_fd, gchar *tmpdir, GPtrArray *profile_manifest_array, gchar *profile)
+{
+    int status = TRUE;
+    
+    if(profile_manifest_array == NULL)
+    {
+        dprintf(log_fd, "Corrupt profile manifest: a service or type is missing!\n");
+        status = FALSE;
+    }
+    else
+    {
+        if(!unlock_services(log_fd, profile_manifest_array))
+        {
+            dprintf(log_fd, "Failed to send unlock notification to old services!\n");
+            status = FALSE;
+        }
+    }
+    
+    if(!unlock_profile(log_fd, tmpdir, profile))
+        status = FALSE; /* There was no lock -> fail */
+    
+    return status;
 }
 
 int run_disnix_activity(Operation operation, gchar **derivation, const unsigned int flags, char *profile, gchar **arguments, char *type, char *container, char *component, int keep, char *command)
@@ -157,7 +280,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
             if(container == NULL)
                 exit_status = 1;
             else
-                exit_status = procreact_wait_for_exit_status(statemgmt_run_dysnomia_activity((gchar*)type, "delete-state", derivation[0], (gchar*)container, arguments, 1, 2), &status);
+                exit_status = procreact_wait_for_exit_status(statemgmt_run_dysnomia_activity((gchar*)type, "collect-garbage", derivation[0], (gchar*)container, arguments, 1, 2), &status);
             break;
         case OP_SNAPSHOT:
             container = check_dysnomia_activity_parameters(type, derivation, container, arguments);
@@ -176,10 +299,32 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
                 exit_status = procreact_wait_for_exit_status(statemgmt_run_dysnomia_activity((gchar*)type, "restore", derivation[0], (gchar*)container, arguments, 1, 2), &status);
             break;
         case OP_LOCK:
-            // TODO: need to make locking functionality reusable
+            profile_manifest_array = create_profile_manifest_array_from_current_deployment(LOCALSTATEDIR, (gchar*)profile);
+
+            if(profile_manifest_array == NULL)
+            {
+                dprintf(2, "Corrupt profile manifest: a service or type is missing!\n");
+                exit_status = 1;
+            }
+            else
+            {
+                exit_status = !acquire_locks(2, tmpdir, profile_manifest_array, profile);
+                delete_profile_manifest_array(profile_manifest_array);
+            }
             break;
         case OP_UNLOCK:
-            // TODO: need to make locking functionality reusable
+            profile_manifest_array = create_profile_manifest_array_from_current_deployment(LOCALSTATEDIR, (gchar*)profile);
+
+            if(profile_manifest_array == NULL)
+            {
+                dprintf(2, "Corrupt profile manifest: a service or type is missing!\n");
+                exit_status = 1;
+            }
+            else
+            {
+                exit_status = !release_locks(2, tmpdir, profile_manifest_array, profile);
+                delete_profile_manifest_array(profile_manifest_array);
+            }
             break;
         case OP_QUERY_ALL_SNAPSHOTS:
             exit_status = print_strv(statemgmt_query_all_snapshots((gchar*)container, (gchar*)component, 2));
@@ -188,7 +333,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
             exit_status = print_strv(statemgmt_query_latest_snapshot((gchar*)container, (gchar*)component, 2));
             break;
         case OP_PRINT_MISSING_SNAPSHOTS:
-            exit_status = print_strv(statemgmt_print_missing_snapshots((gchar**)component, 2));
+            exit_status = print_strv(statemgmt_print_missing_snapshots((gchar**)derivation, 2));
             break;
         case OP_IMPORT_SNAPSHOTS:
             if(derivation[0] == NULL)
@@ -239,8 +384,10 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
     }
 
     /* Cleanup */
-    g_strfreev(derivation);
-    g_strfreev(arguments);
+    if(derivation != NULL)
+        g_strfreev(derivation);
+    if(arguments != NULL)
+        g_strfreev(arguments);
 
     return exit_status;
 }

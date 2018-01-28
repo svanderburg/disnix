@@ -147,7 +147,6 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         
         # Deactivate the component
         $client->mustSucceed("${env} disnix-ssh-client --target server --deactivate --type wrapper ${wrapper}");
-        
         # Delete the state and check if it is not present anymore.
         $client->mustSucceed("${env} disnix-ssh-client --target server --delete-state --type wrapper ${wrapper}");
         $server->mustSucceed("[ ! -e /var/db/wrapper ]");
