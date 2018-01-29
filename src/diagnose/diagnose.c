@@ -18,11 +18,11 @@
  */
 
 #include "diagnose.h"
-#include "manifest.h"
-#include "activationmapping.h"
-#include "targets.h"
-#include "client-interface.h"
-#include "procreact_pid.h"
+#include <manifest.h>
+#include <activationmapping.h>
+#include <targets.h>
+#include <client-interface.h>
+#include <procreact_pid.h>
 
 int diagnose(char *service_name, const char *manifest_file, const gchar *coordinator_profile_path, gchar *profile, char *container_filter, char *target_filter, char *command)
 {
