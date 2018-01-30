@@ -26,6 +26,7 @@
  * spawns a diagnostic shell for them.
  *
  * @param service_name Name of the service to connect to
+ * @param show_mappings Indicates whether to show mapping or to spawn a shell
  * @param manifest_file Path to the manifest file
  * @param coordinator_profile_path Path where the current deployment state is stored for future reference
  * @param profile Identifier of the distributed profile
@@ -34,6 +35,6 @@
  * @param command Command to execute in the shell or NULL to spawn an interactive shell
  * @return 0 if the operation succeeded, else a non-zero exit status
  */
-int diagnose(char *service_name, const char *manifest_file, const gchar *coordinator_profile_path, gchar *profile, char *container_filter, char *target_filter, char *command);
+int diagnose(const char *service_name, const int show_mappings, const char *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const char *container_filter, const char *target_filter, char *command);
 
 #endif

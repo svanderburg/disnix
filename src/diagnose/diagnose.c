@@ -24,7 +24,36 @@
 #include <client-interface.h>
 #include <procreact_pid.h>
 
-int diagnose(char *service_name, const char *manifest_file, const gchar *coordinator_profile_path, gchar *profile, char *container_filter, char *target_filter, char *command)
+static int spawn_shell(const GPtrArray *target_array, const ActivationMapping *mapping, char *command)
+{
+    Target *target = find_target(target_array, mapping->target);
+    gchar **arguments = generate_activation_arguments(target, mapping->container);
+    ProcReact_Status status;
+    int exit_status;
+
+    g_printerr("[%s]: Connecting to service: %s deployed to container: %s\n", mapping->target, mapping->service, mapping->container);
+
+    exit_status = procreact_wait_for_exit_status(exec_dysnomia_shell(target->client_interface, mapping->target, mapping->container, mapping->type, arguments, g_strv_length(arguments), mapping->service, command), &status);
+
+    g_strfreev(arguments);
+
+    return exit_status;
+}
+
+static void print_mappings(const GPtrArray *mappings_array)
+{
+    unsigned int i;
+
+    g_printerr("This service has been mapped to:\n\n");
+
+    for(i = 0; i < mappings_array->len; i++)
+    {
+        ActivationMapping *mapping = (ActivationMapping*)g_ptr_array_index(mappings_array, i);
+        g_printerr("container: %s, target: %s\n", mapping->container, mapping->target);
+    }
+}
+
+int diagnose(const char *service_name, const int show_mappings, const char *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const char *container_filter, const char *target_filter, char *command)
 {
     int exit_status;
     Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_ACTIVATION_FLAG, NULL, NULL);
@@ -39,6 +68,7 @@ int diagnose(char *service_name, const char *manifest_file, const gchar *coordin
         unsigned int i;
         GPtrArray *candidate_mappings_array = g_ptr_array_new();
 
+        /* Look for all mappings that have the provided service name and (optionally) the container and target */
         for(i = 0; i < manifest->activation_array->len; i++)
         {
             ActivationMapping *mapping = (ActivationMapping*)g_ptr_array_index(manifest->activation_array, i);
@@ -49,7 +79,12 @@ int diagnose(char *service_name, const char *manifest_file, const gchar *coordin
                 g_ptr_array_add(candidate_mappings_array, mapping);
         }
 
-        if(candidate_mappings_array->len == 0)
+        if(show_mappings)
+        {
+            print_mappings(candidate_mappings_array);
+            exit_status = 0;
+        }
+        else if(candidate_mappings_array->len == 0)
         {
             g_printerr("No mapping found that matches the provided selection criteria!\n");
             exit_status = 1;
@@ -57,33 +92,36 @@ int diagnose(char *service_name, const char *manifest_file, const gchar *coordin
         else if(candidate_mappings_array->len == 1)
         {
             ActivationMapping *mapping = g_ptr_array_index(candidate_mappings_array, 0);
-            Target *target = find_target(manifest->target_array, mapping->target);
-            gchar **arguments = generate_activation_arguments(target, mapping->container);
-            ProcReact_Status status;
-
-            g_printerr("[%s]: Connecting to service: %s deployed to container: %s\n", mapping->target, mapping->service, mapping->container);
-
-            exit_status = procreact_wait_for_exit_status(exec_dysnomia_shell(target->client_interface, mapping->target, mapping->container, mapping->type, arguments, g_strv_length(arguments), mapping->service, command), &status);
-            g_strfreev(arguments);
+            exit_status = spawn_shell(manifest->target_array, mapping, command);
         }
         else
         {
-            g_printerr("Multiple mappings found! Please specify a --target and, optionally, a --container parameter!\n\n");
-            g_printerr("This service has been mapped to:\n\n");
-
-            for(i = 0; i < candidate_mappings_array->len; i++)
+            if(command == NULL)
             {
-                ActivationMapping *mapping = (ActivationMapping*)g_ptr_array_index(candidate_mappings_array, i);
-                g_printerr("container: %s, target: %s\n", mapping->container, mapping->target);
-            }
+                g_printerr("Multiple mappings found! Please specify a --target and, optionally, a\n");
+                g_printerr("--container parameter! Alternatively, you can execute commands for all possible\n");
+                g_printerr("service mappings by providing a --command parameter.\n\n");
 
-            exit_status = 1;
+                print_mappings(candidate_mappings_array);
+
+                exit_status = 1;
+            }
+            else
+            {
+                for(i = 0; i < candidate_mappings_array->len; i++)
+                {
+                    ActivationMapping *mapping = g_ptr_array_index(candidate_mappings_array, i);
+                    exit_status = spawn_shell(manifest->target_array, mapping, command);
+
+                    if(exit_status != 0)
+                        break;
+                }
+            }
         }
 
         g_ptr_array_free(candidate_mappings_array, TRUE);
+        delete_manifest(manifest);
     }
-
-    delete_manifest(manifest);
 
     return exit_status;
 }

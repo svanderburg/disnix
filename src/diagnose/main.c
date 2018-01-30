@@ -33,6 +33,8 @@ static void print_usage(const char *command)
 
     printf("Options:\n");
     printf("  -S, --service              Name of the service to connect to\n");
+    printf("      --show-mappings        Displays the targets and containers in which the\n");
+    printf("                             service is hosted\n");
     printf("  -c, --container=CONTAINER  Name of the container in which the mutable\n");
     printf("                             component is deployed\n");
     printf("  -t, --target=TARGET        Specifies the target to connect to\n");
@@ -60,6 +62,7 @@ int main(int argc, char *argv[])
     struct option long_options[] =
     {
         {"service", required_argument, 0, 'S'},
+        {"show-mappings", no_argument, 0, 'D'},
         {"container", required_argument, 0, 'c'},
         {"target", required_argument, 0, 't'},
         {"command", required_argument, 0, 'C'},
@@ -76,6 +79,7 @@ int main(int argc, char *argv[])
     char *container = NULL;
     char *target = NULL;
     char *command = NULL;
+    int show_mappings = FALSE;
 
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "S:c:t:p:hv", long_options, &option_index)) != -1)
@@ -84,6 +88,9 @@ int main(int argc, char *argv[])
         {
             case 'S':
                 service_name = optarg;
+                break;
+            case 'D':
+                show_mappings = TRUE;
                 break;
             case 'c':
                 container = optarg;
@@ -125,5 +132,5 @@ int main(int argc, char *argv[])
     else
         manifest_file = argv[optind];
 
-    return diagnose(service_name, manifest_file, coordinator_profile_path, profile, container, target, command);
+    return diagnose(service_name, show_mappings, manifest_file, coordinator_profile_path, profile, container, target, command);
 }
