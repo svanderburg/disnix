@@ -52,7 +52,8 @@ typedef enum
     OP_RESOLVE_SNAPSHOTS,
     OP_CLEAN_SNAPSHOTS,
     OP_DELETE_STATE,
-    OP_CAPTURE_CONFIG
+    OP_CAPTURE_CONFIG,
+    OP_SHELL
 }
 Operation;
 

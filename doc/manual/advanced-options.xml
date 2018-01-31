@@ -283,4 +283,68 @@ ZipcodeService = {
 			</callout>
 		</calloutlist>
 	</section>
+
+	<section>
+		<title>Diagnosing errors and executing arbitrary maintenance tasks</title>
+
+		<para>
+			When running production systems, you cannot get around unforeseen incidents and problems, such as crashes and database inconsistencies.
+			To make diagnosing errors and executing arbitrary maintenance tasks more convenient, the <command>disnix-diagnose</command> can be used.
+			The purpose of this tool is to spawn remote shell sessions containing all relevant configuration settings as environment variables.
+			Furthermore, it will display command-line suggestions with command maintenance tasks.
+		</para>
+
+		<para>
+			To spawn a diagnostic interactive shell for a service, such as the <code>staff</code> MySQL database, simply run:
+		</para>
+
+<screen>
+$ disnix-diagnose -S staff
+</screen>
+
+		<para>
+			The above command will query the deployment configuration of the system, remotely connects to the machine (typically through SSH) and
+			spawns a diagnostic shell session.
+		</para>
+
+		<para>
+			It is also possible to execute arbitrary shell commands in the session. For example, the following command will query all staff records:
+		</para>
+
+<screen>
+$ disnix-diagnose -S staff --command 'echo "select * from staff" | mysql -u $mysqlUsername -p $mysqlPassword staff'
+</screen>
+
+		<para>
+			Disnix can also host redundant instances of the same service. In such cases, you must refine the search query with a target or container
+			parameter. The following instruction specifies that we want to connect to the <code>StaffTracker</code> service deployed to machine
+			<code>test1</code>:
+		</para>
+
+<screen>
+$ disnix-diagnose -S StaffTracker --target test1
+</screen>
+
+		<para>
+			It is still possible to execute remote shell commands for redundantly deployed instances. For example, the following command may
+			be executed several times:
+		</para>
+
+<screen>
+$ disnix-diagnose -S StaffTracker --command 'echo I may see this message multiple times!'
+</screen>
+
+		<para>
+			In some cases, you may want to execute other kinds of maintenance tasks or you simply want to know where a particular service resides.
+			This can be done by running the following command:
+		</para>
+
+<screen>
+$ disnix-diagnose -S StaffTracker --show-mappings
+</screen>
+
+		<para>
+			As a remark: the diagnose tool does not work with all Disnix client instances. Currently, only connectors that use SSH are supported!
+		</para>
+	</section>
 </chapter>

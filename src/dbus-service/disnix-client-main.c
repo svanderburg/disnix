@@ -97,7 +97,10 @@ static void print_usage(const char *command)
     printf("  --remotefile               Specifies that the given paths are stored remotely\n");
     printf("                             and must transferred from the remote machine if\n");
     printf("                             needed\n");
-    
+
+    printf("\nShell options:\n");
+    printf("  --command=COMMAND          Commands to execute in the shell session\n");
+
     printf("\nSet/Query installed/Lock/Unlock options:\n");
     printf("  -p, --profile=PROFILE      Name of the Disnix profile. Defaults to: default\n");
   
@@ -158,6 +161,7 @@ int main(int argc, char *argv[])
         {"resolve-snapshots", no_argument, 0, 'Z'},
         {"clean-snapshots", no_argument, 0, 'e'},
         {"capture-config", no_argument, 0, '1'},
+        {"shell", no_argument, 0, '2'},
         {"target", required_argument, 0, 't'},
         {"localfile", no_argument, 0, 'l'},
         {"remotefile", no_argument, 0, 'R'},
@@ -169,6 +173,7 @@ int main(int argc, char *argv[])
         {"component", required_argument, 0, 'c'},
         {"session-bus", no_argument, 0, 'b'},
         {"keep", required_argument, 0, 'z'},
+        {"command", required_argument, 0, '3'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
@@ -251,6 +256,9 @@ int main(int argc, char *argv[])
                 break;
             case '1':
                 operation = OP_CAPTURE_CONFIG;
+                break;
+            case '2':
+                operation = OP_SHELL;
                 break;
             case 't':
                 break;

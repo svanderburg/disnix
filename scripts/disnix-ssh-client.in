@@ -108,7 +108,7 @@ Import/Export/Import snapshots/Export snapshots options:
 
 Set/Query installed/Lock/Unlock options:
   -p, --profile=PROFILE      Name of the Disnix profile. Defaults to: default
-  
+
 Collect garbage options:
   -d, --delete-old           Indicates whether all older generations of Nix
                              profiles must be removed as well

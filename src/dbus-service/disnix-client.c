@@ -307,6 +307,10 @@ int run_disnix_client(Operation operation, gchar **derivation, const unsigned in
 	case OP_CAPTURE_CONFIG:
 	    org_nixos_disnix_disnix_call_capture_config_sync(proxy, pid, NULL, &error);
 	    break;
+	case OP_SHELL:
+	    g_printerr("ERROR: This operation is unsupported by this client!\n");
+	    return 1;
+	    break;
 	case OP_NONE:
 	    g_printerr("ERROR: No operation specified!\n");
 	    cleanup(proxy, derivation, arguments);
