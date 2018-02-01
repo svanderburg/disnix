@@ -28,4 +28,12 @@ rec {
   fail = import ./fail.nix {
     inherit (pkgs) stdenv;
   };
+
+  cyclicTestService1 = import ./cyclicTestService1.nix {
+    inherit (pkgs) stdenv;
+  };
+
+  cyclicTestService2 = import ./cyclicTestService2.nix {
+    inherit (pkgs) stdenv;
+  };
 }

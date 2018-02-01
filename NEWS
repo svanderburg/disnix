@@ -2,7 +2,9 @@ Version 0.8
 ===========
 - Added disnix-diagnose that can be used to spawn remote shell sessions to execute diagnoses and maintenance tasks
 
-- Added disnix-run-activity that can be used to directly execute Disnix activities without a multi-user installation
+- Added disnix-run-activity that can be used to directly execute Disnix activities without a multi-user installation or D-Bus service
+
+- Services can now also declare inter-dependencies with the connectTo property that disregards the activation order. This is useful for systems with cyclic connections and faster deployments in which it is allowed to break a connection
 
 Version 0.7
 ===========

@@ -124,6 +124,12 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         
         $client->mustFail("${env} disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-incomplete.nix");
         
+        # Cyclic service dependencies. Here we have a two services mutually
+        # referring to each other by using the connectTo property. This should
+        # not trigger an error, because the activation ordering is disregarded.
+        
+        $client->mustSucceed("${env} disnix-manifest -s ${manifestTests}/services-cyclic.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-cyclic.nix");
+        
         #### Test disnix-client / disnix-service
         
         # Check invalid path. We query an invalid path from the service

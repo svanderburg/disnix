@@ -34,14 +34,57 @@ rec {
    * Returns:
    * Packages collection for the given system identifier
    */
-  
   selectPkgs = system:
     import nixpkgs { inherit system; };
+
+  /**
+   * Takes an attribute set representing a subset of inter-dependencies and
+   * augments them with the targets to which they have been distributed.
+   *
+   * Parameters:
+   * distribution: Distribution attributeset
+   * services: Initial services attributeset
+   * interDeps: Attribute set with inter-dependencies
+   *
+   * Returns:
+   * Attribute set of inter-dependencies with a targets and target attribute
+   */
+  augmentInterDependenciesWithTargets = distribution: services: interDeps:
+    listToAttrs (map (argName:
+      let
+        dependencyName = (getAttr argName interDeps).name;
+        dependency = getAttr dependencyName services;
+        targets = getAttr dependencyName distribution;
+
+        targetParameters = if isList targets then
+          map (target:
+            { inherit (target) properties;
+              container = getAttr dependency.type target.containers;
+            }
+          ) targets
+        else if isAttrs targets then
+          map (mapping:
+            { inherit (mapping.target) properties;
+              container = if mapping ? container
+                then getAttr mapping.container mapping.target.containers
+                else getAttr dependency.type mapping.target.containers;
+            }
+          ) targets.targets
+        else throw "One of the targets in the distribution model is neither a list nor an attribute set!";
+      in
+      { name = argName;
+        value = dependency // {
+          targets = targetParameters;
+          target = head targetParameters;
+        };
+      }
+    ) (attrNames interDeps))
+  ;
   
   /*
    * Iterates over each service in the distribution attributeset, adds the corresponding service
    * declaration in the attributeset and augments the targets of every inter-dependency
-   * in the dependsOn attributeset
+   * in the dependsOn and connectsTo attribute sets.
    * 
    * Parameters:
    * distribution: Distribution attributeset
@@ -50,44 +93,19 @@ rec {
    * Returns:
    * Attributeset with service declarations augmented with targets in the dependsOn attribute
    */
-   
-  augmentTargetsInDependsOn = distribution: services:
+
+  augmentTargetsInInterDependencies = distribution: services:
     listToAttrs (map (serviceName:
       let service = getAttr serviceName services;
       in
       { name = serviceName;
         value = service // {
-          dependsOn = if service ? dependsOn && service.dependsOn != {} then
-            listToAttrs (map (argName:
-              let
-                dependencyName = (getAttr argName (service.dependsOn)).name;
-                dependency = getAttr dependencyName services;
-                targets = getAttr dependencyName distribution;
-                
-                targetParameters = if isList targets then
-                  map (target:
-                    { inherit (target) properties;
-                      container = getAttr dependency.type target.containers;
-                    }
-                  ) targets
-                else if isAttrs targets then
-                  map (mapping:
-                    { inherit (mapping.target) properties;
-                      container = if mapping ? container
-                        then getAttr mapping.container mapping.target.containers
-                        else getAttr dependency.type mapping.target.containers;
-                    }
-                  ) targets.targets
-                else throw "One of the targets in the distribution model is neither a list nor an attribute set!";
-              in
-              { name = argName;
-                value = dependency // {
-                  targets = targetParameters;
-                  target = head targetParameters;
-                };
-              }
-            ) (attrNames (service.dependsOn)))
-          else {};
+          dependsOn = if service ? dependsOn && service.dependsOn != {}
+            then augmentInterDependenciesWithTargets distribution services (service.dependsOn)
+            else {};
+          connectsTo = if service ? connectsTo && service.connectsTo != {}
+            then augmentInterDependenciesWithTargets distribution services (service.connectsTo)
+            else {};
         };
       }
     ) (attrNames distribution))
@@ -142,12 +160,16 @@ rec {
    * A store path to the build output or derivation file
    */
   evaluateService = service: serviceProperty: pkg:
+    let
+      interDependencies = (if service ? dependsOn then service.dependsOn else {}) //
+        (if service ? connectsTo then service.connectsTo else {});
+    in
     if serviceProperty == "outPath" then
-      if service.dependsOn == {} then pkg.outPath
-      else (pkg (service.dependsOn)).outPath
+      if interDependencies == {} then pkg.outPath
+      else (pkg interDependencies).outPath
     else
-      if service.dependsOn == {} then unsafeDiscardOutputDependency (pkg.drvPath)
-      else unsafeDiscardOutputDependency ((pkg (service.dependsOn)).drvPath)
+      if interDependencies == {} then unsafeDiscardOutputDependency (pkg.drvPath)
+      else unsafeDiscardOutputDependency ((pkg interDependencies).drvPath)
     ;
   
   /*
@@ -532,7 +554,7 @@ rec {
       distribution = distributionFun { inherit infrastructure; };
       initialServices = servicesFun { inherit distribution invDistribution; system = null; inherit pkgs; };
       checkedServices = checkServiceNames initialServices;
-      servicesWithTargets = augmentTargetsInDependsOn distribution checkedServices;
+      servicesWithTargets = augmentTargetsInInterDependencies distribution checkedServices;
       servicesWithDistribution = evaluatePkgFunctions distribution invDistribution servicesWithTargets servicesFun "outPath" targetProperty;
       serviceActivationMapping = generateServiceActivationMapping (attrNames servicesWithDistribution) servicesWithDistribution targetProperty;
       snapshotsMapping = generateSnapshotsMapping (attrNames servicesWithDistribution) servicesWithDistribution deployState;
@@ -566,7 +588,7 @@ rec {
       distribution = distributionFun { inherit infrastructure; };
       initialServices = servicesFun { inherit distribution invDistribution; system = null; inherit pkgs; };
       checkedServices = checkServiceNames initialServices;
-      servicesWithTargets = augmentTargetsInDependsOn distribution checkedServices;
+      servicesWithTargets = augmentTargetsInInterDependencies distribution checkedServices;
       servicesWithDistribution = evaluatePkgFunctions distribution invDistribution servicesWithTargets servicesFun "drvPath" targetProperty;
       serviceActivationMapping = generateServiceActivationMapping (attrNames servicesWithDistribution) servicesWithDistribution targetProperty;
       targets = generateTargetPropertyList infrastructure targetProperty clientInterface;
