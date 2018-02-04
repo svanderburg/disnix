@@ -68,6 +68,8 @@ typedef struct
     gchar *type;
     /** Array of ActivationMappingKey items representing the inter-dependencies */
     GPtrArray *depends_on;
+    /** Array of ActivationMappingKey items representing the inter-dependencies for which the ordering does not matter */
+    GPtrArray *connects_to;
     /** Indicates the status of the activation mapping */
     ActivationMappingStatus status;
 }

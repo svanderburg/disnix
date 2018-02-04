@@ -52,6 +52,51 @@ static gint compare_activation_mapping(const ActivationMapping **l, const Activa
     return compare_activation_mapping_keys((const ActivationMappingKey **)l, (const ActivationMappingKey **)r);
 }
 
+static GPtrArray *parse_inter_dependencies(xmlNodePtr mapping_children)
+{
+    xmlNodePtr inter_dependency_children = mapping_children->children;
+    GPtrArray *inter_dependency_array = g_ptr_array_new();
+
+    /* Iterate over all services in dependsOn (dependency element) */
+    while(inter_dependency_children != NULL)
+    {
+	xmlNodePtr dependency_children = inter_dependency_children->children;
+	gchar *key = NULL;
+	gchar *target = NULL;
+	gchar *container = NULL;
+	ActivationMappingKey *dependency = (ActivationMappingKey*)g_malloc(sizeof(ActivationMappingKey));
+
+	if(xmlStrcmp(inter_dependency_children->name, (xmlChar*) "dependency") == 0) /* Only iterate over dependency nodes */
+	{
+	    /* Iterate over all dependency properties */
+	    while(dependency_children != NULL)
+	    {
+		if(xmlStrcmp(dependency_children->name, (xmlChar*) "key") == 0)
+		    key = duplicate_node_text(dependency_children);
+		else if(xmlStrcmp(dependency_children->name, (xmlChar*) "target") == 0)
+		    target = duplicate_node_text(dependency_children);
+		else if(xmlStrcmp(dependency_children->name, (xmlChar*) "container") == 0)
+		    container = duplicate_node_text(dependency_children);
+
+		dependency_children = dependency_children->next;
+	    }
+
+	    dependency->key = key;
+	    dependency->target = target;
+	    dependency->container = container;
+	    g_ptr_array_add(inter_dependency_array, dependency);
+	}
+
+	inter_dependency_children = inter_dependency_children->next;
+    }
+
+    /* Sort the dependency array */
+    g_ptr_array_sort(inter_dependency_array, (GCompareFunc)compare_activation_mapping_keys);
+
+    /* Return array */
+    return inter_dependency_array;
+}
+
 GPtrArray *create_activation_array(const gchar *manifest_file)
 {
     xmlDocPtr doc;
@@ -103,6 +148,7 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 	    gchar *name = NULL;
 	    gchar *type = NULL;
 	    GPtrArray *depends_on = NULL;
+	    GPtrArray *connects_to = NULL;
 	    ActivationMappingStatus status = ACTIVATIONMAPPING_DEACTIVATED;
 	    ActivationMapping *mapping = (ActivationMapping*)g_malloc(sizeof(ActivationMapping));
 	    
@@ -123,46 +169,9 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "container") == 0)
 		    container = duplicate_node_text(mapping_children);
 		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "dependsOn") == 0)
-		{
-		    xmlNodePtr depends_on_children = mapping_children->children;
-		    depends_on = g_ptr_array_new();
-		    
-		    /* Iterate over all services in dependsOn (dependency element) */
-		    while(depends_on_children != NULL)
-		    {
-			xmlNodePtr dependency_children = depends_on_children->children;
-			gchar *key = NULL;
-			gchar *target = NULL;
-			gchar *container = NULL;
-			ActivationMappingKey *dependency = (ActivationMappingKey*)g_malloc(sizeof(ActivationMappingKey));
-			
-			if(xmlStrcmp(depends_on_children->name, (xmlChar*) "dependency") == 0) /* Only iterate over dependency nodes */
-			{
-			    /* Iterate over all dependency properties */
-			    while(dependency_children != NULL)
-			    {
-				if(xmlStrcmp(dependency_children->name, (xmlChar*) "key") == 0)
-				    key = duplicate_node_text(dependency_children);
-				else if(xmlStrcmp(dependency_children->name, (xmlChar*) "target") == 0)
-				    target = duplicate_node_text(dependency_children);
-				else if(xmlStrcmp(dependency_children->name, (xmlChar*) "container") == 0)
-				    container = duplicate_node_text(dependency_children);
-				
-				dependency_children = dependency_children->next;
-			    }
-			
-			    dependency->key = key;
-			    dependency->target = target;
-			    dependency->container = container;
-			    g_ptr_array_add(depends_on, dependency);
-			}
-			
-			depends_on_children = depends_on_children->next;
-		    }
-		    
-		    /* Sort the dependency array */
-		    g_ptr_array_sort(depends_on, (GCompareFunc)compare_activation_mapping_keys);
-		}
+		    depends_on = parse_inter_dependencies(mapping_children);
+		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "connectsTo") == 0)
+		    connects_to = parse_inter_dependencies(mapping_children);
 		
 		mapping_children = mapping_children->next;
 	    }
@@ -174,6 +183,7 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 	    mapping->name = name;
 	    mapping->type = type;
 	    mapping->depends_on = depends_on;
+	    mapping->connects_to = connects_to;
 	    mapping->status = status;
 	    
 	    if(mapping->key == NULL || mapping->target == NULL || mapping->container == NULL || mapping->service == NULL || mapping->name == NULL || mapping->type == NULL)
@@ -204,43 +214,48 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
     return activation_array;
 }
 
+static void delete_inter_dependency_array(GPtrArray *inter_dependency_array)
+{
+    if(inter_dependency_array != NULL)
+    {
+        unsigned int i;
+
+        for(i = 0; i < inter_dependency_array->len; i++)
+        {
+            ActivationMappingKey *dependency = g_ptr_array_index(inter_dependency_array, i);
+
+            g_free(dependency->key);
+            g_free(dependency->target);
+            g_free(dependency->container);
+            g_free(dependency);
+        }
+
+        g_ptr_array_free(inter_dependency_array, TRUE);
+    }
+}
+
 void delete_activation_array(GPtrArray *activation_array)
 {
     if(activation_array != NULL)
     {
         unsigned int i;
-        
+
         for(i = 0; i < activation_array->len; i++)
         {
             ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
-            
+
             g_free(mapping->key);
             g_free(mapping->target);
             g_free(mapping->container);
             g_free(mapping->service);
             g_free(mapping->name);
             g_free(mapping->type);
+            delete_inter_dependency_array(mapping->depends_on);
+            delete_inter_dependency_array(mapping->connects_to);
 
-            if(mapping->depends_on != NULL)
-            {
-                unsigned int j;
-                
-                for(j = 0; j < mapping->depends_on->len; j++)
-                {
-                    ActivationMappingKey *dependency = g_ptr_array_index(mapping->depends_on, j);
-                    
-                    g_free(dependency->key);
-                    g_free(dependency->target);
-                    g_free(dependency->container);
-                    g_free(dependency);
-                }
-                
-                g_ptr_array_free(mapping->depends_on, TRUE);
-            }
-            
             g_free(mapping);
         }
-    
+
         g_ptr_array_free(activation_array, TRUE);
     }
 }
@@ -362,31 +377,38 @@ GPtrArray *find_interdependent_mappings(const GPtrArray *activation_array, const
     return return_array;
 }
 
+static void print_interdependencies(const GPtrArray *inter_dependency_array)
+{
+    unsigned int i;
+
+    for(i = 0; i < inter_dependency_array->len; i++)
+    {
+        ActivationMappingKey *dependency = g_ptr_array_index(inter_dependency_array, i);
+
+        g_print("  key: %s\n", dependency->key);
+        g_print("  target: %s\n", dependency->target);
+        g_print("  container: %s\n", dependency->container);
+    }
+}
+
 void print_activation_array(const GPtrArray *activation_array)
 {
     unsigned int i;
-    
+
     for(i = 0; i < activation_array->len; i++)
     {
 	ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
-	unsigned int j;
-	
+
 	g_print("key: %s\n", mapping->key);
 	g_print("target: %s\n", mapping->target);
 	g_print("container: %s\n", mapping->container);
 	g_print("service: %s\n", mapping->service);
 	g_print("type: %s\n", mapping->type);
 	g_print("dependsOn:\n");
-	
-	for(j = 0; j < mapping->depends_on->len; j++)
-	{
-	    ActivationMappingKey *dependency = g_ptr_array_index(mapping->depends_on, j);
-	    
-	    g_print("  key: %s\n", dependency->key);
-	    g_print("  target: %s\n", dependency->target);
-	    g_print("  container: %s\n", dependency->container);
-	}
-	
+	print_interdependencies(mapping->depends_on);
+	g_print("connectsTo:\n");
+	print_interdependencies(mapping->connects_to);
+
 	g_print("\n");
     }
 }

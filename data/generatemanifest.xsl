@@ -23,6 +23,15 @@
 		</dependency>
 	      </xsl:for-each>
 	    </dependsOn>
+	    <connectsTo>
+	      <xsl:for-each select="attr[@name='connectsTo']/list/attrs">
+		<dependency>
+		  <target><xsl:value-of select="attr[@name='target']/string/@value" /></target>
+		  <container><xsl:value-of select="attr[@name='container']/string/@value" /></container>
+		  <key><xsl:value-of select="attr[@name='_key']/string/@value" /></key>
+		</dependency>
+	      </xsl:for-each>
+	    </connectsTo>
 	    <name><xsl:value-of select="attr[@name='name']/string/@value" /></name>
 	    <service><xsl:value-of select="attr[@name='service']/string/@value" /></service>
 	    <target><xsl:value-of select="attr[@name='target']/string/@value" /></target>
