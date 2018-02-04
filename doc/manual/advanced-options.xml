@@ -347,4 +347,59 @@ $ disnix-diagnose -S StaffTracker --show-mappings
 			As a remark: the diagnose tool does not work with all Disnix client instances. Currently, only connectors that use SSH are supported!
 		</para>
 	</section>
+
+	<section>
+		<title>Disregarding the inter-dependency activation order</title>
+
+		<para>
+			As mentioned before, inter-dependencies serve two purposes -- to allow services to find them
+			(e.g. by propagating their connection attributes) and to ensure that services are activated
+			in the right order. It is not allowed that a service gets activated before any of its inter-dependencies.
+		</para>
+
+		<para>
+			Activation order strictness is generally a good property, but it comes at a price. It makes
+			certain kinds of upgrades very expensive. For example, when a service has to be updated, then
+			all interdependent services need to be updated as well. For a services that has many interdependent
+			services, this could become quite expensive.
+		</para>
+
+		<para>
+			When a connection is not considered to be critical, e.g. if a disconnection for a short time
+			does not bring the service's functionality down in a harmful way, it is possible to disregard
+			the activation order, so that upgrades become less expensive and faster.
+		</para>
+
+		<example xml:id="ex-services-disregarding-order">
+			<title>A service disregarding the activation order</title>
+<programlisting>
+StaffTracker = {
+  name = "StaffTracker";
+  pkg = customPkgs.StaffTracker;
+  dependsOn = {
+    inherit RoomService StaffService ZipcodeService;
+  };
+  connectsTo = {
+    inherit GeolocationService;
+  };
+  type = "tomcat-webapplication";
+};
+</programlisting>
+		</example>
+
+		<para>
+			To disregard the activation order, you can annotate a service with the <varname>connectsTo</varname>
+			property instead of the <varname>dependsOn</varname> property.
+			In <xref linkend="ex-services-disregarding-order" />, the connection to the
+			<code>GeolocationService</code> is considered to be non-critial and Disnix will drop the guarantee
+			that it will be deployed before the <code>StaffTracker</code>. Furthermore, the <code>StaffTracker</code>
+			service will not be reactivated if the <code>GeolocationService</code> gets updated.
+		</para>
+
+		<para>
+			Disregarding the order has another useful property. When two services mutually depend on each
+			other they can also be declared inter-dependencies. This is particularly useful for systems
+			that have a ring structure.
+		</para>
+	</section>
 </chapter>

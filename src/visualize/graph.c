@@ -37,22 +37,29 @@ int generate_graph(const gchar *manifest_file, const gchar *coordinator_profile_
     {
         /* Creates a table which maps each target onto a list of mappings */
         GHashTable *cluster_table = generate_cluster_table(manifest->activation_array, manifest->target_array);
-    
-        /* Creates a table which associates each mapping to its dependencies */
-        GHashTable *edges_table = generate_edges_table(manifest->activation_array, manifest->target_array);
-    
+
+        /* Creates a table which associates each mapping to its inter-dependencies that have a strict ordering requirement */
+        GHashTable *edges_depends_on_table = generate_edges_table(manifest->activation_array, manifest->target_array, TRUE);
+
+        /* Creates a table which associates each mapping to its inter-dependencies that have no strict ordering requirement */
+        GHashTable *edges_connects_to_table = generate_edges_table(manifest->activation_array, manifest->target_array, FALSE);
+
         g_print("digraph G {\n");
-        
+
         print_cluster_table(cluster_table, no_containers); /* Generate clusters with nodes from the cluster table */
-        print_edges_table(edges_table); /* Generate edges from the edges table */
-    
+
+        /* Generate edges from the edges table */
+        print_edges_table(edges_depends_on_table, TRUE);
+        print_edges_table(edges_connects_to_table, FALSE);
+
         g_print("}\n");
-    
+
         /* Cleanup */
         destroy_cluster_table(cluster_table);
-        destroy_edges_table(edges_table);
+        destroy_edges_table(edges_connects_to_table);
+        destroy_edges_table(edges_depends_on_table);
         delete_manifest(manifest);
-        
+
         return 0;
     }
 }

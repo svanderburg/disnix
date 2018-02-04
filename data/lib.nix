@@ -407,9 +407,10 @@ rec {
         service = getAttr (mapping.name) services;
         stateful = if deployState || (service ? deployState && service.deployState) then "true" else "false";
         dependsOn = "[${toString (map (dependency: "{ target = \"${dependency.target}\"; container = \"${dependency.container}\"; _key = \"${dependency._key}\"; }") (mapping.dependsOn))}]";
+        connectsTo = "[${toString (map (dependency: "{ target = \"${dependency.target}\"; container = \"${dependency.container}\"; _key = \"${dependency._key}\"; }") (mapping.connectsTo))}]";
       in
       if mapping.target == getTargetProperty targetProperty target && mapping.type != "package"
-      then [ mapping.name mapping.service mapping.container mapping.type mapping._key stateful dependsOn ] ++ (generateProfileManifest services (tail serviceActivationMapping) targetName infrastructure targetProperty deployState)
+      then [ mapping.name mapping.service mapping.container mapping.type mapping._key stateful dependsOn connectsTo ] ++ (generateProfileManifest services (tail serviceActivationMapping) targetName infrastructure targetProperty deployState)
       else generateProfileManifest services (tail serviceActivationMapping) targetName infrastructure targetProperty deployState
   ;
   
@@ -663,7 +664,7 @@ rec {
    */
   reconstructActivationMappingsFromServices = target: services:
     map (service:
-      { inherit (service) service container name type dependsOn _key;
+      { inherit (service) service container name type dependsOn connectsTo _key;
         inherit target;
       }
     ) services

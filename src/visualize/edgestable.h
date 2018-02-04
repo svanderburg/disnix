@@ -27,9 +27,10 @@
  *
  * @param activation_array Array with activation mappings
  * @param targets_array Array with targets
+ * @param ordering TRUE if strict ordering is required, else FALSE
  * @return Generated edges table
  */
-GHashTable *generate_edges_table(const GPtrArray *activation_array, GPtrArray *targets_array);
+GHashTable *generate_edges_table(const GPtrArray *activation_array, GPtrArray *targets_array, int ordering);
 
 /**
  * Removes an edges table including all its contents from memory.
@@ -42,7 +43,8 @@ void destroy_edges_table(GHashTable *edges_table);
  * Prints the edges table in dot format.
  *
  * @param edges_table Edges table to print
+ * @param ordering TRUE if strict ordering is required, else FALSE
  */
-void print_edges_table(GHashTable *edges_table);
+void print_edges_table(GHashTable *edges_table, int ordering);
 
 #endif

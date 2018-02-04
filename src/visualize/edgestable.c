@@ -40,10 +40,10 @@ static gchar *compose_mapping_key(ActivationMapping *mapping, gchar *target_key)
     return g_strconcat(mapping->key, ":", target_key, ":", mapping->container, NULL);
 }
 
-GHashTable *generate_edges_table(const GPtrArray *activation_array, GPtrArray *targets_array)
-{    
+GHashTable *generate_edges_table(const GPtrArray *activation_array, GPtrArray *targets_array, int ordering)
+{
     unsigned int i;
-    
+
     /* Create empty hash table */
     GHashTable *edges_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, destroy_value);
 
@@ -66,20 +66,25 @@ GHashTable *generate_edges_table(const GPtrArray *activation_array, GPtrArray *t
 	if(dependency_array == NULL)
 	{
 	    unsigned int j;
-	    GPtrArray *depends_on = mapping->depends_on;
-	    
+	    GPtrArray *inter_dependencies;
+
+            if(ordering)
+	        inter_dependencies = mapping->depends_on;
+	    else
+	        inter_dependencies = mapping->connects_to;
+
 	    /* Create new dependency array */
 	    dependency_array = g_ptr_array_new();
 	    
 	    /* Create a list of mapping values for each dependency */
-	    for(j = 0; j < depends_on->len; j++)
+	    for(j = 0; j < inter_dependencies->len; j++)
 	    {
 		ActivationMapping *actual_mapping;
 		gchar *mapping_value, *target_key;
 		Target *target;
 		
 		/* Retrieve current dependency from the array */
-		ActivationMappingKey *dependency = g_ptr_array_index(depends_on, j);
+		ActivationMappingKey *dependency = g_ptr_array_index(inter_dependencies, j);
 		
 		/* Find the activation mapping in the activation array */
 		actual_mapping = find_activation_mapping(activation_array, dependency);
@@ -109,22 +114,26 @@ void destroy_edges_table(GHashTable *edges_table)
     g_hash_table_destroy(edges_table);
 }
 
-void print_edges_table(GHashTable *edges_table)
+void print_edges_table(GHashTable *edges_table, int ordering)
 {
     GHashTableIter iter;
     gpointer *key;
     gpointer *value;
-    
+
     g_hash_table_iter_init(&iter, edges_table);
     while(g_hash_table_iter_next(&iter, (gpointer*)&key, (gpointer*)&value))
     {
         unsigned int i;
         GPtrArray *dependency_array = (GPtrArray*)value;
-    
+
         for(i = 0; i < dependency_array->len; i++)
         {
             gchar *dep = g_ptr_array_index(dependency_array, i);
-            g_print("\"%s\" -> \"%s\"\n", (gchar*)key, dep);
+            g_print("\"%s\" -> \"%s\"", (gchar*)key, dep);
+
+            if(!ordering)
+                g_print(" [style=dashed]");
+            g_print("\n");
         }
     }
 }

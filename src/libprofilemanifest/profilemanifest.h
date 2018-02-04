@@ -40,6 +40,8 @@ typedef struct
     gchar *stateful;
     /** Array of Nix attribute sets containing references to the service's inter dependencies */
     gchar *depends_on;
+    /** Array of Nix attribute sets containing references to the service's inter dependencies that have no ordering requirement */
+    gchar *connects_to;
 }
 ProfileManifestEntry;
 

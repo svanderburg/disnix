@@ -34,7 +34,8 @@ typedef enum
     LINE_TYPE,
     LINE_KEY,
     LINE_STATEFUL,
-    LINE_DEPENDS_ON
+    LINE_DEPENDS_ON,
+    LINE_CONNECTS_TO
 }
 LineType;
 
@@ -81,15 +82,19 @@ GPtrArray *create_profile_manifest_array_from_string_array(char **result)
                     break;
                 case LINE_DEPENDS_ON:
                     entry->depends_on = line;
+                    line_type = LINE_CONNECTS_TO;
+                    break;
+                case LINE_CONNECTS_TO:
+                    entry->connects_to = line;
                     line_type = LINE_NAME;
                     g_ptr_array_add(profile_manifest_array, entry);
                     break;
             }
-        
+
             count++;
         }
     }
-    
+
     /* We should have the right number of lines */
     if(line_type == LINE_NAME)
         return profile_manifest_array; /* Return the generate profile manifest array */
@@ -160,6 +165,7 @@ void delete_profile_manifest_array(GPtrArray *profile_manifest_array)
             g_free(entry->key);
             g_free(entry->stateful);
             g_free(entry->depends_on);
+            g_free(entry->connects_to);
             g_free(entry);
         }
     }
@@ -226,15 +232,16 @@ void print_text_from_profile_manifest_array(const GPtrArray *profile_manifest_ar
         dprintf(fd, "%s\n", entry->key);
         dprintf(fd, "%s\n", entry->stateful);
         dprintf(fd, "%s\n", entry->depends_on);
+        dprintf(fd, "%s\n", entry->connects_to);
     }
 }
 
 void print_nix_expression_from_profile_manifest_array(const GPtrArray *profile_manifest_array)
 {
     unsigned int i;
-    
+
     g_print("[\n");
-    
+
     for(i = 0; i < profile_manifest_array->len; i++)
     {
         ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
@@ -245,8 +252,9 @@ void print_nix_expression_from_profile_manifest_array(const GPtrArray *profile_m
         g_print("        _key = \"%s\";\n", entry->key);
         g_print("        stateful = %s;\n", entry->stateful);
         g_print("        dependsOn = %s;\n", entry->depends_on);
+        g_print("        connectsTo = %s;\n", entry->connects_to);
         g_print("      }\n");
     }
-    
+
     g_print("    ]");
 }

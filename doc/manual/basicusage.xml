@@ -722,6 +722,16 @@ rec { <co xml:id='co-rec2' />
 						<code>zipcodes = zipcodes;</code>),
 						you can configure the <code>ZipcodeService</code> to use a different database.
 					</para>
+					<para>
+						Besides telling services where they can find their dependencies, inter-dependencies
+						also have a second purpose -- they ensure that services are activated in the right order.
+						For example, Disnix does not allow a service to be deployed before any of its inter-dependencies
+						are deployed.
+					</para>
+					<para>
+						In some scenarios, it may be desired to relax the activation order requirement.
+						See <xref linkend="chap-advanced-options" /> for more information.
+					</para>
 				</callout>
 				
 				<callout arearefs='co-type'>
