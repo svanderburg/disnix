@@ -1,4 +1,4 @@
-{dysnomia, disnix}:
+{dysnomia, disnix, enableMultiUser ? true}:
 {config, pkgs, ...}:
 
 {
@@ -6,11 +6,13 @@
   
   virtualisation.writableStore = true;
   virtualisation.pathsInNixDB = [ pkgs.stdenv ] ++ pkgs.libxml2.all ++ pkgs.libxslt.all;
-  
-  services.disnixTest.enable = true;
-  services.disnixTest.package = disnix;
-  services.disnixTest.dysnomia = dysnomia;
-  
+
+  services.disnixTest = {
+    enable = true;
+    package = disnix;
+    inherit dysnomia enableMultiUser;
+  };
+
   users.extraUsers = [
     { uid = 1000;
       name = "unprivileged";

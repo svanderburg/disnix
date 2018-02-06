@@ -90,6 +90,20 @@ let
         disnix = builtins.getAttr (builtins.currentSystem) (jobs.build);
       in
       {
+        runactivities = import ./tests/runactivities.nix {
+          inherit nixpkgs dysnomia disnix;
+        };
+        dbus = import ./tests/dbus.nix {
+          inherit nixpkgs dysnomia disnix;
+        };
+        ssh-to-runactivity = import ./tests/ssh.nix {
+          inherit nixpkgs dysnomia disnix;
+          disnixRemoteClient = "disnix-run-activity";
+        };
+        ssh-to-dbus = import ./tests/ssh.nix {
+          inherit nixpkgs dysnomia disnix;
+          disnixRemoteClient = "disnix-client";
+        };
         install = import ./tests/install.nix {
           inherit nixpkgs dysnomia disnix;
         };

@@ -20,6 +20,8 @@
 #include "run-activity.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <procreact_pid.h>
 #include <procreact_future.h>
 #include <package-management.h>
@@ -72,6 +74,29 @@ static int print_strv(ProcReact_Future future)
     }
 }
 
+static int return_tempfile(pid_t pid, gchar *tempfilename, int temp_fd)
+{
+    int exit_status = 0;
+    ProcReact_Status status;
+    int result = procreact_wait_for_boolean(pid, &status);
+
+    if(status == PROCREACT_STATUS_OK && result)
+    {
+        if(fchmod(temp_fd, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) == 1)
+        {
+            g_printerr("Cannot change permissions of tempfile: %s\n", tempfilename);
+            exit_status = 1;
+        }
+        else
+            g_print("%s\n", tempfilename);
+    }
+
+    g_free(tempfilename);
+    close(temp_fd);
+
+    return exit_status;
+}
+
 int run_disnix_activity(Operation operation, gchar **derivation, const unsigned int flags, char *profile, gchar **arguments, char *type, char *container, char *component, int keep, char *command)
 {
     int exit_status = 0;
@@ -104,8 +129,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
             break;
         case OP_EXPORT:
             tempfilename = pkgmgmt_export_closure(tmpdir, derivation, 2, &pid, &temp_fd);
-            g_print("%s\n", tempfilename);
-            g_free(tempfilename);
+            return_tempfile(pid, tempfilename, temp_fd);
             break;
         case OP_PRINT_INVALID:
             exit_status = print_strv(pkgmgmt_print_invalid_packages(derivation, 2));
@@ -114,7 +138,13 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
             exit_status = print_strv(pkgmgmt_realise(derivation, 2));
             break;
         case OP_SET:
-            exit_status = procreact_wait_for_exit_status(pkgmgmt_set_profile((gchar*)profile, derivation[0], 1, 2), &status);
+            if(derivation[0] == NULL)
+            {
+                g_printerr("ERROR: A Nix store component has to be specified!\n");
+                exit_status = 1;
+            }
+            else
+                exit_status = procreact_wait_for_exit_status(pkgmgmt_set_profile((gchar*)profile, derivation[0], 1, 2), &status);
             break;
         case OP_QUERY_INSTALLED:
             profile_manifest_array = create_profile_manifest_array_from_current_deployment(LOCALSTATEDIR, (gchar*)profile);
@@ -245,8 +275,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
             break;
         case OP_CAPTURE_CONFIG:
             tempfilename = statemgmt_capture_config(tmpdir, 2, &pid, &temp_fd);
-            g_print("%s\n", tempfilename);
-            g_free(tempfilename);
+            return_tempfile(pid, tempfilename, temp_fd);
             break;
         case OP_SHELL:
             container = check_dysnomia_activity_parameters(type, derivation, container, arguments);

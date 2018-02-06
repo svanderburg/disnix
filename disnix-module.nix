@@ -14,12 +14,18 @@ in
           default = false;
           description = "Whether to enable Disnix";
         };
-        
+
+        enableMultiUser = mkOption {
+          type = types.bool;
+          default = true;
+          description = "Whether to support multi-user mode by enabling the Disnix D-Bus service";
+        };
+
         package = mkOption {
           type = types.path;
           description = "The Disnix package";
         };
-        
+
         dysnomia = mkOption {
           type = types.path;
           description = "The Dysnomia package";
@@ -27,22 +33,22 @@ in
       };
     };
   };
-  
+
   config = mkIf cfg.enable {
     ids.gids = { disnix = 200; };
     users.extraGroups = [ { gid = 200; name = "disnix"; } ];
-    
+
     services.dbus.enable = true;
     services.dbus.packages = [ cfg.package ];
     services.openssh.enable = true;
-    
+
     services.disnixTest.package = mkDefault (import ./release.nix {}).build."${builtins.currentSystem}";
-    
-    systemd.services.disnix =
+
+    systemd.services.disnix = mkIf cfg.enableMultiUser
       { description = "Disnix server";
         wantedBy = [ "multi-user.target" ];
         after = [ "dbus.service" ];
-        
+
         path = [ config.nix.package cfg.package cfg.dysnomia ];
         environment = {
           HOME = "/root";

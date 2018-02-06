@@ -219,7 +219,14 @@ int run_disnix_client(Operation operation, gchar **derivation, const unsigned in
 	    org_nixos_disnix_disnix_call_realise_sync(proxy, pid, (const gchar**) derivation, NULL, &error);
 	    break;
 	case OP_SET:
-	    org_nixos_disnix_disnix_call_set_sync(proxy, pid, profile, derivation[0], NULL, &error);
+	    if(derivation[0] == NULL)
+	    {
+		g_printerr("ERROR: A Nix store component has to be specified!\n");
+		cleanup(proxy, derivation, arguments);
+		return 1;
+	    }
+	    else
+		org_nixos_disnix_disnix_call_set_sync(proxy, pid, profile, derivation[0], NULL, &error);
 	    break;
 	case OP_QUERY_INSTALLED:
 	    org_nixos_disnix_disnix_call_query_installed_sync(proxy, pid, profile, NULL, &error);

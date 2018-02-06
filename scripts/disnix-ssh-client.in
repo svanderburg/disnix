@@ -140,6 +140,8 @@ Environment:
                              machines
   SSH_OPTS                   Additional properties which are passed to the ssh
                              command
+  DISNIX_REMOTE_CLIENT       Name of the remote executable to run to execute a
+                             deployment activity (defaults to: disnix-client)
   DISNIX_PROFILE             Sets the name of the profile that stores the
                              manifest on the coordinator machine and the
                              deployed services per machine on each target
@@ -359,6 +361,11 @@ then
     SSH_USER="$SSH_USER@"
 fi
 
+if [ "$DISNIX_REMOTE_CLIENT" = "" ]
+then
+    DISNIX_REMOTE_CLIENT="disnix-client"
+fi
+
 checkTmpDir
 
 # Execute selected operation
@@ -377,7 +384,7 @@ case "$operation" in
         fi
         
         # Import the closure into the Nix store
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --import $remoteClosure
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --import $remoteClosure
         ;;
     export)
         checkLocalOrRemoteFile
@@ -393,53 +400,53 @@ case "$operation" in
         fi
         ;;
     print-invalid)
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --print-invalid "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --print-invalid "$@"
         ;;
     realise)
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --realise "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --realise "$@"
         ;;
     set)
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client $profileArg --set "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT $profileArg --set "$@"
         ;;
     query-installed)
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client $profileArg --query-installed "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT $profileArg --query-installed "$@"
         ;;
     query-requisites)
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --query-requisites "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --query-requisites "$@"
         ;;
     collect-garbage)
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --collect-garbage $deleteOldArg "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --collect-garbage $deleteOldArg "$@"
         ;;
     activate)
         checkType
         checkContainer
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --container $container --activate "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --type $type $argsArg --container $container --activate "$@"
         ;;
     deactivate)
         checkType
         checkContainer
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --container $container --deactivate "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --type $type $argsArg --container $container --deactivate "$@"
         ;;
     lock)
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --lock $profileArg
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --lock $profileArg
         ;;
     unlock)
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --unlock $profileArg
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --unlock $profileArg
         ;;
     snapshot)
         checkType
         checkContainer
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --container $container --snapshot "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --type $type $argsArg --container $container --snapshot "$@"
         ;;
     restore)
         checkType
         checkContainer
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --container $container --restore "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --type $type $argsArg --container $container --restore "$@"
         ;;
     delete-state)
         checkType
         checkContainer
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --type $type $argsArg --container $container --delete-state "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --type $type $argsArg --container $container --delete-state "$@"
         ;;
     shell)
         checkType
@@ -453,13 +460,13 @@ case "$operation" in
         fi
         ;;
     query-all-snapshots)
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --query-all-snapshots --container $container --component $component
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --query-all-snapshots --container $container --component $component
         ;;
     query-latest-snapshot)
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --query-latest-snapshot --container $container --component $component
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --query-latest-snapshot --container $container --component $component
         ;;
     print-missing-snapshots)
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --print-missing-snapshots "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --print-missing-snapshots "$@"
         ;;
     import-snapshots)
         checkLocalOrRemoteFile
@@ -474,7 +481,7 @@ case "$operation" in
             remoteSnapshots=$@
         fi
         
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --container $container --component $component --import-snapshots $remoteSnapshots
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --container $container --component $component --import-snapshots $remoteSnapshots
         ;;
     export-snapshots)
         for i in $@
@@ -485,7 +492,7 @@ case "$operation" in
         done
         ;;
     resolve-snapshots)
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --resolve-snapshots "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --resolve-snapshots "$@"
         ;;
     clean-snapshots)
         if [ "$container" != "" ]
@@ -498,10 +505,10 @@ case "$operation" in
             componentArg="--component $component"
         fi
         
-        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --clean-snapshots --keep $keep $containerArg $componentArg "$@"
+        ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --clean-snapshots --keep $keep $containerArg $componentArg "$@"
         ;;
     capture-config)
-        tempfile=`ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --capture-config`
+        tempfile=`ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --capture-config`
         ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname "cat $tempfile; rm -f $tempfile"
         ;;
 esac
