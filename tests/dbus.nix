@@ -73,7 +73,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
 
         $client->mustSucceed("disnix-client --set --profile default @target1Profile");
         my @defaultProfileClosure = split('\n', $client->mustSucceed("nix-store -qR /nix/var/nix/profiles/disnix/default"));
-        my @closure = grep("@target1Profile", @defaultProfileClosure);
+        @closure = grep("@target1Profile", @defaultProfileClosure);
 
         if(scalar @closure > 0) {
             print "@target1Profile is part of the closure\n";

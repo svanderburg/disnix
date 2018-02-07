@@ -51,8 +51,8 @@ $ nixos-rebuild switch
 				A NixOS-based target machine requires a number of addtional aspects to be configured.
 			</para>
 			<para>
-				First, we must enable the core Disnix service that exposes deployment operations
-				through D-Bus in the NixOS configuration file (<filename>/etc/nixos/configuration.nix</filename>):
+				First, we must enable the core Disnix service that exposes remote deployment operations
+				in the NixOS configuration file (<filename>/etc/nixos/configuration.nix</filename>):
 <screen>
 services.disnix.enable = true;
 </screen>
@@ -66,12 +66,25 @@ services.disnix.enable = true;
 services.openssh.enable = true;
 </screen>
 			</para>
-			
+
 			<para>
 				Besides SSH it also possible to use other kinds of communication protocols.
 				<xref linkend="chap-advanced-options" /> provides more information on this.
 			</para>
-			
+
+			<para>
+				Disnix by default works in multi-user mode -- it launches a D-Bus services that carries
+				out deployment operations on behalf of a user. Any user belonging to the 'disnix' group
+				can execute deployment operations.
+			</para>
+			<para>
+				It is also possible to use single-user mode in which only
+				the super user can carry out deployment operations:
+<screen>
+services.disnix.enableMultiUser = false;
+</screen>
+			</para>
+
 			<para>
 				Disnix executes a number of non-generic deployment activities that
 				are carried out by Dysnomia.
@@ -227,6 +240,7 @@ $ nix-env -i disnix
 			<title>Configuring the D-Bus service</title>
 			
 			<para>
+				By default, Disnix works in multi-user mode requiring the presence of the Disnix service.
 				The Disnix service is a <link xlink:href="http://www.freedesktop.org/wiki/Software/dbus">D-Bus</link>
 				service operating on the system bus.
 				As a dependency, it requires D-Bus to be running on the same system, which is
@@ -269,6 +283,11 @@ $ cp /usr/local/etc/dbus-1/system.d/disnix.conf /etc/dbus-1/system.d
 				to grant the user: <code>sander</code>, that owns a single user Nix installation, the permissions to own
 				the Disnix service as well.
 			</para>
+
+			<para>
+				Disnix can also work in single-user mode, in which only the super user can carry out deployment operations.
+				Installation of the Disnix D-Bus service can be skipped if this suffices.
+			</para>
 		</section>
 		
 		<section>
@@ -278,7 +297,7 @@ $ cp /usr/local/etc/dbus-1/system.d/disnix.conf /etc/dbus-1/system.d
 				Another important installation concern is to start the Disnix D-Bus service automatically on startup.
 				The following sub sections describe how to accomplish this for several kinds of service managers.
 			</para>
-			
+
 			<section>
 				<title>Composing an init.d script</title>
 				
@@ -426,6 +445,9 @@ $ editrights -u sander -a SeServiceLogonRight
 $ mkdir -p /var/log/disnix
 $ chown sander:users /var/log/disnix
 </screen>
+			<para>
+				In single user mode, there is logging infastructure. As a result, this step can be skipped.
+			</para>
 		</section>
 		
 		<section>
@@ -544,7 +566,7 @@ $ dysnomia --operation activate --component ./schema.sql --container mysql-datab
 		<title>Configuring user accounts</title>
 		
 		<para>
-			By default, only the super user and users who are members of the <code>disnix</code> group may access operations
+			In multi-user mode, only the super user and users who are members of the <code>disnix</code> group may access operations
 			of the core Disnix service. In order to access the Disnix operations remotely, either
 			an account with the right permissions is required or the protocol wrapper should perform
 			the authentication to the core Disnix service.
@@ -576,7 +598,7 @@ $ groupadd disnix
 $ usermod -a -G disnix someuser
 </screen>
 	</section>
-	
+
 	<section>
 		<title>Additional SSH settings</title>
 		<para>
@@ -584,6 +606,19 @@ $ usermod -a -G disnix someuser
 			This is not a bug, but an implication of using SSH. In order to make this process non-interactive,
 			you must either generate an SSH keypair through <command>ssh-keygen</command> or use
 			<command>ssh-agent</command> to remember the authentication settings.
+		</para>
+	</section>
+
+	<section>
+		<title>Forcing a client to work in single-user mode</title>
+
+		<para>
+			When it is desired to use a single-user installation, the client must be instructed not to use the D-Bus service.
+			This can be done by setting the following environment variable:
+
+<screen>
+$ export DISNIX_REMOTE_CLIENT=disnix-run-activity
+</screen>
 		</para>
 	</section>
 </chapter>

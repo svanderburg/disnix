@@ -135,6 +135,10 @@ let
       ]
       ++ map (system: builtins.getAttr system build) systems
       ++ [
+        tests.runactivities
+        tests.dbus
+        tests.ssh-to-runactivity
+        tests.ssh-to-dbus
         tests.install
         tests.deployment
         tests.distbuild

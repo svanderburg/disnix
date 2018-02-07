@@ -101,7 +101,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
 
         $client->mustSucceed("${env} disnix-ssh-client --target server --set --profile default @target2Profile");
         my @defaultProfileClosure = split('\n', $server->mustSucceed("nix-store -qR /nix/var/nix/profiles/disnix/default"));
-        my @closure = grep("@target2Profile", @defaultProfileClosure);
+        @closure = grep("@target2Profile", @defaultProfileClosure);
 
         if(scalar @closure > 0) {
             print "@target2Profile is part of the closure\n";
