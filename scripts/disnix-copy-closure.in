@@ -141,40 +141,56 @@ then
     storePath=`nix-store --query --resolve $@`
 
     # Query the requisites of the given component
-    requisites=`nix-store --query --requisites $storePath`
+    requisites=( $(nix-store --query --requisites $storePath) )
 
-    # Invoke a remote Disnix interface to fetch all the paths that 
-    # are not already at the remote machine
-    invalidPaths=`$interface --target $target --print-invalid $requisites`
+    invalidPaths=()
 
-    if [ "$invalidPaths" != "" ]
+    for ((I=0;I<${#requisites[*]};I+=100))
+    do
+        # Invoke a remote Disnix interface to fetch all the paths that
+        # are not already at the remote machine
+        #
+        # We read 100 paths at the time to prevent hitting the 'arguments too
+        # long' error.
+        invalidPaths+=( $($interface --target $target --print-invalid ${requisites[@]:I:100}) )
+    done
+
+    if [ "${#invalidPaths[@]}" -ne 0 ]
     then
         # Serialise all the missing parts of the closure
         tmpfilename=`mktemp -p $TMPDIR`
-        nix-store --export $invalidPaths > $tmpfilename
-    
+        nix-store --export ${invalidPaths[@]} > $tmpfilename
+
         # Import the serialisation of the target by using the Disnix interface
         # on the remote machine
         $interface --target $target --import --localfile $tmpfilename || (rm -f $tmpfilename; false)
-    
+
         # Remove the serialisation
         rm -f $tmpfilename
     fi
 else
     # Query the requisites of the given component
-    requisites=`$interface --target $target --query-requisites $@`
-    
-    # Query all the invalid paths on this machine
-    invalidPaths=`nix-store --check-validity --print-invalid $requisites`
-    
-    if [ "$invalidPaths" != "" ]
+    requisites=( $($interface --target $target --query-requisites $@) )
+
+    invalidPaths=()
+
+    for ((I=0;I<${#requisites[*]};I+=100))
+    do
+        # Query all the invalid paths on this machine
+        #
+        # We read 100 paths at the time to prevent hitting the 'arguments too
+        # long' error.
+        invalidPaths+=( $(nix-store --check-validity --print-invalid ${requisites[@]:I:100}) )
+    done
+
+    if [ "${#invalidPaths[@]}" -ne 0 ]
     then
         # Export the closure all the invalid paths
-        closure=`$interface --target $target --export --remotefile $invalidPaths`
-    
+        closure=`$interface --target $target --export --remotefile ${invalidPaths[@]}`
+
         # Import the closure
         cat $closure | nix-store --import || (rm -f $closure; false)
-        
+
         # Remove the serialisation
         rm -f $closure
     fi

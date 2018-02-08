@@ -6,6 +6,8 @@ Version 0.8
 
 - Services can now also declare inter-dependencies with the connectTo property that disregards the activation order. This is useful for systems with cyclic connections and faster deployments in which it is allowed to break a connection
 
+- The copy closure command now partitions the requisites to prevent hitting the "arguments too long" error
+
 Version 0.7
 ===========
 - When moving state it will no longer be deleted by default. Instead, the user must provide --delete-state
