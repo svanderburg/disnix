@@ -1,4 +1,4 @@
-{nixpkgs, stdenv, dysnomia, disnix}:
+{nixpkgs, stdenv, dysnomia, disnix, disnixRemoteClient}:
 
 let
   manifestTests = ./manifest;
@@ -14,7 +14,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
     };
     testScript =
       let
-        env = "SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'";
+        env = "SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' DISNIX_REMOTE_CLIENT=${disnixRemoteClient}";
       in
       ''
         startAll;

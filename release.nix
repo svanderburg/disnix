@@ -7,14 +7,14 @@
 
 let
   pkgs = import nixpkgs {};
-  
+
   # Refer either to dysnomia in the parent folder, or to the one in Nixpkgs
   dysnomiaJobset = if fetchDependenciesFromNixpkgs then {
     build = pkgs.lib.genAttrs systems (system:
       (import nixpkgs { inherit system; }).dysnomia
     );
   } else import ../dysnomia/release.nix { inherit nixpkgs systems officialRelease; };
-  
+
   jobs = rec {
     tarball =
       with pkgs;
@@ -30,26 +30,26 @@ let
         dontBuild = false;
 
         buildInputs = [ pkgconfig glib libxml2 libxslt getopt nixUnstable dblatex (dblatex.tex or tetex) doxygen nukeReferences help2man doclifter dysnomia ];
-        
+
         CFLAGS = "-Wall";
-        
+
         # Add documentation in the tarball
         configureFlags = ''
           --with-docbook-rng=${docbook5}/xml/rng/docbook
           --with-docbook-xsl=${docbook5_xsl}/xml/xsl/docbook
         '';
-        
+
         preConfigure = ''
           # TeX needs a writable font cache.
           export VARTEXFONTS=$TMPDIR/texfonts
         '';
-        
+
         preDist = ''
           make -C doc/manual install prefix=$out
-          
+
           make -C doc/manual index.pdf prefix=$out
           cp doc/manual/index.pdf $out/index.pdf
-          
+
           make -C src apidox
           cp -av doc/apidox $out/share/doc/disnix
 
@@ -60,7 +60,7 @@ let
           # to Windows and Macs, so there should be no Linux binaries
           # in the closure).
           nuke-refs $out/index.pdf
-          
+
           echo "doc-pdf manual $out/index.pdf" >> $out/nix-support/hydra-build-products
           echo "doc manual $out/share/doc/disnix/manual" >> $out/nix-support/hydra-build-products
           echo "doc api $out/share/doc/disnix/apidox/html" >> $out/nix-support/hydra-build-products
@@ -80,10 +80,10 @@ let
 
           buildInputs = [ pkgconfig glib libxml2 libxslt getopt nixUnstable dysnomia ]
             ++ lib.optionals (!stdenv.isLinux) [ libiconv gettext ];
-            
+
           CFLAGS = "-Wall";
         });
-      
+
     tests =
       let
         dysnomia = builtins.getAttr (builtins.currentSystem) (dysnomiaJobset.build);
@@ -113,9 +113,15 @@ let
         distbuild = import ./tests/distbuild.nix {
           inherit nixpkgs dysnomia disnix;
         };
-        snapshots = import ./tests/snapshots.nix {
+        snapshots-via-runactivity = import ./tests/snapshots.nix {
           inherit nixpkgs dysnomia disnix;
           inherit (pkgs) stdenv;
+          disnixRemoteClient = "disnix-run-activity";
+        };
+        snapshots-via-dbus = import ./tests/snapshots.nix {
+          inherit nixpkgs dysnomia disnix;
+          inherit (pkgs) stdenv;
+          disnixRemoteClient = "disnix-client";
         };
         datamigration = import ./tests/datamigration.nix {
           inherit nixpkgs dysnomia disnix;
@@ -127,7 +133,7 @@ let
           inherit nixpkgs dysnomia disnix;
         };
       };
-    
+
     release = pkgs.releaseTools.aggregate {
       name = "disnix-${tarball.version}";
       constituents = [
@@ -142,7 +148,8 @@ let
         tests.install
         tests.deployment
         tests.distbuild
-        tests.snapshots
+        tests.snapshots-via-runactivity
+        tests.snapshots-via-dbus
         tests.datamigration
         tests.locking
         tests.pkgs
