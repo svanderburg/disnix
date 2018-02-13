@@ -1092,6 +1092,15 @@ $ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
 				on the coordinator machine, then the services and their intra-dependencies are transferred to the target machines
 				in the network. Finally, the services are activated.
 			</para>
+
+			<para>
+				When running the following command-line instruction:
+<screen>
+$ disnix-env --list-generations
+   1   2018-02-13 13:22:35   (current)
+</screen>
+				We can see an overview of deployment generations. Because this is our initial deployment, we only have one generation.
+			</para>
 		</section>
 	
 		<section>
@@ -1117,6 +1126,17 @@ $ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
 				Disnix upgrades the environment and only performs the steps that are necessary -- it moves the build of the <code>ZipcodeService</code>
 				from the coordinator machine to <code>test2</code> and redeploys the web application front-end to connect to the new location of the
 				<code>ZipcodeService</code>. All the other parts of the system will remain untouched.
+			</para>
+
+			<para>
+				When running the following command-line instruction:
+<screen>
+   1   2018-02-13 13:22:35
+   2   2018-02-13 13:30:24   (current)
+</screen>
+				We will see that we have two configurations deployed, the current after the upgrade (generation 2) and the previous configuration (generation 1).
+				Because Disnix builts on top of Nix, older configurations are never removed by default. We can use the older
+				configuration to easily roll back to a previous configuration, when desired.
 			</para>
 		</section>
 	
@@ -1172,6 +1192,28 @@ $ disnix-collect-garbage infrastructure.nix
 				<option>-d</option> option can be used:
 <screen>
 $ disnix-collect-garbage -d infrastructure.nix
+</screen>
+			</para>
+			<para>
+				In addition to the target machines, the coordinator machine also keeps packages of all configurations
+				unless they are declared obsolete and garbage collected. We can use the following command
+				to delete all older generations on the coordinator machine:
+<screen>
+$ disnix-env --delete-generations old
+</screen>
+			</para>
+			<para>
+				When running the garbage collector on the coordinator machine, all obsolete packages of the obsolete
+				configurations will be removed:
+<screen>
+$ nix-collect-garbage -d
+</screen>
+			</para>
+			<para>
+				It also possible to discard all profile generations. This is useful, for example, when the
+				target machines are no longer available:
+<screen>
+$ disnix-env --delete-all-generations
 </screen>
 			</para>
 		</section>

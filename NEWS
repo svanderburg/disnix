@@ -8,6 +8,8 @@ Version 0.8
 
 - The copy closure command now partitions the requisites to prevent hitting the "arguments too long" error
 
+- The disnix-env command now also takes the --list-generations option to display coordinator profile generations and --delete-generations, --delete-all-generations to delete them
+
 Version 0.7
 ===========
 - When moving state it will no longer be deleted by default. Instead, the user must provide --delete-state

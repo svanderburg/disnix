@@ -43,6 +43,15 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # This test should succeed.
         $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
         
+        # Check if we have one profile generation.
+        my $result = $coordinator->mustSucceed("${env} disnix-env --list-generations | wc -l");
+
+        if($result == 1) {
+            print("We have 1 profile generation\n");
+        } else {
+            die "We should have 1 profile generation, instead we have: $result";
+        }
+
         # Do another rollback. Since there is no previous deployment, it should fail.
         $coordinator->mustFail("${env} disnix-env --rollback");
         
@@ -89,7 +98,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # folder and one generation link in the target profiles folder on each
         # machine.
         
-        my $result = $coordinator->mustSucceed("ls /nix/var/nix/profiles/per-user/root/disnix-coordinator | wc -l");
+        $result = $coordinator->mustSucceed("ls /nix/var/nix/profiles/per-user/root/disnix-coordinator | wc -l");
         
         if($result == 2) {
             print "We have only one generation symlink on the coordinator!\n";
@@ -119,6 +128,14 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         
         $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");
         
+        $result = $coordinator->mustSucceed("${env} disnix-env --list-generations | wc -l");
+        
+        if($result == 1) {
+            print "We have one generation symlink\n";
+        } else {
+            die "We should have one generation symlink, instead we have: $result"
+        }
+        
         $result = $coordinator->mustSucceed("ls /nix/var/nix/profiles/per-user/root/disnix-coordinator | wc -l");
         
         if($result == 2) {
@@ -146,6 +163,14 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # We now perform an upgrade by moving testService2 to another machine.
         # This test should succeed.
         $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-reverse.nix");
+        
+        $result = $coordinator->mustSucceed("${env} disnix-env --list-generations | wc -l");
+        
+        if($result == 2) {
+            print "We have two generation symlinks";
+        } else {
+            die "We should have two generation symlinks, instead we have: $result"
+        }
         
         @lines = split('\n', $coordinator->mustSucceed("${env} disnix-query ${manifestTests}/infrastructure.nix"));
         
@@ -452,6 +477,19 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
             die "disnix-query output line 9 does not contain testService3!\n";
         }
         
+        # Remove old generation test. We remove one profile generation and we
+        # check if it has been successfully removed
+
+        my $oldNumOfGenerations = $coordinator->mustSucceed("${env} disnix-env --list-generations | wc -l");
+        $coordinator->mustSucceed("${env} disnix-env --delete-generations 1");
+        my $newNumOfGenerations = $coordinator->mustSucceed("${env} disnix-env --list-generations | wc -l");
+        
+        if($newNumOfGenerations == $oldNumOfGenerations - 1) {
+            print "We have successfully removed one generation!\n";
+        } else {
+            die "We seem to have removed more than one generation, new: $newNumOfGenerations, old: $oldNumOfGenerations";
+        }
+        
         # Test disnix-capture-infra. Capture the container properties of all
         # machines and generate an infrastructure expression from it. It should
         # contain: "foo" = "bar"; twice.
@@ -475,9 +513,9 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # Test disnix-reconstruct. Because nothing has changed the coordinator
         # profile should remain identical.
         
-        my $oldNumOfGenerations = $coordinator->mustSucceed("ls /nix/var/nix/profiles/per-user/root/disnix-coordinator | wc -l");
+        $oldNumOfGenerations = $coordinator->mustSucceed("ls /nix/var/nix/profiles/per-user/root/disnix-coordinator | wc -l");
         $coordinator->mustSucceed("${env} disnix-reconstruct ${manifestTests}/infrastructure.nix");
-        my $newNumOfGenerations = $coordinator->mustSucceed("ls /nix/var/nix/profiles/per-user/root/disnix-coordinator | wc -l");
+        $newNumOfGenerations = $coordinator->mustSucceed("ls /nix/var/nix/profiles/per-user/root/disnix-coordinator | wc -l");
         
         if($oldNumOfGenerations == $newNumOfGenerations) {
             print "The amount of manifest generations remained the same!\n";
@@ -488,7 +526,14 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # Test disnix-reconstruct. First, we remove the old manifests. They
         # should have been reconstructed.
         
-        $coordinator->mustSucceed("rm /nix/var/nix/profiles/per-user/root/disnix-coordinator/*");
+        $result = $coordinator->mustSucceed("${env} disnix-env --delete-all-generations | wc -l");
+        
+        if($result == 0) {
+            print "We have no symlinks";
+        } else {
+            die "We should have no symlinks, instead we have: $result";
+        }
+        
         $coordinator->mustSucceed("${env} disnix-reconstruct ${manifestTests}/infrastructure.nix");
         $result = $coordinator->mustSucceed("ls /nix/var/nix/profiles/per-user/root/disnix-coordinator | wc -l");
         

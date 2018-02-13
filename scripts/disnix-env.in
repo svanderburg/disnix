@@ -28,6 +28,9 @@ showUsage()
 Usage: $0 -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
   or: $0 --rollback [OPTION]
   or: $0 --switch-generation NUM [OPTION]
+  or: $0 --list-generations [OPTION]
+  or: $0 --delete-generations NUM [OPTION]
+  or: $0 --delete-all-generations NUM [OPTION]
 
 The command \`disnix-env' is used to install, upgrade, or roll back a
 service-oriented system in a given environment.
@@ -75,6 +78,13 @@ Options:
       --switch-to-generation=NUM  Switches to a specific profile generation
       --rollback                  Switches back to the previously deployed
                                   configuration
+      --list-generations          Lists all profile generations of the current
+                                  deployment
+      --delete-generations=NUM    Deletes the specified generations. The number
+                                  can correspond to generation numbers, days
+                                  (d postfix) or 'old'.
+      --delete-all-generations    Deletes all profile generations. This is
+                                  useful when a deployment has been discarded
       --target-property=PROP      The target property of an infrastructure
                                   model, that specifies how to connect to the
                                   remote Disnix interface. (Defaults to
@@ -151,7 +161,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:p:m:hv -l services:,infrastructure:,distribution:,rollback,switch-to-generation:,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,delete-state,depth-first,keep:,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:p:m:hv -l services:,infrastructure:,distribution:,rollback,switch-to-generation:,list-generations,delete-generations:,delete-all-generations,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,delete-state,depth-first,keep:,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -176,11 +186,21 @@ do
             distributionFile=`readlink -f $2`
             ;;
         --rollback)
-            switchGeneration=1
+            operation="switchGenerations"
             ;;
         --switch-to-generation)
-            switchGeneration=1
+            operation="switchGenerations"
             generationId=$2
+            ;;
+        --list-generations)
+            operation="listGenerations"
+            ;;
+        --delete-generations)
+            operation="deleteGenerations"
+            generations="$2"
+            ;;
+        --delete-all-generations)
+            operation="deleteAllGenerations"
             ;;
         -m|--max-concurrent-transfers)
             maxConcurrentTransfersArg="-m $2"
@@ -241,7 +261,7 @@ do
             exit 0
             ;;
     esac
-    
+
     shift
 done
 
@@ -254,13 +274,6 @@ export prefix=@prefix@
 source @datadir@/@PACKAGE@/checks
 
 # Validate the given options
-
-if [ "$switchGeneration" != "1" ]
-then
-    checkServicesFile
-    checkInfrastructureFile
-    checkDistributionFile
-fi
 
 checkClientInterface
 checkTargetProperty
@@ -279,10 +292,17 @@ else
     profileDir="$coordinatorProfilePath"
 fi
 
-# Execute operations
+# Operation functions
 
-if [ "$switchGeneration" = "1" ]
-then
+checkModels()
+{
+    checkServicesFile
+    checkInfrastructureFile
+    checkDistributionFile
+}
+
+switchGenerations()
+{
     # If no generation link has been requested, figure out what the previous one is
     if [ "$generationId" = "" ]
     then
@@ -296,7 +316,7 @@ then
     else
         generation="$profile-$generationId-link"
     fi
-    
+
     if [ -e "$profileDir/$generation" ]
     then
         # Retrieve the manifest of the requested profile generation
@@ -305,7 +325,26 @@ then
         echo "[coordinator]: Cannot switch profile generations, because the requested profile does not exist!" >&2
         exit 1
     fi
-else
+}
+
+listGenerations()
+{
+    nix-env -p $profileDir/$profile --list-generations
+}
+
+deleteGenerations()
+{
+    nix-env -p $profileDir/$profile --delete-generations "$generations"
+}
+
+deleteAllGenerations()
+{
+    rm -f $profileDir/$profile
+    rm -f $profileDir/$profile-*-link
+}
+
+produceManifest()
+{
     if [ "$buildOnTargets" = "1" ]
     then
         disnix-delegate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --interface $interface $maxConcurrentTransfersArg $showTraceArg
@@ -313,13 +352,39 @@ else
 
     echo "[coordinator]: Building manifest..."
     manifest=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link --interface $interface $deployStateArg $showTraceArg`
-fi
+}
 
-# Determine the name of the previous manifest file
-if [ -d "$profileDir" ] && [ "$(echo $profileDir/$profile-*-link)" != "" ]
-then
-    oldManifestArg="-o $(ls $profileDir/$profile-*-link | sort -V | tail -1)"
-fi
+deploy()
+{
+    # Determine the name of the previous manifest file
+    if [ -d "$profileDir" ] && [ "$(echo $profileDir/$profile-*-link)" != "" ]
+    then
+        oldManifestArg="-o $(ls $profileDir/$profile-*-link | sort -V | tail -1)"
+    fi
 
-# Deploy the (pre)built Disnix configuration (implying a manifest file)
-disnix-deploy $maxConcurrentTransfersArg $noLockArg $profileArg $noUpgradeArg $deleteStateArg $noCoordinatorProfileArg $coordinatorProfilePathArg $noTargetProfilesArg $noMigrationArg $oldManifestArg $depthFirstArg $keepArg $manifest
+    # Deploy the (pre)built Disnix configuration (implying a manifest file)
+    disnix-deploy $maxConcurrentTransfersArg $noLockArg $profileArg $noUpgradeArg $deleteStateArg $noCoordinatorProfileArg $coordinatorProfilePathArg $noTargetProfilesArg $noMigrationArg $oldManifestArg $depthFirstArg $keepArg $manifest
+}
+
+# Execute operations
+
+case "$operation" in
+    switchGenerations)
+        switchGenerations
+        deploy
+        ;;
+    listGenerations)
+        listGenerations
+        ;;
+    deleteGenerations)
+        deleteGenerations
+        ;;
+    deleteAllGenerations)
+        deleteAllGenerations
+        ;;
+    *)
+        checkModels
+        produceManifest
+        deploy
+        ;;
+esac
