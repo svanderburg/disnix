@@ -204,7 +204,14 @@ GPtrArray *generate_target_array(const gchar *manifest_file)
 	    target->available_cores = available_cores;
 	    target->properties = properties;
 	    target->containers = containers;
-	    
+
+	    /* Compose empty arrays if properties or containers are not specified */
+	    if(target->properties == NULL)
+	        target->properties = g_ptr_array_new();
+
+	    if(target->containers == NULL)
+	        target->containers = g_ptr_array_new();
+
 	    if(target->system == NULL || target->client_interface == NULL || target->target_property == NULL)
 	    {
 	        /* Check if all mandatory properties have been provided */
@@ -307,34 +314,28 @@ void delete_target_array(GPtrArray *target_array)
 
 static void print_properties(const GPtrArray *properties)
 {
-    if(properties != NULL)
+    unsigned int i;
+
+    g_print("  properties:\n");
+
+    for(i = 0; i < properties->len; i++)
     {
-        unsigned int i;
-        
-        g_print("  properties:\n");
-        
-        for(i = 0; i < properties->len; i++)
-        {
-            TargetProperty *target_property = g_ptr_array_index(properties, i);
-            g_print("    %s = %s;\n", target_property->name, target_property->value);
-        }
+        TargetProperty *target_property = g_ptr_array_index(properties, i);
+        g_print("    %s = %s;\n", target_property->name, target_property->value);
     }
 }
 
 static void print_containers(const GPtrArray *containers)
 {
-    if(containers != NULL)
+    unsigned int i;
+    g_print("  containers:\n");
+
+    for(i = 0; i < containers->len; i++)
     {
-        unsigned int i;
-        g_print("  containers:\n");
-        
-        for(i = 0; i < containers->len; i++)
-        {
-            Container *container = g_ptr_array_index(containers, i);
-            g_print("    %s:\n", container->name);
-            print_properties(container->properties);
-            g_print("\n");
-        }
+        Container *container = g_ptr_array_index(containers, i);
+        g_print("    %s:\n", container->name);
+        print_properties(container->properties);
+        g_print("\n");
     }
 }
 

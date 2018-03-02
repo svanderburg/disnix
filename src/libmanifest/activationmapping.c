@@ -185,7 +185,14 @@ GPtrArray *create_activation_array(const gchar *manifest_file)
 	    mapping->depends_on = depends_on;
 	    mapping->connects_to = connects_to;
 	    mapping->status = status;
-	    
+
+	    /* If no properties or containers are specified, compose empty arrays */
+	    if(mapping->depends_on == NULL)
+	        mapping->depends_on = g_ptr_array_new();
+
+	    if(mapping->connects_to == NULL)
+	        mapping->connects_to = g_ptr_array_new();
+
 	    if(mapping->key == NULL || mapping->target == NULL || mapping->container == NULL || mapping->service == NULL || mapping->name == NULL || mapping->type == NULL)
 	    {
 	        /* Check if all mandatory properties have been provided */
