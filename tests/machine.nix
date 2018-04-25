@@ -30,6 +30,13 @@
     }
   ];
   
+  # We can't download any substitutes in a test environment. To make tests
+  # faster, we disable substitutes so that Nix does not waste any time by
+  # attempting to download them.
+  nix.extraOptions = ''
+    substitute = false
+  '';
+
   environment.systemPackages = [ dysnomia ];
 
   environment.etc."dysnomia/properties" = {

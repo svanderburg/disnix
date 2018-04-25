@@ -27,12 +27,12 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # which should return the path we have given.
         # This test should succeed.
 
-        my $result = $server->mustSucceed("disnix-run-activity --print-invalid /nix/store/invalid");
+        my $result = $server->mustSucceed("disnix-run-activity --print-invalid /nix/store/00000000000000000000000000000000-invalid");
 
-        if($result =~ /\/nix\/store\/invalid/) {
-            print "/nix/store/invalid is invalid\n";
+        if($result =~ /\/nix\/store\/00000000000000000000000000000000-invalid/) {
+            print "/nix/store/00000000000000000000000000000000-invalid is invalid\n";
         } else {
-            die "/nix/store/invalid should be invalid\n";
+            die "/nix/store/00000000000000000000000000000000-invalid should be invalid\n";
         }
 
         # Check invalid path. We query a valid path from the service

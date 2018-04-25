@@ -19,7 +19,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         startAll;
 
         # Initialise ssh stuff by creating a key pair for communication
-        my $key=`${pkgs.openssh}/bin/ssh-keygen -t dsa -f key -N ""`;
+        my $key=`${pkgs.openssh}/bin/ssh-keygen -t ecdsa -f key -N ""`;
 
         $server->mustSucceed("mkdir -m 700 /root/.ssh");
         $server->copyFileFromHost("key.pub", "/root/.ssh/authorized_keys");

@@ -23,7 +23,7 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
 
         #### Test disnix-ssh-client
         # Initialise ssh stuff by creating a key pair for communication
-        my $key=`${pkgs.openssh}/bin/ssh-keygen -t dsa -f key -N ""`;
+        my $key=`${pkgs.openssh}/bin/ssh-keygen -t ecdsa -f key -N ""`;
 
         $server->mustSucceed("mkdir -m 700 /root/.ssh");
         $server->copyFileFromHost("key.pub", "/root/.ssh/authorized_keys");
@@ -36,12 +36,12 @@ with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem
         # which should return the path we have given.
         # This test should succeed.
 
-        my $result = $client->mustSucceed("${env} disnix-ssh-client --target server --print-invalid /nix/store/invalid");
+        my $result = $client->mustSucceed("${env} disnix-ssh-client --target server --print-invalid /nix/store/00000000000000000000000000000000-invalid");
 
-        if($result =~ /\/nix\/store\/invalid/) {
-            print "/nix/store/invalid is invalid\n";
+        if($result =~ /\/nix\/store\/00000000000000000000000000000000-invalid/) {
+            print "/nix/store/00000000000000000000000000000000-invalid is invalid\n";
         } else {
-            die "/nix/store/invalid should be invalid\n";
+            die "/nix/store/00000000000000000000000000000000-invalid should be invalid\n";
         }
 
         # Check invalid path. We query a valid path from the service
