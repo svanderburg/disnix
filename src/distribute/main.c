@@ -26,21 +26,23 @@
 static void print_usage(const char *command)
 {
     printf("Usage: %s [OPTION] MANIFEST\n\n", command);
-    
-    printf("The command `disnix-distribute' copies all the intra-dependency closures of\n");
-    printf("services in a manifest file to the target machines in the network. This process\n");
-    printf("is very efficient, since it scans for all intra-dependencies and only copies the\n");
-    printf("missing parts.\n\n");
 
-    printf("Most users don't need to use this command directly. The `disnix-env' command\n");
-    printf("will automatically invoke this command to distribute the services if necessary.\n\n");
-    
-    printf("Options:\n");
-    printf("  -m, --max-concurrent-transfers=NUM  Maximum amount of concurrent closure\n");
-    printf("                                      transfers. Defauls to: 2\n");
-    printf("  -h, --help                          Shows the usage of this command to the user\n");
-    printf("  -v, --version                       Shows the version of this command to the\n");
-    printf("                                      user\n");
+    puts(
+    "The command `disnix-distribute' copies all the intra-dependency closures of\n"
+    "services in a manifest file to the target machines in the network. This process\n"
+    "is very efficient, since it scans for all intra-dependencies and only copies the\n"
+    "missing parts.\n\n"
+
+    "Most users don't need to use this command directly. The `disnix-env' command\n"
+    "will automatically invoke this command to distribute the services if necessary.\n\n"
+
+    "Options:\n"
+    "  -m, --max-concurrent-transfers=NUM  Maximum amount of concurrent closure\n"
+    "                                      transfers. Defauls to: 2\n"
+    "  -h, --help                          Shows the usage of this command to the user\n"
+    "  -v, --version                       Shows the version of this command to the\n"
+    "                                      user\n"
+    );
 }
 
 int main(int argc, char *argv[])

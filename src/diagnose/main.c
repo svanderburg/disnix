@@ -27,32 +27,34 @@ static void print_usage(const char *command)
 {
     printf("Usage: %s -S SERVICE [OPTION] [MANIFEST]\n\n", command);
 
-    printf("Spawns a remote shell session to a machine where the given service is deployed\n");
-    printf("with environment variables containing configuration settings allowing a user to\n");
-    printf("conveniently diagnose problems or execute arbitrary maintenance tasks.\n\n");
+    puts(
+    "Spawns a remote shell session to a machine where the given service is deployed\n"
+    "with environment variables containing configuration settings allowing a user to\n"
+    "conveniently diagnose problems or execute arbitrary maintenance tasks.\n\n"
 
-    printf("Options:\n");
-    printf("  -S, --service              Name of the service to connect to\n");
-    printf("      --show-mappings        Displays the targets and containers in which the\n");
-    printf("                             service is hosted\n");
-    printf("  -c, --container=CONTAINER  Name of the container in which the mutable\n");
-    printf("                             component is deployed\n");
-    printf("  -t, --target=TARGET        Specifies the target to connect to\n");
-    printf("      --command=COMMAND      Shell commands to execute\n");
-    printf("  -p, --profile=PROFILE      Name of the profile in which the services are\n");
-    printf("                             registered. Defaults to: default\n");
-    printf("      --coordinator-profile-path=PATH\n");
-    printf("                             Path to the manifest of the previous configuration. By\n");
-    printf("                             default this tool will use the manifest stored in the\n");
-    printf("                             disnix coordinator profile instead of the specified\n");
-    printf("                             one, which is usually sufficient in most cases.\n");
-    printf("  -h, --help                 Shows the usage of this command to the user\n");
-    printf("  -v, --version              Shows the version of this command to the user\n");
+    "Options:\n"
+    "  -S, --service              Name of the service to connect to\n"
+    "      --show-mappings        Displays the targets and containers in which the\n"
+    "                             service is hosted\n"
+    "  -c, --container=CONTAINER  Name of the container in which the mutable\n"
+    "                             component is deployed\n"
+    "  -t, --target=TARGET        Specifies the target to connect to\n"
+    "      --command=COMMAND      Shell commands to execute\n"
+    "  -p, --profile=PROFILE      Name of the profile in which the services are\n"
+    "                             registered. Defaults to: default\n"
+    "      --coordinator-profile-path=PATH\n"
+    "                             Path to the manifest of the previous configuration. By\n"
+    "                             default this tool will use the manifest stored in the\n"
+    "                             disnix coordinator profile instead of the specified\n"
+    "                             one, which is usually sufficient in most cases.\n"
+    "  -h, --help                 Shows the usage of this command to the user\n"
+    "  -v, --version              Shows the version of this command to the user\n"
 
-    printf("\nEnvironment:\n");
-    printf("  DISNIX_PROFILE    Sets the name of the profile that stores the manifest on the\n");
-    printf("                    coordinator machine and the deployed services per machine on\n");
-    printf("                    each target (Defaults to: default)\n");
+    "\nEnvironment:\n"
+    "  DISNIX_PROFILE    Sets the name of the profile that stores the manifest on the\n"
+    "                    coordinator machine and the deployed services per machine on\n"
+    "                    each target (Defaults to: default)\n"
+    );
 }
 
 int main(int argc, char *argv[])

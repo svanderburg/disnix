@@ -26,33 +26,35 @@
 static void print_usage(const char *command)
 {
     printf("Usage: %s [--unlock] [OPTION] [MANIFEST]\n\n", command);
-    
-    printf("Notifies all services on the machines that the transition phase starts or ends,\n");
-    printf("so that they can temporarily lock or unlock themselves (or take other\n");
-    printf("precautions to make the transition to go smooth)\n\n");
-    
-    printf("If no manifest is specified, the manifest of the last deployed configuration\n");
-    printf("will be used\n\n");
-    
-    printf("Most users don't need to use this command directly. The `disnix-env' command\n");
-    printf("will automatically invoke this command before upgrading the configuration.\n\n");
-    
-    printf("Options:\n");
-    printf("  -u, --unlock           Executes an unlock operation instead of a lock\n");
-    printf("  -p, --profile=PROFILE  Name of the profile in which the services are\n");
-    printf("                         registered. Defaults to: default\n");
-    printf("      --coordinator-profile-path=PATH\n");
-    printf("                         Path to the manifest of the previous configuration. By\n");
-    printf("                         default this tool will use the manifest stored in the\n");
-    printf("                         disnix coordinator profile instead of the specified\n");
-    printf("                         one, which is usually sufficient in most cases.\n");
-    printf("  -h, --help             Shows the usage of this command to the user\n");
-    printf("  -v, --version          Shows the version of this command to the user\n");
-    
-    printf("\nEnvironment:\n");
-    printf("  DISNIX_PROFILE    Sets the name of the profile that stores the manifest on the\n");
-    printf("                    coordinator machine and the deployed services per machine on\n");
-    printf("                    each target (Defaults to: default)\n");
+
+    puts(
+    "Notifies all services on the machines that the transition phase starts or ends,\n"
+    "so that they can temporarily lock or unlock themselves (or take other\n"
+    "precautions to make the transition to go smooth)\n\n"
+
+    "If no manifest is specified, the manifest of the last deployed configuration\n"
+    "will be used\n\n"
+
+    "Most users don't need to use this command directly. The `disnix-env' command\n"
+    "will automatically invoke this command before upgrading the configuration.\n\n"
+
+    "Options:\n"
+    "  -u, --unlock           Executes an unlock operation instead of a lock\n"
+    "  -p, --profile=PROFILE  Name of the profile in which the services are\n"
+    "                         registered. Defaults to: default\n"
+    "      --coordinator-profile-path=PATH\n"
+    "                         Path to the manifest of the previous configuration. By\n"
+    "                         default this tool will use the manifest stored in the\n"
+    "                         disnix coordinator profile instead of the specified\n"
+    "                         one, which is usually sufficient in most cases.\n"
+    "  -h, --help             Shows the usage of this command to the user\n"
+    "  -v, --version          Shows the version of this command to the user\n"
+
+    "\nEnvironment:\n"
+    "  DISNIX_PROFILE    Sets the name of the profile that stores the manifest on the\n"
+    "                    coordinator machine and the deployed services per machine on\n"
+    "                    each target (Defaults to: default)\n"
+    );
 }
 
 int main(int argc, char *argv[])

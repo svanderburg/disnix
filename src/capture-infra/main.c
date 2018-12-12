@@ -25,26 +25,28 @@
 static void print_usage(const char *command)
 {
     printf("Usage: %s [OPTION] infrastructure_nix\n\n", command);
-    
-    printf("The command `disnix-capture-infra' captures the container\n");
-    printf("configurations of all machines defined in the infrastructure model and\n");
-    printf("generates an infrastructure expression from it.\n\n");
-    
-    printf("Options:\n");
-    printf("      --interface=INTERFACE   Path to executable that communicates with a Disnix\n");
-    printf("                              interface. Defaults to `disnix-ssh-client'\n");
-    printf("      --target-property=PROP  The target property of an infrastructure model,\n");
-    printf("                              that specifies how to connect to the remote Disnix\n");
-    printf("                              interface. (Defaults to: hostname)\n");
-    printf("  -h, --help                  Shows the usage of this command to the user\n");
-    printf("  -v, --version               Shows the version of this command to the user\n");
-    
-    printf("\nEnvironment:\n");
-    printf("  DISNIX_CLIENT_INTERFACE    Sets the client interface (which defaults to\n");
-    printf("                             `disnix-ssh-client')\n");
-    printf("  DISNIX_TARGET_PROPERTY     Specifies which property in the infrastructure Nix\n");
-    printf("                             expression specifies how to connect to the remote\n");
-    printf("                             interface (defaults to: hostname)\n");
+
+    puts(
+    "The command `disnix-capture-infra' captures the container\n"
+    "configurations of all machines defined in the infrastructure model and\n"
+    "generates an infrastructure expression from it.\n\n"
+
+    "Options:\n"
+    "      --interface=INTERFACE   Path to executable that communicates with a Disnix\n"
+    "                              interface. Defaults to `disnix-ssh-client'\n"
+    "      --target-property=PROP  The target property of an infrastructure model,\n"
+    "                              that specifies how to connect to the remote Disnix\n"
+    "                              interface. (Defaults to: hostname)\n"
+    "  -h, --help                  Shows the usage of this command to the user\n"
+    "  -v, --version               Shows the version of this command to the user\n"
+
+    "\nEnvironment:\n"
+    "  DISNIX_CLIENT_INTERFACE    Sets the client interface (which defaults to\n"
+    "                             `disnix-ssh-client')\n"
+    "  DISNIX_TARGET_PROPERTY     Specifies which property in the infrastructure Nix\n"
+    "                             expression specifies how to connect to the remote\n"
+    "                             interface (defaults to: hostname)\n"
+    );
 }
 
 int main(int argc, char *argv[])

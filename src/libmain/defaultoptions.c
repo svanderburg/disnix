@@ -74,6 +74,8 @@ char *check_profile_option(char *profile)
 
 void print_version(const char *command)
 {
-    printf("%s (" PACKAGE_NAME ") " PACKAGE_VERSION "\n\n", command);
-    printf("Copyright (C) 2008-2018 Sander van der Burg\n");
+    printf(
+    "%s (" PACKAGE_NAME ") " PACKAGE_VERSION "\n\n"
+    "Copyright (C) 2008-2018 Sander van der Burg\n"
+    , command);
 }

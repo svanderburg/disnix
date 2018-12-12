@@ -25,63 +25,65 @@
 static void print_usage(const char *command)
 {
     printf("Usage: %s [OPTION] MANIFEST\n\n", command);
-    
-    printf("The command `disnix-activate' will activate all the services in the given\n");
-    printf("manifest file on the target machines in the right order, by traversing the\n");
-    printf("inter-dependency graph of the services.\n\n");
-    printf("If there is already a configuration deployed, then this command will perform an\n");
-    printf("upgrade.\n\n");
-    
-    printf("First it deactivates all obsolete services which are not present in the new\n");
-    printf("configuration, finally it will activate all the new services in the new\n");
-    printf("configuration. During this phase it takes inter-dependencies into account, so\n");
-    printf("that no service will fail due to  a broken inter-dependency closure.\n\n");
-    printf("In case of a failure, a rollback is performed and all the newly activated\n");
-    printf("services are deactivated and all deactivated services are activated again.\n\n");
-    
-    printf("Most users don't need to use this command directly. The `disnix-env' command\n");
-    printf("will automatically invoke this command to activate the new configuration.\n\n");
-    
-    printf("Options:\n");
-    printf("  -p, --profile=PROFILE          Name of the profile in which the services are\n");
-    printf("                                 registered. Defaults to: default\n");
-    printf("      --coordinator-profile-path=PATH\n");
-    printf("                                 Path to the manifest of the previous\n");
-    printf("                                 configuration. By default this tool will use\n");
-    printf("                                 the manifest stored in the disnix coordinator\n");
-    printf("                                 profile instead of the specified one, which is\n");
-    printf("                                 usually sufficient in most cases.\n");
-    printf("  -o, --old-manifest=MANIFEST    Nix profile path where the manifest should be\n");
-    printf("                                 stored, so that Disnix knows the current\n");
-    printf("                                 configuration of a distributed system. By\n");
-    printf("                                 default it is stored in the profile directory\n");
-    printf("                                 of the user. Most users do not want to use this\n");
-    printf("                                 option directly, but it is used by e.g. the\n");
-    printf("                                 virtualization extension to store virtual\n");
-    printf("                                 machine profile in a separate directory.\n");
-    printf("      --no-upgrade               By enabling this option Disnix does not store\n");
-    printf("                                 the deployment state for further use, such as\n");
-    printf("                                 upgrading\n");
-    printf("      --no-rollback              Do not roll back if an error occurs while\n");
-    printf("                                 deactivating and activating services\n");
-    printf("      --dry-run                  Prints the activation and deactivation steps\n");
-    printf("                                 that will be performed but does not actually\n");
-    printf("                                 execute them\n");
-    printf("  -h, --help                     Shows the usage of this command to the user\n");
-    printf("  -v, --version                  Shows the version of this command to the user\n");
-    
-    printf("\nExit status:\n");
-    printf(" 0                  Transition succeeded.\n");
-    printf(" 1                  Transition failed, but was successfully roll backed.\n");
-    printf(" 2                  Transition failed and the rollback of the obsolete mappings\n");
-    printf("                    failed.\n");
-    printf(" 3                  Transition failed and the rollback of the new mappings\n");
-    printf("                    failed.\n");
-    
-    printf("\nEnvironment:\n");
-    printf("  DISNIX_PROFILE    Sets the name of the profile that stores the manifest on the\n");
-    printf("                    coordinator machine and the deployed services per machine on\n");
-    printf("                    each target (Defaults to: default)\n");
+
+    puts(
+    "The command `disnix-activate' will activate all the services in the given\n"
+    "manifest file on the target machines in the right order, by traversing the\n"
+    "inter-dependency graph of the services.\n\n"
+    "If there is already a configuration deployed, then this command will perform an\n"
+    "upgrade.\n\n"
+
+    "First it deactivates all obsolete services which are not present in the new\n"
+    "configuration, finally it will activate all the new services in the new\n"
+    "configuration. During this phase it takes inter-dependencies into account, so\n"
+    "that no service will fail due to  a broken inter-dependency closure.\n\n"
+    "In case of a failure, a rollback is performed and all the newly activated\n"
+    "services are deactivated and all deactivated services are activated again.\n\n"
+
+    "Most users don't need to use this command directly. The `disnix-env' command\n"
+    "will automatically invoke this command to activate the new configuration.\n\n"
+
+    "Options:\n"
+    "  -p, --profile=PROFILE          Name of the profile in which the services are\n"
+    "                                 registered. Defaults to: default\n"
+    "      --coordinator-profile-path=PATH\n"
+    "                                 Path to the manifest of the previous\n"
+    "                                 configuration. By default this tool will use\n"
+    "                                 the manifest stored in the disnix coordinator\n"
+    "                                 profile instead of the specified one, which is\n"
+    "                                 usually sufficient in most cases.\n"
+    "  -o, --old-manifest=MANIFEST    Nix profile path where the manifest should be\n"
+    "                                 stored, so that Disnix knows the current\n"
+    "                                 configuration of a distributed system. By\n"
+    "                                 default it is stored in the profile directory\n"
+    "                                 of the user. Most users do not want to use this\n"
+    "                                 option directly, but it is used by e.g. the\n"
+    "                                 virtualization extension to store virtual\n"
+    "                                 machine profile in a separate directory.\n"
+    "      --no-upgrade               By enabling this option Disnix does not store\n"
+    "                                 the deployment state for further use, such as\n"
+    "                                 upgrading\n"
+    "      --no-rollback              Do not roll back if an error occurs while\n"
+    "                                 deactivating and activating services\n"
+    "      --dry-run                  Prints the activation and deactivation steps\n"
+    "                                 that will be performed but does not actually\n"
+    "                                 execute them\n"
+    "  -h, --help                     Shows the usage of this command to the user\n"
+    "  -v, --version                  Shows the version of this command to the user\n"
+
+    "\nExit status:\n"
+    " 0                  Transition succeeded.\n"
+    " 1                  Transition failed, but was successfully roll backed.\n"
+    " 2                  Transition failed and the rollback of the obsolete mappings\n"
+    "                    failed.\n"
+    " 3                  Transition failed and the rollback of the new mappings\n"
+    "                    failed.\n"
+
+    "\nEnvironment:\n"
+    "  DISNIX_PROFILE    Sets the name of the profile that stores the manifest on the\n"
+    "                    coordinator machine and the deployed services per machine on\n"
+    "                    each target (Defaults to: default)\n"
+    );
 }
 
 int main(int argc, char *argv[])

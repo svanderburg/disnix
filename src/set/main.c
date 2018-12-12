@@ -26,32 +26,34 @@
 static void print_usage(const char *command)
 {
     printf("Usage: %s [OPTION] MANIFEST\n\n", command);
-    
-    printf("The command `disnix-set' updates the coordinator profile referring to the last\n");
-    printf("deployed manifest and the Disnix profiles on the target machines referring\n");
-    printf("to the set of installed services. Updating the profiles prevents the\n");
-    printf("configuration from being garbage collected.\n\n");
-    
-    printf("This command should almost never be called directly. The command `disnix-env'\n");
-    printf("invokes this command to update the profiles automatically.\n\n");
-    
-    printf("Options:\n");
-    printf("  -p, --profile=PROFILE                Name of the profile in which the services\n");
-    printf("                                       are registered. Defaults to: default\n");
-    printf("      --coordinator-profile-path=PATH  Path to the manifest of the previous\n");
-    printf("                                       configuration. By default this tool will\n");
-    printf("                                       use the manifest stored in the disnix\n");
-    printf("                                       coordinator profile instead of the\n");
-    printf("                                       specified one, which is usually sufficient\n");
-    printf("                                       in most cases.\n");
-    printf("      --no-coordinator-profile         Specifies that the coordinator profile\n");
-    printf("                                       should not be updated\n");
-    printf("      --no-target-profiles             Specifies that the target profiles should\n");
-    printf("                                       not be updated\n");
-    printf("  -h, --help                           Shows the usage of this command to the\n");
-    printf("                                       user\n");
-    printf("  -v, --version                        Shows the version of this command to the\n");
-    printf("                                       user\n");
+
+    puts(
+    "The command `disnix-set' updates the coordinator profile referring to the last\n"
+    "deployed manifest and the Disnix profiles on the target machines referring\n"
+    "to the set of installed services. Updating the profiles prevents the\n"
+    "configuration from being garbage collected.\n\n"
+
+    "This command should almost never be called directly. The command `disnix-env'\n"
+    "invokes this command to update the profiles automatically.\n\n"
+
+    "Options:\n"
+    "  -p, --profile=PROFILE                Name of the profile in which the services\n"
+    "                                       are registered. Defaults to: default\n"
+    "      --coordinator-profile-path=PATH  Path to the manifest of the previous\n"
+    "                                       configuration. By default this tool will\n"
+    "                                       use the manifest stored in the disnix\n"
+    "                                       coordinator profile instead of the\n"
+    "                                       specified one, which is usually sufficient\n"
+    "                                       in most cases.\n"
+    "      --no-coordinator-profile         Specifies that the coordinator profile\n"
+    "                                       should not be updated\n"
+    "      --no-target-profiles             Specifies that the target profiles should\n"
+    "                                       not be updated\n"
+    "  -h, --help                           Shows the usage of this command to the\n"
+    "                                       user\n"
+    "  -v, --version                        Shows the version of this command to the\n"
+    "                                       user\n"
+    );
 }
 
 int main(int argc, char *argv[])

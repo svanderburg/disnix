@@ -26,28 +26,30 @@
 static void print_usage(const char *command)
 {
     printf("Usage: %s [OPTION] DISTRIBUTED_DERIVATION\n\n", command);
-    
-    printf("The command `disnix-build' builds derivations on the given target machines\n");
-    printf("specified in a distributed derivation XML file. When the building process is\n");
-    printf("complete, the results are transfered back to the coordinator machine, so that\n");
-    printf("they are kept for further use and do not have to be rebuilt again in case of a\n");
-    printf("configuration change.\n\n");
-    
-    printf("In most cases this command should not be called directly. The command\n");
-    printf("`disnix-env' automatically uses this command if the --build-on-targets is\n");
-    printf("specified.\n\n");
-    
-    printf("Options:\n");
-    printf("  -m, --max-concurrent-transfers=NUM  Maximum amount of concurrent closure\n");
-    printf("                                      transfers. Defauls to: 2\n");
-    printf("  -h, --help                          Shows the usage of this command to the user\n");
-    printf("  -v, --version                       Shows the version of this command to the\n");
-    printf("                                      user\n");
-    
-    printf("\nEnvironment:\n");
-    printf("  DISNIX_TARGET_PROPERTY    Specifies which property in the infrastructure Nix\n");
-    printf("                            expression specifies how to connect to the remote\n");
-    printf("                            interface (defaults to: hostname)\n");
+
+    puts(
+    "The command `disnix-build' builds derivations on the given target machines\n"
+    "specified in a distributed derivation XML file. When the building process is\n"
+    "complete, the results are transfered back to the coordinator machine, so that\n"
+    "they are kept for further use and do not have to be rebuilt again in case of a\n"
+    "configuration change.\n\n"
+
+    "In most cases this command should not be called directly. The command\n"
+    "`disnix-env' automatically uses this command if the --build-on-targets is\n"
+    "specified.\n\n"
+
+    "Options:\n"
+    "  -m, --max-concurrent-transfers=NUM  Maximum amount of concurrent closure\n"
+    "                                      transfers. Defauls to: 2\n"
+    "  -h, --help                          Shows the usage of this command to the user\n"
+    "  -v, --version                       Shows the version of this command to the\n"
+    "                                      user\n"
+
+    "\nEnvironment:\n"
+    "  DISNIX_TARGET_PROPERTY    Specifies which property in the infrastructure Nix\n"
+    "                            expression specifies how to connect to the remote\n"
+    "                            interface (defaults to: hostname)\n"
+    );
 }
 
 int main(int argc, char *argv[])

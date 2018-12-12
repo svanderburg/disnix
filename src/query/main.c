@@ -26,33 +26,35 @@
 static void print_usage(const char *command)
 {
     printf("Usage: %s [OPTION] infrastructure_nix\n\n", command);
-    
-    printf("The command `disnix-query' collects and displays all the installed services from\n");
-    printf("the machines defined in a given infrastructure model.\n\n");
-    
-    printf("Options:\n");
-    printf("  -p, --profile=PROFILE       Name of the profile in which the services are\n");
-    printf("                              registered. Defaults to: default\n");
-    printf("      --interface=INTERFACE   Path to executable that communicates with a Disnix\n");
-    printf("                              interface. Defaults to `disnix-ssh-client'\n");
-    printf("      --target-property=PROP  The target property of an infrastructure model,\n");
-    printf("                              that specifies how to connect to the remote Disnix\n");
-    printf("                              interface. (Defaults to hostname)\n");
-    printf("  -f, --format=FORMAT         Output format. Options are: services (default),\n");
-    printf("                              containers and nix\n");
-    printf("  -h, --help                  Shows the usage of this command to the user\n");
-    printf("  -v, --version               Shows the version of this command to the user\n");
-    
-    printf("\nEnvironment:\n");
-    printf("  DISNIX_CLIENT_INTERFACE    Sets the client interface (which defaults to\n");
-    printf("                             `disnix-ssh-client')\n");
-    printf("  DISNIX_TARGET_PROPERTY     Specifies which property in the infrastructure Nix\n");
-    printf("                             expression specifies how to connect to the remote\n");
-    printf("                             interface (defaults to: hostname)\n");
-    printf("  DISNIX_PROFILE             Sets the name of the profile that stores the\n");
-    printf("                             manifest on the coordinator machine and the\n");
-    printf("                             deployed services per machine on each target\n");
-    printf("                             (Defaults to: default).\n");
+
+    puts(
+    "The command `disnix-query' collects and displays all the installed services from\n"
+    "the machines defined in a given infrastructure model.\n\n"
+
+    "Options:\n"
+    "  -p, --profile=PROFILE       Name of the profile in which the services are\n"
+    "                              registered. Defaults to: default\n"
+    "      --interface=INTERFACE   Path to executable that communicates with a Disnix\n"
+    "                              interface. Defaults to `disnix-ssh-client'\n"
+    "      --target-property=PROP  The target property of an infrastructure model,\n"
+    "                              that specifies how to connect to the remote Disnix\n"
+    "                              interface. (Defaults to hostname)\n"
+    "  -f, --format=FORMAT         Output format. Options are: services (default),\n"
+    "                              containers and nix\n"
+    "  -h, --help                  Shows the usage of this command to the user\n"
+    "  -v, --version               Shows the version of this command to the user\n"
+
+    "\nEnvironment:\n"
+    "  DISNIX_CLIENT_INTERFACE    Sets the client interface (which defaults to\n"
+    "                             `disnix-ssh-client')\n"
+    "  DISNIX_TARGET_PROPERTY     Specifies which property in the infrastructure Nix\n"
+    "                             expression specifies how to connect to the remote\n"
+    "                             interface (defaults to: hostname)\n"
+    "  DISNIX_PROFILE             Sets the name of the profile that stores the\n"
+    "                             manifest on the coordinator machine and the\n"
+    "                             deployed services per machine on each target\n"
+    "                             (Defaults to: default).\n"
+    );
 }
 
 int main(int argc, char *argv[])

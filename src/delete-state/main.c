@@ -26,35 +26,37 @@
 static void print_usage(const char *command)
 {
     printf("Usage: %s [OPTION] [MANIFEST]\n\n", command);
-    
-    printf("The command `disnix-delete-state' removes the state of all the components\n");
-    printf("in a given deployment manifest that have been marked as garbage. If no manifest\n");
-    printf("file is given, it uses the manifest of last deployed configuration.\n\n");
-    
-    printf("Most users don't need to use this command directly. The `disnix-env' command\n");
-    printf("will automatically invoke this command after the new configuration has been\n");
-    printf("deployed.\n\n");
-    
-    printf("Options:\n");
-    printf("  -c, --container=CONTAINER      Name of the container in which the mutable\n");
-    printf("                                 component is deployed\n");
-    printf("  -C, --component=COMPONENT      Name of the mutable component to take snapshots\n");
-    printf("                                 from\n");
-    printf("  -p, --profile=PROFILE          Name of the profile in which the services are\n");
-    printf("                                 registered. Defaults to: default\n");
-    printf("      --coordinator-profile-path=PATH\n");
-    printf("                                 Path to the manifest of the previous\n");
-    printf("                                 configuration. By default this tool will use\n");
-    printf("                                 the manifest stored in the disnix coordinator\n");
-    printf("                                 profile instead of the specified one, which is\n");
-    printf("                                 usually sufficient in most cases.\n");
-    printf("  -h, --help                     Shows the usage of this command to the user\n");
-    printf("  -v, --version                  Shows the version of this command to the user\n");
-    
-    printf("\nEnvironment:\n");
-    printf("  DISNIX_PROFILE    Sets the name of the profile that stores the manifest on the\n");
-    printf("                    coordinator machine and the deployed services per machine on\n");
-    printf("                    each target (Defaults to: default)\n");
+
+    puts(
+    "The command `disnix-delete-state' removes the state of all the components\n"
+    "in a given deployment manifest that have been marked as garbage. If no manifest\n"
+    "file is given, it uses the manifest of last deployed configuration.\n\n"
+
+    "Most users don't need to use this command directly. The `disnix-env' command\n"
+    "will automatically invoke this command after the new configuration has been\n"
+    "deployed.\n\n"
+
+    "Options:\n"
+    "  -c, --container=CONTAINER      Name of the container in which the mutable\n"
+    "                                 component is deployed\n"
+    "  -C, --component=COMPONENT      Name of the mutable component to take snapshots\n"
+    "                                 from\n"
+    "  -p, --profile=PROFILE          Name of the profile in which the services are\n"
+    "                                 registered. Defaults to: default\n"
+    "      --coordinator-profile-path=PATH\n"
+    "                                 Path to the manifest of the previous\n"
+    "                                 configuration. By default this tool will use\n"
+    "                                 the manifest stored in the disnix coordinator\n"
+    "                                 profile instead of the specified one, which is\n"
+    "                                 usually sufficient in most cases.\n"
+    "  -h, --help                     Shows the usage of this command to the user\n"
+    "  -v, --version                  Shows the version of this command to the user\n"
+
+    "\nEnvironment:\n"
+    "  DISNIX_PROFILE    Sets the name of the profile that stores the manifest on the\n"
+    "                    coordinator machine and the deployed services per machine on\n"
+    "                    each target (Defaults to: default)\n"
+    );
 }
 
 int main(int argc, char *argv[])

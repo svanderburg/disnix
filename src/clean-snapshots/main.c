@@ -26,28 +26,30 @@
 static void print_usage(const char *command)
 {
     printf("Usage: %s [OPTION] infrastructure_nix\n\n", command);
-    
-    printf("The command `disnix-clean-snapshots' removes all older snapshot generations\n");
-    printf("stored on the machines in the network.\n\n");
-    
-    printf("Options:\n");
-    printf("      --interface=INTERFACE   Path to executable that communicates with a Disnix\n");
-    printf("                              interface. Defaults to `disnix-ssh-client'\n");
-    printf("      --target-property=PROP  The target property of an infrastructure model,\n");
-    printf("                              that specifies how to connect to the remote Disnix\n");
-    printf("      --keep=NUM              Amount of snapshot generations to keep. Defaults\n");
-    printf("                              to: 1\n");
-    printf("  -C, --container=CONTAINER   Name of the container to filter on\n");
-    printf("  -c, --component=COMPONENT   Name of the component to filter on\n");
-    printf("  -h, --help                  Shows the usage of this command to the user\n");
-    printf("  -v, --version               Shows the version of this command to the user\n");
-    
-    printf("\nEnvironment:\n");
-    printf("  DISNIX_CLIENT_INTERFACE    Sets the client interface (which defaults to\n");
-    printf("                             `disnix-ssh-client')\n");
-    printf("  DISNIX_TARGET_PROPERTY     Specifies which property in the infrastructure Nix\n");
-    printf("                             expression specifies how to connect to the remote\n");
-    printf("                             interface (defaults to: hostname)\n");
+
+    puts(
+    "The command `disnix-clean-snapshots' removes all older snapshot generations\n"
+    "stored on the machines in the network.\n\n"
+
+    "Options:\n"
+    "      --interface=INTERFACE   Path to executable that communicates with a Disnix\n"
+    "                              interface. Defaults to `disnix-ssh-client'\n"
+    "      --target-property=PROP  The target property of an infrastructure model,\n"
+    "                              that specifies how to connect to the remote Disnix\n"
+    "      --keep=NUM              Amount of snapshot generations to keep. Defaults\n"
+    "                              to: 1\n"
+    "  -C, --container=CONTAINER   Name of the container to filter on\n"
+    "  -c, --component=COMPONENT   Name of the component to filter on\n"
+    "  -h, --help                  Shows the usage of this command to the user\n"
+    "  -v, --version               Shows the version of this command to the user\n"
+
+    "\nEnvironment:\n"
+    "  DISNIX_CLIENT_INTERFACE    Sets the client interface (which defaults to\n"
+    "                             `disnix-ssh-client')\n"
+    "  DISNIX_TARGET_PROPERTY     Specifies which property in the infrastructure Nix\n"
+    "                             expression specifies how to connect to the remote\n"
+    "                             interface (defaults to: hostname)\n"
+    );
 }
 
 int main(int argc, char *argv[])
