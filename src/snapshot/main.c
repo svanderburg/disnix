@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <defaultoptions.h>
-#include "snapshot.h"
+#include "run-snapshot.h"
 
 static void print_usage(const char *command)
 {
@@ -174,5 +174,5 @@ int main(int argc, char *argv[])
     else
         manifest_file = argv[optind];
     
-    return snapshot(manifest_file, max_concurrent_transfers, flags, keep, old_manifest, coordinator_profile_path, profile, container, component); /* Execute snapshot operation */
+    return run_snapshot(manifest_file, max_concurrent_transfers, flags, keep, old_manifest, coordinator_profile_path, profile, container, component); /* Execute snapshot operation */
 }

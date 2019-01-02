@@ -1,3 +1,7 @@
+Version 0.9
+===========
+- Most higher level functionality has been reimplemented in C and exposed as C APIs
+
 Version 0.8
 ===========
 - Added disnix-diagnose that can be used to spawn remote shell sessions to execute diagnoses and maintenance tasks

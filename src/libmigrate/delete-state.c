@@ -35,29 +35,7 @@ static void complete_delete_state_on_target(SnapshotMapping *mapping, ProcReact_
         g_printerr("[target: %s]: Cannot delete state of service: %s\n", mapping->target, mapping->component);
 }
 
-static int delete_obsolete_state(GPtrArray *snapshots_array, GPtrArray *target_array)
+int delete_obsolete_state(GPtrArray *snapshots_array, GPtrArray *target_array)
 {
     return map_snapshot_items(snapshots_array, target_array, delete_state_on_target, complete_delete_state_on_target);
-}
-
-int delete_state(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container, const gchar *component)
-{
-    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_SNAPSHOT_FLAG, container, component);
-    
-    if(manifest == NULL)
-    {
-        g_printerr("[coordinator]: Error while opening manifest file!\n");
-        g_printerr("Please provde a valid manifest file as a command-line parameter.\n");
-        return 1;
-    }
-    else
-    {
-        int exit_status;
-        
-        /* Delete the obsolete state */
-        g_printerr("[coordinator]: Deleting obsolete state of services...\n");
-        exit_status = !delete_obsolete_state(manifest->snapshots_array, manifest->target_array);
-        delete_manifest(manifest);
-        return exit_status;
-    }
 }

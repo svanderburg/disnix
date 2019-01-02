@@ -17,18 +17,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_RESTORE_H
-#define __DISNIX_RESTORE_H
-
-#define FLAG_TRANSFER_ONLY 0x1
-#define FLAG_DEPTH_FIRST 0x2
-#define FLAG_ALL 0x4
-#define FLAG_NO_UPGRADE 0x8
+#ifndef __DISNIX_RUN_SNAPSHOT_H
+#define __DISNIX_RUN_SNAPSHOT_H
 
 #include <glib.h>
+#include "snapshot.h"
 
 /**
- * Restores the state of services in the manifest.
+ * Snapshots the state of services in the manifest.
  *
  * @param manifest_file Path to the manifest file which maps services to machines
  * @param max_concurrent_transfers Specifies the maximum amount of concurrent transfers
@@ -37,10 +33,10 @@
  * @param old_manifest Manifest file representing the old deployment configuration
  * @param coordinator_profile_path Path where the current deployment state is stored for future reference
  * @param profile Name of the distributed profile
- * @param container_filter Snapshot operations will be restricted to the given container, NULL indicates all containers
- * @param component_filter Snapshot operations will be restricted to the given component, NULL indicates all components
+ * @param container Snapshot operations will be restricted to the given container, NULL indicates all containers
+ * @param component Snapshot operations will be restricted to the given component, NULL indicates all components
  * @return 0 if everything succeeds, else a non-zero exit status
  */
-int restore(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gchar *container_filter, const gchar *component_filter);
+int run_snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gchar *container, const gchar *component);
 
 #endif

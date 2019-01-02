@@ -23,7 +23,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <client-interface.h>
-#include <manifest.h>
 #include <snapshotmapping.h>
 #include <targets.h>
 
@@ -205,60 +204,32 @@ static int restore_depth_first(GPtrArray *snapshots_array, GPtrArray *target_arr
 
 /* The entire restore operation */
 
-int restore(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gchar *container_filter, const gchar *component_filter)
+int restore(const Manifest *manifest, GPtrArray *old_snapshots_array, const unsigned int max_concurrent_transfers, const unsigned int flags, const unsigned int keep)
 {
-    /* Generate a distribution array from the manifest file */
-    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_SNAPSHOT_FLAG, container_filter, component_filter);
-    
-    if(manifest == NULL)
+    int exit_status;
+    GPtrArray *snapshots_array;
+
+    if(flags & FLAG_NO_UPGRADE || old_snapshots_array == NULL)
     {
-        g_print("[coordinator]: Error while opening manifest file!\n");
-        return 1;
+        g_printerr("[coordinator]: Sending snapshots of all components...\n");
+        snapshots_array = manifest->snapshots_array;
     }
     else
     {
-        int exit_status;
-        GPtrArray *snapshots_array;
-        gchar *old_manifest_file;
-        
-        if(old_manifest == NULL)
-            old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, profile);
-        else
-            old_manifest_file = g_strdup(old_manifest);
-        
-        if(flags & FLAG_NO_UPGRADE || old_manifest_file == NULL)
-        {
-            g_printerr("[coordinator]: Sending snapshots of all components...\n");
-            snapshots_array = manifest->snapshots_array;
-        }
-        else
-        {
-            GPtrArray *old_snapshots_array = create_snapshots_array(old_manifest_file, container_filter, component_filter);
-            g_printerr("[coordinator]: Snapshotting state of moved components...\n");
-            snapshots_array = subtract_snapshot_mappings(manifest->snapshots_array, old_snapshots_array);
-            delete_snapshots_array(old_snapshots_array);
-        }
-        
-        if(flags & FLAG_DEPTH_FIRST)
-            exit_status = !restore_depth_first(snapshots_array, manifest->target_array, max_concurrent_transfers, flags, keep);
-        else
-        {
-            if(send_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, flags) /* First, send the snapshots to the remote machines */
-              && ((flags & FLAG_TRANSFER_ONLY) || restore_services(snapshots_array, manifest->target_array))) /* Then, restore them on the remote machines */
-                exit_status = 0;
-            else
-                exit_status = 1;
-        }
-        
-        /* Cleanup */
-        g_free(old_manifest_file);
-        
-        if(!(flags & FLAG_NO_UPGRADE) && old_manifest_file != NULL)
-            g_ptr_array_free(snapshots_array, TRUE);
-    
-        delete_manifest(manifest);
-
-        /* Return the exit status */
-        return exit_status;
+        g_printerr("[coordinator]: Snapshotting state of moved components...\n");
+        snapshots_array = subtract_snapshot_mappings(manifest->snapshots_array, old_snapshots_array);
     }
+
+    if(flags & FLAG_DEPTH_FIRST)
+        exit_status = restore_depth_first(snapshots_array, manifest->target_array, max_concurrent_transfers, flags, keep);
+    else
+    {
+        exit_status = send_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, flags) /* First, send the snapshots to the remote machines */
+          && ((flags & FLAG_TRANSFER_ONLY) || restore_services(snapshots_array, manifest->target_array)); /* Then, restore them on the remote machines */
+    }
+
+    if(!(flags & FLAG_NO_UPGRADE) && old_snapshots_array != NULL)
+        g_ptr_array_free(snapshots_array, TRUE);
+
+    return exit_status;
 }

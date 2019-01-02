@@ -21,23 +21,18 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <defaultoptions.h>
-#include "run-restore.h"
+#include "run-migrate.h"
 
 static void print_usage(const char *command)
 {
-    printf("Usage: %s [OPTION] [MANIFEST]\n\n", command);
+    printf("Usage: %s [OPTION] MANIFEST\n\n", command);
 
     puts(
-    "Restores the state of components deployed in a network of machines.\n\n"
+    "The command `disnix-migrate' is used to snapshot, transfer and restore the\n"
+    "state of services that have been moved from one machine to another.\n\n"
 
-    "By default, this command only restores the state of components that are recently\n"
-    "activated, i.e. the ones that are defined in the current deployment manifest,\n"
-    "but not the previous one.\n\n"
-
-    "A full restore of the state of the entire system can be done by providing the\n"
-    "--no-upgrade parameter.\n\n"
-
-    "If no manifest has been provided, the last deployed one is used.\n\n"
+    "Most users don't need to use this command directly. The `disnix-env' command\n"
+    "will automatically invoke this command to activate the new configuration.\n\n"
 
     "Options:\n"
     "  -c, --container=CONTAINER            Name of the container in which the\n"
@@ -53,6 +48,8 @@ static void print_usage(const char *command)
     "      --no-upgrade                     Indicates that no upgrade should be\n"
     "                                       performed and the state of all components\n"
     "                                       should be restored.\n"
+    "      --delete-state                   Remove the obsolete state of deactivated\n"
+    "                                       services\n"
     "      --transfer-only                  Transfers the snapshot from the target\n"
     "                                       machines, but does not actually restore\n"
     "                                       them\n"
@@ -77,9 +74,13 @@ static void print_usage(const char *command)
     "                                       user\n"
 
     "\nEnvironment:\n"
-    "  DISNIX_PROFILE    Sets the name of the profile that stores the manifest on the\n"
-    "                    coordinator machine and the deployed services per machine on\n"
-    "                    each target (Defaults to: default)\n"
+    "  DISNIX_PROFILE       Sets the name of the profile that stores the manifest on\n"
+    "                       the coordinator machine and the deployed services per\n"
+    "                       machine on each target (Defaults to: default)\n"
+    "  DISNIX_DELETE_STATE  If set to 1 it automatically deletes the obsolete\n"
+    "                       state after upgrading. (defaults to: 0)\n"
+    "  DYSNOMIA_STATEDIR    Specifies where the snapshots must be stored on the\n"
+    "                       coordinator machine (defaults to: /var/state/dysnomia)\n"
     );
 }
 
@@ -94,9 +95,10 @@ int main(int argc, char *argv[])
         {"coordinator-profile-path", required_argument, 0, 'P'},
         {"profile", required_argument, 0, 'p'},
         {"old-manifest", required_argument, 0, 'o'},
+        {"no-upgrade", no_argument, 0, 'u'},
+        {"delete-state", no_argument, 0, ','},
         {"transfer-only", no_argument, 0, 't'},
         {"depth-first", no_argument, 0, 'D'},
-        {"no-upgrade", no_argument, 0, 'u'},
         {"all", no_argument, 0, 'a'},
         {"keep", required_argument, 0, 'k'},
         {"max-concurrent-transfers", required_argument, 0, 'm'},
@@ -104,17 +106,17 @@ int main(int argc, char *argv[])
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
     };
-    
+
     unsigned int max_concurrent_transfers = 2;
     unsigned int flags = 0;
     int keep = 1;
+    char *manifest_file;
     char *old_manifest = NULL;
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
-    char *manifest_file;
     char *container = NULL;
     char *component = NULL;
-    
+
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "c:C:m:o:p:hv", long_options, &option_index)) != -1)
     {
@@ -137,6 +139,9 @@ int main(int argc, char *argv[])
                 break;
             case 'u':
                 flags |= FLAG_NO_UPGRADE;
+                break;
+            case ',':
+                flags |= FLAG_DELETE_STATE;
                 break;
             case 'a':
                 flags |= FLAG_ALL;
@@ -164,13 +169,16 @@ int main(int argc, char *argv[])
     }
 
     /* Validate options */
-    
+
     profile = check_profile_option(profile);
-    
+
     if(optind >= argc)
         manifest_file = NULL;
     else
         manifest_file = argv[optind];
-    
-    return run_restore(manifest_file, max_concurrent_transfers, flags, keep, old_manifest, coordinator_profile_path, profile, container, component); /* Execute restore operation */
+
+    if(getenv("DISNIX_DELETE_STATE") != NULL && strcmp(getenv("DISNIX_DELETE_STATE"), "1") == 0)
+        flags |= FLAG_DELETE_STATE;
+
+    return run_migrate(manifest_file, max_concurrent_transfers, flags, keep, old_manifest, coordinator_profile_path, profile, container, component); /* Execute migrate operation */
 }

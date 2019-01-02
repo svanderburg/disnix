@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <defaultoptions.h>
-#include "delete-state.h"
+#include "run-delete-state.h"
 
 static void print_usage(const char *command)
 {
@@ -116,5 +116,5 @@ int main(int argc, char *argv[])
     else
         manifest_file = argv[optind];
     
-    return delete_state(manifest_file, coordinator_profile_path, profile, container, component); /* Execute snapshot operation */
+    return run_delete_state(manifest_file, coordinator_profile_path, profile, container, component); /* Execute snapshot operation */
 }

@@ -98,6 +98,7 @@ src/libinterface/Makefile
 src/libpkgmgmt/Makefile
 src/libstatemgmt/Makefile
 src/libprofilemanifest/Makefile
+src/libmigrate/Makefile
 src/distribute/Makefile
 src/lock/Makefile
 src/set/Makefile
@@ -110,6 +111,7 @@ src/delete-state/Makefile
 src/capture-infra/Makefile
 src/capture-manifest/Makefile
 src/run-activity/Makefile
+src/migrate/Makefile
 scripts/Makefile
 data/Makefile
 maintenance/Makefile
@@ -120,7 +122,6 @@ scripts/disnix-deploy
 scripts/disnix-env
 scripts/disnix-instantiate
 scripts/disnix-manifest
-scripts/disnix-migrate
 scripts/disnix-gendist-roundrobin
 scripts/disnix-reconstruct
 scripts/disnix-ssh-client

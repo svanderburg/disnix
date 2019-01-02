@@ -141,4 +141,6 @@ GPtrArray *find_snapshot_mappings_per_target(const GPtrArray *snapshots_array, c
  */
 int map_snapshot_items(GPtrArray *snapshots_array, GPtrArray *target_array, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping);
 
+void clear_snapshot_items_transferred_status(GPtrArray *snapshots_array);
+
 #endif

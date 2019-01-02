@@ -312,3 +312,14 @@ int map_snapshot_items(GPtrArray *snapshots_array, GPtrArray *target_array, map_
     g_hash_table_destroy(pid_table);
     return status;
 }
+
+void clear_snapshot_items_transferred_status(GPtrArray *snapshots_array)
+{
+    unsigned int i;
+
+    for(i = 0; i < snapshots_array->len; i++)
+    {
+        SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
+        mapping->transferred = FALSE;
+    }
+}

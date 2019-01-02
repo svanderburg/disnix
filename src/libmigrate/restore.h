@@ -17,20 +17,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_DELETE_STATE_H
-#define __DISNIX_DELETE_STATE_H
-#include <glib.h>
+#ifndef __DISNIX_RESTORE_H
+#define __DISNIX_RESTORE_H
 
-/**
- * Deletes the state marked as obsolete of the services in the manifest.
- *
- * @param manifest_file Path to the manifest file which maps services to machines
- * @param coordinator_profile_path Path where the current deployment state is stored for future reference
- * @param profile Name of the distributed profile
- * @param container Snapshot operations will be restricted to the given container, NULL indicates all containers
- * @param component Snapshot operations will be restricted to the given component, NULL indicates all components
- * @return 0 if everything succeeds, else a non-zero exit status
- */
-int delete_state(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container, const gchar *component);
+#include <glib.h>
+#include <manifest.h>
+#include "datamigrationflags.h"
+
+int restore(const Manifest *manifest, GPtrArray *old_snapshots_array, const unsigned int max_concurrent_transfers, const unsigned int flags, const unsigned int keep);
 
 #endif

@@ -23,7 +23,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <client-interface.h>
-#include <manifest.h>
 #include <snapshotmapping.h>
 #include <targets.h>
 
@@ -205,78 +204,42 @@ static int snapshot_depth_first(GPtrArray *snapshots_array, GPtrArray *target_ar
     return success;
 }
 
-static void cleanup(const unsigned int flags, const gchar *manifest_file, char *old_manifest_file, Manifest *manifest, GPtrArray *snapshots_array, GPtrArray *old_snapshots_array)
-{
-    g_free(old_manifest_file);
-    
-    if(!(flags & FLAG_NO_UPGRADE) && manifest_file != NULL)
-    {
-        delete_snapshots_array(old_snapshots_array);
-        if(snapshots_array != NULL)
-            g_ptr_array_free(snapshots_array, TRUE);
-    }
-    
-    delete_manifest(manifest);
-}
-
 /* The entire snapshot operation */
 
-int snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gchar *container_filter, const gchar *component_filter)
+int snapshot(const Manifest *manifest, GPtrArray *old_snapshots_array, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)
 {
-    /* Generate a distribution array from the manifest file */
-    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_SNAPSHOT_FLAG, container_filter, component_filter);
-    
-    if(manifest == NULL)
+    if(!(flags & FLAG_NO_UPGRADE) && old_snapshots_array == NULL)
     {
-        g_print("[coordinator]: Error while opening manifest file!\n");
-        return 1;
+        g_printerr("[coordinator]: No snapshots are taken since an upgrade is requested and no previous deployment state is known\n");
+        return TRUE;
     }
     else
     {
         GPtrArray *snapshots_array = NULL;
-        GPtrArray *old_snapshots_array = NULL;
-        gchar *old_manifest_file;
-        
-        if(old_manifest == NULL)
-            old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, profile);
-        else
-            old_manifest_file = g_strdup(old_manifest);
-        
-        if(!(flags & FLAG_NO_UPGRADE) && old_manifest_file == NULL)
-            g_printerr("[coordinator]: No snapshots are taken since an upgrade is requested and no previous deployment state is known\n");
+        int exit_status;
+
+        if(flags & FLAG_NO_UPGRADE)
+        {
+            g_printerr("[coordinator]: Snapshotting state of all components...\n");
+            snapshots_array = manifest->snapshots_array;
+        }
         else
         {
-            if((flags & FLAG_NO_UPGRADE) || manifest_file == NULL)
-            {
-                g_printerr("[coordinator]: Snapshotting state of all components...\n");
-                snapshots_array = manifest->snapshots_array;
-            }
-            else
-            {
-                old_snapshots_array = create_snapshots_array(old_manifest_file, container_filter, component_filter);
-                g_printerr("[coordinator]: Snapshotting state of moved components using previous manifest: %s\n", old_manifest_file);
-                snapshots_array = subtract_snapshot_mappings(old_snapshots_array, manifest->snapshots_array);
-            }
-        
-            if(flags & FLAG_DEPTH_FIRST)
-            {
-                int exit_status = !snapshot_depth_first(snapshots_array, manifest->target_array, max_concurrent_transfers, flags, keep);
-                
-                cleanup(flags, manifest_file, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
-                return exit_status;
-            }
-            else
-            {
-                if((!(flags & FLAG_TRANSFER_ONLY) && !snapshot_services(snapshots_array, manifest->target_array)) /* First, take snapshots on the remote machines */
-                  || (!retrieve_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, flags))) /* Then transfer the snapshots to the coordinator machine */
-                {
-                    cleanup(flags, manifest_file, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
-                    return 1;
-                }
-            }
+            g_printerr("[coordinator]: Snapshotting state of moved components...\n");
+            snapshots_array = subtract_snapshot_mappings(old_snapshots_array, manifest->snapshots_array);
         }
-        
-        cleanup(flags, manifest_file, old_manifest_file, manifest, snapshots_array, old_snapshots_array);
-        return 0;
+
+        if(flags & FLAG_DEPTH_FIRST)
+            exit_status = snapshot_depth_first(snapshots_array, manifest->target_array, max_concurrent_transfers, flags, keep);
+        else
+        {
+            exit_status = ((flags & FLAG_TRANSFER_ONLY) || snapshot_services(snapshots_array, manifest->target_array))
+              && retrieve_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, flags);
+        }
+
+        if(!(flags & FLAG_NO_UPGRADE))
+            g_ptr_array_free(snapshots_array, TRUE);
+
+        return exit_status;
     }
 }
