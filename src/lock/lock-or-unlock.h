@@ -17,22 +17,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_PROFILES_H
-#define __DISNIX_PROFILES_H
+#ifndef __DISNIX_LOCK_OR_UNLOCK_H
+#define __DISNIX_LOCK_OR_UNLOCK_H
 #include <glib.h>
 
 /**
- * Sets the Disnix profiles on the target machines and the Disnix coordinator
- * profile on the coordinator machine so that the current configuration is known
- * and the installed components are no longer considered garbage.
+ * Locks or unlocks the target machines in a manifest
  *
- * @param manifest_file Path to the manifest file representing the deployment state
- * @param coordinator_profile_path Path where the current deployment configuration must be stored
- * @param profile Name of the distributed profile
- * @param no_coordinator_profile Do not create a coordinator profile
- * @param no_target_profiles Do not create Disnix profiles on the target machines
- * @return 0 if everything succeeds, else a non-zero exit status
+ * @param do_lock TRUE to lock the machines, FALSE to unlock them
+ * @param manifest_file Path to the manifest file
+ * @param coordinator_profile_path Path where the current deployment state is stored for future reference
+ * @param profile Identifier of the distributed profile
+ * @return 0 if the unlocking phase succeeds, else a non-zero exit status
  */
-int set_profiles(const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const int no_coordinator_profile, const int no_target_profiles);
+int lock_or_unlock(const int do_lock, const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile);
 
 #endif

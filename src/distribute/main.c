@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <defaultoptions.h>
-#include "distribute.h"
+#include "run-distribute.h"
 
 static void print_usage(const char *command)
 {
@@ -85,5 +85,5 @@ int main(int argc, char *argv[])
         return 1;
     }
     else
-        return distribute(argv[optind], max_concurrent_transfers); /* Execute distribute operation */
+        return run_distribute(argv[optind], max_concurrent_transfers); /* Execute distribute operation */
 }

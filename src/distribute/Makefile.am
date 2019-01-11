@@ -5,12 +5,12 @@ disnix-distribute.1.xml: disnix-distribute.1
 	$(SHELL) ../../maintenance/man2docbook.bash $<
 
 bin_PROGRAMS = disnix-distribute
-noinst_HEADERS = distribute.h
+noinst_HEADERS = run-distribute.h
 noinst_DATA = disnix-distribute.1.xml
 man1_MANS = disnix-distribute.1
 
-disnix_distribute_SOURCES = distribute.c main.c
-disnix_distribute_CFLAGS = $(GLIB2_CFLAGS) -I../libprocreact -I../libmanifest -I../libmain -I../libinterface -I../libmodel
-disnix_distribute_LDADD = $(GLIB2_LIBS) ../libprocreact/libprocreact.la ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la
+disnix_distribute_SOURCES = run-distribute.c main.c
+disnix_distribute_CFLAGS = $(GLIB2_CFLAGS) -I../libprocreact -I../libmanifest -I../libmain -I../libinterface -I../libmodel -I../libdeploy
+disnix_distribute_LDADD = $(GLIB2_LIBS) ../libprocreact/libprocreact.la ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la ../libdeploy/libdeploy.la
 
 EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

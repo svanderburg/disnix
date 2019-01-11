@@ -1,6 +1,6 @@
-bin_SCRIPTS = disnix-instantiate disnix-manifest disnix-gendist-roundrobin disnix-copy-closure disnix-copy-snapshots disnix-delegate disnix-deploy disnix-env disnix-ssh-client disnix-reconstruct
+bin_SCRIPTS = disnix-instantiate disnix-manifest disnix-gendist-roundrobin disnix-copy-closure disnix-copy-snapshots disnix-delegate disnix-env disnix-ssh-client disnix-reconstruct
 pkgdata_SCRIPTS = checks
-noinst_DATA = disnix-instantiate.1.xml disnix-manifest.1.xml disnix-gendist-roundrobin.1.xml disnix-copy-closure.1.xml disnix-copy-snapshots.1.xml disnix-delegate.1.xml disnix-deploy.1.xml disnix-env.1.xml disnix-ssh-client.1.xml disnix-reconstruct.1.xml
+noinst_DATA = disnix-instantiate.1.xml disnix-manifest.1.xml disnix-gendist-roundrobin.1.xml disnix-copy-closure.1.xml disnix-copy-snapshots.1.xml disnix-delegate.1.xml disnix-env.1.xml disnix-ssh-client.1.xml disnix-reconstruct.1.xml
 
 disnix-instantiate.1: disnix-instantiate.in
 	$(HELP2MAN) --output=$@ --no-info --name 'Instantiate a distributed derivation from Disnix expressions' "$(SHELL) disnix-instantiate"
@@ -38,12 +38,6 @@ disnix-delegate.1: disnix-delegate.in
 disnix-delegate.1.xml: disnix-delegate.1
 	$(SHELL) ../maintenance/man2docbook.bash $<
 
-disnix-deploy.1: disnix-deploy.in
-	$(HELP2MAN) --output=$@ --no-info --name 'Deploys a prebuilt Disnix manifest' "$(SHELL) disnix-deploy"
-
-disnix-deploy.1.xml: disnix-deploy.1
-	$(SHELL) ../maintenance/man2docbook.bash $<
-
 disnix-env.1: disnix-env.in
 	$(HELP2MAN) --output=$@ --no-info --name 'Installs or updates the environment of a distributed system' "$(SHELL) disnix-env"
 
@@ -62,9 +56,9 @@ disnix-reconstruct.1: disnix-reconstruct.in
 disnix-reconstruct.1.xml: disnix-reconstruct.1
 	$(SHELL) ../maintenance/man2docbook.bash $<
 
-man1_MANS = disnix-instantiate.1 disnix-manifest.1 disnix-gendist-roundrobin.1 disnix-copy-closure.1 disnix-copy-snapshots.1 disnix-delegate.1 disnix-deploy.1 disnix-env.1 disnix-ssh-client.1 disnix-reconstruct.1
+man1_MANS = disnix-instantiate.1 disnix-manifest.1 disnix-gendist-roundrobin.1 disnix-copy-closure.1 disnix-copy-snapshots.1 disnix-delegate.1 disnix-env.1 disnix-ssh-client.1 disnix-reconstruct.1
 
-EXTRA_DIST = disnix-instantiate.in disnix-manifest.in disnix-gendist-roundrobin.in disnix-copy-closure.in disnix-copy-snapshots.in disnix-delegate.in disnix-deploy.in disnix-env.in disnix-ssh-client.in \
+EXTRA_DIST = disnix-instantiate.in disnix-manifest.in disnix-gendist-roundrobin.in disnix-copy-closure.in disnix-copy-snapshots.in disnix-delegate.in disnix-env.in disnix-ssh-client.in \
   $(pkgdata_SCRIPTS) \
   $(man1_MANS) \
   $(noinst_DATA)

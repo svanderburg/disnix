@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <defaultoptions.h>
-#include "activate.h"
+#include "run-activate.h"
 
 static void print_usage(const char *command)
 {
@@ -150,5 +150,5 @@ int main(int argc, char *argv[])
         return 1;
     }
     else
-        return activate_system(argv[optind], old_manifest, coordinator_profile_path, profile, flags); /* Execute activation operation */
+        return run_activate_system(argv[optind], old_manifest, coordinator_profile_path, profile, flags); /* Execute activation operation */
 }

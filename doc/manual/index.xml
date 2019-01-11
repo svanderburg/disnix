@@ -59,7 +59,7 @@
       <title>Utilities</title>
       
       <xi:include href="../../scripts/disnix-delegate.1.xml" />
-      <xi:include href="../../scripts/disnix-deploy.1.xml" />
+      <xi:include href="../../src/deploy/disnix-deploy.1.xml" />
       <xi:include href="../../src/diagnose/disnix-diagnose.1.xml" />
       <xi:include href="../../src/migrate/disnix-migrate.1.xml" />
       <xi:include href="../../src/capture-infra/disnix-capture-infra.1.xml" />

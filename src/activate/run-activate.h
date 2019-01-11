@@ -17,10 +17,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_ACTIVATE_H
-#define __DISNIX_ACTIVATE_H
+#ifndef __DISNIX_RUN_ACTIVATE_H
+#define __DISNIX_RUN_ACTIVATE_H
 #include <glib.h>
-#include "transition.h"
+#include <transition.h>
 
 /**
  * Activates a distributed system deployment state defined in a manifest file.
@@ -38,6 +38,6 @@
  * @param flags Option flags
  * @return 0 if the process succeeds, else a non-zero exit value
  */
-int activate_system(const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const unsigned int flags);
+int run_activate_system(const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const unsigned int flags);
 
 #endif

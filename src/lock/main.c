@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <defaultoptions.h>
-#include "locking.h"
+#include "lock-or-unlock.h"
 
 static void print_usage(const char *command)
 {

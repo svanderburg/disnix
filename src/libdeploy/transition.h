@@ -19,12 +19,8 @@
 
 #ifndef __DISNIX_TRANSITION_H
 #define __DISNIX_TRANSITION_H
-
-#define FLAG_NO_UPGRADE 0x1
-#define FLAG_NO_ROLLBACK 0x2
-#define FLAG_DRY_RUN 0x4
-
 #include <glib.h>
+#include "deploymentflags.h"
 
 /**
  * @brief Possible outcomes for the transition process

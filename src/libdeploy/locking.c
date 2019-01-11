@@ -22,7 +22,6 @@
 #include <manifest.h>
 #include <targets.h>
 #include <client-interface.h>
-#include <interrupt.h>
 
 extern volatile int interrupted;
 
@@ -41,15 +40,15 @@ static void complete_unlock_distribution_item(void *data, DistributionItem *item
         g_printerr("[target: %s]: Cannot unlock profile: %s\n", item->target, item->profile);
 }
 
-static int unlock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
+int unlock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
 {
     int success;
     ProcReact_PidIterator iterator = create_distribution_iterator(distribution_array, target_array, unlock_distribution_item, complete_unlock_distribution_item, profile);
     procreact_fork_in_parallel_and_wait(&iterator);
     success = distribution_iterator_has_succeeded(&iterator);
-    
+
     destroy_distribution_iterator(&iterator);
-    
+
     return success;
 }
 
@@ -79,7 +78,7 @@ static void complete_lock_distribution_item(void *data, DistributionItem *item, 
         g_ptr_array_add(lock_data->lock_array, item);
 }
 
-static int lock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
+int lock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
 {
     GPtrArray *lock_array = g_ptr_array_new();
     int success;
@@ -102,37 +101,4 @@ static int lock(const GPtrArray *distribution_array, const GPtrArray *target_arr
     destroy_distribution_iterator(&iterator);
     
     return success;
-}
-
-/* The entire lock or unlock operation */
-
-int lock_or_unlock(const int do_lock, const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile)
-{
-    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_DISTRIBUTION_FLAG, NULL, NULL);
-
-    if(manifest == NULL)
-    {
-        g_printerr("Cannot open any manifest file!\n");
-        g_printerr("Please provide a valid manifest as command-line parameter!\n");
-        return 1;
-    }
-    else
-    {
-        int exit_status;
-
-        /* Override SIGINT's behaviour to allow stuff to be rollbacked in case of an interruption */
-        set_flag_on_interrupt();
-        
-        /* Do the locking */
-        if(do_lock)
-            exit_status = !lock(manifest->distribution_array, manifest->target_array, profile);
-        else
-            exit_status = !unlock(manifest->distribution_array, manifest->target_array, profile);
-        
-        /* Cleanup */
-        delete_manifest(manifest);
-
-        /* Return exit status */
-        return exit_status;
-    }
 }

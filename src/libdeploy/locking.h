@@ -17,18 +17,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_DISTRIBUTE_H
-#define __DISNIX_DISTRIBUTE_H
+#ifndef __DISNIX_LOCKING_H
+#define __DISNIX_LOCKING_H
 #include <glib.h>
 
-/**
- * Distributes all services defined in the manifest file to target machines
- * in the network.
- *
- * @param manifest_file Path to the manifest file which maps services to machines
- * @param max_concurrent_transfers Specifies the maximum amount of concurrent transfers
- * @return 0 if everything succeeds, else a non-zero exit status
- */
-int distribute(const gchar *manifest_file, const unsigned int max_concurrent_transfers);
+int unlock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile);
+
+int lock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile);
 
 #endif

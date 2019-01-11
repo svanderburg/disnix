@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <defaultoptions.h>
-#include "profiles.h"
+#include "set-profiles.h"
 
 static void print_usage(const char *command)
 {
@@ -112,5 +112,5 @@ int main(int argc, char *argv[])
         return 1;
     }
     else
-        return set_profiles(argv[optind], coordinator_profile_path, profile, no_coordinator_profile, no_target_profiles); /* Execute set profiles operation */
+        return run_set_profiles(argv[optind], coordinator_profile_path, profile, no_coordinator_profile, no_target_profiles); /* Execute set profiles operation */
 }
