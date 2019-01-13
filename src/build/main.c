@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <defaultoptions.h>
-#include "build.h"
+#include "run-build.h"
 
 static void print_usage(const char *command)
 {
@@ -92,5 +92,5 @@ int main(int argc, char *argv[])
         return 1;
     }
     else
-        return build(argv[optind], max_concurrent_transfers); /* Perform distributed build operation */
+        return run_build(argv[optind], max_concurrent_transfers); /* Perform distributed build operation */
 }

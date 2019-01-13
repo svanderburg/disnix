@@ -122,32 +122,9 @@ static int retrieve_results(const GPtrArray *derivation_array, const GPtrArray *
     return success;
 }
 
-/* The entire build operation */
-
-int build(const gchar *distributed_derivation_file, const unsigned int max_concurrent_transfers)
+int build(DistributedDerivation *distributed_derivation, const unsigned int max_concurrent_transfers)
 {
-    DistributedDerivation *distributed_derivation = create_distributed_derivation(distributed_derivation_file);
-    
-    if(distributed_derivation == NULL)
-    {
-        g_printerr("[coordinator]: Cannot open distributed derivation file!\n");
-        return 1;
-    }
-    else
-    {
-        int exit_status;
-        
-        if(distribute_derivations(distributed_derivation->derivation_array, distributed_derivation->interface_array, max_concurrent_transfers) /* Distribute derivations to target machines */
-          && realise(distributed_derivation->derivation_array, distributed_derivation->interface_array) /* Realise derivations on target machines */
-          && retrieve_results(distributed_derivation->derivation_array, distributed_derivation->interface_array, max_concurrent_transfers)) /* Retrieve back the build results */
-            exit_status = 0;
-        else
-            exit_status = 1;
-            
-        /* Cleanup */
-        delete_distributed_derivation(distributed_derivation);
-        
-        /* Return the exit status, which is 0 if everything succeeds */
-        return exit_status;
-    }
+    return (distribute_derivations(distributed_derivation->derivation_array, distributed_derivation->interface_array, max_concurrent_transfers) /* Distribute derivations to target machines */
+      && realise(distributed_derivation->derivation_array, distributed_derivation->interface_array) /* Realise derivations on target machines */
+      && retrieve_results(distributed_derivation->derivation_array, distributed_derivation->interface_array, max_concurrent_transfers)); /* Retrieve back the build results */
 }

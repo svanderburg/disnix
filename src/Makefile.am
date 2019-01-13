@@ -1,4 +1,4 @@
-SUBDIRS = libprocreact libmain libmodel libinterface libpkgmgmt libstatemgmt libinfrastructure libprofilemanifest libmanifest libmigrate libdeploy collect-garbage query dbus-service libdistderivation build distribute lock diagnose set activate visualize snapshot restore clean-snapshots delete-state capture-infra capture-manifest run-activity migrate deploy
+SUBDIRS = libprocreact libmain libmodel libinterface libpkgmgmt libstatemgmt libinfrastructure libprofilemanifest libmanifest libmigrate libdeploy libdistderivation libbuild collect-garbage query dbus-service build distribute lock diagnose set activate visualize snapshot restore clean-snapshots delete-state capture-infra capture-manifest run-activity migrate deploy
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = disnix.pc

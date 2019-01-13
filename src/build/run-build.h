@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_BUILD_H
-#define __DISNIX_BUILD_H
+#ifndef __DISNIX_RUN_BUILD_H
+#define __DISNIX_RUN_BUILD_H
 #include <glib.h>
 
 /**
@@ -30,6 +30,6 @@
  * @param max_concurrent_transfers Specifies the maximum amount of concurrent transfers
  * @return 0 if everything succeeds, or else a non-zero exit value
  */
-int build(const gchar *distributed_derivation_file, const unsigned int max_concurrent_transfers);
+int run_build(const gchar *distributed_derivation_file, const unsigned int max_concurrent_transfers);
 
 #endif

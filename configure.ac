@@ -99,6 +99,7 @@ src/libpkgmgmt/Makefile
 src/libstatemgmt/Makefile
 src/libprofilemanifest/Makefile
 src/libmigrate/Makefile
+src/libbuild/Makefile
 src/libdeploy/Makefile
 src/distribute/Makefile
 src/lock/Makefile
