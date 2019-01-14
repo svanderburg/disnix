@@ -19,9 +19,13 @@
 
 #ifndef __DISNIX_PROFILES_H
 #define __DISNIX_PROFILES_H
+
+#define SET_NO_COORDINATOR_PROFILE 0x1
+#define SET_NO_TARGET_PROFILES 0x2
+
 #include <glib.h>
 #include <manifest.h>
 
-int set_profiles(Manifest *manifest, const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const int no_coordinator_profile, const int no_target_profiles);
+int set_profiles(Manifest *manifest, const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const unsigned int flags);
 
 #endif

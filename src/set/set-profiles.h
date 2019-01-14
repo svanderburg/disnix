@@ -20,6 +20,7 @@
 #ifndef __DISNIX_SET_PROFILES_H
 #define __DISNIX_SET_PROFILES_H
 #include <glib.h>
+#include <profiles.h>
 
 /**
  * Sets the Disnix profiles on the target machines and the Disnix coordinator
@@ -29,10 +30,9 @@
  * @param manifest_file Path to the manifest file representing the deployment state
  * @param coordinator_profile_path Path where the current deployment configuration must be stored
  * @param profile Name of the distributed profile
- * @param no_coordinator_profile Do not create a coordinator profile
- * @param no_target_profiles Do not create Disnix profiles on the target machines
+ * @param flags Set profile configuration flags
  * @return 0 if everything succeeds, else a non-zero exit status
  */
-int run_set_profiles(const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const int no_coordinator_profile, const int no_target_profiles);
+int run_set_profiles(const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const unsigned int flags);
 
 #endif

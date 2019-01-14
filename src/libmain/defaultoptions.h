@@ -48,6 +48,15 @@ char *check_target_property_option(char *target_property);
  */
 char *check_profile_option(char *profile);
 
+
+/**
+ * Checks whether the delete state has been enabled via the DISNIX_DELETE_STATE
+ * environment variable.
+ *
+ * @return TRUE if it has been enabled, else FALSE
+ */
+int check_global_delete_state(void);
+
 /**
  * Prints the name, version, package and copyright statement for a command
  *

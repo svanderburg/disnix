@@ -18,10 +18,9 @@
  */
 
 #include "set-profiles.h"
-#include <profiles.h>
 #include <manifest.h>
 
-int run_set_profiles(const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const int no_coordinator_profile, const int no_target_profiles)
+int run_set_profiles(const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const unsigned int flags)
 {
     Manifest *manifest = create_manifest(manifest_file, MANIFEST_DISTRIBUTION_FLAG, NULL, NULL);
 
@@ -32,7 +31,7 @@ int run_set_profiles(const gchar *manifest_file, const gchar *coordinator_profil
     }
     else
     {
-        int exit_status = !set_profiles(manifest, manifest_file, coordinator_profile_path, profile, no_coordinator_profile, no_target_profiles);
+        int exit_status = !set_profiles(manifest, manifest_file, coordinator_profile_path, profile, flags);
 
         /* Cleanup */
         delete_manifest(manifest);

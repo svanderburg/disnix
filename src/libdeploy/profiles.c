@@ -49,8 +49,8 @@ static int set_target_profiles(const GPtrArray *distribution_array, const GPtrAr
     return success;
 }
 
-int set_profiles(Manifest *manifest, const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const int no_coordinator_profile, const int no_target_profiles)
+int set_profiles(Manifest *manifest, const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const unsigned int flags)
 {
-    return((no_target_profiles || set_target_profiles(manifest->distribution_array, manifest->target_array, profile)) /* First, attempt to set the target profiles */
-      && (no_coordinator_profile || pkgmgmt_set_coordinator_profile(coordinator_profile_path, manifest_file, profile))); /* Then try to set the coordinator profile */
+    return((flags & SET_NO_TARGET_PROFILES || set_target_profiles(manifest->distribution_array, manifest->target_array, profile)) /* First, attempt to set the target profiles */
+      && (flags & SET_NO_COORDINATOR_PROFILE || pkgmgmt_set_coordinator_profile(coordinator_profile_path, manifest_file, profile))); /* Then try to set the coordinator profile */
 }

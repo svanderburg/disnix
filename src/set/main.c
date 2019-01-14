@@ -72,9 +72,8 @@ int main(int argc, char *argv[])
     };
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
-    int no_coordinator_profile = FALSE;
-    int no_target_profiles = FALSE;
-    
+    unsigned int flags = 0;
+
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "p:hv", long_options, &option_index)) != -1)
     {
@@ -87,10 +86,10 @@ int main(int argc, char *argv[])
                 coordinator_profile_path = optarg;
                 break;
             case 'c':
-                no_coordinator_profile = TRUE;
+                flags |= SET_NO_COORDINATOR_PROFILE;
                 break;
            case 'C':
-                no_target_profiles = TRUE;
+                flags |= SET_NO_TARGET_PROFILES;
                 break;
             case 'h':
             case '?':
@@ -112,5 +111,5 @@ int main(int argc, char *argv[])
         return 1;
     }
     else
-        return run_set_profiles(argv[optind], coordinator_profile_path, profile, no_coordinator_profile, no_target_profiles); /* Execute set profiles operation */
+        return run_set_profiles(argv[optind], coordinator_profile_path, profile, flags); /* Execute set profiles operation */
 }

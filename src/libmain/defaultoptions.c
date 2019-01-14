@@ -19,6 +19,7 @@
 
 #include "defaultoptions.h"
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 
 /* Default interface value */
@@ -70,6 +71,11 @@ char *check_profile_option(char *profile)
     }
     
     return profile;
+}
+
+int check_global_delete_state(void)
+{
+    return (getenv("DISNIX_DELETE_STATE") != NULL && strcmp(getenv("DISNIX_DELETE_STATE"), "1") == 0);
 }
 
 void print_version(const char *command)

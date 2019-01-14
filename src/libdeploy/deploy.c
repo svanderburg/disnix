@@ -74,7 +74,7 @@ static int migrate_data(Manifest *manifest, Manifest *old_manifest, const unsign
 static int set_all_profiles(Manifest *manifest, const gchar *new_manifest, const gchar *coordinator_profile_path, gchar *profile)
 {
     g_print("[coordinator]: Setting profiles...\n");
-    return set_profiles(manifest, new_manifest, coordinator_profile_path, profile, FALSE, FALSE);
+    return set_profiles(manifest, new_manifest, coordinator_profile_path, profile, 0);
 }
 
 DeployStatus deploy(gchar *old_manifest_file, const gchar *new_manifest, Manifest *manifest, Manifest *old_manifest, gchar *profile, const gchar *coordinator_profile_path, const unsigned int max_concurrent_transfers, const unsigned int keep, const unsigned int flags)

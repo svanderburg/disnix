@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
     else
         manifest_file = argv[optind];
 
-    if(getenv("DISNIX_DELETE_STATE") != NULL && strcmp(getenv("DISNIX_DELETE_STATE"), "1") == 0)
+    if(check_global_delete_state())
         flags |= FLAG_DELETE_STATE;
 
     return run_deploy(manifest_file, old_manifest, coordinator_profile_path, profile, max_concurrent_transfers, keep, flags); /* Execute deploy operation */

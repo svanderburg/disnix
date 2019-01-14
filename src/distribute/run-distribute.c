@@ -35,12 +35,12 @@ int run_distribute(const gchar *manifest_file, const unsigned int max_concurrent
     else
     {
         /* Iterate over the distribution mappings, limiting concurrency to the desired concurrent transfers and distribute them */
-        int success = distribute(manifest, max_concurrent_transfers);
+        int exit_status = !distribute(manifest, max_concurrent_transfers);
 
         /* Delete resources */
         delete_manifest(manifest);
 
         /* Return the exit status, which is 0 if everything succeeds */
-        return (!success);
+        return exit_status;
     }
 }
