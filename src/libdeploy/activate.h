@@ -23,6 +23,10 @@
 #include <manifest.h>
 #include "transition.h"
 
-TransitionStatus activate_system(gchar *old_manifest_file, const gchar *new_manifest, Manifest *manifest, GPtrArray *old_activation_mappings, const gchar *coordinator_profile_path, gchar *profile, const unsigned int flags);
+void print_activate_message(const gchar *old_manifest_file, GPtrArray *old_activation_mappings, const unsigned int flags);
+
+void print_transition_status(TransitionStatus status, const gchar *old_manifest_file, const gchar *new_manifest, const gchar *coordinator_profile_path, const gchar *profile);
+
+TransitionStatus activate_system(Manifest *manifest, GPtrArray *old_activation_mappings, const unsigned int flags);
 
 #endif

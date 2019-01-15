@@ -54,7 +54,9 @@ int run_activate_system(const gchar *new_manifest, const gchar *old_manifest, co
         set_flag_on_interrupt();
 
         /* Do the activation process */
-        status = activate_system(old_manifest_file, new_manifest, manifest, old_activation_mappings, coordinator_profile_path, profile, flags);
+        print_activate_message(old_manifest_file, old_activation_mappings, flags);
+        status = activate_system(manifest, old_activation_mappings, flags);
+        print_transition_status(status, old_manifest_file, new_manifest, coordinator_profile_path, profile);
 
         /* Cleanup */
         g_free(old_manifest_file);

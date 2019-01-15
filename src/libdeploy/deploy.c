@@ -14,6 +14,7 @@ static int distribute_closures(Manifest *manifest, const unsigned int max_concur
 static TransitionStatus activate_new_configuration(gchar *old_manifest_file, const gchar *new_manifest, Manifest *manifest, Manifest *old_manifest, gchar *profile, const gchar *coordinator_profile_path, const unsigned int flags)
 {
     GPtrArray *old_activation_array;
+    TransitionStatus status;
 
     g_print("[coordinator]: Activating new configuration...\n");
 
@@ -22,7 +23,11 @@ static TransitionStatus activate_new_configuration(gchar *old_manifest_file, con
     else
         old_activation_array = old_manifest->activation_array;
 
-    return activate_system(old_manifest_file, new_manifest, manifest, old_activation_array, coordinator_profile_path, profile, flags);
+    print_activate_message(old_manifest_file, old_activation_array, flags);
+    status = activate_system(manifest, old_activation_array, flags);
+    print_transition_status(status, old_manifest_file, new_manifest, coordinator_profile_path, profile);
+
+    return status;
 }
 
 static int acquire_locks(Manifest *manifest, const unsigned int flags, gchar *profile)
