@@ -33,33 +33,23 @@ int run_snapshot(const gchar *manifest_file, const unsigned int max_concurrent_t
     }
     else
     {
-        if(manifest_file == NULL) /* When no manifest file is provided as a parameter -> always snapshot the entrie environment */
+        if(manifest_file == NULL) /* When no manifest file is provided as a parameter -> always snapshot the entire environment */
             return !snapshot(manifest, NULL, max_concurrent_transfers, flags | FLAG_NO_UPGRADE, keep);
         else
         {
-            GPtrArray *old_snapshots_array = NULL;
-            gchar *old_manifest_file;
+            GPtrArray *old_snapshots_array;
             int exit_status;
 
-            /* If no old manifest is provided, try to open previous manifest from profile */
-            if(old_manifest == NULL)
-                old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, profile);
+            if(flags & FLAG_NO_UPGRADE)
+                old_snapshots_array = NULL;
             else
-                old_manifest_file = g_strdup(old_manifest);
-
-            g_printerr("[coordinator]: Using previous manifest: %s\n", old_manifest_file);
-
-            /* Take the snapshots from the previous manifest, if appropriate */
-            if(!(flags & FLAG_NO_UPGRADE) || old_manifest_file != NULL)
-                old_snapshots_array = create_snapshots_array(old_manifest_file, container_filter, component_filter);
+                old_snapshots_array = open_provided_or_previous_snapshots_array(old_manifest, coordinator_profile_path, profile, container_filter, component_filter);
 
             /* Take snapshots and transfer them */
             exit_status = !snapshot(manifest, old_snapshots_array, max_concurrent_transfers, flags, keep);
 
             /* Cleanup */
-            if(!(flags & FLAG_NO_UPGRADE) || old_manifest_file != NULL)
-                delete_snapshots_array(old_snapshots_array);
-
+            delete_snapshots_array(old_snapshots_array);
             delete_manifest(manifest);
 
             /* Return exit status */

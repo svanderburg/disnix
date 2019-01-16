@@ -24,6 +24,7 @@
 #include <xmlutil.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include "manifest.h"
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
@@ -322,4 +323,27 @@ void clear_snapshot_items_transferred_status(GPtrArray *snapshots_array)
         SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
         mapping->transferred = FALSE;
     }
+}
+
+GPtrArray *open_provided_or_previous_snapshots_array(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container_filter, const gchar *component_filter)
+{
+    if(manifest_file == NULL)
+    {
+        gchar *old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, profile);
+
+        if(old_manifest_file == NULL) /* There is no old manifest file, return nothing */
+            return NULL;
+        else
+        {
+            /* Open snapshots from previously deployed manifest */
+            GPtrArray *old_snapshots_array;
+            g_printerr("[coordinator]: Using previous manifest: %s\n", old_manifest_file);
+            old_snapshots_array = create_snapshots_array(old_manifest_file, container_filter, component_filter);
+            g_free(old_manifest_file);
+
+            return old_snapshots_array;
+        }
+    }
+    else
+        return create_snapshots_array(manifest_file, container_filter, component_filter);
 }

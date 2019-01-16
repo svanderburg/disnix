@@ -34,22 +34,16 @@ int run_restore(const gchar *manifest_file, const unsigned int max_concurrent_tr
     else
     {
         int exit_status;
-        GPtrArray *old_snapshots_array = NULL;
-        gchar *old_manifest_file;
+        GPtrArray *old_snapshots_array;
 
-        if(old_manifest == NULL)
-            old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, profile);
+        if(flags & FLAG_NO_UPGRADE)
+            old_snapshots_array = NULL;
         else
-            old_manifest_file = g_strdup(old_manifest);
-
-        if(!(flags & FLAG_NO_UPGRADE) && old_manifest != NULL)
-            old_snapshots_array = create_snapshots_array(old_manifest_file, container_filter, component_filter);
+            old_snapshots_array = open_provided_or_previous_snapshots_array(old_manifest, coordinator_profile_path, profile, container_filter, component_filter);
 
         exit_status = !restore(manifest, old_snapshots_array, max_concurrent_transfers, flags, keep);
 
         /* Cleanup */
-        g_free(old_manifest_file);
-
         delete_snapshots_array(old_snapshots_array);
         delete_manifest(manifest);
 

@@ -37,8 +37,6 @@ int run_delete_state(const gchar *manifest_file, const gchar *coordinator_profil
     else
     {
         int exit_status;
-
-        /* Delete the obsolete state */
         g_printerr("[coordinator]: Deleting obsolete state of services...\n");
         exit_status = !delete_obsolete_state(manifest->snapshots_array, manifest->target_array);
         delete_manifest(manifest);
