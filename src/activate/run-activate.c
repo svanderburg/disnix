@@ -35,33 +35,20 @@ int run_activate_system(const gchar *new_manifest, const gchar *old_manifest, co
     else
     {
         TransitionStatus status;
-        gchar *old_manifest_file;
-        GPtrArray *old_activation_mappings;
-
-        /* If no previous configuration is given, check whether we have one in the coordinator profile, otherwise use the given one */
-        if(old_manifest == NULL)
-            old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, profile);
-        else
-            old_manifest_file = g_strdup(old_manifest);
-
-        /* If we have an old configuration -> open it */
-        if(old_manifest_file == NULL)
-            old_activation_mappings = NULL;
-        else
-            old_activation_mappings = create_activation_array(old_manifest_file);
+        gchar *old_manifest_file = determine_manifest_to_open(old_manifest, coordinator_profile_path, profile);
+        GPtrArray *old_activation_mappings = open_previous_activation_array(old_manifest_file);
 
         /* Override SIGINT's behaviour to allow stuff to be rollbacked in case of an interruption */
         set_flag_on_interrupt();
 
         /* Do the activation process */
-        print_activate_message(old_manifest_file, old_activation_mappings, flags);
         status = activate_system(manifest, old_activation_mappings, flags);
         print_transition_status(status, old_manifest_file, new_manifest, coordinator_profile_path, profile);
 
         /* Cleanup */
+        delete_activation_array(old_activation_mappings);
         g_free(old_manifest_file);
         delete_manifest(manifest);
-        delete_activation_array(old_activation_mappings);
 
         /* Return the transition status */
         return status;

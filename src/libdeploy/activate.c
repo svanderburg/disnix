@@ -20,16 +20,6 @@
 #include "activate.h"
 #include <activationmapping.h>
 
-void print_activate_message(const gchar *old_manifest_file, GPtrArray *old_activation_mappings, const unsigned int flags)
-{
-    if(flags & FLAG_NO_UPGRADE)
-        g_print("[coordinator]: Forced to do no upgrade! Ignoring the previous manifest file!\n");
-    else if(old_activation_mappings != NULL)
-        g_print("[coordinator]: Doing an upgrade from previous manifest file: %s\n", old_manifest_file);
-    else
-        g_print("[coordinator]: Doing an installation from scratch\n");
-}
-
 void print_transition_status(TransitionStatus status, const gchar *old_manifest_file, const gchar *new_manifest, const gchar *coordinator_profile_path, const gchar *profile)
 {
     if(status == TRANSITION_SUCCESS)
@@ -83,7 +73,14 @@ TransitionStatus activate_system(Manifest *manifest, GPtrArray *old_activation_m
     g_print("[coordinator]: Executing the transition to the new deployment state\n");
 
     if(flags & FLAG_NO_UPGRADE)
+    {
+        g_print("[coordinator]: Forced to do no upgrade! Ignoring the previous manifest file!\n");
         old_activation_mappings = NULL;
+    }
+    else if(old_activation_mappings != NULL)
+        g_print("[coordinator]: Doing an upgrade from previous manifest file\n");
+    else
+        g_print("[coordinator]: Doing an installation from scratch\n");
 
     status = transition(manifest->activation_array, old_activation_mappings, manifest->target_array, flags);
 

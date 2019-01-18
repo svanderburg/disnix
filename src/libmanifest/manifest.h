@@ -92,4 +92,8 @@ gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, c
  */
 Manifest *open_provided_or_previous_manifest_file(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const unsigned int flags, const gchar *container, const gchar *component);
 
+gchar *determine_manifest_to_open(const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile);
+
+Manifest *open_previous_manifest(const gchar *manifest_file, const unsigned int flags, const gchar *container, const gchar *component);
+
 #endif

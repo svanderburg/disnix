@@ -21,6 +21,7 @@
 #define __DISNIX_ACTIVATIONMAPPING_H
 #include <glib.h>
 #include "targets.h"
+#include "manifest.h"
 
 /**
  * @brief Contains the values that constitute a key uniquely referring to an activation mapping.
@@ -254,5 +255,7 @@ ActivationStatus traverse_interdependent_mappings(GPtrArray *union_array, const 
  * @return TRUE if all the activation mappings' states have been successfully changed, else FALSE
  */
 int traverse_activation_mappings(GPtrArray *mappings, GPtrArray *union_array, GPtrArray *target_array, iterate_strategy_function iterate_strategy, map_activation_mapping_function map_activation_mapping, complete_activation_mapping_function complete_activation_mapping);
+
+GPtrArray *open_previous_activation_array(const gchar *manifest_file);
 
 #endif

@@ -23,7 +23,6 @@ static TransitionStatus activate_new_configuration(gchar *old_manifest_file, con
     else
         old_activation_array = old_manifest->activation_array;
 
-    print_activate_message(old_manifest_file, old_activation_array, flags);
     status = activate_system(manifest, old_activation_array, flags);
     print_transition_status(status, old_manifest_file, new_manifest, coordinator_profile_path, profile);
 

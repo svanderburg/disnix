@@ -602,3 +602,14 @@ int traverse_activation_mappings(GPtrArray *mappings, GPtrArray *union_array, GP
     g_hash_table_destroy(pid_table);
     return success;
 }
+
+GPtrArray *open_previous_activation_array(const gchar *manifest_file)
+{
+    if(manifest_file == NULL)
+        return NULL;
+    else
+    {
+        g_printerr("[coordinator]: Using previous manifest: %s\n", manifest_file);
+        return create_activation_array(manifest_file);
+    }
+}

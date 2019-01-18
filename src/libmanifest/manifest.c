@@ -128,11 +128,32 @@ Manifest *open_provided_or_previous_manifest_file(const gchar *manifest_file, co
         else
         {
             /* Open the previously deployed manifest */
-            Manifest *manifest = create_manifest(old_manifest_file, flags, container, component);
+            Manifest *manifest;
+            g_printerr("[coordinator]: Using previous manifest: %s\n", old_manifest_file);
+            manifest = create_manifest(old_manifest_file, flags, container, component);
             g_free(old_manifest_file);
             return manifest;
         }
     }
     else
         return create_manifest(manifest_file, flags, container, component); /* Open the provided manifest file */
+}
+
+gchar *determine_manifest_to_open(const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile)
+{
+    if(old_manifest == NULL)
+        return determine_previous_manifest_file(coordinator_profile_path, profile);
+    else
+        return g_strdup(old_manifest);
+}
+
+Manifest *open_previous_manifest(const gchar *manifest_file, const unsigned int flags, const gchar *container, const gchar *component)
+{
+    if(manifest_file == NULL)
+        return NULL;
+    else
+    {
+        g_printerr("[coordinator]: Using previous manifest: %s\n", manifest_file);
+        return create_manifest(manifest_file, flags, container, component);
+    }
 }

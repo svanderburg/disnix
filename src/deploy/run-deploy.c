@@ -44,21 +44,9 @@ int run_deploy(const gchar *new_manifest, gchar *old_manifest, const gchar *coor
     }
     else
     {
-        Manifest *previous_manifest;
-        gchar *old_manifest_file;
+        gchar *old_manifest_file = determine_manifest_to_open(old_manifest, coordinator_profile_path, profile);
+        Manifest *previous_manifest = open_previous_manifest(old_manifest_file, MANIFEST_ALL_FLAGS, NULL, NULL);
         int status;
-
-        /* If no previous configuration is given, check whether we have one in the coordinator profile, otherwise use the given one */
-        if(old_manifest == NULL)
-            old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, profile);
-        else
-            old_manifest_file = g_strdup(old_manifest);
-
-        /* If we have an old configuration -> open it */
-        if(old_manifest_file == NULL)
-            previous_manifest = NULL;
-        else
-            previous_manifest = create_manifest(old_manifest_file, MANIFEST_ALL_FLAGS, NULL, NULL);
 
         /* Execute the deployment process */
         status = deploy(old_manifest_file, new_manifest, manifest, previous_manifest, profile, coordinator_profile_path, max_concurrent_transfers, keep, flags);
