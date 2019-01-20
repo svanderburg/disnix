@@ -122,6 +122,8 @@ static int retrieve_results(const GPtrArray *derivation_array, const GPtrArray *
     return success;
 }
 
+/* Build orchestration */
+
 int build(DistributedDerivation *distributed_derivation, const unsigned int max_concurrent_transfers)
 {
     return (distribute_derivations(distributed_derivation->derivation_array, distributed_derivation->interface_array, max_concurrent_transfers) /* Distribute derivations to target machines */

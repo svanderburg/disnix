@@ -117,7 +117,7 @@ SnapshotMapping *find_snapshot_mapping(const GPtrArray *snapshots_array, const S
  * @param snapshots_array2 Array to substract
  * @return An array with snapshot mappings with elements from array1 that are not in array2
  */
-GPtrArray *subtract_snapshot_mappings(GPtrArray *snapshots_array1, GPtrArray *snapshots_array2);
+GPtrArray *subtract_snapshot_mappings(const GPtrArray *snapshots_array1, const GPtrArray *snapshots_array2);
 
 /**
  * Finds all snapshot mappings that map to a specific target.
@@ -139,7 +139,7 @@ GPtrArray *find_snapshot_mappings_per_target(const GPtrArray *snapshots_array, c
  * @param complete_snapshot_item_mapping Function that gets executed when a mapping function completes
  * @return TRUE if all mappings were successfully executed, else FALSE
  */
-int map_snapshot_items(GPtrArray *snapshots_array, GPtrArray *target_array, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping);
+int map_snapshot_items(const GPtrArray *snapshots_array, const GPtrArray *target_array, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping);
 
 void clear_snapshot_items_transferred_status(GPtrArray *snapshots_array);
 

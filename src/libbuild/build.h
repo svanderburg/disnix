@@ -22,6 +22,13 @@
 #include <glib.h>
 #include <distributedderivation.h>
 
+/**
+ * Delegates all store derivations to the remote machines and retrieves their build results.
+ *
+ * @param distributed_derivation Configuration specifying a mapping between store derivations and machines
+ * @param max_concurrent_transfers Specifies the maximum amount of concurrent transfers
+ * @return TRUE if all the remote builds succeed, else FALSE
+ */
 int build(DistributedDerivation *distributed_derivation, const unsigned int max_concurrent_transfers);
 
 #endif

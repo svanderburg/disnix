@@ -206,7 +206,7 @@ static int snapshot_depth_first(GPtrArray *snapshots_array, GPtrArray *target_ar
 
 /* The entire snapshot operation */
 
-int snapshot(const Manifest *manifest, GPtrArray *old_snapshots_array, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)
+int snapshot(const Manifest *manifest, const GPtrArray *old_snapshots_array, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)
 {
     if(!(flags & FLAG_NO_UPGRADE) && old_snapshots_array == NULL)
     {

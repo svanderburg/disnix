@@ -204,7 +204,7 @@ static int restore_depth_first(GPtrArray *snapshots_array, GPtrArray *target_arr
 
 /* The entire restore operation */
 
-int restore(const Manifest *manifest, GPtrArray *old_snapshots_array, const unsigned int max_concurrent_transfers, const unsigned int flags, const unsigned int keep)
+int restore(const Manifest *manifest, const GPtrArray *old_snapshots_array, const unsigned int max_concurrent_transfers, const unsigned int flags, const unsigned int keep)
 {
     int exit_status;
     GPtrArray *snapshots_array;

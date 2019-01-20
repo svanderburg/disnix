@@ -203,7 +203,7 @@ SnapshotMapping *find_snapshot_mapping(const GPtrArray *snapshots_array, const S
         return *ret;
 }
 
-GPtrArray *subtract_snapshot_mappings(GPtrArray *snapshots_array1, GPtrArray *snapshots_array2)
+GPtrArray *subtract_snapshot_mappings(const GPtrArray *snapshots_array1, const GPtrArray *snapshots_array2)
 {
     GPtrArray *return_array = g_ptr_array_new();
     unsigned int i;
@@ -235,7 +235,7 @@ GPtrArray *find_snapshot_mappings_per_target(const GPtrArray *snapshots_array, c
     return return_array;
 }
 
-static int wait_to_complete_snapshot_item(GHashTable *pid_table, GPtrArray *target_array, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
+static int wait_to_complete_snapshot_item(GHashTable *pid_table, const GPtrArray *target_array, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
 {
     if(g_hash_table_size(pid_table) > 0)
     {
@@ -270,7 +270,7 @@ static int wait_to_complete_snapshot_item(GHashTable *pid_table, GPtrArray *targ
         return TRUE;
 }
 
-int map_snapshot_items(GPtrArray *snapshots_array, GPtrArray *target_array, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
+int map_snapshot_items(const GPtrArray *snapshots_array, const GPtrArray *target_array, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
 {
     unsigned int num_processed = 0;
     int status = TRUE;

@@ -35,7 +35,7 @@ static void complete_transfer_distribution_item_to(void *data, DistributionItem 
         g_printerr("[target: %s]: Cannot receive intra-dependency closure of profile: %s\n", item->target, item->profile);
 }
 
-int distribute(Manifest *manifest, const unsigned int max_concurrent_transfers)
+int distribute(const Manifest *manifest, const unsigned int max_concurrent_transfers)
 {
     /* Iterate over the distribution mappings, limiting concurrency to the desired concurrent transfers and distribute them */
     int success;

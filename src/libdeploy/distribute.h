@@ -21,6 +21,6 @@
 #define __DISNIX_DISTRIBUTE_H
 #include <manifest.h>
 
-int distribute(Manifest *manifest, const unsigned int max_concurrent_transfers);
+int distribute(const Manifest *manifest, const unsigned int max_concurrent_transfers);
 
 #endif

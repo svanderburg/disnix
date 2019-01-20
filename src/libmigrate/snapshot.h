@@ -24,6 +24,17 @@
 #include <manifest.h>
 #include "datamigrationflags.h"
 
-int snapshot(const Manifest *manifest, GPtrArray *old_snapshots_array, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep);
+/**
+ * Takes and retrieves snapshots of the state of all the stateful services in
+ * the manifest that are not in the previous configuration.
+ *
+ * @param manifest Manifest containing all deployment information
+ * @param old_snapshots_array Array of stateful components belonging to the previous configurations or NULL to force all services to be snapshotted
+ * @param max_concurrent_transfers Specifies the maximum amount of concurrent transfers
+ * @param flags Data migration option flags
+ * @param keep Indicates how many snapshot generations should be kept remotely while executing the depth first operation
+ * @param TRUE if the snapshot completed successfully, else FALSE
+ */
+int snapshot(const Manifest *manifest, const GPtrArray *old_snapshots_array, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep);
 
 #endif
