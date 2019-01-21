@@ -26,6 +26,18 @@
 #include <glib.h>
 #include <manifest.h>
 
-int set_profiles(Manifest *manifest, const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const unsigned int flags);
+/**
+ * Updates the coordinator profile referring to the last deployed manifest and
+ * target Disnix profiles containing the closures of all services deployed to a
+ * target machine.
+ *
+ * @param manifest Manifest containing all deployment information
+ * @param manifest_file Path to the manifest file
+ * @param coordinator_profile_path Path where the current deployment configuration must be stored
+ * @param profile Name of the distributed profile
+ * @param flags Set option flags
+ * @return TRUE if the profiles have been successfully set, else FALSE
+ */
+int set_profiles(const Manifest *manifest, const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const unsigned int flags);
 
 #endif

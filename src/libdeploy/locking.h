@@ -21,8 +21,26 @@
 #define __DISNIX_LOCKING_H
 #include <glib.h>
 
+/**
+ * Unlocks the target machine and all services on all target machines in the
+ * network.
+ *
+ * @param distribution_array Array of distribution items
+ * @param target_array Array of targets belonging to the current configuration
+ * @param profile Identifier of the distributed profile
+ * @return TRUE if all the target machines have been successfully unlocked, else FALSE
+ */
 int unlock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile);
 
+/**
+ * Locks the target machine and all services on all target machines in the
+ * network.
+ *
+ * @param distribution_array Array of distribution items
+ * @param target_array Array of targets belonging to the current configuration
+ * @param profile Identifier of the distributed profile
+ * @return TRUE if all the target machines have been successfully locked, else FALSE
+ */
 int lock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile);
 
 #endif

@@ -141,7 +141,12 @@ GPtrArray *find_snapshot_mappings_per_target(const GPtrArray *snapshots_array, c
  */
 int map_snapshot_items(const GPtrArray *snapshots_array, const GPtrArray *target_array, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping);
 
-void clear_snapshot_items_transferred_status(GPtrArray *snapshots_array);
+/**
+ * Resets the transferred status on all items in the snapshots array
+ *
+ * @param snapshots_array Snapshots array
+ */
+void reset_snapshot_items_transferred_status(GPtrArray *snapshots_array);
 
 /**
  * Opens the provided manifest or (if NULL) it attempts to open the manifest of

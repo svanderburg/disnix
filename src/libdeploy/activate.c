@@ -20,7 +20,7 @@
 #include "activate.h"
 #include <activationmapping.h>
 
-void print_transition_status(TransitionStatus status, const gchar *old_manifest_file, const gchar *new_manifest, const gchar *coordinator_profile_path, const gchar *profile)
+void print_transition_status(TransitionStatus status, const gchar *old_manifest_file, const gchar *new_manifest_file, const gchar *coordinator_profile_path, const gchar *profile)
 {
     if(status == TRANSITION_SUCCESS)
         g_printerr("[coordinator]: The new configuration has been successfully activated!\n");
@@ -43,7 +43,7 @@ void print_transition_status(TransitionStatus status, const gchar *old_manifest_
                 if(coordinator_profile_path != NULL)
                     g_printerr("--coordinator-profile-path %s ", coordinator_profile_path);
 
-                g_printerr("-o %s %s\n\n", new_manifest, old_manifest_file);
+                g_printerr("-o %s %s\n\n", new_manifest_file, old_manifest_file);
             }
             else if(status == TRANSITION_OBSOLETE_MAPPINGS_ROLLBACK_FAILED)
             {

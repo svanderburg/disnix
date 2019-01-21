@@ -22,6 +22,9 @@
 #include <glib.h>
 #include <manifest.h>
 
+/**
+ * @brief Possible outcomes for the deployment operation
+ */
 typedef enum
 {
     DEPLOY_OK,
@@ -30,6 +33,21 @@ typedef enum
 }
 DeployStatus;
 
-DeployStatus deploy(gchar *old_manifest_file, const gchar *new_manifest, Manifest *manifest, Manifest *old_manifest, gchar *profile, const gchar *coordinator_profile_path, const unsigned int max_concurrent_transfers, const unsigned int keep, const unsigned int flags);
+/**
+ * Executes all required deployment activites to deploy a configuration
+ * described in a manifest file.
+ *
+ * @param old_manifest_file Path to the old manifest file
+ * @param new_manifest_file Path to the new manifest file
+ * @param manifest Manifest containing all deployment information of the new configuration
+ * @param manifest_old Manifest containing all deployment information of the previous configuration
+ * @param profile Name of the distributed profile
+ * @param coordinator_profile_path Path where the current deployment configuration must be stored
+ * @param max_concurrent_transfers Specifies the maximum amount of concurrent transfers
+ * @param keep Indicates how many snapshot generations should be kept remotely while executing the depth first operation
+ * @param flags Deployment option flags
+ * @return One of the possible outcomes in the DeployStatus enumeration
+ */
+DeployStatus deploy(gchar *old_manifest_file, const gchar *new_manifest_fike, Manifest *manifest, Manifest *old_manifest, gchar *profile, const gchar *coordinator_profile_path, const unsigned int max_concurrent_transfers, const unsigned int keep, const unsigned int flags);
 
 #endif

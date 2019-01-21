@@ -35,7 +35,8 @@ static void complete_delete_state_on_target(SnapshotMapping *mapping, ProcReact_
         g_printerr("[target: %s]: Cannot delete state of service: %s\n", mapping->target, mapping->component);
 }
 
-int delete_obsolete_state(const GPtrArray *snapshots_array, const GPtrArray *target_array)
+int delete_obsolete_state(GPtrArray *snapshots_array, const GPtrArray *target_array)
 {
+    reset_snapshot_items_transferred_status(snapshots_array);
     return map_snapshot_items(snapshots_array, target_array, delete_state_on_target, complete_delete_state_on_target);
 }

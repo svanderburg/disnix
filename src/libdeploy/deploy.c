@@ -81,7 +81,7 @@ static int set_all_profiles(Manifest *manifest, const gchar *new_manifest, const
     return set_profiles(manifest, new_manifest, coordinator_profile_path, profile, 0);
 }
 
-DeployStatus deploy(gchar *old_manifest_file, const gchar *new_manifest, Manifest *manifest, Manifest *old_manifest, gchar *profile, const gchar *coordinator_profile_path, const unsigned int max_concurrent_transfers, const unsigned int keep, const unsigned int flags)
+DeployStatus deploy(gchar *old_manifest_file, const gchar *new_manifest_file, Manifest *manifest, Manifest *old_manifest, gchar *profile, const gchar *coordinator_profile_path, const unsigned int max_concurrent_transfers, const unsigned int keep, const unsigned int flags)
 {
     if(!distribute_closures(manifest, max_concurrent_transfers))
         return DEPLOY_FAIL;
@@ -89,7 +89,7 @@ DeployStatus deploy(gchar *old_manifest_file, const gchar *new_manifest, Manifes
     if(!acquire_locks(manifest, flags, profile))
         return DEPLOY_FAIL;
 
-    if(activate_new_configuration(old_manifest_file, new_manifest, manifest, old_manifest, profile, coordinator_profile_path, flags) != 0)
+    if(activate_new_configuration(old_manifest_file, new_manifest_file, manifest, old_manifest, profile, coordinator_profile_path, flags) != 0)
     {
         release_locks(manifest, flags, profile);
         return DEPLOY_FAIL;
@@ -101,7 +101,7 @@ DeployStatus deploy(gchar *old_manifest_file, const gchar *new_manifest, Manifes
         return DEPLOY_STATE_FAIL;
     }
 
-    if(!set_all_profiles(manifest, new_manifest, coordinator_profile_path, profile))
+    if(!set_all_profiles(manifest, new_manifest_file, coordinator_profile_path, profile))
     {
         release_locks(manifest, flags, profile);
         return DEPLOY_FAIL;

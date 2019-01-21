@@ -314,7 +314,7 @@ int map_snapshot_items(const GPtrArray *snapshots_array, const GPtrArray *target
     return status;
 }
 
-void clear_snapshot_items_transferred_status(GPtrArray *snapshots_array)
+void reset_snapshot_items_transferred_status(GPtrArray *snapshots_array)
 {
     unsigned int i;
 

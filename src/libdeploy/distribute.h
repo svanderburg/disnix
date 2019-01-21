@@ -21,6 +21,14 @@
 #define __DISNIX_DISTRIBUTE_H
 #include <manifest.h>
 
+/**
+ * Distributes the Nix store closures of all services in the manifest to the
+ * target machines in the network.
+ *
+ * @param manifest Manifest containing all deployment information
+ * @param max_concurrent_transfers Specifies the maximum amount of concurrent transfers
+ * @return TRUE if all closures have been successfully transferred, else FALSE
+ */
 int distribute(const Manifest *manifest, const unsigned int max_concurrent_transfers);
 
 #endif

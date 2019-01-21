@@ -28,6 +28,6 @@
  * @param target_array Array of targets belonging to the current configuration
  * @return TRUE if deleting the state completed successfully, else FALSE
  */
-int delete_obsolete_state(const GPtrArray *snapshots_array, const GPtrArray *target_array);
+int delete_obsolete_state(GPtrArray *snapshots_array, const GPtrArray *target_array);
 
 #endif

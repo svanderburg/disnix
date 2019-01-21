@@ -23,8 +23,26 @@
 #include <manifest.h>
 #include "transition.h"
 
-void print_transition_status(TransitionStatus status, const gchar *old_manifest_file, const gchar *new_manifest, const gchar *coordinator_profile_path, const gchar *profile);
+/**
+ * Prints a human readable form of the transition status including instructions
+ * explaining how to resolve issues.
+ *
+ * @param status A value from the TransitionStatus enumeration
+ * @param old_manifest_file Path to the old manifest file
+ * @param new_manifest_file Path to the new manifest file
+ * @param coordinator_profile_path Path where the current deployment configuration must be stored
+ * @param profile Name of the distributed profile
+ */
+void print_transition_status(TransitionStatus status, const gchar *old_manifest_file, const gchar *new_manifest_file, const gchar *coordinator_profile_path, const gchar *profile);
 
+/**
+ * Deactivates all obsolete services and activates all new services.
+ *
+ * @param manifest Manifest containing all deployment information of the new configuration
+ * @param old_activation_mappings Array of activation mappings belonging to the previous configuration
+ * @param Deployment option flags\
+ * @return A value from the TransitionStatus enumeration
+ */
 TransitionStatus activate_system(Manifest *manifest, GPtrArray *old_activation_mappings, const unsigned int flags);
 
 #endif
