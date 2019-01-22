@@ -159,9 +159,11 @@ int main(int argc, char *argv[])
                 max_concurrent_transfers = atoi(optarg);
                 break;
             case 'h':
-            case '?':
                 print_usage(argv[0]);
                 return 0;
+            case '?':
+                print_usage(argv[0]);
+                return 1;
             case 'v':
                 print_version(argv[0]);
                 return 0;
