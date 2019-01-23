@@ -38,11 +38,8 @@ int run_activate_system(const gchar *new_manifest, const gchar *old_manifest, co
         gchar *old_manifest_file = determine_manifest_to_open(old_manifest, coordinator_profile_path, profile);
         GPtrArray *old_activation_mappings = open_previous_activation_array(old_manifest_file);
 
-        /* Override SIGINT's behaviour to allow stuff to be rollbacked in case of an interruption */
-        set_flag_on_interrupt();
-
         /* Do the activation process */
-        status = activate_system(manifest, old_activation_mappings, flags);
+        status = activate_system(manifest, old_activation_mappings, flags, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
         print_transition_status(status, old_manifest_file, new_manifest, coordinator_profile_path, profile);
 
         /* Cleanup */

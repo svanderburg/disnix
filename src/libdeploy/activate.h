@@ -40,9 +40,11 @@ void print_transition_status(TransitionStatus status, const gchar *old_manifest_
  *
  * @param manifest Manifest containing all deployment information of the new configuration
  * @param old_activation_mappings Array of activation mappings belonging to the previous configuration
- * @param Deployment option flags\
+ * @param Deployment option flags
+ * @param pre_hook Pointer to a function that gets executed before a series of critical operations start. This function can be used to catch a SIGINT signal and do a proper rollback. If the pointer is NULL then no function is executed.
+ * @param pre_hook Pointer to a function that gets executed after the critical operations are done. This function can be used to restore the handler for the SIGINT to normal. If the pointer is NULL then no function is executed.
  * @return A value from the TransitionStatus enumeration
  */
-TransitionStatus activate_system(Manifest *manifest, GPtrArray *old_activation_mappings, const unsigned int flags);
+TransitionStatus activate_system(Manifest *manifest, GPtrArray *old_activation_mappings, const unsigned int flags, void (*pre_hook) (void), void (*post_hook) (void));
 
 #endif

@@ -26,7 +26,7 @@
 
 volatile int interrupted = FALSE;
 
-static void handle_sigint(int signum)
+static void set_flag_on_sigint(int signum)
 {
     interrupted = TRUE;
 }
@@ -34,10 +34,21 @@ static void handle_sigint(int signum)
 void set_flag_on_interrupt(void)
 {
     struct sigaction act;
-    act.sa_handler = handle_sigint;
+    act.sa_handler = set_flag_on_sigint;
     act.sa_flags = 0;
     sigemptyset(&act.sa_mask);
     sigaddset(&act.sa_mask, SIGINT);
-    
+
+    sigaction(SIGINT, &act, NULL);
+}
+
+void restore_default_behaviour_on_interrupt(void)
+{
+    struct sigaction act;
+    act.sa_handler = SIG_DFL;
+    act.sa_flags = 0;
+    sigemptyset(&act.sa_mask);
+    sigaddset(&act.sa_mask, SIGINT);
+
     sigaction(SIGINT, &act, NULL);
 }

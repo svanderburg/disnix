@@ -25,4 +25,9 @@
  */
 void set_flag_on_interrupt(void);
 
+/**
+ * Restores the signal handler of SIGINT to its default behaviour
+ */
+void restore_default_behaviour_on_interrupt(void);
+
 #endif

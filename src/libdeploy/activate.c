@@ -65,7 +65,7 @@ void print_transition_status(TransitionStatus status, const gchar *old_manifest_
     }
 }
 
-TransitionStatus activate_system(Manifest *manifest, GPtrArray *old_activation_mappings, const unsigned int flags)
+TransitionStatus activate_system(Manifest *manifest, GPtrArray *old_activation_mappings, const unsigned int flags, void (*pre_hook) (void), void (*post_hook) (void))
 {
     TransitionStatus status;
 
@@ -82,7 +82,13 @@ TransitionStatus activate_system(Manifest *manifest, GPtrArray *old_activation_m
     else
         g_print("[coordinator]: Doing an installation from scratch\n");
 
+    if(pre_hook != NULL) /* Execute hook before the lock operations are executed */
+        pre_hook();
+
     status = transition(manifest->activation_array, old_activation_mappings, manifest->target_array, flags);
+
+    if(post_hook != NULL) /* Execute hook after the lock operations have been completed */
+        post_hook();
 
     return status;
 }

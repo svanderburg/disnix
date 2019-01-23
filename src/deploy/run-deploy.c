@@ -19,6 +19,7 @@
 
 #include "run-deploy.h"
 #include <manifest.h>
+#include <interrupt.h>
 #include <deploy.h>
 
 static void printProfileArg(const gchar *profile)
@@ -49,7 +50,7 @@ int run_deploy(const gchar *new_manifest, gchar *old_manifest, const gchar *coor
         int status;
 
         /* Execute the deployment process */
-        status = deploy(old_manifest_file, new_manifest, manifest, previous_manifest, profile, coordinator_profile_path, max_concurrent_transfers, keep, flags);
+        status = deploy(old_manifest_file, new_manifest, manifest, previous_manifest, profile, coordinator_profile_path, max_concurrent_transfers, keep, flags, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
 
         switch(status)
         {

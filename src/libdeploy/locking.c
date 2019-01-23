@@ -40,11 +40,19 @@ static void complete_unlock_distribution_item(void *data, DistributionItem *item
         g_printerr("[target: %s]: Cannot unlock profile: %s\n", item->target, item->profile);
 }
 
-int unlock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
+int unlock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void))
 {
     int success;
     ProcReact_PidIterator iterator = create_distribution_iterator(distribution_array, target_array, unlock_distribution_item, complete_unlock_distribution_item, profile);
+
+    if(pre_hook != NULL) /* Execute hook before the unlock operations are executed */
+        pre_hook();
+
     procreact_fork_in_parallel_and_wait(&iterator);
+
+    if(post_hook != NULL) /* Execute hook after the unlock operations have been completed */
+        post_hook();
+
     success = distribution_iterator_has_succeeded(&iterator);
 
     destroy_distribution_iterator(&iterator);
@@ -78,27 +86,35 @@ static void complete_lock_distribution_item(void *data, DistributionItem *item, 
         g_ptr_array_add(lock_data->lock_array, item);
 }
 
-int lock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
+int lock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void))
 {
     GPtrArray *lock_array = g_ptr_array_new();
     int success;
     LockData data = { profile, lock_array };
     ProcReact_PidIterator iterator = create_distribution_iterator(distribution_array, target_array, lock_distribution_item, complete_lock_distribution_item, &data);
+
+    if(pre_hook != NULL) /* Execute hook before the lock operations are executed */
+        pre_hook();
+
     procreact_fork_in_parallel_and_wait(&iterator);
+
+    if(post_hook != NULL) /* Execute hook after the lock operations have been completed */
+        post_hook();
+
     success = distribution_iterator_has_succeeded(&iterator);
-    
+
     if(interrupted)
     {
         g_printerr("[coordinator]: The lock phase has been interrupted, unlocking all targets again...\n");
         success = FALSE;
     }
-    
+
     if(!success)
-        unlock(lock_array, target_array, profile); /* If the locking has failed, try to unlock everything again */
-    
+        unlock(lock_array, target_array, profile, pre_hook, post_hook); /* If the locking has failed, try to unlock everything again */
+
     /* Cleanup */
     g_ptr_array_free(lock_array, TRUE);
     destroy_distribution_iterator(&iterator);
-    
+
     return success;
 }

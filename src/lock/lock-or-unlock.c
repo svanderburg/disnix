@@ -38,14 +38,11 @@ int lock_or_unlock(const int do_lock, const gchar *manifest_file, const gchar *c
     {
         int exit_status;
 
-        /* Override SIGINT's behaviour to allow stuff to be rollbacked in case of an interruption */
-        set_flag_on_interrupt();
-
         /* Do the locking */
         if(do_lock)
-            exit_status = !lock(manifest->distribution_array, manifest->target_array, profile);
+            exit_status = !lock(manifest->distribution_array, manifest->target_array, profile, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
         else
-            exit_status = !unlock(manifest->distribution_array, manifest->target_array, profile);
+            exit_status = !unlock(manifest->distribution_array, manifest->target_array, profile, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
 
         /* Cleanup */
         delete_manifest(manifest);

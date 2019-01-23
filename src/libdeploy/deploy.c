@@ -11,7 +11,7 @@ static int distribute_closures(Manifest *manifest, const unsigned int max_concur
     return distribute(manifest, max_concurrent_transfers);
 }
 
-static TransitionStatus activate_new_configuration(gchar *old_manifest_file, const gchar *new_manifest, Manifest *manifest, Manifest *old_manifest, gchar *profile, const gchar *coordinator_profile_path, const unsigned int flags)
+static TransitionStatus activate_new_configuration(gchar *old_manifest_file, const gchar *new_manifest, Manifest *manifest, Manifest *old_manifest, gchar *profile, const gchar *coordinator_profile_path, const unsigned int flags, void (*pre_hook) (void), void (*post_hook) (void))
 {
     GPtrArray *old_activation_array;
     TransitionStatus status;
@@ -23,13 +23,13 @@ static TransitionStatus activate_new_configuration(gchar *old_manifest_file, con
     else
         old_activation_array = old_manifest->activation_array;
 
-    status = activate_system(manifest, old_activation_array, flags);
+    status = activate_system(manifest, old_activation_array, flags, pre_hook, post_hook);
     print_transition_status(status, old_manifest_file, new_manifest, coordinator_profile_path, profile);
 
     return status;
 }
 
-static int acquire_locks(Manifest *manifest, const unsigned int flags, gchar *profile)
+static int acquire_locks(Manifest *manifest, const unsigned int flags, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void))
 {
     if(flags & FLAG_NO_LOCK)
     {
@@ -39,11 +39,11 @@ static int acquire_locks(Manifest *manifest, const unsigned int flags, gchar *pr
     else
     {
         g_print("[coordinator]: Acquiring locks...\n");
-        return lock(manifest->distribution_array, manifest->target_array, profile);
+        return lock(manifest->distribution_array, manifest->target_array, profile, pre_hook, post_hook);
     }
 }
 
-static int release_locks(Manifest *manifest, const unsigned int flags, gchar *profile)
+static int release_locks(Manifest *manifest, const unsigned int flags, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void))
 {
     if(flags & FLAG_NO_LOCK)
     {
@@ -53,7 +53,7 @@ static int release_locks(Manifest *manifest, const unsigned int flags, gchar *pr
     else
     {
         g_print("[coordinator]: Releasing locks...\n");
-        return unlock(manifest->distribution_array, manifest->target_array, profile);
+        return unlock(manifest->distribution_array, manifest->target_array, profile, pre_hook, post_hook);
     }
 }
 
@@ -81,33 +81,33 @@ static int set_all_profiles(Manifest *manifest, const gchar *new_manifest, const
     return set_profiles(manifest, new_manifest, coordinator_profile_path, profile, 0);
 }
 
-DeployStatus deploy(gchar *old_manifest_file, const gchar *new_manifest_file, Manifest *manifest, Manifest *old_manifest, gchar *profile, const gchar *coordinator_profile_path, const unsigned int max_concurrent_transfers, const unsigned int keep, const unsigned int flags)
+DeployStatus deploy(gchar *old_manifest_file, const gchar *new_manifest_file, Manifest *manifest, Manifest *old_manifest, gchar *profile, const gchar *coordinator_profile_path, const unsigned int max_concurrent_transfers, const unsigned int keep, const unsigned int flags, void (*pre_hook) (void), void (*post_hook) (void))
 {
     if(!distribute_closures(manifest, max_concurrent_transfers))
         return DEPLOY_FAIL;
 
-    if(!acquire_locks(manifest, flags, profile))
+    if(!acquire_locks(manifest, flags, profile, pre_hook, post_hook))
         return DEPLOY_FAIL;
 
-    if(activate_new_configuration(old_manifest_file, new_manifest_file, manifest, old_manifest, profile, coordinator_profile_path, flags) != 0)
+    if(activate_new_configuration(old_manifest_file, new_manifest_file, manifest, old_manifest, profile, coordinator_profile_path, flags, pre_hook, post_hook) != 0)
     {
-        release_locks(manifest, flags, profile);
+        release_locks(manifest, flags, profile, pre_hook, post_hook);
         return DEPLOY_FAIL;
     }
 
     if(!migrate_data(manifest, old_manifest, max_concurrent_transfers, flags, keep))
     {
-        release_locks(manifest, flags, profile);
+        release_locks(manifest, flags, profile, pre_hook, post_hook);
         return DEPLOY_STATE_FAIL;
     }
 
     if(!set_all_profiles(manifest, new_manifest_file, coordinator_profile_path, profile))
     {
-        release_locks(manifest, flags, profile);
+        release_locks(manifest, flags, profile, pre_hook, post_hook);
         return DEPLOY_FAIL;
     }
 
-    if(!release_locks(manifest, flags, profile))
+    if(!release_locks(manifest, flags, profile, pre_hook, post_hook))
         return DEPLOY_FAIL;
 
     return DEPLOY_OK;
