@@ -19,9 +19,6 @@
 
 #include "restore.h"
 #include <sys/types.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <client-interface.h>
 #include <snapshotmapping.h>
 #include <targets.h>
