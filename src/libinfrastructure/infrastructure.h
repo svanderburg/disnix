@@ -182,6 +182,14 @@ GPtrArray *create_target_array_from_doc(xmlDocPtr doc);
 GPtrArray *create_target_array(char *infrastructure_expr);
 
 /**
+ * Creates an array with targets from an infrastructure XML configuration
+ *
+ * @param infrastructure_xml Path to the infrastructure XML file
+ * @return GPtrArray with target properties
+ */
+GPtrArray *create_target_array_from_xml(const char *infrastructure_xml);
+
+/**
  * Deletes an array with targets
  *
  * @param target_array Array to delete

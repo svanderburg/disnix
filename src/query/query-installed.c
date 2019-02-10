@@ -73,10 +73,15 @@ static void print_installed_services(QueryInstalledServicesData *query_installed
     }
 }
 
-int query_installed(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile, OutputFormat format)
+int query_installed(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile, OutputFormat format, const int xml)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
-    GPtrArray *target_array = create_target_array(infrastructure_expr);
+    GPtrArray *target_array;
+
+    if(xml)
+        target_array = create_target_array_from_xml(infrastructure_expr);
+    else
+        target_array = create_target_array(infrastructure_expr);
 
     if(target_array == NULL)
     {

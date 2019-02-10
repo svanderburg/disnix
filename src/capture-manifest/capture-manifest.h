@@ -31,8 +31,9 @@
  * @param infrastructure_expr Path to the infrastructure expression
  * @param profile Name of the distributed profile
  * @param max_concurrent_transfers Specifies the maximum amount of concurrent transfers
+ * @param xml If set to TRUE it considers the input to be in XML format
  * @return 0 if all the operations succeed, else a non-zero value
  */
-int capture_manifest(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile, const unsigned int max_concurrent_transfers);
+int capture_manifest(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile, const unsigned int max_concurrent_transfers, const int xml);
 
 #endif

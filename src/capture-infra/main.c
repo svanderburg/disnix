@@ -37,6 +37,8 @@ static void print_usage(const char *command)
     "      --target-property=PROP  The target property of an infrastructure model,\n"
     "                              that specifies how to connect to the remote Disnix\n"
     "                              interface. (Defaults to: hostname)\n"
+    "      --xml                   Specifies that the configurations are in XML not\n"
+    "                              the Nix expression language.\n"
     "  -h, --help                  Shows the usage of this command to the user\n"
     "  -v, --version               Shows the version of this command to the user\n"
 
@@ -57,13 +59,15 @@ int main(int argc, char *argv[])
     {
         {"interface", required_argument, 0, 'i'},
         {"target-property", required_argument, 0, 't'},
+        {"xml", no_argument, 0, 'x'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
     };
     char *interface = NULL;
     char *target_property = NULL;
-    
+    int xml = FALSE;
+
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "hv", long_options, &option_index)) != -1)
     {
@@ -74,6 +78,9 @@ int main(int argc, char *argv[])
                 break;
             case 't':
                 target_property = optarg;
+                break;
+            case 'x':
+                xml = TRUE;
                 break;
             case 'h':
                 print_usage(argv[0]);
@@ -98,5 +105,5 @@ int main(int argc, char *argv[])
         return 1;
     }
     else
-        return capture_infra(interface, target_property, argv[optind]); /* Execute capture infrastructure operation */
+        return capture_infra(interface, target_property, argv[optind], xml); /* Execute capture infrastructure operation */
 }

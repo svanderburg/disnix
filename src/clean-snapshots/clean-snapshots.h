@@ -31,8 +31,9 @@
  * @param keep Number of snapshot generations to keep
  * @param container Name of the container to filter on, or NULL to consult all containers
  * @param component Name of the component to filter on, or NULL to consult all components
+ * @param xml If set to TRUE it considers the input to be in XML format
  * @return 0 if everything succeeds, else a non-zero exit value
  */
-int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, int keep, gchar *container, gchar *component);
+int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, int keep, gchar *container, gchar *component, const int xml);
 
 #endif

@@ -38,6 +38,8 @@ static void print_usage(const char *command)
     "      --target-property=PROP  The target property of an infrastructure model,\n"
     "                              that specifies how to connect to the remote Disnix\n"
     "                              interface. (Defaults to: hostname)\n"
+    "      --xml                   Specifies that the configurations are in XML not\n"
+    "                              the Nix expression language.\n"
     "  -h, --help                  Shows the usage of this command to the user\n"
     "  -v, --version               Shows the version of this command to the user\n"
 
@@ -59,14 +61,15 @@ int main(int argc, char *argv[])
         {"interface", required_argument, 0, 'i'},
         {"target-property", required_argument, 0, 't'},
         {"delete-old", no_argument, 0, 'd'},
+        {"xml", no_argument, 0, 'x'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
     };
     char *interface = NULL;
-    gboolean delete_old = FALSE;
     char *target_property = NULL;
-    
+    unsigned int flags = 0;
+
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "dhv", long_options, &option_index)) != -1)
     {
@@ -79,7 +82,10 @@ int main(int argc, char *argv[])
                 target_property = optarg;
                 break;
             case 'd':
-                delete_old = TRUE;
+                flags |= FLAG_COLLECT_GARBAGE_DELETE_OLD;
+                break;
+            case 'x':
+                flags |= FLAG_COLLECT_GARBAGE_XML;
                 break;
             case 'h':
                 print_usage(argv[0]);
@@ -104,5 +110,5 @@ int main(int argc, char *argv[])
         return 1;
     }
     else
-        return collect_garbage(interface, target_property, argv[optind], delete_old); /* Execute garbage collection operation */
+        return collect_garbage(interface, target_property, argv[optind], flags); /* Execute garbage collection operation */
 }

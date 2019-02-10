@@ -40,11 +40,16 @@ static void complete_collect_garbage_on_target(void *data, Target *target, gchar
         g_printerr("[target: %s]: Garbage collection failed!\n", target_key);
 }
 
-int collect_garbage(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, const gboolean delete_old)
+int collect_garbage(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, const unsigned int flags)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
-    GPtrArray *target_array = create_target_array(infrastructure_expr);
-    
+    GPtrArray *target_array;
+
+    if(flags & FLAG_COLLECT_GARBAGE_XML)
+        target_array = create_target_array_from_xml(infrastructure_expr);
+    else
+        target_array = create_target_array(infrastructure_expr);
+
     if(target_array == NULL)
     {
         g_printerr("[coordinator]: Error retrieving targets from infrastructure model!\n");
@@ -54,6 +59,7 @@ int collect_garbage(gchar *interface, const gchar *target_property, gchar *infra
     {
         /* Iterate over all targets and run collect garbage operation in parallel */
         int success;
+        gboolean delete_old = flags & FLAG_COLLECT_GARBAGE_DELETE_OLD;
         CollectGarbageData data = { delete_old };
         ProcReact_PidIterator iterator = create_target_pid_iterator(target_array, target_property, interface, collect_garbage_on_target, complete_collect_garbage_on_target, &data);
         

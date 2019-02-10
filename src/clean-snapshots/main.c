@@ -40,6 +40,8 @@ static void print_usage(const char *command)
     "                              to: 1\n"
     "  -C, --container=CONTAINER   Name of the container to filter on\n"
     "  -c, --component=COMPONENT   Name of the component to filter on\n"
+    "      --xml                   Specifies that the configurations are in XML not\n"
+    "                              the Nix expression language.\n"
     "  -h, --help                  Shows the usage of this command to the user\n"
     "  -v, --version               Shows the version of this command to the user\n"
 
@@ -63,6 +65,7 @@ int main(int argc, char *argv[])
         {"keep", required_argument, 0, 'z'},
         {"container", required_argument, 0, 'C'},
         {"component", required_argument, 0, 'c'},
+        {"xml", no_argument, 0, 'x'},
         {"version", no_argument, 0, 'v'},
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}
@@ -72,7 +75,8 @@ int main(int argc, char *argv[])
     int keep = 1;
     char *container = NULL;
     char *component = NULL;
-    
+    int xml = FALSE;
+
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "c:C:hv", long_options, &option_index)) != -1)
     {
@@ -96,6 +100,9 @@ int main(int argc, char *argv[])
             case 'h':
                 print_usage(argv[0]);
                 return 0;
+            case 'x':
+                xml = TRUE;
+                break;
             case '?':
                 print_usage(argv[0]);
                 return 1;
@@ -116,5 +123,5 @@ int main(int argc, char *argv[])
         return 1;
     }
     else
-        return clean_snapshots(interface, target_property, argv[optind], keep, container, component); /* Execute clean snapshots operation */
+        return clean_snapshots(interface, target_property, argv[optind], keep, container, component, xml); /* Execute clean snapshots operation */
 }

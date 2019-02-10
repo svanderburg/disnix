@@ -106,11 +106,16 @@ static void delete_configs_array(GPtrArray *configs_array)
     g_ptr_array_free(configs_array, TRUE);
 }
 
-int capture_infra(gchar *interface, const gchar *target_property, gchar *infrastructure_expr)
+int capture_infra(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, const int xml)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
-    GPtrArray *target_array = create_target_array(infrastructure_expr);
-    
+    GPtrArray *target_array;
+
+    if(xml)
+        target_array = create_target_array_from_xml(infrastructure_expr);
+    else
+        target_array = create_target_array(infrastructure_expr);
+
     if(target_array == NULL)
     {
         g_printerr("[coordinator]: Error retrieving targets from infrastructure model!\n");

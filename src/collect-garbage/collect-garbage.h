@@ -20,6 +20,9 @@
 #define __DISNIX_COLLECT_GARBAGE_H
 #include <glib.h>
 
+#define FLAG_COLLECT_GARBAGE_DELETE_OLD 0x1
+#define FLAG_COLLECT_GARBAGE_XML        0x2
+
 /**
  * Iterates over targets defined in an infrastructure Nix expression and
  * performs the garbage collection operation on each target.
@@ -28,9 +31,9 @@
  * @param target_property Property in the infrastructure model which specifies
  *                        how to connect to the Disnix service
  * @param infrastructure_expr Path to the infrastructure expression
- * @param delete_old Indicates whether to delete old profile generations
+ * @param flags Configuration flags for the collect garbage operation
  * @return 0 if everything succeeds, else a non-zero exit value
  */
-int collect_garbage(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, const gboolean delete_old);
+int collect_garbage(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, const unsigned int flags);
 
 #endif

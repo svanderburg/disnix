@@ -41,6 +41,8 @@ static void print_usage(const char *command)
     "                              interface. (Defaults to hostname)\n"
     "  -f, --format=FORMAT         Output format. Options are: services (default),\n"
     "                              containers and nix\n"
+    "      --xml                   Specifies that the configurations are in XML not\n"
+    "                              the Nix expression language.\n"
     "  -h, --help                  Shows the usage of this command to the user\n"
     "  -v, --version               Shows the version of this command to the user\n"
 
@@ -67,6 +69,7 @@ int main(int argc, char *argv[])
         {"interface", required_argument, 0, 'i'},
         {"target-property", required_argument, 0, 't'},
         {"profile", required_argument, 0, 'p'},
+        {"xml", no_argument, 0, 'x'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
@@ -75,7 +78,8 @@ int main(int argc, char *argv[])
     char *target_property = NULL;
     char *profile = NULL;
     OutputFormat format = FORMAT_SERVICES;
-    
+    int xml = FALSE;
+
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "f:p:hv", long_options, &option_index)) != -1)
     {
@@ -88,7 +92,6 @@ int main(int argc, char *argv[])
                     format = FORMAT_CONTAINERS;
                 else if(strcmp(optarg, "nix") == 0)
                     format = FORMAT_NIX;
-                    
                 break;
             case 'i':
                 interface = optarg;
@@ -98,6 +101,9 @@ int main(int argc, char *argv[])
                 break;
             case 'p':
                 profile = optarg;
+                break;
+            case 'x':
+                xml = TRUE;
                 break;
             case 'h':
                 print_usage(argv[0]);
@@ -112,16 +118,16 @@ int main(int argc, char *argv[])
     }
 
     /* Validate options */
-    
+
     interface = check_interface_option(interface);
     target_property = check_target_property_option(target_property);
     profile = check_profile_option(profile);
-    
+
     if(optind >= argc)
     {
         fprintf(stderr, "An infrastructure Nix expression has to be specified!\n");
         return 1;
     }
     else
-        return query_installed(interface, target_property, argv[optind], profile, format); /* Execute query operation */
+        return query_installed(interface, target_property, argv[optind], profile, format, xml); /* Execute query operation */
 }

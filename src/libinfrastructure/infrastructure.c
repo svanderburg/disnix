@@ -320,6 +320,31 @@ GPtrArray *create_target_array(char *infrastructure_expr)
     return targets_array;
 }
 
+GPtrArray *create_target_array_from_xml(const char *infrastructure_xml)
+{
+    /* Declarations */
+    xmlDocPtr doc;
+    GPtrArray *targets_array;
+
+    /* Open the XML file */
+    if((doc = xmlParseFile(infrastructure_xml)) == NULL)
+    {
+        g_printerr("Error with parsing the manifest XML file!\n");
+        xmlCleanupParser();
+        return NULL;
+    }
+
+    /* Create a target array from the XML document */
+    targets_array = create_target_array_from_doc(doc);
+
+    /* Cleanup */
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+
+    /* Return the target array */
+    return targets_array;
+}
+
 static void delete_properties(GPtrArray *properties)
 {
     if(properties != NULL)
