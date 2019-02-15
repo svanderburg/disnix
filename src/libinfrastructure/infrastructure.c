@@ -290,7 +290,7 @@ GPtrArray *create_target_array_from_doc(xmlDocPtr doc)
     }
 }
 
-GPtrArray *create_target_array(char *infrastructure_expr)
+GPtrArray *create_target_array_from_nix(char *infrastructure_expr)
 {
     /* Declarations */
     xmlDocPtr doc;
@@ -343,6 +343,14 @@ GPtrArray *create_target_array_from_xml(const char *infrastructure_xml)
 
     /* Return the target array */
     return targets_array;
+}
+
+GPtrArray *create_target_array(gchar *infrastructure_expr, const int xml)
+{
+    if(xml)
+        return create_target_array_from_xml(infrastructure_expr);
+    else
+        return create_target_array_from_nix(infrastructure_expr);
 }
 
 static void delete_properties(GPtrArray *properties)

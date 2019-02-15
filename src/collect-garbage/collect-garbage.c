@@ -43,12 +43,7 @@ static void complete_collect_garbage_on_target(void *data, Target *target, gchar
 int collect_garbage(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, const unsigned int flags)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
-    GPtrArray *target_array;
-
-    if(flags & FLAG_COLLECT_GARBAGE_XML)
-        target_array = create_target_array_from_xml(infrastructure_expr);
-    else
-        target_array = create_target_array(infrastructure_expr);
+    GPtrArray *target_array = create_target_array(infrastructure_expr, flags & FLAG_COLLECT_GARBAGE_XML);
 
     if(target_array == NULL)
     {

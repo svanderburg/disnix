@@ -125,12 +125,7 @@ static int retrieve_profiles(gchar *interface, GPtrArray *profile_manifest_targe
 int capture_manifest(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile, const unsigned int max_concurrent_transfers, const int xml)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
-    GPtrArray *target_array;
-
-    if(xml)
-        target_array = create_target_array_from_xml(infrastructure_expr);
-    else
-        target_array = create_target_array(infrastructure_expr);
+    GPtrArray *target_array = create_target_array(infrastructure_expr, xml);
 
     if(target_array == NULL)
     {

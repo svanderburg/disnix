@@ -179,7 +179,7 @@ GPtrArray *create_target_array_from_doc(xmlDocPtr doc);
  * @param infrastructure_expr Path to the infrastructure Nix expression
  * @return GPtrArray with target properties
  */
-GPtrArray *create_target_array(char *infrastructure_expr);
+GPtrArray *create_target_array_from_nix(char *infrastructure_expr);
 
 /**
  * Creates an array with targets from an infrastructure XML configuration
@@ -188,6 +188,15 @@ GPtrArray *create_target_array(char *infrastructure_expr);
  * @return GPtrArray with target properties
  */
 GPtrArray *create_target_array_from_xml(const char *infrastructure_xml);
+
+/**
+ * Creates an array with targets from an infrastructure configuration
+ *
+ * @param infrastructure_xml Path to the infrastructure configure file
+ * @param xml TRUE to indicate the input is in XML, FALSE that it is a Nix expression
+ * @return GPtrArray with target properties
+ */
+GPtrArray *create_target_array(gchar *infrastructure_expr, const int xml);
 
 /**
  * Deletes an array with targets
