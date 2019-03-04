@@ -3,7 +3,7 @@
 
 {
   imports = [ ../disnix-module.nix ];
-  
+
   virtualisation.writableStore = true;
   virtualisation.pathsInNixDB = [ pkgs.stdenv ] ++ pkgs.libxml2.all ++ pkgs.libxslt.all;
 
@@ -20,7 +20,7 @@
       shell = "/bin/sh";
       description = "Unprivileged user for the disnix-service";
     }
-    
+
     { uid = 1001;
       name = "privileged";
       group = "users";
