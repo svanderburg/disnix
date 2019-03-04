@@ -126,6 +126,9 @@ let
         datamigration = import ./tests/datamigration.nix {
           inherit nixpkgs dysnomia disnix;
         };
+        commands = import ./tests/commands.nix {
+          inherit nixpkgs dysnomia disnix;
+        };
         locking = import ./tests/locking.nix {
           inherit nixpkgs dysnomia disnix;
         };
@@ -146,6 +149,7 @@ let
         tests.ssh-to-runactivity
         tests.ssh-to-dbus
         tests.install
+        tests.commands
         tests.deployment
         tests.distbuild
         tests.snapshots-via-runactivity
