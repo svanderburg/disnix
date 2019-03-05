@@ -63,9 +63,9 @@ int main(int argc, char *argv[])
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
     };
-    
+
     unsigned int max_concurrent_transfers = 2;
-    
+
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "m:hv", long_options, &option_index)) != -1)
     {

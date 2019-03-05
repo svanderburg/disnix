@@ -63,9 +63,9 @@ int main(int argc, char *argv[])
     struct option long_options[] =
     {
         {"profile", required_argument, 0, 'p'},
-        {"coordinator-profile-path", required_argument, 0, 'P'},
-        {"no-coordinator-profile", no_argument, 0, 'c'},
-        {"no-target-profiles", no_argument, 0, 'C'},
+        {"coordinator-profile-path", required_argument, 0, DISNIX_OPTION_COORDINATOR_PROFILE_PATH},
+        {"no-coordinator-profile", no_argument, 0, DISNIX_OPTION_NO_COORDINATOR_PROFILE},
+        {"no-target-profiles", no_argument, 0, DISNIX_OPTION_NO_TARGET_PROFILES},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
@@ -82,31 +82,31 @@ int main(int argc, char *argv[])
             case 'p':
                 profile = optarg;
                 break;
-            case 'P':
+            case DISNIX_OPTION_COORDINATOR_PROFILE_PATH:
                 coordinator_profile_path = optarg;
                 break;
-            case 'c':
+            case DISNIX_OPTION_NO_COORDINATOR_PROFILE:
                 flags |= SET_NO_COORDINATOR_PROFILE;
                 break;
-           case 'C':
+           case DISNIX_OPTION_NO_TARGET_PROFILES:
                 flags |= SET_NO_TARGET_PROFILES;
                 break;
             case 'h':
                 print_usage(argv[0]);
                 return 0;
-            case '?':
-                print_usage(argv[0]);
-                return 1;
             case 'v':
                 print_version(argv[0]);
                 return 0;
+            case '?':
+                print_usage(argv[0]);
+                return 1;
         }
     }
 
     /* Validate options */
-    
+
     profile = check_profile_option(profile);
-    
+
     if(optind >= argc)
     {
         fprintf(stderr, "ERROR: No manifest specified!\n");

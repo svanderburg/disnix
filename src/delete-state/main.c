@@ -67,19 +67,19 @@ int main(int argc, char *argv[])
     {
         {"container", required_argument, 0, 'c'},
         {"component", required_argument, 0, 'C'},
-        {"coordinator-profile-path", required_argument, 0, 'P'},
+        {"coordinator-profile-path", required_argument, 0, DISNIX_OPTION_COORDINATOR_PROFILE_PATH},
         {"profile", required_argument, 0, 'p'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
     };
-    
+
     char *manifest_file;
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
     char *container = NULL;
     char *component = NULL;
-    
+
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "c:C:p:hv", long_options, &option_index)) != -1)
     {
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
             case 'p':
                 profile = optarg;
                 break;
-            case 'P':
+            case DISNIX_OPTION_COORDINATOR_PROFILE_PATH:
                 coordinator_profile_path = optarg;
                 break;
             case 'h':
@@ -110,13 +110,13 @@ int main(int argc, char *argv[])
     }
 
     /* Validate options */
-    
+
     profile = check_profile_option(profile);
-    
+
     if(optind >= argc)
         manifest_file = NULL;
     else
         manifest_file = argv[optind];
-    
+
     return run_delete_state(manifest_file, coordinator_profile_path, profile, container, component); /* Execute snapshot operation */
 }

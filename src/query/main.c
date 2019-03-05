@@ -66,10 +66,10 @@ int main(int argc, char *argv[])
     struct option long_options[] =
     {
         {"format", required_argument, 0, 'f'},
-        {"interface", required_argument, 0, 'i'},
-        {"target-property", required_argument, 0, 't'},
+        {"interface", required_argument, 0, DISNIX_OPTION_INTERFACE},
+        {"target-property", required_argument, 0, DISNIX_OPTION_TARGET_PROPERTY},
         {"profile", required_argument, 0, 'p'},
-        {"xml", no_argument, 0, 'x'},
+        {"xml", no_argument, 0, DISNIX_OPTION_XML},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
@@ -93,27 +93,27 @@ int main(int argc, char *argv[])
                 else if(strcmp(optarg, "nix") == 0)
                     format = FORMAT_NIX;
                 break;
-            case 'i':
+            case DISNIX_OPTION_INTERFACE:
                 interface = optarg;
                 break;
-            case 't':
+            case DISNIX_OPTION_TARGET_PROPERTY:
                 target_property = optarg;
                 break;
             case 'p':
                 profile = optarg;
                 break;
-            case 'x':
+            case DISNIX_OPTION_XML:
                 xml = TRUE;
                 break;
             case 'h':
                 print_usage(argv[0]);
                 return 0;
-            case '?':
-                print_usage(argv[0]);
-                return 1;
             case 'v':
                 print_version(argv[0]);
                 return 0;
+            case '?':
+                print_usage(argv[0]);
+                return 1;
         }
     }
 

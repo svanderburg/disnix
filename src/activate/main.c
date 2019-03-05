@@ -93,11 +93,11 @@ int main(int argc, char *argv[])
     struct option long_options[] =
     {
         {"old-manifest", required_argument, 0, 'o'},
-        {"coordinator-profile-path", required_argument, 0, 'P'},
+        {"coordinator-profile-path", required_argument, 0, DISNIX_OPTION_COORDINATOR_PROFILE_PATH},
         {"profile", required_argument, 0, 'p'},
-        {"no-upgrade", no_argument, 0, 'u'},
-        {"no-rollback", no_argument, 0, 'r'},
-        {"dry-run", no_argument, 0, 'd'},
+        {"no-upgrade", no_argument, 0, DISNIX_OPTION_NO_UPGRADE},
+        {"no-rollback", no_argument, 0, DISNIX_OPTION_NO_ROLLBACK},
+        {"dry-run", no_argument, 0, DISNIX_OPTION_DRY_RUN},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
     unsigned int flags = 0;
-    
+
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "o:p:hv", long_options, &option_index)) != -1)
     {
@@ -118,34 +118,34 @@ int main(int argc, char *argv[])
             case 'p':
                 profile = optarg;
                 break;
-            case 'P':
+            case DISNIX_OPTION_COORDINATOR_PROFILE_PATH:
                 coordinator_profile_path = optarg;
                 break;
-            case 'r':
+            case DISNIX_OPTION_NO_ROLLBACK:
                 flags |= FLAG_NO_ROLLBACK;
                 break;
-            case 'u':
+            case DISNIX_OPTION_NO_UPGRADE:
                 flags |= FLAG_NO_UPGRADE;
                 break;
-            case 'd':
+            case DISNIX_OPTION_DRY_RUN:
                 flags |= FLAG_DRY_RUN;
                 break;
             case 'h':
                 print_usage(argv[0]);
                 return 0;
-            case '?':
-                print_usage(argv[0]);
-                return 1;
             case 'v':
                 print_version(argv[0]);
                 return 0;
+            case '?':
+                print_usage(argv[0]);
+                return 1;
         }
     }
 
     /* Validate options */
-    
+
     profile = check_profile_option(profile);
-    
+
     if(optind >= argc)
     {
         fprintf(stderr, "A manifest file has to be specified!\n");

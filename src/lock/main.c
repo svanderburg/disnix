@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     struct option long_options[] =
     {
         {"unlock", no_argument, 0, 'u'},
-        {"coordinator-profile-path", required_argument, 0, 'P'},
+        {"coordinator-profile-path", required_argument, 0, DISNIX_OPTION_COORDINATOR_PROFILE_PATH},
         {"profile", required_argument, 0, 'p'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     int lock = TRUE;
     char *coordinator_profile_path = NULL;
     char *manifest_file;
-    
+
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "up:hv", long_options, &option_index)) != -1)
     {
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
             case 'u':
                 lock = FALSE;
                 break;
-            case 'P':
+            case DISNIX_OPTION_COORDINATOR_PROFILE_PATH:
                 coordinator_profile_path = optarg;
                 break;
             case 'p':
@@ -102,13 +102,13 @@ int main(int argc, char *argv[])
     }
 
     /* Validate options */
-    
+
     profile = check_profile_option(profile);
-    
+
     if(optind >= argc)
         manifest_file = NULL;
     else
         manifest_file = argv[optind];
-    
+
     return lock_or_unlock(lock, manifest_file, coordinator_profile_path, profile); /* Execute lock or unlock operation */
 }

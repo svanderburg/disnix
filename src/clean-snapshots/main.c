@@ -60,12 +60,12 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-        {"interface", required_argument, 0, 'i'},
-        {"target-property", required_argument, 0, 't'},
-        {"keep", required_argument, 0, 'z'},
+        {"interface", required_argument, 0, DISNIX_OPTION_INTERFACE},
+        {"target-property", required_argument, 0, DISNIX_OPTION_TARGET_PROPERTY},
+        {"keep", required_argument, 0, DISNIX_OPTION_KEEP},
         {"container", required_argument, 0, 'C'},
         {"component", required_argument, 0, 'c'},
-        {"xml", no_argument, 0, 'x'},
+        {"xml", no_argument, 0, DISNIX_OPTION_XML},
         {"version", no_argument, 0, 'v'},
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}
@@ -82,13 +82,13 @@ int main(int argc, char *argv[])
     {
         switch(c)
         {
-            case 'i':
+            case DISNIX_OPTION_INTERFACE:
                 interface = optarg;
                 break;
-            case 't':
+            case DISNIX_OPTION_TARGET_PROPERTY:
                 target_property = optarg;
                 break;
-            case 'z':
+            case DISNIX_OPTION_KEEP:
                 keep = atoi(optarg);
                 break;
             case 'C':
@@ -97,26 +97,26 @@ int main(int argc, char *argv[])
             case 'c':
                 component = optarg;
                 break;
+            case DISNIX_OPTION_XML:
+                xml = TRUE;
+                break;
             case 'h':
                 print_usage(argv[0]);
                 return 0;
-            case 'x':
-                xml = TRUE;
-                break;
-            case '?':
-                print_usage(argv[0]);
-                return 1;
             case 'v':
                 print_version(argv[0]);
                 return 0;
+            case '?':
+                print_usage(argv[0]);
+                return 1;
         }
     }
-    
+
     /* Validate options */
-    
+
     interface = check_interface_option(interface);
     target_property = check_target_property_option(target_property);
-    
+
     if(optind >= argc)
     {
         fprintf(stderr, "An infrastructure Nix expression has to be specified!\n");

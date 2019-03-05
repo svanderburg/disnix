@@ -55,9 +55,9 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-        {"coordinator-profile-path", required_argument, 0, 'P'},
+        {"coordinator-profile-path", required_argument, 0, DISNIX_OPTION_COORDINATOR_PROFILE_PATH},
         {"profile", required_argument, 0, 'p'},
-        {"no-containers", no_argument, 0, 'c'},
+        {"no-containers", no_argument, 0, DISNIX_OPTION_NO_CONTAINERS},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
@@ -75,10 +75,10 @@ int main(int argc, char *argv[])
             case 'p':
                 profile = optarg;
                 break;
-            case 'P':
+            case DISNIX_OPTION_COORDINATOR_PROFILE_PATH:
                 coordinator_profile_path = optarg;
                 break;
-            case 'c':
+            case DISNIX_OPTION_NO_CONTAINERS:
                 no_containers = TRUE;
                 break;
             case 'h':
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 
     /* Validate options */
     profile = check_profile_option(profile);
-    
+
     if(optind >= argc)
         manifest_file = NULL;
     else

@@ -58,10 +58,10 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-        {"interface", required_argument, 0, 'i'},
-        {"target-property", required_argument, 0, 't'},
+        {"interface", required_argument, 0, DISNIX_OPTION_INTERFACE},
+        {"target-property", required_argument, 0, DISNIX_OPTION_TARGET_PROPERTY},
         {"delete-old", no_argument, 0, 'd'},
-        {"xml", no_argument, 0, 'x'},
+        {"xml", no_argument, 0, DISNIX_OPTION_XML},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
@@ -75,35 +75,35 @@ int main(int argc, char *argv[])
     {
         switch(c)
         {
-            case 'i':
+            case DISNIX_OPTION_INTERFACE:
                 interface = optarg;
                 break;
-            case 't':
+            case DISNIX_OPTION_TARGET_PROPERTY:
                 target_property = optarg;
                 break;
             case 'd':
                 flags |= FLAG_COLLECT_GARBAGE_DELETE_OLD;
                 break;
-            case 'x':
+            case DISNIX_OPTION_XML:
                 flags |= FLAG_COLLECT_GARBAGE_XML;
                 break;
-            case 'h':
-                print_usage(argv[0]);
-                return 0;
             case '?':
                 print_usage(argv[0]);
                 return 1;
+            case 'h':
+                print_usage(argv[0]);
+                return 0;
             case 'v':
                 print_version(argv[0]);
                 return 0;
         }
     }
-    
+
     /* Validate options */
-    
+
     interface = check_interface_option(interface);
     target_property = check_target_property_option(target_property);
-    
+
     if(optind >= argc)
     {
         fprintf(stderr, "An infrastructure Nix expression has to be specified!\n");

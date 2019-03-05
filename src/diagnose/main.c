@@ -64,11 +64,11 @@ int main(int argc, char *argv[])
     struct option long_options[] =
     {
         {"service", required_argument, 0, 'S'},
-        {"show-mappings", no_argument, 0, 'D'},
+        {"show-mappings", no_argument, 0, DISNIX_OPTION_SHOW_MAPPINGS},
         {"container", required_argument, 0, 'c'},
         {"target", required_argument, 0, 't'},
-        {"command", required_argument, 0, 'C'},
-        {"coordinator-profile-path", required_argument, 0, 'P'},
+        {"command", required_argument, 0, DISNIX_OPTION_COMMAND},
+        {"coordinator-profile-path", required_argument, 0, DISNIX_OPTION_COORDINATOR_PROFILE_PATH},
         {"profile", required_argument, 0, 'p'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
             case 'S':
                 service_name = optarg;
                 break;
-            case 'D':
+            case DISNIX_OPTION_SHOW_MAPPINGS:
                 show_mappings = TRUE;
                 break;
             case 'c':
@@ -100,10 +100,10 @@ int main(int argc, char *argv[])
             case 't':
                 target = optarg;
                 break;
-            case 'C':
+            case DISNIX_OPTION_COMMAND:
                 command = optarg;
                 break;
-            case 'P':
+            case DISNIX_OPTION_COORDINATOR_PROFILE_PATH:
                 coordinator_profile_path = optarg;
                 break;
             case 'p':
@@ -112,12 +112,12 @@ int main(int argc, char *argv[])
             case 'h':
                 print_usage(argv[0]);
                 return 0;
-            case '?':
-                print_usage(argv[0]);
-                return 1;
             case 'v':
                 print_version(argv[0]);
                 return 0;
+            case '?':
+                print_usage(argv[0]);
+                return 1;
         }
     }
 

@@ -21,6 +21,46 @@
 #define __DISNIX_DEFAULTOPTIONS_H
 
 /**
+ * @brief Enumeration of all possible long-only options used in the Disnix toolset
+ */
+typedef enum
+{
+    /* Connectivity options */
+    DISNIX_OPTION_INTERFACE = 256,
+    DISNIX_OPTION_TARGET_PROPERTY = 257,
+
+    /* Deployment options */
+    DISNIX_OPTION_NO_UPGRADE = 258,
+    DISNIX_OPTION_NO_ROLLBACK = 259,
+    DISNIX_OPTION_NO_MIGRATION = 260,
+    DISNIX_OPTION_NO_LOCK = 261,
+    DISNIX_OPTION_DRY_RUN = 252,
+
+    /* Model options */
+    DISNIX_OPTION_XML = 263,
+
+    /* State management options */
+    DISNIX_OPTION_KEEP = 264,
+    DISNIX_OPTION_DELETE_STATE = 265,
+    DISNIX_OPTION_TRANSFER_ONLY = 266,
+    DISNIX_OPTION_DEPTH_FIRST = 267,
+    DISNIX_OPTION_ALL = 268,
+
+    /* Diagnose options */
+    DISNIX_OPTION_SHOW_MAPPINGS = 269,
+    DISNIX_OPTION_COMMAND = 270,
+
+    /* Profile management options */
+    DISNIX_OPTION_COORDINATOR_PROFILE_PATH = 271,
+    DISNIX_OPTION_NO_COORDINATOR_PROFILE = 272,
+    DISNIX_OPTION_NO_TARGET_PROFILES = 273,
+
+    /* Visualize options */
+    DISNIX_OPTION_NO_CONTAINERS = 274
+}
+DisnixCommandLineOption;
+
+/**
  * Checks the interface option. If NULL, it will take the value defined in the
  * DISNIX_CLIENT_INTERFACE environment variable or else it will use
  * a default value.
@@ -47,7 +87,6 @@ char *check_target_property_option(char *target_property);
  * @return The given profile if set, or else the default Disnix profile
  */
 char *check_profile_option(char *profile);
-
 
 /**
  * Checks whether the delete state has been enabled via the DISNIX_DELETE_STATE

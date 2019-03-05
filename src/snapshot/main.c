@@ -93,20 +93,20 @@ int main(int argc, char *argv[])
     {
         {"container", required_argument, 0, 'c'},
         {"component", required_argument, 0, 'C'},
-        {"coordinator-profile-path", required_argument, 0, 'P'},
+        {"coordinator-profile-path", required_argument, 0, DISNIX_OPTION_COORDINATOR_PROFILE_PATH},
         {"profile", required_argument, 0, 'p'},
         {"old-manifest", required_argument, 0, 'o'},
-        {"no-upgrade", no_argument, 0, 'u'},
-        {"transfer-only", no_argument, 0, 't'},
-        {"depth-first", no_argument, 0, 'D'},
-        {"all", no_argument, 0, 'a'},
-        {"keep", required_argument, 0, 'k'},
+        {"no-upgrade", no_argument, 0, DISNIX_OPTION_NO_UPGRADE},
+        {"transfer-only", no_argument, 0, DISNIX_OPTION_TRANSFER_ONLY},
+        {"depth-first", no_argument, 0, DISNIX_OPTION_DEPTH_FIRST},
+        {"all", no_argument, 0, DISNIX_OPTION_ALL},
+        {"keep", required_argument, 0, DISNIX_OPTION_KEEP},
         {"max-concurrent-transfers", required_argument, 0, 'm'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
     };
-    
+
     unsigned int max_concurrent_transfers = 2;
     unsigned int flags = 0;
     int keep = 1;
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
     char *coordinator_profile_path = NULL;
     char *container = NULL;
     char *component = NULL;
-    
+
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "c:C:m:o:p:hv", long_options, &option_index)) != -1)
     {
@@ -131,25 +131,25 @@ int main(int argc, char *argv[])
             case 'p':
                 profile = optarg;
                 break;
-            case 'P':
+            case DISNIX_OPTION_COORDINATOR_PROFILE_PATH:
                 coordinator_profile_path = optarg;
                 break;
             case 'o':
                 old_manifest = optarg;
                 break;
-            case 'u':
+            case DISNIX_OPTION_NO_UPGRADE:
                 flags |= FLAG_NO_UPGRADE;
                 break;
-            case 'a':
+            case DISNIX_OPTION_ALL:
                 flags |= FLAG_ALL;
                 break;
-            case 'k':
+            case DISNIX_OPTION_KEEP:
                 keep = atoi(optarg);
                 break;
-            case 't':
+            case DISNIX_OPTION_TRANSFER_ONLY:
                 flags |= FLAG_TRANSFER_ONLY;
                 break;
-            case 'D':
+            case DISNIX_OPTION_DEPTH_FIRST:
                 flags |= FLAG_DEPTH_FIRST;
                 break;
             case 'm':
@@ -158,23 +158,23 @@ int main(int argc, char *argv[])
             case 'h':
                 print_usage(argv[0]);
                 return 0;
-            case '?':
-                print_usage(argv[0]);
-                return 1;
             case 'v':
                 print_version(argv[0]);
                 return 0;
+            case '?':
+                print_usage(argv[0]);
+                return 1;
         }
     }
 
     /* Validate options */
-    
+
     profile = check_profile_option(profile);
-    
+
     if(optind >= argc)
         manifest_file = NULL;
     else
         manifest_file = argv[optind];
-    
+
     return run_snapshot(manifest_file, max_concurrent_transfers, flags, keep, old_manifest, coordinator_profile_path, profile, container, component); /* Execute snapshot operation */
 }
