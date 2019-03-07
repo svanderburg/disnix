@@ -63,15 +63,15 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-        {"service", required_argument, 0, 'S'},
+        {"service", required_argument, 0, DISNIX_OPTION_SERVICE},
         {"show-mappings", no_argument, 0, DISNIX_OPTION_SHOW_MAPPINGS},
-        {"container", required_argument, 0, 'c'},
-        {"target", required_argument, 0, 't'},
+        {"container", required_argument, 0, DISNIX_OPTION_CONTAINER},
+        {"target", required_argument, 0, DISNIX_OPTION_TARGET},
         {"command", required_argument, 0, DISNIX_OPTION_COMMAND},
         {"coordinator-profile-path", required_argument, 0, DISNIX_OPTION_COORDINATOR_PROFILE_PATH},
-        {"profile", required_argument, 0, 'p'},
-        {"help", no_argument, 0, 'h'},
-        {"version", no_argument, 0, 'v'},
+        {"profile", required_argument, 0, DISNIX_OPTION_PROFILE},
+        {"help", no_argument, 0, DISNIX_OPTION_HELP},
+        {"version", no_argument, 0, DISNIX_OPTION_VERSION},
         {0, 0, 0, 0}
     };
     char *service_name = NULL;
@@ -88,16 +88,16 @@ int main(int argc, char *argv[])
     {
         switch(c)
         {
-            case 'S':
+            case DISNIX_OPTION_SERVICE:
                 service_name = optarg;
                 break;
             case DISNIX_OPTION_SHOW_MAPPINGS:
                 show_mappings = TRUE;
                 break;
-            case 'c':
+            case DISNIX_OPTION_CONTAINER:
                 container = optarg;
                 break;
-            case 't':
+            case DISNIX_OPTION_TARGET:
                 target = optarg;
                 break;
             case DISNIX_OPTION_COMMAND:
@@ -106,16 +106,16 @@ int main(int argc, char *argv[])
             case DISNIX_OPTION_COORDINATOR_PROFILE_PATH:
                 coordinator_profile_path = optarg;
                 break;
-            case 'p':
+            case DISNIX_OPTION_PROFILE:
                 profile = optarg;
                 break;
-            case 'h':
+            case DISNIX_OPTION_HELP:
                 print_usage(argv[0]);
                 return 0;
-            case 'v':
+            case DISNIX_OPTION_VERSION:
                 print_version(argv[0]);
                 return 0;
-            case '?':
+            default:
                 print_usage(argv[0]);
                 return 1;
         }

@@ -20,11 +20,45 @@
 #ifndef __DISNIX_DEFAULTOPTIONS_H
 #define __DISNIX_DEFAULTOPTIONS_H
 
+#define DISNIX_DEFAULT_MAX_NUM_OF_CONCURRENT_TRANSFERS 2
+#define DISNIX_DEFAULT_KEEP 1
+#define DISNIX_DEFAULT_XML FALSE
+
 /**
- * @brief Enumeration of all possible long-only options used in the Disnix toolset
+ * @brief Enumeration of all possible command-line options used in the Disnix toolset
  */
 typedef enum
 {
+    /* Short and long options */
+
+    /* General housekeeping options */
+    DISNIX_OPTION_HELP = 'h',
+    DISNIX_OPTION_VERSION = 'v',
+
+    /* Connectivity options */
+    DISNIX_OPTION_MAX_CONCURRENT_TRANSFERS = 'm',
+
+    /* Configuration options */
+    DISNIX_OPTION_PROFILE = 'p',
+    DISNIX_OPTION_OLD_MANIFEST = 'o',
+
+    /* State management options */
+    DISNIX_OPTION_COMPONENT = 'C',
+    DISNIX_OPTION_CONTAINER = 'c',
+    DISNIX_OPTION_UNLOCK = 'u',
+
+    /* Documenation options */
+    DISNIX_OPTION_FORMAT = 'f',
+
+    /* Garbage collect options */
+    DISNIX_OPTION_DELETE_OLD = 'd',
+
+    /* Diagnose options */
+    DISNIX_OPTION_SERVICE = 'S',
+    DISNIX_OPTION_TARGET = 't',
+
+    /* Long-only options */
+
     /* Connectivity options */
     DISNIX_OPTION_INTERFACE = 256,
     DISNIX_OPTION_TARGET_PROPERTY = 257,

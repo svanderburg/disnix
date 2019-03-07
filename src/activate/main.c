@@ -92,14 +92,14 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-        {"old-manifest", required_argument, 0, 'o'},
+        {"old-manifest", required_argument, 0, DISNIX_OPTION_OLD_MANIFEST},
         {"coordinator-profile-path", required_argument, 0, DISNIX_OPTION_COORDINATOR_PROFILE_PATH},
-        {"profile", required_argument, 0, 'p'},
+        {"profile", required_argument, 0, DISNIX_OPTION_PROFILE},
         {"no-upgrade", no_argument, 0, DISNIX_OPTION_NO_UPGRADE},
         {"no-rollback", no_argument, 0, DISNIX_OPTION_NO_ROLLBACK},
         {"dry-run", no_argument, 0, DISNIX_OPTION_DRY_RUN},
-        {"help", no_argument, 0, 'h'},
-        {"version", no_argument, 0, 'v'},
+        {"help", no_argument, 0, DISNIX_OPTION_HELP},
+        {"version", no_argument, 0, DISNIX_OPTION_VERSION},
         {0, 0, 0, 0}
     };
     char *old_manifest = NULL;
@@ -112,10 +112,10 @@ int main(int argc, char *argv[])
     {
         switch(c)
         {
-            case 'o':
+            case DISNIX_OPTION_OLD_MANIFEST:
                 old_manifest = optarg;
                 break;
-            case 'p':
+            case DISNIX_OPTION_PROFILE:
                 profile = optarg;
                 break;
             case DISNIX_OPTION_COORDINATOR_PROFILE_PATH:
@@ -130,13 +130,13 @@ int main(int argc, char *argv[])
             case DISNIX_OPTION_DRY_RUN:
                 flags |= FLAG_DRY_RUN;
                 break;
-            case 'h':
+            case DISNIX_OPTION_HELP:
                 print_usage(argv[0]);
                 return 0;
-            case 'v':
+            case DISNIX_OPTION_VERSION:
                 print_version(argv[0]);
                 return 0;
-            case '?':
+            default:
                 print_usage(argv[0]);
                 return 1;
         }

@@ -60,10 +60,10 @@ int main(int argc, char *argv[])
     {
         {"interface", required_argument, 0, DISNIX_OPTION_INTERFACE},
         {"target-property", required_argument, 0, DISNIX_OPTION_TARGET_PROPERTY},
-        {"delete-old", no_argument, 0, 'd'},
+        {"delete-old", no_argument, 0, DISNIX_OPTION_DELETE_OLD},
         {"xml", no_argument, 0, DISNIX_OPTION_XML},
-        {"help", no_argument, 0, 'h'},
-        {"version", no_argument, 0, 'v'},
+        {"help", no_argument, 0, DISNIX_OPTION_HELP},
+        {"version", no_argument, 0, DISNIX_OPTION_VERSION},
         {0, 0, 0, 0}
     };
     char *interface = NULL;
@@ -81,21 +81,21 @@ int main(int argc, char *argv[])
             case DISNIX_OPTION_TARGET_PROPERTY:
                 target_property = optarg;
                 break;
-            case 'd':
+            case DISNIX_OPTION_DELETE_OLD:
                 flags |= FLAG_COLLECT_GARBAGE_DELETE_OLD;
                 break;
             case DISNIX_OPTION_XML:
                 flags |= FLAG_COLLECT_GARBAGE_XML;
                 break;
-            case '?':
-                print_usage(argv[0]);
-                return 1;
-            case 'h':
+            case DISNIX_OPTION_HELP:
                 print_usage(argv[0]);
                 return 0;
-            case 'v':
+            case DISNIX_OPTION_VERSION:
                 print_version(argv[0]);
                 return 0;
+            default:
+                print_usage(argv[0]);
+                return 1;
         }
     }
 

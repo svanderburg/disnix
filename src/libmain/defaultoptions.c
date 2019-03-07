@@ -31,6 +31,7 @@ static char *default_target_property = "hostname";
 /* Default profile value */
 static char *default_profile = "default";
 
+
 char *check_interface_option(char *interface)
 {
     if(interface == NULL)

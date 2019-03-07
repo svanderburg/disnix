@@ -91,25 +91,25 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-        {"container", required_argument, 0, 'c'},
-        {"component", required_argument, 0, 'C'},
+        {"container", required_argument, 0, DISNIX_OPTION_CONTAINER},
+        {"component", required_argument, 0, DISNIX_OPTION_COMPONENT},
         {"coordinator-profile-path", required_argument, 0, DISNIX_OPTION_COORDINATOR_PROFILE_PATH},
-        {"profile", required_argument, 0, 'p'},
-        {"old-manifest", required_argument, 0, 'o'},
+        {"profile", required_argument, 0, DISNIX_OPTION_PROFILE},
+        {"old-manifest", required_argument, 0, DISNIX_OPTION_OLD_MANIFEST},
         {"no-upgrade", no_argument, 0, DISNIX_OPTION_NO_UPGRADE},
         {"transfer-only", no_argument, 0, DISNIX_OPTION_TRANSFER_ONLY},
         {"depth-first", no_argument, 0, DISNIX_OPTION_DEPTH_FIRST},
         {"all", no_argument, 0, DISNIX_OPTION_ALL},
         {"keep", required_argument, 0, DISNIX_OPTION_KEEP},
-        {"max-concurrent-transfers", required_argument, 0, 'm'},
-        {"help", no_argument, 0, 'h'},
-        {"version", no_argument, 0, 'v'},
+        {"max-concurrent-transfers", required_argument, 0, DISNIX_OPTION_MAX_CONCURRENT_TRANSFERS},
+        {"help", no_argument, 0, DISNIX_OPTION_HELP},
+        {"version", no_argument, 0, DISNIX_OPTION_VERSION},
         {0, 0, 0, 0}
     };
 
-    unsigned int max_concurrent_transfers = 2;
+    unsigned int max_concurrent_transfers = DISNIX_DEFAULT_MAX_NUM_OF_CONCURRENT_TRANSFERS;
     unsigned int flags = 0;
-    int keep = 1;
+    int keep = DISNIX_DEFAULT_KEEP;
     char *manifest_file;
     char *old_manifest = NULL;
     char *profile = NULL;
@@ -122,19 +122,19 @@ int main(int argc, char *argv[])
     {
         switch(c)
         {
-            case 'c':
+            case DISNIX_OPTION_CONTAINER:
                 container = optarg;
                 break;
-            case 'C':
+            case DISNIX_OPTION_COMPONENT:
                 component = optarg;
                 break;
-            case 'p':
+            case DISNIX_OPTION_PROFILE:
                 profile = optarg;
                 break;
             case DISNIX_OPTION_COORDINATOR_PROFILE_PATH:
                 coordinator_profile_path = optarg;
                 break;
-            case 'o':
+            case DISNIX_OPTION_OLD_MANIFEST:
                 old_manifest = optarg;
                 break;
             case DISNIX_OPTION_NO_UPGRADE:
@@ -152,16 +152,16 @@ int main(int argc, char *argv[])
             case DISNIX_OPTION_DEPTH_FIRST:
                 flags |= FLAG_DEPTH_FIRST;
                 break;
-            case 'm':
+            case DISNIX_OPTION_MAX_CONCURRENT_TRANSFERS:
                 max_concurrent_transfers = atoi(optarg);
                 break;
-            case 'h':
+            case DISNIX_OPTION_HELP:
                 print_usage(argv[0]);
                 return 0;
-            case 'v':
+            case DISNIX_OPTION_VERSION:
                 print_version(argv[0]);
                 return 0;
-            case '?':
+            default:
                 print_usage(argv[0]);
                 return 1;
         }

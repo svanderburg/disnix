@@ -58,31 +58,31 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-        {"max-concurrent-transfers", required_argument, 0, 'm'},
-        {"help", no_argument, 0, 'h'},
-        {"version", no_argument, 0, 'v'},
+        {"max-concurrent-transfers", required_argument, 0, DISNIX_OPTION_MAX_CONCURRENT_TRANSFERS},
+        {"help", no_argument, 0, DISNIX_OPTION_HELP},
+        {"version", no_argument, 0, DISNIX_OPTION_VERSION},
         {0, 0, 0, 0}
     };
 
-    unsigned int max_concurrent_transfers = 2;
+    unsigned int max_concurrent_transfers = DISNIX_DEFAULT_MAX_NUM_OF_CONCURRENT_TRANSFERS;
 
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "m:hv", long_options, &option_index)) != -1)
     {
         switch(c)
         {
-            case 'm':
+            case DISNIX_OPTION_MAX_CONCURRENT_TRANSFERS:
                 max_concurrent_transfers = atoi(optarg);
                 break;
-            case 'h':
+            case DISNIX_OPTION_HELP:
                 print_usage(argv[0]);
                 return 0;
-            case '?':
-                print_usage(argv[0]);
-                return 1;
-            case 'v':
+            case DISNIX_OPTION_VERSION:
                 print_version(argv[0]);
                 return 0;
+            default:
+                print_usage(argv[0]);
+                return 1;
         }
     }
 

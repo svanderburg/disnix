@@ -63,19 +63,19 @@ int main(int argc, char *argv[])
         {"interface", required_argument, 0, DISNIX_OPTION_INTERFACE},
         {"target-property", required_argument, 0, DISNIX_OPTION_TARGET_PROPERTY},
         {"keep", required_argument, 0, DISNIX_OPTION_KEEP},
-        {"container", required_argument, 0, 'C'},
-        {"component", required_argument, 0, 'c'},
+        {"container", required_argument, 0, DISNIX_OPTION_CONTAINER},
+        {"component", required_argument, 0, DISNIX_OPTION_COMPONENT},
         {"xml", no_argument, 0, DISNIX_OPTION_XML},
-        {"version", no_argument, 0, 'v'},
-        {"help", no_argument, 0, 'h'},
+        {"version", no_argument, 0, DISNIX_OPTION_VERSION},
+        {"help", no_argument, 0, DISNIX_OPTION_HELP},
         {0, 0, 0, 0}
     };
     char *interface = NULL;
     char *target_property = NULL;
-    int keep = 1;
+    int keep = DISNIX_DEFAULT_KEEP;
     char *container = NULL;
     char *component = NULL;
-    int xml = FALSE;
+    int xml = DISNIX_DEFAULT_XML;
 
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "c:C:hv", long_options, &option_index)) != -1)
@@ -91,22 +91,22 @@ int main(int argc, char *argv[])
             case DISNIX_OPTION_KEEP:
                 keep = atoi(optarg);
                 break;
-            case 'C':
+            case DISNIX_OPTION_CONTAINER:
                 container = optarg;
                 break;
-            case 'c':
+            case DISNIX_OPTION_COMPONENT:
                 component = optarg;
                 break;
             case DISNIX_OPTION_XML:
                 xml = TRUE;
                 break;
-            case 'h':
+            case DISNIX_OPTION_HELP:
                 print_usage(argv[0]);
                 return 0;
-            case 'v':
+            case DISNIX_OPTION_VERSION:
                 print_version(argv[0]);
                 return 0;
-            case '?':
+            default:
                 print_usage(argv[0]);
                 return 1;
         }

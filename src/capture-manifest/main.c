@@ -68,50 +68,50 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
-        {"interface", required_argument, 0, 'i'},
-        {"target-property", required_argument, 0, 't'},
-        {"profile", required_argument, 0, 'p'},
-        {"max-concurrent-transfers", required_argument, 0, 'm'},
-        {"xml", no_argument, 0, 'x'},
-        {"help", no_argument, 0, 'h'},
-        {"version", no_argument, 0, 'v'},
+        {"interface", required_argument, 0, DISNIX_OPTION_INTERFACE},
+        {"target-property", required_argument, 0, DISNIX_OPTION_TARGET_PROPERTY},
+        {"profile", required_argument, 0, DISNIX_OPTION_PROFILE},
+        {"max-concurrent-transfers", required_argument, 0, DISNIX_OPTION_MAX_CONCURRENT_TRANSFERS},
+        {"xml", no_argument, 0, DISNIX_OPTION_XML},
+        {"help", no_argument, 0, DISNIX_OPTION_HELP},
+        {"version", no_argument, 0, DISNIX_OPTION_VERSION},
         {0, 0, 0, 0}
     };
     char *interface = NULL;
     char *target_property = NULL;
     char *profile = NULL;
-    unsigned int max_concurrent_transfers = 2;
-    int xml = FALSE;
+    unsigned int max_concurrent_transfers = DISNIX_DEFAULT_MAX_NUM_OF_CONCURRENT_TRANSFERS;
+    int xml = DISNIX_DEFAULT_XML;
 
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "p:m:hv", long_options, &option_index)) != -1)
     {
         switch(c)
         {
-            case 'i':
+            case DISNIX_OPTION_INTERFACE:
                 interface = optarg;
                 break;
-            case 't':
+            case DISNIX_OPTION_TARGET_PROPERTY:
                 target_property = optarg;
                 break;
-            case 'p':
+            case DISNIX_OPTION_PROFILE:
                 profile = optarg;
                 break;
-            case 'm':
+            case DISNIX_OPTION_MAX_CONCURRENT_TRANSFERS:
                 max_concurrent_transfers = atoi(optarg);
                 break;
-            case 'x':
+            case DISNIX_OPTION_XML:
                 xml = TRUE;
                 break;
-            case 'h':
+            case DISNIX_OPTION_HELP:
                 print_usage(argv[0]);
                 return 0;
-            case '?':
-                print_usage(argv[0]);
-                return 1;
-            case 'v':
+            case DISNIX_OPTION_VERSION:
                 print_version(argv[0]);
                 return 0;
+            default:
+                print_usage(argv[0]);
+                return 1;
         }
     }
 

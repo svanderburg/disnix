@@ -60,13 +60,13 @@ int main(int argc, char *argv[])
         {"interface", required_argument, 0, DISNIX_OPTION_INTERFACE},
         {"target-property", required_argument, 0, DISNIX_OPTION_TARGET_PROPERTY},
         {"xml", no_argument, 0, DISNIX_OPTION_XML},
-        {"help", no_argument, 0, 'h'},
-        {"version", no_argument, 0, 'v'},
+        {"help", no_argument, 0, DISNIX_OPTION_HELP},
+        {"version", no_argument, 0, DISNIX_OPTION_VERSION},
         {0, 0, 0, 0}
     };
     char *interface = NULL;
     char *target_property = NULL;
-    int xml = FALSE;
+    int xml = DISNIX_DEFAULT_XML;
 
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "hv", long_options, &option_index)) != -1)
@@ -82,13 +82,13 @@ int main(int argc, char *argv[])
             case DISNIX_OPTION_XML:
                 xml = TRUE;
                 break;
-            case 'h':
+            case DISNIX_OPTION_HELP:
                 print_usage(argv[0]);
                 return 0;
-            case 'v':
+            case DISNIX_OPTION_VERSION:
                 print_version(argv[0]);
                 return 0;
-            case '?':
+            default:
                 print_usage(argv[0]);
                 return 1;
         }

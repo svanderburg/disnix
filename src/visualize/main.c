@@ -56,10 +56,10 @@ int main(int argc, char *argv[])
     struct option long_options[] =
     {
         {"coordinator-profile-path", required_argument, 0, DISNIX_OPTION_COORDINATOR_PROFILE_PATH},
-        {"profile", required_argument, 0, 'p'},
+        {"profile", required_argument, 0, DISNIX_OPTION_PROFILE},
         {"no-containers", no_argument, 0, DISNIX_OPTION_NO_CONTAINERS},
-        {"help", no_argument, 0, 'h'},
-        {"version", no_argument, 0, 'v'},
+        {"help", no_argument, 0, DISNIX_OPTION_HELP},
+        {"version", no_argument, 0, DISNIX_OPTION_VERSION},
         {0, 0, 0, 0}
     };
     char *profile = NULL;
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     {
         switch(c)
         {
-            case 'p':
+            case DISNIX_OPTION_PROFILE:
                 profile = optarg;
                 break;
             case DISNIX_OPTION_COORDINATOR_PROFILE_PATH:
@@ -81,15 +81,15 @@ int main(int argc, char *argv[])
             case DISNIX_OPTION_NO_CONTAINERS:
                 no_containers = TRUE;
                 break;
-            case 'h':
+            case DISNIX_OPTION_HELP:
                 print_usage(argv[0]);
                 return 0;
-            case '?':
-                print_usage(argv[0]);
-                return 1;
-            case 'v':
+            case DISNIX_OPTION_VERSION:
                 print_version(argv[0]);
                 return 0;
+            default:
+                print_usage(argv[0]);
+                return 1;
         }
     }
 
