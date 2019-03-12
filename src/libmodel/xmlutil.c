@@ -44,3 +44,46 @@ gchar *duplicate_node_text(xmlNodePtr node)
     else
         return NULL;
 }
+
+gpointer parse_value(xmlNodePtr element)
+{
+    if(element->children != NULL && element->children->type == XML_TEXT_NODE)
+        return g_strdup((gchar*)element->children->content);
+    else
+        return NULL;
+}
+
+GHashTable *parse_dictionary(xmlNodePtr element, ParseObjectFunc parse_object)
+{
+    xmlNodePtr element_children = element->children;
+    GHashTable *table = g_hash_table_new(g_str_hash, g_str_equal);
+
+    while(element_children != NULL)
+    {
+        gchar *key = g_strdup((gchar*)element_children->name);
+        gpointer value = parse_object(element_children);
+        g_hash_table_insert(table, key, value);
+        element_children = element_children->next;
+    }
+
+    return table;
+}
+
+GPtrArray *parse_list(xmlNodePtr element, gchar *child_element_name, ParseObjectFunc parse_object)
+{
+    xmlNodePtr element_children = element->children;
+    GPtrArray *return_array = g_ptr_array_new();
+
+    while(element_children != NULL)
+    {
+        if(xmlStrcmp(element_children->name, (xmlChar*)child_element_name) == 0)
+        {
+            gpointer value = parse_object(element_children);
+            g_ptr_array_add(return_array, value);
+        }
+
+        element_children = element_children->next;
+    }
+
+    return return_array;
+}

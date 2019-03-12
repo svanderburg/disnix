@@ -10,7 +10,7 @@ noinst_DATA = disnix-snapshot.1.xml
 man1_MANS = disnix-snapshot.1
 
 disnix_snapshot_SOURCES = run-snapshot.c main.c
-disnix_snapshot_CFLAGS = $(GLIB2_CFLAGS) -I../libprocreact -I../libmanifest -I../libmodel -I../libmain -I../libmigrate
+disnix_snapshot_CFLAGS = $(LIBXML2_CFLAGS) $(GLIB2_CFLAGS) -I../libprocreact -I../libmanifest -I../libmodel -I../libmain -I../libmigrate
 disnix_snapshot_LDADD = ../libmain/libmain.la ../libmigrate/libmigrate.la
 
 EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

@@ -20,6 +20,7 @@
 #ifndef __DISNIX_INTERFACES_H
 #define __DISNIX_INTERFACES_H
 #include <glib.h>
+#include <libxml/parser.h>
 
 /**
  * @brief Contains properties to interface with a target machine for building
@@ -28,19 +29,13 @@ typedef struct
 {
     /** Target property referring to the target machine to which the service is deployed */
     gchar *target;
-    
+
     /** Executable that needs to be run to connect to the remote machine */
     gchar *clientInterface;
 }
 Interface;
 
-/**
- * Creates a new array with interfaces from a distributed derivation file
- *
- * @param distributed_derivation_file Path to the distributed derivation XML file
- * @return GPtrArray with targets
- */
-GPtrArray *create_interface_array(const gchar *distributed_derivation_file);
+GPtrArray *parse_interfaces(xmlNodePtr element);
 
 /**
  * Deletes an array with interfaces.

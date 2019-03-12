@@ -25,7 +25,7 @@ static gint compare_interface(const Interface **l, const Interface **r)
 {
     const Interface *left = *l;
     const Interface *right = *r;
-    
+
     return g_strcmp0(left->target, right->target);
 }
 
@@ -35,84 +35,22 @@ static int compare_interface_keys(const char *key, const Interface **r)
     return g_strcmp0(key, right->target);
 }
 
-GPtrArray *create_interface_array(const gchar *distributed_derivation_file)
+static gpointer parse_interface(xmlNodePtr element)
 {
-    /* Declarations */
-    xmlDocPtr doc;
-    xmlNodePtr node_root;
-    xmlXPathObjectPtr result;
-    GPtrArray *interface_array = NULL;
-    
-    /* Parse the XML document */
-    
-    if((doc = xmlParseFile(distributed_derivation_file)) == NULL)
-    {
-	g_printerr("Error with parsing the distributed derivation XML file!\n");
-	xmlCleanupParser();
-	return NULL;
-    }
-    
-    /* Retrieve root element */
-    node_root = xmlDocGetRootElement(doc);
-    
-    if(node_root == NULL)
-    {
-	g_printerr("The distributed derivation XML file is empty!\n");
-	xmlFreeDoc(doc);
-	xmlCleanupParser();
-	return NULL;
-    }
-    
-    /* Query the targets elements */
-    result = executeXPathQuery(doc, "/distributedderivation/interfaces/interface");
-    
-    /* Iterate over all the targets elements and add them to the array */
-    
-    if(result)
-    {
-	unsigned int i;
-	xmlNodeSetPtr nodeset = result->nodesetval;
-	
-	/* Create a targets array */
-	interface_array = g_ptr_array_new();
-	
-	/* Iterate over all the target elements */
-	for(i = 0; i < nodeset->nodeNr; i++)
-	{
-	    xmlNodePtr interfaces_children = nodeset->nodeTab[i]->children;
-	    gchar *target = NULL;
-	    gchar *clientInterface = NULL;
-	    Interface *interface = (Interface*)g_malloc(sizeof(Interface));
-	    
-	    while(interfaces_children != NULL)
-	    {
-	        if(xmlStrcmp(interfaces_children->name, (xmlChar*) "target") == 0)
-		    target = g_strdup((gchar*)interfaces_children->children->content);
-		else if(xmlStrcmp(interfaces_children->name, (xmlChar*) "clientInterface") == 0)
-		    clientInterface = g_strdup((gchar*)interfaces_children->children->content);
-	        
-	        interfaces_children = interfaces_children->next;
-	    }
-	    
-	    interface->target = target;
-	    interface->clientInterface = clientInterface;
-	    
-	    /* Add interface item to the interface array */
-	    g_ptr_array_add(interface_array, interface);
-	}
-	
-	/* Sort the interface array */
-	g_ptr_array_sort(interface_array, (GCompareFunc)compare_interface);
-	
-	/* Cleanup */
-	xmlXPathFreeObject(result);
-    }
-    
-    /* Cleanup */
-    xmlFreeDoc(doc);
-    xmlCleanupParser();
-    
-    /* Return the interfaces array */
+    GHashTable *table = parse_dictionary(element, parse_value);
+
+    Interface *interface = (Interface*)g_malloc(sizeof(Interface));
+    interface->target = g_hash_table_lookup(table, "target");
+    interface->clientInterface = g_hash_table_lookup(table, "clientInterface");
+
+    g_hash_table_destroy(table);
+    return interface;
+}
+
+GPtrArray *parse_interfaces(xmlNodePtr element)
+{
+    GPtrArray *interface_array = parse_list(element, "interface", parse_interface);
+    g_ptr_array_sort(interface_array, (GCompareFunc)compare_interface);
     return interface_array;
 }
 
@@ -128,13 +66,13 @@ void delete_interface_array(GPtrArray *interface_array)
     if(interface_array != NULL)
     {
         unsigned int i;
-        
+
         for(i = 0; i < interface_array->len; i++)
         {
             Interface *interface = g_ptr_array_index(interface_array, i);
             delete_interface(interface);
         }
-    
+
         g_ptr_array_free(interface_array, TRUE);
     }
 }
@@ -142,7 +80,7 @@ void delete_interface_array(GPtrArray *interface_array)
 Interface *find_interface(const GPtrArray *interface_array, const gchar *key)
 {
     Interface **ret = bsearch(key, interface_array->pdata, interface_array->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_interface_keys);
-    
+
     if(ret == NULL)
         return NULL;
     else

@@ -25,6 +25,8 @@
 #include <modeliterator.h>
 #include "interfaces.h"
 
+#include <libxml/parser.h>
+
 /**
  * @brief Contains a mapping of a Nix store derivation to a Disnix Service target
  */
@@ -116,14 +118,7 @@ typedef struct
 }
 DerivationIteratorData;
 
-/**
- * Creates a new array with derivation items from a distributed derivation
- * XML file.
- *
- * @param distributed_derivation_file Path to the distributed derivation XML file
- * @return GPtrArray with DerivationItems
- */ 
-GPtrArray *create_derivation_array(const gchar *distributed_derivation_file);
+GPtrArray *parse_build(xmlNodePtr element);
 
 /**
  * Deletes an array with derivation items

@@ -20,6 +20,7 @@
 #ifndef __DISNIX_SNAPSHOTMAPPING_H
 #define __DISNIX_SNAPSHOTMAPPING_H
 #include <glib.h>
+#include <libxml/parser.h>
 #include "targets.h"
 
 /**
@@ -91,8 +92,10 @@ typedef void (*complete_snapshot_item_mapping_function) (SnapshotMapping *mappin
  * @param container_filter Name of the container to filter on, or NULL to parse all containers
  * @param component_filter Name of the component to filter on, or NULL to parse all components
  * @return GPtrArray containing activation mappings
+ * TODO
  */
-GPtrArray *create_snapshots_array(const gchar *manifest_file, const gchar *container_filter, const gchar *component_filter);
+//GPtrArray *create_snapshots_array(const gchar *manifest_file, const gchar *container_filter, const gchar *component_filter);
+GPtrArray *parse_snapshots(xmlNodePtr element, const gchar *container_filter, const gchar *component_filter);
 
 /**
  * Deletes an array with snapshot mappings including its contents.
@@ -100,6 +103,8 @@ GPtrArray *create_snapshots_array(const gchar *manifest_file, const gchar *conta
  * @param snapshots_array Snapshots array to delete
  */
 void delete_snapshots_array(GPtrArray *snapshots_array);
+
+int check_snapshots_array(const GPtrArray *snapshots_array);
 
 /**
  * Returns the snapshots mapping with the given key in the snapshots array.
@@ -148,17 +153,6 @@ int map_snapshot_items(const GPtrArray *snapshots_array, const GPtrArray *target
  */
 void reset_snapshot_items_transferred_status(GPtrArray *snapshots_array);
 
-/**
- * Opens the provided manifest or (if NULL) it attempts to open the manifest of
- * the last deployed configuration and returns the snapshot entries in it.
- *
- * @param manifest_file Manifest file to open
- * @param coordinator_profile_path Path to the coordinator profile or NULL to consult the default profile path
- * @param profile Name of the Disnix profile that identifies the deployment (typically: default)
- * @param container_filter Name of the container to filter on, or NULL to parse all containers
- * @param component_filter Name of the component to filter on, or NULL to parse all components
- * @return An array with the snapshots in the provided manifest, or previous manifest, or NULL in case of an error
- */
-GPtrArray *open_provided_or_previous_snapshots_array(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container_filter, const gchar *component_filter);
+GPtrArray *open_provided_or_previous_snapshots_array(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container, const gchar *component);
 
 #endif

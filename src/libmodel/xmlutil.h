@@ -42,4 +42,12 @@ xmlXPathObjectPtr executeXPathQuery(xmlDocPtr doc, const char *xpath);
  */
 gchar *duplicate_node_text(xmlNodePtr node);
 
+typedef gpointer (*ParseObjectFunc) (xmlNodePtr element);
+
+gpointer parse_value(xmlNodePtr element);
+
+GHashTable *parse_dictionary(xmlNodePtr element, ParseObjectFunc parse_object);
+
+GPtrArray *parse_list(xmlNodePtr element, gchar *child_element_name, ParseObjectFunc parse_object);
+
 #endif

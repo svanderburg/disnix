@@ -20,93 +20,26 @@
 #include "derivationmapping.h"
 #include <xmlutil.h>
 
-GPtrArray *create_derivation_array(const gchar *distributed_derivation_file)
+static DerivationItem *create_derivation_item_from_dict(GHashTable *table)
 {
-    /* Declarations */
-    xmlDocPtr doc;
-    xmlNodePtr node_root;
-    xmlXPathObjectPtr result;
-    GPtrArray *derivation_array = NULL;
-    
-    /* Parse the XML document */
-    
-    if((doc = xmlParseFile(distributed_derivation_file)) == NULL)
-    {
-	g_printerr("Error with parsing the distributed derivation XML file!\n");
-	xmlCleanupParser();
-	return NULL;
-    }
-    
-    /* Retrieve root element */
-    node_root = xmlDocGetRootElement(doc);
-    
-    if(node_root == NULL)
-    {
-        g_printerr("The distributed derivation XML file is empty!\n");
-	xmlFreeDoc(doc);
-	xmlCleanupParser();
-	return NULL;
-    }
+    DerivationItem *item = (DerivationItem*)g_malloc(sizeof(DerivationItem));
+    item->derivation = g_hash_table_lookup(table, "derivation");
+    item->target = g_hash_table_lookup(table, "target");
+    item->result = NULL;
+    return item;
+}
 
-    /* Query the mapping elements */
-    result = executeXPathQuery(doc, "/distributedderivation/build/mapping");
-    
-    /* Iterate over all the mapping elements and add them to the array */
-    
-    if(result)
-    {
-	xmlNodeSetPtr nodeset = result->nodesetval;
-	unsigned int i;
-	
-	/* Create a derivation array */
-        derivation_array = g_ptr_array_new();
-	
-	/* Iterate over all the mapping elements */
-	for(i = 0; i < nodeset->nodeNr; i++)
-        {
-	    xmlNodePtr mapping_children = nodeset->nodeTab[i]->children;
-	    DerivationItem *item = (DerivationItem*)g_malloc(sizeof(DerivationItem));
-	    gchar *derivation = NULL, *target = NULL;
-	    
-	    /* Iterate over all the mapping item children (derivation and target elements) */
-	    
-	    while(mapping_children != NULL)
-	    {
-		if(xmlStrcmp(mapping_children->name, (xmlChar*) "derivation") == 0)
-		    derivation = duplicate_node_text(mapping_children);
-		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "target") == 0)
-		    target = duplicate_node_text(mapping_children);
-		
-		mapping_children = mapping_children->next;
-	    }
-	    
-	    /* Added the mapping to the array */
-	    item->derivation = derivation;
-	    item->target = target;
-	    item->result = NULL;
-	    
-	    if(item->derivation == NULL || item->target == NULL)
-	    {
-	        /* Check if all mandatory properties have been provided */
-	        g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
-	        g_printerr("distributed derivation file?\n");
-	        delete_derivation_array(derivation_array);
-	        derivation_array = NULL;
-	        break;
-	    }
-	    else
-	        g_ptr_array_add(derivation_array, item); /* Add item to the array */
-        }
-        
-        xmlXPathFreeObject(result);
-    }
-    
-    /* Cleanup */
-    xmlFreeDoc(doc);
-    xmlCleanupParser();
-    
-    /* Return the derivation array */
-    return derivation_array;
+static gpointer parse_derivation_item(xmlNodePtr element)
+{
+    GHashTable *table = parse_dictionary(element, parse_value);
+    DerivationItem *item = create_derivation_item_from_dict(table);
+    g_hash_table_destroy(table);
+    return item;
+}
+
+GPtrArray *parse_build(xmlNodePtr element)
+{
+    return parse_list(element, "mapping", parse_derivation_item);
 }
 
 void delete_derivation_array(GPtrArray *derivation_array)
@@ -126,6 +59,26 @@ void delete_derivation_array(GPtrArray *derivation_array)
     
         g_ptr_array_free(derivation_array, TRUE);
     }
+}
+
+int check_derivation_array(const GPtrArray *derivation_array)
+{
+    unsigned int i;
+
+    for(i = 0; i < derivation_array->len; i++)
+    {
+        DerivationItem *item = g_ptr_array_index(derivation_array, i);
+
+        if(item->derivation == NULL || item->target == NULL)
+        {
+            /* Check if all mandatory properties have been provided */
+            g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
+            g_printerr("distributed derivation file?\n");
+            return FALSE;
+        }
+    }
+
+    return TRUE;
 }
 
 static int has_next_derivation_item(void *data)

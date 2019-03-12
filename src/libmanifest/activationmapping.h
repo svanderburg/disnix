@@ -20,6 +20,7 @@
 #ifndef __DISNIX_ACTIVATIONMAPPING_H
 #define __DISNIX_ACTIVATIONMAPPING_H
 #include <glib.h>
+#include <libxml/parser.h>
 #include "targets.h"
 #include "manifest.h"
 
@@ -128,8 +129,10 @@ typedef ActivationStatus (*iterate_strategy_function) (GPtrArray *union_array, c
  *
  * @param manifest_file Path to the manifest XML file
  * @return GPtrArray containing activation mappings
+ * TODO
  */
-GPtrArray *create_activation_array(const gchar *manifest_file);
+//GPtrArray *create_activation_array(const gchar *manifest_file);
+GPtrArray *parse_activation(xmlNodePtr element);
 
 /**
  * Deletes an array with activation mappings including its contents.
@@ -137,6 +140,8 @@ GPtrArray *create_activation_array(const gchar *manifest_file);
  * @param activation_array Activation array to delete
  */
 void delete_activation_array(GPtrArray *activation_array);
+
+int check_activation_array(const GPtrArray *activation_array);
 
 /**
  * Returns the activation mapping with the given key in the activation array.

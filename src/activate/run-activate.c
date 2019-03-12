@@ -25,7 +25,7 @@
 
 int run_activate_system(const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const unsigned int flags)
 {
-    Manifest *manifest = create_manifest(new_manifest, MANIFEST_ACTIVATION_FLAG, NULL, NULL);
+    Manifest *manifest = create_manifest(new_manifest, MANIFEST_ACTIVATION_FLAG | MANIFEST_TARGETS_FLAG, NULL, NULL);
 
     if(manifest == NULL)
     {
@@ -36,14 +36,14 @@ int run_activate_system(const gchar *new_manifest, const gchar *old_manifest, co
     {
         TransitionStatus status;
         gchar *old_manifest_file = determine_manifest_to_open(old_manifest, coordinator_profile_path, profile);
-        GPtrArray *old_activation_mappings = open_previous_activation_array(old_manifest_file);
+        GPtrArray *old_activation_array = open_previous_activation_array(old_manifest_file);
 
         /* Do the activation process */
-        status = activate_system(manifest, old_activation_mappings, flags, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
+        status = activate_system(manifest, old_activation_array, flags, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
         print_transition_status(status, old_manifest_file, new_manifest, coordinator_profile_path, profile);
 
         /* Cleanup */
-        delete_activation_array(old_activation_mappings);
+        g_ptr_array_free(old_activation_array, TRUE);
         g_free(old_manifest_file);
         delete_manifest(manifest);
 

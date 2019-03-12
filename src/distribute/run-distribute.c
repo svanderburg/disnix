@@ -25,7 +25,7 @@
 int run_distribute(const gchar *manifest_file, const unsigned int max_concurrent_transfers)
 {
     /* Generate a distribution array from the manifest file */
-    Manifest *manifest = create_manifest(manifest_file, MANIFEST_DISTRIBUTION_FLAG, NULL, NULL);
+    Manifest *manifest = create_manifest(manifest_file, MANIFEST_DISTRIBUTION_FLAG | MANIFEST_TARGETS_FLAG, NULL, NULL);
 
     if(manifest == NULL)
     {

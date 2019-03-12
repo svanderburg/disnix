@@ -21,26 +21,61 @@
 #include "derivationmapping.h"
 #include "interfaces.h"
 
+#include <libxml/parser.h>
+
+static DistributedDerivation *parse_distributed_derivation(xmlNodePtr element)
+{
+    DistributedDerivation *distributed_derivation = (DistributedDerivation*)g_malloc0(sizeof(DistributedDerivation));
+    xmlNodePtr element_children = element->children;
+
+    while(element_children != NULL)
+    {
+        if(xmlStrcmp(element_children->name, (xmlChar*) "build") == 0)
+            distributed_derivation->derivation_array = parse_build(element_children);
+        else if(xmlStrcmp(element_children->name, (xmlChar*) "interfaces") == 0)
+            distributed_derivation->interface_array = parse_interfaces(element_children);
+
+        element_children = element_children->next;
+    }
+
+    return distributed_derivation;
+}
+
 DistributedDerivation *create_distributed_derivation(const gchar *distributed_derivation_file)
 {
-    GPtrArray *derivation_array, *interface_array;
+    /* Declarations */
+    xmlDocPtr doc;
+    xmlNodePtr node_root;
     DistributedDerivation *distributed_derivation;
-    
-    derivation_array = create_derivation_array(distributed_derivation_file);
-    if(derivation_array == NULL)
-        return NULL;
-    
-    interface_array = create_interface_array(distributed_derivation_file);
-    if(interface_array == NULL)
+
+    /* Parse the XML document */
+
+    if((doc = xmlParseFile(distributed_derivation_file)) == NULL)
     {
-        delete_derivation_array(derivation_array);
+        g_printerr("Error with parsing the distributed derivation XML file!\n");
+        xmlCleanupParser();
         return NULL;
     }
-    
-    distributed_derivation = (DistributedDerivation*)g_malloc(sizeof(DistributedDerivation));
-    distributed_derivation->derivation_array = derivation_array;
-    distributed_derivation->interface_array = interface_array;
-    
+
+    /* Retrieve root element */
+    node_root = xmlDocGetRootElement(doc);
+
+    if(node_root == NULL)
+    {
+        g_printerr("The distributed derivation XML file is empty!\n");
+        xmlFreeDoc(doc);
+        xmlCleanupParser();
+        return NULL;
+    }
+
+    /* Parse distributed derivation */
+    distributed_derivation = parse_distributed_derivation(node_root);
+
+    /* Cleanup */
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+
+    /* Return distributed derivation */
     return distributed_derivation;
 }
 

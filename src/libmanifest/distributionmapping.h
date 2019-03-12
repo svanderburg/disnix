@@ -20,6 +20,7 @@
 #ifndef __DISNIX_DISTRIBUTIONMAPPING_H
 #define __DISNIX_DISTRIBUTIONMAPPING_H
 #include <glib.h>
+#include <libxml/parser.h>
 #include <procreact_pid_iterator.h>
 #include <modeliterator.h>
 #include "targets.h"
@@ -85,7 +86,8 @@ DistributionIteratorData;
  * @param manifest_file Path to the manifest XML file
  * @return GPtrArray with DistributionItems
  */
-GPtrArray *generate_distribution_array(const gchar *manifest_file);
+//GPtrArray *generate_distribution_array(const gchar *manifest_file);
+GPtrArray *parse_distribution(xmlNodePtr element);
 
 /**
  * Deletes an array with distribution items.
@@ -93,6 +95,10 @@ GPtrArray *generate_distribution_array(const gchar *manifest_file);
  * @param distribution_array Array with distribution items
  */
 void delete_distribution_array(GPtrArray *distribution_array);
+
+void print_distribution_array(const GPtrArray *distribution_array);
+
+int check_distribution_array(const GPtrArray *distribution_array);
 
 /**
  * Creates a new iterator that steps over each distribution item and target and

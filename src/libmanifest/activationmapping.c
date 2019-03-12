@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <xmlutil.h>
 #define min(a,b) ((a) < (b) ? (a) : (b))
@@ -52,172 +51,77 @@ static gint compare_activation_mapping(const ActivationMapping **l, const Activa
     return compare_activation_mapping_keys((const ActivationMappingKey **)l, (const ActivationMappingKey **)r);
 }
 
-static GPtrArray *parse_inter_dependencies(xmlNodePtr mapping_children)
+static ActivationMappingKey *create_activation_mapping_key_from_dict(GHashTable *table)
 {
-    xmlNodePtr inter_dependency_children = mapping_children->children;
-    GPtrArray *inter_dependency_array = g_ptr_array_new();
+    ActivationMappingKey *key = (ActivationMappingKey*)g_malloc(sizeof(ActivationMappingKey));
+    key->key = g_hash_table_lookup(table, "key");
+    key->target = g_hash_table_lookup(table, "target");
+    key->container = g_hash_table_lookup(table, "container");
+    return key;
+}
 
-    /* Iterate over all services in dependsOn (dependency element) */
-    while(inter_dependency_children != NULL)
-    {
-	xmlNodePtr dependency_children = inter_dependency_children->children;
-	gchar *key = NULL;
-	gchar *target = NULL;
-	gchar *container = NULL;
-	ActivationMappingKey *dependency = (ActivationMappingKey*)g_malloc(sizeof(ActivationMappingKey));
+static gpointer parse_dependency_key(xmlNodePtr element)
+{
+    GHashTable *table = parse_dictionary(element, parse_value);
+    ActivationMappingKey *key = create_activation_mapping_key_from_dict(table);
+    g_hash_table_destroy(table);
+    return key;
+}
 
-	if(xmlStrcmp(inter_dependency_children->name, (xmlChar*) "dependency") == 0) /* Only iterate over dependency nodes */
-	{
-	    /* Iterate over all dependency properties */
-	    while(dependency_children != NULL)
-	    {
-		if(xmlStrcmp(dependency_children->name, (xmlChar*) "key") == 0)
-		    key = duplicate_node_text(dependency_children);
-		else if(xmlStrcmp(dependency_children->name, (xmlChar*) "target") == 0)
-		    target = duplicate_node_text(dependency_children);
-		else if(xmlStrcmp(dependency_children->name, (xmlChar*) "container") == 0)
-		    container = duplicate_node_text(dependency_children);
-
-		dependency_children = dependency_children->next;
-	    }
-
-	    dependency->key = key;
-	    dependency->target = target;
-	    dependency->container = container;
-	    g_ptr_array_add(inter_dependency_array, dependency);
-	}
-
-	inter_dependency_children = inter_dependency_children->next;
-    }
+static GPtrArray *parse_inter_dependencies(xmlNodePtr element)
+{
+    GPtrArray *inter_dependency_array = parse_list(element, "dependency", parse_dependency_key);
 
     /* Sort the dependency array */
     g_ptr_array_sort(inter_dependency_array, (GCompareFunc)compare_activation_mapping_keys);
 
-    /* Return array */
     return inter_dependency_array;
 }
 
-GPtrArray *create_activation_array(const gchar *manifest_file)
+static gpointer parse_activation_mapping(xmlNodePtr element)
 {
-    xmlDocPtr doc;
-    xmlNodePtr node_root;
-    xmlXPathObjectPtr result;
-    GPtrArray *activation_array;
-    
-    /* Parse the XML document */
-    
-    if((doc = xmlParseFile(manifest_file)) == NULL)
+    ActivationMapping *mapping = (ActivationMapping*)g_malloc0(sizeof(ActivationMapping));
+    xmlNodePtr element_children = element->children;
+
+    while(element_children != NULL)
     {
-	g_printerr("Error with parsing the manifest XML file!\n");
-	xmlCleanupParser();
-	return NULL;
+        if(xmlStrcmp(element_children->name, (xmlChar*) "key") == 0)
+            mapping->key = parse_value(element_children);
+        else if(xmlStrcmp(element_children->name, (xmlChar*) "service") == 0)
+            mapping->service = parse_value(element_children);
+        else if(xmlStrcmp(element_children->name, (xmlChar*) "name") == 0)
+            mapping->name = parse_value(element_children);
+        else if(xmlStrcmp(element_children->name, (xmlChar*) "type") == 0)
+            mapping->type = parse_value(element_children);
+        else if(xmlStrcmp(element_children->name, (xmlChar*) "target") == 0)
+            mapping->target = parse_value(element_children);
+        else if(xmlStrcmp(element_children->name, (xmlChar*) "container") == 0)
+            mapping->container = duplicate_node_text(element_children);
+        else if(xmlStrcmp(element_children->name, (xmlChar*) "dependsOn") == 0)
+            mapping->depends_on = parse_inter_dependencies(element_children);
+        else if(xmlStrcmp(element_children->name, (xmlChar*) "connectsTo") == 0)
+            mapping->connects_to = parse_inter_dependencies(element_children);
+
+        element_children = element_children->next;
     }
 
-    /* Retrieve root element */
-    node_root = xmlDocGetRootElement(doc);
-    
-    if(node_root == NULL)
-    {
-        g_printerr("The distribution manifest XML file is empty!\n");
-	xmlFreeDoc(doc);
-	xmlCleanupParser();
-	return NULL;
-    }
+    /* If no properties or containers are specified, compose empty arrays */
+    if(mapping->depends_on == NULL)
+        mapping->depends_on = g_ptr_array_new();
 
-    /* Query the distribution elements */
-    result = executeXPathQuery(doc, "/manifest/activation/mapping");
-    
-    /* Initialize activation array */
-    activation_array = g_ptr_array_new();
-    
-    /* Iterate over all the distribution elements and add them to the array */
-    
-    if(result)
-    {
-	xmlNodeSetPtr nodeset = result->nodesetval;
-	unsigned int i;
-	
-	/* Iterate over all the mapping elements */
-	for(i = 0; i < nodeset->nodeNr; i++)
-        {
-	    xmlNodePtr mapping_children = nodeset->nodeTab[i]->children;
-	    gchar *key = NULL;
-	    gchar *target = NULL;
-	    gchar *container = NULL;
-	    gchar *service = NULL;
-	    gchar *name = NULL;
-	    gchar *type = NULL;
-	    GPtrArray *depends_on = NULL;
-	    GPtrArray *connects_to = NULL;
-	    ActivationMappingStatus status = ACTIVATIONMAPPING_DEACTIVATED;
-	    ActivationMapping *mapping = (ActivationMapping*)g_malloc(sizeof(ActivationMapping));
-	    
-	    /* Iterate over all the mapping item children (service,target,targetProperty,type,dependsOn elements) */
-	    
-	    while(mapping_children != NULL)
-	    {
-		if(xmlStrcmp(mapping_children->name, (xmlChar*) "key") == 0)
-		    key = duplicate_node_text(mapping_children);
-		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "service") == 0)
-		    service = duplicate_node_text(mapping_children);
-		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "name") == 0)
-		    name = duplicate_node_text(mapping_children);
-		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "type") == 0)
-		    type = duplicate_node_text(mapping_children);
-		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "target") == 0)
-		    target = duplicate_node_text(mapping_children);
-		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "container") == 0)
-		    container = duplicate_node_text(mapping_children);
-		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "dependsOn") == 0)
-		    depends_on = parse_inter_dependencies(mapping_children);
-		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "connectsTo") == 0)
-		    connects_to = parse_inter_dependencies(mapping_children);
-		
-		mapping_children = mapping_children->next;
-	    }
-	    
-	    mapping->key = key;
-	    mapping->target = target;
-	    mapping->container = container;
-	    mapping->service = service;
-	    mapping->name = name;
-	    mapping->type = type;
-	    mapping->depends_on = depends_on;
-	    mapping->connects_to = connects_to;
-	    mapping->status = status;
+    if(mapping->connects_to == NULL)
+        mapping->connects_to = g_ptr_array_new();
 
-	    /* If no properties or containers are specified, compose empty arrays */
-	    if(mapping->depends_on == NULL)
-	        mapping->depends_on = g_ptr_array_new();
+    return mapping;
+}
 
-	    if(mapping->connects_to == NULL)
-	        mapping->connects_to = g_ptr_array_new();
-
-	    if(mapping->key == NULL || mapping->target == NULL || mapping->container == NULL || mapping->service == NULL || mapping->name == NULL || mapping->type == NULL)
-	    {
-	        /* Check if all mandatory properties have been provided */
-	        g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
-	        g_printerr("manifest file?\n");
-	        delete_activation_array(activation_array);
-	        activation_array = NULL;
-	        break;
-	    }
-	    else
-	        g_ptr_array_add(activation_array, mapping); /* Add the mapping to the array */
-	}
-	
-	xmlXPathFreeObject(result);
-    }
-
-    /* Cleanup */
-    xmlFreeDoc(doc);
-    xmlCleanupParser();
+GPtrArray *parse_activation(xmlNodePtr element)
+{
+    GPtrArray *activation_array = parse_list(element, "mapping", parse_activation_mapping);
 
     /* Sort the activation array */
-    if(activation_array != NULL)
-        g_ptr_array_sort(activation_array, (GCompareFunc)compare_activation_mapping);
-    
-    /* Return the activation array */
+    g_ptr_array_sort(activation_array, (GCompareFunc)compare_activation_mapping);
+
     return activation_array;
 }
 
@@ -264,6 +168,31 @@ void delete_activation_array(GPtrArray *activation_array)
         }
 
         g_ptr_array_free(activation_array, TRUE);
+    }
+}
+
+int check_activation_array(const GPtrArray *activation_array)
+{
+    if(activation_array == NULL)
+        return TRUE;
+    else
+    {
+        unsigned int i;
+
+        for(i = 0; i < activation_array->len; i++)
+        {
+            ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
+
+            if(mapping->key == NULL || mapping->target == NULL || mapping->container == NULL || mapping->service == NULL || mapping->name == NULL || mapping->type == NULL)
+            {
+                /* Check if all mandatory properties have been provided */
+                g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
+                g_printerr("manifest file?\n");
+                return FALSE;
+            }
+        }
+
+        return TRUE;
     }
 }
 
@@ -605,11 +534,14 @@ int traverse_activation_mappings(GPtrArray *mappings, GPtrArray *union_array, GP
 
 GPtrArray *open_previous_activation_array(const gchar *manifest_file)
 {
-    if(manifest_file == NULL)
+    Manifest *manifest = open_previous_manifest(manifest_file, MANIFEST_ACTIVATION_FLAG, NULL, NULL);
+
+    if(manifest == NULL)
         return NULL;
     else
     {
-        g_printerr("[coordinator]: Using previous manifest: %s\n", manifest_file);
-        return create_activation_array(manifest_file);
+        GPtrArray *activation_array = manifest->activation_array;
+        g_free(manifest);
+        return activation_array;
     }
 }

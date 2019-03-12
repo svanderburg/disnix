@@ -27,56 +27,73 @@
 #include "snapshotmapping.h"
 #include "targets.h"
 
-Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, const gchar *container_filter, const gchar *component_filter)
+#include <libxml/parser.h>
+
+static Manifest *parse_manifest(xmlNodePtr element, const unsigned int flags, const gchar *container_filter, const gchar *component_filter)
 {
-    Manifest *manifest = (Manifest*)g_malloc(sizeof(Manifest));
-    manifest->distribution_array = NULL;
-    manifest->activation_array = NULL;
-    manifest->snapshots_array = NULL;
-    manifest->target_array = NULL;
-    
-    if(flags & MANIFEST_DISTRIBUTION_FLAG)
+    Manifest *manifest = (Manifest*)g_malloc0(sizeof(Manifest));
+    xmlNodePtr element_children = element->children;
+
+    while(element_children != NULL)
     {
-        manifest->distribution_array = generate_distribution_array(manifest_file);
-        
-        if(manifest->distribution_array == NULL)
-        {
-            delete_manifest(manifest);
-            return NULL;
-        }
-    }
-    
-    if(flags & MANIFEST_ACTIVATION_FLAG)
-    {
-        manifest->activation_array = create_activation_array(manifest_file);
-        
-        if(manifest->activation_array == NULL)
-        {
-            delete_manifest(manifest);
-            return NULL;
-        }
-    }
-    
-    if(flags & MANIFEST_SNAPSHOT_FLAG)
-    {
-        manifest->snapshots_array = create_snapshots_array(manifest_file, container_filter, component_filter);
-        
-        if(manifest->snapshots_array == NULL)
-        {
-            delete_manifest(manifest);
-            return NULL;
-        }
+        if((flags & MANIFEST_DISTRIBUTION_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "distribution") == 0)
+            manifest->distribution_array = parse_distribution(element_children);
+        else if((flags & MANIFEST_ACTIVATION_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "activation") == 0)
+            manifest->activation_array = parse_activation(element_children);
+        else if((flags & MANIFEST_SNAPSHOT_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "snapshots") == 0)
+            manifest->snapshots_array = parse_snapshots(element_children, container_filter, component_filter);
+        else if((flags & MANIFEST_TARGETS_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "targets") == 0)
+            manifest->target_array = parse_targets(element_children);
+
+        element_children = element_children->next;
     }
 
-    manifest->target_array = generate_target_array(manifest_file);
-    
-    if(manifest->target_array == NULL)
+    return manifest;
+}
+
+Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, const gchar *container_filter, const gchar *component_filter)
+{
+    xmlDocPtr doc;
+    xmlNodePtr node_root;
+    Manifest *manifest;
+
+    /* Parse the XML document */
+
+    if((doc = xmlParseFile(manifest_file)) == NULL)
     {
-        delete_manifest(manifest);
+        g_printerr("Error with parsing the manifest XML file!\n");
+        xmlCleanupParser();
         return NULL;
     }
-    else
-        return manifest;
+
+    /* Retrieve root element */
+    node_root = xmlDocGetRootElement(doc);
+
+    if(node_root == NULL)
+    {
+        g_printerr("The distribution manifest XML file is empty!\n");
+        xmlFreeDoc(doc);
+        xmlCleanupParser();
+        return NULL;
+    }
+
+    /* Parse manifest */
+    manifest = parse_manifest(node_root, flags, container_filter, component_filter);
+
+    /* Cleanup */
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+
+    /* Return manifest */
+    return manifest;
+}
+
+int check_manifest(const Manifest *manifest)
+{
+    return (check_distribution_array(manifest->distribution_array)
+      && check_activation_array(manifest->activation_array)
+      && check_snapshots_array(manifest->snapshots_array)
+      && check_target_array(manifest->target_array));
 }
 
 void delete_manifest(Manifest *manifest)

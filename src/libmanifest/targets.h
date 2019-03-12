@@ -17,39 +17,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/* TODO: finish apidocs */
-
 #ifndef __DISNIX_TARGETS_H
 #define __DISNIX_TARGETS_H
 #include <glib.h>
+#include <libxml/parser.h>
 #include <procreact_pid_iterator.h>
 #include <modeliterator.h>
-
-/**
- * @brief Contains a property of a specific target machine.
- */
-typedef struct
-{
-    /** Name of the property */
-    gchar *name;
-    
-    /** Value of the property */
-    gchar *value;
-}
-TargetProperty;
-
-/**
- * @brief Contains properties of a container belonging to a machine.
- */
-typedef struct
-{
-    /** Name of the container */
-    gchar *name;
-    
-    /** Contains the properties of the container */
-    GPtrArray *properties;
-}
-Container;
 
 /**
  * @brief Contains properties of a target machine.
@@ -57,10 +30,10 @@ Container;
 typedef struct
 {
     /* Contains arbitrary target machine properties */
-    GPtrArray *properties;
+    GHashTable *properties_table;
     
     /* Contains container-specific configuration properties */
-    GPtrArray *containers;
+    GHashTable *containers_table;
     
     /* Contains the system architecture identifier of the system */
     gchar *system;
@@ -124,8 +97,10 @@ TargetIteratorData;
  *
  * @param manifest_file Path to the manifest XML file
  * @return GPtrArray with targets
+ * TODO
  */
-GPtrArray *generate_target_array(const gchar *manifest_file);
+//GPtrArray *generate_target_array(const gchar *manifest_file);
+GPtrArray *parse_targets(xmlNodePtr element);
 
 /**
  * Deletes an array with targets.
@@ -140,6 +115,8 @@ void delete_target_array(GPtrArray *target_array);
  * @param target_array Target array to print
  */
 void print_target_array(const GPtrArray *target_array);
+
+int check_target_array(const GPtrArray *target_array);
 
 /**
  * Retrieves a target with a specific key from the target array.

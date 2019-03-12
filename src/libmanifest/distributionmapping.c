@@ -20,91 +20,25 @@
 #include "distributionmapping.h"
 #include <xmlutil.h>
 
-GPtrArray *generate_distribution_array(const gchar *manifest_file)
+static DistributionItem *create_distribution_item_from_dict(GHashTable *table)
 {
-    /* Declarations */
-    xmlDocPtr doc;
-    xmlNodePtr node_root;
-    xmlXPathObjectPtr result;
-    GPtrArray *distribution_array;
-    
-    /* Parse the XML document */
-    
-    if((doc = xmlParseFile(manifest_file)) == NULL)
-    {
-	g_printerr("Error with parsing the manifest XML file!\n");
-	xmlCleanupParser();
-	return NULL;
-    }
+    DistributionItem *item = (DistributionItem*)g_malloc(sizeof(DistributionItem));
+    item->profile = g_hash_table_lookup(table, "profile");
+    item->target = g_hash_table_lookup(table, "target");
+    return item;
+}
 
-    /* Retrieve root element */
-    node_root = xmlDocGetRootElement(doc);
-    
-    if(node_root == NULL)
-    {
-        g_printerr("The manifest XML file is empty!\n");
-	xmlFreeDoc(doc);
-	xmlCleanupParser();
-	return NULL;
-    }
+static gpointer parse_distribution_item(xmlNodePtr element)
+{
+    GHashTable *table = parse_dictionary(element, parse_value);
+    DistributionItem *item = create_distribution_item_from_dict(table);
+    g_hash_table_destroy(table);
+    return item;
+}
 
-    /* Create a distribution array */
-    distribution_array = g_ptr_array_new();
-    
-    /* Query the distribution elements */
-    result = executeXPathQuery(doc, "/manifest/distribution/mapping");
-    
-    /* Iterate over all the distribution elements and add them to the array */
-    
-    if(result)
-    {
-	unsigned int i;
-	xmlNodeSetPtr nodeset = result->nodesetval;
-	
-	/* Iterate over all the mapping elements */
-	for(i = 0; i < nodeset->nodeNr; i++)
-	{
-	    xmlNodePtr mapping_children = nodeset->nodeTab[i]->children;
-	    DistributionItem *item = (DistributionItem*)g_malloc(sizeof(DistributionItem));
-	    gchar *profile = NULL, *target = NULL;
-	    
-	    /* Iterate over all the mapping item children (profile and target elements) */
-	    
-	    while(mapping_children != NULL)
-	    {
-		if(xmlStrcmp(mapping_children->name, (xmlChar*) "profile") == 0)
-		    profile = duplicate_node_text(mapping_children);
-		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "target") == 0)
-		    target = duplicate_node_text(mapping_children);
-		
-		mapping_children = mapping_children->next;
-	    }
-	    
-	    item->profile = profile;
-	    item->target = target;
-	    
-	    if(item->profile == NULL || item->target == NULL)
-	    {
-	        /* Check if all mandatory properties have been provided */
-	        g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
-	        g_printerr("manifest file?\n");
-	        delete_distribution_array(distribution_array);
-	        distribution_array = NULL;
-	        break;
-	    }
-	    else
-	        g_ptr_array_add(distribution_array, item); /* Add the mapping to the array */
-        }
-	
-	xmlXPathFreeObject(result);
-    }
-    
-    /* Cleanup */
-    xmlFreeDoc(doc);
-    xmlCleanupParser();
-    
-    /* Return the distribution array */
-    return distribution_array;
+GPtrArray *parse_distribution(xmlNodePtr element)
+{
+    return parse_list(element, "mapping", parse_distribution_item);
 }
 
 void delete_distribution_array(GPtrArray *distribution_array)
@@ -123,6 +57,37 @@ void delete_distribution_array(GPtrArray *distribution_array)
         }
     
         g_ptr_array_free(distribution_array, TRUE);
+    }
+}
+
+void print_distribution_array(const GPtrArray *distribution_array)
+{
+    unsigned int i;
+
+    for(i = 0; i < distribution_array->len; i++)
+    {
+        DistributionItem* item = g_ptr_array_index(distribution_array, i);
+        g_print("profile: %s\n", item->profile);
+        g_print("target: %s\n\n", item->target);
+    }
+}
+
+int check_distribution_array(const GPtrArray *distribution_array)
+{
+    if(distribution_array == NULL)
+        return TRUE;
+    else
+    {
+        unsigned int i;
+
+        for(i = 0; i < distribution_array->len; i++)
+        {
+            DistributionItem *item = g_ptr_array_index(distribution_array, i);
+            if(item->profile == NULL || item->target == NULL)
+                return FALSE;
+        }
+
+        return TRUE;
     }
 }
 

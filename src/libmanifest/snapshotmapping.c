@@ -69,111 +69,60 @@ static void delete_snapshot_mapping(SnapshotMapping *mapping)
     g_free(mapping);
 }
 
-GPtrArray *create_snapshots_array(const gchar *manifest_file, const gchar *container_filter, const gchar *component_filter)
+static SnapshotMapping *create_snapshot_mapping_from_dict(GHashTable *table)
 {
-    xmlDocPtr doc;
-    xmlNodePtr node_root;
-    xmlXPathObjectPtr result;
-    GPtrArray *snapshots_array;
-    
-    /* Parse the XML document */
-    
-    if((doc = xmlParseFile(manifest_file)) == NULL)
-    {
-	g_printerr("Error with parsing the manifest XML file!\n");
-	xmlCleanupParser();
-	return NULL;
-    }
+    SnapshotMapping *mapping = (SnapshotMapping*)g_malloc(sizeof(SnapshotMapping));
+    mapping->component = g_hash_table_lookup(table, "component");
+    mapping->container = g_hash_table_lookup(table, "container");
+    mapping->target = g_hash_table_lookup(table, "target");
+    mapping->service = g_hash_table_lookup(table, "service");
+    mapping->type = g_hash_table_lookup(table, "type");
+    mapping->transferred = FALSE;
 
-    /* Retrieve root element */
-    node_root = xmlDocGetRootElement(doc);
-    
-    if(node_root == NULL)
-    {
-        g_printerr("The distribution manifest XML file is empty!\n");
-	xmlFreeDoc(doc);
-	xmlCleanupParser();
-	return NULL;
-    }
+    return mapping;
+}
 
-    /* Query the distribution elements */
-    result = executeXPathQuery(doc, "/manifest/snapshots/mapping");
-    
-    /* Initialize snapshots array */
-    snapshots_array = g_ptr_array_new();
-    
-    /* Iterate over all the distribution elements and add them to the array */
-    
-    if(result)
+static gpointer parse_snapshot_mapping(xmlNodePtr element)
+{
+    GHashTable *table = parse_dictionary(element, parse_value);
+    SnapshotMapping *mapping = create_snapshot_mapping_from_dict(table);
+    g_hash_table_destroy(table);
+    return mapping;
+}
+
+static GPtrArray *filter_selected_mappings(GPtrArray *snapshots_array, const gchar *container_filter, const gchar *component_filter)
+{
+    if(component_filter == NULL && container_filter == NULL)
+        return snapshots_array;
+    else
     {
-	xmlNodeSetPtr nodeset = result->nodesetval;
-	unsigned int i;
-	
-	/* Iterate over all the mapping elements */
-	for(i = 0; i < nodeset->nodeNr; i++)
+        GPtrArray *filtered_snapshots_array = g_ptr_array_new();
+        unsigned int i;
+
+        for(i = 0; i < snapshots_array->len; i++)
         {
-	    xmlNodePtr mapping_children = nodeset->nodeTab[i]->children;
-	    gchar *component = NULL;
-	    gchar *container = NULL;
-	    gchar *target = NULL;
-	    gchar *service = NULL;
-	    gchar *type = NULL;
-	    SnapshotMapping *mapping = (SnapshotMapping*)g_malloc(sizeof(SnapshotMapping));
-	    
-	    /* Iterate over all the mapping item children (service,target,targetProperty,type,dependsOn elements) */
-	    
-	    while(mapping_children != NULL)
-	    {
-		if(xmlStrcmp(mapping_children->name, (xmlChar*) "component") == 0)
-		    component = duplicate_node_text(mapping_children);
-		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "container") == 0)
-		    container = duplicate_node_text(mapping_children);
-		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "target") == 0)
-		    target = duplicate_node_text(mapping_children);
-		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "service") == 0)
-		    service = duplicate_node_text(mapping_children);
-		else if(xmlStrcmp(mapping_children->name, (xmlChar*) "type") == 0)
-		    type = duplicate_node_text(mapping_children);
-		
-		mapping_children = mapping_children->next;
-	    }
-	    mapping->component = component;
-	    mapping->container = container;
-	    mapping->target = target;
-	    mapping->service = service;
-	    mapping->type = type;
-	    mapping->transferred = FALSE;
-	    
-	    if(mapping_is_selected(mapping, container_filter, component_filter))
-	    {
-	        if(component == NULL || container == NULL || target == NULL || service == NULL || type == NULL)
-	        {
-	            /* Check if all mandatory properties have been provided */
-	            g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
-	            g_printerr("manifest file?\n");
-	            delete_snapshots_array(snapshots_array);
-	            snapshots_array = NULL;
-	            break;
-	        }
-	        else
-	            g_ptr_array_add(snapshots_array, mapping); /* Add the mapping to the array */
-	    }
-	    else
-	        delete_snapshot_mapping(mapping);
-	}
-	
-	xmlXPathFreeObject(result);
-    }
+            SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
+            if(mapping_is_selected(mapping, container_filter, component_filter))
+                g_ptr_array_add(filtered_snapshots_array, mapping);
+            else
+                delete_snapshot_mapping(mapping);
+        }
 
-    /* Cleanup */
-    xmlFreeDoc(doc);
-    xmlCleanupParser();
+        g_ptr_array_free(snapshots_array, TRUE);
+        return filtered_snapshots_array;
+    }
+}
+
+GPtrArray *parse_snapshots(xmlNodePtr element, const gchar *container_filter, const gchar *component_filter)
+{
+    GPtrArray *snapshots_array = parse_list(element, "mapping", parse_snapshot_mapping);
 
     /* Sort the snapshots array */
-    if(snapshots_array != NULL)
-        g_ptr_array_sort(snapshots_array, (GCompareFunc)compare_snapshot_mapping);
-    
-    /* Return the snapshots array */
+    g_ptr_array_sort(snapshots_array, (GCompareFunc)compare_snapshot_mapping);
+
+    /* Filter only selected mappings */
+    snapshots_array = filter_selected_mappings(snapshots_array, container_filter, component_filter);
+
     return snapshots_array;
 }
 
@@ -190,6 +139,31 @@ void delete_snapshots_array(GPtrArray *snapshots_array)
         }
     
         g_ptr_array_free(snapshots_array, TRUE);
+    }
+}
+
+int check_snapshots_array(const GPtrArray *snapshots_array)
+{
+    if(snapshots_array == NULL)
+        return TRUE;
+    else
+    {
+        unsigned int i;
+
+        for(i = 0; i < snapshots_array->len; i++)
+        {
+            SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
+
+            if(mapping->component == NULL || mapping->container == NULL || mapping->target == NULL || mapping->service == NULL || mapping->type == NULL)
+            {
+                /* Check if all mandatory properties have been provided */
+                g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
+                g_printerr("manifest file?\n");
+                return FALSE;
+            }
+        }
+
+        return TRUE;
     }
 }
 
@@ -325,25 +299,16 @@ void reset_snapshot_items_transferred_status(GPtrArray *snapshots_array)
     }
 }
 
-GPtrArray *open_provided_or_previous_snapshots_array(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container_filter, const gchar *component_filter)
+GPtrArray *open_provided_or_previous_snapshots_array(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container, const gchar *component)
 {
-    if(manifest_file == NULL)
-    {
-        gchar *old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, profile);
+    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_SNAPSHOT_FLAG, container, component);
 
-        if(old_manifest_file == NULL) /* There is no old manifest file, return nothing */
-            return NULL;
-        else
-        {
-            /* Open snapshots from previously deployed manifest */
-            GPtrArray *old_snapshots_array;
-            g_printerr("[coordinator]: Using previous manifest: %s\n", old_manifest_file);
-            old_snapshots_array = create_snapshots_array(old_manifest_file, container_filter, component_filter);
-            g_free(old_manifest_file);
-
-            return old_snapshots_array;
-        }
-    }
+    if(manifest == NULL)
+        return NULL;
     else
-        return create_snapshots_array(manifest_file, container_filter, component_filter);
+    {
+        GPtrArray *snapshots_array = manifest->snapshots_array;
+        g_free(manifest);
+        return snapshots_array;
+    }
 }
