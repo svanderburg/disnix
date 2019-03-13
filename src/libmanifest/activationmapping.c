@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <libxml/xpath.h>
 #include <xmlutil.h>
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
@@ -96,7 +95,7 @@ static gpointer parse_activation_mapping(xmlNodePtr element)
         else if(xmlStrcmp(element_children->name, (xmlChar*) "target") == 0)
             mapping->target = parse_value(element_children);
         else if(xmlStrcmp(element_children->name, (xmlChar*) "container") == 0)
-            mapping->container = duplicate_node_text(element_children);
+            mapping->container = parse_value(element_children);
         else if(xmlStrcmp(element_children->name, (xmlChar*) "dependsOn") == 0)
             mapping->depends_on = parse_inter_dependencies(element_children);
         else if(xmlStrcmp(element_children->name, (xmlChar*) "connectsTo") == 0)

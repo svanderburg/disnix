@@ -71,7 +71,7 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
 
     if(node_root == NULL)
     {
-        g_printerr("The distribution manifest XML file is empty!\n");
+        g_printerr("The manifest XML file is empty!\n");
         xmlFreeDoc(doc);
         xmlCleanupParser();
         return NULL;

@@ -26,57 +26,31 @@
 #include <procreact_future_iterator.h>
 
 /**
- * @brief Encapsulates a property of a machine
- */
-typedef struct
-{
-    /** Name of the machine property */
-    gchar *name;
-    
-    /** Value of the machine property */
-    gchar *value;
-}
-TargetProperty;
-
-/**
- * @brief Contains properties of a container belonging to a machine.
- */
-typedef struct
-{
-    /** Name of the container */
-    gchar *name;
-    
-    /** Contains the properties of the container */
-    GPtrArray *properties;
-}
-Container;
-
-/**
  * @brief Contains properties of a target machine.
  */
 typedef struct
 {
     /* Contains arbitrary target machine properties */
-    GPtrArray *properties;
-    
+    GHashTable *properties_table;
+
     /* Contains container-specific configuration properties */
-    GPtrArray *containers;
-    
+    GHashTable *containers_table;
+
     /* Contains the attribute name of the target machine */
     gchar *name;
-    
+
     /* Contains the system architecture identifier of the system */
     gchar *system;
-    
+
     /* Refers to the executable that must be executed to connect to the target system */
     gchar *client_interface;
-    
+
     /* Refer to the name of the property in properties that must be used to connect to the target system */
     gchar *target_property;
-    
+
     /* Contains the amount CPU cores this machine has */
     int num_of_cores;
-    
+
     /* Contains the amount of CPU cores that are currently available */
     int available_cores;
 }

@@ -20,7 +20,6 @@
 #include "snapshotmapping.h"
 #include <stdlib.h>
 #include <libxml/parser.h>
-#include <libxml/xpath.h>
 #include <xmlutil.h>
 #include <sys/types.h>
 #include <sys/wait.h>

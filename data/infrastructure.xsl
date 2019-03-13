@@ -4,7 +4,9 @@
   <xsl:template match="/expr/attrs">
     <infrastructure version="1">
       <xsl:for-each select="attr">
-	<target name="{@name}">
+	<target>
+	  <name><xsl:value-of select="@name" /></name>
+
 	  <xsl:for-each select="attrs/attr[@name='properties']/attrs">
 	    <properties>
 	      <xsl:for-each select="attr">
