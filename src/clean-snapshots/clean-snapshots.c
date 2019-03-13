@@ -18,7 +18,7 @@
  */
 
 #include "clean-snapshots.h"
-#include <infrastructure.h>
+#include <infrastructure-iterator.h>
 #include <client-interface.h>
 
 typedef struct

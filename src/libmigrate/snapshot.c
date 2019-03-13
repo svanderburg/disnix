@@ -21,7 +21,7 @@
 #include <sys/types.h>
 #include <client-interface.h>
 #include <snapshotmapping.h>
-#include <targets.h>
+#include <targets-iterator.h>
 
 /* Snapshot services infrastructure */
 
