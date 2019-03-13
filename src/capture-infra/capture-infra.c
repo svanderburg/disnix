@@ -19,7 +19,7 @@
 
 #include "capture-infra.h"
 #include <stdlib.h>
-#include <infrastructure-iterator.h>
+#include <targets-iterator.h>
 #include <client-interface.h>
 
 typedef struct

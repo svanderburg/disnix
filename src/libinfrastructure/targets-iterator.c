@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "infrastructure-iterator.h"
+#include "targets-iterator.h"
 
 static int has_next_target(void *data)
 {

@@ -20,8 +20,9 @@
 #ifndef __DISNIX_ACTIVATIONMAPPING_H
 #define __DISNIX_ACTIVATIONMAPPING_H
 #include <glib.h>
+#include <procreact_pid.h>
 #include <libxml/parser.h>
-#include "targets.h"
+#include <targets.h>
 #include "manifest.h"
 
 /**

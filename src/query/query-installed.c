@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include "query-installed.h"
-#include <infrastructure-iterator.h>
+#include <targets-iterator.h>
 #include <client-interface.h>
 #include <profilemanifesttarget.h>
 #include <profilemanifest.h>

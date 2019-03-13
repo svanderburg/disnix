@@ -57,25 +57,25 @@ static pid_t retrieve_snapshot_mapping(SnapshotMapping *mapping, Target *target,
     return exec_copy_snapshots_from(target->client_interface, mapping->target, mapping->container, mapping->component, (flags & FLAG_ALL));
 }
 
-pid_t retrieve_snapshots_from_target(void *data, Target *target)
+pid_t retrieve_snapshots_from_target(void *data, Target *target, gchar *client_interface, gchar *target_key)
 {
     pid_t pid = fork();
-    
+
     if(pid == 0)
     {
         RetrieveSnapshotsData *retrieve_snapshots_data = (RetrieveSnapshotsData*)data;
-        
-        gchar *target_key = find_target_key(target);
+
+        gchar *target_key = find_target_key(target, NULL);
         GPtrArray *snapshots_per_target_array = find_snapshot_mappings_per_target(retrieve_snapshots_data->snapshots_array, target_key);
         unsigned int i;
         int exit_status = 0;
         ProcReact_Status status;
-        
+
         for(i = 0; i < snapshots_per_target_array->len; i++)
         {
             SnapshotMapping *mapping = g_ptr_array_index(snapshots_per_target_array, i);
             exit_status = procreact_wait_for_exit_status(retrieve_snapshot_mapping(mapping, target, retrieve_snapshots_data->flags), &status);
-        
+
             if(status != PROCREACT_STATUS_OK)
             {
                 exit_status = 1;
@@ -84,20 +84,20 @@ pid_t retrieve_snapshots_from_target(void *data, Target *target)
             else if(exit_status != 0)
                 break;
         }
-    
+
         g_ptr_array_free(snapshots_per_target_array, TRUE);
-        
+
         exit(exit_status);
     }
-    
+
     return pid;
 }
 
-void complete_retrieve_snapshots_from_target(void *data, Target *target, ProcReact_Status status, int result)
+void complete_retrieve_snapshots_from_target(void *data, Target *target, gchar *target_key, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
     {
-        gchar *target_key = find_target_key(target);
+        gchar *target_key = find_target_key(target, NULL);
         g_printerr("[target: %s]: Cannot send snapshots!\n", target_key);
     }
 }
@@ -106,15 +106,15 @@ static int retrieve_snapshots(GPtrArray *snapshots_array, GPtrArray *target_arra
 {
     int success;
     RetrieveSnapshotsData data = { snapshots_array, flags };
-    ProcReact_PidIterator iterator = create_target_iterator(target_array, retrieve_snapshots_from_target, complete_retrieve_snapshots_from_target, &data);
-    
+    ProcReact_PidIterator iterator = create_target_pid_iterator(target_array, NULL, NULL, retrieve_snapshots_from_target, complete_retrieve_snapshots_from_target, &data);
+
     g_print("[coordinator]: Retrieving snapshots...\n");
-    
+
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
-    success = target_iterator_has_succeeded(&iterator);
-    
-    destroy_target_iterator(&iterator);
-    
+    success = target_iterator_has_succeeded(iterator.data);
+
+    destroy_target_pid_iterator(&iterator);
+
     return success;
 }
 
@@ -136,7 +136,7 @@ TakeRetrieveAndCleanSnapshotsData;
 
 /* Snapshot depth-first infrastructure */
 
-static pid_t take_retrieve_and_clean_snapshot_on_target(void *data, Target *target)
+static pid_t take_retrieve_and_clean_snapshot_on_target(void *data, Target *target, gchar *client_interface, gchar *target_key)
 {
     pid_t pid = fork();
     
@@ -144,7 +144,7 @@ static pid_t take_retrieve_and_clean_snapshot_on_target(void *data, Target *targ
     {
         TakeRetrieveAndCleanSnapshotsData *retrieve_snapshots_data = (TakeRetrieveAndCleanSnapshotsData*)data;
         
-        gchar *target_key = find_target_key(target);
+        gchar *target_key = find_target_key(target, NULL);
         GPtrArray *snapshots_per_target_array = find_snapshot_mappings_per_target(retrieve_snapshots_data->snapshots_array, target_key);
         unsigned int i;
         int exit_status = 0;
@@ -176,11 +176,11 @@ static pid_t take_retrieve_and_clean_snapshot_on_target(void *data, Target *targ
     return pid;
 }
 
-void complete_take_retrieve_and_clean_snapshots_on_target(void *data, Target *target, ProcReact_Status status, int result)
+void complete_take_retrieve_and_clean_snapshots_on_target(void *data, Target *target, gchar *target_key, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
     {
-        gchar *target_key = find_target_key(target);
+        gchar *target_key = find_target_key(target, NULL);
         g_printerr("[target: %s]: Cannot take, send or clean snapshots!\n", target_key);
     }
 }
@@ -189,15 +189,15 @@ static int snapshot_depth_first(GPtrArray *snapshots_array, GPtrArray *target_ar
 {
     int success;
     TakeRetrieveAndCleanSnapshotsData data = { snapshots_array, flags, keep };
-    ProcReact_PidIterator iterator = create_target_iterator(target_array, take_retrieve_and_clean_snapshot_on_target, complete_take_retrieve_and_clean_snapshots_on_target, &data);
-    
+    ProcReact_PidIterator iterator = create_target_pid_iterator(target_array, NULL, NULL, take_retrieve_and_clean_snapshot_on_target, complete_take_retrieve_and_clean_snapshots_on_target, &data);
+
     g_print("[coordinator]: Snapshotting, retrieving and cleaning snapshots...\n");
-    
+
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
-    success = target_iterator_has_succeeded(&iterator);
-    
-    destroy_target_iterator(&iterator);
-    
+    success = target_iterator_has_succeeded(iterator.data);
+
+    destroy_target_pid_iterator(iterator.data);
+
     return success;
 }
 

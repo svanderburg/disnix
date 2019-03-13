@@ -17,13 +17,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_INFRASTRUCTURE_ITERATOR_H
-#define __DISNIX_INFRASTRUCTURE_ITERATOR_H
+#ifndef __DISNIX_TARGETS_ITERATOR_H
+#define __DISNIX_TARGETS_ITERATOR_H
 #include <glib.h>
 #include <modeliterator.h>
 #include <procreact_pid_iterator.h>
 #include <procreact_future_iterator.h>
-#include "infrastructure.h"
+#include "targets.h"
 
 /** Pointer to a function that executes a process for each target */
 typedef pid_t (*map_target_pid_function) (void *data, Target *target, gchar *client_interface, gchar *target_key);

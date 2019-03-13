@@ -18,7 +18,7 @@
  */
 #include "capture-manifest.h"
 #include <stdio.h>
-#include <infrastructure-iterator.h>
+#include <targets-iterator.h>
 #include <client-interface.h>
 #include <profilemanifest.h>
 #include <profilemanifesttarget.h>

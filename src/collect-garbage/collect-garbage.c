@@ -18,7 +18,7 @@
  */
 
 #include "collect-garbage.h"
-#include <infrastructure-iterator.h>
+#include <targets-iterator.h>
 #include <client-interface.h>
 
 typedef struct

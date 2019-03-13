@@ -10,7 +10,7 @@ noinst_DATA = disnix-restore.1.xml
 man1_MANS = disnix-restore.1
 
 disnix_restore_SOURCES = run-restore.c main.c
-disnix_restore_CFLAGS = $(LIBXML2_CFLAGS) $(GLIB2_CFLAGS) -I../libprocreact -I../libmanifest -I../libmain -I../libinterface -I../libmodel -I../libmigrate
+disnix_restore_CFLAGS = $(LIBXML2_CFLAGS) $(GLIB2_CFLAGS) -I../libprocreact -I../libinfrastructure -I../libmanifest -I../libmain -I../libinterface -I../libmodel -I../libmigrate
 disnix_restore_LDADD = $(GLIB2_LIBS) ../libprocreact/libprocreact.la ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la ../libmigrate/libmigrate.la
 
 EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

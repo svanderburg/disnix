@@ -48,7 +48,7 @@ GHashTable *generate_cluster_table(GPtrArray *activation_array, GPtrArray *targe
 	
 	/* Get target property of the current mapping item */
 	Target *target = find_target(target_array, mapping->target);
-	gchar *target_key = find_target_key(target);
+	gchar *target_key = find_target_key(target, NULL);
 	
 	/* See whether the target already exists in the table */
 	GHashTable *containers_table = g_hash_table_lookup(cluster_table, target_key);

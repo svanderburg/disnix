@@ -18,26 +18,65 @@
  */
 
 #include "targets.h"
+#include <stdio.h>
 #include <stdlib.h>
-#include <xmlutil.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <libxslt/xslt.h>
+#include <libxslt/transform.h>
+#include "package-management.h"
 
 static gint compare_target(const Target **l, const Target **r)
 {
     const Target *left = *l;
     const Target *right = *r;
-    
-    gchar *left_target_property = find_target_key(left);
-    gchar *right_target_property = find_target_key(right);
-    
+
+    gchar *left_target_property = find_target_key(left, NULL);
+    gchar *right_target_property = find_target_key(right, NULL);
+
     return g_strcmp0(left_target_property, right_target_property);
 }
 
-static int compare_target_keys(const char *key, const Target **r)
+static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
 {
-    const Target *right = *r;
-    gchar *right_target_property = find_target_key(right);
-    
-    return g_strcmp0(key, right_target_property);
+    /* Declarations */
+    xmlDocPtr doc, transform_doc;
+    xmlNodePtr root_node;
+    xsltStylesheetPtr style;
+
+    /* Parse XML file from XML string */
+    doc = xmlParseMemory(infrastructureXML, strlen(infrastructureXML));
+
+    if(doc == NULL)
+    {
+        g_printerr("Error with parsing infrastructure XML file!\n");
+        return NULL;
+    }
+
+    /* Check if the document has a root */
+    root_node = xmlDocGetRootElement(doc);
+
+    if(root_node == NULL)
+    {
+        g_printerr("The infrastructure XML file is empty!\n");
+        xmlFreeDoc(doc);
+        return NULL;
+    }
+
+    /* Transform the document into a more concrete format */
+    style = xsltParseStylesheetFile((const xmlChar *) DATADIR "/infrastructure.xsl");
+
+    transform_doc = xsltApplyStylesheet(style, doc, NULL);
+
+    /* Cleanup */
+    xsltFreeStylesheet(style);
+    xmlFreeDoc(doc);
+    xsltCleanupGlobals();
+
+    /* Return transformed XML document */
+    return transform_doc;
 }
 
 static gpointer parse_container(xmlNodePtr element)
@@ -52,7 +91,9 @@ static gpointer parse_target(xmlNodePtr element)
 
     while(element_children != NULL)
     {
-        if(xmlStrcmp(element_children->name, (xmlChar*) "system") == 0)
+        if(xmlStrcmp(element_children->name, (xmlChar*) "name") == 0)
+            target->name = parse_value(element_children);
+        else if(xmlStrcmp(element_children->name, (xmlChar*) "system") == 0)
             target->system = parse_value(element_children);
         else if(xmlStrcmp(element_children->name, (xmlChar*) "clientInterface") == 0)
             target->client_interface = parse_value(element_children);
@@ -85,6 +126,98 @@ GPtrArray *parse_targets(xmlNodePtr element)
     GPtrArray *targets_array = parse_list(element, "target", parse_target);
     g_ptr_array_sort(targets_array, (GCompareFunc)compare_target);
     return targets_array;
+}
+
+GPtrArray *create_target_array_from_doc(xmlDocPtr doc)
+{
+    xmlNodePtr node_root;
+    GPtrArray *targets_array;
+
+    if(doc == NULL)
+    {
+        g_printerr("Error with parsing infrastructure XML file!\n");
+        return NULL;
+    }
+
+    /* Retrieve root element */
+    node_root = xmlDocGetRootElement(doc);
+
+    if(node_root == NULL)
+    {
+        g_printerr("The infrastructure XML file is empty!\n");
+        xmlFreeDoc(doc);
+        xmlCleanupParser();
+        return NULL;
+    }
+
+    /* Parse targets */
+    targets_array = parse_targets(node_root);
+
+    /* Return targets */
+    return targets_array;
+}
+
+GPtrArray *create_target_array_from_nix(char *infrastructure_expr)
+{
+    /* Declarations */
+    xmlDocPtr doc;
+    GPtrArray *targets_array = NULL;
+
+    /* Open the XML output of nix-instantiate */
+    char *infrastructureXML = pkgmgmt_instantiate_sync(infrastructure_expr);
+
+    if(infrastructureXML == NULL)
+    {
+        g_printerr("Error opening infrastructure XML file!\n");
+        return NULL;
+    }
+
+    /* Parse the infrastructure XML file */
+    doc = create_infrastructure_doc(infrastructureXML);
+
+    /* Create a target array from the XML document */
+    targets_array = create_target_array_from_doc(doc);
+
+    /* Cleanup */
+    free(infrastructureXML);
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+
+    /* Return the target array */
+    return targets_array;
+}
+
+GPtrArray *create_target_array_from_xml(const char *infrastructure_xml)
+{
+    /* Declarations */
+    xmlDocPtr doc;
+    GPtrArray *targets_array;
+
+    /* Open the XML file */
+    if((doc = xmlParseFile(infrastructure_xml)) == NULL)
+    {
+        g_printerr("Error with parsing the manifest XML file!\n");
+        xmlCleanupParser();
+        return NULL;
+    }
+
+    /* Create a target array from the XML document */
+    targets_array = create_target_array_from_doc(doc);
+
+    /* Cleanup */
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+
+    /* Return the target array */
+    return targets_array;
+}
+
+GPtrArray *create_target_array(gchar *infrastructure_expr, const int xml)
+{
+    if(xml)
+        return create_target_array_from_xml(infrastructure_expr);
+    else
+        return create_target_array_from_nix(infrastructure_expr);
 }
 
 static void delete_properties_table(GHashTable *properties_table)
@@ -126,16 +259,14 @@ static void delete_containers_table(GHashTable *containers_table)
 
 static void delete_target(Target *target)
 {
-    if(target != NULL)
-    {
-        delete_properties_table(target->properties_table);
-        delete_containers_table(target->containers_table);
-        
-        g_free(target->system);
-        g_free(target->client_interface);
-        g_free(target->target_property);
-        g_free(target);
-    }
+    delete_properties_table(target->properties_table);
+    delete_containers_table(target->containers_table);
+
+    g_free(target->name);
+    g_free(target->system);
+    g_free(target->client_interface);
+    g_free(target->target_property);
+    g_free(target);
 }
 
 void delete_target_array(GPtrArray *target_array)
@@ -143,13 +274,13 @@ void delete_target_array(GPtrArray *target_array)
     if(target_array != NULL)
     {
         unsigned int i;
-        
+
         for(i = 0; i < target_array->len; i++)
         {
             Target *target = g_ptr_array_index(target_array, i);
             delete_target(target);
         }
-    
+
         g_ptr_array_free(target_array, TRUE);
     }
 }
@@ -165,78 +296,32 @@ int check_target_array(const GPtrArray *target_array)
         for(i = 0; i < target_array->len; i++)
         {
             Target *target = g_ptr_array_index(target_array, i);
-            if(target->system == NULL || target->client_interface == NULL || target->target_property == NULL)
+
+            if(target->properties_table == NULL)
             {
                 /* Check if all mandatory properties have been provided */
                 g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
-                g_printerr("manifest file?\n");
+                g_printerr("infrastrucure file?\n");
                 return FALSE;
             }
         }
-
-        return TRUE;
     }
+
+    return TRUE;
 }
 
-static void print_properties_table(GHashTable *properties_table)
+static int compare_target_keys(const char *key, const Target **r)
 {
-    g_print("  properties:\n");
+    const Target *right = *r;
+    gchar *right_target_property = find_target_key(right, NULL);
 
-    GHashTableIter iter;
-    gpointer key, value;
-
-    g_hash_table_iter_init(&iter, properties_table);
-    while (g_hash_table_iter_next(&iter, &key, &value))
-        g_print("    %s = %s;\n", (gchar*)key, (gchar*)value);
-}
-
-static void print_containers_table(GHashTable *containers_table)
-{
-    g_print("  containers:\n");
-
-    GHashTableIter iter;
-    gpointer key, value;
-
-    g_hash_table_iter_init(&iter, containers_table);
-    while (g_hash_table_iter_next(&iter, &key, &value))
-    {
-        GHashTable *container_table = (GHashTable*)value;
-        g_print("    %s:\n", (gchar*)key);
-        print_properties_table(container_table);
-        g_print("\n");
-    }
-}
-
-static void print_reserved_properties(const Target *target)
-{
-    g_print("  system = %s\n", target->system);
-    g_print("  clientInterface = %s\n", target->client_interface);
-    g_print("  targetProperty = %s\n", target->target_property);
-    g_print("  numOfCores = %d\n", target->num_of_cores);
-}
-
-void print_target_array(const GPtrArray *target_array)
-{
-    unsigned int i;
-    
-    for(i = 0; i < target_array->len; i++)
-    {
-        Target *target = g_ptr_array_index(target_array, i);
-        
-        g_print("Target:\n");
-        
-        print_properties_table(target->properties_table);
-        print_containers_table(target->containers_table);
-        print_reserved_properties(target);
-        
-        g_print("\n");
-    }
+    return g_strcmp0(key, right_target_property);
 }
 
 Target *find_target(const GPtrArray *target_array, const gchar *key)
 {
     Target **ret = bsearch(key, target_array->pdata, target_array->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_target_keys);
-    
+
     if(ret == NULL)
         return NULL;
     else
@@ -245,15 +330,18 @@ Target *find_target(const GPtrArray *target_array, const gchar *key)
 
 gchar *find_target_property(const Target *target, const gchar *name)
 {
-    if(target->properties_table == NULL)
+    if(target->properties_table == NULL || name == NULL)
         return NULL;
     else
         return g_hash_table_lookup(target->properties_table, name);
 }
 
-gchar *find_target_key(const Target *target)
+gchar *find_target_key(const Target *target, const gchar *global_target_property)
 {
-    return find_target_property(target, target->target_property);
+    if(target->target_property == NULL)
+        return find_target_property(target, global_target_property);
+    else
+        return find_target_property(target, target->target_property);
 }
 
 static GHashTable *find_container(GHashTable *containers_table, const gchar *name)

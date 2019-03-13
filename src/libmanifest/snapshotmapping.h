@@ -21,7 +21,8 @@
 #define __DISNIX_SNAPSHOTMAPPING_H
 #include <glib.h>
 #include <libxml/parser.h>
-#include "targets.h"
+#include <procreact_pid.h>
+#include <targets.h>
 
 /**
  * @brief Contains the values that constitute a key uniquely referring to a snapshot mapping.

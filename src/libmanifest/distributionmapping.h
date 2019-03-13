@@ -23,7 +23,7 @@
 #include <libxml/parser.h>
 #include <procreact_pid_iterator.h>
 #include <modeliterator.h>
-#include "targets.h"
+#include <targets.h>
 
 /**
  * @brief Contains a mapping of a Nix profile to a disnix service target

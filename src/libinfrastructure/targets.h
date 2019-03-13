@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_INFRASTRUCTURE_H
-#define __DISNIX_INFRASTRUCTURE_H
+#ifndef __DISNIX_TARGETS_H
+#define __DISNIX_TARGETS_H
 #include <glib.h>
 #include <xmlutil.h>
 
@@ -53,8 +53,10 @@ typedef struct
 }
 Target;
 
+GPtrArray *parse_targets(xmlNodePtr element);
+
 /**
- * Creaes an array with targets from an XML document
+ * Creates an array with targets from an XML document
  *
  * @param doc XML document composed by the XML parser
  * @return GPtrArray with target properties
@@ -93,6 +95,26 @@ GPtrArray *create_target_array(gchar *infrastructure_expr, const int xml);
  */
 void delete_target_array(GPtrArray *target_array);
 
+int check_target_array(const GPtrArray *target_array);
+
+/**
+ * Retrieves a target with a specific key from the target array.
+ *
+ * @param target_array Array of arrays representing target machines with properties
+ * @param key String referring to a target property serving as the key of the target
+ * @return An target struct containing the properties of the machine with the given key or NULL if it cannot be found
+ */
+Target *find_target(const GPtrArray *target_array, const gchar *key);
+
+/**
+ * Retrieves the value of a target property with the given name.
+ *
+ * @param target Target struct containing properties of a target machine
+ * @param name Name of the property to retrieve
+ * @return The value of the target property or NULL if it does not exists
+ */
+gchar *find_target_property(const Target *target, const gchar *name);
+
 /**
  * Retrieves the value of the target property that serves as the key to identify
  * the machine.
@@ -102,5 +124,41 @@ void delete_target_array(GPtrArray *target_array);
  * @return The key value of identifying the machine or NULL if it does not exists
  */
 gchar *find_target_key(const Target *target, const gchar *global_target_property);
+
+/**
+ * Retrieves a target with a specific key from the target array.
+ *
+ * @param target_array Array of arrays representing target machines with properties
+ * @param key String referring to a target property serving as the key of the target
+ * @return An target struct containing the properties of the machine with the given key or NULL if it cannot be found
+ */
+Target *find_target(const GPtrArray *target_array, const gchar *key);
+
+/**
+ * Generates a string vector with: 'name=value' pairs from the
+ * target properties, which are passed to the activation module as
+ * environment variables. The resulting string must be eventually be removed
+ * from memory with g_strfreev()
+ *
+ * @param target Struct with target properties
+ * @param container_name Name of the container to deploy to
+ * @return String with environment variable settings
+ */
+gchar **generate_activation_arguments(const Target *target, const gchar *container_name);
+
+/**
+ * Requests a CPU core for deployment utilisation.
+ *
+ * @param target A target struct containing properties of a target machine
+ * @return TRUE if a CPU core is allocated, FALSE if none is available
+ */
+int request_available_target_core(Target *target);
+
+/**
+ * Signals the availability of an additional CPU core for deployment utilisation.
+ *
+ * @param target A target struct containing properties of a target machine
+ */
+void signal_available_target_core(Target *target);
 
 #endif

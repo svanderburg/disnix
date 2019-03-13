@@ -10,7 +10,7 @@ noinst_DATA = disnix-delete-state.1.xml
 man1_MANS = disnix-delete-state.1
 
 disnix_delete_state_SOURCES = run-delete-state.c main.c
-disnix_delete_state_CFLAGS = $(LIBXML2_CFLAGS) $(GLIB2_CFLAGS) -I../libprocreact -I../libmanifest -I../libmain -I../libinterface -I../libmodel -I../libmigrate
+disnix_delete_state_CFLAGS = $(LIBXML2_CFLAGS) $(GLIB2_CFLAGS) -I../libprocreact -I../libinfrastructure -I../libmanifest -I../libmain -I../libinterface -I../libmodel -I../libmigrate
 disnix_delete_state_LDADD = $(GLIB2_LIBS) ../libprocreact/libprocreact.la ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la ../libmigrate/libmigrate.la
 
 EXTRA_DIST = $(man1_MANS) $(noinst_DATA)
