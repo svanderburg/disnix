@@ -19,7 +19,7 @@
 
 #include "build.h"
 #include <distributedderivation.h>
-#include <derivationmapping.h>
+#include <derivationmapping-iterator.h>
 #include <interfaces.h>
 #include <client-interface.h>
 

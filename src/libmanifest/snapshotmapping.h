@@ -31,10 +31,10 @@ typedef struct
 {
     /** Name of the mutable component */
     gchar *component;
-    
+
     /** Container in which the mutable component is deployed */
     gchar *container;
-    
+
     /** Target property referring to the target machine to which the service is deployed */
     gchar *target;
 }
@@ -48,19 +48,19 @@ typedef struct
 {
     /** Name of the mutable component */
     gchar *component;
-    
+
     /** Container in which the mutable component is deployed */
     gchar *container;
-    
+
     /** Target property referring to the target machine to which the service is deployed */
     gchar *target;
-    
+
     /** Full Nix store path to the corresponding service */
     gchar *service;
-    
+
     /** Activation type */
     gchar *type;
-    
+
     /** Indicates whether the snapshot has been transferred or not */
     gboolean transferred;
 }
@@ -87,15 +87,14 @@ typedef pid_t (*map_snapshot_item_function) (SnapshotMapping *mapping, Target *t
 typedef void (*complete_snapshot_item_mapping_function) (SnapshotMapping *mapping, ProcReact_Status status, int result);
 
 /**
- * Creates an array with activation mappings from a manifest XML file.
+ * Creates an array with activation mappings from the corresponding sub section
+ * in an XML document.
  *
- * @param manifest_file Path to the manifest XML file
+ * @param element XML root element of the sub section defining the mappings
  * @param container_filter Name of the container to filter on, or NULL to parse all containers
  * @param component_filter Name of the component to filter on, or NULL to parse all components
  * @return GPtrArray containing activation mappings
- * TODO
  */
-//GPtrArray *create_snapshots_array(const gchar *manifest_file, const gchar *container_filter, const gchar *component_filter);
 GPtrArray *parse_snapshots(xmlNodePtr element, const gchar *container_filter, const gchar *component_filter);
 
 /**

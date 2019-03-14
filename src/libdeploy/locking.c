@@ -18,7 +18,7 @@
  */
 
 #include "locking.h"
-#include <distributionmapping.h>
+#include <distributionmapping-iterator.h>
 #include <manifest.h>
 #include <targets.h>
 #include <client-interface.h>

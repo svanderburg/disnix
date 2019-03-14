@@ -196,7 +196,7 @@ static int snapshot_depth_first(GPtrArray *snapshots_array, GPtrArray *target_ar
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
     success = target_iterator_has_succeeded(iterator.data);
 
-    destroy_target_pid_iterator(iterator.data);
+    destroy_target_pid_iterator(&iterator);
 
     return success;
 }

@@ -126,13 +126,12 @@ typedef void (*complete_activation_mapping_function) (ActivationMapping *mapping
 typedef ActivationStatus (*iterate_strategy_function) (GPtrArray *union_array, const ActivationMappingKey *key, GPtrArray *target_array, GHashTable *pid_table, map_activation_mapping_function map_activation_mapping);
 
 /**
- * Creates an array with activation mappings from a manifest XML file.
+ * Creates an array with activation mappings from the corresponding sub section
+ * in an XML document.
  *
- * @param manifest_file Path to the manifest XML file
+ * @param element XML root element of the sub section defining the mappings
  * @return GPtrArray containing activation mappings
- * TODO
  */
-//GPtrArray *create_activation_array(const gchar *manifest_file);
 GPtrArray *parse_activation(xmlNodePtr element);
 
 /**

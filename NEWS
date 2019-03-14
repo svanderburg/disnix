@@ -1,5 +1,7 @@
 Version 0.9
 ===========
+- libmanifest now uses libinfrastructure for managing the infrastructure related parts
+
 - The tools that work with infrastructure models (e.g. disnix-capture-infra, disnix-collect-garbage) now also work with XML representations of the infrastructure models by passing the --xml option
 
 - Most higher level functionality has been reimplemented in C and exposed as C APIs

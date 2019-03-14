@@ -18,7 +18,7 @@
  */
 
 #include "profiles.h"
-#include <distributionmapping.h>
+#include <distributionmapping-iterator.h>
 #include <targets.h>
 #include <client-interface.h>
 #include <package-management.h>

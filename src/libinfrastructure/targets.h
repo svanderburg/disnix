@@ -53,6 +53,12 @@ typedef struct
 }
 Target;
 
+/**
+ * Parses all targets from a sub section in an XML document.
+ *
+ * @param element Root XML element that defines targets
+ * @return GPtrArray of targets
+ */
 GPtrArray *parse_targets(xmlNodePtr element);
 
 /**

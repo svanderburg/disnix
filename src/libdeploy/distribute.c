@@ -19,7 +19,7 @@
 
 #include "distribute.h"
 #include <client-interface.h>
-#include <distributionmapping.h>
+#include <distributionmapping-iterator.h>
 #include <targets.h>
 
 static pid_t transfer_distribution_item_to(void *data, DistributionItem *item, Target *target)
