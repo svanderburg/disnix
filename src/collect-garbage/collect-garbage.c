@@ -52,20 +52,27 @@ int collect_garbage(gchar *interface, const gchar *target_property, gchar *infra
     }
     else
     {
-        /* Iterate over all targets and run collect garbage operation in parallel */
-        int success;
-        gboolean delete_old = flags & FLAG_COLLECT_GARBAGE_DELETE_OLD;
-        CollectGarbageData data = { delete_old };
-        ProcReact_PidIterator iterator = create_target_pid_iterator(target_array, target_property, interface, collect_garbage_on_target, complete_collect_garbage_on_target, &data);
+        int exit_status;
 
-        procreact_fork_in_parallel_and_wait(&iterator);
-        success = target_iterator_has_succeeded(iterator.data);
+        if(check_target_array(target_array))
+        {
+            /* Iterate over all targets and run collect garbage operation in parallel */
+            gboolean delete_old = flags & FLAG_COLLECT_GARBAGE_DELETE_OLD;
+            CollectGarbageData data = { delete_old };
+            ProcReact_PidIterator iterator = create_target_pid_iterator(target_array, target_property, interface, collect_garbage_on_target, complete_collect_garbage_on_target, &data);
 
-        /* Cleanup */
-        destroy_target_pid_iterator(&iterator);
+            procreact_fork_in_parallel_and_wait(&iterator);
+            exit_status = !target_iterator_has_succeeded(iterator.data);
+
+            /* Cleanup */
+            destroy_target_pid_iterator(&iterator);
+        }
+        else
+            exit_status = 1;
+
         delete_target_array(target_array);
 
         /* Return the exit status, which is 0 if everything succeeds */
-        return (!success);
+        return exit_status;
     }
 }

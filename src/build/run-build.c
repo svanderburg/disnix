@@ -35,8 +35,12 @@ int run_build(const gchar *distributed_derivation_file, const unsigned int max_c
     }
     else
     {
-        /* Execute remote builds */
-        int exit_status = !build(distributed_derivation, max_concurrent_transfers);
+        int exit_status;
+
+        if(check_distributed_derivation(distributed_derivation))
+            exit_status = !build(distributed_derivation, max_concurrent_transfers); /* Execute remote builds */
+        else
+            exit_status = 1;
 
         /* Cleanup */
         delete_distributed_derivation(distributed_derivation);

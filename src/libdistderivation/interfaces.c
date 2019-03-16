@@ -77,6 +77,20 @@ void delete_interface_array(GPtrArray *interface_array)
     }
 }
 
+int check_interface_array(const GPtrArray *interface_array)
+{
+    unsigned int i;
+
+    for(i = 0; i < interface_array->len; i++)
+    {
+        Interface *interface = g_ptr_array_index(interface_array, i);
+        if(interface->target == NULL || interface->clientInterface == NULL)
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
 Interface *find_interface(const GPtrArray *interface_array, const gchar *key)
 {
     Interface **ret = bsearch(key, interface_array->pdata, interface_array->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_interface_keys);

@@ -44,6 +44,8 @@ GPtrArray *parse_interfaces(xmlNodePtr element);
  */
 void delete_interface_array(GPtrArray *interface_array);
 
+int check_interface_array(const GPtrArray *interface_array);
+
 /**
  * Retrieves an interface with a specific key from the interfaces array.
  *

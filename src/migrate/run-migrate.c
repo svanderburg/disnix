@@ -15,18 +15,28 @@ int run_migrate(const gchar *manifest_file, const unsigned int max_concurrent_tr
     }
     else
     {
-        GPtrArray *old_snapshots_array;
         int exit_status;
 
-        if(flags & FLAG_NO_UPGRADE)
-            old_snapshots_array = NULL;
+        if(check_manifest(manifest))
+        {
+            GPtrArray *old_snapshots_array;
+
+            if(flags & FLAG_NO_UPGRADE)
+                old_snapshots_array = NULL;
+            else
+                old_snapshots_array = open_provided_or_previous_snapshots_array(old_manifest, coordinator_profile_path, profile, container_filter, component_filter);
+
+            if(old_snapshots_array == NULL || check_snapshots_array(old_snapshots_array))
+                exit_status = !migrate(manifest, old_snapshots_array, max_concurrent_transfers, flags, keep);
+            else
+                exit_status = 1;
+
+            /* Cleanup */
+            delete_snapshots_array(old_snapshots_array);
+        }
         else
-            old_snapshots_array = open_provided_or_previous_snapshots_array(old_manifest, coordinator_profile_path, profile, container_filter, component_filter);
+            exit_status = 1;
 
-        exit_status = !migrate(manifest, old_snapshots_array, max_concurrent_transfers, flags, keep);
-
-        /* Cleanup */
-        delete_snapshots_array(old_snapshots_array);
         delete_manifest(manifest);
 
         /* Return the exit status */

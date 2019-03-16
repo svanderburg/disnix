@@ -47,7 +47,7 @@ void delete_derivation_array(GPtrArray *derivation_array)
     if(derivation_array != NULL)
     {
         unsigned int i;
-    
+
         for(i = 0; i < derivation_array->len; i++)
         {
             DerivationItem *item = g_ptr_array_index(derivation_array, i);
@@ -56,7 +56,7 @@ void delete_derivation_array(GPtrArray *derivation_array)
             g_strfreev(item->result);
             g_free(item);
         }
-    
+
         g_ptr_array_free(derivation_array, TRUE);
     }
 }

@@ -38,11 +38,16 @@ int lock_or_unlock(const int do_lock, const gchar *manifest_file, const gchar *c
     {
         int exit_status;
 
-        /* Do the locking */
-        if(do_lock)
-            exit_status = !lock(manifest->distribution_array, manifest->target_array, profile, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
+        if(check_manifest(manifest))
+        {
+            /* Do the locking */
+            if(do_lock)
+                exit_status = !lock(manifest->distribution_array, manifest->target_array, profile, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
+            else
+               exit_status = !unlock(manifest->distribution_array, manifest->target_array, profile, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
+        }
         else
-            exit_status = !unlock(manifest->distribution_array, manifest->target_array, profile, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
+            exit_status = 1;
 
         /* Cleanup */
         delete_manifest(manifest);

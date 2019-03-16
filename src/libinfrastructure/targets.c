@@ -145,8 +145,6 @@ GPtrArray *create_target_array_from_doc(xmlDocPtr doc)
     if(node_root == NULL)
     {
         g_printerr("The infrastructure XML file is empty!\n");
-        xmlFreeDoc(doc);
-        xmlCleanupParser();
         return NULL;
     }
 
@@ -161,7 +159,7 @@ GPtrArray *create_target_array_from_nix(char *infrastructure_expr)
 {
     /* Declarations */
     xmlDocPtr doc;
-    GPtrArray *targets_array = NULL;
+    GPtrArray *targets_array;
 
     /* Open the XML output of nix-instantiate */
     char *infrastructureXML = pkgmgmt_instantiate_sync(infrastructure_expr);
@@ -173,14 +171,16 @@ GPtrArray *create_target_array_from_nix(char *infrastructure_expr)
     }
 
     /* Parse the infrastructure XML file */
-    doc = create_infrastructure_doc(infrastructureXML);
-
-    /* Create a target array from the XML document */
-    targets_array = create_target_array_from_doc(doc);
+    if((doc = create_infrastructure_doc(infrastructureXML)) == NULL)
+        targets_array = NULL;
+    else
+    {
+        targets_array = create_target_array_from_doc(doc); /* Create a target array from the XML document */
+        xmlFreeDoc(doc);
+    }
 
     /* Cleanup */
     free(infrastructureXML);
-    xmlFreeDoc(doc);
     xmlCleanupParser();
 
     /* Return the target array */

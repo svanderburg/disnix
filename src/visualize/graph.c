@@ -25,7 +25,7 @@
 
 int generate_graph(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, int no_containers)
 {
-    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_ACTIVATION_FLAG, NULL, NULL);
+    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_ACTIVATION_FLAG | MANIFEST_TARGETS_FLAG, NULL, NULL);
 
     if(manifest == NULL)
     {
@@ -35,31 +35,41 @@ int generate_graph(const gchar *manifest_file, const gchar *coordinator_profile_
     }
     else
     {
-        /* Creates a table which maps each target onto a list of mappings */
-        GHashTable *cluster_table = generate_cluster_table(manifest->activation_array, manifest->target_array);
+        int exit_status;
 
-        /* Creates a table which associates each mapping to its inter-dependencies that have a strict ordering requirement */
-        GHashTable *edges_depends_on_table = generate_edges_table(manifest->activation_array, manifest->target_array, TRUE);
+        if(check_manifest(manifest))
+        {
+            /* Creates a table which maps each target onto a list of mappings */
+            GHashTable *cluster_table = generate_cluster_table(manifest->activation_array, manifest->target_array);
 
-        /* Creates a table which associates each mapping to its inter-dependencies that have no strict ordering requirement */
-        GHashTable *edges_connects_to_table = generate_edges_table(manifest->activation_array, manifest->target_array, FALSE);
+            /* Creates a table which associates each mapping to its inter-dependencies that have a strict ordering requirement */
+            GHashTable *edges_depends_on_table = generate_edges_table(manifest->activation_array, manifest->target_array, TRUE);
 
-        g_print("digraph G {\n");
+            /* Creates a table which associates each mapping to its inter-dependencies that have no strict ordering requirement */
+            GHashTable *edges_connects_to_table = generate_edges_table(manifest->activation_array, manifest->target_array, FALSE);
 
-        print_cluster_table(cluster_table, no_containers); /* Generate clusters with nodes from the cluster table */
+            g_print("digraph G {\n");
 
-        /* Generate edges from the edges table */
-        print_edges_table(edges_depends_on_table, TRUE);
-        print_edges_table(edges_connects_to_table, FALSE);
+            print_cluster_table(cluster_table, no_containers); /* Generate clusters with nodes from the cluster table */
 
-        g_print("}\n");
+            /* Generate edges from the edges table */
+            print_edges_table(edges_depends_on_table, TRUE);
+            print_edges_table(edges_connects_to_table, FALSE);
 
-        /* Cleanup */
-        destroy_cluster_table(cluster_table);
-        destroy_edges_table(edges_connects_to_table);
-        destroy_edges_table(edges_depends_on_table);
+            g_print("}\n");
+
+            /* Cleanup */
+            destroy_cluster_table(cluster_table);
+            destroy_edges_table(edges_connects_to_table);
+            destroy_edges_table(edges_depends_on_table);
+
+            exit_status = 0;
+        }
+        else
+            exit_status = 1;
+
         delete_manifest(manifest);
 
-        return 0;
+        return exit_status;
     }
 }

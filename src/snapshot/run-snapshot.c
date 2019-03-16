@@ -33,27 +33,36 @@ int run_snapshot(const gchar *manifest_file, const unsigned int max_concurrent_t
     }
     else
     {
-        if(manifest_file == NULL) /* When no manifest file is provided as a parameter -> always snapshot the entire environment */
-            return !snapshot(manifest, NULL, max_concurrent_transfers, flags | FLAG_NO_UPGRADE, keep);
-        else
+        int exit_status;
+
+        if(check_manifest(manifest))
         {
-            GPtrArray *old_snapshots_array;
-            int exit_status;
-
-            if(flags & FLAG_NO_UPGRADE)
-                old_snapshots_array = NULL;
+            if(manifest_file == NULL) /* When no manifest file is provided as a parameter -> always snapshot the entire environment */
+                exit_status = !snapshot(manifest, NULL, max_concurrent_transfers, flags | FLAG_NO_UPGRADE, keep);
             else
-                old_snapshots_array = open_provided_or_previous_snapshots_array(old_manifest, coordinator_profile_path, profile, container_filter, component_filter);
+            {
+                GPtrArray *old_snapshots_array;
 
-            /* Take snapshots and transfer them */
-            exit_status = !snapshot(manifest, old_snapshots_array, max_concurrent_transfers, flags, keep);
+                if(flags & FLAG_NO_UPGRADE)
+                    old_snapshots_array = NULL;
+                else
+                    old_snapshots_array = open_provided_or_previous_snapshots_array(old_manifest, coordinator_profile_path, profile, container_filter, component_filter);
 
-            /* Cleanup */
-            delete_snapshots_array(old_snapshots_array);
-            delete_manifest(manifest);
+                if(check_snapshots_array(old_snapshots_array))
+                    exit_status = !snapshot(manifest, old_snapshots_array, max_concurrent_transfers, flags, keep); /* Take snapshots and transfer them */
+                else
+                    exit_status = 1;
 
-            /* Return exit status */
-            return exit_status;
+                /* Cleanup */
+                delete_snapshots_array(old_snapshots_array);
+            }
         }
+        else
+            exit_status = 1;
+
+        delete_manifest(manifest);
+
+        /* Return exit status */
+        return exit_status;
     }
 }

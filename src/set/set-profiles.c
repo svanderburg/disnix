@@ -31,7 +31,12 @@ int run_set_profiles(const gchar *manifest_file, const gchar *coordinator_profil
     }
     else
     {
-        int exit_status = !set_profiles(manifest, manifest_file, coordinator_profile_path, profile, flags);
+        int exit_status;
+
+        if(check_manifest(manifest))
+            exit_status = !set_profiles(manifest, manifest_file, coordinator_profile_path, profile, flags);
+        else
+            exit_status = 1;
 
         /* Cleanup */
         delete_manifest(manifest);

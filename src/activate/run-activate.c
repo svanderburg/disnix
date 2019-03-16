@@ -35,16 +35,31 @@ int run_activate_system(const gchar *new_manifest, const gchar *old_manifest, co
     else
     {
         TransitionStatus status;
-        gchar *old_manifest_file = determine_manifest_to_open(old_manifest, coordinator_profile_path, profile);
-        GPtrArray *old_activation_array = open_previous_activation_array(old_manifest_file);
 
-        /* Do the activation process */
-        status = activate_system(manifest, old_activation_array, flags, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
-        print_transition_status(status, old_manifest_file, new_manifest, coordinator_profile_path, profile);
+        if(check_manifest(manifest))
+        {
+            gchar *old_manifest_file = determine_manifest_to_open(old_manifest, coordinator_profile_path, profile);
+            GPtrArray *old_activation_array = open_previous_activation_array(old_manifest_file);
 
-        /* Cleanup */
-        g_ptr_array_free(old_activation_array, TRUE);
-        g_free(old_manifest_file);
+            if(check_activation_array(old_activation_array))
+            {
+                /* Do the activation process */
+                status = activate_system(manifest, old_activation_array, flags, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
+                print_transition_status(status, old_manifest_file, new_manifest, coordinator_profile_path, profile);
+            }
+            else
+            {
+                g_printerr("[coordinator]: The previous manifest file is invalid!\n");
+                status = TRANSITION_FAILED;
+            }
+
+            /* Cleanup */
+            g_ptr_array_free(old_activation_array, TRUE);
+            g_free(old_manifest_file);
+        }
+        else
+            status = TRANSITION_FAILED;
+
         delete_manifest(manifest);
 
         /* Return the transition status */

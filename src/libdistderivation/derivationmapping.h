@@ -54,4 +54,6 @@ GPtrArray *parse_build(xmlNodePtr element);
  */
 void delete_derivation_array(GPtrArray *derivation_array);
 
+int check_derivation_array(const GPtrArray *derivation_array);
+
 #endif

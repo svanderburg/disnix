@@ -134,22 +134,29 @@ int capture_manifest(gchar *interface, const gchar *target_property, gchar *infr
     }
     else
     {
-        GPtrArray *profile_manifest_target_array = g_ptr_array_new();
         int exit_status;
-        
-        if(resolve_profiles(target_array, interface, target_property, profile, profile_manifest_target_array)
-          && retrieve_profiles(interface, profile_manifest_target_array, max_concurrent_transfers))
+
+        if(check_target_array(target_array))
         {
-            print_nix_expression_for_profile_manifest_target_array(profile_manifest_target_array);
-            exit_status = 0;
+            GPtrArray *profile_manifest_target_array = g_ptr_array_new();
+
+            if(resolve_profiles(target_array, interface, target_property, profile, profile_manifest_target_array)
+              && retrieve_profiles(interface, profile_manifest_target_array, max_concurrent_transfers))
+            {
+                print_nix_expression_for_profile_manifest_target_array(profile_manifest_target_array);
+                exit_status = 0;
+            }
+            else
+                exit_status = 1;
+
+            /* Cleanup */
+            delete_profile_manifest_target_array(profile_manifest_target_array);
         }
         else
             exit_status = 1;
-        
-        /* Cleanup */
-        delete_profile_manifest_target_array(profile_manifest_target_array);
+
         delete_target_array(target_array);
-        
+
         /* Return exit status */
         return exit_status;
     }

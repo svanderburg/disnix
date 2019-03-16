@@ -32,7 +32,7 @@ typedef struct
 {
     /** Array of store derivations to be built on a target machine */
     GPtrArray *derivation_array;
-    
+
     /** Array containing the available interface properties of target machines */
     GPtrArray *interface_array;
 }
@@ -52,5 +52,7 @@ DistributedDerivation *create_distributed_derivation(const gchar *distributed_de
  * @param distributed_derivation Distributed derivation to delete
  */
 void delete_distributed_derivation(DistributedDerivation *distributed_derivation);
+
+int check_distributed_derivation(const DistributedDerivation *distributed_derivation);
 
 #endif

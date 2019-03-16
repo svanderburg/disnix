@@ -88,3 +88,14 @@ void delete_distributed_derivation(DistributedDerivation *distributed_derivation
         g_free(distributed_derivation);
     }
 }
+
+int check_distributed_derivation(const DistributedDerivation *distributed_derivation)
+{
+    if(distributed_derivation == NULL)
+        return TRUE;
+    else
+    {
+        return (check_derivation_array(distributed_derivation->derivation_array)
+          && check_interface_array(distributed_derivation->interface_array));
+    }
+}

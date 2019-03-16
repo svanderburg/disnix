@@ -85,24 +85,30 @@ int query_installed(gchar *interface, const gchar *target_property, gchar *infra
     }
     else
     {
-        int success;
+        int exit_status;
 
-        /* Iterate over targets and capture their installed services */
-        GPtrArray *profile_manifest_target_array = g_ptr_array_new();
-        QueryInstalledServicesData data = { profile, profile_manifest_target_array };
-        ProcReact_FutureIterator iterator = create_target_future_iterator(target_array, target_property, interface, query_installed_services_on_target, complete_query_installed_services_on_target, &data);
-        procreact_fork_in_parallel_buffer_and_wait(&iterator);
-        success = target_iterator_has_succeeded(iterator.data);
+        if(check_target_array(target_array))
+        {
+            /* Iterate over targets and capture their installed services */
+            GPtrArray *profile_manifest_target_array = g_ptr_array_new();
+            QueryInstalledServicesData data = { profile, profile_manifest_target_array };
+            ProcReact_FutureIterator iterator = create_target_future_iterator(target_array, target_property, interface, query_installed_services_on_target, complete_query_installed_services_on_target, &data);
+            procreact_fork_in_parallel_buffer_and_wait(&iterator);
+            exit_status = !target_iterator_has_succeeded(iterator.data);
 
-        /* Print the captured configurations */
-        print_installed_services(&data, format);
+            /* Print the captured configurations */
+            print_installed_services(&data, format);
 
-        /* Cleanup */
-        destroy_target_future_iterator(&iterator);
-        delete_profile_manifest_target_array(profile_manifest_target_array);
+            /* Cleanup */
+            destroy_target_future_iterator(&iterator);
+            delete_profile_manifest_target_array(profile_manifest_target_array);
+        }
+        else
+            exit_status = 1;
+
         delete_target_array(target_array);
 
         /* Return exit status */
-        return (!success);
+        return exit_status;
     }
 }

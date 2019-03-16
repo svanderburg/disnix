@@ -118,23 +118,30 @@ int capture_infra(gchar *interface, const gchar *target_property, gchar *infrast
     }
     else
     {
-        int success;
-        GPtrArray *configs_array = g_ptr_array_new();
+        int exit_status;
 
-        /* Iterate over targets and capture their infrastructure configurations */
-        ProcReact_FutureIterator iterator = create_target_future_iterator(target_array, target_property, interface, capture_infra_on_target, complete_capture_infra_on_target, configs_array);
-        procreact_fork_in_parallel_buffer_and_wait(&iterator);
-        success = target_iterator_has_succeeded(iterator.data);
+        if(check_target_array(target_array))
+        {
+            GPtrArray *configs_array = g_ptr_array_new();
 
-        /* Print the captured configurations */
-        print_configs_array(configs_array);
+            /* Iterate over targets and capture their infrastructure configurations */
+            ProcReact_FutureIterator iterator = create_target_future_iterator(target_array, target_property, interface, capture_infra_on_target, complete_capture_infra_on_target, configs_array);
+            procreact_fork_in_parallel_buffer_and_wait(&iterator);
+            exit_status = !target_iterator_has_succeeded(iterator.data);
 
-        /* Cleanup */
-        destroy_target_future_iterator(&iterator);
-        delete_configs_array(configs_array);
+            /* Print the captured configurations */
+            print_configs_array(configs_array);
+
+            /* Cleanup */
+            destroy_target_future_iterator(&iterator);
+            delete_configs_array(configs_array);
+        }
+        else
+            exit_status = 1;
+
         delete_target_array(target_array);
 
         /* Return exit status */
-        return (!success);
+        return exit_status;
     }
 }

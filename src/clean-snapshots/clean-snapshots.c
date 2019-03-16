@@ -32,7 +32,7 @@ CleanSnapshotsData;
 static pid_t clean_snapshots_on_target(void *data, Target *target, gchar *client_interface, gchar *target_key)
 {
     CleanSnapshotsData *clean_snapshots_data = (CleanSnapshotsData*)data;
-    
+
     g_print("[target: %s]: Running snapshot garbage collector!\n", target_key);
     return exec_clean_snapshots(client_interface, target_key, clean_snapshots_data->keep, clean_snapshots_data->container, clean_snapshots_data->component);
 }
@@ -55,19 +55,26 @@ int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infra
     }
     else
     {
-        /* Iterate over all targets and run clean snapshots operation in parallel */
-        int success;
-        CleanSnapshotsData data = { keep, container, component };
-        ProcReact_PidIterator iterator = create_target_pid_iterator(target_array, target_property, interface, clean_snapshots_on_target, complete_clean_snapshots_on_target, &data);
+        int exit_status;
 
-        procreact_fork_in_parallel_and_wait(&iterator);
-        success = target_iterator_has_succeeded(iterator.data);
+        if(check_target_array(target_array))
+        {
+            /* Iterate over all targets and run clean snapshots operation in parallel */
+            CleanSnapshotsData data = { keep, container, component };
+            ProcReact_PidIterator iterator = create_target_pid_iterator(target_array, target_property, interface, clean_snapshots_on_target, complete_clean_snapshots_on_target, &data);
 
-        /* Cleanup */
-        destroy_target_pid_iterator(&iterator);
+            procreact_fork_in_parallel_and_wait(&iterator);
+            exit_status = !target_iterator_has_succeeded(iterator.data);
+
+            /* Cleanup */
+            destroy_target_pid_iterator(&iterator);
+        }
+        else
+            exit_status = 1;
+
         delete_target_array(target_array);
 
         /* Return the exit status, which is 0 if everything succeeds */
-        return (!success);
+        return exit_status;
     }
 }

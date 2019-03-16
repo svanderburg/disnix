@@ -68,6 +68,8 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
  */
 void delete_manifest(Manifest *manifest);
 
+int check_manifest(const Manifest *manifest);
+
 /**
  * Determines the path of the last generation of the coordinator profile which
  * corresponds to the manifest of the last deployed configuration.
