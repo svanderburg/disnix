@@ -43,6 +43,39 @@ GHashTable *parse_dictionary(xmlNodePtr element, ParseObjectFunc parse_object)
     return table;
 }
 
+GHashTable *parse_dictionary_attr(xmlNodePtr element, gchar *child_element_name, gchar *property_name, ParseObjectFunc parse_object)
+{
+    xmlNodePtr element_children = element->children;
+    GHashTable *table = g_hash_table_new(g_str_hash, g_str_equal);
+
+    while(element_children != NULL)
+    {
+        if(xmlStrcmp(element_children->name, (xmlChar*)child_element_name) == 0)
+        {
+            xmlAttrPtr element_attributes = element_children->properties;
+            gchar *key = NULL;
+
+            while(element_attributes != NULL)
+            {
+                if(xmlStrcmp(element_attributes->name, (xmlChar*) property_name) == 0)
+                    key = g_strdup((gchar*)element_attributes->children->content);
+
+                element_attributes = element_attributes->next;
+            }
+
+            if(key != NULL)
+            {
+                gpointer value = parse_object(element_children);
+                g_hash_table_insert(table, key, value);
+            }
+        }
+
+        element_children = element_children->next;
+    }
+
+    return table;
+}
+
 GPtrArray *parse_list(xmlNodePtr element, gchar *child_element_name, ParseObjectFunc parse_object)
 {
     xmlNodePtr element_children = element->children;

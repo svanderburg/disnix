@@ -29,6 +29,8 @@ gpointer parse_value(xmlNodePtr element);
 
 GHashTable *parse_dictionary(xmlNodePtr element, ParseObjectFunc parse_object);
 
+GHashTable *parse_dictionary_attr(xmlNodePtr element, gchar *child_element_name, gchar *property_name, ParseObjectFunc parse_object);
+
 GPtrArray *parse_list(xmlNodePtr element, gchar *child_element_name, ParseObjectFunc parse_object);
 
 #endif
