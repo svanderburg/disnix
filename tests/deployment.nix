@@ -245,7 +245,7 @@ simpleTest {
       # We now perform an upgrade. In this case testService2 is replaced
       # by testService2B. This test should succeed.
 
-      $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-composition.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-composition.nix");
+      $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-composition.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-composition.nix --show-trace");
 
       # Use disnix-query to see if the right services are installed on
       # the right target platforms. This test should succeed.

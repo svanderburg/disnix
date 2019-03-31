@@ -8,12 +8,18 @@
 
 let
   pkgs = import nixpkgs {};
-  lib = import ./lib.nix { inherit nixpkgs pkgs; };
 
   infrastructure = import infrastructureFile;
   capturedProperties = import capturedPropertiesFile;
-  reconstructedManifest = lib.reconstructManifest infrastructure capturedProperties targetProperty clientInterface;
-  
+
+  reconstructManifest = import ./reconstruct.nix;
+
+  reconstructedManifest = reconstructManifest {
+    inherit infrastructure capturedProperties;
+    defaultTargetProperty = targetProperty;
+    defaultClientInterface = clientInterface;
+  };
+
   generateManifestXSL = ./generatemanifest.xsl;
 in
 pkgs.stdenv.mkDerivation {
@@ -21,7 +27,7 @@ pkgs.stdenv.mkDerivation {
   buildInputs = [ pkgs.libxslt ];
   manifestXML = builtins.toXML reconstructedManifest;
   passAsFile = [ "manifestXML" ];
-  
+
   buildCommand = ''
     if [ "$manifestXMLPath" != "" ]
     then

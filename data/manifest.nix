@@ -11,11 +11,37 @@ let
   servicesFun = import servicesFile;
   infrastructure = import infrastructureFile;
   distributionFun = import distributionFile;
-  
+
   pkgs = import nixpkgs {};
-  lib = import ./lib.nix { inherit nixpkgs pkgs; };
-  manifest = lib.generateManifest pkgs servicesFun infrastructure distributionFun targetProperty clientInterface deployState;
-  
+
+  wrapArchitecture = import ./wrap-architecture.nix {
+    inherit (pkgs) lib;
+  };
+
+  normalizeArchitecture = import ./normalize.nix {
+    inherit (pkgs) lib;
+  };
+
+  generateManifest = import ./generate-manifest.nix {
+    inherit pkgs;
+    inherit (pkgs) lib;
+  };
+
+  architectureFun = wrapArchitecture {
+    inherit servicesFun infrastructure distributionFun;
+  };
+
+  architecture = normalizeArchitecture {
+    inherit architectureFun nixpkgs;
+    defaultClientInterface = clientInterface;
+    defaultTargetProperty = targetProperty;
+    defaultDeployState = deployState;
+  };
+
+  manifest = generateManifest {
+    inherit architecture;
+  };
+
   generateManifestXSL = ./generatemanifest.xsl;
 in
 pkgs.stdenv.mkDerivation {
@@ -23,7 +49,7 @@ pkgs.stdenv.mkDerivation {
   buildInputs = [ pkgs.libxslt ];
   manifestXML = builtins.toXML manifest;
   passAsFile = [ "manifestXML" ];
-  
+
   buildCommand = ''
     if [ "$manifestXMLPath" != "" ]
     then

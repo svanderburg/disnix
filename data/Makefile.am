@@ -1,2 +1,2 @@
-pkgdata_DATA = lib.nix manifest.nix reconstructmanifest.nix gendist-roundrobin.nix instantiate.nix generatedistributedderivation.xsl generatemanifest.xsl infrastructure.xsl
-EXTRA_DIST = lib.nix manifest.nix reconstructmanifest.nix gendist-roundrobin.nix instantiate.nix generatedistributedderivation.xsl generatemanifest.xsl infrastructure.xsl
+pkgdata_DATA = manifest.nix reconstructmanifest.nix gendist-roundrobin.nix instantiate.nix generatedistributedderivation.xsl generatemanifest.xsl infrastructure.xsl wrap-architecture.nix normalize.nix generate-manifest.nix generate-distributed-derivation.nix roundrobin.nix reconstruct.nix
+EXTRA_DIST = manifest.nix reconstructmanifest.nix gendist-roundrobin.nix instantiate.nix generatedistributedderivation.xsl generatemanifest.xsl infrastructure.xsl wrap-architecture.nix normalize.nix generate-manifest.nix generate-distributed-derivation.nix roundrobin.nix reconstruct.nix

@@ -6,15 +6,20 @@
 let 
   servicesFun = import servicesFile;
   infrastructure = import infrastructureFile;
-  
+
   pkgs = import nixpkgs {};
-  lib = import ./lib.nix { inherit pkgs nixpkgs; };
+
+  generateDistributionModelRoundRobin = import ./roundrobin.nix {
+    inherit pkgs;
+  };
 in
 pkgs.stdenv.mkDerivation {
   name = "distribution.nix";
   buildCommand = ''
     cat > $out <<EOF
-    ${lib.generateDistributionModelRoundRobin servicesFun infrastructure}
+    ${generateDistributionModelRoundRobin {
+      inherit servicesFun infrastructure;
+    }}
     EOF
   '';
 }
