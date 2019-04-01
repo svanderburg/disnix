@@ -26,6 +26,7 @@ showUsage()
 {
     cat <<EOF
 Usage: $0 -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
+  or: $0 -A architecture_nix [OPTION]
   or: $0 --rollback [OPTION]
   or: $0 --switch-generation NUM [OPTION]
   or: $0 --list-generations [OPTION]
@@ -75,6 +76,11 @@ Options:
   -d, --distribution=distribution_nix
                                   Distribution Nix expression which maps
                                   services to machines in the network
+  -A, --architecture=architecture_nix
+                                  Deployment architecture Nix expression that
+                                  captures all properties of the services and
+                                  infrastructure including the distribution of
+                                  services to targets
       --switch-to-generation=NUM  Switches to a specific profile generation
       --rollback                  Switches back to the previously deployed
                                   configuration
@@ -161,7 +167,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:p:m:hv -l services:,infrastructure:,distribution:,rollback,switch-to-generation:,list-generations,delete-generations:,delete-all-generations,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,delete-state,depth-first,keep:,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:A:p:m:hv -l services:,infrastructure:,distribution:,architecture:,rollback,switch-to-generation:,list-generations,delete-generations:,delete-all-generations,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,delete-state,depth-first,keep:,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -184,6 +190,10 @@ do
             ;;
         -d|--distribution)
             distributionFile=`readlink -f $2`
+            ;;
+        -A|--architecture)
+            architectureFile=`readlink -f $2`
+            operation="deployArchitecture"
             ;;
         --rollback)
             operation="switchGenerations"
@@ -354,6 +364,17 @@ produceManifest()
     manifest=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link --interface $interface $deployStateArg $showTraceArg`
 }
 
+produceManifestFromArchitecture()
+{
+    if [ "$buildOnTargets" = "1" ]
+    then
+        disnix-delegate -A $architectureFile --target-property $targetProperty --interface $interface $maxConcurrentTransfersArg $showTraceArg
+    fi
+
+    echo "[coordinator]: Building manifest..."
+    manifest=`disnix-manifest -A $architectureFile --target-property $targetProperty --no-out-link --interface $interface $deployStateArg $showTraceArg`
+}
+
 deploy()
 {
     # Determine the name of the previous manifest file
@@ -381,6 +402,10 @@ case "$operation" in
         ;;
     deleteAllGenerations)
         deleteAllGenerations
+        ;;
+    deployArchitecture)
+        produceManifestFromArchitecture
+        deploy
         ;;
     *)
         checkModels

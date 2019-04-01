@@ -117,22 +117,23 @@ let
         }) architecture.services;
     };
 
-  ## TODO: Consider this to be in the scope of generatePkgsPerTarget
-  generatePkgsPerTargetGroupedByService = {architecture}:
-    lib.mapAttrs (name: target:
-      let
-        targetProperty = getTargetProperty target;
-      in
-      map (serviceName:
-        let
-          service = getAttr serviceName architecture.services;
-          mappingsToTarget = filter (mapping: mapping.target == targetProperty) service._systemsPerTarget;
-        in
-        lib.unique (map (mapping: service._pkgsPerSystem."${mapping.system}".outPath) mappingsToTarget)
-      ) (attrNames architecture.services)
-    ) architecture.infrastructure;
-
   generatePkgsPerTarget = {architecture}:
+    let
+      generatePkgsPerTargetGroupedByService = {architecture}:
+
+        lib.mapAttrs (name: target:
+          let
+            targetProperty = getTargetProperty target;
+          in
+          map (serviceName:
+            let
+              service = getAttr serviceName architecture.services;
+              mappingsToTarget = filter (mapping: mapping.target == targetProperty) service._systemsPerTarget;
+            in
+            lib.unique (map (mapping: service._pkgsPerSystem."${mapping.system}".outPath) mappingsToTarget)
+          ) (attrNames architecture.services)
+        ) architecture.infrastructure;
+    in
     architecture // {
       pkgs = lib.mapAttrs (targetName: pkgsPerService:
         concatLists pkgsPerService

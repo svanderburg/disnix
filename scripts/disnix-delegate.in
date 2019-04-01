@@ -26,6 +26,7 @@ showUsage()
 {
     cat <<EOF
 Usage: $0 -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
+  or: $0 -A architecture_nix [OPTION]
 
 The command \`disnix-delegate' is used to instantiate all derivations of the
 services deployed machines in the network and to delegate their build operations
@@ -50,6 +51,11 @@ Options:
   -d, --distribution=distribution_nix
                                   Distribution Nix expression which maps
                                   services to machines in the network
+  -A, --architecture=architecture_nix
+                                  Deployment architecture Nix expression that
+                                  captures all properties of the services and
+                                  infrastructure including the distribution of
+                                  services to targets
       --target-property=PROP      The target property of an infrastructure
                                   model, that specifies how to connect to the
                                   remote Disnix interface. (Defaults to
@@ -86,7 +92,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:m:hv -l services:,infrastructure:,distribution:,interface:,target-property:,max-concurrent-transfers:,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:A:m:hv -l services:,infrastructure:,distribution:,architecture:,interface:,target-property:,max-concurrent-transfers:,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -110,6 +116,9 @@ do
         -d|--distribution)
             distributionFile=`readlink -f $2`
             ;;
+        -A|--architecture)
+            architectureFile=`readlink -f $2`
+            ;;
         -m|--max-concurrent-transfers)
             maxConcurrentTransfersArg="-m $2"
             ;;
@@ -131,7 +140,7 @@ do
             exit 0
             ;;
     esac
-    
+
     shift
 done
 
@@ -145,15 +154,26 @@ source @datadir@/@PACKAGE@/checks
 
 # Validate the given options
 
-checkServicesFile
-checkInfrastructureFile
-checkDistributionFile
+if [ "$architectureFile" = "" ]
+then
+    checkServicesFile
+    checkInfrastructureFile
+    checkDistributionFile
+fi
+
 checkClientInterface
 checkTargetProperty
 
 # Execute operations
 
 echo "[coordinator]: Instantiating store derivations..."
-distributedDerivation=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --interface $interface --no-out-link $showTraceArg`
+
+if [ "$architectureFile" = "" ]
+then
+    distributedDerivation=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --interface $interface --no-out-link $showTraceArg`
+else
+    distributedDerivation=`disnix-instantiate -A $architectureFile --target-property $targetProperty --interface $interface --no-out-link $showTraceArg`
+fi
+
 echo "[coordinator]: Remotely building services..."
 disnix-build $maxConcurrentTransfersArg $distributedDerivation

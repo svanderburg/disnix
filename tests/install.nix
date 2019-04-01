@@ -144,6 +144,12 @@ simpleTest {
       @closure = split('\n', $client->mustSucceed("nix-store -qR $manifest"));
       my @testService1 = grep(/\-testService1/, @closure);
 
+      # Test an architecture model, a Nix specification that specifies the
+      # service and infrastructure properties and the mappings between them in
+      # one configuration.
+
+      $client->mustSucceed("${env} disnix-manifest -A ${manifestTests}/architecture.nix");
+
       #### Test disnix-copy-closure
 
       # Test copy closure. Here, we first dermine the closure of

@@ -25,6 +25,7 @@ showUsage()
 {
     cat <<EOF
 Usage: $0 -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
+  or: $0 -A architecture_nix [OPTION]
 
 The command \`disnix-instantiate' generates a distributed derivation file from
 a service, infrastructure and distribution Nix expression, which can be used to
@@ -45,6 +46,11 @@ Options:
   -d, --distribution=distribution_nix
                               Distribution Nix expression which maps services to
                               machines in the network
+  -A, --architecture=architecture_nix
+                              Deployment architecture Nix expression that
+                              captures all properties of the services and
+                              infrastructure including the distribution of
+                              services to targets
       --target-property=PROP  The target property of an infrastructure model,
                               that specifies how to connect to the remote Disnix
                               interface. (Defaults to: hostname)
@@ -77,7 +83,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:hv -l services:,infrastructure:,distribution:,target-property:,interface:,no-out-link,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:A:hv -l services:,infrastructure:,distribution:,architecture:,target-property:,interface:,no-out-link,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -101,6 +107,9 @@ do
         -d|--distribution)
             distributionFile=`readlink -f $2`
             ;;
+        -A|--architecture)
+            architectureFile=`readlink -f $2`
+            ;;
         --target-property)
             targetProperty=$2
             ;;
@@ -122,7 +131,7 @@ do
             exit 0
             ;;
     esac
-    
+
     shift
 done
 
@@ -136,9 +145,6 @@ source @datadir@/@PACKAGE@/checks
 
 # Validate the given options
 
-checkServicesFile
-checkInfrastructureFile
-checkDistributionFile
 checkTargetProperty
 checkClientInterface
 checkNoOutLink
@@ -146,11 +152,27 @@ checkShowTrace
 
 # Build the distributed derivation file
 
-nix-build --argstr servicesFile "$(readlink -f $servicesFile)" \
-    --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
-    --argstr distributionFile "$(readlink -f $distributionFile)" \
-    --argstr targetProperty $targetProperty \
-    --argstr clientInterface $interface \
-    $noOutLinkArg \
-    $showTraceArg \
-    "$(readlink -f @datadir@/@PACKAGE@/instantiate.nix)"
+if [ "$architectureFile" = "" ]
+then
+    checkServicesFile
+    checkInfrastructureFile
+    checkDistributionFile
+
+    nix-build --argstr servicesFile "$(readlink -f $servicesFile)" \
+        --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
+        --argstr distributionFile "$(readlink -f $distributionFile)" \
+        --argstr targetProperty $targetProperty \
+        --argstr clientInterface $interface \
+        $noOutLinkArg \
+        $showTraceArg \
+        -A generateDistributedDerivationFromModels \
+        "$(readlink -f @datadir@/@PACKAGE@/instantiate.nix)"
+else
+    nix-build --argstr architectureFile "$(readlink -f architectureFile)" \
+        --argstr targetProperty $targetProperty \
+        --argstr clientInterface $interface \
+        $noOutLinkArg \
+        $showTraceArg \
+        -A generateDistributedDerivationFromArchitectureModel \
+        "$(readlink -f @datadir@/@PACKAGE@/instantiate.nix)"
+fi
