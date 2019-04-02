@@ -70,9 +70,10 @@ in
     };
 
   generateManifestFromModels =
-    { servicesFile
+    { servicesFile ? null
     , infrastructureFile
-    , distributionFile
+    , distributionFile ? null
+    , packagesFile ? null
     , targetProperty
     , clientInterface
     , deployState ? false
@@ -80,9 +81,10 @@ in
     }:
 
     let
-      servicesFun = import servicesFile;
+      servicesFun = if servicesFile == null then null else import servicesFile;
       infrastructure = import infrastructureFile;
-      distributionFun = import distributionFile;
+      distributionFun = if distributionFile == null then null else import distributionFile;
+      packagesFun = if packagesFile == null then null else import packagesFile;
 
       pkgs = import nixpkgs {};
 
@@ -91,7 +93,7 @@ in
       };
 
       architectureFun = wrapArchitecture {
-        inherit servicesFun infrastructure distributionFun;
+        inherit servicesFun infrastructure distributionFun packagesFun;
       };
     in
     generateManifestFromArchitectureFun {

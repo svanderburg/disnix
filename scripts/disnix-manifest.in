@@ -25,6 +25,7 @@ showUsage()
 {
     cat <<EOF
 Usage: $0 -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
+  or: $0 -P packages_nix -i infrastructure_nix [OPTION]
   or: $0 -A architecture_nix [OPTION]
 
 The command \`disnix-manifest' generates a manifest file from a service,
@@ -51,6 +52,10 @@ Options:
   -d, --distribution=distribution_nix
                               Distribution Nix expression which maps services to
                               machines in the network
+  -P, --packages=packages_nix
+                              Packages Nix expression specifying the packages
+                              that should be deployed in a Nix profile mapped
+                              to each machine in the network
   -A, --architecture=architecture_nix
                               Deployment architecture Nix expression that
                               captures all properties of the services and
@@ -92,7 +97,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:A:hv -l services:,infrastructure:,distribution:,architecture:,target-property:,interface:,deploy-state,no-out-link,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:hv -l services:,infrastructure:,distribution:,packages:,architecture:,target-property:,interface:,deploy-state,no-out-link,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -115,6 +120,9 @@ do
             ;;
         -d|--distribution)
             distributionFile=`readlink -f $2`
+            ;;
+        -P|--packages)
+            packagesFile=`readlink -f $2`
             ;;
         -A|--architecture)
             architectureFile=`readlink -f $2`
@@ -169,23 +177,8 @@ fi
 
 # Build the manifest file
 
-if [ "$architectureFile" = "" ]
+if [ "$architectureFile" != "" ]
 then
-    checkServicesFile
-    checkInfrastructureFile
-    checkDistributionFile
-
-    nix-build --argstr servicesFile "$(readlink -f $servicesFile)" \
-        --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
-        --argstr distributionFile "$(readlink -f $distributionFile)" \
-        --argstr targetProperty $targetProperty \
-        --argstr clientInterface $interface \
-        $deployStateArg \
-        $noOutLinkArg \
-        $showTraceArg \
-        -A generateManifestFromModels \
-        "$(readlink -f @datadir@/@PACKAGE@/manifest.nix)"
-else
     nix-build --argstr architectureFile "$(readlink -f $architectureFile)" \
         --argstr targetProperty $targetProperty \
         --argstr clientInterface $interface \
@@ -194,4 +187,42 @@ else
         $showTraceArg \
         -A generateManifestFromArchitectureModel \
         "$(readlink -f @datadir@/@PACKAGE@/manifest.nix)"
+elif [ "$servicesFile" != "" ] || [ "$distributionFile" != "" ]
+then
+    checkServicesFile
+    checkInfrastructureFile
+    checkDistributionFile
+
+    if [ "$packagesFile" != "" ]
+    then
+        packagesFileArg="--argstr packagesFile $(readlink -f $packagesFile)"
+    fi
+
+    nix-build --argstr servicesFile "$(readlink -f $servicesFile)" \
+        --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
+        --argstr distributionFile "$(readlink -f $distributionFile)" \
+        $packagesFileArg \
+        --argstr targetProperty $targetProperty \
+        --argstr clientInterface $interface \
+        $deployStateArg \
+        $noOutLinkArg \
+        $showTraceArg \
+        -A generateManifestFromModels \
+        "$(readlink -f @datadir@/@PACKAGE@/manifest.nix)"
+elif [ "$packagesFile" != "" ]
+then
+    checkInfrastructureFile
+
+    nix-build --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
+        --argstr packagesFile "$(readlink -f $packagesFile)" \
+        --argstr targetProperty $targetProperty \
+        --argstr clientInterface $interface \
+        $deployStateArg \
+        $noOutLinkArg \
+        $showTraceArg \
+        -A generateManifestFromModels \
+        "$(readlink -f @datadir@/@PACKAGE@/manifest.nix)"
+else
+    echo "An unknown combination of input models were provided!" >&2
+    exit 1
 fi

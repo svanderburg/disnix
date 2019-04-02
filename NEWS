@@ -1,5 +1,9 @@
 Version 0.9
 ===========
+- The Disnix tools can also work with a packages model, a specification that specifies the contents of the Nix profiles per machine
+
+- The frontend has been reengineered. In addition to more configurable properties, it is also possible to specify the intermediate models as input parameters to various Disnix tools.
+
 - libmanifest now uses libinfrastructure for managing the infrastructure related parts
 
 - The tools that work with infrastructure models (e.g. disnix-capture-infra, disnix-collect-garbage) now also work with XML representations of the infrastructure models by passing the --xml option

@@ -104,7 +104,7 @@ let
     map (targetName:
       let
         target = getAttr targetName architecture.infrastructure;
-        paths = getAttr targetName architecture.pkgs;
+        paths = getAttr targetName architecture.targetPackages;
       in
       {
         profile = (pkgs.buildEnv {
@@ -119,7 +119,7 @@ let
 
         target = getTargetProperty target;
       }
-    ) (attrNames architecture.pkgs);
+    ) (attrNames architecture.targetPackages);
 
   generateManifest = {architecture}:
     rec {

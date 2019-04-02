@@ -4,6 +4,15 @@ let
   customPkgs = import ./pkgs { inherit pkgs system; };
 in
 rec {
+  targetPackages = {
+    testtarget1 = [
+      pkgs.curl
+    ];
+    testtarget2 = [
+      pkgs.strace
+    ];
+  };
+
   services = rec {
     testService1 = {
       name = "testService1";

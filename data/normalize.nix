@@ -1,7 +1,7 @@
 {lib}:
 
 let
-  inherit (builtins) isList isAttrs head getAttr filter attrNames concatLists;
+  inherit (builtins) isList isAttrs head getAttr filter attrNames concatLists listToAttrs;
 
   checkServiceNames = {architecture}:
     architecture // {
@@ -133,11 +133,19 @@ let
             lib.unique (map (mapping: service._pkgsPerSystem."${mapping.system}".outPath) mappingsToTarget)
           ) (attrNames architecture.services)
         ) architecture.infrastructure;
-    in
-    architecture // {
-      pkgs = lib.mapAttrs (targetName: pkgsPerService:
+
+      pkgsFromServices = lib.mapAttrs (targetName: pkgsPerService:
         concatLists pkgsPerService
       ) (generatePkgsPerTargetGroupedByService { inherit architecture; });
+
+      allTargetNames = attrNames (pkgsFromServices // (architecture.pkgs or {}));
+    in
+    architecture // {
+      # Merge existing pkgs attribute with pkgs that need to be built for the services
+      targetPackages = listToAttrs (map (targetName: {
+        name = targetName;
+        value = (pkgsFromServices.${targetName} or []) ++ (architecture.targetPackages.${targetName} or []);
+      }) allTargetNames);
     };
 
   generateNormalizedDeploymentArchitecture = {architectureFun, nixpkgs, defaultClientInterface, defaultTargetProperty, defaultDeployState}:

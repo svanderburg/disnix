@@ -33,30 +33,34 @@ let
       }
     ) services;
 
-  wrapArchitectureModel = {servicesFun, infrastructure, distributionFun}:
-    {pkgs, system}:
+in
+{servicesFun ? null, infrastructure, distributionFun ? null, packagesFun ? null}:
 
-    let
-      distribution = distributionFun {
-        inherit infrastructure;
-      };
+  {pkgs, system}:
 
-      services = servicesFun {
-        inherit pkgs system;
-        inherit distribution;
-
-        invDistribution = generateInverseDistribution {
-          inherit services infrastructure distribution;
-        };
-      };
-
-      servicesWithTargets = augmentTargetsToServices {
-        inherit services distribution;
-      };
-    in
-    {
-      services = servicesWithTargets;
+  let
+    distribution = if distributionFun == null then {} else distributionFun {
       inherit infrastructure;
     };
-in
-wrapArchitectureModel
+
+    services = if servicesFun == null then {} else servicesFun {
+      inherit pkgs system;
+      inherit distribution;
+
+      invDistribution = generateInverseDistribution {
+        inherit services infrastructure distribution;
+      };
+    };
+
+    servicesWithTargets = augmentTargetsToServices {
+      inherit services distribution;
+    };
+
+    targetPackages = if packagesFun == null then {} else packagesFun {
+      inherit pkgs system;
+    };
+  in
+  {
+    services = servicesWithTargets;
+    inherit infrastructure targetPackages;
+  }

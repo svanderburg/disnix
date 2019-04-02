@@ -51,6 +51,10 @@ Options:
   -d, --distribution=distribution_nix
                                   Distribution Nix expression which maps
                                   services to machines in the network
+  -P, --packages=packages_nix
+                                  Packages Nix expression specifying the packages
+                                  that should be deployed in a Nix profile mapped
+                                  to each machine in the network
   -A, --architecture=architecture_nix
                                   Deployment architecture Nix expression that
                                   captures all properties of the services and
@@ -92,7 +96,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:A:m:hv -l services:,infrastructure:,distribution:,architecture:,interface:,target-property:,max-concurrent-transfers:,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:m:hv -l services:,infrastructure:,distribution:,packages:,architecture:,interface:,target-property:,max-concurrent-transfers:,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -115,6 +119,9 @@ do
             ;;
         -d|--distribution)
             distributionFile=`readlink -f $2`
+            ;;
+        -P|--packages)
+            packagesFile=`readlink -f $2`
             ;;
         -A|--architecture)
             architectureFile=`readlink -f $2`
@@ -154,13 +161,6 @@ source @datadir@/@PACKAGE@/checks
 
 # Validate the given options
 
-if [ "$architectureFile" = "" ]
-then
-    checkServicesFile
-    checkInfrastructureFile
-    checkDistributionFile
-fi
-
 checkClientInterface
 checkTargetProperty
 
@@ -168,11 +168,16 @@ checkTargetProperty
 
 echo "[coordinator]: Instantiating store derivations..."
 
-if [ "$architectureFile" = "" ]
+if [ "$architectureFile" != "" ]
 then
-    distributedDerivation=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --interface $interface --no-out-link $showTraceArg`
-else
     distributedDerivation=`disnix-instantiate -A $architectureFile --target-property $targetProperty --interface $interface --no-out-link $showTraceArg`
+elif [ "$servicesFile" != "" ] || [ "$distributionFile" != "" ]
+    distributedDerivation=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --interface $interface --no-out-link $showTraceArg`
+elif [ "$packagesFile" != "" ]
+    distributedDerivation=`disnix-instantiate -P $packagesFile -i $infrastructureFile --target-property $targetProperty --interface $interface --no-out-link $showTraceArg`
+else
+    echo "An unknown combination of input models were provided!" >&2
+    exit 1
 fi
 
 echo "[coordinator]: Remotely building services..."

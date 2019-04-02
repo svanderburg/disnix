@@ -144,6 +144,18 @@ simpleTest {
       @closure = split('\n', $client->mustSucceed("nix-store -qR $manifest"));
       my @testService1 = grep(/\-testService1/, @closure);
 
+      # Test a packages model, a Nix specification that specifies the content of
+      # the Nix profiles for each machine
+
+      my $manifestPkgs = $client->mustSucceed("${env} disnix-manifest -P ${manifestTests}/target-pkgs.nix -i ${manifestTests}/infrastructure.nix");
+      $closure = $client->mustSucceed("nix-store -qR $manifestPkgs");
+
+      if($closure =~ /\-curl\-/) {
+          print "Found curl package in closure!\n";
+      } else {
+          die "curl should be in the closure!\n";
+      }
+
       # Test an architecture model, a Nix specification that specifies the
       # service and infrastructure properties and the mappings between them in
       # one configuration.
