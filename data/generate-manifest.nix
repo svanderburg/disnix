@@ -100,7 +100,7 @@ let
       [ mapping.name mapping.service mapping.container mapping.type mapping._key stateful dependsOn connectsTo ]
     ) activationMappingsToTarget);
 
-  generateProfilesFromPkgs = {architecture, activation}:
+  generateProfilesFromTargetPackages = {architecture, activation}:
     map (targetName:
       let
         target = getAttr targetName architecture.infrastructure;
@@ -123,7 +123,7 @@ let
 
   generateManifest = {architecture}:
     rec {
-      profiles = generateProfilesFromPkgs {
+      distribution = generateProfilesFromTargetPackages {
         inherit architecture activation;
       };
 

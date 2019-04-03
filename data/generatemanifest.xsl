@@ -4,7 +4,7 @@
   <xsl:template match="/expr/attrs">
     <manifest version="1">
       <distribution>
-        <xsl:for-each select="attr[@name='profiles']/list/attrs">
+        <xsl:for-each select="attr[@name='distribution']/list/attrs">
 	  <mapping>
 	    <profile><xsl:value-of select="attr[@name='profile']/string/@value" /></profile>
 	    <target><xsl:value-of select="attr[@name='target']/string/@value" /></target>

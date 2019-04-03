@@ -311,20 +311,6 @@ fi
 
 # Operation functions
 
-checkModels()
-{
-    if [ "$architectureFile" != "" ]
-    then
-        checkInfrastructureFile
-
-        if [ "$servicesFile" != "" ] || [ "$distributionFile" != "" ]
-        then
-            checkServicesFile
-            checkDistributionFile
-        fi
-    fi
-}
-
 switchGenerations()
 {
     # If no generation link has been requested, figure out what the previous one is
@@ -369,32 +355,16 @@ deleteAllGenerations()
 
 produceManifest()
 {
+    checkDeployModels
+    generateModelArgs
+
     if [ "$buildOnTargets" = "1" ]
     then
-        if [ "$architectureFile" != "" ]
-        then
-            disnix-delegate -A $architectureFile --target-property $targetProperty --interface $interface $maxConcurrentTransfersArg $showTraceArg
-        elif [ "$servicesFile" != "" ] || [ "$distributionFile" != "" ]
-        then
-            disnix-delegate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --interface $interface $maxConcurrentTransfersArg $showTraceArg
-        elif [ "$packagesFile" != "" ]
-        then
-            disnix-delegate -P $packagesFile -i $infrastructureFile --target-property $targetProperty --interface $interface $maxConcurrentTransfersArg $showTraceArg
-        fi
+        disnix-delegate $modelArgs --target-property $targetProperty --interface $interface $maxConcurrentTransfersArg $showTraceArg
     fi
 
     echo "[coordinator]: Building manifest..."
-
-    if [ "$architectureFile" != "" ]
-    then
-        manifest=`disnix-manifest -A $architectureFile --target-property $targetProperty --no-out-link --interface $interface $deployStateArg $showTraceArg`
-    elif [ "$servicesFile" != "" ] || [ "$distributionFile" != "" ]
-    then
-        manifest=`disnix-manifest -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --no-out-link --interface $interface $deployStateArg $showTraceArg`
-    elif [ "$packagesFile" != "" ]
-    then
-        manifest=`disnix-manifest -P $packagesFile -i $infrastructureFile --target-property $targetProperty --no-out-link --interface $interface $deployStateArg $showTraceArg`
-    fi
+    manifest=`disnix-manifest $modelArgs --target-property $targetProperty --no-out-link --interface $interface $deployStateArg $showTraceArg`
 }
 
 deploy()
@@ -426,7 +396,6 @@ case "$operation" in
         deleteAllGenerations
         ;;
     *)
-        checkModels
         produceManifest
         deploy
         ;;

@@ -1,4 +1,30 @@
 let
+  generateManifestFromDeploymentModel =
+    {manifest, pkgs}:
+
+    let
+      generateManifestXSL = ./generatemanifest.xsl;
+    in
+    pkgs.stdenv.mkDerivation {
+      name = "manifest.xml";
+      buildInputs = [ pkgs.libxslt ];
+      manifestXML = builtins.toXML manifest;
+      passAsFile = [ "manifestXML" ];
+
+      buildCommand = ''
+        if [ "$manifestXMLPath" != "" ]
+        then
+            xsltproc ${generateManifestXSL} $manifestXMLPath > $out
+        else
+        (
+        cat <<EOF
+        $manifestXML
+        EOF
+        ) | xsltproc ${generateManifestXSL} - > $out
+        fi
+      '';
+    };
+
   generateManifestFromArchitectureFun =
     { architectureFun
     , nixpkgs
@@ -28,27 +54,9 @@ let
       manifest = generateManifest {
         inherit architecture;
       };
-
-      generateManifestXSL = ./generatemanifest.xsl;
     in
-    pkgs.stdenv.mkDerivation {
-      name = "manifest.xml";
-      buildInputs = [ pkgs.libxslt ];
-      manifestXML = builtins.toXML manifest;
-      passAsFile = [ "manifestXML" ];
-
-      buildCommand = ''
-        if [ "$manifestXMLPath" != "" ]
-        then
-            xsltproc ${generateManifestXSL} $manifestXMLPath > $out
-        else
-        (
-        cat <<EOF
-        $manifestXML
-        EOF
-        ) | xsltproc ${generateManifestXSL} - > $out
-        fi
-      '';
+    generateManifestFromDeploymentModel {
+      inherit manifest pkgs;
     };
 in
 {
@@ -99,5 +107,15 @@ in
     generateManifestFromArchitectureFun {
       inherit architectureFun;
       inherit nixpkgs pkgs targetProperty clientInterface deployState;
+    };
+
+  generateManifestFromDeploymentModel =
+    { deploymentFile
+    , nixpkgs ? <nixpkgs>
+    }:
+
+    generateManifestFromDeploymentModel {
+      manifest = import deploymentFile;
+      pkgs = import nixpkgs {};
     };
 }

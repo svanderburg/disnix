@@ -161,24 +161,15 @@ source @datadir@/@PACKAGE@/checks
 
 # Validate the given options
 
+checkBuildModels
 checkClientInterface
 checkTargetProperty
 
 # Execute operations
 
 echo "[coordinator]: Instantiating store derivations..."
-
-if [ "$architectureFile" != "" ]
-then
-    distributedDerivation=`disnix-instantiate -A $architectureFile --target-property $targetProperty --interface $interface --no-out-link $showTraceArg`
-elif [ "$servicesFile" != "" ] || [ "$distributionFile" != "" ]
-    distributedDerivation=`disnix-instantiate -s $servicesFile -i $infrastructureFile -d $distributionFile --target-property $targetProperty --interface $interface --no-out-link $showTraceArg`
-elif [ "$packagesFile" != "" ]
-    distributedDerivation=`disnix-instantiate -P $packagesFile -i $infrastructureFile --target-property $targetProperty --interface $interface --no-out-link $showTraceArg`
-else
-    echo "An unknown combination of input models were provided!" >&2
-    exit 1
-fi
+generateModelArgs
+distributedDerivation=`disnix-instantiate $modelArgs --target-property $targetProperty --interface $interface --no-out-link $showTraceArg`
 
 echo "[coordinator]: Remotely building services..."
 disnix-build $maxConcurrentTransfersArg $distributedDerivation

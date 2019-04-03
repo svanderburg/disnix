@@ -103,6 +103,135 @@ checkDistributionFile()
     fi
 }
 
+# Checks whether a packages expression is given. Exits with status 1 if not set.
+
+checkPackagesFile()
+{
+    if [ "$packagesFile" = "" ]
+    then
+        echo "ERROR: A packages expression must be specified!" >&2
+        exit 1
+    fi
+}
+
+# Check all the possible input model combinations. Exists with status 1 if an
+# invalid combination is given or when a mandatory model is not specified.
+# It sets the deploymentModel environment variable to indicate what kind of
+# front-end model needs to be converted.
+
+checkModels()
+{
+    if [ "$architectureFile" = "" ]
+    then
+        checkInfrastructureFile
+
+        if [ "$servicesFile" != "" ] || [ "$distributionFile" != "" ]
+        then
+            checkServicesFile
+            checkDistributionFile
+            deploymentModel="models"
+        elif [ "$packagesFile" != "" ]
+        then
+            checkPackagesFile
+            deploymentModel="packages"
+        else
+            echo "An unknown combination of models were provided!" >&2
+            exit 1
+        fi
+    else
+        deploymentModel="architecture"
+    fi
+}
+
+# Check all the possible deploy input model combinations. Exists with status 1 if
+# an invalid combination is given or when a mandatory model is not specified.
+# It sets the deploymentModel environment variable to indicate what kind of
+# front-end model needs to be converted.
+
+checkDeployModels()
+{
+    if [ "$deploymentFile" = "" ]
+    then
+        checkModels
+    else
+        deploymentModel="deployment"
+    fi
+}
+
+# Check all the possible build input model combinations. Exists with status 1 if
+# an invalid combination is given or when a mandatory model is not specified.
+# It sets the deploymentModel environment variable to indicate what kind of
+# front-end model needs to be converted.
+
+checkBuildModels()
+{
+    if [ "$buildFile" = "" ]
+    then
+        checkModels
+    else
+        deploymentModel="build"
+    fi
+}
+
+# Generates the proper combination input model parameters that various Disnix
+# utilities take as inputs. You need to verify the kind of the deployment model
+# first by invoking checkModels()
+
+generateModelArgs()
+{
+    case "$deploymentModel" in
+        models)
+            modelArgs="-s $servicesFile -i $infrastructureFile -d $distributionFile"
+            if [ "$packagesFile" != "" ]
+            then
+                modelArgs="$modelArgs -P $packagesFile"
+            fi
+            ;;
+        packages)
+            modelArgs="-P $packagesFile -i $infrastructureFile"
+            ;;
+        architecture)
+            modelArgs="-A $architectureFile"
+            ;;
+        build)
+            modelArgs="-B $buildFile"
+            ;;
+        deployment)
+            modelArgs="-D $deploymentFile"
+            ;;
+    esac
+}
+
+# Generates the proper combination of input model parameters that various
+# expressions passed to nix-build take as inputs. You need to verify the kind of
+# the deployment model first by invoking checkModels()
+
+generateNixBuildArgs()
+{
+    case "$deploymentModel" in
+        models)
+            conversionArgs="--argstr servicesFile $(readlink -f $servicesFile) --argstr infrastructureFile $(readlink -f $infrastructureFile) --argstr distributionFile $(readlink -f $distributionFile)"
+
+            if [ "$packagesFile" != "" ]
+            then
+                conversionArgs="$conversionArgs --argstr packagesFile $(readlink -f $packagesFile)"
+            fi
+            ;;
+        packages)
+            conversionArgs="--argstr packagesFile $(readlink -f $packagesFile) --argstr infrastructureFile $(readlink -f $infrastructureFile)"
+            ;;
+        architecture)
+            conversionArgs="--argstr architectureFile $(readlink -f $architectureFile)"
+            ;;
+        build)
+            conversionArgs="--argstr buildFile $(readlink -f $buildFile)"
+            ;;
+        deployment)
+            conversionArgs="--argstr deploymentFile $(readlink -f $deploymentFile)"
+            ;;
+    esac
+}
+
 # Checks whether the --show-trace option is specified and sets the
 # showTraceArg variable.
 
@@ -145,6 +274,6 @@ checkTmpDir()
     then
         export TMPDIR=/tmp
     fi
-    
+
     mkdir -p "$TMPDIR"
 }

@@ -114,7 +114,7 @@ void print_nix_expression_from_derivations_in_profile_manifest_array(const GPtrA
 void print_nix_expression_for_profile_manifest_target_array(const GPtrArray *profile_manifest_target_array)
 {
     g_print("{\n");
-    g_print("  profiles = ");
+    g_print("  distribution = ");
     print_nix_expression_from_derivations_in_profile_manifest_array(profile_manifest_target_array);
     g_print(";\n");
     g_print("  servicesPerTarget = ");

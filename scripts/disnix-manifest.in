@@ -27,6 +27,7 @@ showUsage()
 Usage: $0 -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
   or: $0 -P packages_nix -i infrastructure_nix [OPTION]
   or: $0 -A architecture_nix [OPTION]
+  or: $0 -D deployment_nix [OPTION]
 
 The command \`disnix-manifest' generates a manifest file from a service,
 infrastructure and distribution Nix expression, which can be used for the
@@ -61,6 +62,10 @@ Options:
                               captures all properties of the services and
                               infrastructure including the distribution of
                               services to targets
+  -D, --deployment=deployment_nix
+                              Deployment Nix expression that describes all the
+                              mappings that have a one-on-one relationship with
+                              the deployment activities that are carried out
       --target-property=PROP  The target property of an infrastructure model,
                               that specifies how to connect to the remote Disnix
                               interface. (Defaults to hostname)
@@ -97,7 +102,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:hv -l services:,infrastructure:,distribution:,packages:,architecture:,target-property:,interface:,deploy-state,no-out-link,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:D:hv -l services:,infrastructure:,distribution:,packages:,architecture:,deployment:,target-property:,interface:,deploy-state,no-out-link,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -126,6 +131,9 @@ do
             ;;
         -A|--architecture)
             architectureFile=`readlink -f $2`
+            ;;
+        -D|--deployment)
+            deploymentFile=`readlink -f $2`
             ;;
         --target-property)
             targetProperty=$2
@@ -165,6 +173,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Validate the given options
 
+checkDeployModels
 checkTargetProperty
 checkClientInterface
 checkNoOutLink
@@ -177,52 +186,27 @@ fi
 
 # Build the manifest file
 
-if [ "$architectureFile" != "" ]
-then
-    nix-build --argstr architectureFile "$(readlink -f $architectureFile)" \
-        --argstr targetProperty $targetProperty \
-        --argstr clientInterface $interface \
-        $deployStateArg \
-        $noOutLinkArg \
-        $showTraceArg \
-        -A generateManifestFromArchitectureModel \
-        "$(readlink -f @datadir@/@PACKAGE@/manifest.nix)"
-elif [ "$servicesFile" != "" ] || [ "$distributionFile" != "" ]
-then
-    checkServicesFile
-    checkInfrastructureFile
-    checkDistributionFile
+generateNixBuildArgs
 
-    if [ "$packagesFile" != "" ]
-    then
-        packagesFileArg="--argstr packagesFile $(readlink -f $packagesFile)"
-    fi
+case "$deploymentModel" in
+    models)
+        conversionArgs="$conversionArgs -A generateManifestFromModels"
+        ;;
+    packages)
+        conversionArgs="$conversionArgs -A generateManifestFromModels"
+        ;;
+    architecture)
+        conversionArgs="$conversionArgs -A generateManifestFromArchitectureModel"
+        ;;
+    deployment)
+        conversionArgs="$conversionArgs -A generateManifestFromDeploymentModel"
+        ;;
+esac
 
-    nix-build --argstr servicesFile "$(readlink -f $servicesFile)" \
-        --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
-        --argstr distributionFile "$(readlink -f $distributionFile)" \
-        $packagesFileArg \
-        --argstr targetProperty $targetProperty \
-        --argstr clientInterface $interface \
-        $deployStateArg \
-        $noOutLinkArg \
-        $showTraceArg \
-        -A generateManifestFromModels \
-        "$(readlink -f @datadir@/@PACKAGE@/manifest.nix)"
-elif [ "$packagesFile" != "" ]
-then
-    checkInfrastructureFile
-
-    nix-build --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
-        --argstr packagesFile "$(readlink -f $packagesFile)" \
-        --argstr targetProperty $targetProperty \
-        --argstr clientInterface $interface \
-        $deployStateArg \
-        $noOutLinkArg \
-        $showTraceArg \
-        -A generateManifestFromModels \
-        "$(readlink -f @datadir@/@PACKAGE@/manifest.nix)"
-else
-    echo "An unknown combination of input models were provided!" >&2
-    exit 1
-fi
+nix-build --argstr targetProperty $targetProperty \
+    --argstr clientInterface $interface \
+    $deployStateArg \
+    $noOutLinkArg \
+    $showTraceArg \
+    $conversionArgs \
+    "$(readlink -f @datadir@/@PACKAGE@/manifest.nix)"

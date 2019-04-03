@@ -56,6 +56,9 @@ Options:
                               captures all properties of the services and
                               infrastructure including the distribution of
                               services to targets
+  -B, --build=build_nix
+                              Build Nix expression that maps store derivations
+                              to target machines in the network
       --target-property=PROP  The target property of an infrastructure model,
                               that specifies how to connect to the remote Disnix
                               interface. (Defaults to: hostname)
@@ -88,7 +91,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:hv -l services:,infrastructure:,distribution:,packages:,architecture:,target-property:,interface:,no-out-link,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:B:hv -l services:,infrastructure:,distribution:,packages:,architecture:,build:,target-property:,interface:,no-out-link,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -117,6 +120,9 @@ do
             ;;
         -A|--architecture)
             architectureFile=`readlink -f $2`
+            ;;
+        -B|--build)
+            buildFile=`readlink -f $2`
             ;;
         --target-property)
             targetProperty=$2
@@ -153,6 +159,7 @@ source @datadir@/@PACKAGE@/checks
 
 # Validate the given options
 
+checkBuildModels
 checkTargetProperty
 checkClientInterface
 checkNoOutLink
@@ -160,50 +167,26 @@ checkShowTrace
 
 # Build the distributed derivation file
 
-if [ "$architectureFile" != "" ]
-then
-    nix-build --argstr architectureFile "$(readlink -f architectureFile)" \
-        --argstr targetProperty $targetProperty \
-        --argstr clientInterface $interface \
-        $noOutLinkArg \
-        $showTraceArg \
-        -A generateDistributedDerivationFromArchitectureModel \
-        "$(readlink -f @datadir@/@PACKAGE@/instantiate.nix)"
-elif [ "$servicesFile" != "" ] || [ "$distributionFile" != "" ]
-then
-    checkServicesFile
-    checkInfrastructureFile
-    checkDistributionFile
+generateNixBuildArgs
 
-    if [ "$packagesFile" != "" ]
-    then
-        packagesFileArg="--argstr packagesFile $(readlink -f $packagesFile)"
-    fi
+case "$deploymentModel" in
+    models)
+        conversionArgs="$conversionArgs -A generateDistributedDerivationFromModels"
+        ;;
+    packages)
+        conversionArgs="$conversionArgs -A generateDistributedDerivationFromModels"
+        ;;
+    architecture)
+        conversionArgs="$conversionArgs -A generateDistributedDerivationFromArchitectureModel"
+        ;;
+    build)
+        conversionArgs="$conversionArgs -A generateDistributedDerivationFromBuildModel"
+        ;;
+esac
 
-    nix-build --argstr servicesFile "$(readlink -f $servicesFile)" \
-        --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
-        --argstr distributionFile "$(readlink -f $distributionFile)" \
-        $packagesFileArg \
-        --argstr targetProperty $targetProperty \
-        --argstr clientInterface $interface \
-        $noOutLinkArg \
-        $showTraceArg \
-        -A generateDistributedDerivationFromModels \
-        "$(readlink -f @datadir@/@PACKAGE@/instantiate.nix)"
-elif [ "$packagesFile" != "" ]
-then
-    checkInfrastructureFile
-
-    nix-build --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
-        --argstr packagesFile "$(readlink -f $packagesFile)" \
-        --argstr targetProperty $targetProperty \
-        --argstr clientInterface $interface \
-        $deployStateArg \
-        $noOutLinkArg \
-        $showTraceArg \
-        -A generateDistributedDerivationFromModels \
-        "$(readlink -f @datadir@/@PACKAGE@/instantiate.nix)"
-else
-    echo "An unknown combination of input models were provided!" >&2
-    exit 1
-fi
+nix-build --argstr targetProperty $targetProperty \
+    --argstr clientInterface $interface \
+    $noOutLinkArg \
+    $showTraceArg \
+    $conversionArgs \
+    "$(readlink -f @datadir@/@PACKAGE@/instantiate.nix)"

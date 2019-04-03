@@ -1,4 +1,30 @@
 let
+  generateDistributedDerivationFromBuildModel =
+    { distributedDerivation, pkgs }:
+
+    let
+      generateDistributedDerivationXSL = ./generatedistributedderivation.xsl;
+    in
+    pkgs.stdenv.mkDerivation {
+      name = "distributedDerivation.xml";
+      buildInputs = [ pkgs.libxslt ];
+      distributedDerivationXML = builtins.toXML distributedDerivation;
+      passAsFile = [ "distributedDerivationXML" ];
+
+      buildCommand = ''
+        if [ "$distributedDerivationXMLPath" != "" ]
+        then
+            xsltproc ${generateDistributedDerivationXSL} $distributedDerivationXMLPath > $out
+        else
+        (
+        cat <<EOF
+        $distributedDerivationXML
+        EOF
+        ) | xsltproc ${generateDistributedDerivationXSL} - > $out
+        fi
+      '';
+    };
+
   generateDistributedDerivationFromArchitectureFun =
     { architectureFun
     , nixpkgs
@@ -26,27 +52,9 @@ let
       distributedDerivation = generateDistributedDerivation {
         inherit architecture;
       };
-
-      generateDistributedDerivationXSL = ./generatedistributedderivation.xsl;
     in
-    pkgs.stdenv.mkDerivation {
-      name = "distributedDerivation.xml";
-      buildInputs = [ pkgs.libxslt ];
-      distributedDerivationXML = builtins.toXML distributedDerivation;
-      passAsFile = [ "distributedDerivationXML" ];
-
-      buildCommand = ''
-        if [ "$distributedDerivationXMLPath" != "" ]
-        then
-            xsltproc ${generateDistributedDerivationXSL} $distributedDerivationXMLPath > $out
-        else
-        (
-        cat <<EOF
-        $distributedDerivationXML
-        EOF
-        ) | xsltproc ${generateDistributedDerivationXSL} - > $out
-        fi
-      '';
+    generateDistributedDerivationFromBuildModel {
+      inherit distributedDerivation pkgs;
     };
 in
 {
@@ -95,5 +103,15 @@ in
     generateDistributedDerivationFromArchitectureFun {
       inherit architectureFun;
       inherit nixpkgs pkgs targetProperty clientInterface;
+    };
+
+  generateDistributedDerivationFromBuildModel =
+    { buildFile
+    , nixpkgs ? <nixpkgs>
+    }:
+
+    generateDistributedDerivationFromBuildModel {
+      distributedDerivation = import buildFile;
+      pkgs = import nixpkgs {};
     };
 }

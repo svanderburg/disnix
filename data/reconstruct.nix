@@ -139,7 +139,7 @@ let
    * A manifest representation that can be transformed into XML
    */
   reconstructManifest = {infrastructure, capturedProperties, defaultTargetProperty, defaultClientInterface}:
-    { inherit (capturedProperties) profiles;
+    { inherit (capturedProperties) distribution;
       activation = sort compareActivationMappings (reconstructActivationMappings capturedProperties.servicesPerTarget);
       snapshots = sort compareSnapshotMappings (reconstructSnapshotMappings capturedProperties.servicesPerTarget);
       targets = map (targetName:
