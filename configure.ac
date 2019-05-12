@@ -89,6 +89,8 @@ src/diagnose/Makefile
 src/query/Makefile
 src/dbus-service/Makefile
 src/libprocreact/Makefile
+src/libnixxml/Makefile
+src/libnixxml-glib/Makefile
 src/libmodel/Makefile
 src/libdistderivation/Makefile
 src/libmain/Makefile

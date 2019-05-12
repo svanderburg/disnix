@@ -19,7 +19,8 @@
 
 #include "interfaces.h"
 #include <stdlib.h>
-#include <xmlutil.h>
+#include <nixxml-ghashtable.h>
+#include <nixxml-gptrarray.h>
 
 static gint compare_interface(const Interface **l, const Interface **r)
 {
@@ -35,21 +36,31 @@ static int compare_interface_keys(const char *key, const Interface **r)
     return g_strcmp0(key, right->target);
 }
 
-static gpointer parse_interface(xmlNodePtr element)
+static void *create_interface(xmlNodePtr element, void *userdata)
 {
-    GHashTable *table = parse_dictionary(element, parse_value);
+    return g_malloc0(sizeof(Interface));
+}
 
-    Interface *interface = (Interface*)g_malloc(sizeof(Interface));
-    interface->target = g_hash_table_lookup(table, "target");
-    interface->clientInterface = g_hash_table_lookup(table, "clientInterface");
+static void insert_interface_attributes(void *table, const xmlChar *key, void *value, void *userdata)
+{
+    Interface *interface = (Interface*)table;
 
-    g_hash_table_destroy(table);
-    return interface;
+    if(xmlStrcmp(key, (xmlChar*) "target") == 0)
+        interface->target = value;
+    else if(xmlStrcmp(key, (xmlChar*) "clientInterface") == 0)
+        interface->clientInterface = value;
+    else
+        xmlFree(value);
+}
+
+static gpointer parse_interface(xmlNodePtr element, void *userdata)
+{
+    return NixXML_parse_simple_attrset(element, userdata, create_interface, NixXML_parse_value, insert_interface_attributes);
 }
 
 GPtrArray *parse_interfaces(xmlNodePtr element)
 {
-    GPtrArray *interface_array = parse_list(element, "interface", parse_interface);
+    GPtrArray *interface_array = NixXML_parse_g_ptr_array(element, "interface", NULL, parse_interface);
     g_ptr_array_sort(interface_array, (GCompareFunc)compare_interface);
     return interface_array;
 }

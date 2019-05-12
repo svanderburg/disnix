@@ -24,9 +24,9 @@
 
 static pid_t transfer_distribution_item_to(void *data, DistributionItem *item, Target *target)
 {
-    char *paths[] = { item->profile, NULL };
+    char *paths[] = { (char*)item->profile, NULL };
     g_print("[target: %s]: Receiving intra-dependency closure of profile: %s\n", item->target, item->profile);
-    return exec_copy_closure_to(target->client_interface, item->target, paths);
+    return exec_copy_closure_to((char*)target->client_interface, (char*)item->target, paths);
 }
 
 static void complete_transfer_distribution_item_to(void *data, DistributionItem *item, ProcReact_Status status, int result)

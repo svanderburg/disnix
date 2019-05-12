@@ -19,8 +19,8 @@
 
 #ifndef __DISNIX_TARGETS_H
 #define __DISNIX_TARGETS_H
+#include <libxml/parser.h>
 #include <glib.h>
-#include <xmlutil.h>
 
 /**
  * @brief Contains properties of a target machine.
@@ -34,16 +34,16 @@ typedef struct
     GHashTable *containers_table;
 
     /* Contains the attribute name of the target machine */
-    gchar *name;
+    xmlChar *name;
 
     /* Contains the system architecture identifier of the system */
-    gchar *system;
+    xmlChar *system;
 
     /* Refers to the executable that must be executed to connect to the target system */
-    gchar *client_interface;
+    xmlChar *client_interface;
 
     /* Refer to the name of the property in properties that must be used to connect to the target system */
-    gchar *target_property;
+    xmlChar *target_property;
 
     /* Contains the amount CPU cores this machine has */
     int num_of_cores;

@@ -1,0 +1,7 @@
+Run the following commands to integrate libnixxml-glib from the upstream
+repository:
+
+cp -av ~/libnixxml/src/libnixxml-glib/* .
+sed -i \
+  -e "s|lib_LTLIBRARIES|pkglib_LTLIBRARIES|" \
+  -e "s|include_HEADERS|pkginclude_HEADERS|" Makefile.am

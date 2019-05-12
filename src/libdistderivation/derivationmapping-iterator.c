@@ -32,7 +32,7 @@ static pid_t next_derivation_process(void *data)
 
     /* Retrieve derivation item, interface pair */
     DerivationItem *item = g_ptr_array_index(derivation_iterator_data->derivation_array, derivation_iterator_data->model_iterator_data.index);
-    Interface *interface = find_interface(derivation_iterator_data->interface_array, item->target);
+    Interface *interface = find_interface(derivation_iterator_data->interface_array, (gchar*)item->target);
 
     /* Invoke the next derivation item operation process */
     pid_t pid = derivation_iterator_data->map_derivation_item_function.pid(derivation_iterator_data->data, item, interface);
@@ -83,7 +83,7 @@ static ProcReact_Future next_derivation_future(void *data)
 
     /* Retrieve derivation item, interface pair */
     DerivationItem *item = g_ptr_array_index(derivation_iterator_data->derivation_array, derivation_iterator_data->model_iterator_data.index);
-    Interface *interface = find_interface(derivation_iterator_data->interface_array, item->target);
+    Interface *interface = find_interface(derivation_iterator_data->interface_array, (gchar*)item->target);
 
     /* Invoke the next derivation item operation process */
     ProcReact_Future future = derivation_iterator_data->map_derivation_item_function.future(derivation_iterator_data->data, item, interface);

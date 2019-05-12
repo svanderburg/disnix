@@ -25,7 +25,7 @@
 static pid_t delete_state_on_target(SnapshotMapping *mapping, Target *target, gchar **arguments, unsigned int arguments_length)
 {
     g_print("[target: %s]: Deleting obsolete state of service: %s\n", mapping->target, mapping->component);
-    return exec_delete_state(target->client_interface, mapping->target, mapping->container, mapping->type, arguments, arguments_length, mapping->service);
+    return exec_delete_state((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)mapping->type, arguments, arguments_length, (char*)mapping->service);
 }
 
 static void complete_delete_state_on_target(SnapshotMapping *mapping, ProcReact_Status status, int result)

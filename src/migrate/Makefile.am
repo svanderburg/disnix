@@ -10,7 +10,7 @@ noinst_DATA = disnix-migrate.1.xml
 man1_MANS = disnix-migrate.1
 
 disnix_migrate_SOURCES = run-migrate.c main.c
-disnix_migrate_CFLAGS = $(LIBXML2_CFLAGS) $(GLIB2_CFLAGS) -I../libprocreact -I../libinfrastructure -I../libmanifest -I../libmodel  -I../libmain -I../libmigrate
+disnix_migrate_CFLAGS = $(LIBXML2_CFLAGS) $(GLIB2_CFLAGS) -I../libprocreact -I../libnixxml -I../libinfrastructure -I../libmanifest -I../libmodel  -I../libmain -I../libmigrate
 disnix_migrate_LDADD = ../libmain/libmain.la ../libmigrate/libmigrate.la
 
 EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

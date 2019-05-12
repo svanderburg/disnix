@@ -43,7 +43,7 @@ static void complete_capture_infra_on_target(void *data, Target *target, gchar *
     else
     {
         CapturedConfig *config = (CapturedConfig*)g_malloc(sizeof(CapturedConfig));
-        config->target_name = target->name;
+        config->target_name = (gchar*)target->name;
         config->config = future->result;
 
         g_ptr_array_add(configs_array, config);

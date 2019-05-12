@@ -26,14 +26,14 @@
 
 static int spawn_shell(const GPtrArray *target_array, const ActivationMapping *mapping, char *command)
 {
-    Target *target = find_target(target_array, mapping->target);
-    gchar **arguments = generate_activation_arguments(target, mapping->container);
+    Target *target = find_target(target_array, (gchar*)mapping->target);
+    gchar **arguments = generate_activation_arguments(target, (gchar*)mapping->container);
     ProcReact_Status status;
     int exit_status;
 
     g_printerr("[%s]: Connecting to service: %s deployed to container: %s\n", mapping->target, mapping->service, mapping->container);
 
-    exit_status = procreact_wait_for_exit_status(exec_dysnomia_shell(target->client_interface, mapping->target, mapping->container, mapping->type, arguments, g_strv_length(arguments), mapping->service, command), &status);
+    exit_status = procreact_wait_for_exit_status(exec_dysnomia_shell((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)mapping->type, arguments, g_strv_length(arguments), (char*)mapping->service, command), &status);
 
     g_strfreev(arguments);
 
@@ -75,9 +75,9 @@ int diagnose(const char *service_name, const int show_mappings, const char *mani
             {
                 ActivationMapping *mapping = (ActivationMapping*)g_ptr_array_index(manifest->activation_array, i);
 
-                if(g_strcmp0(service_name, mapping->name) == 0 &&
-                  (container_filter == NULL || g_strcmp0(container_filter, mapping->container) == 0) &&
-                  (target_filter == NULL || g_strcmp0(target_filter, mapping->target) == 0))
+                if(xmlStrcmp((const xmlChar*) service_name, mapping->name) == 0 &&
+                  (container_filter == NULL || xmlStrcmp((const xmlChar*) container_filter, mapping->container) == 0) &&
+                  (target_filter == NULL || xmlStrcmp((const xmlChar*) target_filter, mapping->target) == 0))
                      g_ptr_array_add(candidate_mappings_array, mapping);
             }
 

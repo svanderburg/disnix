@@ -32,7 +32,7 @@ static pid_t next_distribution_process(void *data)
 
     /* Retrieve distributionitem, target pair */
     DistributionItem *item = g_ptr_array_index(distribution_iterator_data->distribution_array, distribution_iterator_data->model_iterator_data.index);
-    Target *target = find_target(distribution_iterator_data->target_array, item->target);
+    Target *target = find_target(distribution_iterator_data->target_array, (gchar*)item->target);
 
     /* Invoke the next distribution item operation process */
     pid_t pid = distribution_iterator_data->map_distribution_item(distribution_iterator_data->data, item, target);

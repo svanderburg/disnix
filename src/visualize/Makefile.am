@@ -10,7 +10,7 @@ noinst_DATA = disnix-visualize.1.xml
 man1_MANS = disnix-visualize.1
 
 disnix_visualize_SOURCES = main.c clustertable.c edgestable.c graph.c
-disnix_visualize_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) -I../libprocreact -I../libinfrastructure -I../libmanifest -I../libmain -I../libmodel
+disnix_visualize_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) -I../libprocreact -I../libnixxml -I../libinfrastructure -I../libmanifest -I../libmain -I../libmodel
 disnix_visualize_LDADD = $(GLIB2_LIBS) ../libmanifest/libmanifest.la ../libmain/libmain.la
 
 EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

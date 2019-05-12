@@ -31,9 +31,9 @@
 typedef struct
 {
     /** Nix store derivation path */
-    gchar *derivation;
+    xmlChar *derivation;
     /** Address of a disnix service */
-    gchar *target;
+    xmlChar *target;
     /** Nix store paths of the build result, or NULL if it has not yet been realised */
     gchar **result;
 }

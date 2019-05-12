@@ -39,7 +39,7 @@ static void print_activation_step(const gchar *activity, const ActivationMapping
 static pid_t activate_mapping(ActivationMapping *mapping, Target *target, gchar **arguments, const unsigned int arguments_length)
 {
     print_activation_step("Activating", mapping, arguments, arguments_length); /* Print debug message */
-    return exec_activate(target->client_interface, mapping->target, mapping->container, mapping->type, arguments, arguments_length, mapping->service);
+    return exec_activate((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)mapping->type, arguments, arguments_length, (char*)mapping->service);
 }
 
 static pid_t dry_run_activate_mapping(ActivationMapping *mapping, Target *target, gchar **arguments, const unsigned int arguments_length)
@@ -51,7 +51,7 @@ static pid_t dry_run_activate_mapping(ActivationMapping *mapping, Target *target
 static pid_t deactivate_mapping(ActivationMapping *mapping, Target *target, gchar **arguments, const unsigned int arguments_length)
 {
     print_activation_step("Deactivating", mapping, arguments, arguments_length); /* Print debug message */
-    return exec_deactivate(target->client_interface, mapping->target, mapping->container, mapping->type, arguments, arguments_length, mapping->service);
+    return exec_deactivate((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)mapping->type, arguments, arguments_length, (char*)mapping->service);
 }
 
 static pid_t dry_run_deactivate_mapping(ActivationMapping *mapping, Target *target, gchar **arguments, const unsigned int arguments_length)

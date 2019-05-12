@@ -11,6 +11,6 @@ man1_MANS = disnix-query.1
 
 disnix_query_SOURCES = query-installed.c main.c
 disnix_query_LDADD = ../libprocreact/libprocreact.la ../libinfrastructure/libinfrastructure.la ../libmain/libmain.la ../libinterface/libinterface.la ../libprofilemanifest/libprofilemanifest.la
-disnix_query_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) -I../libprocreact -I../libinfrastructure -I../libmain -I../libinterface -I../libmodel -I../libprofilemanifest
+disnix_query_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) -I../libprocreact -I../libnixxml -I../libinfrastructure -I../libmain -I../libinterface -I../libmodel -I../libprofilemanifest
 
 EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

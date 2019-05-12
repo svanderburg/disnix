@@ -18,28 +18,34 @@
  */
 
 #include "derivationmapping.h"
-#include <xmlutil.h>
+#include <nixxml-ghashtable.h>
+#include <nixxml-gptrarray.h>
 
-static DerivationItem *create_derivation_item_from_dict(GHashTable *table)
+static void *create_derivation_item(xmlNodePtr element, void *userdata)
 {
-    DerivationItem *item = (DerivationItem*)g_malloc(sizeof(DerivationItem));
-    item->derivation = g_hash_table_lookup(table, "derivation");
-    item->target = g_hash_table_lookup(table, "target");
-    item->result = NULL;
-    return item;
+    return g_malloc0(sizeof(DerivationItem));
 }
 
-static gpointer parse_derivation_item(xmlNodePtr element)
+static void insert_derivation_item_attributes(void *table, const xmlChar *key, void *value, void *userdata)
 {
-    GHashTable *table = parse_dictionary(element, parse_value);
-    DerivationItem *item = create_derivation_item_from_dict(table);
-    g_hash_table_destroy(table);
-    return item;
+    DerivationItem *item = (DerivationItem*)table;
+
+    if(xmlStrcmp(key, (xmlChar*) "derivation") == 0)
+        item->derivation = value;
+    else if(xmlStrcmp(key, (xmlChar*) "target") == 0)
+        item->target = value;
+    else
+        xmlFree(value);
+}
+
+static gpointer parse_derivation_item(xmlNodePtr element, void *userdata)
+{
+    return NixXML_parse_simple_attrset(element, userdata, create_derivation_item, NixXML_parse_value, insert_derivation_item_attributes);
 }
 
 GPtrArray *parse_build(xmlNodePtr element)
 {
-    return parse_list(element, "mapping", parse_derivation_item);
+    return NixXML_parse_g_ptr_array(element, "mapping", NULL, parse_derivation_item);
 }
 
 void delete_derivation_array(GPtrArray *derivation_array)
@@ -51,8 +57,8 @@ void delete_derivation_array(GPtrArray *derivation_array)
         for(i = 0; i < derivation_array->len; i++)
         {
             DerivationItem *item = g_ptr_array_index(derivation_array, i);
-            free(item->derivation);
-            g_free(item->target);
+            xmlFree(item->derivation);
+            xmlFree(item->target);
             g_strfreev(item->result);
             g_free(item);
         }

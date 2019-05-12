@@ -35,7 +35,7 @@ SendSnapshotsData;
 static pid_t send_snapshot_mapping(SnapshotMapping *mapping, Target *target, const unsigned int flags)
 {
     g_print("[target: %s]: Sending snapshots of component: %s deployed to container: %s\n", mapping->target, mapping->component, mapping->container);
-    return exec_copy_snapshots_to(target->client_interface, mapping->target, mapping->container, mapping->component, (flags & FLAG_ALL));
+    return exec_copy_snapshots_to((gchar*)target->client_interface, (gchar*)mapping->target, (gchar*)mapping->container, (gchar*)mapping->component, (flags & FLAG_ALL));
 }
 
 pid_t send_snapshots_to_target(void *data, Target *target, gchar *client_interface, gchar *target_key)
@@ -101,7 +101,7 @@ static int send_snapshots(GPtrArray *snapshots_array, GPtrArray *target_array, c
 static pid_t restore_snapshot_on_target(SnapshotMapping *mapping, Target *target, gchar **arguments, unsigned int arguments_length)
 {
     g_print("[target: %s]: Restoring state of service: %s\n", mapping->target, mapping->component);
-    return exec_restore(target->client_interface, mapping->target, mapping->container, mapping->type, arguments, arguments_length, mapping->service);
+    return exec_restore((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)mapping->type, arguments, arguments_length, (char*)mapping->service);
 }
 
 static void complete_restore_snapshot_on_target(SnapshotMapping *mapping, ProcReact_Status status, int result)
@@ -121,7 +121,7 @@ static int restore_services(GPtrArray *snapshots_array, GPtrArray *target_array)
 static pid_t clean_snapshot_mapping(SnapshotMapping *mapping, Target *target, int keep)
 {
     g_print("[target: %s]: Cleaning snapshots of component: %s deployed to container: %s\n", mapping->target, mapping->component, mapping->container);
-    return exec_clean_snapshots(target->client_interface, mapping->target, keep, mapping->container, mapping->component);
+    return exec_clean_snapshots((char*)target->client_interface, (char*)mapping->target, keep, (char*)mapping->container, (char*)mapping->component);
 }
 
 typedef struct
@@ -151,7 +151,7 @@ static pid_t send_restore_and_clean_snapshot_on_target(void *data, Target *targe
         for(i = 0; i < snapshots_per_target_array->len; i++)
         {
             SnapshotMapping *mapping = g_ptr_array_index(snapshots_per_target_array, i);
-            gchar **arguments = generate_activation_arguments(target, mapping->container); /* Generate an array of key=value pairs from container properties */
+            gchar **arguments = generate_activation_arguments(target, (gchar*)mapping->container); /* Generate an array of key=value pairs from container properties */
             unsigned int arguments_length = g_strv_length(arguments); /* Determine length of the activation arguments array */
             
             if(!procreact_wait_for_boolean(send_snapshot_mapping(mapping, target, send_snapshots_data->flags), &status) || (status != PROCREACT_STATUS_OK)

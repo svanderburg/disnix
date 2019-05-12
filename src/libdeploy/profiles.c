@@ -27,7 +27,7 @@ static pid_t set_distribution_item(void *data, DistributionItem *item, Target *t
 {
     char *profile = (char*)data;
     g_print("[target: %s]: Setting Disnix profile: %s\n", item->target, item->profile);
-    return exec_set(target->client_interface, item->target, profile, item->profile);
+    return exec_set((char*)target->client_interface, (char*)item->target, profile, (char*)item->profile);
 }
 
 static void complete_set_distribution_item(void *data, DistributionItem *item, ProcReact_Status status, int result)

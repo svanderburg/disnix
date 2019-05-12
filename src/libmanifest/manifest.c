@@ -26,7 +26,6 @@
 #include "activationmapping.h"
 #include "snapshotmapping.h"
 #include "targets.h"
-
 #include <libxml/parser.h>
 
 static Manifest *parse_manifest(xmlNodePtr element, const unsigned int flags, const gchar *container_filter, const gchar *component_filter)

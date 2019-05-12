@@ -29,9 +29,9 @@
 typedef struct
 {
     /** Nix store path to the profile */
-    gchar *profile;
+    xmlChar *profile;
     /** Address of a disnix service */
-    gchar *target;
+    xmlChar *target;
 }
 DistributionItem;
 

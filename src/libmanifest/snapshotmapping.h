@@ -30,13 +30,13 @@
 typedef struct
 {
     /** Name of the mutable component */
-    gchar *component;
+    xmlChar *component;
 
     /** Container in which the mutable component is deployed */
-    gchar *container;
+    xmlChar *container;
 
     /** Target property referring to the target machine to which the service is deployed */
-    gchar *target;
+    xmlChar *target;
 }
 SnapshotMappingKey;
 
@@ -47,19 +47,19 @@ SnapshotMappingKey;
 typedef struct
 {
     /** Name of the mutable component */
-    gchar *component;
+    xmlChar *component;
 
     /** Container in which the mutable component is deployed */
-    gchar *container;
+    xmlChar *container;
 
     /** Target property referring to the target machine to which the service is deployed */
-    gchar *target;
+    xmlChar *target;
 
     /** Full Nix store path to the corresponding service */
-    gchar *service;
+    xmlChar *service;
 
     /** Activation type */
-    gchar *type;
+    xmlChar *type;
 
     /** Indicates whether the snapshot has been transferred or not */
     gboolean transferred;

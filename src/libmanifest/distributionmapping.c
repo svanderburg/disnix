@@ -18,27 +18,34 @@
  */
 
 #include "distributionmapping.h"
-#include <xmlutil.h>
+#include <nixxml-ghashtable.h>
+#include <nixxml-gptrarray.h>
 
-static DistributionItem *create_distribution_item_from_dict(GHashTable *table)
+static void *create_distribution_item(xmlNodePtr element, void *userdata)
 {
-    DistributionItem *item = (DistributionItem*)g_malloc(sizeof(DistributionItem));
-    item->profile = g_hash_table_lookup(table, "profile");
-    item->target = g_hash_table_lookup(table, "target");
-    return item;
+    return g_malloc0(sizeof(DistributionItem));
 }
 
-static gpointer parse_distribution_item(xmlNodePtr element)
+static void insert_distribution_item_attributes(void *table, const xmlChar *key, void *value, void *userdata)
 {
-    GHashTable *table = parse_dictionary(element, parse_value);
-    DistributionItem *item = create_distribution_item_from_dict(table);
-    g_hash_table_destroy(table);
-    return item;
+    DistributionItem *item = (DistributionItem*)table;
+
+    if(xmlStrcmp(key, (xmlChar*) "profile") == 0)
+        item->profile = value;
+    else if(xmlStrcmp(key, (xmlChar*) "target") == 0)
+        item->target = value;
+    else
+        xmlFree(value);
+}
+
+static gpointer parse_distribution_item(xmlNodePtr element, void *userdata)
+{
+    return NixXML_parse_simple_attrset(element, userdata, create_distribution_item, NixXML_parse_value, insert_distribution_item_attributes);
 }
 
 GPtrArray *parse_distribution(xmlNodePtr element)
 {
-    return parse_list(element, "mapping", parse_distribution_item);
+    return NixXML_parse_g_ptr_array(element, "mapping", NULL, parse_distribution_item);
 }
 
 void delete_distribution_array(GPtrArray *distribution_array)
@@ -51,8 +58,8 @@ void delete_distribution_array(GPtrArray *distribution_array)
         {
             DistributionItem* item = g_ptr_array_index(distribution_array, i);
 
-            g_free(item->profile);
-            g_free(item->target);
+            xmlFree(item->profile);
+            xmlFree(item->target);
             g_free(item);
         }
 

@@ -33,7 +33,7 @@ static pid_t next_target_process(void *data)
 
     /* Retrieve distributionitem, target pair */
     Target *target = g_ptr_array_index(target_iterator_data->target_array, target_iterator_data->model_iterator_data.index);
-    gchar *client_interface = target->client_interface;
+    gchar *client_interface = (gchar*)target->client_interface;
     gchar *target_key = find_target_key(target, target_iterator_data->target_property);
 
     /* If no client interface is provided by the infrastructure model, use global one */
@@ -70,7 +70,7 @@ static ProcReact_Future next_target_future(void *data)
 
     /* Retrieve distributionitem, target pair */
     Target *target = g_ptr_array_index(target_iterator_data->target_array, target_iterator_data->model_iterator_data.index);
-    gchar *client_interface = target->client_interface;
+    gchar *client_interface = (gchar*)target->client_interface;
     gchar *target_key = find_target_key(target, target_iterator_data->target_property);
 
     /* If no client interface is provided by the infrastructure model, use global one */

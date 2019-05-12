@@ -22,23 +22,26 @@
 #include "interfaces.h"
 
 #include <libxml/parser.h>
+#include <nixxml-parse.h>
 
-static DistributedDerivation *parse_distributed_derivation(xmlNodePtr element)
+static void *create_distributed_derivation_from_element(xmlNodePtr element, void *userdata)
 {
-    DistributedDerivation *distributed_derivation = (DistributedDerivation*)g_malloc0(sizeof(DistributedDerivation));
-    xmlNodePtr element_children = element->children;
+    return g_malloc0(sizeof(DistributedDerivation));
+}
 
-    while(element_children != NULL)
-    {
-        if(xmlStrcmp(element_children->name, (xmlChar*) "build") == 0)
-            distributed_derivation->derivation_array = parse_build(element_children);
-        else if(xmlStrcmp(element_children->name, (xmlChar*) "interfaces") == 0)
-            distributed_derivation->interface_array = parse_interfaces(element_children);
+static void parse_and_insert_distributed_derivation_attributes(xmlNodePtr element, void *table, const xmlChar *key, void *userdata)
+{
+    DistributedDerivation *distributed_derivation = (DistributedDerivation*)table;
 
-        element_children = element_children->next;
-    }
+    if(xmlStrcmp(element->name, (xmlChar*) "build") == 0)
+        distributed_derivation->derivation_array = parse_build(element);
+    else if(xmlStrcmp(element->name, (xmlChar*) "interfaces") == 0)
+        distributed_derivation->interface_array = parse_interfaces(element);
+}
 
-    return distributed_derivation;
+static DistributedDerivation *parse_distributed_derivation(xmlNodePtr element, void *userdata)
+{
+    return NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_distributed_derivation_from_element, parse_and_insert_distributed_derivation_attributes);
 }
 
 DistributedDerivation *create_distributed_derivation(const gchar *distributed_derivation_file)
@@ -69,7 +72,7 @@ DistributedDerivation *create_distributed_derivation(const gchar *distributed_de
     }
 
     /* Parse distributed derivation */
-    distributed_derivation = parse_distributed_derivation(node_root);
+    distributed_derivation = parse_distributed_derivation(node_root, NULL);
 
     /* Cleanup */
     xmlFreeDoc(doc);

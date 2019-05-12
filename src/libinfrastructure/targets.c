@@ -22,10 +22,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 #include <libxslt/xslt.h>
 #include <libxslt/transform.h>
+#include <nixxml-ghashtable.h>
+#include <nixxml-gptrarray.h>
 #include "package-management.h"
 
 static gint compare_target(const Target **l, const Target **r)
@@ -79,51 +79,53 @@ static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
     return transform_doc;
 }
 
-static gpointer parse_container(xmlNodePtr element)
+static gpointer parse_container(xmlNodePtr element, void *userdata)
 {
-    return parse_dictionary(element, parse_value);
+    return NixXML_parse_g_hash_table(element, userdata, NixXML_parse_value);
 }
 
-static gpointer parse_target(xmlNodePtr element)
+static void *create_target(xmlNodePtr element, void *userdata)
 {
-    Target *target = (Target*)g_malloc0(sizeof(Target));
-    xmlNodePtr element_children = element->children;
+    return g_malloc0(sizeof(Target));
+}
 
-    while(element_children != NULL)
+static void parse_and_insert_target_attributes(xmlNodePtr element, void *table, const xmlChar *key, void *userdata)
+{
+    Target *target = (Target*)table;
+
+    if(xmlStrcmp(key, (xmlChar*) "name") == 0)
+        target->name = NixXML_parse_value(element, userdata);
+    else if(xmlStrcmp(key, (xmlChar*) "system") == 0)
+        target->system = NixXML_parse_value(element, userdata);
+    else if(xmlStrcmp(key, (xmlChar*) "clientInterface") == 0)
+        target->client_interface = NixXML_parse_value(element, userdata);
+    else if(xmlStrcmp(key, (xmlChar*) "targetProperty") == 0)
+        target->target_property = NixXML_parse_value(element, userdata);
+    else if(xmlStrcmp(key, (xmlChar*) "numOfCores") == 0)
     {
-        if(xmlStrcmp(element_children->name, (xmlChar*) "name") == 0)
-            target->name = parse_value(element_children);
-        else if(xmlStrcmp(element_children->name, (xmlChar*) "system") == 0)
-            target->system = parse_value(element_children);
-        else if(xmlStrcmp(element_children->name, (xmlChar*) "clientInterface") == 0)
-            target->client_interface = parse_value(element_children);
-        else if(xmlStrcmp(element_children->name, (xmlChar*) "targetProperty") == 0)
-            target->target_property = parse_value(element_children);
-        else if(xmlStrcmp(element_children->name, (xmlChar*) "numOfCores") == 0)
+        gchar *num_of_cores_str = NixXML_parse_value(element, userdata);
+
+        if(num_of_cores_str != NULL)
         {
-            gchar *num_of_cores_str = parse_value(element_children);
-
-            if(num_of_cores_str != NULL)
-            {
-                target->num_of_cores = atoi((char*)num_of_cores_str);
-                target->available_cores = target->num_of_cores;
-                g_free(num_of_cores_str);
-            }
+            target->num_of_cores = atoi((char*)num_of_cores_str);
+            target->available_cores = target->num_of_cores;
+            g_free(num_of_cores_str);
         }
-        else if(xmlStrcmp(element_children->name, (xmlChar*) "properties") == 0)
-            target->properties_table = parse_dictionary(element_children, parse_value);
-        else if(xmlStrcmp(element_children->name, (xmlChar*) "containers") == 0)
-            target->containers_table = parse_dictionary(element_children, parse_container);
-
-        element_children = element_children->next;
     }
+    else if(xmlStrcmp(key, (xmlChar*) "properties") == 0)
+        target->properties_table = NixXML_parse_g_hash_table(element, userdata, NixXML_parse_value);
+    else if(xmlStrcmp(key, (xmlChar*) "containers") == 0)
+        target->containers_table = NixXML_parse_g_hash_table(element, userdata, parse_container);
+}
 
-    return target;
+static gpointer parse_target(xmlNodePtr element, void *userdata)
+{
+    return NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_target, parse_and_insert_target_attributes);
 }
 
 GPtrArray *parse_targets(xmlNodePtr element)
 {
-    GPtrArray *targets_array = parse_list(element, "target", parse_target);
+    GPtrArray *targets_array = NixXML_parse_g_ptr_array(element, "target", NULL, parse_target);
     g_ptr_array_sort(targets_array, (GCompareFunc)compare_target);
     return targets_array;
 }
@@ -229,10 +231,7 @@ static void delete_properties_table(GHashTable *properties_table)
 
         g_hash_table_iter_init(&iter, properties_table);
         while (g_hash_table_iter_next(&iter, &key, &value))
-        {
-            g_free(key);
-            g_free(value);
-        }
+            xmlFree(value);
 
         g_hash_table_destroy(properties_table);
     }
@@ -249,7 +248,6 @@ static void delete_containers_table(GHashTable *containers_table)
         while (g_hash_table_iter_next(&iter, &key, &value))
         {
             GHashTable *container_table = (GHashTable*)value;
-            g_free(key);
             delete_properties_table(container_table);
         }
 
@@ -262,10 +260,10 @@ static void delete_target(Target *target)
     delete_properties_table(target->properties_table);
     delete_containers_table(target->containers_table);
 
-    g_free(target->name);
-    g_free(target->system);
-    g_free(target->client_interface);
-    g_free(target->target_property);
+    xmlFree(target->name);
+    xmlFree(target->system);
+    xmlFree(target->client_interface);
+    xmlFree(target->target_property);
     g_free(target);
 }
 
@@ -341,7 +339,7 @@ gchar *find_target_key(const Target *target, const gchar *global_target_property
     if(target->target_property == NULL)
         return find_target_property(target, global_target_property);
     else
-        return find_target_property(target, target->target_property);
+        return find_target_property(target, (gchar*)target->target_property);
 }
 
 static GHashTable *find_container(GHashTable *containers_table, const gchar *name)

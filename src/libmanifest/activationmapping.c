@@ -21,7 +21,9 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <xmlutil.h>
+#include <nixxml-ghashtable.h>
+#include <nixxml-gptrarray.h>
+
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
 static gint compare_activation_mapping_keys(const ActivationMappingKey **l, const ActivationMappingKey **r)
@@ -30,14 +32,14 @@ static gint compare_activation_mapping_keys(const ActivationMappingKey **l, cons
     const ActivationMappingKey *right = *r;
     
     /* Compare the service keys */
-    gint status = g_strcmp0(left->key, right->key);
+    gint status = xmlStrcmp(left->key, right->key);
     
     if(status == 0)
     {
-        status = g_strcmp0(left->target, right->target); /* If services are equal then compare the targets */
+        status = xmlStrcmp(left->target, right->target); /* If services are equal then compare the targets */
         
         if(status == 0)
-            return g_strcmp0(left->container, right->container); /* If targets are equal then compare the containers */
+            return xmlStrcmp(left->container, right->container); /* If targets are equal then compare the containers */
         else
             return status;
     }
@@ -50,26 +52,33 @@ static gint compare_activation_mapping(const ActivationMapping **l, const Activa
     return compare_activation_mapping_keys((const ActivationMappingKey **)l, (const ActivationMappingKey **)r);
 }
 
-static ActivationMappingKey *create_activation_mapping_key_from_dict(GHashTable *table)
+static void *create_activation_mapping_key(xmlNodePtr element, void *userdata)
 {
-    ActivationMappingKey *key = (ActivationMappingKey*)g_malloc(sizeof(ActivationMappingKey));
-    key->key = g_hash_table_lookup(table, "key");
-    key->target = g_hash_table_lookup(table, "target");
-    key->container = g_hash_table_lookup(table, "container");
-    return key;
+    return g_malloc0(sizeof(ActivationMappingKey));
 }
 
-static gpointer parse_dependency_key(xmlNodePtr element)
+static void insert_activation_mapping_key_attributes(void *table, const xmlChar *key, void *value, void *userdata)
 {
-    GHashTable *table = parse_dictionary(element, parse_value);
-    ActivationMappingKey *key = create_activation_mapping_key_from_dict(table);
-    g_hash_table_destroy(table);
-    return key;
+    ActivationMappingKey *activation_mapping_key = (ActivationMappingKey*)table;
+
+    if(xmlStrcmp(key, (xmlChar*) "key") == 0)
+        activation_mapping_key->key = value;
+    else if(xmlStrcmp(key, (xmlChar*) "target") == 0)
+        activation_mapping_key->target = value;
+    else if(xmlStrcmp(key, (xmlChar*) "container") == 0)
+        activation_mapping_key->container = value;
+    else
+        xmlFree(value);
+}
+
+static gpointer parse_dependency_key(xmlNodePtr element, void *userdata)
+{
+    return NixXML_parse_simple_attrset(element, userdata, create_activation_mapping_key, NixXML_parse_value, insert_activation_mapping_key_attributes);
 }
 
 static GPtrArray *parse_inter_dependencies(xmlNodePtr element)
 {
-    GPtrArray *inter_dependency_array = parse_list(element, "dependency", parse_dependency_key);
+    GPtrArray *inter_dependency_array = NixXML_parse_g_ptr_array(element, "dependency", NULL, parse_dependency_key);
 
     /* Sort the dependency array */
     g_ptr_array_sort(inter_dependency_array, (GCompareFunc)compare_activation_mapping_keys);
@@ -77,32 +86,36 @@ static GPtrArray *parse_inter_dependencies(xmlNodePtr element)
     return inter_dependency_array;
 }
 
-static gpointer parse_activation_mapping(xmlNodePtr element)
+static void *create_activation_mapping(xmlNodePtr element, void *userdata)
 {
-    ActivationMapping *mapping = (ActivationMapping*)g_malloc0(sizeof(ActivationMapping));
-    xmlNodePtr element_children = element->children;
+    return g_malloc0(sizeof(ActivationMapping));
+}
 
-    while(element_children != NULL)
-    {
-        if(xmlStrcmp(element_children->name, (xmlChar*) "key") == 0)
-            mapping->key = parse_value(element_children);
-        else if(xmlStrcmp(element_children->name, (xmlChar*) "service") == 0)
-            mapping->service = parse_value(element_children);
-        else if(xmlStrcmp(element_children->name, (xmlChar*) "name") == 0)
-            mapping->name = parse_value(element_children);
-        else if(xmlStrcmp(element_children->name, (xmlChar*) "type") == 0)
-            mapping->type = parse_value(element_children);
-        else if(xmlStrcmp(element_children->name, (xmlChar*) "target") == 0)
-            mapping->target = parse_value(element_children);
-        else if(xmlStrcmp(element_children->name, (xmlChar*) "container") == 0)
-            mapping->container = parse_value(element_children);
-        else if(xmlStrcmp(element_children->name, (xmlChar*) "dependsOn") == 0)
-            mapping->depends_on = parse_inter_dependencies(element_children);
-        else if(xmlStrcmp(element_children->name, (xmlChar*) "connectsTo") == 0)
-            mapping->connects_to = parse_inter_dependencies(element_children);
+static void parse_and_insert_activation_mapping_attributes(xmlNodePtr element, void *table, const xmlChar *key, void *userdata)
+{
+    ActivationMapping *mapping = (ActivationMapping*)table;
 
-        element_children = element_children->next;
-    }
+    if(xmlStrcmp(key, (xmlChar*) "key") == 0)
+        mapping->key = NixXML_parse_value(element, userdata);
+    else if(xmlStrcmp(key, (xmlChar*) "service") == 0)
+        mapping->service = NixXML_parse_value(element, userdata);
+    else if(xmlStrcmp(key, (xmlChar*) "name") == 0)
+        mapping->name = NixXML_parse_value(element, userdata);
+    else if(xmlStrcmp(key, (xmlChar*) "type") == 0)
+        mapping->type = NixXML_parse_value(element, userdata);
+    else if(xmlStrcmp(key, (xmlChar*) "target") == 0)
+        mapping->target = NixXML_parse_value(element, userdata);
+    else if(xmlStrcmp(key, (xmlChar*) "container") == 0)
+        mapping->container = NixXML_parse_value(element, userdata);
+    else if(xmlStrcmp(key, (xmlChar*) "dependsOn") == 0)
+        mapping->depends_on = parse_inter_dependencies(element);
+    else if(xmlStrcmp(key, (xmlChar*) "connectsTo") == 0)
+        mapping->connects_to = parse_inter_dependencies(element);
+}
+
+static gpointer parse_activation_mapping(xmlNodePtr element, void *userdata)
+{
+    ActivationMapping *mapping = NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_activation_mapping, parse_and_insert_activation_mapping_attributes);
 
     /* If no properties or containers are specified, compose empty arrays */
     if(mapping->depends_on == NULL)
@@ -116,7 +129,7 @@ static gpointer parse_activation_mapping(xmlNodePtr element)
 
 GPtrArray *parse_activation(xmlNodePtr element)
 {
-    GPtrArray *activation_array = parse_list(element, "mapping", parse_activation_mapping);
+    GPtrArray *activation_array = NixXML_parse_g_ptr_array(element, "mapping", NULL, parse_activation_mapping);
 
     /* Sort the activation array */
     g_ptr_array_sort(activation_array, (GCompareFunc)compare_activation_mapping);
@@ -134,9 +147,9 @@ static void delete_inter_dependency_array(GPtrArray *inter_dependency_array)
         {
             ActivationMappingKey *dependency = g_ptr_array_index(inter_dependency_array, i);
 
-            g_free(dependency->key);
-            g_free(dependency->target);
-            g_free(dependency->container);
+            xmlFree(dependency->key);
+            xmlFree(dependency->target);
+            xmlFree(dependency->container);
             g_free(dependency);
         }
 
@@ -154,12 +167,12 @@ void delete_activation_array(GPtrArray *activation_array)
         {
             ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
 
-            g_free(mapping->key);
-            g_free(mapping->target);
-            g_free(mapping->container);
-            g_free(mapping->service);
-            g_free(mapping->name);
-            g_free(mapping->type);
+            xmlFree(mapping->key);
+            xmlFree(mapping->target);
+            xmlFree(mapping->container);
+            xmlFree(mapping->service);
+            xmlFree(mapping->name);
+            xmlFree(mapping->type);
             delete_inter_dependency_array(mapping->depends_on);
             delete_inter_dependency_array(mapping->connects_to);
 
@@ -352,7 +365,7 @@ static ActivationStatus attempt_to_map_activation_mapping(ActivationMapping *map
 {
     if(request_available_target_core(target)) /* Check if machine has any cores available, if not wait and try again later */
     {
-        gchar **arguments = generate_activation_arguments(target, mapping->container); /* Generate an array of key=value pairs from container properties */
+        gchar **arguments = generate_activation_arguments(target, (gchar*)mapping->container); /* Generate an array of key=value pairs from container properties */
         unsigned int arguments_size = g_strv_length(arguments); /* Determine length of the activation arguments array */
         pid_t pid = map_activation_mapping(mapping, target, arguments, arguments_size); /* Execute the activation operation asynchronously */
         
@@ -398,7 +411,7 @@ static void wait_for_activation_mapping_to_complete(GHashTable *pid_table, GPtrA
         complete_activation_mapping(mapping, status, result);
     
         /* Signal the target to make the CPU core available again */
-        target = find_target(target_array, mapping->target);
+        target = find_target(target_array, (gchar*)mapping->target);
         signal_available_target_core(target);
     }
 }
@@ -429,7 +442,7 @@ ActivationStatus traverse_inter_dependency_mappings(GPtrArray *union_array, cons
     {
         case ACTIVATIONMAPPING_DEACTIVATED:
             {
-                Target *target = find_target(target_array, actual_mapping->target);
+                Target *target = find_target(target_array, (gchar*)actual_mapping->target);
                 
                 if(target == NULL)
                 {
@@ -478,7 +491,7 @@ ActivationStatus traverse_interdependent_mappings(GPtrArray *union_array, const 
     {
         case ACTIVATIONMAPPING_ACTIVATED:
             {
-                Target *target = find_target(target_array, actual_mapping->target);
+                Target *target = find_target(target_array, (gchar*)actual_mapping->target);
         
                 if(target == NULL)
                 {

@@ -31,7 +31,7 @@ static pid_t unlock_distribution_item(void *data, DistributionItem *item, Target
 {
     char *profile = (char*)data;
     g_print("[target: %s]: Releasing a lock on profile: %s\n", item->target, item->profile);
-    return exec_unlock(target->client_interface, item->target, profile);
+    return exec_unlock((char*)target->client_interface, (char*)item->target, profile);
 }
 
 static void complete_unlock_distribution_item(void *data, DistributionItem *item, ProcReact_Status status, int result)
@@ -73,7 +73,7 @@ static pid_t lock_distribution_item(void *data, DistributionItem *item, Target *
 {
     LockData *lock_data = (LockData*)data;
     g_print("[target: %s]: Acquiring a lock on profile: %s\n", item->target, item->profile);
-    return exec_lock(target->client_interface, item->target, lock_data->profile);
+    return exec_lock((char*)target->client_interface, (char*)item->target, (char*)lock_data->profile);
 }
 
 static void complete_lock_distribution_item(void *data, DistributionItem *item, ProcReact_Status status, int result)

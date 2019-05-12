@@ -31,11 +31,11 @@
 typedef struct
 {
     /** Hash code that uniquely defines a service */
-    gchar *key;
+    xmlChar *key;
     /** Target property referring to the target machine to which the service is deployed */
-    gchar *target;
+    xmlChar *target;
     /** Name of the container to which the service is deployed */
-    gchar *container;
+    xmlChar *container;
 }
 ActivationMappingKey;
 
@@ -58,17 +58,17 @@ ActivationMappingStatus;
 typedef struct
 {
     /** Hash code that uniquely defines a service */
-    gchar *key;
+    xmlChar *key;
     /** Target property referring to the target machine to which the service is deployed */
-    gchar *target;
+    xmlChar *target;
     /** Name of the container to which the service is deployed */
-    gchar *container;
+    xmlChar *container;
     /** Nix store path to the service */
-    gchar *service;
+    xmlChar *service;
     /* Name of the service */
-    gchar *name;
+    xmlChar *name;
     /** Activation type */
-    gchar *type;
+    xmlChar *type;
     /** Array of ActivationMappingKey items representing the inter-dependencies */
     GPtrArray *depends_on;
     /** Array of ActivationMappingKey items representing the inter-dependencies for which the ordering does not matter */
