@@ -89,7 +89,12 @@ void NixXML_print_g_hash_table_verbose_xml(FILE *file, GHashTable *hash_table, c
 
 /* Parse functionality */
 
-void *NixXML_parse_g_hash_table(xmlNodePtr element, void *userdata, NixXML_ParseObjectFunc parse_object)
+void *NixXML_parse_g_hash_table_simple(xmlNodePtr element, void *userdata, NixXML_ParseObjectFunc parse_object)
 {
     return NixXML_parse_simple_attrset(element, userdata, NixXML_create_g_hash_table, parse_object, NixXML_insert_into_g_hash_table);
+}
+
+void *NixXML_parse_g_hash_table_verbose(xmlNodePtr element, const char *child_element_name, const char *name_property_name, void *userdata, NixXML_ParseObjectFunc parse_object)
+{
+    return NixXML_parse_verbose_attrset(element, child_element_name, name_property_name, userdata, NixXML_create_g_hash_table, parse_object, NixXML_insert_into_g_hash_table);
 }

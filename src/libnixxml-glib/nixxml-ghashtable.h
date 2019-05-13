@@ -119,13 +119,27 @@ void NixXML_print_g_hash_table_verbose_attributes_xml(FILE *file, const void *va
 void NixXML_print_g_hash_table_verbose_xml(FILE *file, GHashTable *hash_table, const char *child_element_name, const char *name_property_name, const int indent_level, const char *type_property_name, void *userdata, NixXML_PrintXMLValueFunc print_value);
 
 /**
- * Parses a GHashTable from the sub elements of a provided XML element.
+ * Parses a GHashTable from the sub elements of a provided XML element using
+ * the simple notation.
  *
  * @param element XML element to parse.
  * @param userdata Arbitrary user data that gets propagated to all print functions
  * @param parse_object Pointer to a function that parses the value
  * @return A pointer to a GHashTable
  */
-void *NixXML_parse_g_hash_table(xmlNodePtr element, void *userdata, NixXML_ParseObjectFunc parse_object);
+void *NixXML_parse_g_hash_table_simple(xmlNodePtr element, void *userdata, NixXML_ParseObjectFunc parse_object);
+
+/**
+ * Parses a GHashTable from the sub elements of a provided XML element using
+ * the verbose notation.
+ *
+ * @param element XML element to parse.
+ * @param child_element_name Name of each attribute child element
+ * @param name_property_name Name of the name property
+ * @param userdata Arbitrary user data that gets propagated to all print functions
+ * @param parse_object Pointer to a function that parses the value
+ * @return A pointer to a GHashTable
+ */
+void *NixXML_parse_g_hash_table_verbose(xmlNodePtr element, const char *child_element_name, const char *name_property_name, void *userdata, NixXML_ParseObjectFunc parse_object);
 
 #endif
