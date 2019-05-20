@@ -21,6 +21,7 @@
 
 #include "nixxml-parse.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 xmlChar *NixXML_find_property(xmlNodePtr element, const char *property_name)
 {
@@ -42,6 +43,18 @@ void *NixXML_parse_value(xmlNodePtr element, void *userdata)
 {
     if(element->children != NULL && element->children->type == XML_TEXT_NODE)
         return xmlStrdup(element->children->content);
+    else
+        return NULL;
+}
+
+void *NixXML_parse_int(xmlNodePtr element, void *userdata)
+{
+    if(element->children != NULL && element->children->type == XML_TEXT_NODE)
+    {
+        int *int_value = (int*)malloc(sizeof(int));
+        *int_value = atoi((char*)element->children->content);
+        return int_value;
+    }
     else
         return NULL;
 }

@@ -89,13 +89,22 @@ typedef void (*NixXML_ParseAndInsertObjectFunc) (xmlNodePtr element, void *table
 xmlChar *NixXML_find_property(xmlNodePtr element, const char *property_name);
 
 /**
- * Parses a value, e.g. a string, float, int or bool.
+ * Parses a text presentation of a value, e.g. a string, float, int or bool.
  *
  * @param element XML element to parse.
  * @param userdata Arbitrary user data that is propagated to all parse functions
- * @return A string representation of the value or NULL if it cannot be parsed. The caller needs to be free up the memory with xmlFree()
+ * @return A string representation of the value or NULL if it cannot be parsed. The caller needs to free up the memory with xmlFree()
  */
 void *NixXML_parse_value(xmlNodePtr element, void *userdata);
+
+/**
+ * Parses an integer.
+ *
+ * @param element XML element to parse.
+ * @param userdata Arbitrary user data that is propagated to all parse functions
+ * @return A pointer to an integer storing the integer value. The caller needs to free up the memory with free()
+ */
+void *NixXML_parse_int(xmlNodePtr element, void *userdata);
 
 /**
  * Parses a list-like data structure.
