@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Sander van der Burg
+ * Copyright (c) 2016-2019 Sander van der Burg
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -48,7 +48,7 @@ struct ProcReact_FutureIterator
      * @return int TRUE if there is a next element, else FALSE
      */
     ProcReact_FutureIteratorHasNext has_next;
-    
+
     /**
      * Function that spawns the next future in the collection.
      *
@@ -56,7 +56,7 @@ struct ProcReact_FutureIterator
      * @return A future instance
      */
     ProcReact_FutureIteratorNext next;
-    
+
     /**
      * Function that gets invoked if a process completes.
      *
@@ -65,16 +65,20 @@ struct ProcReact_FutureIterator
      * @param status Status option that will be set to any of the status codes
      */
     ProcReact_FutureIteratorComplete complete;
-    
+
     /** Arbitrary data structure used to compute the overall end result */
     void *data;
-    
+
     /** Memorizes the amount of processes running concurrently */
     unsigned int running_processes;
-    
+
     /** Memorizes the future instances of the process that are being executed */
     ProcReact_Future *futures;
 };
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * Creates a new future iterator struct.
@@ -127,5 +131,9 @@ void procreact_fork_in_parallel_buffer_and_wait(ProcReact_FutureIterator *iterat
  * @param limit Amount of processes that are allowed to run concurrently
  */
 void procreact_fork_buffer_and_wait_in_parallel_limit(ProcReact_FutureIterator *iterator, const unsigned int limit);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

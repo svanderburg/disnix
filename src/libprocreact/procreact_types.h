@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Sander van der Burg
+ * Copyright (c) 2016-2019 Sander van der Burg
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -88,6 +88,10 @@ typedef struct
 }
 ProcReact_StringArrayState;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void *procreact_type_initialize_bytes(void);
 
 ssize_t procreact_type_append_bytes(ProcReact_Type *type, void *state, int fd);
@@ -129,5 +133,9 @@ ProcReact_Type procreact_create_string_array_type(char delimiter);
  * @param arr String array to free
  */
 void procreact_free_string_array(char **arr);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

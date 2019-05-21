@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Sander van der Burg
+ * Copyright (c) 2016-2019 Sander van der Burg
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -23,6 +23,10 @@
 #define __PROCREACT_SIGNAL_H
 #include "procreact_pid_iterator.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Configures a SIGCHLD handler that indicates that processes have finished
  * whose results must be gathered.
@@ -38,5 +42,9 @@ int procreact_register_signal_handler(void);
  * @param iterator PID iterator
  */
 void procreact_complete_all_finished_processes(ProcReact_PidIterator *iterator);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

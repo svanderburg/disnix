@@ -47,6 +47,10 @@ typedef struct
 }
 NixXML_ParseExprParams;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Parses a string node.
  *
@@ -153,5 +157,9 @@ void *NixXML_parse_expr(xmlNodePtr element, void *userdata);
  * @return A list-like or table-like data structure, string or NULL if the data cannot be parsed.
  */
 NixXML_Node *NixXML_generic_parse_expr(xmlNodePtr element, const char *type_property_name, const char *name_property_name, NixXML_CreateObjectFunc create_list, NixXML_CreateObjectFunc create_table, NixXML_AddElementFunc add_element, NixXML_InsertObjectFunc insert_object, NixXML_FinalizeListFunc finalize_list);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

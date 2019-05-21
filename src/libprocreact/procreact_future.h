@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Sander van der Burg
+ * Copyright (c) 2016-2019 Sander van der Burg
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -43,6 +43,10 @@ typedef struct
 }
 ProcReact_Future;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Initializes a future.
  *
@@ -66,5 +70,9 @@ void procreact_destroy_future(ProcReact_Future *future);
  * @return Pointer to a data struct conforming to the requested type
  */
 void *procreact_future_get(ProcReact_Future *future, ProcReact_Status *status);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

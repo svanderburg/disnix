@@ -74,6 +74,10 @@ typedef void (*NixXML_PrintSimpleXMLMembersFunc) (FILE *file, const void *value,
  */
 typedef void (*NixXML_PrintVerboseXMLMembersFunc) (FILE *file, const void *value, const char *child_element_name, const char *name_property_name, const int indent_level, const char *type_property_name, void *userdata, NixXML_PrintXMLValueFunc print_value);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Prints an opening XML tag.
  *
@@ -241,5 +245,9 @@ void NixXML_print_simple_attrset_xml(FILE *file, const void *table, const int in
  * @param print_value Pointer to a function that prints the attribute value
  */
 void NixXML_print_verbose_attrset_xml(FILE *file, const void *table, const char *child_element_name, const char *name_property_name, const int indent_level, const char *type_property_name, void *userdata, NixXML_PrintVerboseXMLMembersFunc print_attributes, NixXML_PrintXMLValueFunc print_value);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

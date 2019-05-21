@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Sander van der Burg
+ * Copyright (c) 2016-2019 Sander van der Burg
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -39,6 +39,10 @@ ProcReact_Status;
  * @brief Pointer to a function that retrieves the outcome by looking at the exit status
  */
 typedef int (*ProcReact_RetrieveResult) (pid_t pid, int wstatus, ProcReact_Status *status);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * Retrieves the exit status of a finished process
@@ -87,5 +91,9 @@ int procreact_wait_for_exit_status(pid_t pid, ProcReact_Status *status);
  * @return TRUE if the exit status is 0, else FALSE
  */
 int procreact_wait_for_boolean(pid_t pid, ProcReact_Status *status);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -24,6 +24,10 @@
 
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Prints indentation of 2 spaces per indent level.
  *
@@ -31,5 +35,9 @@
  * @param indent_level Specifies the indent level, or -1 to disable indentation
  */
 void NixXML_print_indentation(FILE *file, const int indent_level);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

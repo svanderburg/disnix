@@ -40,6 +40,28 @@ typedef struct
 NixXML_SimplePrintExprParams;
 
 /**
+ * @brief Generic parameters for printing verbose XML that get propagated to all print functions
+ */
+typedef struct
+{
+    /** List element name */
+    const char *list_element_name;
+    /** Attribute element name */
+    const char *attr_element_name;
+    /** Name of the name property */
+    const char *name_property_name;
+    /** Pointer to a function that prints the list elements */
+    NixXML_PrintXMLListMembersFunc print_list_elements;
+    /** Pointer to a function that prints the attributes */
+    NixXML_PrintVerboseXMLMembersFunc print_attributes;
+}
+NixXML_VerbosePrintExprParams;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
  * Internal function (that can be integrated into the printing infrastructure)
  * that generically prints a simple XML representation of a data structure of
  * XML_Node objects.
@@ -66,24 +88,6 @@ void NixXML_print_expr_simple_xml(FILE *file, const void *value, const int inden
  * @param print_attributes Pointer to a function that prints the attributes
  */
 void NixXML_print_generic_expr_simple_xml(FILE *file, const NixXML_Node *value, const int indent_level, const char *root_element_name, const char *child_element_name, const char *type_property_name, NixXML_PrintXMLListMembersFunc print_list_elements, NixXML_PrintSimpleXMLMembersFunc print_attributes);
-
-/**
- * @brief Generic parameters for printing verbose XML that get propagated to all print functions
- */
-typedef struct
-{
-    /** List element name */
-    const char *list_element_name;
-    /** Attribute element name */
-    const char *attr_element_name;
-    /** Name of the name property */
-    const char *name_property_name;
-    /** Pointer to a function that prints the list elements */
-    NixXML_PrintXMLListMembersFunc print_list_elements;
-    /** Pointer to a function that prints the attributes */
-    NixXML_PrintVerboseXMLMembersFunc print_attributes;
-}
-NixXML_VerbosePrintExprParams;
 
 /**
  * Internal function (that can be integrated into the printing infrastructure)
@@ -114,5 +118,9 @@ void NixXML_print_expr_verbose_xml(FILE *file, const void *value, const int inde
  * @param print_attributes Pointer to a function that prints the attributes
  */
 void NixXML_print_generic_expr_verbose_xml(FILE *file, const NixXML_Node *value, const int indent_level, const char *root_element_name, const char *list_element_name, const char *attr_element_name, const char *name_property_name, const char *type_property_name, NixXML_PrintXMLListMembersFunc print_list_elements, NixXML_PrintVerboseXMLMembersFunc print_attributes);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

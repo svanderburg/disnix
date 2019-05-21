@@ -27,6 +27,10 @@
 
 typedef void (*NixXML_DeletePtrArrayElementFunc) (void *element);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Creates a new pointer array by parsing the sub elements of a provided
  * XML element.
@@ -129,5 +133,9 @@ void NixXML_print_g_ptr_array_xml(FILE *file, const GPtrArray *array, const char
  * @return A GPtrArray
  */
 void *NixXML_parse_g_ptr_array(xmlNodePtr element, const char *child_element_name, void *userdata, NixXML_ParseObjectFunc parse_object);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Sander van der Burg
+ * Copyright (c) 2016-2019 Sander van der Burg
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -35,14 +35,14 @@ ssize_t procreact_type_append_bytes(ProcReact_Type *type, void *state, int fd)
     ProcReact_BytesState *bytes_state = (ProcReact_BytesState*)state;
     char buffer[BUFFER_SIZE];
     ssize_t bytes_read = read(fd, buffer, BUFFER_SIZE);
-    
+
     if(bytes_read > 0)
     {
         bytes_state->data = realloc(bytes_state->data, (bytes_state->data_size + bytes_read));
-        memcpy(bytes_state->data + bytes_state->data_size, buffer, bytes_read);
+        memcpy((char*)bytes_state->data + bytes_state->data_size, buffer, bytes_read);
         bytes_state->data_size += bytes_read;
     }
-    
+
     return bytes_read;
 }
 
@@ -50,7 +50,7 @@ void *procreact_type_finalize_bytes(void *state, pid_t pid, ProcReact_Status *st
 {
     ProcReact_BytesState *bytes_state = (ProcReact_BytesState*)state;
     int success = procreact_wait_for_boolean(pid, status);
-    
+
     if(*status == PROCREACT_STATUS_OK && success)
         return bytes_state;
     else
@@ -70,15 +70,15 @@ void *procreact_type_finalize_string(void *state, pid_t pid, ProcReact_Status *s
     else
     {
         char *result;
-        
+
         bytes_state->data = realloc(bytes_state->data, (bytes_state->data_size + 1) * sizeof(char));
-        
+
         /* Add NUL-termination */
         result = (char*)bytes_state->data;
         result[bytes_state->data_size] = '\0';
-        
+
         free(bytes_state);
-    
+
         return result;
     }
 }
@@ -91,7 +91,7 @@ static char *copy_substring(char *str, unsigned int start_offset, unsigned int e
         char *substr = (char*)malloc((substring_len + 1) * sizeof(char));
         strncpy(substr, str + start_offset, substring_len);
         substr[substring_len] = '\0';
-        
+
         return substr;
     }
     else
@@ -103,7 +103,7 @@ static char **increase_tokens_array(char **tokens, unsigned int *tokens_length)
     *tokens_length = *tokens_length + 1;
     tokens = (char**)realloc(tokens, *tokens_length * sizeof(char*));
     tokens[*tokens_length - 1] = NULL;
-    
+
     return tokens;
 }
 
@@ -111,7 +111,7 @@ static void append_or_concatenate_buffer(char **tokens, char *buf, unsigned int 
 {
     char *token = copy_substring(buf, start_offset, pos);
     char *last_token = tokens[tokens_length - 1]; /* Take the last token */
-    
+
     if(last_token == NULL)
         tokens[tokens_length - 1] = token; /* If the last token is NULL, append token to the end */
     else
@@ -120,11 +120,11 @@ static void append_or_concatenate_buffer(char **tokens, char *buf, unsigned int 
         size_t last_token_length = strlen(last_token);
         size_t token_length = strlen(token);
         size_t concat_token_length = last_token_length + token_length;
-        
+
         tokens[tokens_length - 1] = (char*)realloc(tokens[tokens_length - 1], concat_token_length + 1);
         strncpy(tokens[tokens_length - 1] + last_token_length, token, token_length);
         tokens[tokens_length - 1][concat_token_length] = '\0';
-        
+
         /* Cleanup obsolete old token */
         free(token);
     }
@@ -133,8 +133,8 @@ static void append_or_concatenate_buffer(char **tokens, char *buf, unsigned int 
 static char **update_tokens_vector(char **tokens, unsigned int *tokens_length, char *buf, ssize_t buf_len, const char delimiter)
 {
     int i;
-    unsigned int start_offset = 0;
-    
+    int start_offset = 0;
+
     /* Check the buffer for tokens */
     for(i = 0; i < buf_len; i++)
     {
@@ -143,15 +143,15 @@ static char **update_tokens_vector(char **tokens, unsigned int *tokens_length, c
         {
             append_or_concatenate_buffer(tokens, buf, start_offset, i, *tokens_length);
             tokens = increase_tokens_array(tokens, tokens_length);
-            
+
             start_offset = i + 1;
         }
     }
-    
+
     /* If there is trailing stuff, append it to the tokens vector */
     if(start_offset < i)
         append_or_concatenate_buffer(tokens, buf, start_offset, i, *tokens_length);
-    
+
     /* Return modified tokens vector */
     return tokens;
 }
@@ -159,24 +159,24 @@ static char **update_tokens_vector(char **tokens, unsigned int *tokens_length, c
 void *procreact_type_initialize_string_array(void)
 {
     ProcReact_StringArrayState *string_array_state = (ProcReact_StringArrayState*)malloc(sizeof(ProcReact_StringArrayState));
-    
+
     /* We need at least one element in the beginning */
     string_array_state->result_length = 0;
     string_array_state->result = increase_tokens_array(NULL, &string_array_state->result_length);
-    
+
     return string_array_state;
 }
 
 ssize_t procreact_type_append_strings_to_array(ProcReact_Type *type, void *state, int fd)
 {
     ProcReact_StringArrayState *string_array_state = (ProcReact_StringArrayState*)state;
-    
+
     char buffer[BUFFER_SIZE];
     ssize_t bytes_read = read(fd, buffer, BUFFER_SIZE);
-    
+
     if(bytes_read > 0)
         string_array_state->result = update_tokens_vector(string_array_state->result, &string_array_state->result_length, buffer, bytes_read, type->delimiter);
-    
+
     return bytes_read;
 }
 
@@ -227,13 +227,13 @@ void procreact_free_string_array(char **arr)
     if(arr != NULL)
     {
         unsigned int count = 0;
-        
+
         while(arr[count] != NULL)
         {
             free(arr[count]);
             count++;
         }
-        
+
         free(arr);
     }
 }

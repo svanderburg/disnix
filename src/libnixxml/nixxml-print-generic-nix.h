@@ -37,6 +37,10 @@ typedef struct
 }
 NixXML_PrintExprParams;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Internal function (that can be integrated into the printing infrastructure)
  * that generically prints a Nix representation of a data structure of XML_Node
@@ -60,5 +64,9 @@ void NixXML_print_expr_nix(FILE *file, const void *value, const int indent_level
  * @param print_attributes Pointer to a function that prints the attributes
  */
 void NixXML_print_generic_expr_nix(FILE *file, const NixXML_Node *value, const int indent_level, NixXML_PrintMembersFunc print_list_elements, NixXML_PrintMembersFunc print_attributes);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

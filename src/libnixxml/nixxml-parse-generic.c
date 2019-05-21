@@ -134,5 +134,5 @@ NixXML_Node *NixXML_generic_parse_expr(xmlNodePtr element, const char *type_prop
     params.add_element = add_element;
     params.insert_object = insert_object;
     params.finalize_list = finalize_list;
-    return NixXML_parse_expr(element, &params);
+    return (NixXML_Node*)NixXML_parse_expr(element, &params);
 }

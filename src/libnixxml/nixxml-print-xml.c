@@ -73,25 +73,25 @@ static void print_type_suffix(FILE *file, const char *type_property_name, const 
 void NixXML_print_string_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
 {
     print_type_suffix(file, type_property_name, "string");
-    print_string_xml(file, value);
+    print_string_xml(file, (const char*)value);
 }
 
 void NixXML_print_string_as_int_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
 {
     print_type_suffix(file, type_property_name, "int");
-    print_string_xml(file, value);
+    print_string_xml(file, (const char*)value);
 }
 
 void NixXML_print_string_as_float_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
 {
     print_type_suffix(file, type_property_name, "int");
-    print_string_xml(file, value);
+    print_string_xml(file, (const char*)value);
 }
 
 void NixXML_print_string_as_bool_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
 {
     print_type_suffix(file, type_property_name, "bool");
-    print_string_xml(file, value);
+    print_string_xml(file, (const char*)value);
 }
 
 void NixXML_print_int_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)

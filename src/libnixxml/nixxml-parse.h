@@ -79,6 +79,10 @@ typedef void *(*NixXML_FinalizeListFunc) (void *list, void *userdata);
  */
 typedef void (*NixXML_ParseAndInsertObjectFunc) (xmlNodePtr element, void *table, const xmlChar *key, void *userdata);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Searches for an element property with a provided name.
  *
@@ -183,5 +187,9 @@ void *NixXML_parse_verbose_heterogeneous_attrset(xmlNodePtr element, const char 
  * @return A table-like data structure
  */
 void *NixXML_parse_verbose_attrset(xmlNodePtr element, const char *child_element_name, const char *name_property_name, void *userdata, NixXML_CreateObjectFunc create_table, NixXML_ParseObjectFunc parse_object, NixXML_InsertObjectFunc insert_object);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

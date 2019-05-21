@@ -45,6 +45,10 @@ typedef void (*NixXML_PrintValueFunc) (FILE *file, const void *value, const int 
  */
 typedef void (*NixXML_PrintMembersFunc) (FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Prints a string, quotes it and escapes it, if required.
  *
@@ -121,5 +125,9 @@ void NixXML_print_attribute_nix(FILE *file, const char *name, const void *value,
  * @param print_value Pointer to a function that prints an attribute value
  */
 void NixXML_print_attrset_nix(FILE *file, const void *table, const int indent_level, void *userdata, NixXML_PrintMembersFunc print_attributes, NixXML_PrintValueFunc print_value);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

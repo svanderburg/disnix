@@ -55,6 +55,10 @@ NixXML_Node;
  */
 typedef void (*NixXML_DeleteObjectFunc) (void *data);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Recursively deletes a node and all its node references.
  *
@@ -63,5 +67,9 @@ typedef void (*NixXML_DeleteObjectFunc) (void *data);
  * @param delete_table Pointer to a function that recursively deletes a table-like data structure
  */
 void NixXML_delete_node(NixXML_Node *node, NixXML_DeleteObjectFunc delete_list, NixXML_DeleteObjectFunc delete_table);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
