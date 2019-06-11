@@ -35,40 +35,50 @@ let
       }) architecture.infrastructure;
     };
 
-  normalizeServiceTargets = {architecture, defaultClientInterface, defaultTargetProperty}:
-    architecture // {
-      services = lib.mapAttrs (name: service: service // {
-        targets = map (target: normalizeTarget {
-          inherit target defaultClientInterface defaultTargetProperty;
-        }) service.targets;
-      }) architecture.services;
-    };
-
-  selectContainersInServiceTargets = {architecture}:
+  selectContainers = {targets, type}:
     let
       generateTargetWithoutContainers = target:
         removeAttrs target [ "containers" ];
     in
+    if isList targets then map (target:
+      let
+        selectedContainer = type;
+      in
+      { # When targets are a list, do automapping of type to container
+        container = target.containers."${selectedContainer}";
+        inherit selectedContainer;
+      } // (generateTargetWithoutContainers target)) targets
+    else if isAttrs targets then map (mapping:
+      let
+        selectedContainer = mapping.container or type; # If target specifies a container, map to that container. If target does not specify a container, do an automap of the type to the container
+      in
+      { # When targets is an attribute set, use the more advanced notation
+        container = mapping.target.containers."${selectedContainer}";
+        inherit selectedContainer;
+      } // (generateTargetWithoutContainers mapping.target)) targets.targets
+    else throw "targets has the wrong type!";
+
+  selectContainersInServiceTargets = {architecture}:
     architecture // {
       services = lib.mapAttrs (name: service: service // {
-        targets =
-          if isList service.targets then map (target:
-            let
-              selectedContainer = service.type;
-            in
-            { # When targets are a list, do automapping of type to container
-              container = target.containers."${selectedContainer}";
-              inherit selectedContainer;
-            } // (generateTargetWithoutContainers target)) service.targets
-          else if isAttrs service.targets then map (mapping:
-            let
-              selectedContainer = mapping.container or service.type; # If target specifies a container, map to that container. If target does not specify a container, do an automap of the type to the container
-            in
-            { # When targets is an attribute set, use the more advanced notation
-              container = mapping.target.containers."${selectedContainer}";
-              inherit selectedContainer;
-            } // (generateTargetWithoutContainers mapping.target)) service.targets.targets
-          else throw "targets has the wrong type!";
+        targets = selectContainers {
+          inherit (service) targets type;
+        };
+      }) architecture.services;
+    };
+
+  normalizeTargets = {targets, defaultClientInterface, defaultTargetProperty}:
+    map (target: normalizeTarget {
+      inherit target defaultClientInterface defaultTargetProperty;
+    }) targets;
+
+  normalizeServiceTargets = {architecture, defaultClientInterface, defaultTargetProperty}:
+    architecture // {
+      services = lib.mapAttrs (name: service: service // {
+        targets = normalizeTargets {
+          inherit defaultClientInterface defaultTargetProperty;
+          inherit (service) targets;
+        };
       }) architecture.services;
     };
 
@@ -77,7 +87,9 @@ let
       appendTargetsToDependencies = dependencies:
         lib.mapAttrs (name: dependency:
           rec {
-            targets = if dependency ? targets then dependency.targets else architectureWithTargets.services."${dependency.name}".targets;
+            targets = if dependency ? targets
+              then normalizeTargets (selectContainers dependency.targets)
+              else architectureWithTargets.services."${dependency.name}".targets;
             target = head targets;
           } // (removeAttrs dependency [ "targets" "target" ])
         ) dependencies;
@@ -138,7 +150,7 @@ let
         concatLists pkgsPerService
       ) (generatePkgsPerTargetGroupedByService { inherit architecture; });
 
-      allTargetNames = attrNames (pkgsFromServices // (architecture.pkgs or {}));
+      allTargetNames = attrNames (pkgsFromServices // (architecture.targetPackages or {}));
     in
     architecture // {
       # Merge existing pkgs attribute with pkgs that need to be built for the services
