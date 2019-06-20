@@ -57,51 +57,60 @@ Target;
  * Parses all targets from a sub section in an XML document.
  *
  * @param element Root XML element that defines targets
- * @return GHashTable of targets
+ * @return GPtrArray of targets
  */
-GHashTable *parse_targets_table(xmlNodePtr element);
+GPtrArray *parse_targets(xmlNodePtr element);
 
 /**
- * Creates a hash table with targets from an XML document
+ * Creates an array with targets from an XML document
  *
  * @param doc XML document composed by the XML parser
- * @return GHashTable with targets
+ * @return GPtrArray with target properties
  */
-GHashTable *create_targets_table_from_doc(xmlDocPtr doc);
+GPtrArray *create_target_array_from_doc(xmlDocPtr doc);
 
 /**
- * Creates a hash table with targets from an infrastructure Nix expression
+ * Creates an array with targets from an infrastructure Nix expression
  *
  * @param infrastructure_expr Path to the infrastructure Nix expression
- * @return GHashTable with targets
+ * @return GPtrArray with target properties
  */
-GHashTable *create_targets_table_from_nix(char *infrastructure_expr);
+GPtrArray *create_target_array_from_nix(char *infrastructure_expr);
 
 /**
- * Creates a hash table with targets from an infrastructure XML configuration
+ * Creates an array with targets from an infrastructure XML configuration
  *
  * @param infrastructure_xml Path to the infrastructure XML file
- * @return GHashTable with targets
+ * @return GPtrArray with target properties
  */
-GHashTable *create_targets_table_from_xml(const char *infrastructure_xml);
+GPtrArray *create_target_array_from_xml(const char *infrastructure_xml);
 
 /**
- * Creates a hash table with targets from an infrastructure configuration
+ * Creates an array with targets from an infrastructure configuration
  *
  * @param infrastructure_expr Path to the infrastructure configure file
  * @param xml TRUE to indicate the input is in XML, FALSE that it is a Nix expression
- * @return GHashTable with targets
+ * @return GPtrArray with target properties
  */
-GHashTable *create_targets_table(gchar *infrastructure_expr, const int xml);
+GPtrArray *create_target_array(gchar *infrastructure_expr, const int xml);
 
 /**
- * Deletes a hash table with targets
+ * Deletes an array with targets
  *
- * @param targets_table Targets table to delete
+ * @param target_array Array to delete
  */
-void delete_targets_table(GHashTable *targets_table);
+void delete_target_array(GPtrArray *target_array);
 
-int check_targets_table(GHashTable *targets_table);
+int check_target_array(const GPtrArray *target_array);
+
+/**
+ * Retrieves a target with a specific key from the target array.
+ *
+ * @param target_array Array of arrays representing target machines with properties
+ * @param key String referring to a target property serving as the key of the target
+ * @return An target struct containing the properties of the machine with the given key or NULL if it cannot be found
+ */
+Target *find_target(const GPtrArray *target_array, const gchar *key);
 
 /**
  * Retrieves the value of a target property with the given name.
@@ -121,6 +130,15 @@ gchar *find_target_property(const Target *target, const gchar *name);
  * @return The key value of identifying the machine or NULL if it does not exists
  */
 gchar *find_target_key(const Target *target, const gchar *global_target_property);
+
+/**
+ * Retrieves a target with a specific key from the target array.
+ *
+ * @param target_array Array of arrays representing target machines with properties
+ * @param key String referring to a target property serving as the key of the target
+ * @return An target struct containing the properties of the machine with the given key or NULL if it cannot be found
+ */
+Target *find_target(const GPtrArray *target_array, const gchar *key);
 
 /**
  * Generates a string vector with: 'name=value' pairs from the

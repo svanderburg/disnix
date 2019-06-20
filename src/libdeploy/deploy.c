@@ -39,7 +39,7 @@ static int acquire_locks(Manifest *manifest, const unsigned int flags, gchar *pr
     else
     {
         g_print("[coordinator]: Acquiring locks...\n");
-        return lock(manifest->distribution_array, manifest->target_array, profile, pre_hook, post_hook);
+        return lock(manifest->distribution_array, manifest->targets_table, profile, pre_hook, post_hook);
     }
 }
 
@@ -53,7 +53,7 @@ static int release_locks(Manifest *manifest, const unsigned int flags, gchar *pr
     else
     {
         g_print("[coordinator]: Releasing locks...\n");
-        return unlock(manifest->distribution_array, manifest->target_array, profile, pre_hook, post_hook);
+        return unlock(manifest->distribution_array, manifest->targets_table, profile, pre_hook, post_hook);
     }
 }
 

@@ -32,7 +32,7 @@ static pid_t next_distribution_process(void *data)
 
     /* Retrieve distributionitem, target pair */
     DistributionItem *item = g_ptr_array_index(distribution_iterator_data->distribution_array, distribution_iterator_data->model_iterator_data.index);
-    Target *target = find_target(distribution_iterator_data->target_array, (gchar*)item->target);
+    Target *target = g_hash_table_lookup(distribution_iterator_data->targets_table, (gchar*)item->target);
 
     /* Invoke the next distribution item operation process */
     pid_t pid = distribution_iterator_data->map_distribution_item(distribution_iterator_data->data, item, target);
@@ -55,13 +55,13 @@ static void complete_distribution_process(void *data, pid_t pid, ProcReact_Statu
     distribution_iterator_data->complete_distribution_item_mapping(distribution_iterator_data->data, item, status, result);
 }
 
-ProcReact_PidIterator create_distribution_iterator(const GPtrArray *distribution_array, const GPtrArray *target_array, map_distribution_item_function map_distribution_item, complete_distribution_item_mapping_function complete_distribution_item_mapping, void *data)
+ProcReact_PidIterator create_distribution_iterator(const GPtrArray *distribution_array, GHashTable *targets_table, map_distribution_item_function map_distribution_item, complete_distribution_item_mapping_function complete_distribution_item_mapping, void *data)
 {
     DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)g_malloc(sizeof(DistributionIteratorData));
 
     init_model_iterator_data(&distribution_iterator_data->model_iterator_data, distribution_array->len);
     distribution_iterator_data->distribution_array = distribution_array;
-    distribution_iterator_data->target_array = target_array;
+    distribution_iterator_data->targets_table = targets_table;
     distribution_iterator_data->map_distribution_item = map_distribution_item;
     distribution_iterator_data->complete_distribution_item_mapping = complete_distribution_item_mapping;
     distribution_iterator_data->data = data;

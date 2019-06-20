@@ -40,7 +40,7 @@ static gchar *compose_mapping_key(ActivationMapping *mapping, gchar *target_key)
     return g_strconcat((gchar*)mapping->key, ":", target_key, ":", (gchar*)mapping->container, NULL);
 }
 
-GHashTable *generate_edges_table(const GPtrArray *activation_array, GPtrArray *targets_array, int ordering)
+GHashTable *generate_edges_table(const GPtrArray *activation_array, GHashTable *targets_table, int ordering)
 {
     unsigned int i;
 
@@ -53,7 +53,7 @@ GHashTable *generate_edges_table(const GPtrArray *activation_array, GPtrArray *t
 	ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
 	
 	/* Retrieve the target property */
-	Target *target = find_target(targets_array, (gchar*)mapping->target);
+	Target *target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
 	gchar *target_key = find_target_key(target, NULL);
 	
 	/* Generate an edge table key, which consist of Nix store component:targetProperty */
@@ -90,7 +90,7 @@ GHashTable *generate_edges_table(const GPtrArray *activation_array, GPtrArray *t
 		actual_mapping = find_activation_mapping(activation_array, dependency);
 		
 		/* Get the target interface */
-		target = find_target(targets_array, (gchar*)actual_mapping->target);
+		target = g_hash_table_lookup(targets_table, (gchar*)actual_mapping->target);
 		target_key = find_target_key(target, NULL);
 		
 		/* Generate mapping value from the service key and target property */

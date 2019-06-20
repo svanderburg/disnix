@@ -40,10 +40,10 @@ static void complete_unlock_distribution_item(void *data, DistributionItem *item
         g_printerr("[target: %s]: Cannot unlock profile: %s\n", item->target, item->profile);
 }
 
-int unlock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void))
+int unlock(const GPtrArray *distribution_array, GHashTable *targets_table, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void))
 {
     int success;
-    ProcReact_PidIterator iterator = create_distribution_iterator(distribution_array, target_array, unlock_distribution_item, complete_unlock_distribution_item, profile);
+    ProcReact_PidIterator iterator = create_distribution_iterator(distribution_array, targets_table, unlock_distribution_item, complete_unlock_distribution_item, profile);
 
     if(pre_hook != NULL) /* Execute hook before the unlock operations are executed */
         pre_hook();
@@ -86,12 +86,12 @@ static void complete_lock_distribution_item(void *data, DistributionItem *item, 
         g_ptr_array_add(lock_data->lock_array, item);
 }
 
-int lock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void))
+int lock(const GPtrArray *distribution_array, GHashTable *targets_table, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void))
 {
     GPtrArray *lock_array = g_ptr_array_new();
     int success;
     LockData data = { profile, lock_array };
-    ProcReact_PidIterator iterator = create_distribution_iterator(distribution_array, target_array, lock_distribution_item, complete_lock_distribution_item, &data);
+    ProcReact_PidIterator iterator = create_distribution_iterator(distribution_array, targets_table, lock_distribution_item, complete_lock_distribution_item, &data);
 
     if(pre_hook != NULL) /* Execute hook before the lock operations are executed */
         pre_hook();
@@ -110,7 +110,7 @@ int lock(const GPtrArray *distribution_array, const GPtrArray *target_array, gch
     }
 
     if(!success)
-        unlock(lock_array, target_array, profile, pre_hook, post_hook); /* If the locking has failed, try to unlock everything again */
+        unlock(lock_array, targets_table, profile, pre_hook, post_hook); /* If the locking has failed, try to unlock everything again */
 
     /* Cleanup */
     g_ptr_array_free(lock_array, TRUE);

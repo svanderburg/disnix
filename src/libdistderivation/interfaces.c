@@ -22,20 +22,6 @@
 #include <nixxml-ghashtable.h>
 #include <nixxml-gptrarray.h>
 
-static gint compare_interface(const Interface **l, const Interface **r)
-{
-    const Interface *left = *l;
-    const Interface *right = *r;
-
-    return g_strcmp0(left->target, right->target);
-}
-
-static int compare_interface_keys(const char *key, const Interface **r)
-{
-    const Interface *right = *r;
-    return g_strcmp0(key, right->target);
-}
-
 static void *create_interface(xmlNodePtr element, void *userdata)
 {
     return g_malloc0(sizeof(Interface));
@@ -45,10 +31,10 @@ static void insert_interface_attributes(void *table, const xmlChar *key, void *v
 {
     Interface *interface = (Interface*)table;
 
-    if(xmlStrcmp(key, (xmlChar*) "target") == 0)
-        interface->target = value;
+    if(xmlStrcmp(key, (xmlChar*) "targetAddress") == 0)
+        interface->target_address = value;
     else if(xmlStrcmp(key, (xmlChar*) "clientInterface") == 0)
-        interface->clientInterface = value;
+        interface->client_interface = value;
     else
         xmlFree(value);
 }
@@ -58,56 +44,48 @@ static gpointer parse_interface(xmlNodePtr element, void *userdata)
     return NixXML_parse_simple_attrset(element, userdata, create_interface, NixXML_parse_value, insert_interface_attributes);
 }
 
-GPtrArray *parse_interfaces(xmlNodePtr element)
+GHashTable *parse_interfaces(xmlNodePtr element)
 {
-    GPtrArray *interface_array = NixXML_parse_g_ptr_array(element, "interface", NULL, parse_interface);
-    g_ptr_array_sort(interface_array, (GCompareFunc)compare_interface);
-    return interface_array;
+    return NixXML_parse_g_hash_table_verbose(element, "interface", "name", NULL, parse_interface);
 }
 
 static void delete_interface(Interface *interface)
 {
-    g_free(interface->target);
-    g_free(interface->clientInterface);
+    g_free(interface->target_address);
+    g_free(interface->client_interface);
     g_free(interface);
 }
 
-void delete_interface_array(GPtrArray *interface_array)
+void delete_interfaces_table(GHashTable *interfaces_table)
 {
-    if(interface_array != NULL)
+    if(interfaces_table != NULL)
     {
-        unsigned int i;
+        GHashTableIter iter;
+        gpointer key, value;
 
-        for(i = 0; i < interface_array->len; i++)
+        g_hash_table_iter_init(&iter, interfaces_table);
+        while (g_hash_table_iter_next(&iter, &key, &value))
         {
-            Interface *interface = g_ptr_array_index(interface_array, i);
+            Interface *interface = (Interface*)value;
             delete_interface(interface);
         }
 
-        g_ptr_array_free(interface_array, TRUE);
+        g_hash_table_destroy(interfaces_table);
     }
 }
 
-int check_interface_array(const GPtrArray *interface_array)
+int check_interfaces_table(GHashTable *interfaces_table)
 {
-    unsigned int i;
+    GHashTableIter iter;
+    gpointer key, value;
 
-    for(i = 0; i < interface_array->len; i++)
+    g_hash_table_iter_init(&iter, interfaces_table);
+    while (g_hash_table_iter_next(&iter, &key, &value))
     {
-        Interface *interface = g_ptr_array_index(interface_array, i);
-        if(interface->target == NULL || interface->clientInterface == NULL)
+        Interface *interface = (Interface*)value;
+        if(interface->target_address == NULL || interface->client_interface == NULL)
             return FALSE;
     }
 
     return TRUE;
-}
-
-Interface *find_interface(const GPtrArray *interface_array, const gchar *key)
-{
-    Interface **ret = bsearch(key, interface_array->pdata, interface_array->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_interface_keys);
-
-    if(ret == NULL)
-        return NULL;
-    else
-        return *ret;
 }

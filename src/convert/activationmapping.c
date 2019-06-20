@@ -391,7 +391,7 @@ static ActivationStatus attempt_to_map_activation_mapping(ActivationMapping *map
         return ACTIVATION_WAIT;
 }
 
-static void wait_for_activation_mapping_to_complete(GHashTable *pid_table, GHashTable *targets_table, complete_activation_mapping_function complete_activation_mapping)
+static void wait_for_activation_mapping_to_complete(GHashTable *pid_table, GPtrArray *target_array, complete_activation_mapping_function complete_activation_mapping)
 {
     int wstatus;
     Target *target;
@@ -411,12 +411,12 @@ static void wait_for_activation_mapping_to_complete(GHashTable *pid_table, GHash
         complete_activation_mapping(mapping, status, result);
     
         /* Signal the target to make the CPU core available again */
-        target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
+        target = find_target(target_array, (gchar*)mapping->target);
         signal_available_target_core(target);
     }
 }
 
-ActivationStatus traverse_inter_dependency_mappings(GPtrArray *union_array, const ActivationMappingKey *key, GHashTable *targets_table, GHashTable *pid_table, map_activation_mapping_function map_activation_mapping)
+ActivationStatus traverse_inter_dependency_mappings(GPtrArray *union_array, const ActivationMappingKey *key, GPtrArray *target_array, GHashTable *pid_table, map_activation_mapping_function map_activation_mapping)
 {
     /* Retrieve the mapping from the union array */
     ActivationMapping *actual_mapping = find_activation_mapping(union_array, key);
@@ -430,7 +430,7 @@ ActivationStatus traverse_inter_dependency_mappings(GPtrArray *union_array, cons
         for(i = 0; i < actual_mapping->depends_on->len; i++)
         {
             ActivationMappingKey *dependency = g_ptr_array_index(actual_mapping->depends_on, i);
-            status = traverse_inter_dependency_mappings(union_array, dependency, targets_table, pid_table, map_activation_mapping);
+            status = traverse_inter_dependency_mappings(union_array, dependency, target_array, pid_table, map_activation_mapping);
             
             if(status != ACTIVATION_DONE)
                 return status; /* If any of the inter-dependencies has not been activated yet, relay its status */
@@ -442,7 +442,7 @@ ActivationStatus traverse_inter_dependency_mappings(GPtrArray *union_array, cons
     {
         case ACTIVATIONMAPPING_DEACTIVATED:
             {
-                Target *target = g_hash_table_lookup(targets_table, (gchar*)actual_mapping->target);
+                Target *target = find_target(target_array, (gchar*)actual_mapping->target);
                 
                 if(target == NULL)
                 {
@@ -461,7 +461,7 @@ ActivationStatus traverse_inter_dependency_mappings(GPtrArray *union_array, cons
     }
 }
 
-ActivationStatus traverse_interdependent_mappings(GPtrArray *union_array, const ActivationMappingKey *key, GHashTable *targets_table, GHashTable *pid_table, map_activation_mapping_function map_activation_mapping)
+ActivationStatus traverse_interdependent_mappings(GPtrArray *union_array, const ActivationMappingKey *key, GPtrArray *target_array, GHashTable *pid_table, map_activation_mapping_function map_activation_mapping)
 {
     /* Retrieve the mapping from the union array */
     ActivationMapping *actual_mapping = find_activation_mapping(union_array, key);
@@ -475,7 +475,7 @@ ActivationStatus traverse_interdependent_mappings(GPtrArray *union_array, const 
     for(i = 0; i < interdependent_mappings->len; i++)
     {
         ActivationMapping *dependency_mapping = g_ptr_array_index(interdependent_mappings, i);
-        ActivationStatus status = traverse_interdependent_mappings(union_array, (ActivationMappingKey*)dependency_mapping, targets_table, pid_table, map_activation_mapping);
+        ActivationStatus status = traverse_interdependent_mappings(union_array, (ActivationMappingKey*)dependency_mapping, target_array, pid_table, map_activation_mapping);
     
         if(status != ACTIVATION_DONE)
         {
@@ -491,7 +491,7 @@ ActivationStatus traverse_interdependent_mappings(GPtrArray *union_array, const 
     {
         case ACTIVATIONMAPPING_ACTIVATED:
             {
-                Target *target = g_hash_table_lookup(targets_table, (gchar*)actual_mapping->target);
+                Target *target = find_target(target_array, (gchar*)actual_mapping->target);
         
                 if(target == NULL)
                 {
@@ -511,7 +511,7 @@ ActivationStatus traverse_interdependent_mappings(GPtrArray *union_array, const 
     }
 }
 
-int traverse_activation_mappings(GPtrArray *mappings, GPtrArray *union_array, GHashTable *targets_table, iterate_strategy_function iterate_strategy, map_activation_mapping_function map_activation_mapping, complete_activation_mapping_function complete_activation_mapping)
+int traverse_activation_mappings(GPtrArray *mappings, GPtrArray *union_array, GPtrArray *target_array, iterate_strategy_function iterate_strategy, map_activation_mapping_function map_activation_mapping, complete_activation_mapping_function complete_activation_mapping)
 {
     GHashTable *pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, NULL);
     unsigned int num_done = 0;
@@ -525,7 +525,7 @@ int traverse_activation_mappings(GPtrArray *mappings, GPtrArray *union_array, GH
         for(i = 0; i < mappings->len; i++)
         {
             ActivationMapping *mapping = g_ptr_array_index(mappings, i);
-            ActivationStatus status = iterate_strategy(union_array, (ActivationMappingKey*)mapping, targets_table, pid_table, map_activation_mapping);
+            ActivationStatus status = iterate_strategy(union_array, (ActivationMappingKey*)mapping, target_array, pid_table, map_activation_mapping);
             
             if(status == ACTIVATION_ERROR)
             {
@@ -535,7 +535,7 @@ int traverse_activation_mappings(GPtrArray *mappings, GPtrArray *union_array, GH
             else if(status == ACTIVATION_DONE)
                 num_done++;
             
-            wait_for_activation_mapping_to_complete(pid_table, targets_table, complete_activation_mapping);
+            wait_for_activation_mapping_to_complete(pid_table, target_array, complete_activation_mapping);
         }
     }
     while(num_done < mappings->len);

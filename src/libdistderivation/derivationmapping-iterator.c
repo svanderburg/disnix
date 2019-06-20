@@ -32,7 +32,7 @@ static pid_t next_derivation_process(void *data)
 
     /* Retrieve derivation item, interface pair */
     DerivationItem *item = g_ptr_array_index(derivation_iterator_data->derivation_array, derivation_iterator_data->model_iterator_data.index);
-    Interface *interface = find_interface(derivation_iterator_data->interface_array, (gchar*)item->target);
+    Interface *interface = g_hash_table_lookup(derivation_iterator_data->interfaces_table, (gchar*)item->target);
 
     /* Invoke the next derivation item operation process */
     pid_t pid = derivation_iterator_data->map_derivation_item_function.pid(derivation_iterator_data->data, item, interface);
@@ -55,21 +55,21 @@ static void complete_derivation_process(void *data, pid_t pid, ProcReact_Status 
     derivation_iterator_data->complete_derivation_item_mapping_function.pid(derivation_iterator_data->data, item, status, result);
 }
 
-static DerivationIteratorData *create_common_iterator(const GPtrArray *derivation_array, const GPtrArray *interface_array, void *data)
+static DerivationIteratorData *create_common_iterator(const GPtrArray *derivation_array, GHashTable *interfaces_table, void *data)
 {
     DerivationIteratorData *derivation_iterator_data = (DerivationIteratorData*)g_malloc(sizeof(DerivationIteratorData));
 
     init_model_iterator_data(&derivation_iterator_data->model_iterator_data, derivation_array->len);
     derivation_iterator_data->derivation_array = derivation_array;
-    derivation_iterator_data->interface_array = interface_array;
+    derivation_iterator_data->interfaces_table = interfaces_table;
     derivation_iterator_data->data = data;
 
     return derivation_iterator_data;
 }
 
-ProcReact_PidIterator create_derivation_pid_iterator(const GPtrArray *derivation_array, const GPtrArray *interface_array, map_derivation_item_pid_function map_derivation_item, complete_derivation_item_mapping_pid_function complete_derivation_item_mapping, void *data)
+ProcReact_PidIterator create_derivation_pid_iterator(const GPtrArray *derivation_array, GHashTable *interfaces_table, map_derivation_item_pid_function map_derivation_item, complete_derivation_item_mapping_pid_function complete_derivation_item_mapping, void *data)
 {
-    DerivationIteratorData *derivation_iterator_data = create_common_iterator(derivation_array, interface_array, data);
+    DerivationIteratorData *derivation_iterator_data = create_common_iterator(derivation_array, interfaces_table, data);
     derivation_iterator_data->map_derivation_item_function.pid = map_derivation_item;
     derivation_iterator_data->complete_derivation_item_mapping_function.pid = complete_derivation_item_mapping;
 
@@ -83,7 +83,7 @@ static ProcReact_Future next_derivation_future(void *data)
 
     /* Retrieve derivation item, interface pair */
     DerivationItem *item = g_ptr_array_index(derivation_iterator_data->derivation_array, derivation_iterator_data->model_iterator_data.index);
-    Interface *interface = find_interface(derivation_iterator_data->interface_array, (gchar*)item->target);
+    Interface *interface = g_hash_table_lookup(derivation_iterator_data->interfaces_table, (gchar*)item->target);
 
     /* Invoke the next derivation item operation process */
     ProcReact_Future future = derivation_iterator_data->map_derivation_item_function.future(derivation_iterator_data->data, item, interface);
@@ -106,9 +106,9 @@ static void complete_derivation_future(void *data, ProcReact_Future *future, Pro
     derivation_iterator_data->complete_derivation_item_mapping_function.future(derivation_iterator_data->data, item, future, status);
 }
 
-ProcReact_FutureIterator create_derivation_future_iterator(const GPtrArray *derivation_array, const GPtrArray *interface_array, map_derivation_item_future_function map_derivation_item, complete_derivation_item_mapping_future_function complete_derivation_item_mapping, void *data)
+ProcReact_FutureIterator create_derivation_future_iterator(const GPtrArray *derivation_array, GHashTable *interfaces_table, map_derivation_item_future_function map_derivation_item, complete_derivation_item_mapping_future_function complete_derivation_item_mapping, void *data)
 {
-    DerivationIteratorData *derivation_iterator_data = create_common_iterator(derivation_array, interface_array, data);
+    DerivationIteratorData *derivation_iterator_data = create_common_iterator(derivation_array, interfaces_table, data);
     derivation_iterator_data->map_derivation_item_function.future = map_derivation_item;
     derivation_iterator_data->complete_derivation_item_mapping_function.future = complete_derivation_item_mapping;
 

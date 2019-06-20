@@ -33,7 +33,7 @@ static void destroy_container_value(gpointer data)
     g_ptr_array_free(services_array, TRUE);
 }
 
-GHashTable *generate_cluster_table(GPtrArray *activation_array, GPtrArray *target_array)
+GHashTable *generate_cluster_table(GPtrArray *activation_array, GHashTable *targets_table)
 {
     unsigned int i;
     
@@ -47,7 +47,7 @@ GHashTable *generate_cluster_table(GPtrArray *activation_array, GPtrArray *targe
 	ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
 	
 	/* Get target property of the current mapping item */
-	Target *target = find_target(target_array, (gchar*)mapping->target);
+	Target *target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
 	gchar *target_key = find_target_key(target, NULL);
 	
 	/* See whether the target already exists in the table */

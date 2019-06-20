@@ -28,6 +28,17 @@
 #include <nixxml-gptrarray.h>
 #include "package-management.h"
 
+static gint compare_target(const Target **l, const Target **r)
+{
+    const Target *left = *l;
+    const Target *right = *r;
+
+    gchar *left_target_property = find_target_key(left, NULL);
+    gchar *right_target_property = find_target_key(right, NULL);
+
+    return g_strcmp0(left_target_property, right_target_property);
+}
+
 static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
 {
     /* Declarations */
@@ -112,15 +123,17 @@ static gpointer parse_target(xmlNodePtr element, void *userdata)
     return NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_target, parse_and_insert_target_attributes);
 }
 
-GHashTable *parse_targets_table(xmlNodePtr element)
+GPtrArray *parse_targets(xmlNodePtr element)
 {
-    return NixXML_parse_g_hash_table_verbose(element, "target", "name", NULL, parse_target);
+    GPtrArray *targets_array = NixXML_parse_g_ptr_array(element, "target", NULL, parse_target);
+    g_ptr_array_sort(targets_array, (GCompareFunc)compare_target);
+    return targets_array;
 }
 
-GHashTable *create_targets_table_from_doc(xmlDocPtr doc)
+GPtrArray *create_target_array_from_doc(xmlDocPtr doc)
 {
     xmlNodePtr node_root;
-    GHashTable *targets_table;
+    GPtrArray *targets_array;
 
     if(doc == NULL)
     {
@@ -137,18 +150,18 @@ GHashTable *create_targets_table_from_doc(xmlDocPtr doc)
         return NULL;
     }
 
-    /* Parse targets table */
-    targets_table = parse_targets_table(node_root);
+    /* Parse targets */
+    targets_array = parse_targets(node_root);
 
-    /* Return targets table */
-    return targets_table;
+    /* Return targets */
+    return targets_array;
 }
 
-GHashTable *create_targets_table_from_nix(char *infrastructure_expr)
+GPtrArray *create_target_array_from_nix(char *infrastructure_expr)
 {
     /* Declarations */
     xmlDocPtr doc;
-    GHashTable *targets_table;
+    GPtrArray *targets_array;
 
     /* Open the XML output of nix-instantiate */
     char *infrastructureXML = pkgmgmt_instantiate_sync(infrastructure_expr);
@@ -161,10 +174,10 @@ GHashTable *create_targets_table_from_nix(char *infrastructure_expr)
 
     /* Parse the infrastructure XML file */
     if((doc = create_infrastructure_doc(infrastructureXML)) == NULL)
-        targets_table = NULL;
+        targets_array = NULL;
     else
     {
-        targets_table = create_targets_table_from_doc(doc); /* Create a target array from the XML document */
+        targets_array = create_target_array_from_doc(doc); /* Create a target array from the XML document */
         xmlFreeDoc(doc);
     }
 
@@ -172,15 +185,15 @@ GHashTable *create_targets_table_from_nix(char *infrastructure_expr)
     free(infrastructureXML);
     xmlCleanupParser();
 
-    /* Return the targets table*/
-    return targets_table;
+    /* Return the target array */
+    return targets_array;
 }
 
-GHashTable *create_targets_table_from_xml(const char *infrastructure_xml)
+GPtrArray *create_target_array_from_xml(const char *infrastructure_xml)
 {
     /* Declarations */
     xmlDocPtr doc;
-    GHashTable *targets_table;
+    GPtrArray *targets_array;
 
     /* Open the XML file */
     if((doc = xmlParseFile(infrastructure_xml)) == NULL)
@@ -190,23 +203,23 @@ GHashTable *create_targets_table_from_xml(const char *infrastructure_xml)
         return NULL;
     }
 
-    /* Create a targets table from the XML document */
-    targets_table = create_targets_table_from_doc(doc);
+    /* Create a target array from the XML document */
+    targets_array = create_target_array_from_doc(doc);
 
     /* Cleanup */
     xmlFreeDoc(doc);
     xmlCleanupParser();
 
-    /* Return the targets table */
-    return targets_table;
+    /* Return the target array */
+    return targets_array;
 }
 
-GHashTable *create_targets_table(gchar *infrastructure_expr, const int xml)
+GPtrArray *create_target_array(gchar *infrastructure_expr, const int xml)
 {
     if(xml)
-        return create_targets_table_from_xml(infrastructure_expr);
+        return create_target_array_from_xml(infrastructure_expr);
     else
-        return create_targets_table_from_nix(infrastructure_expr);
+        return create_target_array_from_nix(infrastructure_expr);
 }
 
 static void delete_properties_table(GHashTable *properties_table)
@@ -254,37 +267,33 @@ static void delete_target(Target *target)
     g_free(target);
 }
 
-void delete_targets_table(GHashTable *targets_table)
+void delete_target_array(GPtrArray *target_array)
 {
-    if(targets_table != NULL)
+    if(target_array != NULL)
     {
-        GHashTableIter iter;
-        gpointer key, value;
+        unsigned int i;
 
-        g_hash_table_iter_init(&iter, targets_table);
-        while (g_hash_table_iter_next(&iter, &key, &value))
+        for(i = 0; i < target_array->len; i++)
         {
-            Target *target = (Target*)value;
+            Target *target = g_ptr_array_index(target_array, i);
             delete_target(target);
         }
 
-        g_hash_table_destroy(targets_table);
+        g_ptr_array_free(target_array, TRUE);
     }
 }
 
-int check_targets_table(GHashTable *targets_table)
+int check_target_array(const GPtrArray *target_array)
 {
-    if(targets_table == NULL)
+    if(target_array == NULL)
         return TRUE;
     else
     {
-        GHashTableIter iter;
-        gpointer key, value;
+        unsigned int i;
 
-        g_hash_table_iter_init(&iter, targets_table);
-        while (g_hash_table_iter_next(&iter, &key, &value))
+        for(i = 0; i < target_array->len; i++)
         {
-            Target *target = (Target*)value;
+            Target *target = g_ptr_array_index(target_array, i);
 
             if(target->properties_table == NULL)
             {
@@ -297,6 +306,24 @@ int check_targets_table(GHashTable *targets_table)
     }
 
     return TRUE;
+}
+
+static int compare_target_keys(const char *key, const Target **r)
+{
+    const Target *right = *r;
+    gchar *right_target_property = find_target_key(right, NULL);
+
+    return g_strcmp0(key, right_target_property);
+}
+
+Target *find_target(const GPtrArray *target_array, const gchar *key)
+{
+    Target **ret = bsearch(key, target_array->pdata, target_array->len, sizeof(gpointer), (int (*)(const void *, const void *)) compare_target_keys);
+
+    if(ret == NULL)
+        return NULL;
+    else
+        return *ret;
 }
 
 gchar *find_target_property(const Target *target, const gchar *name)

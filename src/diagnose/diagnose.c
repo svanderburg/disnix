@@ -24,9 +24,9 @@
 #include <client-interface.h>
 #include <procreact_pid.h>
 
-static int spawn_shell(const GPtrArray *target_array, const ActivationMapping *mapping, char *command)
+static int spawn_shell(GHashTable *targets_table, const ActivationMapping *mapping, char *command)
 {
-    Target *target = find_target(target_array, (gchar*)mapping->target);
+    Target *target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
     gchar **arguments = generate_activation_arguments(target, (gchar*)mapping->container);
     ProcReact_Status status;
     int exit_status;
@@ -94,7 +94,7 @@ int diagnose(const char *service_name, const int show_mappings, const char *mani
             else if(candidate_mappings_array->len == 1)
             {
                 ActivationMapping *mapping = g_ptr_array_index(candidate_mappings_array, 0);
-                exit_status = spawn_shell(manifest->target_array, mapping, command);
+                exit_status = spawn_shell(manifest->targets_table, mapping, command);
             }
             else
             {
@@ -113,7 +113,7 @@ int diagnose(const char *service_name, const int show_mappings, const char *mani
                     for(i = 0; i < candidate_mappings_array->len; i++)
                     {
                         ActivationMapping *mapping = g_ptr_array_index(candidate_mappings_array, i);
-                        exit_status = spawn_shell(manifest->target_array, mapping, command);
+                        exit_status = spawn_shell(manifest->targets_table, mapping, command);
 
                         if(exit_status != 0)
                             break;

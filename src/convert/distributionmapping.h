@@ -17,33 +17,42 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_INTERFACES_H
-#define __DISNIX_INTERFACES_H
+#ifndef __DISNIX_DISTRIBUTIONMAPPING_H
+#define __DISNIX_DISTRIBUTIONMAPPING_H
 #include <glib.h>
 #include <libxml/parser.h>
+#include <targets.h>
 
 /**
- * @brief Contains properties to interface with a target machine for building
+ * @brief Contains a mapping of a Nix profile to a disnix service target
  */
 typedef struct
 {
-    /** Target property referring to the target machine to which the service is deployed */
-    gchar *target_address;
-
-    /** Executable that needs to be run to connect to the remote machine */
-    gchar *client_interface;
+    /** Nix store path to the profile */
+    xmlChar *profile;
+    /** Address of a disnix service */
+    xmlChar *target;
 }
-Interface;
-
-GHashTable *parse_interfaces(xmlNodePtr element);
+DistributionItem;
 
 /**
- * Deletes an array with interfaces.
+ * Creates a new array with distribution items from the corresponding sub
+ * section in an XML document.
  *
- * @param interfaces_table Hash table with interfaces
+ * @param element XML root element of the sub section defining the mappings
+ * @return GPtrArray with DistributionItems
  */
-void delete_interfaces_table(GHashTable *interfaces_table);
+GPtrArray *parse_distribution(xmlNodePtr element);
 
-int check_interfaces_table(GHashTable *interfaces_table);
+/**
+ * Deletes an array with distribution items.
+ *
+ * @param distribution_array Array with distribution items
+ */
+void delete_distribution_array(GPtrArray *distribution_array);
+
+void print_distribution_array(const GPtrArray *distribution_array);
+
+int check_distribution_array(const GPtrArray *distribution_array);
 
 #endif

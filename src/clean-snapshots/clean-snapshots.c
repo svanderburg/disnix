@@ -45,10 +45,10 @@ static void complete_clean_snapshots_on_target(void *data, Target *target, gchar
 
 int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, int keep, gchar *container, gchar *component, const int xml)
 {
-    /* Retrieve an array of all target machines from the infrastructure expression */
-    GPtrArray *target_array = create_target_array(infrastructure_expr, xml);
+    /* Retrieve a table of all target machines from the infrastructure expression */
+    GHashTable *targets_table = create_targets_table(infrastructure_expr, xml);
 
-    if(target_array == NULL)
+    if(targets_table == NULL)
     {
         g_printerr("[coordinator]: Error retrieving targets from infrastructure model!\n");
         return 1;
@@ -57,11 +57,11 @@ int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infra
     {
         int exit_status;
 
-        if(check_target_array(target_array))
+        if(check_targets_table(targets_table))
         {
             /* Iterate over all targets and run clean snapshots operation in parallel */
             CleanSnapshotsData data = { keep, container, component };
-            ProcReact_PidIterator iterator = create_target_pid_iterator(target_array, target_property, interface, clean_snapshots_on_target, complete_clean_snapshots_on_target, &data);
+            ProcReact_PidIterator iterator = create_target_pid_iterator(targets_table, target_property, interface, clean_snapshots_on_target, complete_clean_snapshots_on_target, &data);
 
             procreact_fork_in_parallel_and_wait(&iterator);
             exit_status = !target_iterator_has_succeeded(iterator.data);
@@ -72,7 +72,7 @@ int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infra
         else
             exit_status = 1;
 
-        delete_target_array(target_array);
+        delete_targets_table(targets_table);
 
         /* Return the exit status, which is 0 if everything succeeds */
         return exit_status;

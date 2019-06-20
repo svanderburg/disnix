@@ -42,7 +42,7 @@ static Manifest *parse_manifest(xmlNodePtr element, const unsigned int flags, co
         else if((flags & MANIFEST_SNAPSHOT_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "snapshots") == 0)
             manifest->snapshots_array = parse_snapshots(element_children, container_filter, component_filter);
         else if((flags & MANIFEST_TARGETS_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "targets") == 0)
-            manifest->targets_table = parse_targets_table(element_children);
+            manifest->target_array = parse_targets(element_children);
 
         element_children = element_children->next;
     }
@@ -92,7 +92,7 @@ int check_manifest(const Manifest *manifest)
     return (check_distribution_array(manifest->distribution_array)
       && check_activation_array(manifest->activation_array)
       && check_snapshots_array(manifest->snapshots_array)
-      && check_targets_table(manifest->targets_table));
+      && check_target_array(manifest->target_array));
 }
 
 void delete_manifest(Manifest *manifest)
@@ -102,7 +102,7 @@ void delete_manifest(Manifest *manifest)
         delete_distribution_array(manifest->distribution_array);
         delete_activation_array(manifest->activation_array);
         delete_snapshots_array(manifest->snapshots_array);
-        delete_targets_table(manifest->targets_table);
+        delete_target_array(manifest->target_array);
         g_free(manifest);
     }
 }

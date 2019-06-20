@@ -216,7 +216,7 @@ GPtrArray *find_snapshot_mappings_per_target(const GPtrArray *snapshots_array, c
     return return_array;
 }
 
-static int wait_to_complete_snapshot_item(GHashTable *pid_table, GHashTable *targets_table, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
+static int wait_to_complete_snapshot_item(GHashTable *pid_table, const GPtrArray *target_array, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
 {
     if(g_hash_table_size(pid_table) > 0)
     {
@@ -238,7 +238,7 @@ static int wait_to_complete_snapshot_item(GHashTable *pid_table, GHashTable *tar
             mapping->transferred = TRUE;
 
             /* Signal the target to make the CPU core available again */
-            target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
+            target = find_target(target_array, (gchar*)mapping->target);
             signal_available_target_core(target);
 
             /* Return the status */
@@ -251,7 +251,7 @@ static int wait_to_complete_snapshot_item(GHashTable *pid_table, GHashTable *tar
         return TRUE;
 }
 
-int map_snapshot_items(const GPtrArray *snapshots_array, GHashTable *targets_table, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
+int map_snapshot_items(const GPtrArray *snapshots_array, const GPtrArray *target_array, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
 {
     unsigned int num_processed = 0;
     int status = TRUE;
@@ -264,7 +264,7 @@ int map_snapshot_items(const GPtrArray *snapshots_array, GHashTable *targets_tab
         for(i = 0; i < snapshots_array->len; i++)
         {
             SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
-            Target *target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
+            Target *target = find_target(target_array, (gchar*)mapping->target);
             
             if(target == NULL)
                 g_print("[target: %s]: Skip state of component: %s deployed to container: %s since machine is no longer present!\n", mapping->target, mapping->component, mapping->container);
@@ -285,7 +285,7 @@ int map_snapshot_items(const GPtrArray *snapshots_array, GHashTable *targets_tab
             }
         }
     
-        if(!wait_to_complete_snapshot_item(pid_table, targets_table, complete_snapshot_item_mapping))
+        if(!wait_to_complete_snapshot_item(pid_table, target_array, complete_snapshot_item_mapping))
             status = FALSE;
         
         num_processed++;

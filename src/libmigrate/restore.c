@@ -83,11 +83,11 @@ void complete_send_snapshots_to_target(void *data, Target *target, gchar *target
     }
 }
 
-static int send_snapshots(GPtrArray *snapshots_array, GPtrArray *target_array, const unsigned int max_concurrent_transfers, const unsigned int flags)
+static int send_snapshots(GPtrArray *snapshots_array, GHashTable *targets_table, const unsigned int max_concurrent_transfers, const unsigned int flags)
 {
     int success;
     SendSnapshotsData data = { snapshots_array, flags };
-    ProcReact_PidIterator iterator = create_target_pid_iterator(target_array, NULL, NULL, send_snapshots_to_target, complete_send_snapshots_to_target, &data);
+    ProcReact_PidIterator iterator = create_target_pid_iterator(targets_table, NULL, NULL, send_snapshots_to_target, complete_send_snapshots_to_target, &data);
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
     success = target_iterator_has_succeeded(iterator.data);
 
@@ -110,10 +110,10 @@ static void complete_restore_snapshot_on_target(SnapshotMapping *mapping, ProcRe
         g_printerr("[target: %s]: Cannot restore state of service: %s\n", mapping->target, mapping->component);
 }
 
-static int restore_services(GPtrArray *snapshots_array, GPtrArray *target_array)
+static int restore_services(GPtrArray *snapshots_array, GHashTable *targets_table)
 {
     g_print("[coordinator]: Restoring state of services...\n");
-    return map_snapshot_items(snapshots_array, target_array, restore_snapshot_on_target, complete_restore_snapshot_on_target);
+    return map_snapshot_items(snapshots_array, targets_table, restore_snapshot_on_target, complete_restore_snapshot_on_target);
 }
 
 /* Clean snapshot mapping infrastructure */
@@ -183,11 +183,11 @@ void complete_send_restore_and_clean_snapshots_on_target(void *data, Target *tar
     }
 }
 
-static int restore_depth_first(GPtrArray *snapshots_array, GPtrArray *target_array, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)
+static int restore_depth_first(GPtrArray *snapshots_array, GHashTable *targets_table, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)
 {
     int success;
     SendRestoreAndCleanSnapshotsData data = { snapshots_array, flags, keep };
-    ProcReact_PidIterator iterator = create_target_pid_iterator(target_array, NULL, NULL, send_restore_and_clean_snapshot_on_target, complete_send_restore_and_clean_snapshots_on_target, &data);
+    ProcReact_PidIterator iterator = create_target_pid_iterator(targets_table, NULL, NULL, send_restore_and_clean_snapshot_on_target, complete_send_restore_and_clean_snapshots_on_target, &data);
 
     g_print("[coordinator]: Sending, restoring and cleaning snapshots...\n");
 
@@ -218,11 +218,11 @@ int restore(const Manifest *manifest, const GPtrArray *old_snapshots_array, cons
     }
 
     if(flags & FLAG_DEPTH_FIRST)
-        exit_status = restore_depth_first(snapshots_array, manifest->target_array, max_concurrent_transfers, flags, keep);
+        exit_status = restore_depth_first(snapshots_array, manifest->targets_table, max_concurrent_transfers, flags, keep);
     else
     {
-        exit_status = send_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, flags) /* First, send the snapshots to the remote machines */
-          && ((flags & FLAG_TRANSFER_ONLY) || restore_services(snapshots_array, manifest->target_array)); /* Then, restore them on the remote machines */
+        exit_status = send_snapshots(snapshots_array, manifest->targets_table, max_concurrent_transfers, flags) /* First, send the snapshots to the remote machines */
+          && ((flags & FLAG_TRANSFER_ONLY) || restore_services(snapshots_array, manifest->targets_table)); /* Then, restore them on the remote machines */
     }
 
     if(!(flags & FLAG_NO_UPGRADE) && old_snapshots_array != NULL)

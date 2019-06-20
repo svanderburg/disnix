@@ -26,11 +26,11 @@
  * a manifest to a list of its inter-dependencies
  *
  * @param activation_array Array with activation mappings
- * @param targets_array Array with targets
+ * @param targets_table Hash table with targets
  * @param ordering TRUE if strict ordering is required, else FALSE
  * @return Generated edges table
  */
-GHashTable *generate_edges_table(const GPtrArray *activation_array, GPtrArray *targets_array, int ordering);
+GHashTable *generate_edges_table(const GPtrArray *activation_array, GHashTable *targets_table, int ordering);
 
 /**
  * Removes an edges table including all its contents from memory.

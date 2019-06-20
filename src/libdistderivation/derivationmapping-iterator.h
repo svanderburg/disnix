@@ -42,8 +42,8 @@ typedef struct
     ModelIteratorData model_iterator_data;
     /** Array with derivation items */
     const GPtrArray *derivation_array;
-    /** Array with interface items */
-    const GPtrArray *interface_array;
+    /** Hash table with interface items */
+    GHashTable *interfaces_table;
 
     /** Function that maps over each item in the derivation array */
     union
@@ -105,26 +105,26 @@ DerivationIteratorData;
  * and executes the provided functions on start and completion.
  *
  * @param derivation_array Array with derivation items
- * @param interface_array Array with interface items
+ * @param interfaces_table Hash table with interfaces
  * @param map_derivation_item Pointer to a function that executes an operation for each derivation item
  * @param complete_derivation_item_mapping Pointer to a function that gets executed when a process completes for a derivation item
  * @param data Pointer to arbitrary data passed to the above functions
  * @return A PID iterator that can be used to traverse the derivation items
  */
-ProcReact_PidIterator create_derivation_pid_iterator(const GPtrArray *derivation_array, const GPtrArray *interface_array, map_derivation_item_pid_function map_derivation_item, complete_derivation_item_mapping_pid_function complete_derivation_item_mapping, void *data);
+ProcReact_PidIterator create_derivation_pid_iterator(const GPtrArray *derivation_array, GHashTable *interfaces_table, map_derivation_item_pid_function map_derivation_item, complete_derivation_item_mapping_pid_function complete_derivation_item_mapping, void *data);
 
 /**
  * Creates a new future iterator that steps over each derivation item and
  * interface and executes the provided functions on start and completion.
  *
  * @param derivation_array Array with derivation items
- * @param interface_array Array with interface items
+ * @param interfaces_table Hash table with interfaces
  * @param map_derivation_item Pointer to a function that constructs a future for each derivation item
  * @param complete_derivation_item_mapping Pointer to a function that gets executed when a future completes for a derivation item
  * @param data Pointer to arbitrary data passed to the above functions
  * @return A future iterator that can be used to traverse the derivation items
  */
-ProcReact_FutureIterator create_derivation_future_iterator(const GPtrArray *derivation_array, const GPtrArray *interface_array, map_derivation_item_future_function map_derivation_item, complete_derivation_item_mapping_future_function complete_derivation_item_mapping, void *data);
+ProcReact_FutureIterator create_derivation_future_iterator(const GPtrArray *derivation_array, GHashTable *interfaces_table, map_derivation_item_future_function map_derivation_item, complete_derivation_item_mapping_future_function complete_derivation_item_mapping, void *data);
 
 /**
  * Destroys all resources allocated with the provided derivation PID iterator

@@ -36,11 +36,11 @@ static void complete_set_distribution_item(void *data, DistributionItem *item, P
         g_printerr("[target: %s]: Cannot set Disnix profile: %s\n", item->target, item->profile);
 }
 
-static int set_target_profiles(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile)
+static int set_target_profiles(const GPtrArray *distribution_array, GHashTable *targets_table, gchar *profile)
 {
     /* Iterate over the distribution mappings, limiting concurrency to the desired concurrent transfers and distribute them */
     int success;
-    ProcReact_PidIterator iterator = create_distribution_iterator(distribution_array, target_array, set_distribution_item, complete_set_distribution_item, profile);
+    ProcReact_PidIterator iterator = create_distribution_iterator(distribution_array, targets_table, set_distribution_item, complete_set_distribution_item, profile);
     procreact_fork_in_parallel_and_wait(&iterator);
     success = distribution_iterator_has_succeeded(&iterator);
 
@@ -51,6 +51,6 @@ static int set_target_profiles(const GPtrArray *distribution_array, const GPtrAr
 
 int set_profiles(const Manifest *manifest, const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const unsigned int flags)
 {
-    return((flags & SET_NO_TARGET_PROFILES || set_target_profiles(manifest->distribution_array, manifest->target_array, profile)) /* First, attempt to set the target profiles */
+    return((flags & SET_NO_TARGET_PROFILES || set_target_profiles(manifest->distribution_array, manifest->targets_table, profile)) /* First, attempt to set the target profiles */
       && (flags & SET_NO_COORDINATOR_PROFILE || pkgmgmt_set_coordinator_profile(coordinator_profile_path, manifest_file, profile))); /* Then try to set the coordinator profile */
 }

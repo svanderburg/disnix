@@ -46,7 +46,7 @@ typedef struct
     GPtrArray *snapshots_array;
     
     /** Array containing the available target machines */
-    GHashTable *targets_table;
+    GPtrArray *target_array;
 }
 Manifest;
 

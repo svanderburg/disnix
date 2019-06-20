@@ -68,12 +68,12 @@ static void complete_query_requisites_on_target(void *data, Target *target, gcha
     }
 }
 
-static int resolve_profiles(GPtrArray *target_array, gchar *interface, const gchar *target_property, gchar *profile, GPtrArray *profile_manifest_target_array)
+static int resolve_profiles(GHashTable *targets_table, gchar *interface, const gchar *target_property, gchar *profile, GPtrArray *profile_manifest_target_array)
 {
     gchar *profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, NULL);
     QueryRequisitesData data = { profile_path, profile_manifest_target_array };
     
-    ProcReact_FutureIterator iterator = create_target_future_iterator(target_array, target_property, interface, query_requisites_on_target, complete_query_requisites_on_target, &data);
+    ProcReact_FutureIterator iterator = create_target_future_iterator(targets_table, target_property, interface, query_requisites_on_target, complete_query_requisites_on_target, &data);
     
     g_printerr("[coordinator]: Resolving target profile paths...\n");
     
@@ -125,9 +125,9 @@ static int retrieve_profiles(gchar *interface, GPtrArray *profile_manifest_targe
 int capture_manifest(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile, const unsigned int max_concurrent_transfers, const int xml)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
-    GPtrArray *target_array = create_target_array(infrastructure_expr, xml);
+    GHashTable *targets_table = create_targets_table(infrastructure_expr, xml);
 
-    if(target_array == NULL)
+    if(targets_table == NULL)
     {
         g_printerr("[coordinator]: Error retrieving targets from infrastructure model!\n");
         return 1;
@@ -136,11 +136,11 @@ int capture_manifest(gchar *interface, const gchar *target_property, gchar *infr
     {
         int exit_status;
 
-        if(check_target_array(target_array))
+        if(check_targets_table(targets_table))
         {
             GPtrArray *profile_manifest_target_array = g_ptr_array_new();
 
-            if(resolve_profiles(target_array, interface, target_property, profile, profile_manifest_target_array)
+            if(resolve_profiles(targets_table, interface, target_property, profile, profile_manifest_target_array)
               && retrieve_profiles(interface, profile_manifest_target_array, max_concurrent_transfers))
             {
                 print_nix_expression_for_profile_manifest_target_array(profile_manifest_target_array);
@@ -155,7 +155,7 @@ int capture_manifest(gchar *interface, const gchar *target_property, gchar *infr
         else
             exit_status = 1;
 
-        delete_target_array(target_array);
+        delete_targets_table(targets_table);
 
         /* Return exit status */
         return exit_status;

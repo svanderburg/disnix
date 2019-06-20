@@ -37,9 +37,9 @@ static void complete_take_snapshot_on_target(SnapshotMapping *mapping, ProcReact
         g_printerr("[target: %s]: Cannot snapshot state of service: %s\n", mapping->target, mapping->component);
 }
 
-static int snapshot_services(GPtrArray *snapshots_array, GPtrArray *target_array)
+static int snapshot_services(GPtrArray *snapshots_array, GHashTable *targets_table)
 {
-    return map_snapshot_items(snapshots_array, target_array, take_snapshot_on_target, complete_take_snapshot_on_target);
+    return map_snapshot_items(snapshots_array, targets_table, take_snapshot_on_target, complete_take_snapshot_on_target);
 }
 
 /* Retrieve snapshots infrastructure */
@@ -102,11 +102,11 @@ void complete_retrieve_snapshots_from_target(void *data, Target *target, gchar *
     }
 }
 
-static int retrieve_snapshots(GPtrArray *snapshots_array, GPtrArray *target_array, const unsigned int max_concurrent_transfers, const unsigned int flags)
+static int retrieve_snapshots(GPtrArray *snapshots_array, GHashTable *targets_table, const unsigned int max_concurrent_transfers, const unsigned int flags)
 {
     int success;
     RetrieveSnapshotsData data = { snapshots_array, flags };
-    ProcReact_PidIterator iterator = create_target_pid_iterator(target_array, NULL, NULL, retrieve_snapshots_from_target, complete_retrieve_snapshots_from_target, &data);
+    ProcReact_PidIterator iterator = create_target_pid_iterator(targets_table, NULL, NULL, retrieve_snapshots_from_target, complete_retrieve_snapshots_from_target, &data);
 
     g_print("[coordinator]: Retrieving snapshots...\n");
 
@@ -185,11 +185,11 @@ void complete_take_retrieve_and_clean_snapshots_on_target(void *data, Target *ta
     }
 }
 
-static int snapshot_depth_first(GPtrArray *snapshots_array, GPtrArray *target_array, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)
+static int snapshot_depth_first(GPtrArray *snapshots_array, GHashTable *targets_table, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)
 {
     int success;
     TakeRetrieveAndCleanSnapshotsData data = { snapshots_array, flags, keep };
-    ProcReact_PidIterator iterator = create_target_pid_iterator(target_array, NULL, NULL, take_retrieve_and_clean_snapshot_on_target, complete_take_retrieve_and_clean_snapshots_on_target, &data);
+    ProcReact_PidIterator iterator = create_target_pid_iterator(targets_table, NULL, NULL, take_retrieve_and_clean_snapshot_on_target, complete_take_retrieve_and_clean_snapshots_on_target, &data);
 
     g_print("[coordinator]: Snapshotting, retrieving and cleaning snapshots...\n");
 
@@ -227,11 +227,11 @@ int snapshot(const Manifest *manifest, const GPtrArray *old_snapshots_array, con
         }
 
         if(flags & FLAG_DEPTH_FIRST)
-            exit_status = snapshot_depth_first(snapshots_array, manifest->target_array, max_concurrent_transfers, flags, keep);
+            exit_status = snapshot_depth_first(snapshots_array, manifest->targets_table, max_concurrent_transfers, flags, keep);
         else
         {
-            exit_status = ((flags & FLAG_TRANSFER_ONLY) || snapshot_services(snapshots_array, manifest->target_array))
-              && retrieve_snapshots(snapshots_array, manifest->target_array, max_concurrent_transfers, flags);
+            exit_status = ((flags & FLAG_TRANSFER_ONLY) || snapshot_services(snapshots_array, manifest->targets_table))
+              && retrieve_snapshots(snapshots_array, manifest->targets_table, max_concurrent_transfers, flags);
         }
 
         if(!(flags & FLAG_NO_UPGRADE))

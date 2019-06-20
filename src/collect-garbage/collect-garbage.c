@@ -43,9 +43,9 @@ static void complete_collect_garbage_on_target(void *data, Target *target, gchar
 int collect_garbage(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, const unsigned int flags)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
-    GPtrArray *target_array = create_target_array(infrastructure_expr, flags & FLAG_COLLECT_GARBAGE_XML);
+    GHashTable *targets_table = create_targets_table(infrastructure_expr, flags & FLAG_COLLECT_GARBAGE_XML);
 
-    if(target_array == NULL)
+    if(targets_table == NULL)
     {
         g_printerr("[coordinator]: Error retrieving targets from infrastructure model!\n");
         return 1;
@@ -54,12 +54,12 @@ int collect_garbage(gchar *interface, const gchar *target_property, gchar *infra
     {
         int exit_status;
 
-        if(check_target_array(target_array))
+        if(check_targets_table(targets_table))
         {
             /* Iterate over all targets and run collect garbage operation in parallel */
             gboolean delete_old = flags & FLAG_COLLECT_GARBAGE_DELETE_OLD;
             CollectGarbageData data = { delete_old };
-            ProcReact_PidIterator iterator = create_target_pid_iterator(target_array, target_property, interface, collect_garbage_on_target, complete_collect_garbage_on_target, &data);
+            ProcReact_PidIterator iterator = create_target_pid_iterator(targets_table, target_property, interface, collect_garbage_on_target, complete_collect_garbage_on_target, &data);
 
             procreact_fork_in_parallel_and_wait(&iterator);
             exit_status = !target_iterator_has_succeeded(iterator.data);
@@ -70,7 +70,7 @@ int collect_garbage(gchar *interface, const gchar *target_property, gchar *infra
         else
             exit_status = 1;
 
-        delete_target_array(target_array);
+        delete_targets_table(targets_table);
 
         /* Return the exit status, which is 0 if everything succeeds */
         return exit_status;

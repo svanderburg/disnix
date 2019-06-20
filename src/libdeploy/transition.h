@@ -40,10 +40,10 @@ TransitionStatus;
  *
  * @param new_activation_mappings Array containing the activation mappings of the new configuration
  * @param old_activation_mappings Array containing the activation mappings of the old configuration or NULL to activate all services in the new configuration
- * @param target_array Array containing all the targets of the new configuration
+ * @param targets_table Hash table containing all the targets of the new configuration
  * @param flags Deployment option flags
  * @return A status value from the transition status enumeration
  */
-TransitionStatus transition(GPtrArray *new_activation_mappings, GPtrArray *old_activation_mappings, GPtrArray *target_array, const unsigned int flags);
+TransitionStatus transition(GPtrArray *new_activation_mappings, GPtrArray *old_activation_mappings, GHashTable *targets_table, const unsigned int flags);
 
 #endif

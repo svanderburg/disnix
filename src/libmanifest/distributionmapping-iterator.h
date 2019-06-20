@@ -40,7 +40,7 @@ typedef struct
     /** Array with distribution items */
     const GPtrArray *distribution_array;
     /** Array with target items */
-    const GPtrArray *target_array;
+    GHashTable *targets_table;
 
     /**
      * Pointer to a function that executes an operation for each distribution item
@@ -72,13 +72,13 @@ DistributionIteratorData;
  * executes the provided functions on start and completion.
  *
  * @param distribution_array Array with distribution items
- * @param target_array Array with target items
+ * @param targets_table Hash table of targets
  * @param map_distribution_item Pointer to a function that executes an operation for each distribution item
  * @param complete_distribution_item_mapping Pointer to a function that gets executed when a process completes for a distribution item
  * @param data Pointer to arbitrary data passed to the above functions
  * @return A PID iterator that can be used to traverse the distribution items
  */
-ProcReact_PidIterator create_distribution_iterator(const GPtrArray *distribution_array, const GPtrArray *target_array, map_distribution_item_function map_distribution_item, complete_distribution_item_mapping_function complete_distribution_item_mapping, void *data);
+ProcReact_PidIterator create_distribution_iterator(const GPtrArray *distribution_array, GHashTable *targets_table, map_distribution_item_function map_distribution_item, complete_distribution_item_mapping_function complete_distribution_item_mapping, void *data);
 
 /**
  * Destroys the resources attached to the given distribution iterator.

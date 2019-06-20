@@ -76,9 +76,9 @@ static void print_installed_services(QueryInstalledServicesData *query_installed
 int query_installed(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile, OutputFormat format, const int xml)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
-    GPtrArray *target_array = create_target_array(infrastructure_expr, xml);
+    GHashTable *targets_table = create_targets_table(infrastructure_expr, xml);
 
-    if(target_array == NULL)
+    if(targets_table == NULL)
     {
         g_printerr("[coordinator]: Error retrieving targets from infrastructure model!\n");
         return 1;
@@ -87,12 +87,12 @@ int query_installed(gchar *interface, const gchar *target_property, gchar *infra
     {
         int exit_status;
 
-        if(check_target_array(target_array))
+        if(check_targets_table(targets_table))
         {
             /* Iterate over targets and capture their installed services */
             GPtrArray *profile_manifest_target_array = g_ptr_array_new();
             QueryInstalledServicesData data = { profile, profile_manifest_target_array };
-            ProcReact_FutureIterator iterator = create_target_future_iterator(target_array, target_property, interface, query_installed_services_on_target, complete_query_installed_services_on_target, &data);
+            ProcReact_FutureIterator iterator = create_target_future_iterator(targets_table, target_property, interface, query_installed_services_on_target, complete_query_installed_services_on_target, &data);
             procreact_fork_in_parallel_buffer_and_wait(&iterator);
             exit_status = !target_iterator_has_succeeded(iterator.data);
 
@@ -106,7 +106,7 @@ int query_installed(gchar *interface, const gchar *target_property, gchar *infra
         else
             exit_status = 1;
 
-        delete_target_array(target_array);
+        delete_targets_table(targets_table);
 
         /* Return exit status */
         return exit_status;

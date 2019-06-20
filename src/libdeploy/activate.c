@@ -85,7 +85,7 @@ TransitionStatus activate_system(Manifest *manifest, GPtrArray *old_activation_m
     if(pre_hook != NULL) /* Execute hook before the lock operations are executed */
         pre_hook();
 
-    status = transition(manifest->activation_array, old_activation_mappings, manifest->target_array, flags);
+    status = transition(manifest->activation_array, old_activation_mappings, manifest->targets_table, flags);
 
     if(post_hook != NULL) /* Execute hook after the lock operations have been completed */
         post_hook();

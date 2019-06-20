@@ -39,7 +39,7 @@ int distribute(const Manifest *manifest, const unsigned int max_concurrent_trans
 {
     /* Iterate over the distribution mappings, limiting concurrency to the desired concurrent transfers and distribute them */
     int success;
-    ProcReact_PidIterator iterator = create_distribution_iterator(manifest->distribution_array, manifest->target_array, transfer_distribution_item_to, complete_transfer_distribution_item_to, NULL);
+    ProcReact_PidIterator iterator = create_distribution_iterator(manifest->distribution_array, manifest->targets_table, transfer_distribution_item_to, complete_transfer_distribution_item_to, NULL);
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
     success = distribution_iterator_has_succeeded(&iterator);
 

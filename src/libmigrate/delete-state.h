@@ -25,9 +25,9 @@
  * Actually deletes all the state that has been marked as obsolete.
  *
  * @param snapshots_array Array of stateful components belonging to the current configurations
- * @param target_array Array of targets belonging to the current configuration
+ * @param targets_table Hash table of targets belonging to the current configuration
  * @return TRUE if deleting the state completed successfully, else FALSE
  */
-int delete_obsolete_state(GPtrArray *snapshots_array, const GPtrArray *target_array);
+int delete_obsolete_state(GPtrArray *snapshots_array, GHashTable *targets_table);
 
 #endif

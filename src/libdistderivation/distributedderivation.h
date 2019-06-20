@@ -33,8 +33,8 @@ typedef struct
     /** Array of store derivations to be built on a target machine */
     GPtrArray *derivation_array;
 
-    /** Array containing the available interface properties of target machines */
-    GPtrArray *interface_array;
+    /** Hash table containing the available interface properties of each target machine */
+    GHashTable *interfaces_table;
 }
 DistributedDerivation;
 

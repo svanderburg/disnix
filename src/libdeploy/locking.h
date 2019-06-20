@@ -26,25 +26,25 @@
  * network.
  *
  * @param distribution_array Array of distribution items
- * @param target_array Array of targets belonging to the current configuration
+ * @param targets_table Hash table of targets belonging to the current configuration
  * @param profile Identifier of the distributed profile
  * @param pre_hook Pointer to a function that gets executed before a series of critical operations start. This function can be used to catch a SIGINT signal and do a proper rollback. If the pointer is NULL then no function is executed.
  * @param pre_hook Pointer to a function that gets executed after the critical operations are done. This function can be used to restore the handler for the SIGINT to normal. If the pointer is NULL then no function is executed.
  * @return TRUE if all the target machines have been successfully unlocked, else FALSE
  */
-int unlock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void));
+int unlock(const GPtrArray *distribution_array, GHashTable *targets_table, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void));
 
 /**
  * Locks the target machine and all services on all target machines in the
  * network.
  *
  * @param distribution_array Array of distribution items
- * @param target_array Array of targets belonging to the current configuration
+ * @param targets_table Hash table of targets belonging to the current configuration
  * @param profile Identifier of the distributed profile
  * @param pre_hook Pointer to a function that gets executed before a series of critical operations start. This function can be used to catch a SIGINT signal and do a proper rollback.
  * @param pre_hook Pointer to a function that gets executed after the critical operations are done. This function can be used to restore the handler for the SIGINT to normal.
  * @return TRUE if all the target machines have been successfully locked, else FALSE
  */
-int lock(const GPtrArray *distribution_array, const GPtrArray *target_array, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void));
+int lock(const GPtrArray *distribution_array, GHashTable *targets_table, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void));
 
 #endif

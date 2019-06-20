@@ -32,7 +32,9 @@ static pid_t next_target_process(void *data)
     TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
 
     /* Retrieve distributionitem, target pair */
-    Target *target = g_ptr_array_index(target_iterator_data->target_array, target_iterator_data->model_iterator_data.index);
+    void *key, *value;
+    g_hash_table_iter_next(&target_iterator_data->iter, &key, &value);
+    Target *target = (Target*)value;
     gchar *client_interface = (gchar*)target->client_interface;
     gchar *target_key = find_target_key(target, target_iterator_data->target_property);
 
@@ -69,7 +71,9 @@ static ProcReact_Future next_target_future(void *data)
     TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
 
     /* Retrieve distributionitem, target pair */
-    Target *target = g_ptr_array_index(target_iterator_data->target_array, target_iterator_data->model_iterator_data.index);
+    void *key, *value;
+    g_hash_table_iter_next(&target_iterator_data->iter, &key, &value);
+    Target *target = (Target*)value;
     gchar *client_interface = (gchar*)target->client_interface;
     gchar *target_key = find_target_key(target, target_iterator_data->target_property);
 
@@ -99,12 +103,13 @@ static void complete_target_future(void *data, ProcReact_Future *future, ProcRea
     target_iterator_data->complete_target_mapping_function.future(target_iterator_data->data, target, target_key, future, status);
 }
 
-static TargetIteratorData *create_common_iterator(GPtrArray *target_array, const gchar *target_property, gchar *interface, void *data)
+static TargetIteratorData *create_common_iterator(GHashTable *targets_table, const gchar *target_property, gchar *interface, void *data)
 {
     TargetIteratorData *target_iterator_data = (TargetIteratorData*)g_malloc(sizeof(TargetIteratorData));
 
-    init_model_iterator_data(&target_iterator_data->model_iterator_data, target_array->len);
-    target_iterator_data->target_array = target_array;
+    init_model_iterator_data(&target_iterator_data->model_iterator_data, g_hash_table_size(targets_table));
+    target_iterator_data->targets_table = targets_table;
+    g_hash_table_iter_init(&target_iterator_data->iter, target_iterator_data->targets_table);
     target_iterator_data->target_property = target_property;
     target_iterator_data->interface = interface;
     target_iterator_data->data = data;
@@ -112,9 +117,9 @@ static TargetIteratorData *create_common_iterator(GPtrArray *target_array, const
     return target_iterator_data;
 }
 
-ProcReact_PidIterator create_target_pid_iterator(GPtrArray *target_array, const gchar *target_property, gchar *interface, map_target_pid_function map_target, complete_target_mapping_pid_function complete_target_mapping, void *data)
+ProcReact_PidIterator create_target_pid_iterator(GHashTable *targets_table, const gchar *target_property, gchar *interface, map_target_pid_function map_target, complete_target_mapping_pid_function complete_target_mapping, void *data)
 {
-    TargetIteratorData *target_iterator_data = create_common_iterator(target_array, target_property, interface, data);
+    TargetIteratorData *target_iterator_data = create_common_iterator(targets_table, target_property, interface, data);
 
     target_iterator_data->map_target_function.pid = map_target;
     target_iterator_data->complete_target_mapping_function.pid = complete_target_mapping;
@@ -122,9 +127,9 @@ ProcReact_PidIterator create_target_pid_iterator(GPtrArray *target_array, const 
     return procreact_initialize_pid_iterator(has_next_target, next_target_process, procreact_retrieve_boolean, complete_target_process, target_iterator_data);
 }
 
-ProcReact_FutureIterator create_target_future_iterator(GPtrArray *target_array, const gchar *target_property, gchar *interface, map_target_future_function map_target, complete_target_mapping_future_function complete_target_mapping, void *data)
+ProcReact_FutureIterator create_target_future_iterator(GHashTable *targets_table, const gchar *target_property, gchar *interface, map_target_future_function map_target, complete_target_mapping_future_function complete_target_mapping, void *data)
 {
-    TargetIteratorData *target_iterator_data = create_common_iterator(target_array, target_property, interface, data);
+    TargetIteratorData *target_iterator_data = create_common_iterator(targets_table, target_property, interface, data);
 
     target_iterator_data->map_target_function.future = map_target;
     target_iterator_data->complete_target_mapping_function.future = complete_target_mapping;
