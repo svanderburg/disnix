@@ -1,140 +1,268 @@
 {lib, pkgs}:
+{normalizedArchitecture}:
 
 let
-  inherit (builtins) toXML filter attrNames getAttr hashString concatLists substring stringLength hasAttr;
+  inherit (builtins) attrNames getAttr toXML hashString listToAttrs stringLength substring unsafeDiscardStringContext elem filter;
 
-  # TODO: duplicate
+  generateHash = {name, type, pkg, dependsOn}:
+    unsafeDiscardStringContext (hashString "sha256" (toXML {
+      inherit name type pkg dependsOn;
+    }));
+
   getTargetProperty = target:
     getAttr target.targetProperty target.properties;
 
-  generateServiceHashKey = mapping:
-    hashString "sha256" (toXML {
-      inherit (mapping) service name type dependsOn;
-    });
-
-  generateDependencyMappingsPerService = {services, dependencies}:
-    map (dependencyName:
+  generateDependencyMappings = {services, service, dependencyType, targetAliases}:
+    lib.flatten (map (dependencyName:
       let
-        dependency = getAttr dependencyName dependencies;
-        service = if dependency.type == "package"
-          then throw "It is not allowed to refer to package: ${dependencyName} as an inter-dependency!"
-          else getAttr dependency.name services;
-      in
-      map (target: {
-        target = getTargetProperty target;
-        container = target.selectedContainer;
-        _key = generateServiceHashKey {
-          inherit (service) name type;
-          dependsOn = generateDependencyMappings { inherit services service; property = "dependsOn"; };
-          service = service._pkgsPerSystem."${target.system}".outPath;
-        };
-      }) service.targets
-    ) (attrNames dependencies);
-
-  generateDependencyMappings = {services, service, property}:
-    if hasAttr property service then
-      let
-        dependencies = service."${property}";
-      in
-      concatLists (generateDependencyMappingsPerService {
-        inherit services dependencies;
-      })
-    else [];
-
-  generateMappingPerTargetGroupedByService = services:
-    let
-      nonPackageServices = filter (name: services."${name}".type != "package") (attrNames services);
-    in
-    map (serviceName:
-      let
-        service = getAttr serviceName services;
+        dependency = getAttr dependencyName service."${dependencyType}";
       in
       map (target:
         let
-          mapping = {
-            inherit (service) name type;
-            container = target.selectedContainer;
-            target = getTargetProperty target;
-            service = service._pkgsPerSystem."${target.system}".outPath;
-            dependsOn = generateDependencyMappings { inherit services service; property = "dependsOn"; };
-            connectsTo = generateDependencyMappings { inherit services service; property = "connectsTo"; };
+          targetProperty = getTargetProperty target;
+          dependencyService = if dependency.type == "package"
+            then throw "It is not allowed to refer to package: ${dependency.name} as an inter-dependency!"
+            else getAttr dependency.name services;
+        in
+        {
+          service = generateHash {
+            inherit (dependencyService) name type;
+            pkg = dependencyService._pkgsPerSystem."${target.system}".outPath;
+
+            dependsOn = generateDependencyMappings {
+              inherit services targetAliases;
+              service = dependencyService;
+              dependencyType = "dependsOn";
+            };
           };
-        in
-        mapping // {
-          _key = generateServiceHashKey mapping;
+          container = target.selectedContainer;
+          target = getAttr targetProperty targetAliases;
         }
-      ) service.targets
-    ) (nonPackageServices);
+      ) dependency.targets
+    ) (attrNames service."${dependencyType}"));
 
-  generateActivationMappings = services:
-    concatLists (generateMappingPerTargetGroupedByService services);
-
-  generateSnapshotMappings = {activationMappings, services}:
-    let
-      statefulActivationMappings = filter (mapping:
-        let
-          service = services."${mapping.name}";
-        in
-        service ? deployState && service.deployState
-      ) activationMappings;
-    in
-    map (activationMapping: {
-      inherit (activationMapping) service type target container;
-      component = substring 33 (stringLength activationMapping.service) (baseNameOf activationMapping.service);
-    }) statefulActivationMappings;
-
-  generateProfileManifest = {architecture, activation, target}:
-    let
-      activationMappingsToTarget = filter (mapping: mapping.target == target && mapping.type != "package") activation;
-    in
-    concatLists (map (mapping:
+  generateServicesPerSystem = {services, service, targetAliases}:
+    map (system:
       let
-        service = getAttr mapping.name architecture.services;
+        pkg = service._pkgsPerSystem."${system}".outPath;
 
-        stateful = if (service ? deployState && service.deployState) then "true" else "false";
-        dependsOn = "[${toString (map (dependency: "{ target = \"${dependency.target}\"; container = \"${dependency.container}\"; _key = \"${dependency._key}\"; }") (mapping.dependsOn))}]";
-        connectsTo = "[${toString (map (dependency: "{ target = \"${dependency.target}\"; container = \"${dependency.container}\"; _key = \"${dependency._key}\"; }") (mapping.connectsTo))}]";
-        # TODO: refactor duplication
-        #"
-      in
-      [ mapping.name mapping.service mapping.container mapping.type mapping._key stateful dependsOn connectsTo ]
-    ) activationMappingsToTarget);
-
-  generateProfilesFromTargetPackages = {architecture, activation}:
-    map (targetName:
-      let
-        target = getAttr targetName architecture.infrastructure;
-        paths = getAttr targetName architecture.targetPackages;
+        dependsOn = generateDependencyMappings {
+          inherit services service targetAliases;
+          dependencyType = "dependsOn";
+        };
       in
       {
-        profile = (pkgs.buildEnv {
-          name = targetName;
-          inherit paths;
-          ignoreCollisions = true;
-          manifest = pkgs.writeTextFile {
-            name = "manifest";
-            text = lib.concatMapStrings (entry: "${entry}\n") (generateProfileManifest { inherit architecture activation; target = getTargetProperty target; });
+        name = generateHash {
+          inherit (service) name type;
+          inherit pkg dependsOn;
+        };
+
+        value = {
+          inherit (service) name type;
+          inherit pkg dependsOn;
+          connectsTo = generateDependencyMappings {
+            inherit services service targetAliases;
+            dependencyType = "connectsTo";
           };
-        }).outPath;
-
-        target = getTargetProperty target;
+        };
       }
-    ) (attrNames architecture.targetPackages);
+    ) (attrNames service._pkgsPerSystem);
 
-  generateManifest = {architecture}:
-    rec {
-      distribution = generateProfilesFromTargetPackages {
-        inherit architecture activation;
+  generateTargetAliases = {infrastructure}:
+    listToAttrs (map (targetName:
+      let
+        target = getAttr targetName infrastructure;
+      in
+      { name = getTargetProperty target; value = targetName; }
+    ) (attrNames infrastructure));
+
+  generateServiceMappingsPerSystem = {services, service, targetAliases}:
+    map (target:
+      let
+        targetProperty = getTargetProperty target;
+        targetName = getAttr targetProperty targetAliases;
+
+        dependsOn = generateDependencyMappings {
+          inherit services service targetAliases;
+          dependencyType = "dependsOn";
+        };
+      in
+      {
+        service = generateHash {
+          inherit (service) name type;
+          inherit dependsOn;
+          pkg = service._pkgsPerSystem."${target.system}".outPath;
+        };
+        target = targetName;
+        container = target.selectedContainer;
+      }
+    ) service.targets;
+
+  generateSnapshotMappingsPerSystem = {service, targetAliases}:
+    map (target:
+      let
+        targetProperty = getTargetProperty target;
+        targetName = getAttr targetProperty targetAliases;
+        pkg = service._pkgsPerSystem."${target.system}".outPath;
+      in
+      {
+        service = pkg;
+        component = substring 33 (stringLength pkg) (baseNameOf pkg);
+        container = target.selectedContainer;
+        target = targetName;
+      }
+    ) service.targets;
+
+  targetAliases = generateTargetAliases {
+    inherit (normalizedArchitecture) infrastructure;
+  };
+
+  filterServicesPerTarget = {services, infrastructure, targetName, targetAliases}:
+    lib.filterAttrs (serviceName: service:
+      let
+        serviceTargetProperties = map (target: getTargetProperty target) service.targets;
+        targetProperty = getTargetProperty (infrastructure."${targetName}");
+      in
+      elem targetProperty serviceTargetProperties
+    ) services;
+
+  generateServices = {services, targetAliases}:
+    let
+      nonPackageServiceNames = filter (serviceName:
+        let
+          service = getAttr serviceName services;
+        in
+        service.type != "package"
+      ) (attrNames services);
+    in
+    listToAttrs (lib.flatten (map (serviceName:
+      let
+        service = getAttr serviceName services;
+      in
+      generateServicesPerSystem {
+        inherit services service targetAliases;
+      }
+    ) nonPackageServiceNames));
+
+  filterLocalTargets = {mappings, targetName}:
+    map (mapping:
+      if mapping.target == targetName
+      then removeAttrs mapping [ "target" ]
+      else mapping
+    ) mappings;
+
+  generateProfileManifest = {targetName, services, serviceMappings, snapshotMappings}:
+    let
+      localServiceMappings = filter (serviceMapping: serviceMapping.target == targetName) serviceMappings;
+      localSnapshotMappings = filter (snapshotMapping: snapshotMapping.target == targetName) snapshotMappings;
+
+      localServiceHashes = map (serviceMapping: serviceMapping.service) localServiceMappings;
+      localServices = lib.filterAttrs (hash: service:
+        elem hash localServiceHashes
+      ) services;
+    in
+    {
+      services = lib.mapAttrs (hash: service:
+        service
+        // lib.optionalAttrs (service ? dependsOn) {
+          dependsOn = filterLocalTargets {
+            mappings = service.dependsOn;
+            inherit targetName;
+          };
+        }
+        // lib.optionalAttrs (service ? connectsTo) {
+          connectsTo = filterLocalTargets {
+            mappings = service.connectsTo;
+            inherit targetName;
+          };
+        }
+      ) localServices;
+
+      serviceMappings = filterLocalTargets {
+        mappings = localServiceMappings;
+        inherit targetName;
       };
-
-      activation = generateActivationMappings architecture.services;
-
-      snapshots = generateSnapshotMappings {
-        activationMappings = activation;
-        inherit (architecture) services;
+      snapshotMappings = filterLocalTargets {
+        mappings = localSnapshotMappings;
+        inherit targetName;
       };
-
-      targets = map (targetName: architecture.infrastructure."${targetName}") (attrNames architecture.infrastructure);
     };
+
+  services = generateServices {
+    inherit targetAliases;
+    inherit (normalizedArchitecture) services;
+  };
+
+  serviceMappings =
+    let
+      nonPackageServiceNames = filter (serviceName:
+        let
+          service = getAttr serviceName normalizedArchitecture.services;
+        in
+        service.type != "package"
+      ) (attrNames normalizedArchitecture.services);
+    in
+    lib.flatten (map (serviceName:
+      let
+        service = getAttr serviceName normalizedArchitecture.services;
+      in
+      generateServiceMappingsPerSystem {
+        inherit (normalizedArchitecture) services;
+        inherit service targetAliases;
+      }
+    ) nonPackageServiceNames);
+
+  snapshotMappings =
+    let
+      statefulServiceNames = filter (serviceName:
+        let
+          service = getAttr serviceName normalizedArchitecture.services;
+        in
+        service.type != "package" && service.deployState
+      ) (attrNames normalizedArchitecture.services);
+    in
+    lib.flatten (map (serviceName:
+    generateSnapshotMappingsPerSystem {
+      service = getAttr serviceName normalizedArchitecture.services;
+      inherit targetAliases;
+    }
+  ) statefulServiceNames);
 in
-generateManifest
+{
+  profiles = lib.mapAttrs (targetName: paths:
+    let
+      manifest = generateProfileManifest {
+        inherit targetName services serviceMappings snapshotMappings;
+      };
+
+      generateProfileManifestXSL = ./generateprofilemanifest.xsl;
+    in
+    (pkgs.buildEnv {
+      name = targetName;
+      inherit paths;
+      ignoreCollisions = true;
+      manifest = pkgs.stdenv.mkDerivation {
+        name = "profilemanifest.xml";
+        buildInputs = [ pkgs.libxslt ];
+        manifestXML = builtins.toXML manifest;
+        passAsFile = [ "manifestXML" ];
+
+        buildCommand = ''
+          if [ "$manifestXMLPath" != "" ]
+          then
+              xsltproc ${generateProfileManifestXSL} $manifestXMLPath > $out
+          else
+          (
+          cat <<EOF
+          $manifestXML
+          EOF
+          ) | xsltproc ${generateProfileManifestXSL} - > $out
+          fi
+        '';
+      };
+    }).outPath
+  ) normalizedArchitecture.targetPackages;
+
+  inherit services serviceMappings snapshotMappings;
+  inherit (normalizedArchitecture) infrastructure;
+}

@@ -52,7 +52,7 @@ let
       };
 
       manifest = generateManifest {
-        inherit architecture;
+        normalizedArchitecture = architecture;
       };
     in
     generateManifestFromDeploymentModel {

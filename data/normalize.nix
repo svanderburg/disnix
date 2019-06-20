@@ -142,7 +142,7 @@ let
               service = getAttr serviceName architecture.services;
               mappingsToTarget = filter (mapping: mapping.target == targetProperty) service._systemsPerTarget;
             in
-            lib.unique (map (mapping: service._pkgsPerSystem."${mapping.system}".outPath) mappingsToTarget)
+            lib.unique (map (mapping: service._pkgsPerSystem."${mapping.system}"/*.outPath*/) mappingsToTarget)
           ) (attrNames architecture.services)
         ) architecture.infrastructure;
 

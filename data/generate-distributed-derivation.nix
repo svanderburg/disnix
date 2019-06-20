@@ -7,31 +7,31 @@ let
   getTargetProperty = target:
     getAttr target.targetProperty target.properties;
 
-  generateDerivationPerTargetGroupedByService = services:
-    map (serviceName:
-      let
-        service = getAttr serviceName services;
-      in
-      map (mapping: { inherit (mapping) target; derivation = unsafeDiscardOutputDependency service._pkgsPerSystem."${mapping.system}".drvPath; }) service._systemsPerTarget
-    ) (attrNames services);
+  generateDerivationMappingsPerTarget = {packages, targetName}:
+    map (package: { derivation = unsafeDiscardOutputDependency package.drvPath; interface = targetName; }) packages;
 
-  generateDerivationPerTarget = services:
-    let
-      derivationPerTargetGroupedByService = generateDerivationPerTargetGroupedByService services;
-    in
-    lib.unique (concatLists derivationPerTargetGroupedByService);
+  generateDerivationMappings = {targetPackages}:
+    concatLists (map (targetName:
+      let
+        packages = getAttr targetName targetPackages;
+      in
+      generateDerivationMappingsPerTarget {
+        inherit packages targetName;
+      }
+    ) (attrNames targetPackages));
 
   generateDistributedDerivation = {architecture}:
     {
-      build = generateDerivationPerTarget architecture.services;
+      #build = generateDerivationPerTarget architecture.services;
+      derivationMappings = generateDerivationMappings {
+        inherit (architecture) targetPackages;
+      };
 
-      interfaces = map (targetName:
-        let
-          target = getAttr targetName architecture.infrastructure;
-        in
-        { target = getTargetProperty target;
+      interfaces = lib.mapAttrs (targetName: target:
+        { targetAddress = getTargetProperty target;
           inherit (target) clientInterface;
-        }) (attrNames architecture.infrastructure);
+        }
+      ) architecture.infrastructure;
     };
 in
 generateDistributedDerivation
