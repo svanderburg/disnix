@@ -31,14 +31,17 @@ static pid_t next_distribution_process(void *data)
     DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
 
     /* Retrieve distributionitem, target pair */
-    DistributionItem *item = g_ptr_array_index(distribution_iterator_data->distribution_array, distribution_iterator_data->model_iterator_data.index);
-    Target *target = g_hash_table_lookup(distribution_iterator_data->targets_table, (gchar*)item->target);
+    void *key, *value;
+    g_hash_table_iter_next(&distribution_iterator_data->iter, &key, &value);
+    gchar *target_name = (gchar*)key;
+    xmlChar *profile_name = (xmlChar*)value;
+    Target *target = g_hash_table_lookup(distribution_iterator_data->targets_table, target_name);
 
     /* Invoke the next distribution item operation process */
-    pid_t pid = distribution_iterator_data->map_distribution_item(distribution_iterator_data->data, item, target);
+    pid_t pid = distribution_iterator_data->map_distribution_item(distribution_iterator_data->data, profile_name, target_name, target);
 
     /* Increase the iterator index and update the pid table */
-    next_iteration_process(&distribution_iterator_data->model_iterator_data, pid, item);
+    next_iteration_process(&distribution_iterator_data->model_iterator_data, pid, target_name);
 
     /* Return the pid of the invoked process */
     return pid;
@@ -49,18 +52,20 @@ static void complete_distribution_process(void *data, pid_t pid, ProcReact_Statu
     DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
 
     /* Retrieve the completed item */
-    DistributionItem *item = complete_iteration_process(&distribution_iterator_data->model_iterator_data, pid, status, result);
+    gchar *target_name = complete_iteration_process(&distribution_iterator_data->model_iterator_data, pid, status, result);
+    xmlChar *profile_name = g_hash_table_lookup(distribution_iterator_data->distribution_table, target_name);
 
     /* Invoke callback that handles completion of distribution item */
-    distribution_iterator_data->complete_distribution_item_mapping(distribution_iterator_data->data, item, status, result);
+    distribution_iterator_data->complete_distribution_item_mapping(distribution_iterator_data->data, profile_name, target_name, status, result);
 }
 
-ProcReact_PidIterator create_distribution_iterator(const GPtrArray *distribution_array, GHashTable *targets_table, map_distribution_item_function map_distribution_item, complete_distribution_item_mapping_function complete_distribution_item_mapping, void *data)
+ProcReact_PidIterator create_distribution_iterator(GHashTable *distribution_table, GHashTable *targets_table, map_distribution_item_function map_distribution_item, complete_distribution_item_mapping_function complete_distribution_item_mapping, void *data)
 {
     DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)g_malloc(sizeof(DistributionIteratorData));
 
-    init_model_iterator_data(&distribution_iterator_data->model_iterator_data, distribution_array->len);
-    distribution_iterator_data->distribution_array = distribution_array;
+    init_model_iterator_data(&distribution_iterator_data->model_iterator_data, g_hash_table_size(distribution_table));
+    distribution_iterator_data->distribution_table = distribution_table;
+    g_hash_table_iter_init(&distribution_iterator_data->iter, distribution_iterator_data->distribution_table);
     distribution_iterator_data->targets_table = targets_table;
     distribution_iterator_data->map_distribution_item = map_distribution_item;
     distribution_iterator_data->complete_distribution_item_mapping = complete_distribution_item_mapping;

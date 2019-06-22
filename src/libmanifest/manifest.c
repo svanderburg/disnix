@@ -35,8 +35,8 @@ static Manifest *parse_manifest(xmlNodePtr element, const unsigned int flags, co
 
     while(element_children != NULL)
     {
-        if((flags & MANIFEST_DISTRIBUTION_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "distribution") == 0)
-            manifest->distribution_array = parse_distribution(element_children);
+        if((flags & MANIFEST_DISTRIBUTION_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "profiles") == 0)
+            manifest->distribution_table = parse_distribution(element_children);
         else if((flags & MANIFEST_ACTIVATION_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "activation") == 0)
             manifest->activation_array = parse_activation(element_children);
         else if((flags & MANIFEST_SNAPSHOT_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "snapshots") == 0)
@@ -89,7 +89,7 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
 
 int check_manifest(const Manifest *manifest)
 {
-    return (check_distribution_array(manifest->distribution_array)
+    return (check_distribution_table(manifest->distribution_table)
       && check_activation_array(manifest->activation_array)
       && check_snapshots_array(manifest->snapshots_array)
       && check_targets_table(manifest->targets_table));
@@ -99,7 +99,7 @@ void delete_manifest(Manifest *manifest)
 {
     if(manifest != NULL)
     {
-        delete_distribution_array(manifest->distribution_array);
+        delete_distribution_table(manifest->distribution_table);
         delete_activation_array(manifest->activation_array);
         delete_snapshots_array(manifest->snapshots_array);
         delete_targets_table(manifest->targets_table);

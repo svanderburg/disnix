@@ -23,24 +23,24 @@
 #include <client-interface.h>
 #include <package-management.h>
 
-static pid_t set_distribution_item(void *data, DistributionItem *item, Target *target)
+static pid_t set_distribution_item(void *data, xmlChar *profile_name, gchar *target_name, Target *target)
 {
     char *profile = (char*)data;
-    g_print("[target: %s]: Setting Disnix profile: %s\n", item->target, item->profile);
-    return exec_set((char*)target->client_interface, (char*)item->target, profile, (char*)item->profile);
+    g_print("[target: %s]: Setting Disnix profile: %s\n", target_name, profile_name);
+    return exec_set((char*)target->client_interface, (char*)target_name, profile, (char*)profile_name);
 }
 
-static void complete_set_distribution_item(void *data, DistributionItem *item, ProcReact_Status status, int result)
+static void complete_set_distribution_item(void *data, xmlChar *profile_name, gchar *target_name, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
-        g_printerr("[target: %s]: Cannot set Disnix profile: %s\n", item->target, item->profile);
+        g_printerr("[target: %s]: Cannot set Disnix profile: %s\n", target_name, profile_name);
 }
 
-static int set_target_profiles(const GPtrArray *distribution_array, GHashTable *targets_table, gchar *profile)
+static int set_target_profiles(GHashTable *distribution_table, GHashTable *targets_table, gchar *profile)
 {
     /* Iterate over the distribution mappings, limiting concurrency to the desired concurrent transfers and distribute them */
     int success;
-    ProcReact_PidIterator iterator = create_distribution_iterator(distribution_array, targets_table, set_distribution_item, complete_set_distribution_item, profile);
+    ProcReact_PidIterator iterator = create_distribution_iterator(distribution_table, targets_table, set_distribution_item, complete_set_distribution_item, profile);
     procreact_fork_in_parallel_and_wait(&iterator);
     success = distribution_iterator_has_succeeded(&iterator);
 
@@ -51,6 +51,6 @@ static int set_target_profiles(const GPtrArray *distribution_array, GHashTable *
 
 int set_profiles(const Manifest *manifest, const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const unsigned int flags)
 {
-    return((flags & SET_NO_TARGET_PROFILES || set_target_profiles(manifest->distribution_array, manifest->targets_table, profile)) /* First, attempt to set the target profiles */
+    return((flags & SET_NO_TARGET_PROFILES || set_target_profiles(manifest->distribution_table, manifest->targets_table, profile)) /* First, attempt to set the target profiles */
       && (flags & SET_NO_COORDINATOR_PROFILE || pkgmgmt_set_coordinator_profile(coordinator_profile_path, manifest_file, profile))); /* Then try to set the coordinator profile */
 }

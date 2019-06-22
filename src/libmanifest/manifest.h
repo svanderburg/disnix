@@ -36,15 +36,15 @@
  */
 typedef struct
 {
-    /** Array mapping intra-dependency closures to machines */
-    GPtrArray *distribution_array;
-    
+    /** Hash table mapping targets to intra-dependency closures */
+    GHashTable *distribution_table;
+
     /** Array of services to be activated on a target machine */
     GPtrArray *activation_array;
-    
+
     /** Array of snapshots to be tranferred to a target machine */
     GPtrArray *snapshots_array;
-    
+
     /** Array containing the available target machines */
     GHashTable *targets_table;
 }

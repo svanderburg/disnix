@@ -22,24 +22,24 @@
 #include <distributionmapping-iterator.h>
 #include <targets.h>
 
-static pid_t transfer_distribution_item_to(void *data, DistributionItem *item, Target *target)
+static pid_t transfer_distribution_item_to(void *data, xmlChar *profile_name, gchar *target_name, Target *target)
 {
-    char *paths[] = { (char*)item->profile, NULL };
-    g_print("[target: %s]: Receiving intra-dependency closure of profile: %s\n", item->target, item->profile);
-    return exec_copy_closure_to((char*)target->client_interface, (char*)item->target, paths);
+    char *paths[] = { (char*)profile_name, NULL };
+    g_print("[target: %s]: Receiving intra-dependency closure of profile: %s\n", target_name, profile_name);
+    return exec_copy_closure_to((char*)target->client_interface, (char*)target_name, paths);
 }
 
-static void complete_transfer_distribution_item_to(void *data, DistributionItem *item, ProcReact_Status status, int result)
+static void complete_transfer_distribution_item_to(void *data, xmlChar *profile_name, gchar *target_name, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
-        g_printerr("[target: %s]: Cannot receive intra-dependency closure of profile: %s\n", item->target, item->profile);
+        g_printerr("[target: %s]: Cannot receive intra-dependency closure of profile: %s\n", target_name, profile_name);
 }
 
 int distribute(const Manifest *manifest, const unsigned int max_concurrent_transfers)
 {
     /* Iterate over the distribution mappings, limiting concurrency to the desired concurrent transfers and distribute them */
     int success;
-    ProcReact_PidIterator iterator = create_distribution_iterator(manifest->distribution_array, manifest->targets_table, transfer_distribution_item_to, complete_transfer_distribution_item_to, NULL);
+    ProcReact_PidIterator iterator = create_distribution_iterator(manifest->distribution_table, manifest->targets_table, transfer_distribution_item_to, complete_transfer_distribution_item_to, NULL);
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
     success = distribution_iterator_has_succeeded(&iterator);
 

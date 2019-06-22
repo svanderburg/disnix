@@ -24,35 +24,21 @@
 #include <targets.h>
 
 /**
- * @brief Contains a mapping of a Nix profile to a disnix service target
- */
-typedef struct
-{
-    /** Nix store path to the profile */
-    xmlChar *profile;
-    /** Address of a disnix service */
-    xmlChar *target;
-}
-DistributionItem;
-
-/**
  * Creates a new array with distribution items from the corresponding sub
  * section in an XML document.
  *
  * @param element XML root element of the sub section defining the mappings
- * @return GPtrArray with DistributionItems
+ * @return GHashTable mapping targets to Nix profiles
  */
-GPtrArray *parse_distribution(xmlNodePtr element);
+GHashTable *parse_distribution(xmlNodePtr element);
 
 /**
  * Deletes an array with distribution items.
  *
- * @param distribution_array Array with distribution items
+ * @param distribution_table GHashTable mapping targets to Nix profiles
  */
-void delete_distribution_array(GPtrArray *distribution_array);
+void delete_distribution_table(GHashTable *distribution_table);
 
-void print_distribution_array(const GPtrArray *distribution_array);
-
-int check_distribution_array(const GPtrArray *distribution_array);
+int check_distribution_table(GHashTable *distribution_table);
 
 #endif

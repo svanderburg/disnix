@@ -25,10 +25,10 @@
 #include "distributionmapping.h"
 
 /** Pointer to a function that executes an operation for each distribution item */
-typedef pid_t (*map_distribution_item_function) (void *data, DistributionItem *item, Target *target);
+typedef pid_t (*map_distribution_item_function) (void *data, xmlChar *profile_name, gchar *target_name, Target *target);
 
 /** Pointer to a function that gets executed when a process completes for a distribution item */
-typedef void (*complete_distribution_item_mapping_function) (void *data, DistributionItem *item, ProcReact_Status status, int result);
+typedef void (*complete_distribution_item_mapping_function) (void *data, xmlChar *profile_name, gchar *target_name, ProcReact_Status status, int result);
 
 /**
  * @brief Iterator that can be used to execute a process for each distribution item
@@ -37,9 +37,10 @@ typedef struct
 {
     /** Common properties for all model iterators */
     ModelIteratorData model_iterator_data;
-    /** Array with distribution items */
-    const GPtrArray *distribution_array;
-    /** Array with target items */
+    /** Hash table with distribution items */
+    GHashTableIter iter;
+    GHashTable *distribution_table;
+    /** Hash table with target items */
     GHashTable *targets_table;
 
     /**
@@ -71,14 +72,14 @@ DistributionIteratorData;
  * Creates a new iterator that steps over each distribution item and target and
  * executes the provided functions on start and completion.
  *
- * @param distribution_array Array with distribution items
+ * @param distribution_table Array with distribution items
  * @param targets_table Hash table of targets
  * @param map_distribution_item Pointer to a function that executes an operation for each distribution item
  * @param complete_distribution_item_mapping Pointer to a function that gets executed when a process completes for a distribution item
  * @param data Pointer to arbitrary data passed to the above functions
  * @return A PID iterator that can be used to traverse the distribution items
  */
-ProcReact_PidIterator create_distribution_iterator(const GPtrArray *distribution_array, GHashTable *targets_table, map_distribution_item_function map_distribution_item, complete_distribution_item_mapping_function complete_distribution_item_mapping, void *data);
+ProcReact_PidIterator create_distribution_iterator(GHashTable *distribution_table, GHashTable *targets_table, map_distribution_item_function map_distribution_item, complete_distribution_item_mapping_function complete_distribution_item_mapping, void *data);
 
 /**
  * Destroys the resources attached to the given distribution iterator.

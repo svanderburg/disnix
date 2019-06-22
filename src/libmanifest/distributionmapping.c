@@ -19,78 +19,44 @@
 
 #include "distributionmapping.h"
 #include <nixxml-ghashtable.h>
-#include <nixxml-gptrarray.h>
 
-static void *create_distribution_item(xmlNodePtr element, void *userdata)
+GHashTable *parse_distribution(xmlNodePtr element)
 {
-    return g_malloc0(sizeof(DistributionItem));
+    return NixXML_parse_g_hash_table_verbose(element, "distribution", "name", NULL, NixXML_parse_value);
 }
 
-static void insert_distribution_item_attributes(void *table, const xmlChar *key, void *value, void *userdata)
+void delete_distribution_table(GHashTable *distribution_table)
 {
-    DistributionItem *item = (DistributionItem*)table;
-
-    if(xmlStrcmp(key, (xmlChar*) "profile") == 0)
-        item->profile = value;
-    else if(xmlStrcmp(key, (xmlChar*) "target") == 0)
-        item->target = value;
-    else
-        xmlFree(value);
-}
-
-static gpointer parse_distribution_item(xmlNodePtr element, void *userdata)
-{
-    return NixXML_parse_simple_attrset(element, userdata, create_distribution_item, NixXML_parse_value, insert_distribution_item_attributes);
-}
-
-GPtrArray *parse_distribution(xmlNodePtr element)
-{
-    return NixXML_parse_g_ptr_array(element, "mapping", NULL, parse_distribution_item);
-}
-
-void delete_distribution_array(GPtrArray *distribution_array)
-{
-    if(distribution_array != NULL)
+    if(distribution_table != NULL)
     {
-        unsigned int i;
+        GHashTableIter iter;
+        gpointer key, value;
 
-        for(i = 0; i < distribution_array->len; i++)
+        g_hash_table_iter_init(&iter, distribution_table);
+        while(g_hash_table_iter_next(&iter, &key, &value))
         {
-            DistributionItem* item = g_ptr_array_index(distribution_array, i);
-
-            xmlFree(item->profile);
-            xmlFree(item->target);
-            g_free(item);
+            xmlChar *target = (xmlChar*)value;
+            xmlFree(target);
         }
 
-        g_ptr_array_free(distribution_array, TRUE);
+        g_hash_table_destroy(distribution_table);
     }
 }
 
-void print_distribution_array(const GPtrArray *distribution_array)
+int check_distribution_table(GHashTable *distribution_table)
 {
-    unsigned int i;
-
-    for(i = 0; i < distribution_array->len; i++)
-    {
-        DistributionItem* item = g_ptr_array_index(distribution_array, i);
-        g_print("profile: %s\n", item->profile);
-        g_print("target: %s\n\n", item->target);
-    }
-}
-
-int check_distribution_array(const GPtrArray *distribution_array)
-{
-    if(distribution_array == NULL)
+    if(distribution_table == NULL)
         return TRUE;
     else
     {
-        unsigned int i;
+        GHashTableIter iter;
+        gpointer key, value;
 
-        for(i = 0; i < distribution_array->len; i++)
+        g_hash_table_iter_init(&iter, distribution_table);
+        while(g_hash_table_iter_next(&iter, &key, &value))
         {
-            DistributionItem *item = g_ptr_array_index(distribution_array, i);
-            if(item->profile == NULL || item->target == NULL)
+            xmlChar *target = (xmlChar*)value;
+            if(target == NULL)
                 return FALSE;
         }
 
