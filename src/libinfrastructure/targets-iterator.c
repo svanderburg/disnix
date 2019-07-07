@@ -37,6 +37,7 @@ static pid_t next_target_process(void *data)
     Target *target = (Target*)value;
     gchar *client_interface = (gchar*)target->client_interface;
     gchar *target_key = find_target_key(target, target_iterator_data->target_property);
+    g_printerr("FOUND KEY: %s\n", target_key);
 
     /* If no client interface is provided by the infrastructure model, use global one */
     if(client_interface == NULL)

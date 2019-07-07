@@ -19,7 +19,7 @@
 
 #include "run-snapshot.h"
 #include <manifest.h>
-#include <snapshotmapping.h>
+#include <snapshotmappingarray.h>
 
 int run_snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gchar *container_filter, const gchar *component_filter)
 {
@@ -41,20 +41,20 @@ int run_snapshot(const gchar *manifest_file, const unsigned int max_concurrent_t
                 exit_status = !snapshot(manifest, NULL, max_concurrent_transfers, flags | FLAG_NO_UPGRADE, keep);
             else
             {
-                GPtrArray *old_snapshots_array;
+                Manifest *previous_manifest;
 
                 if(flags & FLAG_NO_UPGRADE)
-                    old_snapshots_array = NULL;
+                    previous_manifest = NULL;
                 else
-                    old_snapshots_array = open_provided_or_previous_snapshots_array(old_manifest, coordinator_profile_path, profile, container_filter, component_filter);
+                    previous_manifest = open_provided_or_previous_manifest_file(old_manifest, coordinator_profile_path, profile, MANIFEST_SNAPSHOT_FLAG, container_filter, component_filter);
 
-                if(check_snapshots_array(old_snapshots_array))
-                    exit_status = !snapshot(manifest, old_snapshots_array, max_concurrent_transfers, flags, keep); /* Take snapshots and transfer them */
+                if(check_manifest(previous_manifest))
+                    exit_status = !snapshot(manifest, previous_manifest, max_concurrent_transfers, flags, keep); /* Take snapshots and transfer them */
                 else
                     exit_status = 1;
 
                 /* Cleanup */
-                delete_snapshots_array(old_snapshots_array);
+                delete_manifest(previous_manifest);
             }
         }
         else

@@ -20,6 +20,7 @@
 #ifndef __DISNIX_TRANSITION_H
 #define __DISNIX_TRANSITION_H
 #include <glib.h>
+#include <manifest.h>
 #include "deploymentflags.h"
 
 /**
@@ -44,6 +45,6 @@ TransitionStatus;
  * @param flags Deployment option flags
  * @return A status value from the transition status enumeration
  */
-TransitionStatus transition(GPtrArray *new_activation_mappings, GPtrArray *old_activation_mappings, GHashTable *targets_table, const unsigned int flags);
+TransitionStatus transition(Manifest *manifest, Manifest *previous_manifest, const unsigned int flags);
 
 #endif

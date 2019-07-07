@@ -70,7 +70,7 @@ static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
 
 static gpointer parse_container(xmlNodePtr element, void *userdata)
 {
-    return NixXML_parse_g_hash_table_simple(element, userdata, NixXML_parse_value);
+    return NixXML_parse_g_hash_table_verbose(element, "property", "name", userdata, NixXML_parse_value);
 }
 
 static void *create_target(xmlNodePtr element, void *userdata)
@@ -102,9 +102,9 @@ static void parse_and_insert_target_attributes(xmlNodePtr element, void *table, 
         }
     }
     else if(xmlStrcmp(key, (xmlChar*) "properties") == 0)
-        target->properties_table = NixXML_parse_g_hash_table_simple(element, userdata, NixXML_parse_value);
+        target->properties_table = NixXML_parse_g_hash_table_verbose(element, "property", "name", userdata, NixXML_parse_value);
     else if(xmlStrcmp(key, (xmlChar*) "containers") == 0)
-        target->containers_table = NixXML_parse_g_hash_table_simple(element, userdata, parse_container);
+        target->containers_table = NixXML_parse_g_hash_table_verbose(element, "container", "name", userdata, parse_container);
 }
 
 static gpointer parse_target(xmlNodePtr element, void *userdata)
@@ -112,9 +112,9 @@ static gpointer parse_target(xmlNodePtr element, void *userdata)
     return NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_target, parse_and_insert_target_attributes);
 }
 
-GHashTable *parse_targets_table(xmlNodePtr element)
+GHashTable *parse_targets_table(xmlNodePtr element, void *userdata)
 {
-    return NixXML_parse_g_hash_table_verbose(element, "target", "name", NULL, parse_target);
+    return NixXML_parse_g_hash_table_verbose(element, "target", "name", userdata, parse_target);
 }
 
 GHashTable *create_targets_table_from_doc(xmlDocPtr doc)
@@ -138,7 +138,7 @@ GHashTable *create_targets_table_from_doc(xmlDocPtr doc)
     }
 
     /* Parse targets table */
-    targets_table = parse_targets_table(node_root);
+    targets_table = parse_targets_table(node_root, NULL);
 
     /* Return targets table */
     return targets_table;

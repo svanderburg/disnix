@@ -21,7 +21,7 @@
 #include "delete-state.h"
 #include <client-interface.h>
 #include <manifest.h>
-#include <snapshotmapping.h>
+#include <snapshotmappingarray.h>
 #include <targets.h>
 
 int run_delete_state(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container, const gchar *component)
@@ -41,7 +41,7 @@ int run_delete_state(const gchar *manifest_file, const gchar *coordinator_profil
         if(check_manifest(manifest))
         {
             g_printerr("[coordinator]: Deleting obsolete state of services...\n");
-            exit_status = !delete_obsolete_state(manifest->snapshots_array, manifest->targets_table);
+            exit_status = !delete_obsolete_state(manifest->snapshot_mapping_array, manifest->services_table, manifest->targets_table);
         }
         else
             exit_status = 1;

@@ -20,26 +20,26 @@
 #include "snapshot.h"
 #include <sys/types.h>
 #include <client-interface.h>
-#include <snapshotmapping.h>
+#include <snapshotmappingarray.h>
 #include <targets-iterator.h>
 
 /* Snapshot services infrastructure */
 
-static pid_t take_snapshot_on_target(SnapshotMapping *mapping, Target *target, gchar **arguments, unsigned int arguments_length)
+static pid_t take_snapshot_on_target(SnapshotMapping *mapping, ManifestService *service, Target *target, gchar **arguments, unsigned int arguments_length)
 {
     g_print("[target: %s]: Snapshotting state of service: %s\n", mapping->target, mapping->component);
-    return exec_snapshot((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)mapping->type, arguments, arguments_length, (char*)mapping->service);
+    return exec_snapshot((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)service->type, arguments, arguments_length, (char*)service->pkg);
 }
 
-static void complete_take_snapshot_on_target(SnapshotMapping *mapping, ProcReact_Status status, int result)
+static void complete_take_snapshot_on_target(SnapshotMapping *mapping, Target *target, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
         g_printerr("[target: %s]: Cannot snapshot state of service: %s\n", mapping->target, mapping->component);
 }
 
-static int snapshot_services(GPtrArray *snapshots_array, GHashTable *targets_table)
+static int snapshot_services(GPtrArray *snapshots_array, GHashTable *snapshots_table, GHashTable *targets_table)
 {
-    return map_snapshot_items(snapshots_array, targets_table, take_snapshot_on_target, complete_take_snapshot_on_target);
+    return map_snapshot_items(snapshots_array, snapshots_table, targets_table, take_snapshot_on_target, complete_take_snapshot_on_target);
 }
 
 /* Retrieve snapshots infrastructure */
@@ -128,7 +128,8 @@ static pid_t clean_snapshot_mapping(SnapshotMapping *mapping, Target *target, in
 
 typedef struct
 {
-    GPtrArray *snapshots_array;
+    GHashTable *snapshots_table;
+    GPtrArray *snapshot_mapping_array;
     unsigned int flags;
     int keep;
 }
@@ -139,24 +140,25 @@ TakeRetrieveAndCleanSnapshotsData;
 static pid_t take_retrieve_and_clean_snapshot_on_target(void *data, Target *target, gchar *client_interface, gchar *target_key)
 {
     pid_t pid = fork();
-    
+
     if(pid == 0)
     {
         TakeRetrieveAndCleanSnapshotsData *retrieve_snapshots_data = (TakeRetrieveAndCleanSnapshotsData*)data;
-        
+
         gchar *target_key = find_target_key(target, NULL);
-        GPtrArray *snapshots_per_target_array = find_snapshot_mappings_per_target(retrieve_snapshots_data->snapshots_array, target_key);
+        GPtrArray *snapshots_per_target_array = find_snapshot_mappings_per_target(retrieve_snapshots_data->snapshot_mapping_array, target_key);
         unsigned int i;
         int exit_status = 0;
         ProcReact_Status status;
-        
+
         for(i = 0; i < snapshots_per_target_array->len; i++)
         {
             SnapshotMapping *mapping = g_ptr_array_index(snapshots_per_target_array, i);
             gchar **arguments = generate_activation_arguments(target, (gchar*)mapping->container); /* Generate an array of key=value pairs from container properties */
             unsigned int arguments_length = g_strv_length(arguments); /* Determine length of the activation arguments array */
-            
-            if(!procreact_wait_for_boolean(take_snapshot_on_target(mapping, target, arguments, arguments_length), &status) || (status != PROCREACT_STATUS_OK)
+            ManifestService *service = g_hash_table_lookup(retrieve_snapshots_data->snapshots_table, (gchar*)mapping->container);
+
+            if(!procreact_wait_for_boolean(take_snapshot_on_target(mapping, service, target, arguments, arguments_length), &status) || (status != PROCREACT_STATUS_OK)
               || !procreact_wait_for_boolean(retrieve_snapshot_mapping(mapping, target, retrieve_snapshots_data->flags), &status) || (status != PROCREACT_STATUS_OK)
               || !procreact_wait_for_boolean(clean_snapshot_mapping(mapping, target, retrieve_snapshots_data->keep), &status) || (status != PROCREACT_STATUS_OK))
             {
@@ -164,15 +166,15 @@ static pid_t take_retrieve_and_clean_snapshot_on_target(void *data, Target *targ
                 g_strfreev(arguments);
                 break;
             }
-            
+
             g_strfreev(arguments);
         }
-    
+
         g_ptr_array_free(snapshots_per_target_array, TRUE);
-        
+
         exit(exit_status);
     }
-    
+
     return pid;
 }
 
@@ -185,10 +187,10 @@ void complete_take_retrieve_and_clean_snapshots_on_target(void *data, Target *ta
     }
 }
 
-static int snapshot_depth_first(GPtrArray *snapshots_array, GHashTable *targets_table, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)
+static int snapshot_depth_first(GPtrArray *snapshot_mapping_array, GHashTable *snapshots_table, GHashTable *targets_table, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)
 {
     int success;
-    TakeRetrieveAndCleanSnapshotsData data = { snapshots_array, flags, keep };
+    TakeRetrieveAndCleanSnapshotsData data = { snapshots_table, snapshot_mapping_array, flags, keep };
     ProcReact_PidIterator iterator = create_target_pid_iterator(targets_table, NULL, NULL, take_retrieve_and_clean_snapshot_on_target, complete_take_retrieve_and_clean_snapshots_on_target, &data);
 
     g_print("[coordinator]: Snapshotting, retrieving and cleaning snapshots...\n");
@@ -203,39 +205,39 @@ static int snapshot_depth_first(GPtrArray *snapshots_array, GHashTable *targets_
 
 /* The entire snapshot operation */
 
-int snapshot(const Manifest *manifest, const GPtrArray *old_snapshots_array, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)
+int snapshot(const Manifest *manifest, const Manifest *previous_manifest, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)
 {
-    if(!(flags & FLAG_NO_UPGRADE) && old_snapshots_array == NULL)
+    if(!(flags & FLAG_NO_UPGRADE) && previous_manifest == NULL)
     {
         g_printerr("[coordinator]: No snapshots are taken since an upgrade is requested and no previous deployment state is known\n");
         return TRUE;
     }
     else
     {
-        GPtrArray *snapshots_array = NULL;
+        GPtrArray *snapshot_mapping_array = NULL;
         int exit_status;
 
         if(flags & FLAG_NO_UPGRADE)
         {
             g_printerr("[coordinator]: Snapshotting state of all components...\n");
-            snapshots_array = manifest->snapshots_array;
+            snapshot_mapping_array = manifest->snapshot_mapping_array;
         }
         else
         {
             g_printerr("[coordinator]: Snapshotting state of moved components...\n");
-            snapshots_array = subtract_snapshot_mappings(old_snapshots_array, manifest->snapshots_array);
+            snapshot_mapping_array = subtract_snapshot_mappings(previous_manifest->snapshot_mapping_array, manifest->snapshot_mapping_array);
         }
 
         if(flags & FLAG_DEPTH_FIRST)
-            exit_status = snapshot_depth_first(snapshots_array, manifest->targets_table, max_concurrent_transfers, flags, keep);
+            exit_status = snapshot_depth_first(snapshot_mapping_array, previous_manifest->services_table, manifest->targets_table, max_concurrent_transfers, flags, keep);
         else
         {
-            exit_status = ((flags & FLAG_TRANSFER_ONLY) || snapshot_services(snapshots_array, manifest->targets_table))
-              && retrieve_snapshots(snapshots_array, manifest->targets_table, max_concurrent_transfers, flags);
+            exit_status = ((flags & FLAG_TRANSFER_ONLY) || snapshot_services(snapshot_mapping_array, previous_manifest->services_table, manifest->targets_table))
+              && retrieve_snapshots(snapshot_mapping_array, manifest->targets_table, max_concurrent_transfers, flags);
         }
 
         if(!(flags & FLAG_NO_UPGRADE))
-            g_ptr_array_free(snapshots_array, TRUE);
+            g_ptr_array_free(snapshot_mapping_array, TRUE);
 
         return exit_status;
     }

@@ -19,23 +19,23 @@
 
 #include "delete-state.h"
 #include <client-interface.h>
-#include <snapshotmapping.h>
+#include <snapshotmappingarray.h>
 #include <targets.h>
 
-static pid_t delete_state_on_target(SnapshotMapping *mapping, Target *target, gchar **arguments, unsigned int arguments_length)
+static pid_t delete_state_on_target(SnapshotMapping *mapping, ManifestService *service, Target *target, gchar **arguments, unsigned int arguments_length)
 {
     g_print("[target: %s]: Deleting obsolete state of service: %s\n", mapping->target, mapping->component);
-    return exec_delete_state((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)mapping->type, arguments, arguments_length, (char*)mapping->service);
+    return exec_delete_state((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)service->type, arguments, arguments_length, (char*)service->pkg);
 }
 
-static void complete_delete_state_on_target(SnapshotMapping *mapping, ProcReact_Status status, int result)
+static void complete_delete_state_on_target(SnapshotMapping *mapping, Target *target, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
         g_printerr("[target: %s]: Cannot delete state of service: %s\n", mapping->target, mapping->component);
 }
 
-int delete_obsolete_state(GPtrArray *snapshots_array, GHashTable *targets_table)
+int delete_obsolete_state(GPtrArray *snapshot_mapping_array, GHashTable *snapshots_table, GHashTable *targets_table)
 {
-    reset_snapshot_items_transferred_status(snapshots_array);
-    return map_snapshot_items(snapshots_array, targets_table, delete_state_on_target, complete_delete_state_on_target);
+    reset_snapshot_items_transferred_status(snapshot_mapping_array);
+    return map_snapshot_items(snapshot_mapping_array, snapshots_table, targets_table, delete_state_on_target, complete_delete_state_on_target);
 }

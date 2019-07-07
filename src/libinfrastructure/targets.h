@@ -59,7 +59,7 @@ Target;
  * @param element Root XML element that defines targets
  * @return GHashTable of targets
  */
-GHashTable *parse_targets_table(xmlNodePtr element);
+GHashTable *parse_targets_table(xmlNodePtr element, void *userdata);
 
 /**
  * Creates a hash table with targets from an XML document

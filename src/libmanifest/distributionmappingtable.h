@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_DISTRIBUTIONMAPPING_H
-#define __DISNIX_DISTRIBUTIONMAPPING_H
+#ifndef __DISNIX_DISTRIBUTIONMAPPINGTABLE_H
+#define __DISNIX_DISTRIBUTIONMAPPINGTABLE_H
 #include <glib.h>
 #include <libxml/parser.h>
 #include <targets.h>
@@ -30,7 +30,7 @@
  * @param element XML root element of the sub section defining the mappings
  * @return GHashTable mapping targets to Nix profiles
  */
-GHashTable *parse_distribution(xmlNodePtr element);
+GHashTable *parse_distribution_table(xmlNodePtr element, void *userdata);
 
 /**
  * Deletes an array with distribution items.

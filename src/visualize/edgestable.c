@@ -18,29 +18,29 @@
  */
 
 #include "edgestable.h"
-#include <activationmapping.h>
+#include <servicemappingarray.h>
 #include <targets.h>
 
 static void destroy_value(gpointer data)
 {
     GPtrArray *dependency_array = (GPtrArray*)data;
     unsigned int i;
-    
+
     for(i = 0; i < dependency_array->len; i++)
     {
         gchar *dep = g_ptr_array_index(dependency_array, i);
         g_free(dep);
     }
-    
+
     g_ptr_array_free(dependency_array, TRUE);
 }
 
-static gchar *compose_mapping_key(ActivationMapping *mapping, gchar *target_key)
+static gchar *compose_mapping_key(ServiceMapping *mapping, gchar *target_key)
 {
-    return g_strconcat((gchar*)mapping->key, ":", target_key, ":", (gchar*)mapping->container, NULL);
+    return g_strconcat((gchar*)mapping->service, ":", target_key, ":", (gchar*)mapping->container, NULL);
 }
 
-GHashTable *generate_edges_table(const GPtrArray *activation_array, GHashTable *targets_table, int ordering)
+GHashTable *generate_edges_table(const GPtrArray *activation_array, GHashTable *services_table, GHashTable *targets_table, int ordering)
 {
     unsigned int i;
 
@@ -50,8 +50,9 @@ GHashTable *generate_edges_table(const GPtrArray *activation_array, GHashTable *
     for(i = 0; i < activation_array->len; i++)
     {
 	/* Retrieve the current mapping from the array */
-	ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
-	
+	ServiceMapping *mapping = g_ptr_array_index(activation_array, i);
+	ManifestService *service = g_hash_table_lookup(services_table, mapping->service);
+
 	/* Retrieve the target property */
 	Target *target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
 	gchar *target_key = find_target_key(target, NULL);
@@ -69,9 +70,9 @@ GHashTable *generate_edges_table(const GPtrArray *activation_array, GHashTable *
 	    GPtrArray *inter_dependencies;
 
             if(ordering)
-	        inter_dependencies = mapping->depends_on;
+	        inter_dependencies = service->depends_on;
 	    else
-	        inter_dependencies = mapping->connects_to;
+	        inter_dependencies = service->connects_to;
 
 	    /* Create new dependency array */
 	    dependency_array = g_ptr_array_new();
@@ -79,15 +80,15 @@ GHashTable *generate_edges_table(const GPtrArray *activation_array, GHashTable *
 	    /* Create a list of mapping values for each dependency */
 	    for(j = 0; j < inter_dependencies->len; j++)
 	    {
-		ActivationMapping *actual_mapping;
+		ServiceMapping *actual_mapping;
 		gchar *mapping_value, *target_key;
 		Target *target;
 		
 		/* Retrieve current dependency from the array */
-		ActivationMappingKey *dependency = g_ptr_array_index(inter_dependencies, j);
+		InterDependencyMapping *dependency = g_ptr_array_index(inter_dependencies, j);
 		
 		/* Find the activation mapping in the activation array */
-		actual_mapping = find_activation_mapping(activation_array, dependency);
+		actual_mapping = find_service_mapping(activation_array, dependency);
 		
 		/* Get the target interface */
 		target = g_hash_table_lookup(targets_table, (gchar*)actual_mapping->target);

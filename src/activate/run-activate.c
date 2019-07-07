@@ -20,7 +20,6 @@
 #include "run-activate.h"
 #include <activate.h>
 #include <manifest.h>
-#include <activationmapping.h>
 #include <interrupt.h>
 
 int run_activate_system(const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const unsigned int flags)
@@ -39,12 +38,12 @@ int run_activate_system(const gchar *new_manifest, const gchar *old_manifest, co
         if(check_manifest(manifest))
         {
             gchar *old_manifest_file = determine_manifest_to_open(old_manifest, coordinator_profile_path, profile);
-            GPtrArray *old_activation_array = open_previous_activation_array(old_manifest_file);
+            Manifest *previous_manifest = open_previous_manifest(old_manifest_file, MANIFEST_ACTIVATION_FLAG, NULL, NULL);
 
-            if(check_activation_array(old_activation_array))
+            if(check_manifest(previous_manifest))
             {
                 /* Do the activation process */
-                status = activate_system(manifest, old_activation_array, flags, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
+                status = activate_system(manifest, previous_manifest, flags, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
                 print_transition_status(status, old_manifest_file, new_manifest, coordinator_profile_path, profile);
             }
             else
@@ -54,7 +53,7 @@ int run_activate_system(const gchar *new_manifest, const gchar *old_manifest, co
             }
 
             /* Cleanup */
-            g_ptr_array_free(old_activation_array, TRUE);
+            delete_manifest(previous_manifest);
             g_free(old_manifest_file);
         }
         else

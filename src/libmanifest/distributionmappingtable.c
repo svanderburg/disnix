@@ -17,12 +17,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "distributionmapping.h"
+#include "distributionmappingtable.h"
 #include <nixxml-ghashtable.h>
 
-GHashTable *parse_distribution(xmlNodePtr element)
+GHashTable *parse_distribution_table(xmlNodePtr element, void *userdata)
 {
-    return NixXML_parse_g_hash_table_verbose(element, "distribution", "name", NULL, NixXML_parse_value);
+    return NixXML_parse_g_hash_table_verbose(element, "distribution", "name", userdata, NixXML_parse_value);
 }
 
 void delete_distribution_table(GHashTable *distribution_table)

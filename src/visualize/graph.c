@@ -21,7 +21,7 @@
 #include "edgestable.h"
 #include "clustertable.h"
 #include <manifest.h>
-#include <activationmapping.h>
+#include <servicemappingarray.h>
 
 int generate_graph(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, int no_containers)
 {
@@ -40,17 +40,17 @@ int generate_graph(const gchar *manifest_file, const gchar *coordinator_profile_
         if(check_manifest(manifest))
         {
             /* Creates a table which maps each target onto a list of mappings */
-            GHashTable *cluster_table = generate_cluster_table(manifest->activation_array, manifest->targets_table);
+            GHashTable *cluster_table = generate_cluster_table(manifest->service_mapping_array, manifest->targets_table);
 
             /* Creates a table which associates each mapping to its inter-dependencies that have a strict ordering requirement */
-            GHashTable *edges_depends_on_table = generate_edges_table(manifest->activation_array, manifest->targets_table, TRUE);
+            GHashTable *edges_depends_on_table = generate_edges_table(manifest->service_mapping_array, manifest->services_table, manifest->targets_table, TRUE);
 
             /* Creates a table which associates each mapping to its inter-dependencies that have no strict ordering requirement */
-            GHashTable *edges_connects_to_table = generate_edges_table(manifest->activation_array, manifest->targets_table, FALSE);
+            GHashTable *edges_connects_to_table = generate_edges_table(manifest->service_mapping_array, manifest->services_table, manifest->targets_table, FALSE);
 
             g_print("digraph G {\n");
 
-            print_cluster_table(cluster_table, no_containers); /* Generate clusters with nodes from the cluster table */
+            print_cluster_table(cluster_table, manifest->services_table, no_containers); /* Generate clusters with nodes from the cluster table */
 
             /* Generate edges from the edges table */
             print_edges_table(edges_depends_on_table, TRUE);

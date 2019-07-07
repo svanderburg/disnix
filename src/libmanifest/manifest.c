@@ -22,13 +22,14 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <pwd.h>
-#include "distributionmapping.h"
-#include "activationmapping.h"
-#include "snapshotmapping.h"
+#include "distributionmappingtable.h"
+#include "servicestable.h"
+#include "servicemappingarray.h"
+#include "snapshotmappingarray.h"
 #include "targets.h"
 #include <libxml/parser.h>
 
-static Manifest *parse_manifest(xmlNodePtr element, const unsigned int flags, const gchar *container_filter, const gchar *component_filter)
+static Manifest *parse_manifest(xmlNodePtr element, const unsigned int flags, const gchar *container_filter, const gchar *component_filter, void *userdata)
 {
     Manifest *manifest = (Manifest*)g_malloc0(sizeof(Manifest));
     xmlNodePtr element_children = element->children;
@@ -36,13 +37,15 @@ static Manifest *parse_manifest(xmlNodePtr element, const unsigned int flags, co
     while(element_children != NULL)
     {
         if((flags & MANIFEST_DISTRIBUTION_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "profiles") == 0)
-            manifest->distribution_table = parse_distribution(element_children);
-        else if((flags & MANIFEST_ACTIVATION_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "activation") == 0)
-            manifest->activation_array = parse_activation(element_children);
-        else if((flags & MANIFEST_SNAPSHOT_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "snapshots") == 0)
-            manifest->snapshots_array = parse_snapshots(element_children, container_filter, component_filter);
+            manifest->distribution_table = parse_distribution_table(element_children, userdata);
+        else if((flags & MANIFEST_ACTIVATION_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "services") == 0)
+            manifest->services_table = parse_services_table(element_children, userdata);
+        else if((flags & MANIFEST_ACTIVATION_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "serviceMappings") == 0)
+            manifest->service_mapping_array = parse_service_mapping_array(element_children, userdata);
+        else if((flags & MANIFEST_SNAPSHOT_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "snapshotMappings") == 0)
+            manifest->snapshot_mapping_array = parse_snapshot_mapping_array(element_children, container_filter, component_filter, userdata);
         else if((flags & MANIFEST_TARGETS_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "targets") == 0)
-            manifest->targets_table = parse_targets_table(element_children);
+            manifest->targets_table = parse_targets_table(element_children, userdata);
 
         element_children = element_children->next;
     }
@@ -77,7 +80,7 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
     }
 
     /* Parse manifest */
-    manifest = parse_manifest(node_root, flags, container_filter, component_filter);
+    manifest = parse_manifest(node_root, flags, container_filter, component_filter, NULL);
 
     /* Cleanup */
     xmlFreeDoc(doc);
@@ -90,8 +93,9 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
 int check_manifest(const Manifest *manifest)
 {
     return (check_distribution_table(manifest->distribution_table)
-      && check_activation_array(manifest->activation_array)
-      && check_snapshots_array(manifest->snapshots_array)
+      && check_services_table(manifest->services_table)
+      && check_service_mapping_array(manifest->service_mapping_array)
+      && check_snapshot_mapping_array(manifest->snapshot_mapping_array)
       && check_targets_table(manifest->targets_table));
 }
 
@@ -100,8 +104,9 @@ void delete_manifest(Manifest *manifest)
     if(manifest != NULL)
     {
         delete_distribution_table(manifest->distribution_table);
-        delete_activation_array(manifest->activation_array);
-        delete_snapshots_array(manifest->snapshots_array);
+        delete_services_table(manifest->services_table);
+        delete_service_mapping_array(manifest->service_mapping_array);
+        delete_snapshot_mapping_array(manifest->snapshot_mapping_array);
         delete_targets_table(manifest->targets_table);
         g_free(manifest);
     }
@@ -112,15 +117,15 @@ gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, c
     gchar *old_manifest_file;
     FILE *file;
     char *username = (getpwuid(geteuid()))->pw_name; /* Get current username */
-    
+
     if(coordinator_profile_path == NULL)
         old_manifest_file = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator/", profile, NULL);
     else
         old_manifest_file = g_strconcat(coordinator_profile_path, "/", profile, NULL);
-    
+
     /* Try to open file => if it succeeds we have a previous configuration */
     file = fopen(old_manifest_file, "r");
-    
+
     if(file == NULL)
     {
         g_free(old_manifest_file);
@@ -128,7 +133,7 @@ gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, c
     }
     else
         fclose(file);
-    
+
     return old_manifest_file;
 }
 
@@ -138,7 +143,7 @@ Manifest *open_provided_or_previous_manifest_file(const gchar *manifest_file, co
     {
         /* If no manifest file has been provided, try opening the last deployed one */
         gchar *old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, profile);
-        
+
         if(old_manifest_file == NULL)
             return NULL; /* There is no previously deployed manifest */
         else

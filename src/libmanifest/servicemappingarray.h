@@ -17,78 +17,55 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_ACTIVATIONMAPPING_H
-#define __DISNIX_ACTIVATIONMAPPING_H
+#ifndef __DISNIX_SERVICEMAPPINGARRAY_H
+#define __DISNIX_SERVICEMAPPINGARRAY_H
 #include <glib.h>
 #include <procreact_pid.h>
 #include <libxml/parser.h>
 #include <targets.h>
+#include "interdependencymappingarray.h"
+#include "servicestable.h"
 #include "manifest.h"
 
 /**
- * @brief Contains the values that constitute a key uniquely referring to an activation mapping.
- */
-typedef struct
-{
-    /** Hash code that uniquely defines a service */
-    xmlChar *key;
-    /** Target property referring to the target machine to which the service is deployed */
-    xmlChar *target;
-    /** Name of the container to which the service is deployed */
-    xmlChar *container;
-}
-ActivationMappingKey;
-
-/**
- * @brief Enumeration of possible states for an activation mapping.
+ * @brief Enumeration of possible states for a service mapping.
  */
 typedef enum
 {
-    ACTIVATIONMAPPING_DEACTIVATED,
-    ACTIVATIONMAPPING_IN_PROGRESS,
-    ACTIVATIONMAPPING_ACTIVATED,
-    ACTIVATIONMAPPING_ERROR
+    SERVICE_MAPPING_DEACTIVATED,
+    SERVICE_MAPPING_IN_PROGRESS,
+    SERVICE_MAPPING_ACTIVATED,
+    SERVICE_MAPPING_ERROR
 }
-ActivationMappingStatus;
+ServiceMappingStatus;
 
 /**
- * @brief Contains all properties to activate a specific service on a specific machine.
- * This struct maps (key,target,container) -> (service,name,type,depends_on,activated)
+ * @brief Contains all properties to map a specific service on a specific machine (by executing a specified activity).
  */
 typedef struct
 {
     /** Hash code that uniquely defines a service */
-    xmlChar *key;
-    /** Target property referring to the target machine to which the service is deployed */
-    xmlChar *target;
-    /** Name of the container to which the service is deployed */
-    xmlChar *container;
-    /** Nix store path to the service */
     xmlChar *service;
-    /* Name of the service */
-    xmlChar *name;
-    /** Activation type */
-    xmlChar *type;
-    /** Array of ActivationMappingKey items representing the inter-dependencies */
-    GPtrArray *depends_on;
-    /** Array of ActivationMappingKey items representing the inter-dependencies for which the ordering does not matter */
-    GPtrArray *connects_to;
+    /** Name of the container to which the service is deployed */
+    xmlChar *container;
+    /** Name of the target machine to which the service is deployed */
+    xmlChar *target;
     /** Indicates the status of the activation mapping */
-    ActivationMappingStatus status;
+    ServiceMappingStatus status;
 }
-ActivationMapping;
+ServiceMapping;
 
 /**
- * @brief Enumerates the possible outcomes of an operation on activation mapping
+ * @brief Enumerates the possible outcomes of an operation on a service mapping
  */
 typedef enum
 {
-    ACTIVATION_ERROR,
-    ACTIVATION_IN_PROGRESS,
-    ACTIVATION_WAIT,
-    ACTIVATION_DONE
+    SERVICE_ERROR,
+    SERVICE_IN_PROGRESS,
+    SERVICE_WAIT,
+    SERVICE_DONE
 }
-ActivationStatus;
+ServiceStatus;
 
 /**
  * Pointer to a function that executes an operation to modify an activation
@@ -100,7 +77,7 @@ ActivationStatus;
  * @param arguments_length Length of the arguments array
  * @return The PID of the process invoked
  */
-typedef pid_t (*map_activation_mapping_function) (ActivationMapping *mapping, Target *target, gchar **arguments, unsigned int arguments_length);
+typedef pid_t (*service_mapping_function) (ServiceMapping *mapping, ManifestService *service, Target *target, gchar **arguments, unsigned int arguments_length);
 
 /**
  * Pointer to a function that gets executed when an operation on activation
@@ -110,7 +87,7 @@ typedef pid_t (*map_activation_mapping_function) (ActivationMapping *mapping, Ta
  * @param status Indicates whether the process terminated abnormally or not
  * @param result TRUE if the operation succeeded, else FALSE
  */
-typedef void (*complete_activation_mapping_function) (ActivationMapping *mapping, ProcReact_Status status, int result);
+typedef void (*complete_service_mapping_function) (ServiceMapping *mapping, Target *target, ProcReact_Status status, int result);
 
 /**
  * Pointer to a function that traverses the collection of activation mappings
@@ -123,7 +100,7 @@ typedef void (*complete_activation_mapping_function) (ActivationMapping *mapping
  * @param map_activation_mapping Pointer to a function that executes an operation modifying the deployment state of an activation mapping
  * @return Any of the activation status codes
  */
-typedef ActivationStatus (*iterate_strategy_function) (GPtrArray *union_array, const ActivationMappingKey *key, GHashTable *targets_table, GHashTable *pid_table, map_activation_mapping_function map_activation_mapping);
+typedef ServiceStatus (*iterate_strategy_function) (GPtrArray *union_service_mapping, GHashTable *union_services_table, const InterDependencyMapping *key, GHashTable *targets_table, GHashTable *pid_table, service_mapping_function map_service_mapping);
 
 /**
  * Creates an array with activation mappings from the corresponding sub section
@@ -132,16 +109,16 @@ typedef ActivationStatus (*iterate_strategy_function) (GPtrArray *union_array, c
  * @param element XML root element of the sub section defining the mappings
  * @return GPtrArray containing activation mappings
  */
-GPtrArray *parse_activation(xmlNodePtr element);
+GPtrArray *parse_service_mapping_array(xmlNodePtr element, void *userdata);
 
 /**
  * Deletes an array with activation mappings including its contents.
  *
  * @param activation_array Activation array to delete
  */
-void delete_activation_array(GPtrArray *activation_array);
+void delete_service_mapping_array(GPtrArray *service_mapping_array);
 
-int check_activation_array(const GPtrArray *activation_array);
+int check_service_mapping_array(const GPtrArray *service_mapping_array);
 
 /**
  * Returns the activation mapping with the given key in the activation array.
@@ -150,16 +127,7 @@ int check_activation_array(const GPtrArray *activation_array);
  * @param key Key of the activation mapping to find
  * @return The activation mapping with the specified keys, or NULL if it cannot be found
  */
-ActivationMapping *find_activation_mapping(const GPtrArray *activation_array, const ActivationMappingKey *key);
-
-/**
- * Returns the dependency with the given keys in the dependsOn array.
- *
- * @param depends_on dependsOn array
- * @param key Key of the dependency to find
- * @return The dependency mapping with the specified keys, or NULL if it cannot be found
- */
-ActivationMappingKey *find_dependency(const GPtrArray *depends_on, const ActivationMappingKey *key);
+ServiceMapping *find_service_mapping(const GPtrArray *service_mapping_array, const InterDependencyMapping *key);
 
 /**
  * Returns the intersection of the two given arrays.
@@ -170,7 +138,7 @@ ActivationMappingKey *find_dependency(const GPtrArray *depends_on, const Activat
  * @param right Array with activation mappings
  * @return Array with activation mappings both in left and right
  */
-GPtrArray *intersect_activation_array(const GPtrArray *left, const GPtrArray *right);
+GPtrArray *intersect_service_mapping_array(const GPtrArray *left, const GPtrArray *right);
 
 /**
  * Returns the union of left and right using the intersection,
@@ -183,7 +151,7 @@ GPtrArray *intersect_activation_array(const GPtrArray *left, const GPtrArray *ri
  * @return Array with activation mappings in both left and right,
  *         marked as active and inactive
  */
-GPtrArray *union_activation_array(GPtrArray *left, GPtrArray *right, const GPtrArray *intersect);
+GPtrArray *union_service_mapping_array(GPtrArray *left, GPtrArray *right, const GPtrArray *intersect);
 
 /**
  * Returns a new array in which the activation mappings in
@@ -195,7 +163,7 @@ GPtrArray *union_activation_array(GPtrArray *left, GPtrArray *right, const GPtrA
  * @param right Array with activation mappings
  * @return Array with right substracted from left.
  */
-GPtrArray *substract_activation_array(const GPtrArray *left, const GPtrArray *right);
+GPtrArray *substract_service_mapping_array(const GPtrArray *left, const GPtrArray *right);
 
 /**
  * Searches for all the mappings in an array that have an inter-dependency
@@ -206,14 +174,7 @@ GPtrArray *substract_activation_array(const GPtrArray *left, const GPtrArray *ri
  *                interdependent mapping
  * @return Array with interdependent activation mappings
  */
-GPtrArray *find_interdependent_mappings(const GPtrArray *activation_array, const ActivationMapping *mapping);
-
-/**
- * Prints the given activation array.
- *
- * @param activation_array Activation array to print
- */
-void print_activation_array(const GPtrArray *activation_array);
+GPtrArray *find_interdependent_service_mappings(GHashTable *services_table, const GPtrArray *activation_array, const ServiceMapping *mapping);
 
 /**
  * Traverses the collection of activation mappings by recursively visiting the
@@ -228,7 +189,7 @@ void print_activation_array(const GPtrArray *activation_array);
  * @param map_activation_mapping Pointer to a function that executes an operation modifying the deployment state of an activation mapping
  * @return Any of the activation status codes
  */
-ActivationStatus traverse_inter_dependency_mappings(GPtrArray *union_array, const ActivationMappingKey *key, GHashTable *targets_table, GHashTable *pid_table, map_activation_mapping_function map_activation_mapping);
+ServiceStatus traverse_inter_dependency_mappings(GPtrArray *union_array, GHashTable *union_services_table, const InterDependencyMapping *key, GHashTable *targets_table, GHashTable *pid_table, service_mapping_function map_service_mapping);
 
 /**
  * Traverses the collection of activation mappings by recursively visting the
@@ -243,7 +204,7 @@ ActivationStatus traverse_inter_dependency_mappings(GPtrArray *union_array, cons
  * @param map_activation_mapping Pointer to a function that executes an operation modifying the deployment state of an activation mapping
  * @return Any of the activation status codes
  */
-ActivationStatus traverse_interdependent_mappings(GPtrArray *union_array, const ActivationMappingKey *key, GHashTable *targets_table, GHashTable *pid_table, map_activation_mapping_function map_activation_mapping);
+ServiceStatus traverse_interdependent_mappings(GPtrArray *union_array, GHashTable *union_services_table, const InterDependencyMapping *key, GHashTable *targets_table, GHashTable *pid_table, service_mapping_function map_service_mapping);
 
 /**
  * Traverses the provided activation mappings according to some strategy,
@@ -259,8 +220,6 @@ ActivationStatus traverse_interdependent_mappings(GPtrArray *union_array, const 
  * @param complete_activation_mapping Pointer to function that gets executed when an operation on activation mapping completes
  * @return TRUE if all the activation mappings' states have been successfully changed, else FALSE
  */
-int traverse_activation_mappings(GPtrArray *mappings, GPtrArray *union_array, GHashTable *targets_table, iterate_strategy_function iterate_strategy, map_activation_mapping_function map_activation_mapping, complete_activation_mapping_function complete_activation_mapping);
-
-GPtrArray *open_previous_activation_array(const gchar *manifest_file);
+int traverse_service_mappings(GPtrArray *mappings, GPtrArray *union_array, GHashTable *union_services_table, GHashTable *targets_table, iterate_strategy_function iterate_strategy, service_mapping_function map_service_mapping, complete_service_mapping_function complete_service_mapping);
 
 #endif

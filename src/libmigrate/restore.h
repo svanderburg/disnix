@@ -35,6 +35,6 @@
  * @param keep Indicates how many snapshot generations should be kept remotely while executing the depth first operation
  * @return TRUE if the restore completed successfully, else FALSE
  */
-int restore(const Manifest *manifest, const GPtrArray *old_snapshots_array, const unsigned int max_concurrent_transfers, const unsigned int flags, const unsigned int keep);
+int restore(const Manifest *manifest, const Manifest *previous_manifest, const unsigned int max_concurrent_transfers, const unsigned int flags, const unsigned int keep);
 
 #endif

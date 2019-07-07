@@ -13,17 +13,11 @@ static int distribute_closures(Manifest *manifest, const unsigned int max_concur
 
 static TransitionStatus activate_new_configuration(gchar *old_manifest_file, const gchar *new_manifest, Manifest *manifest, Manifest *old_manifest, gchar *profile, const gchar *coordinator_profile_path, const unsigned int flags, void (*pre_hook) (void), void (*post_hook) (void))
 {
-    GPtrArray *old_activation_array;
     TransitionStatus status;
 
     g_print("[coordinator]: Activating new configuration...\n");
 
-    if(old_manifest == NULL)
-        old_activation_array = NULL;
-    else
-        old_activation_array = old_manifest->activation_array;
-
-    status = activate_system(manifest, old_activation_array, flags, pre_hook, post_hook);
+    status = activate_system(manifest, old_manifest, flags, pre_hook, post_hook);
     print_transition_status(status, old_manifest_file, new_manifest, coordinator_profile_path, profile);
 
     return status;
@@ -63,15 +57,8 @@ static int migrate_data(Manifest *manifest, Manifest *old_manifest, const unsign
         return TRUE;
     else
     {
-        GPtrArray *old_snapshots_array;
-
-        if(old_manifest == NULL)
-            old_snapshots_array = NULL;
-        else
-            old_snapshots_array = old_manifest->snapshots_array;
-
         g_print("[coordinator]: Migrating data...\n");
-        return migrate(manifest, old_snapshots_array, max_concurrent_transfers, flags, keep);
+        return migrate(manifest, old_manifest, max_concurrent_transfers, flags, keep);
     }
 }
 

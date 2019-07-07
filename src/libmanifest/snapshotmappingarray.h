@@ -17,12 +17,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_SNAPSHOTMAPPING_H
-#define __DISNIX_SNAPSHOTMAPPING_H
+#ifndef __DISNIX_SNAPSHOTMAPPINGARRAY_H
+#define __DISNIX_SNAPSHOTMAPPINGARRAY_H
 #include <glib.h>
 #include <libxml/parser.h>
 #include <procreact_pid.h>
 #include <targets.h>
+#include "servicestable.h"
 
 /**
  * @brief Contains the values that constitute a key uniquely referring to a snapshot mapping.
@@ -55,11 +56,8 @@ typedef struct
     /** Target property referring to the target machine to which the service is deployed */
     xmlChar *target;
 
-    /** Full Nix store path to the corresponding service */
+    /** Hash code that uniquely defines a service */
     xmlChar *service;
-
-    /** Activation type */
-    xmlChar *type;
 
     /** Indicates whether the snapshot has been transferred or not */
     gboolean transferred;
@@ -75,7 +73,7 @@ SnapshotMapping;
  * @param arguments_length Length of the arguments array
  * @return PID of the spawned process
  */
-typedef pid_t (*map_snapshot_item_function) (SnapshotMapping *mapping, Target *target, gchar **arguments, unsigned int arguments_length);
+typedef pid_t (*map_snapshot_item_function) (SnapshotMapping *mapping, ManifestService *service, Target *target, gchar **arguments, unsigned int arguments_length);
 
 /**
  * Function that gets executed when a mapping function completes.
@@ -84,7 +82,7 @@ typedef pid_t (*map_snapshot_item_function) (SnapshotMapping *mapping, Target *t
  * @param status Indicates whether the process terminated abnormally or not
  * @param result TRUE if the mapping operation succeeded, else FALSE
  */
-typedef void (*complete_snapshot_item_mapping_function) (SnapshotMapping *mapping, ProcReact_Status status, int result);
+typedef void (*complete_snapshot_item_mapping_function) (SnapshotMapping *mapping, Target *target, ProcReact_Status status, int result);
 
 /**
  * Creates an array with activation mappings from the corresponding sub section
@@ -95,16 +93,16 @@ typedef void (*complete_snapshot_item_mapping_function) (SnapshotMapping *mappin
  * @param component_filter Name of the component to filter on, or NULL to parse all components
  * @return GPtrArray containing activation mappings
  */
-GPtrArray *parse_snapshots(xmlNodePtr element, const gchar *container_filter, const gchar *component_filter);
+GPtrArray *parse_snapshot_mapping_array(xmlNodePtr element, const gchar *container_filter, const gchar *component_filter, void *userdata);
 
 /**
  * Deletes an array with snapshot mappings including its contents.
  *
  * @param snapshots_array Snapshots array to delete
  */
-void delete_snapshots_array(GPtrArray *snapshots_array);
+void delete_snapshot_mapping_array(GPtrArray *snapshots_array);
 
-int check_snapshots_array(const GPtrArray *snapshots_array);
+int check_snapshot_mapping_array(const GPtrArray *snapshots_array);
 
 /**
  * Returns the snapshots mapping with the given key in the snapshots array.
@@ -144,7 +142,7 @@ GPtrArray *find_snapshot_mappings_per_target(const GPtrArray *snapshots_array, c
  * @param complete_snapshot_item_mapping Function that gets executed when a mapping function completes
  * @return TRUE if all mappings were successfully executed, else FALSE
  */
-int map_snapshot_items(const GPtrArray *snapshots_array, GHashTable *targets_table, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping);
+int map_snapshot_items(const GPtrArray *snapshots_array, GHashTable *snapshots_table, GHashTable *targets_table, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping);
 
 /**
  * Resets the transferred status on all items in the snapshots array
@@ -152,7 +150,5 @@ int map_snapshot_items(const GPtrArray *snapshots_array, GHashTable *targets_tab
  * @param snapshots_array Snapshots array
  */
 void reset_snapshot_items_transferred_status(GPtrArray *snapshots_array);
-
-GPtrArray *open_provided_or_previous_snapshots_array(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container, const gchar *component);
 
 #endif

@@ -18,7 +18,7 @@
  */
 
 #include "clustertable.h"
-#include <activationmapping.h>
+#include <servicemappingarray.h>
 #include <targets.h>
 
 static void destroy_cluster_value(gpointer data)
@@ -44,7 +44,7 @@ GHashTable *generate_cluster_table(GPtrArray *activation_array, GHashTable *targ
     for(i = 0; i < activation_array->len; i++)
     {
 	/* Get current mapping item */
-	ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
+	ServiceMapping *mapping = g_ptr_array_index(activation_array, i);
 	
 	/* Get target property of the current mapping item */
 	Target *target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
@@ -95,7 +95,7 @@ void destroy_cluster_table(GHashTable *cluster_table)
     g_hash_table_destroy(cluster_table);
 }
 
-static void print_container_table(GHashTable *container_table, int id, gchar *target, int no_containers)
+static void print_container_table(GHashTable *services_table, GHashTable *container_table, int id, gchar *target, int no_containers)
 {
     GHashTableIter iter;
     gpointer *key;
@@ -115,7 +115,7 @@ static void print_container_table(GHashTable *container_table, int id, gchar *ta
         
             if(cluster_array->len > 0)
             {
-                ActivationMapping *mapping = g_ptr_array_index(cluster_array, 0);
+                ServiceMapping *mapping = g_ptr_array_index(cluster_array, 0);
                 g_print("label=\"%s\";\n", mapping->container);
             }
             
@@ -126,8 +126,9 @@ static void print_container_table(GHashTable *container_table, int id, gchar *ta
         
         for(i = 0; i < cluster_array->len; i++)
         {
-            ActivationMapping *mapping = g_ptr_array_index(cluster_array, i);
-            g_print("\"%s:%s:%s\" [ label = \"%s\" ];\n", mapping->key, target, mapping->container, mapping->name);
+            ServiceMapping *mapping = g_ptr_array_index(cluster_array, i);
+            ManifestService *service = g_hash_table_lookup(services_table, (gchar*)mapping->service);
+            g_print("\"%s:%s:%s\" [ label = \"%s\" ];\n", mapping->service, target, mapping->container, service->name);
         }
         
         if(!no_containers)
@@ -137,7 +138,7 @@ static void print_container_table(GHashTable *container_table, int id, gchar *ta
     }
 }
 
-void print_cluster_table(GHashTable *cluster_table, int no_containers)
+void print_cluster_table(GHashTable *cluster_table, GHashTable *services_table, int no_containers)
 {
     GHashTableIter iter;
     gpointer *key;
@@ -155,7 +156,7 @@ void print_cluster_table(GHashTable *cluster_table, int no_containers)
         g_print("label=\"%s\";\n", target);
         g_print("fillcolor=grey\n");
 
-        print_container_table(container_table, count, target, no_containers);
+        print_container_table(services_table, container_table, count, target, no_containers);
         
         g_print("}\n");
     

@@ -18,7 +18,7 @@
  */
 
 #include "activate.h"
-#include <activationmapping.h>
+#include <servicemappingarray.h>
 
 void print_transition_status(TransitionStatus status, const gchar *old_manifest_file, const gchar *new_manifest_file, const gchar *coordinator_profile_path, const gchar *profile)
 {
@@ -65,7 +65,7 @@ void print_transition_status(TransitionStatus status, const gchar *old_manifest_
     }
 }
 
-TransitionStatus activate_system(Manifest *manifest, GPtrArray *old_activation_mappings, const unsigned int flags, void (*pre_hook) (void), void (*post_hook) (void))
+TransitionStatus activate_system(Manifest *manifest, Manifest *previous_manifest, const unsigned int flags, void (*pre_hook) (void), void (*post_hook) (void))
 {
     TransitionStatus status;
 
@@ -75,9 +75,9 @@ TransitionStatus activate_system(Manifest *manifest, GPtrArray *old_activation_m
     if(flags & FLAG_NO_UPGRADE)
     {
         g_print("[coordinator]: Forced to do no upgrade! Ignoring the previous manifest file!\n");
-        old_activation_mappings = NULL;
+        previous_manifest = NULL;
     }
-    else if(old_activation_mappings != NULL)
+    else if(previous_manifest != NULL)
         g_print("[coordinator]: Doing an upgrade from previous manifest file\n");
     else
         g_print("[coordinator]: Doing an installation from scratch\n");
@@ -85,7 +85,7 @@ TransitionStatus activate_system(Manifest *manifest, GPtrArray *old_activation_m
     if(pre_hook != NULL) /* Execute hook before the lock operations are executed */
         pre_hook();
 
-    status = transition(manifest->activation_array, old_activation_mappings, manifest->targets_table, flags);
+    status = transition(manifest, previous_manifest, flags);
 
     if(post_hook != NULL) /* Execute hook after the lock operations have been completed */
         post_hook();

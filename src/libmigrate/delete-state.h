@@ -20,6 +20,7 @@
 #ifndef __DISNIX_DELETE_STATE_H
 #define __DISNIX_DELETE_STATE_H
 #include <glib.h>
+#include "manifest.h"
 
 /**
  * Actually deletes all the state that has been marked as obsolete.
@@ -28,6 +29,5 @@
  * @param targets_table Hash table of targets belonging to the current configuration
  * @return TRUE if deleting the state completed successfully, else FALSE
  */
-int delete_obsolete_state(GPtrArray *snapshots_array, GHashTable *targets_table);
-
+int delete_obsolete_state(GPtrArray *snapshot_mapping_array, GHashTable *snapshots_table, GHashTable *targets_table);
 #endif

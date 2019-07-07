@@ -19,21 +19,21 @@
 
 #include "diagnose.h"
 #include <manifest.h>
-#include <activationmapping.h>
+#include <servicemappingarray.h>
 #include <targets.h>
 #include <client-interface.h>
 #include <procreact_pid.h>
 
-static int spawn_shell(GHashTable *targets_table, const ActivationMapping *mapping, char *command)
+static int spawn_shell(GHashTable *targets_table, const ServiceMapping *mapping, const ManifestService *service, char *command)
 {
     Target *target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
     gchar **arguments = generate_activation_arguments(target, (gchar*)mapping->container);
     ProcReact_Status status;
     int exit_status;
 
-    g_printerr("[%s]: Connecting to service: %s deployed to container: %s\n", mapping->target, mapping->service, mapping->container);
+    g_printerr("[%s]: Connecting to service: %s deployed to container: %s\n", mapping->target, service->pkg, mapping->container);
 
-    exit_status = procreact_wait_for_exit_status(exec_dysnomia_shell((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)mapping->type, arguments, g_strv_length(arguments), (char*)mapping->service, command), &status);
+    exit_status = procreact_wait_for_exit_status(exec_dysnomia_shell((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)service->type, arguments, g_strv_length(arguments), (char*)service->pkg, command), &status);
 
     g_strfreev(arguments);
 
@@ -48,7 +48,7 @@ static void print_mappings(const GPtrArray *mappings_array)
 
     for(i = 0; i < mappings_array->len; i++)
     {
-        ActivationMapping *mapping = (ActivationMapping*)g_ptr_array_index(mappings_array, i);
+        ServiceMapping *mapping = (ServiceMapping*)g_ptr_array_index(mappings_array, i);
         g_printerr("container: %s, target: %s\n", mapping->container, mapping->target);
     }
 }
@@ -71,11 +71,12 @@ int diagnose(const char *service_name, const int show_mappings, const char *mani
             GPtrArray *candidate_mappings_array = g_ptr_array_new();
 
             /* Look for all mappings that have the provided service name and (optionally) the container and target */
-            for(i = 0; i < manifest->activation_array->len; i++)
+            for(i = 0; i < manifest->service_mapping_array->len; i++)
             {
-                ActivationMapping *mapping = (ActivationMapping*)g_ptr_array_index(manifest->activation_array, i);
+                ServiceMapping *mapping = (ServiceMapping*)g_ptr_array_index(manifest->service_mapping_array, i);
+                ManifestService *service = g_hash_table_lookup(manifest->services_table, mapping->service);
 
-                if(xmlStrcmp((const xmlChar*) service_name, mapping->name) == 0 &&
+                if(xmlStrcmp((const xmlChar*) service_name, service->name) == 0 &&
                   (container_filter == NULL || xmlStrcmp((const xmlChar*) container_filter, mapping->container) == 0) &&
                   (target_filter == NULL || xmlStrcmp((const xmlChar*) target_filter, mapping->target) == 0))
                      g_ptr_array_add(candidate_mappings_array, mapping);
@@ -93,8 +94,9 @@ int diagnose(const char *service_name, const int show_mappings, const char *mani
             }
             else if(candidate_mappings_array->len == 1)
             {
-                ActivationMapping *mapping = g_ptr_array_index(candidate_mappings_array, 0);
-                exit_status = spawn_shell(manifest->targets_table, mapping, command);
+                ServiceMapping *mapping = g_ptr_array_index(candidate_mappings_array, 0);
+                ManifestService *service = g_hash_table_lookup(manifest->services_table, mapping->service);
+                exit_status = spawn_shell(manifest->targets_table, mapping, service, command);
             }
             else
             {
@@ -112,8 +114,9 @@ int diagnose(const char *service_name, const int show_mappings, const char *mani
                 {
                     for(i = 0; i < candidate_mappings_array->len; i++)
                     {
-                        ActivationMapping *mapping = g_ptr_array_index(candidate_mappings_array, i);
-                        exit_status = spawn_shell(manifest->targets_table, mapping, command);
+                        ServiceMapping *mapping = g_ptr_array_index(candidate_mappings_array, i);
+                        ManifestService *service = g_hash_table_lookup(manifest->services_table, mapping->service);
+                        exit_status = spawn_shell(manifest->targets_table, mapping, service, command);
 
                         if(exit_status != 0)
                             break;

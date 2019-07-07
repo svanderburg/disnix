@@ -39,11 +39,14 @@ typedef struct
     /** Hash table mapping targets to intra-dependency closures */
     GHashTable *distribution_table;
 
+    /** Hash table containing the properties of all services */
+    GHashTable *services_table;
+
     /** Array of services to be activated on a target machine */
-    GPtrArray *activation_array;
+    GPtrArray *service_mapping_array;
 
     /** Array of snapshots to be tranferred to a target machine */
-    GPtrArray *snapshots_array;
+    GPtrArray *snapshot_mapping_array;
 
     /** Array containing the available target machines */
     GHashTable *targets_table;

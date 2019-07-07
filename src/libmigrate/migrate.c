@@ -3,9 +3,9 @@
 #include "restore.h"
 #include "delete-state.h"
 
-int migrate(const Manifest *manifest, GPtrArray *old_snapshots_array, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)
+int migrate(const Manifest *manifest, const Manifest *previous_manifest, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)
 {
-    return (snapshot(manifest, old_snapshots_array, max_concurrent_transfers, flags, keep)
-      && restore(manifest, old_snapshots_array, max_concurrent_transfers, flags, keep)
-      && (!(flags & FLAG_DELETE_STATE) || (old_snapshots_array == NULL) || (flags & FLAG_NO_UPGRADE) || delete_obsolete_state(old_snapshots_array, manifest->targets_table)));
+    return (snapshot(manifest, previous_manifest, max_concurrent_transfers, flags, keep)
+      && restore(manifest, previous_manifest, max_concurrent_transfers, flags, keep)
+      && (!(flags & FLAG_DELETE_STATE) || (previous_manifest == NULL) || (flags & FLAG_NO_UPGRADE) || delete_obsolete_state(previous_manifest->snapshot_mapping_array, previous_manifest->services_table, manifest->targets_table)));
 }

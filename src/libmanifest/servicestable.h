@@ -17,33 +17,32 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_CLUSTERTABLE_H
-#define __DISNIX_CLUSTERTABLE_H
+#ifndef __DISNIX_SERVICESTABLE_H
+#define __DISNIX_SERVICESTABLE_H
 #include <glib.h>
+#include <libxml/parser.h>
 
-/**
- * Generates a cluster table, which contains for each target property
- * of a machine the deployed services.
- *
- * @param activation_array Array with activation mappings
- * @param targets_table Hash table with targets
- * @return Generated cluster table
- */ 
-GHashTable *generate_cluster_table(GPtrArray *activation_array, GHashTable *targets_table);
+typedef struct
+{
+    /* Name of the service */
+    xmlChar *name;
+    /** Nix store path to the built service artifact */
+    xmlChar *pkg;
+    /** Activation type */
+    xmlChar *type;
+    /* Array of inter-dependency mappings */
+    GPtrArray *depends_on;
+    /* Array of inter-dependency mappings for which activation ordering does not matter */
+    GPtrArray *connects_to;
+}
+ManifestService;
 
-/**
- * Removes a clustered table including all its contents from memory
- *
- * @param cluster_table Clustered table to destroy
- */
-void destroy_cluster_table(GHashTable *cluster_table);
+GHashTable *parse_services_table(xmlNodePtr element, void *userdata);
 
-/**
- * Prints the cluster table in dot format.
- *
- * @param cluster_table Clustered table to print
- * @param no_containers Indicates whether not to visualize the containers
- */
-void print_cluster_table(GHashTable *cluster_table, GHashTable *services_table, int no_containers);
+void delete_services_table(GHashTable *services_table);
+
+int check_services_table(GHashTable *services_table);
+
+GHashTable *generate_union_services_table(GHashTable *left, GHashTable *right);
 
 #endif

@@ -22,7 +22,7 @@
 
 #include <procreact_pid_iterator.h>
 #include <modeliterator.h>
-#include "distributionmapping.h"
+#include "distributionmappingtable.h"
 
 /** Pointer to a function that executes an operation for each distribution item */
 typedef pid_t (*map_distribution_item_function) (void *data, xmlChar *profile_name, gchar *target_name, Target *target);
