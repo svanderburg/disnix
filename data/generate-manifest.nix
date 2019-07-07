@@ -98,15 +98,24 @@ let
       }
     ) service.targets;
 
-  generateSnapshotMappingsPerSystem = {service, targetAliases}:
+  generateSnapshotMappingsPerSystem = {services, service, targetAliases}:
     map (target:
       let
         targetProperty = getTargetProperty target;
         targetName = getAttr targetProperty targetAliases;
+
+        dependsOn = generateDependencyMappings {
+          inherit services service targetAliases;
+          dependencyType = "dependsOn";
+        };
+
         pkg = service._pkgsPerSystem."${target.system}".outPath;
       in
       {
-        service = pkg;
+        service = generateHash {
+          inherit (service) name type;
+          inherit dependsOn pkg;
+        };
         component = substring 33 (stringLength pkg) (baseNameOf pkg);
         container = target.selectedContainer;
         target = targetName;
@@ -224,6 +233,7 @@ let
     lib.flatten (map (serviceName:
     generateSnapshotMappingsPerSystem {
       service = getAttr serviceName normalizedArchitecture.services;
+      inherit (normalizedArchitecture) services;
       inherit targetAliases;
     }
   ) statefulServiceNames);
