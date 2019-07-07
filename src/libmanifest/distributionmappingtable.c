@@ -22,7 +22,7 @@
 
 GHashTable *parse_distribution_table(xmlNodePtr element, void *userdata)
 {
-    return NixXML_parse_g_hash_table_verbose(element, "distribution", "name", userdata, NixXML_parse_value);
+    return NixXML_parse_g_hash_table_verbose(element, "profile", "name", userdata, NixXML_parse_value);
 }
 
 void delete_distribution_table(GHashTable *distribution_table)

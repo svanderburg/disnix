@@ -64,6 +64,7 @@ static void delete_snapshot_mapping(SnapshotMapping *mapping)
     xmlFree(mapping->component);
     xmlFree(mapping->container);
     xmlFree(mapping->target);
+    xmlFree(mapping->service);
     g_free(mapping);
 }
 
@@ -82,6 +83,8 @@ static void insert_snapshot_mapping_attributes(void *table, const xmlChar *key, 
         mapping->container = value;
     else if(xmlStrcmp(key, (xmlChar*) "target") == 0)
         mapping->target = value;
+    else if(xmlStrcmp(key, (xmlChar*) "service") == 0)
+        mapping->service = value;
     else
         xmlFree(value);
 }
@@ -155,7 +158,7 @@ int check_snapshot_mapping_array(const GPtrArray *snapshots_array)
         {
             SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
 
-            if(mapping->component == NULL || mapping->container == NULL || mapping->target == NULL)
+            if(mapping->component == NULL || mapping->container == NULL || mapping->target == NULL || mapping->service == NULL)
             {
                 /* Check if all mandatory properties have been provided */
                 g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
@@ -266,7 +269,7 @@ int map_snapshot_items(const GPtrArray *snapshots_array, GHashTable *snapshots_t
             {
                 gchar **arguments = generate_activation_arguments(target, (gchar*)mapping->container); /* Generate an array of key=value pairs from container properties */
                 unsigned int arguments_length = g_strv_length(arguments); /* Determine length of the activation arguments array */
-                ManifestService *service = g_hash_table_lookup(snapshots_table, mapping->component);
+                ManifestService *service = g_hash_table_lookup(snapshots_table, mapping->service);
                 pid_t pid = map_snapshot_item(mapping, service, target, arguments, arguments_length);
                 gint *pid_ptr;
 

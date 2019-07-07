@@ -44,7 +44,7 @@ static Manifest *parse_manifest(xmlNodePtr element, const unsigned int flags, co
             manifest->service_mapping_array = parse_service_mapping_array(element_children, userdata);
         else if((flags & MANIFEST_SNAPSHOT_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "snapshotMappings") == 0)
             manifest->snapshot_mapping_array = parse_snapshot_mapping_array(element_children, container_filter, component_filter, userdata);
-        else if((flags & MANIFEST_TARGETS_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "targets") == 0)
+        else if((flags & MANIFEST_TARGETS_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "infrastructure") == 0)
             manifest->targets_table = parse_targets_table(element_children, userdata);
 
         element_children = element_children->next;

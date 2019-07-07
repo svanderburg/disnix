@@ -43,7 +43,7 @@ static gpointer parse_service_mapping(xmlNodePtr element, void *userdata)
 
 GPtrArray *parse_service_mapping_array(xmlNodePtr element, void *userdata)
 {
-    GPtrArray *service_mapping_array = NixXML_parse_g_ptr_array(element, "serviceMappings", userdata, parse_service_mapping);
+    GPtrArray *service_mapping_array = NixXML_parse_g_ptr_array(element, "mapping", userdata, parse_service_mapping);
 
     /* Sort the service mapping array */
     g_ptr_array_sort(service_mapping_array, (GCompareFunc)compare_service_mappings);

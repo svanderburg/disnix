@@ -195,6 +195,7 @@ TransitionStatus transition(Manifest *manifest, Manifest *previous_manifest, con
     GPtrArray *deactivation_array;
     GPtrArray *activation_array;
     GHashTable *union_services_table;
+    GPtrArray *previous_service_mapping_array;
     TransitionStatus status;
     service_mapping_function activate_mapping_function, deactivate_mapping_function;
 
@@ -206,10 +207,12 @@ TransitionStatus transition(Manifest *manifest, Manifest *previous_manifest, con
         deactivation_array = NULL;
         activation_array = manifest->service_mapping_array;
         union_services_table = manifest->services_table;
+        previous_service_mapping_array = NULL;
     }
     else
     {
         GPtrArray *intersection_array = intersect_service_mapping_array(manifest->service_mapping_array, previous_manifest->service_mapping_array);
+        previous_service_mapping_array = previous_manifest->service_mapping_array;
 
         g_print("[coordinator]: Mapping closures to deactivate:\n");
         deactivation_array = substract_service_mapping_array(previous_manifest->service_mapping_array, intersection_array);
@@ -239,9 +242,8 @@ TransitionStatus transition(Manifest *manifest, Manifest *previous_manifest, con
     }
 
     /* Execute transition steps */
-
-    if((status = deactivate_obsolete_mappings(deactivation_array, union_service_array, union_services_table, manifest->targets_table, previous_manifest->service_mapping_array, flags, activate_mapping_function, deactivate_mapping_function)) == TRANSITION_SUCCESS
-      && (status = activate_new_mappings(activation_array, union_service_array, union_services_table, manifest->targets_table, previous_manifest->service_mapping_array, flags, activate_mapping_function, deactivate_mapping_function)) == TRANSITION_SUCCESS);
+    if((status = deactivate_obsolete_mappings(deactivation_array, union_service_array, union_services_table, manifest->targets_table, previous_service_mapping_array, flags, activate_mapping_function, deactivate_mapping_function)) == TRANSITION_SUCCESS
+      && (status = activate_new_mappings(activation_array, union_service_array, union_services_table, manifest->targets_table, previous_service_mapping_array, flags, activate_mapping_function, deactivate_mapping_function)) == TRANSITION_SUCCESS);
 
     /* Cleanup */
     if(previous_manifest != NULL)
