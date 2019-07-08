@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_TARGETS_H
-#define __DISNIX_TARGETS_H
+#ifndef __DISNIX_TARGETSTABLE_H
+#define __DISNIX_TARGETSTABLE_H
 #include <libxml/parser.h>
 #include <glib.h>
 

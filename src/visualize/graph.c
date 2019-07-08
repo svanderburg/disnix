@@ -25,7 +25,7 @@
 
 int generate_graph(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, int no_containers)
 {
-    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_ACTIVATION_FLAG | MANIFEST_TARGETS_FLAG, NULL, NULL);
+    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_SERVICE_MAPPINGS_FLAG | MANIFEST_INFRASTRUCTURE_FLAG, NULL, NULL);
 
     if(manifest == NULL)
     {

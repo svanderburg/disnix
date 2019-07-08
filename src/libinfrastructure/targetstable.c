@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "targets.h"
+#include "targetstable.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -22,7 +22,7 @@
 
 int run_set_profiles(const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const unsigned int flags)
 {
-    Manifest *manifest = create_manifest(manifest_file, MANIFEST_DISTRIBUTION_FLAG | MANIFEST_TARGETS_FLAG, NULL, NULL);
+    Manifest *manifest = create_manifest(manifest_file, MANIFEST_PROFILES_FLAG | MANIFEST_INFRASTRUCTURE_FLAG, NULL, NULL);
 
     if(manifest == NULL)
     {

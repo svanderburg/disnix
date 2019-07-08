@@ -18,7 +18,7 @@
  */
 
 #include "distributedderivation.h"
-#include "derivationmapping.h"
+#include "derivationmappingarray.h"
 #include "interfaces.h"
 
 #include <libxml/parser.h>
@@ -33,8 +33,8 @@ static void parse_and_insert_distributed_derivation_attributes(xmlNodePtr elemen
 {
     DistributedDerivation *distributed_derivation = (DistributedDerivation*)table;
 
-    if(xmlStrcmp(element->name, (xmlChar*) "build") == 0)
-        distributed_derivation->derivation_array = parse_build(element);
+    if(xmlStrcmp(element->name, (xmlChar*) "derivationMappings") == 0)
+        distributed_derivation->derivation_mapping_array = parse_derivation_mapping_array(element);
     else if(xmlStrcmp(element->name, (xmlChar*) "interfaces") == 0)
         distributed_derivation->interfaces_table = parse_interfaces(element);
 }
@@ -86,7 +86,7 @@ void delete_distributed_derivation(DistributedDerivation *distributed_derivation
 {
     if(distributed_derivation != NULL)
     {
-        delete_derivation_array(distributed_derivation->derivation_array);
+        delete_derivation_mapping_array(distributed_derivation->derivation_mapping_array);
         delete_interfaces_table(distributed_derivation->interfaces_table);
         g_free(distributed_derivation);
     }
@@ -98,7 +98,7 @@ int check_distributed_derivation(const DistributedDerivation *distributed_deriva
         return TRUE;
     else
     {
-        return (check_derivation_array(distributed_derivation->derivation_array)
+        return (check_derivation_mapping_array(distributed_derivation->derivation_mapping_array)
           && check_interfaces_table(distributed_derivation->interfaces_table));
     }
 }

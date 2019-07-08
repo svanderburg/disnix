@@ -20,7 +20,7 @@
 #include "delete-state.h"
 #include <client-interface.h>
 #include <snapshotmappingarray.h>
-#include <targets.h>
+#include <targetstable.h>
 
 static pid_t delete_state_on_target(SnapshotMapping *mapping, ManifestService *service, Target *target, gchar **arguments, unsigned int arguments_length)
 {
@@ -34,8 +34,8 @@ static void complete_delete_state_on_target(SnapshotMapping *mapping, Target *ta
         g_printerr("[target: %s]: Cannot delete state of service: %s\n", mapping->target, mapping->component);
 }
 
-int delete_obsolete_state(GPtrArray *snapshot_mapping_array, GHashTable *snapshots_table, GHashTable *targets_table)
+int delete_obsolete_state(GPtrArray *snapshot_mapping_array, GHashTable *services_table, GHashTable *targets_table)
 {
     reset_snapshot_items_transferred_status(snapshot_mapping_array);
-    return map_snapshot_items(snapshot_mapping_array, snapshots_table, targets_table, delete_state_on_target, complete_delete_state_on_target);
+    return map_snapshot_items(snapshot_mapping_array, services_table, targets_table, delete_state_on_target, complete_delete_state_on_target);
 }

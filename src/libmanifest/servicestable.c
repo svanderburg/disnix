@@ -70,17 +70,22 @@ static int check_manifest_service(const ManifestService *service)
 
 int check_services_table(GHashTable *services_table)
 {
-    GHashTableIter iter;
-    gpointer key, value;
-
-    g_hash_table_iter_init(&iter, services_table);
-    while(g_hash_table_iter_next(&iter, &key, &value))
+    if(services_table == NULL)
+        return TRUE;
+    else
     {
-        if(!check_manifest_service((ManifestService*)value))
-            return FALSE;
-    }
+        GHashTableIter iter;
+        gpointer key, value;
 
-    return TRUE;
+        g_hash_table_iter_init(&iter, services_table);
+        while(g_hash_table_iter_next(&iter, &key, &value))
+        {
+            if(!check_manifest_service((ManifestService*)value))
+                return FALSE;
+        }
+
+        return TRUE;
+    }
 }
 
 GHashTable *generate_union_services_table(GHashTable *left, GHashTable *right)
@@ -89,15 +94,12 @@ GHashTable *generate_union_services_table(GHashTable *left, GHashTable *right)
     GHashTableIter iter;
     gpointer key, value;
 
-    /* Check which element in left are not in right */
+    /* Insert all elements from left */
     g_hash_table_iter_init(&iter, left);
     while(g_hash_table_iter_next(&iter, &key, &value))
-    {
-        if(!g_hash_table_contains(right, key))
-            g_hash_table_insert(result_table, key, value);
-    }
+        g_hash_table_insert(result_table, key, value);
 
-    /* Check which element in right are not in left */
+    /* Insert all elements from right that have not been inserted yet */
     g_hash_table_iter_init(&iter, right);
     while(g_hash_table_iter_next(&iter, &key, &value))
     {

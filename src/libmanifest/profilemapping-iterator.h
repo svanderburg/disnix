@@ -17,12 +17,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_DISTRIBUTIONMAPPING_ITERATOR_H
-#define __DISNIX_DISTRIBUTIONMAPPING_ITERATOR_H
+#ifndef __DISNIX_PROFILEMAPPING_ITERATOR_H
+#define __DISNIX_PROFILEMAPPING_ITERATOR_H
 
 #include <procreact_pid_iterator.h>
 #include <modeliterator.h>
-#include "distributionmappingtable.h"
+#include "profilemappingtable.h"
 
 /** Pointer to a function that executes an operation for each distribution item */
 typedef pid_t (*map_distribution_item_function) (void *data, xmlChar *profile_name, gchar *target_name, Target *target);
@@ -39,7 +39,7 @@ typedef struct
     ModelIteratorData model_iterator_data;
     /** Hash table with distribution items */
     GHashTableIter iter;
-    GHashTable *distribution_table;
+    GHashTable *profile_mapping_table;
     /** Hash table with target items */
     GHashTable *targets_table;
 
@@ -72,14 +72,14 @@ DistributionIteratorData;
  * Creates a new iterator that steps over each distribution item and target and
  * executes the provided functions on start and completion.
  *
- * @param distribution_table Array with distribution items
+ * @param profile_mapping_table Array with distribution items
  * @param targets_table Hash table of targets
  * @param map_distribution_item Pointer to a function that executes an operation for each distribution item
  * @param complete_distribution_item_mapping Pointer to a function that gets executed when a process completes for a distribution item
  * @param data Pointer to arbitrary data passed to the above functions
  * @return A PID iterator that can be used to traverse the distribution items
  */
-ProcReact_PidIterator create_distribution_iterator(GHashTable *distribution_table, GHashTable *targets_table, map_distribution_item_function map_distribution_item, complete_distribution_item_mapping_function complete_distribution_item_mapping, void *data);
+ProcReact_PidIterator create_distribution_iterator(GHashTable *profile_mapping_table, GHashTable *targets_table, map_distribution_item_function map_distribution_item, complete_distribution_item_mapping_function complete_distribution_item_mapping, void *data);
 
 /**
  * Destroys the resources attached to the given distribution iterator.

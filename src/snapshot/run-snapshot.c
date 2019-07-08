@@ -24,7 +24,7 @@
 int run_snapshot(const gchar *manifest_file, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const gchar *container_filter, const gchar *component_filter)
 {
     /* Generate a distribution array from the manifest file */
-    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_SNAPSHOT_FLAG | MANIFEST_TARGETS_FLAG, container_filter, component_filter);
+    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_SNAPSHOT_MAPPINGS_FLAG | MANIFEST_INFRASTRUCTURE_FLAG, container_filter, component_filter);
 
     if(manifest == NULL)
     {
@@ -46,7 +46,7 @@ int run_snapshot(const gchar *manifest_file, const unsigned int max_concurrent_t
                 if(flags & FLAG_NO_UPGRADE)
                     previous_manifest = NULL;
                 else
-                    previous_manifest = open_provided_or_previous_manifest_file(old_manifest, coordinator_profile_path, profile, MANIFEST_SNAPSHOT_FLAG, container_filter, component_filter);
+                    previous_manifest = open_provided_or_previous_manifest_file(old_manifest, coordinator_profile_path, profile, MANIFEST_SNAPSHOT_MAPPINGS_FLAG, container_filter, component_filter);
 
                 if(check_manifest(previous_manifest))
                     exit_status = !snapshot(manifest, previous_manifest, max_concurrent_transfers, flags, keep); /* Take snapshots and transfer them */

@@ -20,7 +20,7 @@
 #include "run-build.h"
 #include <build.h>
 #include <distributedderivation.h>
-#include <derivationmapping.h>
+#include <derivationmappingarray.h>
 #include <interfaces.h>
 #include <client-interface.h>
 

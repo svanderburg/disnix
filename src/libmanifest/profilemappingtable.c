@@ -17,42 +17,42 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "distributionmappingtable.h"
+#include "profilemappingtable.h"
 #include <nixxml-ghashtable.h>
 
-GHashTable *parse_distribution_table(xmlNodePtr element, void *userdata)
+GHashTable *parse_profile_mapping_table(xmlNodePtr element, void *userdata)
 {
     return NixXML_parse_g_hash_table_verbose(element, "profile", "name", userdata, NixXML_parse_value);
 }
 
-void delete_distribution_table(GHashTable *distribution_table)
+void delete_profile_mapping_table(GHashTable *profile_mapping_table)
 {
-    if(distribution_table != NULL)
+    if(profile_mapping_table != NULL)
     {
         GHashTableIter iter;
         gpointer key, value;
 
-        g_hash_table_iter_init(&iter, distribution_table);
+        g_hash_table_iter_init(&iter, profile_mapping_table);
         while(g_hash_table_iter_next(&iter, &key, &value))
         {
             xmlChar *target = (xmlChar*)value;
             xmlFree(target);
         }
 
-        g_hash_table_destroy(distribution_table);
+        g_hash_table_destroy(profile_mapping_table);
     }
 }
 
-int check_distribution_table(GHashTable *distribution_table)
+int check_profile_mapping_table(GHashTable *profile_mapping_table)
 {
-    if(distribution_table == NULL)
+    if(profile_mapping_table == NULL)
         return TRUE;
     else
     {
         GHashTableIter iter;
         gpointer key, value;
 
-        g_hash_table_iter_init(&iter, distribution_table);
+        g_hash_table_iter_init(&iter, profile_mapping_table);
         while(g_hash_table_iter_next(&iter, &key, &value))
         {
             xmlChar *target = (xmlChar*)value;

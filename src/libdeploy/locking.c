@@ -18,9 +18,9 @@
  */
 
 #include "locking.h"
-#include <distributionmapping-iterator.h>
+#include <profilemapping-iterator.h>
 #include <manifest.h>
-#include <targets.h>
+#include <targetstable.h>
 #include <client-interface.h>
 
 extern volatile int interrupted;
@@ -40,10 +40,10 @@ static void complete_unlock_distribution_item(void *data, xmlChar *profile_name,
         g_printerr("[target: %s]: Cannot unlock profile: %s\n", target_name, profile_name);
 }
 
-int unlock(GHashTable *distribution_table, GHashTable *targets_table, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void))
+int unlock(GHashTable *profile_mapping_table, GHashTable *targets_table, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void))
 {
     int success;
-    ProcReact_PidIterator iterator = create_distribution_iterator(distribution_table, targets_table, unlock_distribution_item, complete_unlock_distribution_item, profile);
+    ProcReact_PidIterator iterator = create_distribution_iterator(profile_mapping_table, targets_table, unlock_distribution_item, complete_unlock_distribution_item, profile);
 
     if(pre_hook != NULL) /* Execute hook before the unlock operations are executed */
         pre_hook();
@@ -86,12 +86,12 @@ static void complete_lock_distribution_item(void *data, xmlChar *profile_name, g
         g_hash_table_insert(lock_data->lock_table, target_name, profile_name);
 }
 
-int lock(GHashTable *distribution_table, GHashTable *targets_table, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void))
+int lock(GHashTable *profile_mapping_table, GHashTable *targets_table, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void))
 {
     GHashTable *lock_table = g_hash_table_new(g_str_hash, g_str_equal);
     int success;
     LockData data = { profile, lock_table };
-    ProcReact_PidIterator iterator = create_distribution_iterator(distribution_table, targets_table, lock_distribution_item, complete_lock_distribution_item, &data);
+    ProcReact_PidIterator iterator = create_distribution_iterator(profile_mapping_table, targets_table, lock_distribution_item, complete_lock_distribution_item, &data);
 
     if(pre_hook != NULL) /* Execute hook before the lock operations are executed */
         pre_hook();

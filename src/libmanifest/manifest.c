@@ -22,11 +22,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <pwd.h>
-#include "distributionmappingtable.h"
+#include <targetstable.h>
+#include "profilemappingtable.h"
 #include "servicestable.h"
 #include "servicemappingarray.h"
 #include "snapshotmappingarray.h"
-#include "targets.h"
 #include <libxml/parser.h>
 
 static Manifest *parse_manifest(xmlNodePtr element, const unsigned int flags, const gchar *container_filter, const gchar *component_filter, void *userdata)
@@ -36,15 +36,15 @@ static Manifest *parse_manifest(xmlNodePtr element, const unsigned int flags, co
 
     while(element_children != NULL)
     {
-        if((flags & MANIFEST_DISTRIBUTION_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "profiles") == 0)
-            manifest->distribution_table = parse_distribution_table(element_children, userdata);
-        else if((flags & MANIFEST_ACTIVATION_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "services") == 0)
+        if((flags & MANIFEST_PROFILES_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "profiles") == 0)
+            manifest->profile_mapping_table = parse_profile_mapping_table(element_children, userdata);
+        else if(((flags & MANIFEST_SERVICE_MAPPINGS_FLAG) || (flags & MANIFEST_SNAPSHOT_MAPPINGS_FLAG)) && xmlStrcmp(element_children->name, (xmlChar*) "services") == 0)
             manifest->services_table = parse_services_table(element_children, userdata);
-        else if((flags & MANIFEST_ACTIVATION_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "serviceMappings") == 0)
+        else if((flags & MANIFEST_SERVICE_MAPPINGS_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "serviceMappings") == 0)
             manifest->service_mapping_array = parse_service_mapping_array(element_children, userdata);
-        else if((flags & MANIFEST_SNAPSHOT_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "snapshotMappings") == 0)
+        else if((flags & MANIFEST_SNAPSHOT_MAPPINGS_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "snapshotMappings") == 0)
             manifest->snapshot_mapping_array = parse_snapshot_mapping_array(element_children, container_filter, component_filter, userdata);
-        else if((flags & MANIFEST_TARGETS_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "infrastructure") == 0)
+        else if((flags & MANIFEST_INFRASTRUCTURE_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "infrastructure") == 0)
             manifest->targets_table = parse_targets_table(element_children, userdata);
 
         element_children = element_children->next;
@@ -92,18 +92,23 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
 
 int check_manifest(const Manifest *manifest)
 {
-    return (check_distribution_table(manifest->distribution_table)
-      && check_services_table(manifest->services_table)
-      && check_service_mapping_array(manifest->service_mapping_array)
-      && check_snapshot_mapping_array(manifest->snapshot_mapping_array)
-      && check_targets_table(manifest->targets_table));
+    if(manifest == NULL)
+        return TRUE;
+    else
+    {
+        return (check_profile_mapping_table(manifest->profile_mapping_table)
+          && check_services_table(manifest->services_table)
+          && check_service_mapping_array(manifest->service_mapping_array)
+          && check_snapshot_mapping_array(manifest->snapshot_mapping_array)
+          && check_targets_table(manifest->targets_table));
+    }
 }
 
 void delete_manifest(Manifest *manifest)
 {
     if(manifest != NULL)
     {
-        delete_distribution_table(manifest->distribution_table);
+        delete_profile_mapping_table(manifest->profile_mapping_table);
         delete_services_table(manifest->services_table);
         delete_service_mapping_array(manifest->service_mapping_array);
         delete_snapshot_mapping_array(manifest->snapshot_mapping_array);

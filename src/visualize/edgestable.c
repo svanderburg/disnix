@@ -19,7 +19,7 @@
 
 #include "edgestable.h"
 #include <servicemappingarray.h>
-#include <targets.h>
+#include <targetstable.h>
 
 static void destroy_value(gpointer data)
 {

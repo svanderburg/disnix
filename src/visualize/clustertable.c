@@ -19,7 +19,7 @@
 
 #include "clustertable.h"
 #include <servicemappingarray.h>
-#include <targets.h>
+#include <targetstable.h>
 
 static void destroy_cluster_value(gpointer data)
 {

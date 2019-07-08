@@ -23,7 +23,7 @@
 #include <modeliterator.h>
 #include <procreact_pid_iterator.h>
 #include <procreact_future_iterator.h>
-#include "targets.h"
+#include "targetstable.h"
 
 /** Pointer to a function that executes a process for each target */
 typedef pid_t (*map_target_pid_function) (void *data, Target *target, gchar *client_interface, gchar *target_key);

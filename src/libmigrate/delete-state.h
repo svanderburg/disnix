@@ -29,5 +29,5 @@
  * @param targets_table Hash table of targets belonging to the current configuration
  * @return TRUE if deleting the state completed successfully, else FALSE
  */
-int delete_obsolete_state(GPtrArray *snapshot_mapping_array, GHashTable *snapshots_table, GHashTable *targets_table);
+int delete_obsolete_state(GPtrArray *snapshot_mapping_array, GHashTable *services_table, GHashTable *targets_table);
 #endif

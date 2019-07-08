@@ -20,7 +20,7 @@
 #include "diagnose.h"
 #include <manifest.h>
 #include <servicemappingarray.h>
-#include <targets.h>
+#include <targetstable.h>
 #include <client-interface.h>
 #include <procreact_pid.h>
 
@@ -56,7 +56,7 @@ static void print_mappings(const GPtrArray *mappings_array)
 int diagnose(const char *service_name, const int show_mappings, const char *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const char *container_filter, const char *target_filter, char *command)
 {
     int exit_status;
-    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_ACTIVATION_FLAG, NULL, NULL);
+    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_SERVICE_MAPPINGS_FLAG, NULL, NULL);
 
     if(manifest == NULL)
     {

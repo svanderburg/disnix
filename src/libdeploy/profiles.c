@@ -18,8 +18,8 @@
  */
 
 #include "profiles.h"
-#include <distributionmapping-iterator.h>
-#include <targets.h>
+#include <profilemapping-iterator.h>
+#include <targetstable.h>
 #include <client-interface.h>
 #include <package-management.h>
 
@@ -36,11 +36,11 @@ static void complete_set_distribution_item(void *data, xmlChar *profile_name, gc
         g_printerr("[target: %s]: Cannot set Disnix profile: %s\n", target_name, profile_name);
 }
 
-static int set_target_profiles(GHashTable *distribution_table, GHashTable *targets_table, gchar *profile)
+static int set_target_profiles(GHashTable *profile_mapping_table, GHashTable *targets_table, gchar *profile)
 {
     /* Iterate over the distribution mappings, limiting concurrency to the desired concurrent transfers and distribute them */
     int success;
-    ProcReact_PidIterator iterator = create_distribution_iterator(distribution_table, targets_table, set_distribution_item, complete_set_distribution_item, profile);
+    ProcReact_PidIterator iterator = create_distribution_iterator(profile_mapping_table, targets_table, set_distribution_item, complete_set_distribution_item, profile);
     procreact_fork_in_parallel_and_wait(&iterator);
     success = distribution_iterator_has_succeeded(&iterator);
 
@@ -51,6 +51,6 @@ static int set_target_profiles(GHashTable *distribution_table, GHashTable *targe
 
 int set_profiles(const Manifest *manifest, const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const unsigned int flags)
 {
-    return((flags & SET_NO_TARGET_PROFILES || set_target_profiles(manifest->distribution_table, manifest->targets_table, profile)) /* First, attempt to set the target profiles */
+    return((flags & SET_NO_TARGET_PROFILES || set_target_profiles(manifest->profile_mapping_table, manifest->targets_table, profile)) /* First, attempt to set the target profiles */
       && (flags & SET_NO_COORDINATOR_PROFILE || pkgmgmt_set_coordinator_profile(coordinator_profile_path, manifest_file, profile))); /* Then try to set the coordinator profile */
 }

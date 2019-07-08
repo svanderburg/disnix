@@ -24,7 +24,7 @@
 
 int run_activate_system(const gchar *new_manifest, const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const unsigned int flags)
 {
-    Manifest *manifest = create_manifest(new_manifest, MANIFEST_ACTIVATION_FLAG | MANIFEST_TARGETS_FLAG, NULL, NULL);
+    Manifest *manifest = create_manifest(new_manifest, MANIFEST_SERVICE_MAPPINGS_FLAG | MANIFEST_INFRASTRUCTURE_FLAG, NULL, NULL);
 
     if(manifest == NULL)
     {
@@ -38,7 +38,7 @@ int run_activate_system(const gchar *new_manifest, const gchar *old_manifest, co
         if(check_manifest(manifest))
         {
             gchar *old_manifest_file = determine_manifest_to_open(old_manifest, coordinator_profile_path, profile);
-            Manifest *previous_manifest = open_previous_manifest(old_manifest_file, MANIFEST_ACTIVATION_FLAG, NULL, NULL);
+            Manifest *previous_manifest = open_previous_manifest(old_manifest_file, MANIFEST_SERVICE_MAPPINGS_FLAG, NULL, NULL);
 
             if(check_manifest(previous_manifest))
             {

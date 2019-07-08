@@ -110,10 +110,10 @@ static void complete_restore_snapshot_on_target(SnapshotMapping *mapping, Target
         g_printerr("[target: %s]: Cannot restore state of service: %s\n", mapping->target, mapping->component);
 }
 
-static int restore_services(GPtrArray *snapshot_mapping_array, GHashTable *snapshots_table, GHashTable *targets_table)
+static int restore_services(GPtrArray *snapshot_mapping_array, GHashTable *services_table, GHashTable *targets_table)
 {
     g_print("[coordinator]: Restoring state of services...\n");
-    return map_snapshot_items(snapshot_mapping_array, snapshots_table, targets_table, restore_snapshot_on_target, complete_restore_snapshot_on_target);
+    return map_snapshot_items(snapshot_mapping_array, services_table, targets_table, restore_snapshot_on_target, complete_restore_snapshot_on_target);
 }
 
 /* Clean snapshot mapping infrastructure */
@@ -126,7 +126,7 @@ static pid_t clean_snapshot_mapping(SnapshotMapping *mapping, Target *target, in
 
 typedef struct
 {
-    GHashTable *snapshots_table;
+    GHashTable *services_table;
     GPtrArray *snapshot_mapping_array;
     unsigned int flags;
     int keep;
@@ -154,7 +154,7 @@ static pid_t send_restore_and_clean_snapshot_on_target(void *data, Target *targe
             SnapshotMapping *mapping = g_ptr_array_index(snapshots_per_target_array, i);
             gchar **arguments = generate_activation_arguments(target, (gchar*)mapping->container); /* Generate an array of key=value pairs from container properties */
             unsigned int arguments_length = g_strv_length(arguments); /* Determine length of the activation arguments array */
-            ManifestService *service = g_hash_table_lookup(send_snapshots_data->snapshots_table, (gchar*)mapping->container);
+            ManifestService *service = g_hash_table_lookup(send_snapshots_data->services_table, (gchar*)mapping->container);
 
             if(!procreact_wait_for_boolean(send_snapshot_mapping(mapping, target, send_snapshots_data->flags), &status) || (status != PROCREACT_STATUS_OK)
               || !procreact_wait_for_boolean(restore_snapshot_on_target(mapping, service, target, arguments, arguments_length), &status) || (status != PROCREACT_STATUS_OK)
@@ -185,10 +185,10 @@ void complete_send_restore_and_clean_snapshots_on_target(void *data, Target *tar
     }
 }
 
-static int restore_depth_first(GPtrArray *snapshot_mapping_array, GHashTable *snapshots_table, GHashTable *targets_table, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)
+static int restore_depth_first(GPtrArray *snapshot_mapping_array, GHashTable *services_table, GHashTable *targets_table, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)
 {
     int success;
-    SendRestoreAndCleanSnapshotsData data = { snapshots_table, snapshot_mapping_array, flags, keep };
+    SendRestoreAndCleanSnapshotsData data = { services_table, snapshot_mapping_array, flags, keep };
     ProcReact_PidIterator iterator = create_target_pid_iterator(targets_table, NULL, NULL, send_restore_and_clean_snapshot_on_target, complete_send_restore_and_clean_snapshots_on_target, &data);
 
     g_print("[coordinator]: Sending, restoring and cleaning snapshots...\n");

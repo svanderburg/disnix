@@ -21,11 +21,11 @@
 #define __DISNIX_MANIFEST_H
 #include <glib.h>
 
-#define MANIFEST_DISTRIBUTION_FLAG 0x1
-#define MANIFEST_ACTIVATION_FLAG 0x2
-#define MANIFEST_SNAPSHOT_FLAG 0x4
-#define MANIFEST_TARGETS_FLAG 0x8
-#define MANIFEST_ALL_FLAGS (MANIFEST_DISTRIBUTION_FLAG | MANIFEST_ACTIVATION_FLAG | MANIFEST_SNAPSHOT_FLAG | MANIFEST_TARGETS_FLAG)
+#define MANIFEST_PROFILES_FLAG 0x1
+#define MANIFEST_SERVICE_MAPPINGS_FLAG 0x2
+#define MANIFEST_SNAPSHOT_MAPPINGS_FLAG 0x4
+#define MANIFEST_INFRASTRUCTURE_FLAG 0x8
+#define MANIFEST_ALL_FLAGS (MANIFEST_PROFILES_FLAG | MANIFEST_SERVICE_MAPPINGS_FLAG | MANIFEST_SNAPSHOT_MAPPINGS_FLAG | MANIFEST_INFRASTRUCTURE_FLAG)
 
 /**
  * @brief Contains all properties of a manifest file that is used for distribution and activation
@@ -37,7 +37,7 @@
 typedef struct
 {
     /** Hash table mapping targets to intra-dependency closures */
-    GHashTable *distribution_table;
+    GHashTable *profile_mapping_table;
 
     /** Hash table containing the properties of all services */
     GHashTable *services_table;

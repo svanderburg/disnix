@@ -22,7 +22,7 @@
 #include <glib.h>
 #include <libxml/parser.h>
 #include <procreact_pid.h>
-#include <targets.h>
+#include <targetstable.h>
 #include "servicestable.h"
 
 /**
@@ -142,7 +142,7 @@ GPtrArray *find_snapshot_mappings_per_target(const GPtrArray *snapshots_array, c
  * @param complete_snapshot_item_mapping Function that gets executed when a mapping function completes
  * @return TRUE if all mappings were successfully executed, else FALSE
  */
-int map_snapshot_items(const GPtrArray *snapshots_array, GHashTable *snapshots_table, GHashTable *targets_table, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping);
+int map_snapshot_items(const GPtrArray *snapshots_array, GHashTable *services_table, GHashTable *targets_table, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping);
 
 /**
  * Resets the transferred status on all items in the snapshots array

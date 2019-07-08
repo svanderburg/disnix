@@ -22,11 +22,11 @@
 #include <client-interface.h>
 #include <manifest.h>
 #include <snapshotmappingarray.h>
-#include <targets.h>
+#include <targetstable.h>
 
 int run_delete_state(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const gchar *container, const gchar *component)
 {
-    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_SNAPSHOT_FLAG | MANIFEST_TARGETS_FLAG, container, component);
+    Manifest *manifest = open_provided_or_previous_manifest_file(manifest_file, coordinator_profile_path, profile, MANIFEST_SNAPSHOT_MAPPINGS_FLAG | MANIFEST_INFRASTRUCTURE_FLAG, container, component);
 
     if(manifest == NULL)
     {

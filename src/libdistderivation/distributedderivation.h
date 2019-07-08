@@ -31,7 +31,7 @@
 typedef struct
 {
     /** Array of store derivations to be built on a target machine */
-    GPtrArray *derivation_array;
+    GPtrArray *derivation_mapping_array;
 
     /** Hash table containing the available interface properties of each target machine */
     GHashTable *interfaces_table;

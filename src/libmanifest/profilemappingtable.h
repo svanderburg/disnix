@@ -17,11 +17,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_DISTRIBUTIONMAPPINGTABLE_H
-#define __DISNIX_DISTRIBUTIONMAPPINGTABLE_H
+#ifndef __DISNIX_PROFILEMAPPINGTABLE_H
+#define __DISNIX_PROFILEMAPPINGTABLE_H
 #include <glib.h>
 #include <libxml/parser.h>
-#include <targets.h>
+#include <targetstable.h>
 
 /**
  * Creates a new array with distribution items from the corresponding sub
@@ -30,15 +30,15 @@
  * @param element XML root element of the sub section defining the mappings
  * @return GHashTable mapping targets to Nix profiles
  */
-GHashTable *parse_distribution_table(xmlNodePtr element, void *userdata);
+GHashTable *parse_profile_mapping_table(xmlNodePtr element, void *userdata);
 
 /**
  * Deletes an array with distribution items.
  *
- * @param distribution_table GHashTable mapping targets to Nix profiles
+ * @param profile_mapping_table GHashTable mapping targets to Nix profiles
  */
-void delete_distribution_table(GHashTable *distribution_table);
+void delete_profile_mapping_table(GHashTable *profile_mapping_table);
 
-int check_distribution_table(GHashTable *distribution_table);
+int check_profile_mapping_table(GHashTable *profile_mapping_table);
 
 #endif

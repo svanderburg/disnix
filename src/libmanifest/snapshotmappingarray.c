@@ -248,7 +248,7 @@ static int wait_to_complete_snapshot_item(GHashTable *pid_table, GHashTable *tar
         return TRUE;
 }
 
-int map_snapshot_items(const GPtrArray *snapshots_array, GHashTable *snapshots_table, GHashTable *targets_table, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
+int map_snapshot_items(const GPtrArray *snapshots_array, GHashTable *services_table, GHashTable *targets_table, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
 {
     unsigned int num_processed = 0;
     int status = TRUE;
@@ -269,7 +269,7 @@ int map_snapshot_items(const GPtrArray *snapshots_array, GHashTable *snapshots_t
             {
                 gchar **arguments = generate_activation_arguments(target, (gchar*)mapping->container); /* Generate an array of key=value pairs from container properties */
                 unsigned int arguments_length = g_strv_length(arguments); /* Determine length of the activation arguments array */
-                ManifestService *service = g_hash_table_lookup(snapshots_table, mapping->service);
+                ManifestService *service = g_hash_table_lookup(services_table, mapping->service);
                 pid_t pid = map_snapshot_item(mapping, service, target, arguments, arguments_length);
                 gint *pid_ptr;
 

@@ -21,7 +21,7 @@
 #define __DISNIX_DERIVATIONMAPPING_ITERATOR_H
 #include <procreact_pid_iterator.h>
 #include <procreact_future_iterator.h>
-#include "derivationmapping.h"
+#include "derivationmappingarray.h"
 
 /** Pointer to a function that executes a process for each derivation item */
 typedef pid_t (*map_derivation_item_pid_function) (void *data, DerivationItem *item, Interface *interface);

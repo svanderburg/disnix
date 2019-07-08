@@ -37,9 +37,9 @@ static void complete_take_snapshot_on_target(SnapshotMapping *mapping, Target *t
         g_printerr("[target: %s]: Cannot snapshot state of service: %s\n", mapping->target, mapping->component);
 }
 
-static int snapshot_services(GPtrArray *snapshots_array, GHashTable *snapshots_table, GHashTable *targets_table)
+static int snapshot_services(GPtrArray *snapshots_array, GHashTable *services_table, GHashTable *targets_table)
 {
-    return map_snapshot_items(snapshots_array, snapshots_table, targets_table, take_snapshot_on_target, complete_take_snapshot_on_target);
+    return map_snapshot_items(snapshots_array, services_table, targets_table, take_snapshot_on_target, complete_take_snapshot_on_target);
 }
 
 /* Retrieve snapshots infrastructure */
@@ -128,7 +128,7 @@ static pid_t clean_snapshot_mapping(SnapshotMapping *mapping, Target *target, in
 
 typedef struct
 {
-    GHashTable *snapshots_table;
+    GHashTable *services_table;
     GPtrArray *snapshot_mapping_array;
     unsigned int flags;
     int keep;
@@ -156,7 +156,7 @@ static pid_t take_retrieve_and_clean_snapshot_on_target(void *data, Target *targ
             SnapshotMapping *mapping = g_ptr_array_index(snapshots_per_target_array, i);
             gchar **arguments = generate_activation_arguments(target, (gchar*)mapping->container); /* Generate an array of key=value pairs from container properties */
             unsigned int arguments_length = g_strv_length(arguments); /* Determine length of the activation arguments array */
-            ManifestService *service = g_hash_table_lookup(retrieve_snapshots_data->snapshots_table, (gchar*)mapping->container);
+            ManifestService *service = g_hash_table_lookup(retrieve_snapshots_data->services_table, (gchar*)mapping->container);
 
             if(!procreact_wait_for_boolean(take_snapshot_on_target(mapping, service, target, arguments, arguments_length), &status) || (status != PROCREACT_STATUS_OK)
               || !procreact_wait_for_boolean(retrieve_snapshot_mapping(mapping, target, retrieve_snapshots_data->flags), &status) || (status != PROCREACT_STATUS_OK)
@@ -187,10 +187,10 @@ void complete_take_retrieve_and_clean_snapshots_on_target(void *data, Target *ta
     }
 }
 
-static int snapshot_depth_first(GPtrArray *snapshot_mapping_array, GHashTable *snapshots_table, GHashTable *targets_table, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)
+static int snapshot_depth_first(GPtrArray *snapshot_mapping_array, GHashTable *services_table, GHashTable *targets_table, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)
 {
     int success;
-    TakeRetrieveAndCleanSnapshotsData data = { snapshots_table, snapshot_mapping_array, flags, keep };
+    TakeRetrieveAndCleanSnapshotsData data = { services_table, snapshot_mapping_array, flags, keep };
     ProcReact_PidIterator iterator = create_target_pid_iterator(targets_table, NULL, NULL, take_retrieve_and_clean_snapshot_on_target, complete_take_retrieve_and_clean_snapshots_on_target, &data);
 
     g_print("[coordinator]: Snapshotting, retrieving and cleaning snapshots...\n");
@@ -215,7 +215,20 @@ int snapshot(const Manifest *manifest, const Manifest *previous_manifest, const 
     else
     {
         GPtrArray *snapshot_mapping_array = NULL;
+        GPtrArray *previous_snapshot_mapping_array;
+        GHashTable *previous_services_table;
         int exit_status;
+
+        if(previous_manifest == NULL)
+        {
+            previous_snapshot_mapping_array = NULL;
+            previous_services_table = manifest->services_table;
+        }
+        else
+        {
+            previous_snapshot_mapping_array = previous_manifest->snapshot_mapping_array;
+            previous_services_table = previous_manifest->services_table;
+        }
 
         if(flags & FLAG_NO_UPGRADE)
         {
@@ -225,14 +238,14 @@ int snapshot(const Manifest *manifest, const Manifest *previous_manifest, const 
         else
         {
             g_printerr("[coordinator]: Snapshotting state of moved components...\n");
-            snapshot_mapping_array = subtract_snapshot_mappings(previous_manifest->snapshot_mapping_array, manifest->snapshot_mapping_array);
+            snapshot_mapping_array = subtract_snapshot_mappings(previous_snapshot_mapping_array, manifest->snapshot_mapping_array);
         }
 
         if(flags & FLAG_DEPTH_FIRST)
-            exit_status = snapshot_depth_first(snapshot_mapping_array, previous_manifest->services_table, manifest->targets_table, max_concurrent_transfers, flags, keep);
+            exit_status = snapshot_depth_first(snapshot_mapping_array, previous_services_table, manifest->targets_table, max_concurrent_transfers, flags, keep);
         else
         {
-            exit_status = ((flags & FLAG_TRANSFER_ONLY) || snapshot_services(snapshot_mapping_array, previous_manifest->services_table, manifest->targets_table))
+            exit_status = ((flags & FLAG_TRANSFER_ONLY) || snapshot_services(snapshot_mapping_array, previous_services_table, manifest->targets_table))
               && retrieve_snapshots(snapshot_mapping_array, manifest->targets_table, max_concurrent_transfers, flags);
         }
 

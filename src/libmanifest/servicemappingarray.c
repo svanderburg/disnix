@@ -152,7 +152,6 @@ GPtrArray *substract_service_mapping_array(const GPtrArray *left, const GPtrArra
 
 GPtrArray *find_interdependent_service_mappings(GHashTable *services_table, const GPtrArray *service_mapping_array, const ServiceMapping *mapping)
 {
-    ManifestService *service = g_hash_table_lookup(services_table, mapping->service);
     GPtrArray *return_array = g_ptr_array_new();
     unsigned int i;
 
@@ -160,6 +159,7 @@ GPtrArray *find_interdependent_service_mappings(GHashTable *services_table, cons
     for(i = 0; i < service_mapping_array->len; i++)
     {
         ServiceMapping *current_mapping = g_ptr_array_index(service_mapping_array, i);
+        ManifestService *service = g_hash_table_lookup(services_table, current_mapping->service);
         InterDependencyMapping *found_dependency = find_interdependency_mapping(service->depends_on, (InterDependencyMapping*)mapping);
 
         if(found_dependency != NULL)

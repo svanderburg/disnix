@@ -22,7 +22,7 @@
 #include <glib.h>
 #include <procreact_pid.h>
 #include <libxml/parser.h>
-#include <targets.h>
+#include <targetstable.h>
 #include "interdependencymappingarray.h"
 #include "servicestable.h"
 #include "manifest.h"

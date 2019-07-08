@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "derivationmapping.h"
+#include "derivationmappingarray.h"
 #include <nixxml-ghashtable.h>
 #include <nixxml-gptrarray.h>
 
@@ -32,8 +32,8 @@ static void insert_derivation_item_attributes(void *table, const xmlChar *key, v
 
     if(xmlStrcmp(key, (xmlChar*) "derivation") == 0)
         item->derivation = value;
-    else if(xmlStrcmp(key, (xmlChar*) "target") == 0)
-        item->target = value;
+    else if(xmlStrcmp(key, (xmlChar*) "interface") == 0)
+        item->interface = value;
     else
         xmlFree(value);
 }
@@ -43,12 +43,12 @@ static gpointer parse_derivation_item(xmlNodePtr element, void *userdata)
     return NixXML_parse_simple_attrset(element, userdata, create_derivation_item, NixXML_parse_value, insert_derivation_item_attributes);
 }
 
-GPtrArray *parse_build(xmlNodePtr element)
+GPtrArray *parse_derivation_mapping_array(xmlNodePtr element)
 {
     return NixXML_parse_g_ptr_array(element, "mapping", NULL, parse_derivation_item);
 }
 
-void delete_derivation_array(GPtrArray *derivation_array)
+void delete_derivation_mapping_array(GPtrArray *derivation_array)
 {
     if(derivation_array != NULL)
     {
@@ -58,7 +58,7 @@ void delete_derivation_array(GPtrArray *derivation_array)
         {
             DerivationItem *item = g_ptr_array_index(derivation_array, i);
             xmlFree(item->derivation);
-            xmlFree(item->target);
+            xmlFree(item->interface);
             g_strfreev(item->result);
             g_free(item);
         }
@@ -67,7 +67,7 @@ void delete_derivation_array(GPtrArray *derivation_array)
     }
 }
 
-int check_derivation_array(const GPtrArray *derivation_array)
+int check_derivation_mapping_array(const GPtrArray *derivation_array)
 {
     unsigned int i;
 
@@ -75,7 +75,7 @@ int check_derivation_array(const GPtrArray *derivation_array)
     {
         DerivationItem *item = g_ptr_array_index(derivation_array, i);
 
-        if(item->derivation == NULL || item->target == NULL)
+        if(item->derivation == NULL || item->interface == NULL)
         {
             /* Check if all mandatory properties have been provided */
             g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");

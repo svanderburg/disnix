@@ -20,7 +20,7 @@
 #include "transition.h"
 #include <servicemappingarray.h>
 #include <servicestable.h>
-#include <targets.h>
+#include <targetstable.h>
 #include <client-interface.h>
 
 extern volatile int interrupted;

@@ -17,12 +17,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_DERIVATIONMAPPING_H
-#define __DISNIX_DERIVATIONMAPPING_H
+#ifndef __DISNIX_DERIVATIONMAPPINGARRAY_H
+#define __DISNIX_DERIVATIONMAPPINGARRAY_H
 #include <glib.h>
 #include <modeliterator.h>
 #include "interfaces.h"
-
 #include <libxml/parser.h>
 
 /**
@@ -33,7 +32,7 @@ typedef struct
     /** Nix store derivation path */
     xmlChar *derivation;
     /** Address of a disnix service */
-    xmlChar *target;
+    xmlChar *interface;
     /** Nix store paths of the build result, or NULL if it has not yet been realised */
     gchar **result;
 }
@@ -45,15 +44,15 @@ DerivationItem;
  * @param element Root XML element of the sub section that defines derivation items
  * @return GPtrArray of derivation items.
  */
-GPtrArray *parse_build(xmlNodePtr element);
+GPtrArray *parse_derivation_mapping_array(xmlNodePtr element);
 
 /**
  * Deletes an array with derivation items
  *
  * @param derivation_array Derivation array to delete
  */
-void delete_derivation_array(GPtrArray *derivation_array);
+void delete_derivation_mapping_array(GPtrArray *derivation_array);
 
-int check_derivation_array(const GPtrArray *derivation_array);
+int check_derivation_mapping_array(const GPtrArray *derivation_array);
 
 #endif
