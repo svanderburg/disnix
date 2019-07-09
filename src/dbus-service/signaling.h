@@ -61,4 +61,6 @@ void signal_strv_result(ProcReact_Future future, OrgNixosDisnixDisnix *object, g
  */
 void signal_tempfile_result(pid_t pid, gchar *tempfilename, int temp_fd, OrgNixosDisnixDisnix *object, gint jid, int log_fd);
 
+void signal_string_result(ProcReact_Future future, OrgNixosDisnixDisnix *object, gint jid, int log_fd);
+
 #endif

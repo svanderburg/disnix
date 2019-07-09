@@ -38,16 +38,16 @@ static gpointer signal_boolean_result_thread_func(gpointer data)
     ProcReact_Status status;
     SignalBooleanResultThreadData *boolean_data = (SignalBooleanResultThreadData*)data;
     int result = procreact_wait_for_boolean(boolean_data->pid, &status);
-    
+
     if(status == PROCREACT_STATUS_OK && result)
         org_nixos_disnix_disnix_emit_finish(boolean_data->object, boolean_data->jid);
     else
         org_nixos_disnix_disnix_emit_failure(boolean_data->object, boolean_data->jid);
-    
+
     /* Cleanup */
     g_free(boolean_data);
     close(boolean_data->log_fd);
-    
+
     return NULL;
 }
 
@@ -55,12 +55,12 @@ void signal_boolean_result(pid_t pid, OrgNixosDisnixDisnix *object, gint jid, in
 {
     GThread *thread;
     SignalBooleanResultThreadData *data = (SignalBooleanResultThreadData*)g_malloc(sizeof(SignalBooleanResultThreadData));
-    
+
     data->object = object;
     data->jid = jid;
     data->log_fd = log_fd;
     data->pid = pid;
-    
+
     thread = g_thread_new("evaluate-boolean", signal_boolean_result_thread_func, data);
     g_thread_unref(thread);
 }
@@ -81,7 +81,7 @@ static gpointer signal_strv_result_thread_func(gpointer data)
     SignalStrvResultThreadData *strv_data = (SignalStrvResultThreadData*)data;
     ProcReact_Status status;
     char **result = procreact_future_get(&strv_data->future, &status);
-    
+
     if(status != PROCREACT_STATUS_OK || result == NULL)
         org_nixos_disnix_disnix_emit_failure(strv_data->object, strv_data->jid);
     else
@@ -89,11 +89,11 @@ static gpointer signal_strv_result_thread_func(gpointer data)
         org_nixos_disnix_disnix_emit_success(strv_data->object, strv_data->jid, (const gchar**)result);
         procreact_free_string_array(result);
     }
-    
+
     /* Cleanup */
     g_free(strv_data);
     close(strv_data->log_fd);
-    
+
     return NULL;
 }
 
@@ -101,12 +101,12 @@ void signal_strv_result(ProcReact_Future future, OrgNixosDisnixDisnix *object, g
 {
     GThread *thread;
     SignalStrvResultThreadData *data = (SignalStrvResultThreadData*)g_malloc(sizeof(SignalStrvResultThreadData));
-    
+
     data->object = object;
     data->jid = jid;
     data->log_fd = log_fd;
     data->future = future;
-    
+
     thread = g_thread_new("evaluate-strv", signal_strv_result_thread_func, data);
     g_thread_unref(thread);
 }
@@ -133,7 +133,7 @@ static gpointer evaluate_tempfile_process_thread_func(gpointer data)
     if(status == PROCREACT_STATUS_OK && result)
     {
         const gchar *tempfilepaths[] = { tempfile_data->tempfilename, NULL };
-        
+
         if(fchmod(tempfile_data->temp_fd, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) == 1)
         {
             dprintf(tempfile_data->log_fd, "Cannot change permissions of tempfile: %s\n", tempfile_data->tempfilename);
@@ -142,13 +142,13 @@ static gpointer evaluate_tempfile_process_thread_func(gpointer data)
         else
             org_nixos_disnix_disnix_emit_success(tempfile_data->object, tempfile_data->jid, tempfilepaths);
     }
-    
+
     g_free(tempfile_data->tempfilename);
-    
+
     /* Cleanup */
     close(tempfile_data->log_fd);
     close(tempfile_data->temp_fd);
-    
+
     return NULL;
 }
 
@@ -156,14 +156,61 @@ void signal_tempfile_result(pid_t pid, gchar *tempfilename, int temp_fd, OrgNixo
 {
     GThread *thread;
     SignalTempFileResultThreadData *data = (SignalTempFileResultThreadData*)g_malloc(sizeof(SignalTempFileResultThreadData));
-    
+
     data->object = object;
     data->jid = jid;
     data->log_fd = log_fd;
     data->pid = pid;
     data->tempfilename = tempfilename;
     data->temp_fd = temp_fd;
-    
+
     thread = g_thread_new("evaluate-tempfile", evaluate_tempfile_process_thread_func, data);
+    g_thread_unref(thread);
+}
+
+/* String signaling infrastructure */
+
+typedef struct
+{
+    OrgNixosDisnixDisnix *object;
+    gint jid;
+    int log_fd;
+    ProcReact_Future future;
+}
+SignalStringResultThreadData;
+
+static gpointer signal_string_result_thread_func(gpointer data)
+{
+    SignalStringResultThreadData *string_data = (SignalStringResultThreadData*)data;
+    ProcReact_Status status;
+    char *result = procreact_future_get(&string_data->future, &status);
+
+    if(status != PROCREACT_STATUS_OK || result == NULL)
+        org_nixos_disnix_disnix_emit_failure(string_data->object, string_data->jid);
+    else
+    {
+        char *result_array[] = { result, NULL };
+        org_nixos_disnix_disnix_emit_success(string_data->object, string_data->jid, (const gchar**)result_array);
+        free(result);
+    }
+
+    /* Cleanup */
+    g_free(string_data);
+    close(string_data->log_fd);
+
+    return NULL;
+}
+
+void signal_string_result(ProcReact_Future future, OrgNixosDisnixDisnix *object, gint jid, int log_fd)
+{
+    GThread *thread;
+    SignalStringResultThreadData *data = (SignalStringResultThreadData*)g_malloc(sizeof(SignalStringResultThreadData));
+
+    data->object = object;
+    data->jid = jid;
+    data->log_fd = log_fd;
+    data->future = future;
+
+    thread = g_thread_new("evaluate-string", signal_string_result_thread_func, data);
     g_thread_unref(thread);
 }

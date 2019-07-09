@@ -147,19 +147,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
                 exit_status = procreact_wait_for_exit_status(pkgmgmt_set_profile((gchar*)profile, derivation[0], 1, 2), &status);
             break;
         case OP_QUERY_INSTALLED:
-            profile_manifest = create_profile_manifest_from_current_deployment(LOCALSTATEDIR, (gchar*)profile);
-
-            if(profile_manifest == NULL)
-            {
-                g_printerr("Cannot query installed services!\n");
-                exit_status = 1;
-            }
-            else
-            {
-                print_text_from_profile_manifest(profile_manifest, 1);
-                delete_profile_manifest(profile_manifest);
-                exit_status = 0;
-            }
+            print_text_from_profile_manifest(LOCALSTATEDIR, (gchar*)profile, 1);
             break;
         case OP_QUERY_REQUISITES:
             exit_status = print_strv(pkgmgmt_query_requisites(derivation, 2));

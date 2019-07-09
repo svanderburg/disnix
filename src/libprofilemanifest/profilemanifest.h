@@ -38,7 +38,7 @@ ProfileManifest;
  * @param result An NULL-terminated array of text lines
  * @return An array of pointers to profile manifest entries or NULL if an error has occured
  */
-ProfileManifest *create_profile_manifest_from_string_array(char **result);
+ProfileManifest *create_profile_manifest_from_string(char *result);
 
 /**
  * Composes an array of profile manifest entries from the provide manifest
@@ -87,7 +87,7 @@ void print_services_per_container_in_profile_manifest(ProfileManifest *profile_m
  * @param profile_manifest_array An array of profile manifest entries
  * @param fd File descriptor to print to
  */
-void print_text_from_profile_manifest(const ProfileManifest *profile_manifest, int fd);
+void print_text_from_profile_manifest(gchar *localstatedir, gchar *profile, int fd);
 
 /**
  * Prints a Nix expression containing all properties of all deployed services

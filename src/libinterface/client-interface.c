@@ -204,7 +204,7 @@ pid_t exec_set(gchar *interface, gchar *target, gchar *profile, gchar *component
 
 ProcReact_Future exec_query_installed(gchar *interface, gchar *target, gchar *profile)
 {
-    ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
+    ProcReact_Future future = procreact_initialize_future(procreact_create_string_type());
 
     if(future.pid == 0)
     {

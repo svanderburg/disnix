@@ -19,11 +19,16 @@
 
 #include "profilemanifest.h"
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <nixxml-parse.h>
 #include <nixxml-print-nix.h>
 #include <servicestable.h>
 #include <servicemappingarray.h>
 #include <snapshotmappingarray.h>
+
+#define BUFFER_SIZE 1024
 
 static void *create_profile_manifest_from_element(xmlNodePtr element, void *userdata)
 {
@@ -47,10 +52,39 @@ static ProfileManifest *parse_profile_manifest(xmlNodePtr element, void *userdat
     return NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_profile_manifest_from_element, parse_and_insert_profile_manifest_attributes);
 }
 
-ProfileManifest *create_profile_manifest_from_string_array(char **result)
+ProfileManifest *create_profile_manifest_from_string(char *result)
 {
-    // TODO
-    return NULL;
+    xmlDocPtr doc;
+    xmlNodePtr node_root;
+    ProfileManifest *profile_manifest;
+
+    if((doc = xmlParseDoc((xmlChar*)result)) == NULL)
+    {
+        g_printerr("Error with parsing the profile manifest XML file!\n");
+        xmlCleanupParser();
+        return NULL;
+    }
+
+    /* Retrieve root element */
+    node_root = xmlDocGetRootElement(doc);
+
+    if(node_root == NULL)
+    {
+        g_printerr("The manifest XML file is empty!\n");
+        xmlFreeDoc(doc);
+        xmlCleanupParser();
+        return NULL;
+    }
+
+    /* Parse manifest */
+    profile_manifest = parse_profile_manifest(node_root, NULL);
+
+    /* Cleanup */
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+
+    /* Return profile manifest */
+    return profile_manifest;
 }
 
 ProfileManifest *create_profile_manifest_from_file(const gchar *profile_manifest_file)
@@ -171,25 +205,29 @@ void print_services_per_container_in_profile_manifest(ProfileManifest *profile_m
     }
 }
 
-void print_text_from_profile_manifest(const ProfileManifest *profile_manifest, int fd)
+void print_text_from_profile_manifest(gchar *localstatedir, gchar *profile, int fd)
 {
-    /*unsigned int i;
+    gchar *profile_manifest_file = g_strconcat(localstatedir, "/nix/profiles/disnix/", profile, "/manifest", NULL);
+    int file_fd;
 
-    for(i = 0; i < profile_manifest->service_mapping_array->len; i++)
+    if((file_fd = open(profile_manifest_file, O_RDONLY)) != -1)
     {
-        ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest->service_mapping_array, i);
-        dprintf(fd, "%s\n", entry->name);
-        dprintf(fd, "%s\n", entry->service);
-        dprintf(fd, "%s\n", entry->container);
-        dprintf(fd, "%s\n", entry->type);
-        dprintf(fd, "%s\n", entry->key);
-        dprintf(fd, "%s\n", entry->stateful);
-        dprintf(fd, "%s\n", entry->depends_on);
-        dprintf(fd, "%s\n", entry->connects_to);
-    }*/
+        ssize_t bytes_read;
+        char buffer[BUFFER_SIZE];
+
+        while((bytes_read = read(file_fd, buffer, BUFFER_SIZE)) > 0)
+        {
+            if(write(fd, buffer, bytes_read) != bytes_read)
+                break;
+        }
+
+        close(file_fd);
+    }
+
+    g_free(profile_manifest_file);
 }
 
-static void print_profile_manifest_attributes(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)
+static void print_profile_manifest_attributes_nix(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)
 {
     ProfileManifest *profile_manifest = (ProfileManifest*)value;
     NixXML_print_attribute_nix(file, "services", profile_manifest->services_table, indent_level, userdata, print_services_table_nix);
@@ -199,5 +237,5 @@ static void print_profile_manifest_attributes(FILE *file, const void *value, con
 
 void print_profile_manifest_nix(const ProfileManifest *profile_manifest, void *userdata)
 {
-    NixXML_print_attrset_nix(stdout, profile_manifest, 0, userdata, print_profile_manifest_attributes, NULL);
+    NixXML_print_attrset_nix(stdout, profile_manifest, 0, userdata, print_profile_manifest_attributes_nix, NULL);
 }

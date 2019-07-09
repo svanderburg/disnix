@@ -42,6 +42,6 @@ pid_t release_locks_async(int log_fd, gchar *tmpdir, ProfileManifest *profile_ma
  * @return A future that can be used to retrieve a NULL-terminated string array
  *   of derivation names
  */
-ProcReact_Future query_installed_services(ProfileManifest *profile_manifest);
+ProcReact_Future query_installed_services(gchar *localstatedir, gchar *profile);
 
 #endif

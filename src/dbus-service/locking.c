@@ -42,13 +42,13 @@ pid_t release_locks_async(int log_fd, gchar *tmpdir, ProfileManifest *profile_ma
     return pid;
 }
 
-ProcReact_Future query_installed_services(ProfileManifest *profile_manifest)
+ProcReact_Future query_installed_services(gchar *localstatedir, gchar *profile)
 {
-    ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
+    ProcReact_Future future = procreact_initialize_future(procreact_create_string_type());
 
     if(future.pid == 0)
     {
-        print_text_from_profile_manifest(profile_manifest, future.fd);
+        print_text_from_profile_manifest(localstatedir, profile, future.fd);
         _exit(0);
     }
 

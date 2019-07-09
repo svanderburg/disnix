@@ -63,23 +63,23 @@ gboolean on_handle_import(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *i
 gboolean on_handle_export(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_derivation)
 {
     int log_fd = open_log_file(object, arg_pid);
-    
+
     if(log_fd != -1)
     {
         pid_t pid;
         int temp_fd;
         gchar *tempfilename;
-        
+
         /* Print log entry */
         dprintf(log_fd, "Exporting: ");
         print_paths(log_fd, (gchar**)arg_derivation);
         dprintf(log_fd, "\n");
-    
+
         /* Execute command */
         tempfilename = pkgmgmt_export_closure(tmpdir, (gchar**)arg_derivation, log_fd, &pid, &temp_fd);
         signal_tempfile_result(pid, tempfilename, temp_fd, object, arg_pid, log_fd);
     }
-    
+
     org_nixos_disnix_disnix_complete_export(object, invocation);
     return TRUE;
 }
@@ -89,18 +89,18 @@ gboolean on_handle_export(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *i
 gboolean on_handle_print_invalid(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_derivation)
 {
     int log_fd = open_log_file(object, arg_pid);
-    
+
     if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Print invalid: ");
         print_paths(log_fd, (gchar**)arg_derivation);
         dprintf(log_fd, "\n");
-        
+
         /* Execute command */
         signal_strv_result(pkgmgmt_print_invalid_packages((gchar**)arg_derivation, log_fd), object, arg_pid, log_fd);
     }
-    
+
     org_nixos_disnix_disnix_complete_print_invalid(object, invocation);
     return TRUE;
 }
@@ -110,18 +110,18 @@ gboolean on_handle_print_invalid(OrgNixosDisnixDisnix *object, GDBusMethodInvoca
 gboolean on_handle_realise(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_derivation)
 {
     int log_fd = open_log_file(object, arg_pid);
-    
+
     if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Realising: ");
         print_paths(log_fd, (gchar**)arg_derivation);
         dprintf(log_fd, "\n");
-        
+
         /* Execute command and wait and asychronously propagate its end result */
         signal_strv_result(pkgmgmt_realise((gchar**)arg_derivation, log_fd), object, arg_pid, log_fd);
     }
-    
+
     org_nixos_disnix_disnix_complete_realise(object, invocation);
     return TRUE;
 }
@@ -131,16 +131,16 @@ gboolean on_handle_realise(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *
 gboolean on_handle_set(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_profile, const gchar *arg_derivation)
 {
     int log_fd = open_log_file(object, arg_pid);
-    
+
     if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Set profile: %s with derivation: %s\n", arg_profile, arg_derivation);
-    
+
         /* Execute command */
         signal_boolean_result(pkgmgmt_set_profile((gchar*)arg_profile, (gchar*)arg_derivation, log_fd, log_fd), object, arg_pid, log_fd);
     }
-    
+
     org_nixos_disnix_disnix_complete_set(object, invocation);
     return TRUE;
 }
@@ -153,21 +153,11 @@ gboolean on_handle_query_installed(OrgNixosDisnixDisnix *object, GDBusMethodInvo
 
     if(log_fd != -1)
     {
-        ProfileManifest *profile_manifest;
-
         /* Print log entry */
         dprintf(log_fd, "Query installed derivations from profile: %s\n", arg_profile);
 
         /* Execute command */
-        profile_manifest = create_profile_manifest_from_current_deployment(LOCALSTATEDIR, (gchar*)arg_profile);
-
-        if(profile_manifest == NULL)
-            org_nixos_disnix_disnix_emit_failure(object, arg_pid);
-        else
-        {
-            signal_strv_result(query_installed_services(profile_manifest), object, arg_pid, log_fd);
-            delete_profile_manifest(profile_manifest);
-        }
+        signal_string_result(query_installed_services(LOCALSTATEDIR, (gchar*)arg_profile), object, arg_pid, log_fd);
     }
 
     org_nixos_disnix_disnix_complete_query_installed(object, invocation);
@@ -222,18 +212,18 @@ gboolean on_handle_collect_garbage(OrgNixosDisnixDisnix *object, GDBusMethodInvo
 static gboolean on_handle_dysnomia_activity(gchar *activity, OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
     int log_fd = open_log_file(object, arg_pid);
-    
+
     if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "%s: %s of type: %s in container: %s with arguments: ", activity, arg_derivation, arg_type, arg_container);
         print_paths(log_fd, (gchar**)arg_arguments);
         dprintf(log_fd, "\n");
-    
+
         /* Execute command */
         signal_boolean_result(statemgmt_run_dysnomia_activity((gchar*)arg_type, activity, (gchar*)arg_derivation, (gchar*)arg_container, (gchar**)arg_arguments, log_fd, log_fd), object, arg_pid, log_fd);
     }
-    
+
     org_nixos_disnix_disnix_complete_activate(object, invocation);
     return TRUE;
 }
@@ -330,16 +320,16 @@ gboolean on_handle_restore(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *
 gboolean on_handle_query_all_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_container, const gchar *arg_component)
 {
     int log_fd = open_log_file(object, arg_pid);
-    
+
     if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Query all snapshots from container: %s and component: %s\n", arg_container, arg_component);
-        
+
         /* Execute command */
         signal_strv_result(statemgmt_query_all_snapshots((gchar*)arg_container, (gchar*)arg_component, log_fd), object, arg_pid, log_fd);
     }
-    
+
     org_nixos_disnix_disnix_complete_query_all_snapshots(object, invocation);
     return TRUE;
 }
@@ -349,16 +339,16 @@ gboolean on_handle_query_all_snapshots(OrgNixosDisnixDisnix *object, GDBusMethod
 gboolean on_handle_query_latest_snapshot(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_container, const gchar *arg_component)
 {
     int log_fd = open_log_file(object, arg_pid);
-    
+
     if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Query latest snapshot from container: %s and component: %s\n", arg_container, arg_component);
-    
+
         /* Execute command */
         signal_strv_result(statemgmt_query_latest_snapshot((gchar*)arg_container, (gchar*)arg_component, log_fd), object, arg_pid, log_fd);
     }
-    
+
     org_nixos_disnix_disnix_complete_query_latest_snapshot(object, invocation);
     return TRUE;
 }
@@ -368,18 +358,18 @@ gboolean on_handle_query_latest_snapshot(OrgNixosDisnixDisnix *object, GDBusMeth
 gboolean on_handle_print_missing_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_component)
 {
     int log_fd = open_log_file(object, arg_pid);
-    
+
     if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Print missing snapshots: ");
         print_paths(log_fd, (gchar**)arg_component);
         dprintf(log_fd, "\n");
-        
+
         /* Execute command */
         signal_strv_result(statemgmt_print_missing_snapshots((gchar**)arg_component, log_fd), object, arg_pid, log_fd);
     }
-    
+
     org_nixos_disnix_disnix_complete_print_missing_snapshots(object, invocation);
     return TRUE;
 }
@@ -389,18 +379,18 @@ gboolean on_handle_print_missing_snapshots(OrgNixosDisnixDisnix *object, GDBusMe
 gboolean on_handle_import_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_container, const gchar *arg_component, const gchar *const *arg_snapshots)
 {
     int log_fd = open_log_file(object, arg_pid);
-    
+
     if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Import snapshots: ");
         print_paths(log_fd, (gchar**)arg_snapshots);
         dprintf(log_fd, "\n");
-        
+
         /* Execute command */
         signal_boolean_result(statemgmt_import_snapshots((gchar*)arg_container, (gchar*)arg_component, (gchar**)arg_snapshots, log_fd, log_fd), object, arg_pid, log_fd);
     }
-    
+
     org_nixos_disnix_disnix_complete_import_snapshots(object, invocation);
     return TRUE;
 }
@@ -410,18 +400,18 @@ gboolean on_handle_import_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInv
 gboolean on_handle_resolve_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_snapshots)
 {
     int log_fd = open_log_file(object, arg_pid);
-    
+
     if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Resolve snapshots: ");
         print_paths(log_fd, (gchar**)arg_snapshots);
         dprintf(log_fd, "\n");
-        
+
         /* Execute command */
         signal_strv_result(statemgmt_resolve_snapshots((gchar**)arg_snapshots, log_fd), object, arg_pid, log_fd);
     }
-    
+
     org_nixos_disnix_disnix_complete_resolve_snapshots(object, invocation);
     return TRUE;
 }
@@ -431,24 +421,24 @@ gboolean on_handle_resolve_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodIn
 gboolean on_handle_clean_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, gint arg_keep, const gchar *arg_container, const char *arg_component)
 {
     int log_fd = open_log_file(object, arg_pid);
-    
+
     if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Clean old snapshots");
-        
+
         if(g_strcmp0(arg_container, "") != 0)
             dprintf(log_fd, " for container: %s", arg_container);
-        
+
         if(g_strcmp0(arg_component, "") != 0)
             dprintf(log_fd, " for component: %s", arg_component);
-        
+
         dprintf(log_fd, " num of generations to keep: %d!\n", arg_keep);
-        
+
         /* Execute command */
         signal_boolean_result(statemgmt_clean_snapshots(arg_keep, (gchar*)arg_container, (gchar*)arg_component, log_fd, log_fd), object, arg_pid, log_fd);
     }
-    
+
     org_nixos_disnix_disnix_complete_clean_snapshots(object, invocation);
     return TRUE;
 }
@@ -473,16 +463,16 @@ gboolean on_handle_get_logdir(OrgNixosDisnixDisnix *object, GDBusMethodInvocatio
 gboolean on_handle_capture_config(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid)
 {
     int log_fd = open_log_file(object, arg_pid);
-    
+
     if(log_fd != -1)
     {
         pid_t pid;
         int temp_fd;
         gchar *tempfilename = statemgmt_capture_config(tmpdir, log_fd, &pid, &temp_fd);
-        
+
         signal_tempfile_result(pid, tempfilename, temp_fd, object, arg_pid, log_fd);
     }
-    
+
     org_nixos_disnix_disnix_complete_capture_config(object, invocation);
     return TRUE;
 }
