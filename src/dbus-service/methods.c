@@ -44,16 +44,16 @@ gboolean on_handle_get_job_id(OrgNixosDisnixDisnix *object, GDBusMethodInvocatio
 gboolean on_handle_import(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_closure)
 {
     int log_fd = open_log_file(object, arg_pid);
-    
+
     if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Importing: %s\n", arg_closure);
-        
+
         /* Execute command */
         signal_boolean_result(pkgmgmt_import_closure(arg_closure, log_fd, log_fd), object, arg_pid, log_fd);
     }
-    
+
     org_nixos_disnix_disnix_complete_import(object, invocation);
     return TRUE;
 }
@@ -150,26 +150,26 @@ gboolean on_handle_set(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invo
 gboolean on_handle_query_installed(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_profile)
 {
     int log_fd = open_log_file(object, arg_pid);
-    
+
     if(log_fd != -1)
     {
-        GPtrArray *profile_manifest_array;
-    
+        ProfileManifest *profile_manifest;
+
         /* Print log entry */
         dprintf(log_fd, "Query installed derivations from profile: %s\n", arg_profile);
-    
+
         /* Execute command */
-        profile_manifest_array = create_profile_manifest_array_from_current_deployment(LOCALSTATEDIR, (gchar*)arg_profile);
-    
-        if(profile_manifest_array == NULL)
+        profile_manifest = create_profile_manifest_from_current_deployment(LOCALSTATEDIR, (gchar*)arg_profile);
+
+        if(profile_manifest == NULL)
             org_nixos_disnix_disnix_emit_failure(object, arg_pid);
         else
         {
-            signal_strv_result(query_installed_services(profile_manifest_array), object, arg_pid, log_fd);
-            delete_profile_manifest_array(profile_manifest_array);
+            signal_strv_result(query_installed_services(profile_manifest), object, arg_pid, log_fd);
+            delete_profile_manifest(profile_manifest);
         }
     }
-    
+
     org_nixos_disnix_disnix_complete_query_installed(object, invocation);
     return TRUE;
 }
@@ -179,18 +179,18 @@ gboolean on_handle_query_installed(OrgNixosDisnixDisnix *object, GDBusMethodInvo
 gboolean on_handle_query_requisites(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *const *arg_derivation)
 {
     int log_fd = open_log_file(object, arg_pid);
-    
+
     if(log_fd != -1)
     {
         /* Print log entry */
         dprintf(log_fd, "Query requisites from derivations: ");
         print_paths(log_fd, (gchar**)arg_derivation);
         dprintf(log_fd, "\n");
-        
+
         /* Execute command */
         signal_strv_result(pkgmgmt_query_requisites((gchar**)arg_derivation, log_fd), object, arg_pid, log_fd);
     }
-    
+
     org_nixos_disnix_disnix_complete_query_requisites(object, invocation);
     return TRUE;
 }
@@ -200,7 +200,7 @@ gboolean on_handle_query_requisites(OrgNixosDisnixDisnix *object, GDBusMethodInv
 gboolean on_handle_collect_garbage(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, gboolean arg_delete_old)
 {
     int log_fd = open_log_file(object, arg_pid);
-    
+
     if(log_fd != -1)
     {
         /* Print log entry */
@@ -208,11 +208,11 @@ gboolean on_handle_collect_garbage(OrgNixosDisnixDisnix *object, GDBusMethodInvo
             dprintf(log_fd, "Garbage collect and remove old derivations\n");
         else
             dprintf(log_fd, "Garbage collect\n");
-    
+
         /* Execute command */
         signal_boolean_result(pkgmgmt_collect_garbage(arg_delete_old, log_fd, log_fd), object, arg_pid, log_fd);
     }
-    
+
     org_nixos_disnix_disnix_complete_collect_garbage(object, invocation);
     return TRUE;
 }
@@ -257,31 +257,31 @@ gboolean on_handle_deactivate(OrgNixosDisnixDisnix *object, GDBusMethodInvocatio
 gboolean on_handle_lock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_profile)
 {
     int log_fd = open_log_file(object, arg_pid);
-    
+
     if(log_fd != -1)
     {
-        GPtrArray *profile_manifest_array;
-        
+        ProfileManifest *profile_manifest;
+
         /* Print log entry */
         dprintf(log_fd, "Acquiring lock on profile: %s\n", arg_profile);
-        
+
         /* Lock the disnix instance */
-        profile_manifest_array = create_profile_manifest_array_from_current_deployment(LOCALSTATEDIR, (gchar*)arg_profile);
-        
-        if(profile_manifest_array == NULL)
+        profile_manifest = create_profile_manifest_from_current_deployment(LOCALSTATEDIR, (gchar*)arg_profile);
+
+        if(profile_manifest == NULL)
         {
             dprintf(log_fd, "Corrupt profile manifest: a service or type is missing!\n");
             org_nixos_disnix_disnix_emit_failure(object, arg_pid);
         }
         else
         {
-            signal_boolean_result(acquire_locks_async(log_fd, tmpdir, profile_manifest_array, (gchar*)arg_profile), object, arg_pid, log_fd);
-            
+            signal_boolean_result(acquire_locks_async(log_fd, tmpdir, profile_manifest, (gchar*)arg_profile), object, arg_pid, log_fd);
+
             /* Cleanup */
-            delete_profile_manifest_array(profile_manifest_array);
+            delete_profile_manifest(profile_manifest);
         }
     }
-    
+
     org_nixos_disnix_disnix_complete_lock(object, invocation);
     return TRUE;
 }
@@ -291,22 +291,22 @@ gboolean on_handle_lock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *inv
 gboolean on_handle_unlock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_profile)
 {
     int log_fd = open_log_file(object, arg_pid);
-    
+
     if(log_fd != -1)
     {
-        GPtrArray *profile_manifest_array;
-        
+        ProfileManifest *profile_manifest;
+
         /* Print log entry */
         dprintf(log_fd, "Releasing lock on profile: %s\n", arg_profile);
 
         /* Unlock the Disnix instance */
-        profile_manifest_array = create_profile_manifest_array_from_current_deployment(LOCALSTATEDIR, (gchar*)arg_profile);
-        signal_boolean_result(release_locks_async(log_fd, tmpdir, profile_manifest_array, (gchar*)arg_profile), object, arg_pid, log_fd);
-        
+        profile_manifest = create_profile_manifest_from_current_deployment(LOCALSTATEDIR, (gchar*)arg_profile);
+        signal_boolean_result(release_locks_async(log_fd, tmpdir, profile_manifest, (gchar*)arg_profile), object, arg_pid, log_fd);
+
        /* Cleanup */
-       delete_profile_manifest_array(profile_manifest_array);
+       delete_profile_manifest(profile_manifest);
     }
-    
+
     org_nixos_disnix_disnix_complete_unlock(object, invocation);
     return TRUE;
 }

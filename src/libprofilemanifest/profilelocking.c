@@ -4,23 +4,26 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <state-management.h>
-#include "profilemanifest.h"
+#include <servicemappingarray.h>
 
-static int lock_or_unlock_services(int log_fd, GPtrArray *profile_manifest_array, gchar *action, pid_t (*notify_function) (gchar *type, gchar *container, gchar *component, int stdout, int stderr))
+static int lock_or_unlock_services(int log_fd, ProfileManifest *profile_manifest, gchar *action, pid_t (*notify_function) (gchar *type, gchar *container, gchar *component, int stdout, int stderr))
 {
     unsigned int i;
     int exit_status = TRUE;
 
     /* Notify all services for a lock or unlock */
-    for(i = 0; i < profile_manifest_array->len; i++)
+
+    for(i = 0; i < profile_manifest->service_mapping_array->len; i++)
     {
-        ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
+        ServiceMapping *mapping = g_ptr_array_index(profile_manifest->service_mapping_array, i);
+        ManifestService *service = g_hash_table_lookup(profile_manifest->services_table, mapping->service);
+
         pid_t pid;
         ProcReact_Status status;
         int result;
 
-        dprintf(log_fd, "Notifying %s on %s: of type: %s in container: %s\n", action, entry->service, entry->type, entry->container);
-        pid = notify_function(entry->type, entry->container, entry->service, log_fd, log_fd);
+        dprintf(log_fd, "Notifying %s on %s: of type: %s in container: %s\n", action, service->pkg, service->type, mapping->container);
+        pid = notify_function((gchar*)service->type, (gchar*)mapping->container, (gchar*)service->pkg, log_fd, log_fd);
         result = procreact_wait_for_boolean(pid, &status);
 
         if(status != PROCREACT_STATUS_OK || !result)
@@ -33,14 +36,14 @@ static int lock_or_unlock_services(int log_fd, GPtrArray *profile_manifest_array
     return exit_status;
 }
 
-static int unlock_services(int log_fd, GPtrArray *profile_manifest_array)
+static int unlock_services(int log_fd, ProfileManifest *profile_manifest)
 {
-    return lock_or_unlock_services(log_fd, profile_manifest_array, "unlock", statemgmt_unlock_component);
+    return lock_or_unlock_services(log_fd, profile_manifest, "unlock", statemgmt_unlock_component);
 }
 
-static int lock_services(int log_fd, GPtrArray *profile_manifest_array)
+static int lock_services(int log_fd, ProfileManifest *profile_manifest)
 {
-    return lock_or_unlock_services(log_fd, profile_manifest_array, "lock", statemgmt_lock_component);
+    return lock_or_unlock_services(log_fd, profile_manifest, "lock", statemgmt_lock_component);
 }
 
 static gchar *create_lock_filename(gchar *tmpdir, gchar *profile)
@@ -88,29 +91,29 @@ static int unlock_profile(int log_fd, gchar *tmpdir, gchar *profile)
     return status;
 }
 
-int acquire_locks(int log_fd, gchar *tmpdir, GPtrArray *profile_manifest_array, gchar *profile)
+int acquire_locks(int log_fd, gchar *tmpdir, ProfileManifest *profile_manifest, gchar *profile)
 {
-    if(lock_services(log_fd, profile_manifest_array)) /* Attempt to acquire locks from the services */
+    if(lock_services(log_fd, profile_manifest)) /* Attempt to acquire locks from the services */
         return lock_profile(log_fd, tmpdir, profile); /* Finally, lock the profile */
     else
     {
-        unlock_services(log_fd, profile_manifest_array);
+        unlock_services(log_fd, profile_manifest);
         return FALSE;
     }
 }
 
-int release_locks(int log_fd, gchar *tmpdir, GPtrArray *profile_manifest_array, gchar *profile)
+int release_locks(int log_fd, gchar *tmpdir, ProfileManifest *profile_manifest, gchar *profile)
 {
     int status = TRUE;
 
-    if(profile_manifest_array == NULL)
+    if(profile_manifest == NULL)
     {
         dprintf(log_fd, "Corrupt profile manifest: a service or type is missing!\n");
         status = FALSE;
     }
     else
     {
-        if(!unlock_services(log_fd, profile_manifest_array))
+        if(!unlock_services(log_fd, profile_manifest))
         {
             dprintf(log_fd, "Failed to send unlock notification to old services!\n");
             status = FALSE;

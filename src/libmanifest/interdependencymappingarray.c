@@ -19,6 +19,7 @@
 
 #include "interdependencymappingarray.h"
 #include <nixxml-parse.h>
+#include <nixxml-print-nix.h>
 #include <nixxml-gptrarray.h>
 
 gint compare_interdependency_mappings(const InterDependencyMapping **l, const InterDependencyMapping **r)
@@ -136,4 +137,18 @@ InterDependencyMapping *find_interdependency_mapping(const GPtrArray *interdepen
         return NULL;
     else
         return *ret;
+}
+
+static void print_interdependency_mapping_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+{
+    InterDependencyMapping *mapping = (InterDependencyMapping*)value;
+
+    NixXML_print_attribute_nix(file, "service", mapping->service, indent_level, userdata, NixXML_print_value_nix);
+    NixXML_print_attribute_nix(file, "container", mapping->container, indent_level, userdata, NixXML_print_value_nix);
+    NixXML_print_attribute_nix(file, "target", mapping->target, indent_level, userdata, NixXML_print_value_nix);
+}
+
+void print_interdependency_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+{
+    NixXML_print_g_ptr_array_nix(file, value, indent_level, userdata, print_interdependency_mapping_nix);
 }

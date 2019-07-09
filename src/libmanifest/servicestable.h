@@ -19,6 +19,7 @@
 
 #ifndef __DISNIX_SERVICESTABLE_H
 #define __DISNIX_SERVICESTABLE_H
+#include <stdio.h>
 #include <glib.h>
 #include <libxml/parser.h>
 
@@ -44,5 +45,7 @@ void delete_services_table(GHashTable *services_table);
 int check_services_table(GHashTable *services_table);
 
 GHashTable *generate_union_services_table(GHashTable *left, GHashTable *right);
+
+void print_services_table_nix(FILE *file, const void *value, const int indent_level, void *userdata);
 
 #endif

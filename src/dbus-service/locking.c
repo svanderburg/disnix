@@ -22,33 +22,33 @@
 #include <procreact_future.h>
 #include <profilelocking.h>
 
-pid_t acquire_locks_async(int log_fd, gchar *tmpdir, GPtrArray *profile_manifest_array, gchar *profile)
+pid_t acquire_locks_async(int log_fd, gchar *tmpdir, ProfileManifest *profile_manifest, gchar *profile)
 {
     pid_t pid = fork();
 
     if(pid == 0)
-        _exit(!acquire_locks(log_fd, tmpdir, profile_manifest_array, profile));
+        _exit(!acquire_locks(log_fd, tmpdir, profile_manifest, profile));
 
     return pid;
 }
 
-pid_t release_locks_async(int log_fd, gchar *tmpdir, GPtrArray *profile_manifest_array, gchar *profile)
+pid_t release_locks_async(int log_fd, gchar *tmpdir, ProfileManifest *profile_manifest, gchar *profile)
 {
     pid_t pid = fork();
 
     if(pid == 0)
-        _exit(!release_locks(log_fd, tmpdir, profile_manifest_array, profile));
+        _exit(!release_locks(log_fd, tmpdir, profile_manifest, profile));
 
     return pid;
 }
 
-ProcReact_Future query_installed_services(GPtrArray *profile_manifest_array)
+ProcReact_Future query_installed_services(ProfileManifest *profile_manifest)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
     if(future.pid == 0)
     {
-        print_text_from_profile_manifest_array(profile_manifest_array, future.fd);
+        print_text_from_profile_manifest(profile_manifest, future.fd);
         _exit(0);
     }
 

@@ -151,4 +151,6 @@ int map_snapshot_items(const GPtrArray *snapshots_array, GHashTable *services_ta
  */
 void reset_snapshot_items_transferred_status(GPtrArray *snapshots_array);
 
+void print_snapshot_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata);
+
 #endif

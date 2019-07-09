@@ -18,7 +18,6 @@
  */
 
 #include "profilemanifesttarget.h"
-#include "profilemanifest.h"
 
 gint compare_profile_manifest_target(const void *l, const void *r)
 {
@@ -31,7 +30,7 @@ gint compare_profile_manifest_target(const void *l, const void *r)
 void parse_manifest(ProfileManifestTarget *profile_manifest_target)
 {
     gchar *manifest_file = g_strconcat(profile_manifest_target->derivation, "/manifest", NULL);
-    profile_manifest_target->profile_manifest_array = create_profile_manifest_array_from_file(manifest_file);
+    profile_manifest_target->profile_manifest = create_profile_manifest_from_file(manifest_file);
     g_free(manifest_file);
 }
 
@@ -43,7 +42,7 @@ void delete_profile_manifest_target_array(GPtrArray *profile_manifest_target_arr
     {
         ProfileManifestTarget *profile_manifest_target = g_ptr_array_index(profile_manifest_target_array, i);
         g_free(profile_manifest_target->derivation);
-        delete_profile_manifest_array(profile_manifest_target->profile_manifest_array);
+        delete_profile_manifest(profile_manifest_target->profile_manifest);
         g_free(profile_manifest_target);
     }
     
@@ -59,7 +58,7 @@ void print_services_in_profile_manifest_target(const GPtrArray *profile_manifest
         ProfileManifestTarget *profile_manifest_target = g_ptr_array_index(profile_manifest_target_array, i);
 
         g_print("\nServices on: %s\n\n", profile_manifest_target->target_key);
-        print_services_in_profile_manifest_array(profile_manifest_target->profile_manifest_array);
+        print_services_in_profile_manifest(profile_manifest_target->profile_manifest);
     }
 }
 
@@ -72,7 +71,7 @@ void print_services_per_container_in_profile_manifest_target(const GPtrArray *pr
         ProfileManifestTarget *profile_manifest_target = g_ptr_array_index(profile_manifest_target_array, i);
 
         g_print("\nServices on: %s\n\n", profile_manifest_target->target_key);
-        print_services_per_container_in_profile_manifest_array(profile_manifest_target->profile_manifest_array);
+        print_services_per_container_in_profile_manifest(profile_manifest_target->profile_manifest);
     }
 }
 
@@ -88,7 +87,7 @@ void print_nix_expression_from_services_in_profile_manifest_target(const GPtrArr
 
         g_print("  { target = \"%s\";\n", profile_manifest_target->target_key);
         g_print("    services = ");
-        print_nix_expression_from_profile_manifest_array(profile_manifest_target->profile_manifest_array);
+        print_profile_manifest_nix(profile_manifest_target->profile_manifest, NULL);
         g_print(";\n");
         g_print("  }\n");
     }
@@ -99,9 +98,9 @@ void print_nix_expression_from_services_in_profile_manifest_target(const GPtrArr
 void print_nix_expression_from_derivations_in_profile_manifest_array(const GPtrArray *profile_manifest_target_array)
 {
     unsigned int i;
-    
+
     g_print("[\n");
-    
+
     for(i = 0; i < profile_manifest_target_array->len; i++)
     {
         ProfileManifestTarget *profile_manifest_target = g_ptr_array_index(profile_manifest_target_array, i);

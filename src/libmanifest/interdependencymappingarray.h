@@ -56,4 +56,6 @@ void delete_interdependency_mapping_array(GPtrArray *interdependency_mapping_arr
  */
 InterDependencyMapping *find_interdependency_mapping(const GPtrArray *interdependency_mapping_array, const InterDependencyMapping *key);
 
+void print_interdependency_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata);
+
 #endif

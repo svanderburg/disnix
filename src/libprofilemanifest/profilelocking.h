@@ -20,6 +20,7 @@
 #ifndef __DISNIX_PROFILELOCKING_H
 #define __DISNIX_PROFILELOCKING_H
 #include <glib.h>
+#include "profilemanifest.h"
 
 /**
  * Attempts to lock the disnix service instance by consulting the services in
@@ -31,7 +32,7 @@
  * @param profile Name of the profile to take the manifest from
  * @return TRUE if and only if the locking succeeded
  */
-int acquire_locks(int log_fd, gchar *tmpdir, GPtrArray *profile_manifest_array, gchar *profile);
+int acquire_locks(int log_fd, gchar *tmpdir, ProfileManifest *profile_manifest, gchar *profile);
 
 /**
  * Attempts to unlock the disnix service by consulting the services in the
@@ -43,6 +44,6 @@ int acquire_locks(int log_fd, gchar *tmpdir, GPtrArray *profile_manifest_array, 
  * @param profile Name of the profile to take the manifest from
  * @return TRUE if and only if the unlocking succeeded
  */
-int release_locks(int log_fd, gchar *tmpdir, GPtrArray *profile_manifest_array, gchar *profile);
+int release_locks(int log_fd, gchar *tmpdir, ProfileManifest *profile_manifest, gchar *profile);
 
 #endif

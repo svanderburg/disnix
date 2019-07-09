@@ -28,12 +28,12 @@
 /**
  * Asynchronously executes the acquire_locks() operation in a child process.
  */
-pid_t acquire_locks_async(int log_fd, gchar *tmpdir, GPtrArray *profile_manifest_array, gchar *profile);
+pid_t acquire_locks_async(int log_fd, gchar *tmpdir, ProfileManifest *profile_manifest, gchar *profile);
 
 /**
  * Asynchronously executes the release_locks() operation in a child process.
  */
-pid_t release_locks_async(int log_fd, gchar *tmpdir, GPtrArray *profile_manifest_array, gchar *profile);
+pid_t release_locks_async(int log_fd, gchar *tmpdir, ProfileManifest *profile_manifest, gchar *profile);
 
 /**
  * Queries all the properties of the entries stored in the profile manifest.
@@ -42,6 +42,6 @@ pid_t release_locks_async(int log_fd, gchar *tmpdir, GPtrArray *profile_manifest
  * @return A future that can be used to retrieve a NULL-terminated string array
  *   of derivation names
  */
-ProcReact_Future query_installed_services(GPtrArray *profile_manifest_array);
+ProcReact_Future query_installed_services(ProfileManifest *profile_manifest);
 
 #endif

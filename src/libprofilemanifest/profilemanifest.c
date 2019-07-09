@@ -18,213 +18,166 @@
  */
 
 #include "profilemanifest.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <procreact_types.h>
+#include <nixxml-parse.h>
+#include <nixxml-print-nix.h>
+#include <servicestable.h>
+#include <servicemappingarray.h>
+#include <snapshotmappingarray.h>
 
-typedef enum
+static void *create_profile_manifest_from_element(xmlNodePtr element, void *userdata)
 {
-    LINE_NAME,
-    LINE_SERVICE,
-    LINE_CONTAINER,
-    LINE_TYPE,
-    LINE_KEY,
-    LINE_STATEFUL,
-    LINE_DEPENDS_ON,
-    LINE_CONNECTS_TO
+    return g_malloc0(sizeof(ProfileManifest));
 }
-LineType;
 
-GPtrArray *create_profile_manifest_array_from_string_array(char **result)
+static void parse_and_insert_profile_manifest_attributes(xmlNodePtr element, void *table, const xmlChar *key, void *userdata)
 {
-    GPtrArray *profile_manifest_array = g_ptr_array_new();
-    LineType line_type = LINE_NAME;
-    ProfileManifestEntry *entry = NULL;
-    
-    if(result != NULL && result[0] != NULL)
-    {
-        unsigned int count = 0;
-        char *line;
-        
-        while((line = result[count]) != NULL)
-        {
-            /* Compose profile manifest entries and add them to an array */
-            switch(line_type)
-            {
-                case LINE_NAME:
-                    entry = (ProfileManifestEntry*)g_malloc(sizeof(ProfileManifestEntry));
-                    entry->name = line;
-                    line_type = LINE_SERVICE;
-                    break;
-                case LINE_SERVICE:
-                    entry->service = line;
-                    line_type = LINE_CONTAINER;
-                    break;
-                case LINE_CONTAINER:
-                    entry->container = line;
-                    line_type = LINE_TYPE;
-                    break;
-                case LINE_TYPE:
-                    entry->type = line;
-                    line_type = LINE_KEY;
-                    break;
-                case LINE_KEY:
-                    entry->key = line;
-                    line_type = LINE_STATEFUL;
-                    break;
-                case LINE_STATEFUL:
-                    entry->stateful = line;
-                    line_type = LINE_DEPENDS_ON;
-                    break;
-                case LINE_DEPENDS_ON:
-                    entry->depends_on = line;
-                    line_type = LINE_CONNECTS_TO;
-                    break;
-                case LINE_CONNECTS_TO:
-                    entry->connects_to = line;
-                    line_type = LINE_NAME;
-                    g_ptr_array_add(profile_manifest_array, entry);
-                    break;
-            }
+    ProfileManifest *profile_manifest = (ProfileManifest*)table;
 
-            count++;
-        }
-    }
+    if(xmlStrcmp(key, (xmlChar*) "services") == 0)
+        profile_manifest->services_table = parse_services_table(element, userdata);
+    else if(xmlStrcmp(key, (xmlChar*) "serviceMappings") == 0)
+        profile_manifest->service_mapping_array = parse_service_mapping_array(element, userdata);
+    else if(xmlStrcmp(key, (xmlChar*) "snapshotMappings") == 0)
+        profile_manifest->snapshot_mapping_array = parse_snapshot_mapping_array(element, NULL, NULL, userdata);
+}
 
-    /* We should have the right number of lines */
-    if(line_type == LINE_NAME)
-        return profile_manifest_array; /* Return the generate profile manifest array */
-    else
+static ProfileManifest *parse_profile_manifest(xmlNodePtr element, void *userdata)
+{
+    return NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_profile_manifest_from_element, parse_and_insert_profile_manifest_attributes);
+}
+
+ProfileManifest *create_profile_manifest_from_string_array(char **result)
+{
+    // TODO
+    return NULL;
+}
+
+ProfileManifest *create_profile_manifest_from_file(const gchar *profile_manifest_file)
+{
+    xmlDocPtr doc;
+    xmlNodePtr node_root;
+    ProfileManifest *profile_manifest;
+
+    /* Parse the XML document */
+
+    if((doc = xmlParseFile(profile_manifest_file)) == NULL)
     {
-        /* If not => the manifest is invalid */
-        g_free(entry);
-        delete_profile_manifest_array(profile_manifest_array);
+        g_printerr("Error with parsing the profile manifest XML file!\n");
+        xmlCleanupParser();
         return NULL;
     }
+
+    /* Retrieve root element */
+    node_root = xmlDocGetRootElement(doc);
+
+    if(node_root == NULL)
+    {
+        g_printerr("The manifest XML file is empty!\n");
+        xmlFreeDoc(doc);
+        xmlCleanupParser();
+        return NULL;
+    }
+
+    /* Parse manifest */
+    profile_manifest = parse_profile_manifest(node_root, NULL);
+
+    /* Cleanup */
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+
+    /* Return profile manifest */
+    return profile_manifest;
 }
 
-GPtrArray *create_profile_manifest_array_from_file(gchar *manifest_file)
+ProfileManifest *create_profile_manifest_from_current_deployment(gchar *localstatedir, gchar *profile)
 {
-    int fd = open(manifest_file, O_RDONLY);
-    
-    if(fd == -1)
-        return g_ptr_array_new(); /* If the manifest does not exist, we have an empty configuration */
+    ProfileManifest *profile_manifest;
+    gchar *profile_manifest_file = g_strconcat(localstatedir, "/nix/profiles/disnix/", profile, "/manifest", NULL);
+
+    if(access(profile_manifest_file, F_OK) == -1)
+    {
+        /*
+         * If no manifest profile exists means we have an initial deployment.
+         * Return an empty profile manifest instead of NULL to indicate that
+           this is not a failure
+         */
+        profile_manifest = g_malloc0(sizeof(ProfileManifest));
+        profile_manifest->service_mapping_array = g_ptr_array_new();
+    }
     else
+        profile_manifest = create_profile_manifest_from_file(profile_manifest_file);
+
+    g_free(profile_manifest_file);
+    return profile_manifest;
+}
+
+void delete_profile_manifest(ProfileManifest *profile_manifest)
+{
+    if(profile_manifest != NULL)
     {
-        GPtrArray *profile_manifest_array;
-        
-        /* Initialize a string array type composing a string array from the read file */
-        ProcReact_Type type = procreact_create_string_array_type('\n');
-        ProcReact_StringArrayState *state = (ProcReact_StringArrayState*)type.initialize();
-        
-        /* Read from the file and compose a string array from it */
-        while(type.append(&type, state, fd) > 0);
-        
-        /* Append NULL termination */
-        state->result = (char**)realloc(state->result, (state->result_length + 1) * sizeof(char*));
-        state->result[state->result_length] = NULL;
-        
-        /* Parse the array for manifest data */
-        profile_manifest_array = create_profile_manifest_array_from_string_array(state->result);
-        
-        /* Cleanup */
-        free(state->result);
-        free(state);
-        close(fd);
-        
-        /* Returns the corresponding array */
-        return profile_manifest_array;
+        delete_services_table(profile_manifest->services_table);
+        delete_service_mapping_array(profile_manifest->service_mapping_array);
+        delete_snapshot_mapping_array(profile_manifest->snapshot_mapping_array);
+        g_free(profile_manifest);
     }
 }
 
-GPtrArray *create_profile_manifest_array_from_current_deployment(gchar *localstatedir, gchar *profile)
-{
-    gchar *manifest_file = g_strconcat(localstatedir, "/nix/profiles/disnix/", profile, "/manifest", NULL);
-    GPtrArray *profile_manifest_array = create_profile_manifest_array_from_file(manifest_file);
-    g_free(manifest_file);
-    return profile_manifest_array;
-}
-
-void delete_profile_manifest_array(GPtrArray *profile_manifest_array)
-{
-    if(profile_manifest_array != NULL)
-    {
-        unsigned int i;
-    
-        for(i = 0; i < profile_manifest_array->len; i++)
-        {
-            ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
-            g_free(entry->name);
-            g_free(entry->service);
-            g_free(entry->container);
-            g_free(entry->type);
-            g_free(entry->key);
-            g_free(entry->stateful);
-            g_free(entry->depends_on);
-            g_free(entry->connects_to);
-            g_free(entry);
-        }
-    }
-    
-    g_ptr_array_free(profile_manifest_array, TRUE);
-}
-
-void print_services_in_profile_manifest_array(const GPtrArray *profile_manifest_array)
+void print_services_in_profile_manifest(const ProfileManifest *profile_manifest)
 {
     unsigned int i;
-    
-    for(i = 0; i < profile_manifest_array->len; i++)
+
+    for(i = 0; i < profile_manifest->service_mapping_array->len; i++)
     {
-        ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
-        g_print("%s\n", entry->service);
+        ServiceMapping *mapping = g_ptr_array_index(profile_manifest->service_mapping_array, i);
+        ManifestService *service = g_hash_table_lookup(profile_manifest->services_table, mapping->service);
+
+        g_print("%s\n", service->pkg);
     }
 }
 
-static gint compare_profile_manifest_entry(gconstpointer l, gconstpointer r)
+static gint compare_service_mapping(gconstpointer l, gconstpointer r)
 {
-    const ProfileManifestEntry *left = *((ProfileManifestEntry **)l);
-    const ProfileManifestEntry *right = *((ProfileManifestEntry **)r);
-    
-    int result = g_strcmp0(left->container, right->container);
-    
+    const ServiceMapping *left = *((ServiceMapping **)l);
+    const ServiceMapping *right = *((ServiceMapping **)r);
+
+    int result = xmlStrcmp(left->container, right->container);
+
     if(result == 0)
-        return g_strcmp0(left->name, right->name);
+        return xmlStrcmp(left->service, right->service);
     else
         return result;
 }
 
-void print_services_per_container_in_profile_manifest_array(GPtrArray *profile_manifest_array)
+void print_services_per_container_in_profile_manifest(ProfileManifest *profile_manifest)
 {
     unsigned int i;
-    gchar *last_container = "";
-    
-    g_ptr_array_sort(profile_manifest_array, compare_profile_manifest_entry);
-    
-    for(i = 0; i < profile_manifest_array->len; i++)
+    xmlChar *last_container = (xmlChar*)"";
+
+    g_ptr_array_sort(profile_manifest->service_mapping_array, compare_service_mapping);
+
+    for(i = 0; i < profile_manifest->service_mapping_array->len; i++)
     {
-        ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
-        
-        if(g_strcmp0(entry->container, last_container) != 0)
+        ServiceMapping *mapping = g_ptr_array_index(profile_manifest->service_mapping_array, i);
+        ManifestService *service = g_hash_table_lookup(profile_manifest->services_table, mapping->service);
+
+        if(xmlStrcmp(mapping->container, last_container) != 0)
         {
-            last_container = entry->container;
+            last_container = mapping->container;
             g_print("  Container: %s\n", last_container);
         }
-        
-        g_print("    %s\n", entry->service);
+
+        g_print("    %s\n", service->pkg);
     }
 }
 
-void print_text_from_profile_manifest_array(const GPtrArray *profile_manifest_array, int fd)
+void print_text_from_profile_manifest(const ProfileManifest *profile_manifest, int fd)
 {
-    unsigned int i;
+    /*unsigned int i;
 
-    for(i = 0; i < profile_manifest_array->len; i++)
+    for(i = 0; i < profile_manifest->service_mapping_array->len; i++)
     {
-        ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
+        ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest->service_mapping_array, i);
         dprintf(fd, "%s\n", entry->name);
         dprintf(fd, "%s\n", entry->service);
         dprintf(fd, "%s\n", entry->container);
@@ -233,28 +186,18 @@ void print_text_from_profile_manifest_array(const GPtrArray *profile_manifest_ar
         dprintf(fd, "%s\n", entry->stateful);
         dprintf(fd, "%s\n", entry->depends_on);
         dprintf(fd, "%s\n", entry->connects_to);
-    }
+    }*/
 }
 
-void print_nix_expression_from_profile_manifest_array(const GPtrArray *profile_manifest_array)
+static void print_profile_manifest_attributes(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)
 {
-    unsigned int i;
+    ProfileManifest *profile_manifest = (ProfileManifest*)value;
+    NixXML_print_attribute_nix(file, "services", profile_manifest->services_table, indent_level, userdata, print_services_table_nix);
+    NixXML_print_attribute_nix(file, "serviceMappings", profile_manifest->service_mapping_array, indent_level, userdata, print_service_mapping_array_nix);
+    NixXML_print_attribute_nix(file, "snapshotMappings", profile_manifest->snapshot_mapping_array, indent_level, userdata, print_snapshot_mapping_array_nix);
+}
 
-    g_print("[\n");
-
-    for(i = 0; i < profile_manifest_array->len; i++)
-    {
-        ProfileManifestEntry *entry = g_ptr_array_index(profile_manifest_array, i);
-        g_print("      { name = \"%s\";\n", entry->name);
-        g_print("        service = builtins.storePath %s;\n", entry->service);
-        g_print("        container = \"%s\";\n", entry->container);
-        g_print("        type = \"%s\";\n", entry->type);
-        g_print("        _key = \"%s\";\n", entry->key);
-        g_print("        stateful = %s;\n", entry->stateful);
-        g_print("        dependsOn = %s;\n", entry->depends_on);
-        g_print("        connectsTo = %s;\n", entry->connects_to);
-        g_print("      }\n");
-    }
-
-    g_print("    ]");
+void print_profile_manifest_nix(const ProfileManifest *profile_manifest, void *userdata)
+{
+    NixXML_print_attrset_nix(stdout, profile_manifest, 0, userdata, print_profile_manifest_attributes, NULL);
 }

@@ -21,29 +21,15 @@
 #define __DISNIX_PROFILEMANIFEST_H
 #include <glib.h>
 
-/**
- * @brief Contains properties of a deployed service on a target machine
- */
 typedef struct
 {
-    /** Canonical name of the deployed service */
-    gchar *name;
-    /** Nix store path to a deployed service */
-    gchar *service;
-    /** Name of the container to which the service has been deployed */
-    gchar *container;
-    /** Dysnomia module type used for executing certain deployment activities */
-    gchar *type;
-    /** Hash code that uniquely identifies the deployment of this service */
-    gchar *key;
-    /** Indicates whether the service has state that needs to be managed by Dysnomia */
-    gchar *stateful;
-    /** Array of Nix attribute sets containing references to the service's inter dependencies */
-    gchar *depends_on;
-    /** Array of Nix attribute sets containing references to the service's inter dependencies that have no ordering requirement */
-    gchar *connects_to;
+    GHashTable *services_table;
+
+    GPtrArray *service_mapping_array;
+
+    GPtrArray *snapshot_mapping_array;
 }
-ProfileManifestEntry;
+ProfileManifest;
 
 /**
  * Composes an array of profile manifest entries from the manifest configuration
@@ -52,7 +38,7 @@ ProfileManifestEntry;
  * @param result An NULL-terminated array of text lines
  * @return An array of pointers to profile manifest entries or NULL if an error has occured
  */
-GPtrArray *create_profile_manifest_array_from_string_array(char **result);
+ProfileManifest *create_profile_manifest_from_string_array(char **result);
 
 /**
  * Composes an array of profile manifest entries from the provide manifest
@@ -61,7 +47,7 @@ GPtrArray *create_profile_manifest_array_from_string_array(char **result);
  * @param manifest_file Path to a profile manifest file
  * @return An array of pointers to profile manifest entries or NULL if an error has occured
  */
-GPtrArray *create_profile_manifest_array_from_file(gchar *manifest_file);
+ProfileManifest *create_profile_manifest_from_file(const gchar *profile_manifest_file);
 
 /**
  * Composes an array of profile manifest entries from the manifest configuration
@@ -71,21 +57,21 @@ GPtrArray *create_profile_manifest_array_from_file(gchar *manifest_file);
  * @param profile Name of the profile to take the manifest from
  * @return An array of pointers to profile manifest entries or NULL if an error has occured
  */
-GPtrArray *create_profile_manifest_array_from_current_deployment(gchar *localstatedir, gchar *profile);
+ProfileManifest *create_profile_manifest_from_current_deployment(gchar *localstatedir, gchar *profile);
 
 /**
  * Deletes a profile manifest array and its contents from heap memory.
  *
  * @param profile_manifest_array An array of profile manifest entries
  */
-void delete_profile_manifest_array(GPtrArray *profile_manifest_array);
+void delete_profile_manifest(ProfileManifest *profile_manifest);
 
 /**
  * Prints the deployed services for the given profile manifest.
  *
  * @param profile_manifest_array An array of profile manifest entries
  */
-void print_services_in_profile_manifest_array(const GPtrArray *profile_manifest_array);
+void print_services_in_profile_manifest(const ProfileManifest *profile_manifest);
 
 /**
  * Prints the deployed services grouped by container for the given profile
@@ -93,7 +79,7 @@ void print_services_in_profile_manifest_array(const GPtrArray *profile_manifest_
  *
  * @param profile_manifest_array An array of profile manifest entries
  */
-void print_services_per_container_in_profile_manifest_array(GPtrArray *profile_manifest_array);
+void print_services_per_container_in_profile_manifest(ProfileManifest *profile_manifest);
 
 /**
  * Prints a raw textual representation of the profile manifest file.
@@ -101,7 +87,7 @@ void print_services_per_container_in_profile_manifest_array(GPtrArray *profile_m
  * @param profile_manifest_array An array of profile manifest entries
  * @param fd File descriptor to print to
  */
-void print_text_from_profile_manifest_array(const GPtrArray *profile_manifest_array, int fd);
+void print_text_from_profile_manifest(const ProfileManifest *profile_manifest, int fd);
 
 /**
  * Prints a Nix expression containing all properties of all deployed services
@@ -109,6 +95,6 @@ void print_text_from_profile_manifest_array(const GPtrArray *profile_manifest_ar
  *
  * @param profile_manifest_array An array of profile manifest entries
  */
-void print_nix_expression_from_profile_manifest_array(const GPtrArray *profile_manifest_array);
+void print_profile_manifest_nix(const ProfileManifest *profile_manifest, void *userdata);
 
 #endif

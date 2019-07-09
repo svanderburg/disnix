@@ -105,7 +105,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
     int temp_fd;
     pid_t pid;
     gchar *tempfilename;
-    GPtrArray *profile_manifest_array;
+    ProfileManifest *profile_manifest;
 
     /* Determine the temp directory */
     tmpdir = getenv("TMPDIR");
@@ -147,17 +147,17 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
                 exit_status = procreact_wait_for_exit_status(pkgmgmt_set_profile((gchar*)profile, derivation[0], 1, 2), &status);
             break;
         case OP_QUERY_INSTALLED:
-            profile_manifest_array = create_profile_manifest_array_from_current_deployment(LOCALSTATEDIR, (gchar*)profile);
+            profile_manifest = create_profile_manifest_from_current_deployment(LOCALSTATEDIR, (gchar*)profile);
 
-            if(profile_manifest_array == NULL)
+            if(profile_manifest == NULL)
             {
                 g_printerr("Cannot query installed services!\n");
                 exit_status = 1;
             }
             else
             {
-                print_text_from_profile_manifest_array(profile_manifest_array, 1);
-                delete_profile_manifest_array(profile_manifest_array);
+                print_text_from_profile_manifest(profile_manifest, 1);
+                delete_profile_manifest(profile_manifest);
                 exit_status = 0;
             }
             break;
@@ -208,31 +208,31 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
                 exit_status = procreact_wait_for_exit_status(statemgmt_run_dysnomia_activity((gchar*)type, "restore", derivation[0], (gchar*)container, arguments, 1, 2), &status);
             break;
         case OP_LOCK:
-            profile_manifest_array = create_profile_manifest_array_from_current_deployment(LOCALSTATEDIR, (gchar*)profile);
+            profile_manifest = create_profile_manifest_from_current_deployment(LOCALSTATEDIR, (gchar*)profile);
 
-            if(profile_manifest_array == NULL)
+            if(profile_manifest == NULL)
             {
                 dprintf(2, "Corrupt profile manifest: a service or type is missing!\n");
                 exit_status = 1;
             }
             else
             {
-                exit_status = !acquire_locks(2, tmpdir, profile_manifest_array, profile);
-                delete_profile_manifest_array(profile_manifest_array);
+                exit_status = !acquire_locks(2, tmpdir, profile_manifest, profile);
+                delete_profile_manifest(profile_manifest);
             }
             break;
         case OP_UNLOCK:
-            profile_manifest_array = create_profile_manifest_array_from_current_deployment(LOCALSTATEDIR, (gchar*)profile);
+            profile_manifest = create_profile_manifest_from_current_deployment(LOCALSTATEDIR, (gchar*)profile);
 
-            if(profile_manifest_array == NULL)
+            if(profile_manifest == NULL)
             {
                 dprintf(2, "Corrupt profile manifest: a service or type is missing!\n");
                 exit_status = 1;
             }
             else
             {
-                exit_status = !release_locks(2, tmpdir, profile_manifest_array, profile);
-                delete_profile_manifest_array(profile_manifest_array);
+                exit_status = !release_locks(2, tmpdir, profile_manifest, profile);
+                delete_profile_manifest(profile_manifest);
             }
             break;
         case OP_QUERY_ALL_SNAPSHOTS:

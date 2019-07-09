@@ -46,7 +46,7 @@ static void complete_query_installed_services_on_target(void *data, Target *targ
         ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)g_malloc(sizeof(ProfileManifestTarget));
         profile_manifest_target->target_key = target_key;
         profile_manifest_target->derivation = NULL;
-        profile_manifest_target->profile_manifest_array = create_profile_manifest_array_from_string_array(future->result);
+        profile_manifest_target->profile_manifest = create_profile_manifest_from_string_array(future->result);
 
         g_ptr_array_add(query_installed_services_data->profile_manifest_target_array, profile_manifest_target);
 

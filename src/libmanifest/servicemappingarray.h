@@ -222,4 +222,6 @@ ServiceStatus traverse_interdependent_mappings(GPtrArray *union_array, GHashTabl
  */
 int traverse_service_mappings(GPtrArray *mappings, GPtrArray *union_array, GHashTable *union_services_table, GHashTable *targets_table, iterate_strategy_function iterate_strategy, service_mapping_function map_service_mapping, complete_service_mapping_function complete_service_mapping);
 
+void print_service_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata);
+
 #endif

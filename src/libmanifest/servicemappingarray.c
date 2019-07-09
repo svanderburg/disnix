@@ -355,3 +355,8 @@ int traverse_service_mappings(GPtrArray *mappings, GPtrArray *union_array, GHash
     g_hash_table_destroy(pid_table);
     return success;
 }
+
+void print_service_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+{
+    print_interdependency_mapping_array_nix(file, value, indent_level, userdata);
+}

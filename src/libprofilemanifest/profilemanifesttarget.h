@@ -23,6 +23,8 @@
 #include <glib.h>
 #include <procreact_pid_iterator.h>
 #include <modeliterator.h>
+#include "profilemanifest.h"
+
 /**
  * @brief Contains all runtime properties of a target machine's deployment configuration
  */
@@ -33,7 +35,7 @@ typedef struct
     /** Path to the Nix store path of the profile containing the intra-dependency closures of all deployed services */
     gchar *derivation;
     /** An array of profile manifest entries */
-    GPtrArray *profile_manifest_array;
+    ProfileManifest *profile_manifest;
 }
 ProfileManifestTarget;
 
@@ -52,7 +54,7 @@ typedef struct
     ModelIteratorData model_iterator_data;
     /** Array with profile manifest targets */
     GPtrArray *profile_manifest_target_array;
-    
+
     /**
      * Pointer to a function that executes an operation for each profile manifest target
      *
@@ -61,7 +63,7 @@ typedef struct
      * @return The PID of the spawned process
      */
     map_profilemanifesttarget_item_function map_profilemanifesttarget_item;
-    
+
     /**
      * Pointer to a function that gets executed when a process completes for a profile manifest target
      *
@@ -71,7 +73,7 @@ typedef struct
      * @param result TRUE if the operation succeeded, else FALSE
      */
     complete_profilemanifesttarget_item_mapping_function complete_profilemanifesttarget_item_mapping;
-    
+
     /** Pointer to arbitrary data passed to the above functions */
     void *data;
 }

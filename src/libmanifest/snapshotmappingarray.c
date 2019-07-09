@@ -303,3 +303,17 @@ void reset_snapshot_items_transferred_status(GPtrArray *snapshots_array)
         mapping->transferred = FALSE;
     }
 }
+
+static void print_snapshot_mapping_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+{
+    SnapshotMapping *mapping = (SnapshotMapping*)value;
+
+    NixXML_print_attribute_nix(file, "component", mapping->component, indent_level, userdata, NixXML_print_value_nix);
+    NixXML_print_attribute_nix(file, "container", mapping->container, indent_level, userdata, NixXML_print_value_nix);
+    NixXML_print_attribute_nix(file, "target", mapping->target, indent_level, userdata, NixXML_print_value_nix);
+}
+
+void print_snapshot_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+{
+    NixXML_print_g_ptr_array_nix(file, value, indent_level, userdata, print_snapshot_mapping_nix);
+}
