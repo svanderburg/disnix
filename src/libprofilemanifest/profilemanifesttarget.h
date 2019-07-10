@@ -30,17 +30,15 @@
  */
 typedef struct
 {
-    /** Key value that uniquely identifies the target */
-    gchar *target_key;
     /** Path to the Nix store path of the profile containing the intra-dependency closures of all deployed services */
-    gchar *derivation;
+    gchar *profile;
     /** An array of profile manifest entries */
     ProfileManifest *profile_manifest;
 }
 ProfileManifestTarget;
 
 /** Pointer to a function that executes an operation for each profile manifest target */
-typedef pid_t (*map_profilemanifesttarget_item_function) (void *data, ProfileManifestTarget *profile_manifest_target);
+typedef pid_t (*map_profilemanifesttarget_item_function) (void *data, gchar *target_key, ProfileManifestTarget *profile_manifest_target);
 
 /** Pointer to a function that gets executed when a process completes for a profile manifest target */
 typedef void (*complete_profilemanifesttarget_item_mapping_function) (void *data, ProfileManifestTarget *profile_manifest_target, ProcReact_Status status, int result);
@@ -52,8 +50,9 @@ typedef struct
 {
     /** Common properties for all model iterators */
     ModelIteratorData model_iterator_data;
-    /** Array with profile manifest targets */
-    GPtrArray *profile_manifest_target_array;
+    GHashTableIter iter;
+    /** Hash table with profile manifest targets */
+    GHashTable *profile_manifest_target_table;
 
     /**
      * Pointer to a function that executes an operation for each profile manifest target
@@ -80,21 +79,12 @@ typedef struct
 ProfileManifestTargetIteratorData;
 
 /**
- * Compares two profile manifest targets
- *
- * @param l A profile manifest target
- * @param r A profile manifest target
- * @return -1 if l is smaller, 0 is they are both equal, 1 if greater
- */
-gint compare_profile_manifest_target(const void *l, const void *r);
-
-/**
  * Parses the manifest from the derivation value and construct arrays of profile
  * manifest entries from it.
  *
  * @param profile_manifest_target A profile manifest target
  */
-void parse_manifest(ProfileManifestTarget *profile_manifest_target);
+void parse_profile_manifest_target(ProfileManifestTarget *profile_manifest_target);
 
 /**
  * Deletes the given profile manifest target array and its properties from
@@ -102,37 +92,21 @@ void parse_manifest(ProfileManifestTarget *profile_manifest_target);
  *
  * @param profile_manifest_target_array Array of profile manifest targets
  */
-void delete_profile_manifest_target_array(GPtrArray *profile_manifest_target_array);
+void delete_profile_manifest_target_table(GHashTable *profile_manifest_target_table);
 
 /**
  * Prints for each target the deployed services.
  *
  * @param profile_manifest_target_array Array of profile manifest targets
  */
-void print_services_in_profile_manifest_target(const GPtrArray *profile_manifest_target_array);
+void print_services_in_profile_manifest_target_table(GHashTable *profile_manifest_target_table);
 
 /**
  * Prints for each target the deployed services per container.
  *
  * @param profile_manifest_target_array Array of profile manifest targets
  */
-void print_services_per_container_in_profile_manifest_target(const GPtrArray *profile_manifest_target_array);
-
-/**
- * Prints a Nix expression containing attribute sets mapping a target key onto
- * all properties of the installed services.
- *
- * @param profile_manifest_target_array Array of profile manifest targets
- */
-void print_nix_expression_from_services_in_profile_manifest_target(const GPtrArray *profile_manifest_target_array);
-
-/**
- * Prints a Nix expression containing attribute sets mapping a target key onto
- * Nix profiles.
- *
- * @param profile_manifest_target_array Array of profile manifest targets
- */
-void print_nix_expression_from_derivations_in_profile_manifest_array(const GPtrArray *profile_manifest_target_array);
+void print_services_per_container_in_profile_manifest_target_table(GHashTable *profile_manifest_target_table);
 
 /**
  * Prints a Nix expression containing profile mappings and service mappings
@@ -141,7 +115,7 @@ void print_nix_expression_from_derivations_in_profile_manifest_array(const GPtrA
  *
  * @param profile_manifest_target_array Array of profile manifest targets
  */
-void print_nix_expression_for_profile_manifest_target_array(const GPtrArray *profile_manifest_target_array);
+void print_profile_manifest_target_table_nix(GHashTable *profile_manifest_target_table, void *userdata);
 
 /**
  * Creates a new iterator that steps over each profile manifest target and
@@ -153,7 +127,7 @@ void print_nix_expression_for_profile_manifest_target_array(const GPtrArray *pro
  * @param data Pointer to arbitrary data passed to the above functions
  * @return A PID iterator that can be used to traverse the distribution items
  */
-ProcReact_PidIterator create_profile_manifest_target_iterator(GPtrArray *profile_manifest_target_array, map_profilemanifesttarget_item_function map_profilemanifesttarget_item, complete_profilemanifesttarget_item_mapping_function complete_profilemanifesttarget_item_mapping, void *data);
+ProcReact_PidIterator create_profile_manifest_target_iterator(GHashTable *profile_manifest_target_table, map_profilemanifesttarget_item_function map_profilemanifesttarget_item, complete_profilemanifesttarget_item_mapping_function complete_profilemanifesttarget_item_mapping, void *data);
 
 /**
  * Destroys the resources attached to the given profile manifest target iterator.

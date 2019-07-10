@@ -18,108 +18,79 @@
  */
 
 #include "profilemanifesttarget.h"
+#include <nixxml-print-nix.h>
+#include <nixxml-ghashtable.h>
 
-gint compare_profile_manifest_target(const void *l, const void *r)
+void parse_profile_manifest_target(ProfileManifestTarget *profile_manifest_target)
 {
-    const ProfileManifestTarget *left = *((ProfileManifestTarget **)l);
-    const ProfileManifestTarget *right = *((ProfileManifestTarget **)r);
-    
-    return g_strcmp0(left->target_key, right->target_key);
-}
-
-void parse_manifest(ProfileManifestTarget *profile_manifest_target)
-{
-    gchar *manifest_file = g_strconcat(profile_manifest_target->derivation, "/manifest", NULL);
+    gchar *manifest_file = g_strconcat(profile_manifest_target->profile, "/manifest", NULL);
     profile_manifest_target->profile_manifest = create_profile_manifest_from_file(manifest_file);
     g_free(manifest_file);
 }
 
-void delete_profile_manifest_target_array(GPtrArray *profile_manifest_target_array)
+void delete_profile_manifest_target_table(GHashTable *profile_manifest_target_table)
 {
-    unsigned int i;
-    
-    for(i = 0; i < profile_manifest_target_array->len; i++)
+    GHashTableIter iter;
+    gpointer key, value;
+
+    g_hash_table_iter_init(&iter, profile_manifest_target_table);
+    while(g_hash_table_iter_next(&iter, &key, &value))
     {
-        ProfileManifestTarget *profile_manifest_target = g_ptr_array_index(profile_manifest_target_array, i);
-        g_free(profile_manifest_target->derivation);
+        ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)value;
+        g_free(profile_manifest_target->profile);
         delete_profile_manifest(profile_manifest_target->profile_manifest);
         g_free(profile_manifest_target);
     }
-    
-    g_ptr_array_free(profile_manifest_target_array, TRUE);
+
+    g_hash_table_destroy(profile_manifest_target_table);
 }
 
-void print_services_in_profile_manifest_target(const GPtrArray *profile_manifest_target_array)
+void print_services_in_profile_manifest_target_table(GHashTable *profile_manifest_target_table)
 {
-    unsigned int i;
+    GHashTableIter iter;
+    gpointer key, value;
 
-    for(i = 0; i < profile_manifest_target_array->len; i++)
+    g_hash_table_iter_init(&iter, profile_manifest_target_table);
+    while(g_hash_table_iter_next(&iter, &key, &value))
     {
-        ProfileManifestTarget *profile_manifest_target = g_ptr_array_index(profile_manifest_target_array, i);
+        ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)value;
 
-        g_print("\nServices on: %s\n\n", profile_manifest_target->target_key);
+        g_print("\nServices on: %s\n\n", (gchar*)key);
         print_services_in_profile_manifest(profile_manifest_target->profile_manifest);
     }
 }
 
-void print_services_per_container_in_profile_manifest_target(const GPtrArray *profile_manifest_target_array)
+void print_services_per_container_in_profile_manifest_target_table(GHashTable *profile_manifest_target_table)
 {
-    unsigned int i;
+    GHashTableIter iter;
+    gpointer key, value;
 
-    for(i = 0; i < profile_manifest_target_array->len; i++)
+    g_hash_table_iter_init(&iter, profile_manifest_target_table);
+    while(g_hash_table_iter_next(&iter, &key, &value))
     {
-        ProfileManifestTarget *profile_manifest_target = g_ptr_array_index(profile_manifest_target_array, i);
+        ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)value;
 
-        g_print("\nServices on: %s\n\n", profile_manifest_target->target_key);
+        g_print("\nServices on: %s\n\n", (gchar*)key);
         print_services_per_container_in_profile_manifest(profile_manifest_target->profile_manifest);
     }
 }
 
-void print_nix_expression_from_services_in_profile_manifest_target(const GPtrArray *profile_manifest_target_array)
+static void print_profile_manifest_target_attributes_nix(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)
 {
-    unsigned int i;
-
-    g_print("[\n");
-
-    for(i = 0; i < profile_manifest_target_array->len; i++)
-    {
-        ProfileManifestTarget *profile_manifest_target = g_ptr_array_index(profile_manifest_target_array, i);
-
-        g_print("  { target = \"%s\";\n", profile_manifest_target->target_key);
-        g_print("    services = ");
-        print_profile_manifest_nix(profile_manifest_target->profile_manifest, NULL);
-        g_print(";\n");
-        g_print("  }\n");
-    }
-
-    g_print("]");
+    ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)value;
+    if(profile_manifest_target->profile != NULL)
+        NixXML_print_attribute_nix(file, "profile", profile_manifest_target->profile, indent_level, userdata, NixXML_print_store_path_nix);
+    NixXML_print_attribute_nix(file, "profileManifest", profile_manifest_target->profile_manifest, indent_level, userdata, print_profile_manifest_nix);
 }
 
-void print_nix_expression_from_derivations_in_profile_manifest_array(const GPtrArray *profile_manifest_target_array)
+static void print_profile_manifest_target_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
-    unsigned int i;
-
-    g_print("[\n");
-
-    for(i = 0; i < profile_manifest_target_array->len; i++)
-    {
-        ProfileManifestTarget *profile_manifest_target = g_ptr_array_index(profile_manifest_target_array, i);
-        g_print("  { profile = builtins.storePath %s; target = \"%s\"; }\n", profile_manifest_target->derivation, profile_manifest_target->target_key);
-    }
-    
-    g_print("]");
+    NixXML_print_attrset_nix(file, value, indent_level, userdata, print_profile_manifest_target_attributes_nix, NULL);
 }
 
-void print_nix_expression_for_profile_manifest_target_array(const GPtrArray *profile_manifest_target_array)
+void print_profile_manifest_target_table_nix(GHashTable *profile_manifest_target_table, void *userdata)
 {
-    g_print("{\n");
-    g_print("  distribution = ");
-    print_nix_expression_from_derivations_in_profile_manifest_array(profile_manifest_target_array);
-    g_print(";\n");
-    g_print("  servicesPerTarget = ");
-    print_nix_expression_from_services_in_profile_manifest_target(profile_manifest_target_array);
-    g_print(";\n");
-    g_print("}\n");
+    NixXML_print_g_hash_table_nix(stdout, profile_manifest_target_table, 0, userdata, print_profile_manifest_target_nix);
 }
 
 static int has_next_profile_manifest_target_process(void *data)
@@ -132,16 +103,18 @@ static pid_t next_profile_manifest_target_process(void *data)
 {
     /* Declarations */
     ProfileManifestTargetIteratorData *iterator_data = (ProfileManifestTargetIteratorData*)data;
-    
+
     /* Retrieve profile manifest target */
-    ProfileManifestTarget *profile_manifest_target = g_ptr_array_index(iterator_data->profile_manifest_target_array, iterator_data->model_iterator_data.index);
-    
+    void *key, *value;
+    g_hash_table_iter_next(&iterator_data->iter, &key, &value);
+    ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)value;
+
     /* Invoke the next profile manifest target item operation process */
-    pid_t pid = iterator_data->map_profilemanifesttarget_item(iterator_data->data, profile_manifest_target);
-    
+    pid_t pid = iterator_data->map_profilemanifesttarget_item(iterator_data->data, (gchar*)key, profile_manifest_target);
+
     /* Increase the iterator index and update the pid table */
     next_iteration_process(&iterator_data->model_iterator_data, pid, profile_manifest_target);
-    
+
     /* Return the pid of the invoked process */
     return pid;
 }
@@ -149,24 +122,25 @@ static pid_t next_profile_manifest_target_process(void *data)
 static void complete_profile_manifest_target_process(void *data, pid_t pid, ProcReact_Status status, int result)
 {
     ProfileManifestTargetIteratorData *iterator_data = (ProfileManifestTargetIteratorData*)data;
-    
+
     /* Retrieve the completed item */
     ProfileManifestTarget *item = complete_iteration_process(&iterator_data->model_iterator_data, pid, status, result);
-    
+
     /* Invoke callback that handles completion of distribution item */
     iterator_data->complete_profilemanifesttarget_item_mapping(iterator_data->data, item, status, result);
 }
 
-ProcReact_PidIterator create_profile_manifest_target_iterator(GPtrArray *profile_manifest_target_array, map_profilemanifesttarget_item_function map_profilemanifesttarget_item, complete_profilemanifesttarget_item_mapping_function complete_profilemanifesttarget_item_mapping, void *data)
+ProcReact_PidIterator create_profile_manifest_target_iterator(GHashTable *profile_manifest_target_table, map_profilemanifesttarget_item_function map_profilemanifesttarget_item, complete_profilemanifesttarget_item_mapping_function complete_profilemanifesttarget_item_mapping, void *data)
 {
     ProfileManifestTargetIteratorData *profile_manifest_target_iterator_data = (ProfileManifestTargetIteratorData*)g_malloc(sizeof(ProfileManifestTargetIteratorData));
-    
-    init_model_iterator_data(&profile_manifest_target_iterator_data->model_iterator_data, profile_manifest_target_array->len);
-    profile_manifest_target_iterator_data->profile_manifest_target_array = profile_manifest_target_array;
+
+    init_model_iterator_data(&profile_manifest_target_iterator_data->model_iterator_data, g_hash_table_size(profile_manifest_target_table));
+    profile_manifest_target_iterator_data->profile_manifest_target_table = profile_manifest_target_table;
+    g_hash_table_iter_init(&profile_manifest_target_iterator_data->iter, profile_manifest_target_iterator_data->profile_manifest_target_table);
     profile_manifest_target_iterator_data->map_profilemanifesttarget_item = map_profilemanifesttarget_item;
     profile_manifest_target_iterator_data->complete_profilemanifesttarget_item_mapping = complete_profilemanifesttarget_item_mapping;
     profile_manifest_target_iterator_data->data = data;
-    
+
     return procreact_initialize_pid_iterator(has_next_profile_manifest_target_process, next_profile_manifest_target_process, procreact_retrieve_boolean, complete_profile_manifest_target_process, profile_manifest_target_iterator_data);
 }
 

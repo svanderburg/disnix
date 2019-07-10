@@ -139,13 +139,19 @@ InterDependencyMapping *find_interdependency_mapping(const GPtrArray *interdepen
         return *ret;
 }
 
-static void print_interdependency_mapping_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+static void print_interdependency_mapping_attributes_nix(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)
 {
     InterDependencyMapping *mapping = (InterDependencyMapping*)value;
 
-    NixXML_print_attribute_nix(file, "service", mapping->service, indent_level, userdata, NixXML_print_value_nix);
-    NixXML_print_attribute_nix(file, "container", mapping->container, indent_level, userdata, NixXML_print_value_nix);
-    NixXML_print_attribute_nix(file, "target", mapping->target, indent_level, userdata, NixXML_print_value_nix);
+    NixXML_print_attribute_nix(file, "service", mapping->service, indent_level, userdata, NixXML_print_string_nix);
+    NixXML_print_attribute_nix(file, "container", mapping->container, indent_level, userdata, NixXML_print_string_nix);
+    if(mapping->target != NULL)
+        NixXML_print_attribute_nix(file, "target", mapping->target, indent_level, userdata, NixXML_print_string_nix);
+}
+
+static void print_interdependency_mapping_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+{
+    NixXML_print_attrset_nix(file, value, indent_level, userdata, print_interdependency_mapping_attributes_nix, NULL);
 }
 
 void print_interdependency_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata)

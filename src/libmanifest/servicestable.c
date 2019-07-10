@@ -114,9 +114,9 @@ GHashTable *generate_union_services_table(GHashTable *left, GHashTable *right)
 static void print_manifest_service_attributes(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)
 {
     ManifestService *service = (ManifestService*)value;
-    NixXML_print_attribute_nix(file, "name", service->name, indent_level, userdata, NixXML_print_value_nix);
-    NixXML_print_attribute_nix(file, "pkg", service->pkg, indent_level, userdata, NixXML_print_value_nix);
-    NixXML_print_attribute_nix(file, "type", service->type, indent_level, userdata, NixXML_print_value_nix);
+    NixXML_print_attribute_nix(file, "name", service->name, indent_level, userdata, NixXML_print_string_nix);
+    NixXML_print_attribute_nix(file, "pkg", service->pkg, indent_level, userdata, NixXML_print_store_path_nix);
+    NixXML_print_attribute_nix(file, "type", service->type, indent_level, userdata, NixXML_print_string_nix);
     NixXML_print_attribute_nix(file, "dependsOn", service->depends_on, indent_level, userdata, print_interdependency_mapping_array_nix);
     NixXML_print_attribute_nix(file, "connectsTo", service->connects_to, indent_level, userdata, print_interdependency_mapping_array_nix);
 }

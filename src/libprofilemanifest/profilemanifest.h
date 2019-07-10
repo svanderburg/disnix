@@ -19,6 +19,7 @@
 
 #ifndef __DISNIX_PROFILEMANIFEST_H
 #define __DISNIX_PROFILEMANIFEST_H
+#include <stdio.h>
 #include <glib.h>
 
 typedef struct
@@ -95,6 +96,6 @@ void print_text_from_profile_manifest(gchar *localstatedir, gchar *profile, int 
  *
  * @param profile_manifest_array An array of profile manifest entries
  */
-void print_profile_manifest_nix(const ProfileManifest *profile_manifest, void *userdata);
+void print_profile_manifest_nix(FILE *file, const void *value, const int indent_level, void *userdata);
 
 #endif

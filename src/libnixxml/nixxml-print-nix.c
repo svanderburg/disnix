@@ -63,6 +63,11 @@ void NixXML_print_int_nix(FILE *file, const void *value, const int indent_level,
     fprintf(file, "%d", *((int*)value));
 }
 
+void NixXML_print_store_path_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+{
+    fprintf(file, "builtins.storePath %s", (const char*)value);
+}
+
 void NixXML_print_list_element_nix(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)
 {
     NixXML_print_indentation(file, indent_level);

@@ -28,7 +28,7 @@
 typedef struct
 {
     gchar *profile_path;
-    GPtrArray *profile_manifest_target_array;
+    GHashTable *profile_manifest_target_table;
 }
 QueryRequisitesData;
 
@@ -41,7 +41,7 @@ static ProcReact_Future query_requisites_on_target(void *data, Target *target, g
 static void complete_query_requisites_on_target(void *data, Target *target, gchar *target_key, ProcReact_Future *future, ProcReact_Status status)
 {
     QueryRequisitesData *query_requisites_data = (QueryRequisitesData*)data;
-    
+
     if(status != PROCREACT_STATUS_OK || future->result == NULL)
         g_printerr("[target: %s]: Cannot query the requisites of the profile!\n", target_key);
     else
@@ -49,74 +49,70 @@ static void complete_query_requisites_on_target(void *data, Target *target, gcha
         ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)g_malloc(sizeof(ProfileManifestTarget));
         char **result = (char**)future->result;
         gint result_length = g_strv_length(result);
-        
-        profile_manifest_target->target_key = target_key;
-        
+
         if(result_length > 0)
         {
-            profile_manifest_target->derivation = result[result_length - 1];
+            profile_manifest_target->profile = result[result_length - 1];
             result[result_length - 1] = NULL;
         }
         else
-            profile_manifest_target->derivation = NULL;
-        
-        parse_manifest(profile_manifest_target);
-        
-        g_ptr_array_add(query_requisites_data->profile_manifest_target_array, profile_manifest_target);
-        
+            profile_manifest_target->profile = NULL;
+
+        parse_profile_manifest_target(profile_manifest_target);
+
+        g_hash_table_insert(query_requisites_data->profile_manifest_target_table, target_key, profile_manifest_target);
+
         procreact_free_string_array(future->result);
     }
 }
 
-static int resolve_profiles(GHashTable *targets_table, gchar *interface, const gchar *target_property, gchar *profile, GPtrArray *profile_manifest_target_array)
+static int resolve_profiles(GHashTable *targets_table, gchar *interface, const gchar *target_property, gchar *profile, GHashTable *profile_manifest_target_table)
 {
     gchar *profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, NULL);
-    QueryRequisitesData data = { profile_path, profile_manifest_target_array };
-    
+    QueryRequisitesData data = { profile_path, profile_manifest_target_table };
+
     ProcReact_FutureIterator iterator = create_target_future_iterator(targets_table, target_property, interface, query_requisites_on_target, complete_query_requisites_on_target, &data);
-    
+
     g_printerr("[coordinator]: Resolving target profile paths...\n");
-    
+
     procreact_fork_in_parallel_buffer_and_wait(&iterator);
-    
-    /* Sort the profiles array to make the outcome deterministic */
-    g_ptr_array_sort(data.profile_manifest_target_array, compare_profile_manifest_target);
-    
+
     /* Cleanup */
     destroy_target_future_iterator(&iterator);
     g_free(data.profile_path);
-    
+
     /* Return success status. Ignore failures. They get reported, but they are not critical */
     return TRUE;
 }
 
 /* Retrieve profiles infrastructure */
 
-pid_t retrieve_profile_manifest_target(void *data, ProfileManifestTarget *profile_manifest_target)
+pid_t retrieve_profile_manifest_target(void *data, gchar *target_key, ProfileManifestTarget *profile_manifest_target)
 {
     gchar *interface = (gchar*)data;
-    gchar *paths[] = { profile_manifest_target->derivation, NULL };
-    
-    return exec_copy_closure_from(interface, profile_manifest_target->target_key, paths);
+    gchar *paths[] = { profile_manifest_target->profile, NULL };
+
+    return exec_copy_closure_from(interface, target_key, paths);
 }
 
 void complete_retrieve_profile_manifest_target(void *data, ProfileManifestTarget *profile_manifest_target, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
-        g_printerr("[target: %s]: Cannot retrieve intra-dependency closure of profile!\n", profile_manifest_target->target_key);
+        //g_printerr("[target: %s]: Cannot retrieve intra-dependency closure of profile!\n", target_key); // TODO: reintroduce target_key
+        g_printerr("Cannot retrieve intra-dependency closure of profile!\n");
 }
 
-static int retrieve_profiles(gchar *interface, GPtrArray *profile_manifest_target_array, const unsigned int max_concurrent_transfers)
+static int retrieve_profiles(gchar *interface, GHashTable *profile_manifest_target_table, const unsigned int max_concurrent_transfers)
 {
     int success;
-    ProcReact_PidIterator iterator = create_profile_manifest_target_iterator(profile_manifest_target_array, retrieve_profile_manifest_target, complete_retrieve_profile_manifest_target, interface);
-    
+    ProcReact_PidIterator iterator = create_profile_manifest_target_iterator(profile_manifest_target_table, retrieve_profile_manifest_target, complete_retrieve_profile_manifest_target, interface);
+
     g_printerr("[coordinator]: Retrieving intra-dependency closures of the profiles...\n");
-    
+
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
     success = profile_manifest_target_iterator_has_succeeded(&iterator);
     destroy_profile_manifest_target_iterator(&iterator);
-    
+
     return success;
 }
 
@@ -138,19 +134,19 @@ int capture_manifest(gchar *interface, const gchar *target_property, gchar *infr
 
         if(check_targets_table(targets_table))
         {
-            GPtrArray *profile_manifest_target_array = g_ptr_array_new();
+            GHashTable *profile_manifest_target_table = g_hash_table_new(g_str_hash, g_str_equal);
 
-            if(resolve_profiles(targets_table, interface, target_property, profile, profile_manifest_target_array)
-              && retrieve_profiles(interface, profile_manifest_target_array, max_concurrent_transfers))
+            if(resolve_profiles(targets_table, interface, target_property, profile, profile_manifest_target_table)
+              && retrieve_profiles(interface, profile_manifest_target_table, max_concurrent_transfers))
             {
-                print_nix_expression_for_profile_manifest_target_array(profile_manifest_target_array);
+                print_profile_manifest_target_table_nix(profile_manifest_target_table, NULL);
                 exit_status = 0;
             }
             else
                 exit_status = 1;
 
             /* Cleanup */
-            delete_profile_manifest_target_array(profile_manifest_target_array);
+            delete_profile_manifest_target_table(profile_manifest_target_table);
         }
         else
             exit_status = 1;

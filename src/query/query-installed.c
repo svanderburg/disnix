@@ -25,7 +25,7 @@
 typedef struct
 {
     gchar *profile;
-    GPtrArray *profile_manifest_target_array;
+    GHashTable *profile_manifest_target_table;
 }
 QueryInstalledServicesData;
 
@@ -44,11 +44,10 @@ static void complete_query_installed_services_on_target(void *data, Target *targ
     else
     {
         ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)g_malloc(sizeof(ProfileManifestTarget));
-        profile_manifest_target->target_key = target_key;
-        profile_manifest_target->derivation = NULL;
+        profile_manifest_target->profile = NULL;
         profile_manifest_target->profile_manifest = create_profile_manifest_from_string(future->result);
 
-        g_ptr_array_add(query_installed_services_data->profile_manifest_target_array, profile_manifest_target);
+        g_hash_table_insert(query_installed_services_data->profile_manifest_target_table, target_key, profile_manifest_target);
 
         free(future->result);
     }
@@ -56,19 +55,16 @@ static void complete_query_installed_services_on_target(void *data, Target *targ
 
 static void print_installed_services(QueryInstalledServicesData *query_installed_services_data, OutputFormat format)
 {
-    /* Sort the captured configs so that the overall result is always displayed in a deterministic order */
-    g_ptr_array_sort(query_installed_services_data->profile_manifest_target_array, compare_profile_manifest_target);
-
     switch(format)
     {
         case FORMAT_SERVICES:
-            print_services_in_profile_manifest_target(query_installed_services_data->profile_manifest_target_array);
+            print_services_in_profile_manifest_target_table(query_installed_services_data->profile_manifest_target_table);
             break;
         case FORMAT_CONTAINERS:
-            print_services_per_container_in_profile_manifest_target(query_installed_services_data->profile_manifest_target_array);
+            print_services_per_container_in_profile_manifest_target_table(query_installed_services_data->profile_manifest_target_table);
             break;
         case FORMAT_NIX:
-            print_nix_expression_from_services_in_profile_manifest_target(query_installed_services_data->profile_manifest_target_array);
+            print_profile_manifest_target_table_nix(query_installed_services_data->profile_manifest_target_table, NULL);
             break;
     }
 }
@@ -90,8 +86,8 @@ int query_installed(gchar *interface, const gchar *target_property, gchar *infra
         if(check_targets_table(targets_table))
         {
             /* Iterate over targets and capture their installed services */
-            GPtrArray *profile_manifest_target_array = g_ptr_array_new();
-            QueryInstalledServicesData data = { profile, profile_manifest_target_array };
+            GHashTable *profile_manifest_target_table = g_hash_table_new(g_str_hash, g_str_equal);
+            QueryInstalledServicesData data = { profile, profile_manifest_target_table };
             ProcReact_FutureIterator iterator = create_target_future_iterator(targets_table, target_property, interface, query_installed_services_on_target, complete_query_installed_services_on_target, &data);
             procreact_fork_in_parallel_buffer_and_wait(&iterator);
             exit_status = !target_iterator_has_succeeded(iterator.data);
@@ -101,7 +97,7 @@ int query_installed(gchar *interface, const gchar *target_property, gchar *infra
 
             /* Cleanup */
             destroy_target_future_iterator(&iterator);
-            delete_profile_manifest_target_array(profile_manifest_target_array);
+            delete_profile_manifest_target_table(profile_manifest_target_table);
         }
         else
             exit_status = 1;

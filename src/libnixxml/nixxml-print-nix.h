@@ -80,6 +80,16 @@ void NixXML_print_value_nix(FILE *file, const void *value, const int indent_leve
 void NixXML_print_int_nix(FILE *file, const void *value, const int indent_level, void *userdata);
 
 /**
+ * Prints a reference to a store path.
+ *
+ * @param file File descriptor to write to
+ * @param value Pointer to a string representing a path in the Nix store
+ * @param indent_level Specifies the indent level, or -1 to disable indentation
+ * @param userdata Arbitrary user data that gets propagated to all print functions
+ */
+void NixXML_print_store_path_nix(FILE *file, const void *value, const int indent_level, void *userdata);
+
+/**
  * Prints a Nix expression representation of a list element.
  *
  * @param file File descriptor to write to

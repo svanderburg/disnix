@@ -235,7 +235,7 @@ static void print_profile_manifest_attributes_nix(FILE *file, const void *value,
     NixXML_print_attribute_nix(file, "snapshotMappings", profile_manifest->snapshot_mapping_array, indent_level, userdata, print_snapshot_mapping_array_nix);
 }
 
-void print_profile_manifest_nix(const ProfileManifest *profile_manifest, void *userdata)
+void print_profile_manifest_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
-    NixXML_print_attrset_nix(stdout, profile_manifest, 0, userdata, print_profile_manifest_attributes_nix, NULL);
+    NixXML_print_attrset_nix(file, value, indent_level, userdata, print_profile_manifest_attributes_nix, NULL);
 }
