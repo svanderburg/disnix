@@ -18,7 +18,6 @@
  */
 
 #include "manifest.h"
-#include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <pwd.h>
@@ -28,6 +27,7 @@
 #include "servicemappingarray.h"
 #include "snapshotmappingarray.h"
 #include <libxml/parser.h>
+#include <nixxml-print-nix.h>
 
 static Manifest *parse_manifest(xmlNodePtr element, const unsigned int flags, const gchar *container_filter, const gchar *component_filter, void *userdata)
 {
@@ -115,6 +115,22 @@ void delete_manifest(Manifest *manifest)
         delete_targets_table(manifest->targets_table);
         g_free(manifest);
     }
+}
+
+static void print_manifest_attributes_nix(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)
+{
+    const Manifest *manifest = (const Manifest*)value;
+
+    NixXML_print_attribute_nix(file, "profiles", manifest->profile_mapping_table, indent_level, userdata, print_profile_mapping_table_nix);
+    NixXML_print_attribute_nix(file, "services", manifest->services_table, indent_level, userdata, print_services_table_nix);
+    NixXML_print_attribute_nix(file, "serviceMappings", manifest->service_mapping_array, indent_level, userdata, print_service_mapping_array_nix);
+    NixXML_print_attribute_nix(file, "snapshotMappings", manifest->snapshot_mapping_array, indent_level, userdata, print_snapshot_mapping_array_nix);
+    NixXML_print_attribute_nix(file, "infrastructure", manifest->targets_table, indent_level, userdata, print_targets_table_nix);
+}
+
+void print_manifest_nix(FILE *file, const Manifest *manifest, const int indent_level, void *userdata)
+{
+    NixXML_print_attrset_nix(file, manifest, indent_level, userdata, print_manifest_attributes_nix, NULL);
 }
 
 gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, const gchar *profile)

@@ -103,6 +103,8 @@ void delete_targets_table(GHashTable *targets_table);
 
 int check_targets_table(GHashTable *targets_table);
 
+void print_targets_table_nix(FILE *file, const void *value, const int indent_level, void *userdata);
+
 /**
  * Retrieves the value of a target property with the given name.
  *

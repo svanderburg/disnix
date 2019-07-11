@@ -26,7 +26,7 @@
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
-static gint compare_service_mappings(const ServiceMapping **l, const ServiceMapping **r)
+gint compare_service_mappings(const ServiceMapping **l, const ServiceMapping **r)
 {
     return compare_interdependency_mappings((const InterDependencyMapping **)l, (const InterDependencyMapping **)r);
 }
@@ -125,10 +125,10 @@ GPtrArray *union_service_mapping_array(GPtrArray *left, GPtrArray *right, const 
             g_ptr_array_add(return_array, mapping);
     }
 
-    /* Sort the activation array */
+    /* Sort the service mapping array */
     g_ptr_array_sort(return_array, (GCompareFunc)compare_service_mappings);
 
-    /* Return the activation array */
+    /* Return the service mapping array */
     return return_array;
 }
 

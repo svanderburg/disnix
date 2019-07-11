@@ -18,6 +18,7 @@
  */
 
 #include "profilemappingtable.h"
+#include <nixxml-print-nix.h>
 #include <nixxml-ghashtable.h>
 
 GHashTable *parse_profile_mapping_table(xmlNodePtr element, void *userdata)
@@ -62,4 +63,9 @@ int check_profile_mapping_table(GHashTable *profile_mapping_table)
 
         return TRUE;
     }
+}
+
+void print_profile_mapping_table_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+{
+    NixXML_print_g_hash_table_nix(file, (GHashTable*)value, indent_level, userdata, NixXML_print_store_path_nix);
 }

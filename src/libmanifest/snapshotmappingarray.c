@@ -28,7 +28,7 @@
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
-static gint compare_snapshot_mapping_keys(const SnapshotMappingKey **l, const SnapshotMappingKey **r)
+gint compare_snapshot_mapping_keys(const SnapshotMappingKey **l, const SnapshotMappingKey **r)
 {
     const SnapshotMappingKey *left = *l;
     const SnapshotMappingKey *right = *r;

@@ -19,6 +19,8 @@
 
 #ifndef __DISNIX_MANIFEST_H
 #define __DISNIX_MANIFEST_H
+
+#include <stdio.h>
 #include <glib.h>
 
 #define MANIFEST_PROFILES_FLAG 0x1
@@ -72,6 +74,8 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
 void delete_manifest(Manifest *manifest);
 
 int check_manifest(const Manifest *manifest);
+
+void print_manifest_nix(FILE *file, const Manifest *manifest, const int indent_level, void *userdata);
 
 /**
  * Determines the path of the last generation of the coordinator profile which

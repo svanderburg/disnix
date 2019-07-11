@@ -22,6 +22,7 @@
 #include <client-interface.h>
 #include <profilemanifest.h>
 #include <profilemanifesttarget.h>
+#include "aggregated-manifest.h"
 
 /* Resolve profiles infrastructure */
 
@@ -139,7 +140,9 @@ int capture_manifest(gchar *interface, const gchar *target_property, gchar *infr
             if(resolve_profiles(targets_table, interface, target_property, profile, profile_manifest_target_table)
               && retrieve_profiles(interface, profile_manifest_target_table, max_concurrent_transfers))
             {
-                print_profile_manifest_target_table_nix(profile_manifest_target_table, NULL);
+                Manifest *manifest = aggregate_manifest(profile_manifest_target_table, targets_table);
+                print_manifest_nix(stdout, manifest, 0, NULL);
+                delete_aggregated_manifest(manifest);
                 exit_status = 0;
             }
             else

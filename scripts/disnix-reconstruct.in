@@ -94,11 +94,9 @@ while [ "$1" != "--" ]
 do
     case "$1" in
         --interface)
-            interface=$2
             interfaceArg="--interface $2"
             ;;
         --target-property)
-            targetProperty=$2
             targetPropertyArg="--target-property $2"
             ;;
         -m|--max-concurrent-transfers)
@@ -114,6 +112,7 @@ do
             ;;
         --deploy-state)
             deployState=1
+            deployStateArg="--deploy-state"
             ;;
         --no-coordinator-profile)
             noCoordinatorProfileArg="--no-coordinator-profile"
@@ -146,8 +145,6 @@ source @datadir@/@PACKAGE@/checks
 
 # Validate the given options
 
-checkClientInterface
-checkTargetProperty
 checkProfile
 checkShowTrace
 checkTmpDir
@@ -173,14 +170,7 @@ tempExpr=`mktemp -p $TMPDIR`
 disnix-capture-manifest $profileArg $targetPropertyArg $interfaceArg $maxConcurrentTransfersArg $infrastructureFile > $tempExpr
 
 echo "[coordinator]: Building captured manifest..." >&2
-reconstructedManifest=`nix-build --argstr infrastructureFile "$(readlink -f $infrastructureFile)" \
-    --argstr capturedPropertiesFile "$(readlink -f $tempExpr)" \
-    --argstr targetProperty $targetProperty \
-    --argstr clientInterface $interface \
-    --no-out-link \
-    $deployStateArg \
-    $showTraceArg \
-    "$(readlink -f @datadir@/@PACKAGE@/reconstructmanifest.nix)"`
+reconstructedManifest=`disnix-manifest --no-out-link $targetPropertyArg $interfaceArg $deployStateArg $showTraceArg -D $tempExpr`
 
 if [ -f $profileDir/$profile ] && (cmp $profileDir/$profile $reconstructedManifest 2> /dev/null)
 then

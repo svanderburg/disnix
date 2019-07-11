@@ -84,6 +84,8 @@ typedef pid_t (*map_snapshot_item_function) (SnapshotMapping *mapping, ManifestS
  */
 typedef void (*complete_snapshot_item_mapping_function) (SnapshotMapping *mapping, Target *target, ProcReact_Status status, int result);
 
+gint compare_snapshot_mapping_keys(const SnapshotMappingKey **l, const SnapshotMappingKey **r);
+
 /**
  * Creates an array with activation mappings from the corresponding sub section
  * in an XML document.

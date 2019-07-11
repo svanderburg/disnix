@@ -102,6 +102,8 @@ typedef void (*complete_service_mapping_function) (ServiceMapping *mapping, Targ
  */
 typedef ServiceStatus (*iterate_strategy_function) (GPtrArray *union_service_mapping, GHashTable *union_services_table, const InterDependencyMapping *key, GHashTable *targets_table, GHashTable *pid_table, service_mapping_function map_service_mapping);
 
+gint compare_service_mappings(const ServiceMapping **l, const ServiceMapping **r);
+
 /**
  * Creates an array with activation mappings from the corresponding sub section
  * in an XML document.

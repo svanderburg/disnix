@@ -69,7 +69,9 @@ static void *parse_interdependency_mapping(xmlNodePtr element, void *userdata)
 
 GPtrArray *parse_interdependency_mapping_array(xmlNodePtr element, void *userdata)
 {
-    return NixXML_parse_g_ptr_array(element, "mapping", userdata, parse_interdependency_mapping);
+    GPtrArray *return_array = NixXML_parse_g_ptr_array(element, "mapping", userdata, parse_interdependency_mapping);
+    g_ptr_array_sort(return_array, (GCompareFunc)compare_interdependency_mappings);
+    return return_array;
 }
 
 static int check_interdependency_mapping(InterDependencyMapping *mapping)
