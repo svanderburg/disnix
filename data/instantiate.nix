@@ -34,7 +34,7 @@ let
     }:
 
     let
-      normalizeArchitecture = import ./normalize.nix {
+      normalizeArchitecture = import ./normalize-architecture.nix {
         inherit (pkgs) lib;
       };
 

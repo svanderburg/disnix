@@ -271,17 +271,39 @@ char *pkgmgmt_instantiate_sync(gchar *infrastructure_expr)
     return procreact_future_get(&future, &status);
 }
 
+ProcReact_Future pkgmgmt_normalize_infrastructure(gchar *infrastructure_expr, gchar *default_target_property, gchar *default_client_interface)
+{
+    ProcReact_Future future = procreact_initialize_future(procreact_create_string_type());
+
+    if(future.pid == 0)
+    {
+        char *const args[] = {"disnix-normalize-infra", "--target-property", default_target_property, "--interface", default_client_interface, "--raw", infrastructure_expr, NULL};
+        dup2(future.fd, 1); /* Attach write-end to stdout */
+        execvp(args[0], args);
+        _exit(1);
+    }
+
+    return future;
+}
+
+char *pkgmgmt_normalize_infrastructure_sync(gchar *infrastructure_expr, gchar *default_target_property, gchar *default_client_interface)
+{
+    ProcReact_Status status;
+    ProcReact_Future future = pkgmgmt_normalize_infrastructure(infrastructure_expr, default_target_property, default_client_interface);
+    return procreact_future_get(&future, &status);
+}
+
 static pid_t execute_set_coordinator_profile(gchar *profile_path, gchar *manifest_file_path)
 {
     pid_t pid = fork();
-    
+
     if(pid == 0)
     {
         char *const args[] = {NIX_ENV_CMD, "-p", profile_path, "--set", manifest_file_path, NULL};
         execvp(NIX_ENV_CMD, args);
         _exit(1);
     }
-    
+
     return pid;
 }
 

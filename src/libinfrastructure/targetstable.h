@@ -75,7 +75,7 @@ GHashTable *create_targets_table_from_doc(xmlDocPtr doc);
  * @param infrastructure_expr Path to the infrastructure Nix expression
  * @return GHashTable with targets
  */
-GHashTable *create_targets_table_from_nix(char *infrastructure_expr);
+GHashTable *create_targets_table_from_nix(char *infrastructure_expr, char *default_target_property, char *default_client_interface);
 
 /**
  * Creates a hash table with targets from an infrastructure XML configuration
@@ -92,7 +92,7 @@ GHashTable *create_targets_table_from_xml(const char *infrastructure_xml);
  * @param xml TRUE to indicate the input is in XML, FALSE that it is a Nix expression
  * @return GHashTable with targets
  */
-GHashTable *create_targets_table(gchar *infrastructure_expr, const int xml);
+GHashTable *create_targets_table(gchar *infrastructure_expr, const int xml, char *default_target_property, char *default_client_interface);
 
 /**
  * Deletes a hash table with targets

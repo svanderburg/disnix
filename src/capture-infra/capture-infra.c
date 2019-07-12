@@ -106,10 +106,10 @@ static void delete_configs_array(GPtrArray *configs_array)
     g_ptr_array_free(configs_array, TRUE);
 }
 
-int capture_infra(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, const int xml)
+int capture_infra(gchar *interface, gchar *target_property, gchar *infrastructure_expr, const int xml)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
-    GHashTable *targets_table = create_targets_table(infrastructure_expr, xml);
+    GHashTable *targets_table = create_targets_table(infrastructure_expr, xml, target_property, interface);
 
     if(targets_table == NULL)
     {

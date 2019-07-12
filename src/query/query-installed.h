@@ -45,6 +45,6 @@ OutputFormat;
  * @param xml If set to TRUE it considers the input to be in XML format
  * @return 0 if all the operations succeed, else a non-zero value
  */
-int query_installed(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile, OutputFormat format, const int xml);
+int query_installed(gchar *interface, gchar *target_property, gchar *infrastructure_expr, gchar *profile, OutputFormat format, const int xml);
 
 #endif

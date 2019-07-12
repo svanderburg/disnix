@@ -69,10 +69,10 @@ static void print_installed_services(QueryInstalledServicesData *query_installed
     }
 }
 
-int query_installed(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile, OutputFormat format, const int xml)
+int query_installed(gchar *interface, gchar *target_property, gchar *infrastructure_expr, gchar *profile, OutputFormat format, const int xml)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
-    GHashTable *targets_table = create_targets_table(infrastructure_expr, xml);
+    GHashTable *targets_table = create_targets_table(infrastructure_expr, xml, target_property, interface);
 
     if(targets_table == NULL)
     {

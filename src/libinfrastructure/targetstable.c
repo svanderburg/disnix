@@ -145,14 +145,14 @@ GHashTable *create_targets_table_from_doc(xmlDocPtr doc)
     return targets_table;
 }
 
-GHashTable *create_targets_table_from_nix(char *infrastructure_expr)
+GHashTable *create_targets_table_from_nix(char *infrastructure_expr, char *default_target_property, char *default_client_interface)
 {
     /* Declarations */
     xmlDocPtr doc;
     GHashTable *targets_table;
 
     /* Open the XML output of nix-instantiate */
-    char *infrastructureXML = pkgmgmt_instantiate_sync(infrastructure_expr);
+    char *infrastructureXML = pkgmgmt_normalize_infrastructure_sync(infrastructure_expr, default_target_property, default_client_interface);
 
     if(infrastructureXML == NULL)
     {
@@ -202,12 +202,12 @@ GHashTable *create_targets_table_from_xml(const char *infrastructure_xml)
     return targets_table;
 }
 
-GHashTable *create_targets_table(gchar *infrastructure_expr, const int xml)
+GHashTable *create_targets_table(gchar *infrastructure_expr, const int xml, char *default_target_property, char *default_client_interface)
 {
     if(xml)
         return create_targets_table_from_xml(infrastructure_expr);
     else
-        return create_targets_table_from_nix(infrastructure_expr);
+        return create_targets_table_from_nix(infrastructure_expr, default_target_property, default_client_interface);
 }
 
 static void delete_properties_table(GHashTable *properties_table)

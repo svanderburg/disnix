@@ -119,10 +119,10 @@ static int retrieve_profiles(gchar *interface, GHashTable *profile_manifest_targ
 
 /* The entire capture manifest operation */
 
-int capture_manifest(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile, const unsigned int max_concurrent_transfers, const int xml)
+int capture_manifest(gchar *interface, gchar *target_property, gchar *infrastructure_expr, gchar *profile, const unsigned int max_concurrent_transfers, const int xml)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
-    GHashTable *targets_table = create_targets_table(infrastructure_expr, xml);
+    GHashTable *targets_table = create_targets_table(infrastructure_expr, xml, target_property, interface);
 
     if(targets_table == NULL)
     {

@@ -1,0 +1,146 @@
+#!/bin/bash
+set -e
+set -o pipefail
+
+# Disnix - A Nix-based distributed service deployment tool
+# Copyright (C) 2008-2018  Sander van der Burg
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    cat <<EOF
+Usage: $0 [OPTION] infrastructure_nix
+
+Normalizes an infrastructure model in the Nix expression language by augmenting
+it with default settings and generates an XML representation of the result.
+
+Options:
+      --target-property=PROP  The target property of an infrastructure model,
+                              that specifies how to connect to the remote Disnix
+                              interface. (Defaults to hostname)
+      --interface=INTERFACE   Path to executable that communicates with a Disnix
+                              interface. Defaults to: disnix-ssh-client
+      --raw                   Output raw XML instead of transformed NixXML data
+      --show-trace            Shows a trace of the output
+  -h, --help                  Shows the usage of this command to the user
+  -v, --version               Shows the version of this command to the user
+
+Environment:
+  DISNIX_CLIENT_INTERFACE    Sets the client interface (defaults to:
+                             disnix-ssh-client)
+  DISNIX_TARGET_PROPERTY     Sets the target property of an infrastructure
+                             model, that specifies how to connect to the remote
+                             Disnix interface. (Defaults to: hostname)
+EOF
+}
+
+# Shows the version of this command to the user
+
+showVersion()
+{
+    cat <<EOF
+$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+
+Copyright (C) 2008-2018 Sander van der Burg
+EOF
+}
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o hv -l target-property:,interface:,raw,show-trace,help,version -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        --target-property)
+            targetProperty=$2
+            ;;
+        --interface)
+            interface=$2
+            ;;
+        --show-trace)
+            showTrace=1
+            ;;
+        --raw)
+            raw=1
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+        -v|--version)
+            showVersion
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
+
+# Autoconf settings
+
+export prefix=@prefix@
+
+# Import checks
+
+source @datadir@/@PACKAGE@/checks
+
+# Validate the given options
+
+checkTargetProperty
+checkClientInterface
+checkShowTrace
+
+if [ -z "$1" ]
+then
+    echo "An infrastructure model must be provided!" >&2
+    exit 1
+else
+    infrastructureFile="$(readlink -f "$1")"
+fi
+
+# Generate a normalized XML infrastructure file
+
+evaluateXML()
+{
+    nix-instantiate --eval-only --xml --strict \
+       --argstr targetProperty $targetProperty \
+       --argstr clientInterface $interface \
+       --argstr infrastructureFile $infrastructureFile \
+       $showTraceArg \
+       "$(readlink -f @datadir@/@PACKAGE@/infrastructure-xml.nix)"
+}
+
+if [ "$raw" = "1" ]
+then
+    evaluateXML
+else
+    evaluateXML | xsltproc @datadir@/@PACKAGE@/infrastructure.xsl -
+fi

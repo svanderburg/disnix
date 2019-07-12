@@ -34,6 +34,6 @@
  * @param flags Configuration flags for the collect garbage operation
  * @return 0 if everything succeeds, else a non-zero exit value
  */
-int collect_garbage(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, const unsigned int flags);
+int collect_garbage(gchar *interface, gchar *target_property, gchar *infrastructure_expr, const unsigned int flags);
 
 #endif

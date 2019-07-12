@@ -34,6 +34,6 @@
  * @param xml If set to TRUE it considers the input to be in XML format
  * @return 0 if all the operations succeed, else a non-zero value
  */
-int capture_manifest(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, gchar *profile, const unsigned int max_concurrent_transfers, const int xml);
+int capture_manifest(gchar *interface, gchar *target_property, gchar *infrastructure_expr, gchar *profile, const unsigned int max_concurrent_transfers, const int xml);
 
 #endif

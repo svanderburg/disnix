@@ -27,15 +27,14 @@ gint compare_interdependency_mappings(const InterDependencyMapping **l, const In
     const InterDependencyMapping *left = *l;
     const InterDependencyMapping *right = *r;
 
-    /* Compare the service keys */
-    gint status = xmlStrcmp(left->service, right->service);
+    gint status = xmlStrcmp(left->target, right->target);
 
     if(status == 0)
     {
-        status = xmlStrcmp(left->target, right->target); /* If services are equal then compare the targets */
+        status = xmlStrcmp(left->container, right->container);
 
         if(status == 0)
-            return xmlStrcmp(left->container, right->container); /* If targets are equal then compare the containers */
+            return xmlStrcmp(left->service, right->service);
         else
             return status;
     }

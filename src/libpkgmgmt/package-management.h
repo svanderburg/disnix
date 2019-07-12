@@ -42,6 +42,10 @@ ProcReact_Future pkgmgmt_instantiate(gchar *infrastructure_expr);
 
 char *pkgmgmt_instantiate_sync(gchar *infrastructure_expr);
 
+ProcReact_Future pkgmgmt_normalize_infrastructure(gchar *infrastructure_expr, gchar *default_target_property, gchar *default_client_interface);
+
+char *pkgmgmt_normalize_infrastructure_sync(gchar *infrastructure_expr, gchar *default_target_property, gchar *default_client_interface);
+
 int pkgmgmt_set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *manifest_file, const gchar *profile);
 
 #endif

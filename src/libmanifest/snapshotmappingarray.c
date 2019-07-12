@@ -33,15 +33,14 @@ gint compare_snapshot_mapping_keys(const SnapshotMappingKey **l, const SnapshotM
     const SnapshotMappingKey *left = *l;
     const SnapshotMappingKey *right = *r;
 
-    /* Compare the component names */
-    gint status = xmlStrcmp(left->component, right->component);
+    gint status = xmlStrcmp(left->target, right->target);
 
     if(status == 0)
     {
-        gint status = xmlStrcmp(left->target, right->target); /* If components are equal then compare the targets */
+        gint status = xmlStrcmp(left->container, right->container);
 
         if(status == 0)
-            return xmlStrcmp(left->container, right->container); /* If containers are equal then compare the containers */
+            return xmlStrcmp(left->component, right->component);
         else
             return status;
     }

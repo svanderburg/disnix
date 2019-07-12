@@ -3,6 +3,10 @@
 let
   inherit (builtins) isList isAttrs head getAttr filter attrNames concatLists listToAttrs;
 
+  normalizeInfrastructure = import ./normalize-infrastructure.nix {
+    inherit lib;
+  };
+
   checkServiceNames = {architecture}:
     architecture // {
       services = lib.mapAttrs (name: service:
@@ -21,18 +25,12 @@ let
       ) architecture.services;
     };
 
-  normalizeTarget = {target, defaultClientInterface, defaultTargetProperty}:
-    { clientInterface = defaultClientInterface;
-      targetProperty = defaultTargetProperty;
-      numOfCores = 1;
-      system = builtins.currentSystem;
-    } // target;
-
-  normalizeInfrastructure = {architecture, defaultClientInterface, defaultTargetProperty}:
+  normalizeInfrastructureAttribute = {architecture, defaultClientInterface, defaultTargetProperty}:
     architecture // {
-      infrastructure = lib.mapAttrs (name: target: normalizeTarget {
-        inherit target defaultClientInterface defaultTargetProperty;
-      }) architecture.infrastructure;
+      infrastructure = normalizeInfrastructure.normalizeInfrastructure {
+        inherit (architecture) infrastructure;
+        inherit defaultClientInterface defaultTargetProperty;
+      };
     };
 
   selectContainers = {targets, type}:
@@ -68,7 +66,7 @@ let
     };
 
   normalizeTargets = {targets, defaultClientInterface, defaultTargetProperty}:
-    map (target: normalizeTarget {
+    map (target: normalizeInfrastructure.normalizeTarget {
       inherit target defaultClientInterface defaultTargetProperty;
     }) targets;
 
@@ -175,7 +173,7 @@ let
         inherit defaultDeployState;
       };
 
-      architectureWithNormalizedInfrastructure = normalizeInfrastructure {
+      architectureWithNormalizedInfrastructure = normalizeInfrastructureAttribute {
         architecture = architectureWithDeployState;
         inherit defaultClientInterface defaultTargetProperty;
       };

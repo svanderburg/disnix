@@ -40,10 +40,10 @@ static void complete_collect_garbage_on_target(void *data, Target *target, gchar
         g_printerr("[target: %s]: Garbage collection failed!\n", target_key);
 }
 
-int collect_garbage(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, const unsigned int flags)
+int collect_garbage(gchar *interface, gchar *target_property, gchar *infrastructure_expr, const unsigned int flags)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
-    GHashTable *targets_table = create_targets_table(infrastructure_expr, flags & FLAG_COLLECT_GARBAGE_XML);
+    GHashTable *targets_table = create_targets_table(infrastructure_expr, flags & FLAG_COLLECT_GARBAGE_XML, target_property, interface);
 
     if(targets_table == NULL)
     {

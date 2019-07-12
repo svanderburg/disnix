@@ -129,6 +129,7 @@ scripts/disnix-manifest
 scripts/disnix-gendist-roundrobin
 scripts/disnix-reconstruct
 scripts/disnix-ssh-client
+scripts/disnix-normalize-infra
 doc/Makefile
 doc/manual/Makefile
 init.d/Makefile

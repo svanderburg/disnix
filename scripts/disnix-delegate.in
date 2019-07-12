@@ -60,6 +60,8 @@ Options:
                                   captures all properties of the services and
                                   infrastructure including the distribution of
                                   services to targets
+  -B, --build=build_nix           Build Nix expression that maps store
+                                  derivations to target machines in the network
       --target-property=PROP      The target property of an infrastructure
                                   model, that specifies how to connect to the
                                   remote Disnix interface. (Defaults to
@@ -96,7 +98,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:m:hv -l services:,infrastructure:,distribution:,packages:,architecture:,interface:,target-property:,max-concurrent-transfers:,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:m:hv -l services:,infrastructure:,distribution:,packages:,architecture:,build:,interface:,target-property:,max-concurrent-transfers:,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -125,6 +127,9 @@ do
             ;;
         -A|--architecture)
             architectureFile=`readlink -f $2`
+            ;;
+        -B|--build)
+            buildFile=`readlink -f $2`
             ;;
         -m|--max-concurrent-transfers)
             maxConcurrentTransfersArg="-m $2"

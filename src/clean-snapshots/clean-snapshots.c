@@ -43,10 +43,10 @@ static void complete_clean_snapshots_on_target(void *data, Target *target, gchar
         g_printerr("[target: %s]: Snapshot garbage collection failed\n", target_key);
 }
 
-int clean_snapshots(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, int keep, gchar *container, gchar *component, const int xml)
+int clean_snapshots(gchar *interface, gchar *target_property, gchar *infrastructure_expr, int keep, gchar *container, gchar *component, const int xml)
 {
     /* Retrieve a table of all target machines from the infrastructure expression */
-    GHashTable *targets_table = create_targets_table(infrastructure_expr, xml);
+    GHashTable *targets_table = create_targets_table(infrastructure_expr, xml, target_property, interface);
 
     if(targets_table == NULL)
     {

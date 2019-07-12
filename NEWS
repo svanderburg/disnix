@@ -1,14 +1,18 @@
 Version 0.9
 ===========
+- The profile manifest file structure has been revised and are now XML-based instead of linefeed separated text files
+
 - Disnix now uses libnixxml for data interchange between the front-end (that does the building) and the tools that execute the remaining deployment activities
 
-- The Disnix tools can also work with a packages model, a specification that specifies the contents of the Nix profiles per machine
+- The Disnix tools can also work with a packages model: a file that specifies the contents of the Nix profiles per machine
+
+- Disnix supports new lower level configuration models: a deployment architecture model that captures all high-level deployment aspects in one file, a build model that has a one on one mapping with the build activities that it executes only and a deployment model that has a one of one mapping with the deployment activities that it executes
 
 - The frontend has been reengineered. In addition to more configurable properties, it is also possible to specify the intermediate models as input parameters to various Disnix tools.
 
 - libmanifest now uses libinfrastructure for managing the infrastructure related parts
 
-- The tools that work with infrastructure models (e.g. disnix-capture-infra, disnix-collect-garbage) now also work with XML representations of the infrastructure models by passing the --xml option
+- The tools that work with infrastructure models (e.g. disnix-capture-infra, disnix-collect-garbage) now also work with XML representations of the infrastructure models by passing the --xml option. disnix-normalize-infra can be used to generate XML representations of infrastructure models
 
 - Most higher level functionality has been reimplemented in C and exposed as C APIs
 
@@ -18,7 +22,7 @@ Version 0.8
 
 - Added disnix-run-activity that can be used to directly execute Disnix activities without a multi-user installation or D-Bus service
 
-- Services can now also declare inter-dependencies with the connectTo property that disregards the activation order. This is useful for systems with cyclic connections and faster deployments in which it is allowed to break a connection
+- Services can now also declare inter-dependencies with the connectsTo property that disregards the activation order. This is useful for systems with cyclic connections and faster deployments in which it is allowed to break a connection
 
 - The copy closure command now partitions the requisites to prevent hitting the "arguments too long" error
 

@@ -31,6 +31,6 @@
  * @param xml If set to TRUE it considers the input to be in XML format
  * @return 0 if everything succeeds, else a non-zero exit value
  */
-int capture_infra(gchar *interface, const gchar *target_property, gchar *infrastructure_expr, const int xml);
+int capture_infra(gchar *interface, gchar *target_property, gchar *infrastructure_expr, const int xml);
 
 #endif
