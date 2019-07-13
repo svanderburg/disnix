@@ -128,5 +128,5 @@ static void print_manifest_service_nix(FILE *file, const void *value, const int 
 
 void print_services_table_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
-    NixXML_print_g_hash_table_nix(file, (GHashTable*)value, indent_level, userdata, print_manifest_service_nix);
+    NixXML_print_g_hash_table_ordered_nix(file, (GHashTable*)value, indent_level, userdata, print_manifest_service_nix);
 }
