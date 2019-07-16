@@ -75,15 +75,18 @@ GPtrArray *parse_interdependency_mapping_array(xmlNodePtr element, void *userdat
 
 static int check_interdependency_mapping(InterDependencyMapping *mapping)
 {
-    if(mapping->service == NULL || mapping->container == NULL || mapping->target == NULL)
+    if(mapping->service == NULL)
     {
-        /* Check if all mandatory properties have been provided */
-        g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
-        g_printerr("manifest file?\n");
+        g_printerr("mapping.service is not set!\n");
         return FALSE;
     }
-    else
-        return TRUE;
+    else if(mapping->container == NULL)
+    {
+        g_printerr("mapping.container is not set!\n");
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 int check_interdependency_mapping_array(const GPtrArray *interdependency_mapping_array)
@@ -128,6 +131,25 @@ void delete_interdependency_mapping_array(GPtrArray *interdependency_mapping_arr
 
         g_ptr_array_free(interdependency_mapping_array, TRUE);
     }
+}
+
+int compare_interdependency_mapping_arrays(const GPtrArray *interdependency_mapping_array1, const GPtrArray *interdependency_mapping_array2)
+{
+    if(interdependency_mapping_array1->len == interdependency_mapping_array2->len)
+    {
+        unsigned int i;
+
+        for(i = 0; i < interdependency_mapping_array1->len; i++)
+        {
+            InterDependencyMapping *mapping = g_ptr_array_index(interdependency_mapping_array1, i);
+            if(find_interdependency_mapping(interdependency_mapping_array2, mapping) == NULL)
+                return FALSE;
+        }
+
+        return TRUE;
+    }
+    else
+        return FALSE;
 }
 
 InterDependencyMapping *find_interdependency_mapping(const GPtrArray *interdependency_mapping_array, const InterDependencyMapping *key)

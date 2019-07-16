@@ -44,6 +44,8 @@ void delete_services_table(GHashTable *services_table);
 
 int check_services_table(GHashTable *services_table);
 
+int compare_services_tables(GHashTable *services_table1, GHashTable *services_table2);
+
 GHashTable *generate_union_services_table(GHashTable *left, GHashTable *right);
 
 void print_services_table_nix(FILE *file, const void *value, const int indent_level, void *userdata);

@@ -3,6 +3,7 @@
 #include <nixxml-print-nix.h>
 #include <nixxml-ghashtable.h>
 #include "interdependencymappingarray.h"
+#include "compareutil.h"
 
 static void *create_manifest_service(xmlNodePtr element, void *userdata)
 {
@@ -62,11 +63,26 @@ void delete_services_table(GHashTable *services_table)
 
 static int check_manifest_service(const ManifestService *service)
 {
-    return(service->name != NULL
-        && service->pkg != NULL
-        && service->type != NULL
-        && check_interdependency_mapping_array(service->depends_on)
-        && check_interdependency_mapping_array(service->connects_to));
+    if(service->name == NULL)
+    {
+        g_printerr("service.name is not set!\n");
+        return FALSE;
+    }
+
+    if(service->pkg == NULL)
+    {
+        g_printerr("service.name is not set!\n");
+        return FALSE;
+    }
+
+    if(service->type == NULL)
+    {
+        g_printerr("service.name is not set!\n");
+        return FALSE;
+    }
+
+    return (check_interdependency_mapping_array(service->depends_on) &&
+        check_interdependency_mapping_array(service->connects_to));
 }
 
 int check_services_table(GHashTable *services_table)
@@ -87,6 +103,23 @@ int check_services_table(GHashTable *services_table)
 
         return TRUE;
     }
+}
+
+static int compare_manifest_services(const gpointer left, const gpointer right)
+{
+    const ManifestService *service1 = (const ManifestService*)left;
+    const ManifestService *service2 = (const ManifestService*)right;
+
+    return (xmlStrcmp(service1->name, service2->name) == 0
+      && xmlStrcmp(service1->pkg, service2->pkg) == 0
+      && xmlStrcmp(service1->type, service2->type) == 0
+      && compare_interdependency_mapping_arrays(service1->depends_on, service2->depends_on)
+      && compare_interdependency_mapping_arrays(service1->connects_to, service2->connects_to));
+}
+
+int compare_services_tables(GHashTable *services_table1, GHashTable *services_table2)
+{
+    return compare_hash_tables(services_table1, services_table2, compare_manifest_services);
 }
 
 GHashTable *generate_union_services_table(GHashTable *left, GHashTable *right)

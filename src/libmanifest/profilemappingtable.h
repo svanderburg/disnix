@@ -41,6 +41,8 @@ void delete_profile_mapping_table(GHashTable *profile_mapping_table);
 
 int check_profile_mapping_table(GHashTable *profile_mapping_table);
 
+int compare_profile_mapping_tables(GHashTable *profile_mapping_table1, GHashTable *profile_mapping_table2);
+
 void print_profile_mapping_table_nix(FILE *file, const void *value, const int indent_level, void *userdata);
 
 #endif

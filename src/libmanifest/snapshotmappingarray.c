@@ -145,6 +145,27 @@ void delete_snapshot_mapping_array(GPtrArray *snapshots_array)
     }
 }
 
+static int check_snapshot_mapping(const SnapshotMapping *mapping)
+{
+    if(mapping->component == NULL)
+    {
+        g_printerr("mapping.component is not set!\n");
+        return FALSE;
+    }
+    else if(mapping->container == NULL)
+    {
+        g_printerr("mapping.container is not set!\n");
+        return FALSE;
+    }
+    else if(mapping->service == NULL)
+    {
+        g_printerr("mapping.service is not set!\n");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 int check_snapshot_mapping_array(const GPtrArray *snapshots_array)
 {
     if(snapshots_array == NULL)
@@ -156,18 +177,31 @@ int check_snapshot_mapping_array(const GPtrArray *snapshots_array)
         for(i = 0; i < snapshots_array->len; i++)
         {
             SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
-
-            if(mapping->component == NULL || mapping->container == NULL || mapping->target == NULL || mapping->service == NULL)
-            {
-                /* Check if all mandatory properties have been provided */
-                g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
-                g_printerr("manifest file?\n");
+            if(!check_snapshot_mapping(mapping))
                 return FALSE;
-            }
         }
 
         return TRUE;
     }
+}
+
+int compare_snapshot_mapping_arrays(const GPtrArray *snapshot_mapping_array1, const GPtrArray *snapshot_mapping_array2)
+{
+    if(snapshot_mapping_array1->len == snapshot_mapping_array2->len)
+    {
+        unsigned int i;
+
+        for(i = 0; i < snapshot_mapping_array1->len; i++)
+        {
+            SnapshotMapping *mapping = g_ptr_array_index(snapshot_mapping_array1, i);
+            if(find_snapshot_mapping(snapshot_mapping_array2, (SnapshotMappingKey*)mapping) == NULL)
+                return FALSE;
+        }
+
+        return TRUE;
+    }
+    else
+        return FALSE;
 }
 
 SnapshotMapping *find_snapshot_mapping(const GPtrArray *snapshots_array, const SnapshotMappingKey *key)
@@ -307,6 +341,7 @@ static void print_snapshot_mapping_attributes_nix(FILE *file, const void *value,
 {
     SnapshotMapping *mapping = (SnapshotMapping*)value;
 
+    NixXML_print_attribute_nix(file, "service", mapping->service, indent_level, userdata, NixXML_print_string_nix);
     NixXML_print_attribute_nix(file, "component", mapping->component, indent_level, userdata, NixXML_print_string_nix);
     NixXML_print_attribute_nix(file, "container", mapping->container, indent_level, userdata, NixXML_print_string_nix);
     if(mapping->target != NULL)

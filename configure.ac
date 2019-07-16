@@ -84,6 +84,7 @@ conf/Makefile
 src/Makefile
 src/disnix.pc
 src/build/Makefile
+src/compare-manifest/Makefile
 src/collect-garbage/Makefile
 src/diagnose/Makefile
 src/query/Makefile

@@ -75,6 +75,8 @@ void delete_manifest(Manifest *manifest);
 
 int check_manifest(const Manifest *manifest);
 
+int compare_manifests(const Manifest *manifest1, const Manifest *manifest2);
+
 void print_manifest_nix(FILE *file, const Manifest *manifest, const int indent_level, void *userdata);
 
 /**

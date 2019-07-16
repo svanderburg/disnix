@@ -122,6 +122,8 @@ void delete_service_mapping_array(GPtrArray *service_mapping_array);
 
 int check_service_mapping_array(const GPtrArray *service_mapping_array);
 
+int compare_service_mapping_arrays(const GPtrArray *service_mapping_array1, const GPtrArray *service_mapping_array2);
+
 /**
  * Returns the activation mapping with the given key in the activation array.
  *

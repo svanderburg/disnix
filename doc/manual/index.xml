@@ -82,6 +82,7 @@
       <xi:include href="../../scripts/disnix-ssh-client.1.xml" />
       <xi:include href="../../src/visualize/disnix-visualize.1.xml" />
       <xi:include href="../../src/capture-manifest/disnix-capture-manifest.1.xml" />
+      <xi:include href="../../src/compare-manifest/disnix-compare-manifest.1.xml" />
       <xi:include href="../../scripts/disnix-reconstruct.1.xml" />
       <xi:include href="../../scripts/disnix-normalize-infra.1.xml" />
       <xi:include href="../../src/run-activity/disnix-run-activity.1.xml" />

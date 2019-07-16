@@ -103,6 +103,8 @@ void delete_targets_table(GHashTable *targets_table);
 
 int check_targets_table(GHashTable *targets_table);
 
+int compare_targets_tables(GHashTable *targets_table1, GHashTable *targets_table2);
+
 void print_targets_table_nix(FILE *file, const void *value, const int indent_level, void *userdata);
 
 /**

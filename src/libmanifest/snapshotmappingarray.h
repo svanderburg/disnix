@@ -106,6 +106,8 @@ void delete_snapshot_mapping_array(GPtrArray *snapshots_array);
 
 int check_snapshot_mapping_array(const GPtrArray *snapshots_array);
 
+int compare_snapshot_mapping_arrays(const GPtrArray *snapshot_mapping_array1, const GPtrArray *snapshot_mapping_array2);
+
 /**
  * Returns the snapshots mapping with the given key in the snapshots array.
  *

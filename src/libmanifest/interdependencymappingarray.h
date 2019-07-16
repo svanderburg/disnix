@@ -47,6 +47,8 @@ int check_interdependency_mapping_array(const GPtrArray *interdependency_mapping
 
 void delete_interdependency_mapping_array(GPtrArray *interdependency_mapping_array);
 
+int compare_interdependency_mapping_arrays(const GPtrArray *interdependency_mapping_array1, const GPtrArray *interdependency_mapping_array2);
+
 /**
  * Returns the dependency with the given keys in the dependsOn array.
  *

@@ -117,6 +117,15 @@ void delete_manifest(Manifest *manifest)
     }
 }
 
+int compare_manifests(const Manifest *manifest1, const Manifest *manifest2)
+{
+    return (compare_profile_mapping_tables(manifest1->profile_mapping_table, manifest2->profile_mapping_table)
+      && compare_services_tables(manifest1->services_table, manifest2->services_table)
+      && compare_service_mapping_arrays(manifest1->service_mapping_array, manifest2->service_mapping_array)
+      && compare_snapshot_mapping_arrays(manifest1->snapshot_mapping_array, manifest2->snapshot_mapping_array)
+      && compare_targets_tables(manifest1->targets_table, manifest2->targets_table));
+}
+
 static void print_manifest_attributes_nix(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)
 {
     const Manifest *manifest = (const Manifest*)value;

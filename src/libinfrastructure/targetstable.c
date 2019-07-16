@@ -28,6 +28,7 @@
 #include <nixxml-ghashtable.h>
 #include <nixxml-gptrarray.h>
 #include "package-management.h"
+#include "compareutil.h"
 
 static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
 {
@@ -298,6 +299,30 @@ int check_targets_table(GHashTable *targets_table)
     }
 
     return TRUE;
+}
+
+static int compare_container_tables(GHashTable *containers_table1, GHashTable *containers_table2)
+{
+    return compare_hash_tables(containers_table1, containers_table2, (int (*) (const gpointer left, const gpointer right)) compare_property_tables);
+}
+
+static int compare_targets(const gpointer left, const gpointer right)
+{
+    const Target *target1 = (const Target*)left;
+    const Target *target2 = (const Target*)right;
+
+    return (compare_property_tables(target1->properties_table, target2->properties_table)
+      && compare_container_tables(target1->containers_table, target2->containers_table)
+      && (xmlStrcmp(target1->name, target2->name) == 0)
+      && (xmlStrcmp(target1->system, target2->system) == 0)
+      && (xmlStrcmp(target1->client_interface, target2->client_interface) == 0)
+      && (xmlStrcmp(target1->target_property, target2->target_property) == 0)
+      && (target1->num_of_cores == target2->num_of_cores));
+}
+
+int compare_targets_tables(GHashTable *targets_table1, GHashTable *targets_table2)
+{
+    return compare_hash_tables(targets_table1, targets_table2, compare_targets);
 }
 
 static void print_properties_nix(FILE *file, const void *value, const int indent_level, void *userdata)

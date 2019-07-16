@@ -20,6 +20,7 @@
 #include "profilemappingtable.h"
 #include <nixxml-print-nix.h>
 #include <nixxml-ghashtable.h>
+#include "compareutil.h"
 
 GHashTable *parse_profile_mapping_table(xmlNodePtr element, void *userdata)
 {
@@ -63,6 +64,11 @@ int check_profile_mapping_table(GHashTable *profile_mapping_table)
 
         return TRUE;
     }
+}
+
+int compare_profile_mapping_tables(GHashTable *profile_mapping_table1, GHashTable *profile_mapping_table2)
+{
+    return compare_property_tables(profile_mapping_table1, profile_mapping_table2);
 }
 
 void print_profile_mapping_table_nix(FILE *file, const void *value, const int indent_level, void *userdata)

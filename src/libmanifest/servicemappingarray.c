@@ -61,6 +61,11 @@ int check_service_mapping_array(const GPtrArray *service_mapping_array)
     return check_interdependency_mapping_array(service_mapping_array);
 }
 
+int compare_service_mapping_arrays(const GPtrArray *service_mapping_array1, const GPtrArray *service_mapping_array2)
+{
+    return compare_interdependency_mapping_arrays(service_mapping_array1, service_mapping_array2);
+}
+
 ServiceMapping *find_service_mapping(const GPtrArray *service_mapping_array, const InterDependencyMapping *key)
 {
     ServiceMapping **ret = bsearch(&key, service_mapping_array->pdata, service_mapping_array->len, sizeof(gpointer), (int (*)(const void*, const void*)) compare_service_mappings);
