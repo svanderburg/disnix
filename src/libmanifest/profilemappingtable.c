@@ -20,7 +20,7 @@
 #include "profilemappingtable.h"
 #include <nixxml-print-nix.h>
 #include <nixxml-ghashtable.h>
-#include "compareutil.h"
+#include "hashtable-util.h"
 
 GHashTable *parse_profile_mapping_table(xmlNodePtr element, void *userdata)
 {
@@ -31,16 +31,7 @@ void delete_profile_mapping_table(GHashTable *profile_mapping_table)
 {
     if(profile_mapping_table != NULL)
     {
-        GHashTableIter iter;
-        gpointer key, value;
-
-        g_hash_table_iter_init(&iter, profile_mapping_table);
-        while(g_hash_table_iter_next(&iter, &key, &value))
-        {
-            xmlChar *target = (xmlChar*)value;
-            xmlFree(target);
-        }
-
+        g_hash_table_foreach(profile_mapping_table, delete_xml_value, NULL);
         g_hash_table_destroy(profile_mapping_table);
     }
 }
@@ -50,20 +41,7 @@ int check_profile_mapping_table(GHashTable *profile_mapping_table)
     if(profile_mapping_table == NULL)
         return TRUE;
     else
-    {
-        GHashTableIter iter;
-        gpointer key, value;
-
-        g_hash_table_iter_init(&iter, profile_mapping_table);
-        while(g_hash_table_iter_next(&iter, &key, &value))
-        {
-            xmlChar *target = (xmlChar*)value;
-            if(target == NULL)
-                return FALSE;
-        }
-
-        return TRUE;
-    }
+        return check_property_table(profile_mapping_table);
 }
 
 int compare_profile_mapping_tables(GHashTable *profile_mapping_table1, GHashTable *profile_mapping_table2)

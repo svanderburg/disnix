@@ -3,7 +3,7 @@
 #include <nixxml-print-nix.h>
 #include <nixxml-ghashtable.h>
 #include "interdependencymappingarray.h"
-#include "compareutil.h"
+#include "hashtable-util.h"
 
 static void *create_manifest_service(xmlNodePtr element, void *userdata)
 {
@@ -46,17 +46,16 @@ static void delete_manifest_service(ManifestService *service)
     g_free(service);
 }
 
+static void delete_manifest_service_func(gpointer key, gpointer value, gpointer user_data)
+{
+    delete_manifest_service((ManifestService*)value);
+}
+
 void delete_services_table(GHashTable *services_table)
 {
     if(services_table != NULL)
     {
-        GHashTableIter iter;
-        gpointer key, value;
-
-        g_hash_table_iter_init(&iter, services_table);
-        while(g_hash_table_iter_next(&iter, &key, &value))
-            delete_manifest_service((ManifestService*)value);
-
+        g_hash_table_foreach(services_table, delete_manifest_service_func, NULL);
         g_hash_table_destroy(services_table);
     }
 }
@@ -90,19 +89,7 @@ int check_services_table(GHashTable *services_table)
     if(services_table == NULL)
         return TRUE;
     else
-    {
-        GHashTableIter iter;
-        gpointer key, value;
-
-        g_hash_table_iter_init(&iter, services_table);
-        while(g_hash_table_iter_next(&iter, &key, &value))
-        {
-            if(!check_manifest_service((ManifestService*)value))
-                return FALSE;
-        }
-
-        return TRUE;
-    }
+        return check_hash_table(services_table, (CheckFunction)check_manifest_service);
 }
 
 static int compare_manifest_services(const gpointer left, const gpointer right)

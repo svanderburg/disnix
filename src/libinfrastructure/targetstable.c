@@ -28,7 +28,7 @@
 #include <nixxml-ghashtable.h>
 #include <nixxml-gptrarray.h>
 #include "package-management.h"
-#include "compareutil.h"
+#include "hashtable-util.h"
 
 static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
 {
@@ -215,31 +215,21 @@ static void delete_properties_table(GHashTable *properties_table)
 {
     if(properties_table != NULL)
     {
-        GHashTableIter iter;
-        gpointer key, value;
-
-        g_hash_table_iter_init(&iter, properties_table);
-        while (g_hash_table_iter_next(&iter, &key, &value))
-            xmlFree(value);
-
+        g_hash_table_foreach(properties_table, delete_xml_value, NULL);
         g_hash_table_destroy(properties_table);
     }
+}
+
+static void delete_properties_func(gpointer key, gpointer value, gpointer user_data)
+{
+    delete_properties_table((GHashTable*)value);
 }
 
 static void delete_containers_table(GHashTable *containers_table)
 {
     if(containers_table != NULL)
     {
-        GHashTableIter iter;
-        gpointer key, value;
-
-        g_hash_table_iter_init(&iter, containers_table);
-        while (g_hash_table_iter_next(&iter, &key, &value))
-        {
-            GHashTable *container_table = (GHashTable*)value;
-            delete_properties_table(container_table);
-        }
-
+        g_hash_table_foreach(containers_table, delete_properties_func, NULL);
         g_hash_table_destroy(containers_table);
     }
 }
@@ -274,31 +264,23 @@ void delete_targets_table(GHashTable *targets_table)
     }
 }
 
+static int check_target(const Target *target)
+{
+    if(target->properties_table == NULL)
+    {
+        g_printerr("target.properties is not set!\n");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 int check_targets_table(GHashTable *targets_table)
 {
     if(targets_table == NULL)
         return TRUE;
     else
-    {
-        GHashTableIter iter;
-        gpointer key, value;
-
-        g_hash_table_iter_init(&iter, targets_table);
-        while (g_hash_table_iter_next(&iter, &key, &value))
-        {
-            Target *target = (Target*)value;
-
-            if(target->properties_table == NULL)
-            {
-                /* Check if all mandatory properties have been provided */
-                g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
-                g_printerr("infrastrucure file?\n");
-                return FALSE;
-            }
-        }
-    }
-
-    return TRUE;
+        return check_hash_table(targets_table, (CheckFunction)check_target);
 }
 
 static int compare_container_tables(GHashTable *containers_table1, GHashTable *containers_table2)
