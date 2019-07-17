@@ -20,6 +20,7 @@
 #include "interdependencymappingarray.h"
 #include <nixxml-parse.h>
 #include <nixxml-print-nix.h>
+#include <nixxml-print-xml.h>
 #include <nixxml-gptrarray.h>
 
 gint compare_interdependency_mappings(const InterDependencyMapping **l, const InterDependencyMapping **r)
@@ -180,4 +181,24 @@ static void print_interdependency_mapping_nix(FILE *file, const void *value, con
 void print_interdependency_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
     NixXML_print_g_ptr_array_nix(file, value, indent_level, userdata, print_interdependency_mapping_nix);
+}
+
+static void print_interdependency_mapping_attributes_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata, NixXML_PrintXMLValueFunc print_value)
+{
+    InterDependencyMapping *mapping = (InterDependencyMapping*)value;
+
+    NixXML_print_simple_attribute_xml(file, "service", mapping->service, indent_level, NULL, userdata, NixXML_print_string_xml);
+    NixXML_print_simple_attribute_xml(file, "container", mapping->container, indent_level, NULL, userdata, NixXML_print_string_xml);
+    if(mapping->target != NULL)
+        NixXML_print_simple_attribute_xml(file, "target", mapping->target, indent_level, NULL, userdata, NixXML_print_string_xml);
+}
+
+static void print_interdependency_mapping_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+{
+    NixXML_print_simple_attrset_xml(file, value, indent_level, NULL, userdata, print_interdependency_mapping_attributes_xml, NULL);
+}
+
+void print_interdependency_mapping_array_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+{
+    NixXML_print_g_ptr_array_xml(file, (const GPtrArray*)value, "mapping", indent_level, NULL, userdata, print_interdependency_mapping_xml);
 }

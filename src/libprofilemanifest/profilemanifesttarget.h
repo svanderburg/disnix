@@ -117,6 +117,8 @@ void print_services_per_container_in_profile_manifest_target_table(GHashTable *p
  */
 void print_profile_manifest_target_table_nix(GHashTable *profile_manifest_target_table, void *userdata);
 
+void print_profile_manifest_target_table_xml(GHashTable *profile_manifest_target_table, void *userdata);
+
 /**
  * Creates a new iterator that steps over each profile manifest target and
  * executes the provided functions on start and completion.

@@ -157,4 +157,6 @@ void reset_snapshot_items_transferred_status(GPtrArray *snapshots_array);
 
 void print_snapshot_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata);
 
+void print_snapshot_mapping_array_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+
 #endif

@@ -19,6 +19,7 @@
 
 #include "profilemappingtable.h"
 #include <nixxml-print-nix.h>
+#include <nixxml-print-xml.h>
 #include <nixxml-ghashtable.h>
 #include "hashtable-util.h"
 
@@ -52,4 +53,9 @@ int compare_profile_mapping_tables(GHashTable *profile_mapping_table1, GHashTabl
 void print_profile_mapping_table_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
     NixXML_print_g_hash_table_nix(file, (GHashTable*)value, indent_level, userdata, NixXML_print_store_path_nix);
+}
+
+void print_profile_mapping_table_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+{
+    NixXML_print_g_hash_table_verbose_xml(file, (GHashTable*)value, "profile", "name", indent_level, NULL, userdata, NixXML_print_string_xml);
 }

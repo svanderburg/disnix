@@ -50,4 +50,6 @@ GHashTable *generate_union_services_table(GHashTable *left, GHashTable *right);
 
 void print_services_table_nix(FILE *file, const void *value, const int indent_level, void *userdata);
 
+void print_services_table_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+
 #endif

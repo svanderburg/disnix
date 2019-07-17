@@ -60,4 +60,6 @@ InterDependencyMapping *find_interdependency_mapping(const GPtrArray *interdepen
 
 void print_interdependency_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata);
 
+void print_interdependency_mapping_array_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+
 #endif

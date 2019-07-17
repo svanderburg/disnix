@@ -107,6 +107,8 @@ int compare_targets_tables(GHashTable *targets_table1, GHashTable *targets_table
 
 void print_targets_table_nix(FILE *file, const void *value, const int indent_level, void *userdata);
 
+void print_targets_table_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+
 /**
  * Retrieves the value of a target property with the given name.
  *

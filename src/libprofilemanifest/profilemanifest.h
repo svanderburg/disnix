@@ -98,4 +98,6 @@ void print_text_from_profile_manifest(gchar *localstatedir, gchar *profile, int 
  */
 void print_profile_manifest_nix(FILE *file, const void *value, const int indent_level, void *userdata);
 
+void print_profile_manifest_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+
 #endif

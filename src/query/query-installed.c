@@ -66,6 +66,9 @@ static void print_installed_services(QueryInstalledServicesData *query_installed
         case FORMAT_NIX:
             print_profile_manifest_target_table_nix(query_installed_services_data->profile_manifest_target_table, NULL);
             break;
+        case FORMAT_XML:
+            print_profile_manifest_target_table_xml(query_installed_services_data->profile_manifest_target_table, NULL);
+            break;
     }
 }
 

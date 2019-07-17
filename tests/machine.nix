@@ -37,7 +37,7 @@
     substitute = false
   '';
 
-  environment.systemPackages = [ dysnomia ];
+  environment.systemPackages = [ dysnomia pkgs.libxml2 ];
 
   environment.etc."dysnomia/properties" = {
     source = pkgs.writeTextFile {

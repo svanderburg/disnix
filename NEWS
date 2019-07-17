@@ -1,5 +1,7 @@
 Version 0.9
 ===========
+- Added option to display output in XML format for disnix-query
+
 - The profile manifest file structure has been revised and are now XML-based instead of linefeed separated text files
 
 - Disnix now uses libnixxml for data interchange between the front-end (that does the building) and the tools that execute the remaining deployment activities

@@ -25,6 +25,7 @@
 #include <libxslt/xslt.h>
 #include <libxslt/transform.h>
 #include <nixxml-print-nix.h>
+#include <nixxml-print-xml.h>
 #include <nixxml-ghashtable.h>
 #include <nixxml-gptrarray.h>
 #include "package-management.h"
@@ -307,19 +308,16 @@ int compare_targets_tables(GHashTable *targets_table1, GHashTable *targets_table
     return compare_hash_tables(targets_table1, targets_table2, compare_targets);
 }
 
-static void print_properties_nix(FILE *file, const void *value, const int indent_level, void *userdata)
-{
-    NixXML_print_g_hash_table_nix(file, (GHashTable*)value, indent_level, userdata, NixXML_print_string_nix);
-}
+/* Nix printing infrastructure */
 
-static void print_container_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+static void print_properties_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
     NixXML_print_g_hash_table_nix(file, (GHashTable*)value, indent_level, userdata, NixXML_print_string_nix);
 }
 
 static void print_containers_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
-    NixXML_print_g_hash_table_nix(file, (GHashTable*)value, indent_level, userdata, print_container_nix);
+    NixXML_print_g_hash_table_nix(file, (GHashTable*)value, indent_level, userdata, print_properties_nix);
 }
 
 static void print_target_attributes_nix(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)
@@ -347,6 +345,45 @@ static void print_target_nix(FILE *file, const void *value, const int indent_lev
 void print_targets_table_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
     NixXML_print_g_hash_table_nix(file, (GHashTable*)value, indent_level, userdata, print_target_nix);
+}
+
+/* XML printing infrastructure */
+
+static void print_properties_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+{
+    NixXML_print_g_hash_table_verbose_xml(file, (GHashTable*)value, "property", "name", indent_level, NULL, userdata, NixXML_print_string_xml);
+}
+
+static void print_containers_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+{
+    NixXML_print_g_hash_table_verbose_xml(file, (GHashTable*)value, "container", "name", indent_level, NULL, userdata, print_properties_xml);
+}
+
+static void print_target_attributes_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata, NixXML_PrintXMLValueFunc print_value)
+{
+    Target *target = (Target*)value;
+
+    NixXML_print_simple_attribute_xml(file, "properties", target->properties_table, indent_level, NULL, userdata, print_properties_xml);
+    NixXML_print_simple_attribute_xml(file, "containers", target->containers_table, indent_level, NULL, userdata, print_containers_xml);
+    if(target->name != NULL)
+        NixXML_print_simple_attribute_xml(file, "name", target->name, indent_level, NULL, userdata, NixXML_print_string_xml);
+    if(target->system != NULL)
+        NixXML_print_simple_attribute_xml(file, "system", target->system, indent_level, NULL, userdata, NixXML_print_string_xml);
+    if(target->client_interface != NULL)
+        NixXML_print_simple_attribute_xml(file, "clientInterface", target->client_interface, indent_level, NULL, userdata, NixXML_print_string_xml);
+    if(target->target_property != NULL)
+        NixXML_print_simple_attribute_xml(file, "targetProperty", target->target_property, indent_level, NULL, userdata, NixXML_print_string_xml);
+    NixXML_print_simple_attribute_xml(file, "numOfCores", &target->num_of_cores, indent_level, NULL, userdata, NixXML_print_int_xml);
+}
+
+static void print_target_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+{
+    NixXML_print_simple_attrset_xml(file, value, indent_level, NULL, userdata, print_target_attributes_xml, NULL);
+}
+
+void print_targets_table_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+{
+    NixXML_print_g_hash_table_verbose_xml(file, (GHashTable*)value, "target", "name", indent_level, NULL, userdata, print_target_xml);
 }
 
 gchar *find_target_property(const Target *target, const gchar *name)

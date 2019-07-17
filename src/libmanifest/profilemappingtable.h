@@ -45,4 +45,6 @@ int compare_profile_mapping_tables(GHashTable *profile_mapping_table1, GHashTabl
 
 void print_profile_mapping_table_nix(FILE *file, const void *value, const int indent_level, void *userdata);
 
+void print_profile_mapping_table_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+
 #endif

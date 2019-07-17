@@ -40,7 +40,7 @@ static void print_usage(const char *command)
     "                              that specifies how to connect to the remote Disnix\n"
     "                              interface. (Defaults to hostname)\n"
     "  -f, --format=FORMAT         Output format. Options are: services (default),\n"
-    "                              containers and nix\n"
+    "                              containers, nix, and xml\n"
     "      --xml                   Specifies that the configurations are in XML not\n"
     "                              the Nix expression language.\n"
     "  -h, --help                  Shows the usage of this command to the user\n"
@@ -92,6 +92,8 @@ int main(int argc, char *argv[])
                     format = FORMAT_CONTAINERS;
                 else if(strcmp(optarg, "nix") == 0)
                     format = FORMAT_NIX;
+                else if(strcmp(optarg, "xml") == 0)
+                    format = FORMAT_XML;
                 break;
             case DISNIX_OPTION_INTERFACE:
                 interface = optarg;

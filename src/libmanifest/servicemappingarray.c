@@ -365,3 +365,8 @@ void print_service_mapping_array_nix(FILE *file, const void *value, const int in
 {
     print_interdependency_mapping_array_nix(file, value, indent_level, userdata);
 }
+
+void print_service_mapping_array_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+{
+    print_interdependency_mapping_array_xml(file, value, indent_level, type_property_name, userdata);
+}

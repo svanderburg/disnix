@@ -228,4 +228,6 @@ int traverse_service_mappings(GPtrArray *mappings, GPtrArray *union_array, GHash
 
 void print_service_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata);
 
+void print_service_mapping_array_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+
 #endif

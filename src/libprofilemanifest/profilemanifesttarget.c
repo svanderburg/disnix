@@ -78,6 +78,7 @@ void print_services_per_container_in_profile_manifest_target_table(GHashTable *p
 static void print_profile_manifest_target_attributes_nix(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)
 {
     ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)value;
+
     if(profile_manifest_target->profile != NULL)
         NixXML_print_attribute_nix(file, "profile", profile_manifest_target->profile, indent_level, userdata, NixXML_print_store_path_nix);
     NixXML_print_attribute_nix(file, "profileManifest", profile_manifest_target->profile_manifest, indent_level, userdata, print_profile_manifest_nix);
@@ -91,6 +92,27 @@ static void print_profile_manifest_target_nix(FILE *file, const void *value, con
 void print_profile_manifest_target_table_nix(GHashTable *profile_manifest_target_table, void *userdata)
 {
     NixXML_print_g_hash_table_nix(stdout, profile_manifest_target_table, 0, userdata, print_profile_manifest_target_nix);
+}
+
+static void print_profile_manifest_target_attributes_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata, NixXML_PrintXMLValueFunc print_value)
+{
+    ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)value;
+
+    if(profile_manifest_target->profile != NULL)
+        NixXML_print_simple_attribute_xml(file, "profile", profile_manifest_target->profile, indent_level, type_property_name, userdata, NixXML_print_string_xml);
+    NixXML_print_simple_attribute_xml(file, "profileManifest", profile_manifest_target->profile_manifest, indent_level, type_property_name, userdata, print_profile_manifest_xml);
+}
+
+static void print_profile_manifest_target_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+{
+    NixXML_print_simple_attrset_xml(file, value, indent_level, type_property_name, userdata, print_profile_manifest_target_attributes_xml, NULL);
+}
+
+void print_profile_manifest_target_table_xml(GHashTable *profile_manifest_target_table, void *userdata)
+{
+    NixXML_print_open_root_tag(stdout, "profileManifestTargets");
+    NixXML_print_g_hash_table_verbose_xml(stdout, profile_manifest_target_table, "target", "name", 0, NULL, userdata, print_profile_manifest_target_xml);
+    NixXML_print_close_root_tag(stdout, "profileManifestTargets");
 }
 
 static int has_next_profile_manifest_target_process(void *data)

@@ -355,5 +355,26 @@ static void print_snapshot_mapping_nix(FILE *file, const void *value, const int 
 
 void print_snapshot_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
-    NixXML_print_g_ptr_array_nix(file, value, indent_level, userdata, print_snapshot_mapping_nix);
+    NixXML_print_g_ptr_array_nix(file, (const GPtrArray*)value, indent_level, userdata, print_snapshot_mapping_nix);
+}
+
+static void print_snapshot_mapping_attributes_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata, NixXML_PrintXMLValueFunc print_value)
+{
+    SnapshotMapping *mapping = (SnapshotMapping*)value;
+
+    NixXML_print_simple_attribute_xml(file, "service", mapping->service, indent_level, NULL, userdata, NixXML_print_string_xml);
+    NixXML_print_simple_attribute_xml(file, "component", mapping->component, indent_level, NULL, userdata, NixXML_print_string_xml);
+    NixXML_print_simple_attribute_xml(file, "container", mapping->container, indent_level, NULL, userdata, NixXML_print_string_xml);
+    if(mapping->target != NULL)
+        NixXML_print_simple_attribute_xml(file, "target", mapping->target, indent_level, NULL, userdata, NixXML_print_string_xml);
+}
+
+static void print_snapshot_mapping_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+{
+    NixXML_print_simple_attrset_xml(file, value, indent_level, type_property_name, userdata, print_snapshot_mapping_attributes_xml, NULL);
+}
+
+void print_snapshot_mapping_array_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+{
+    NixXML_print_g_ptr_array_xml(file, (const GPtrArray*)value, "mapping", indent_level, type_property_name, userdata, print_snapshot_mapping_xml);
 }

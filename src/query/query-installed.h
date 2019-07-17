@@ -28,7 +28,8 @@ typedef enum
 {
     FORMAT_SERVICES,
     FORMAT_CONTAINERS,
-    FORMAT_NIX
+    FORMAT_NIX,
+    FORMAT_XML
 }
 OutputFormat;
 

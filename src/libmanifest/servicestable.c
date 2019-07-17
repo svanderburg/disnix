@@ -1,6 +1,7 @@
 #include "servicestable.h"
 #include <nixxml-parse.h>
 #include <nixxml-print-nix.h>
+#include <nixxml-print-xml.h>
 #include <nixxml-ghashtable.h>
 #include "interdependencymappingarray.h"
 #include "hashtable-util.h"
@@ -131,9 +132,10 @@ GHashTable *generate_union_services_table(GHashTable *left, GHashTable *right)
     return result_table;
 }
 
-static void print_manifest_service_attributes(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)
+static void print_manifest_service_attributes_nix(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)
 {
     ManifestService *service = (ManifestService*)value;
+
     NixXML_print_attribute_nix(file, "name", service->name, indent_level, userdata, NixXML_print_string_nix);
     NixXML_print_attribute_nix(file, "pkg", service->pkg, indent_level, userdata, NixXML_print_store_path_nix);
     NixXML_print_attribute_nix(file, "type", service->type, indent_level, userdata, NixXML_print_string_nix);
@@ -143,10 +145,31 @@ static void print_manifest_service_attributes(FILE *file, const void *value, con
 
 static void print_manifest_service_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
-    NixXML_print_attrset_nix(file, value, indent_level, userdata, print_manifest_service_attributes, NULL);
+    NixXML_print_attrset_nix(file, value, indent_level, userdata, print_manifest_service_attributes_nix, NULL);
 }
 
 void print_services_table_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
     NixXML_print_g_hash_table_ordered_nix(file, (GHashTable*)value, indent_level, userdata, print_manifest_service_nix);
+}
+
+static void print_manifest_service_attributes_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata, NixXML_PrintXMLValueFunc print_value)
+{
+    ManifestService *service = (ManifestService*)value;
+
+    NixXML_print_simple_attribute_xml(file, "name", service->name, indent_level, NULL, userdata, NixXML_print_string_xml);
+    NixXML_print_simple_attribute_xml(file, "pkg", service->pkg, indent_level, NULL, userdata, NixXML_print_string_xml);
+    NixXML_print_simple_attribute_xml(file, "type", service->type, indent_level, NULL, userdata, NixXML_print_string_xml);
+    NixXML_print_simple_attribute_xml(file, "dependsOn", service->depends_on, indent_level, NULL, userdata, print_interdependency_mapping_array_xml);
+    NixXML_print_simple_attribute_xml(file, "connectsTo", service->connects_to, indent_level, NULL, userdata, print_interdependency_mapping_array_xml);
+}
+
+static void print_manifest_service_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+{
+    NixXML_print_simple_attrset_xml(file, value, indent_level, NULL, userdata, print_manifest_service_attributes_xml, NULL);
+}
+
+void print_services_table_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+{
+    NixXML_print_g_hash_table_verbose_ordered_xml(file, (GHashTable*)value, "service", "name", indent_level, NULL, userdata, print_manifest_service_xml);
 }

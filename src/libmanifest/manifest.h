@@ -79,6 +79,8 @@ int compare_manifests(const Manifest *manifest1, const Manifest *manifest2);
 
 void print_manifest_nix(FILE *file, const Manifest *manifest, const int indent_level, void *userdata);
 
+void print_manifest_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+
 /**
  * Determines the path of the last generation of the coordinator profile which
  * corresponds to the manifest of the last deployed configuration.
