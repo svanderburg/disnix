@@ -24,6 +24,7 @@
 #include "nixxml-parse.h"
 #include "nixxml-print-nix.h"
 #include "nixxml-print-xml.h"
+#include "nixxml-generate-env.h"
 
 typedef void (*NixXML_DeletePtrArrayElementFunc) (void *element);
 
@@ -133,6 +134,16 @@ void NixXML_print_g_ptr_array_xml(FILE *file, const GPtrArray *array, const char
  * @return A GPtrArray
  */
 void *NixXML_parse_g_ptr_array(xmlNodePtr element, const char *child_element_name, void *userdata, NixXML_ParseObjectFunc parse_object);
+
+/**
+ * Generates a white space separated environment variable representation of a
+ * pointer array.
+ *
+ * @param value A GPtrArray
+ * @param userdata Arbitrary user data that is propagated to all generate functions
+ * @param generate_value A pointer to a function that generates an environment variable representation of a provided value
+ */
+xmlChar *NixXML_generate_env_value_from_g_ptrarray(const void *value, void *userdata, NixXML_GenerateEnvValueFunc generate_value);
 
 #ifdef __cplusplus
 }

@@ -24,10 +24,15 @@
 #include <unistd.h>
 #include <libxslt/xslt.h>
 #include <libxslt/transform.h>
+#include <nixxml-parse.h>
+#include <nixxml-parse-generic.h>
 #include <nixxml-print-nix.h>
 #include <nixxml-print-xml.h>
+#include <nixxml-print-generic-nix.h>
+#include <nixxml-print-generic-xml.h>
 #include <nixxml-ghashtable.h>
 #include <nixxml-gptrarray.h>
+#include <nixxml-glib.h>
 #include "package-management.h"
 #include "hashtable-util.h"
 
@@ -71,9 +76,14 @@ static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
     return transform_doc;
 }
 
-static gpointer parse_container(xmlNodePtr element, void *userdata)
+static void *generic_parse_expr(xmlNodePtr element, void *userdata)
 {
-    return NixXML_parse_g_hash_table_verbose(element, "property", "name", userdata, NixXML_parse_value);
+    return NixXML_generic_parse_expr(element, "type", "name", NixXML_create_g_ptr_array, NixXML_create_g_hash_table, NixXML_add_value_to_g_ptr_array, NixXML_insert_into_g_hash_table, NixXML_finalize_g_ptr_array);
+}
+
+static void *parse_property_table(xmlNodePtr element, void *userdata)
+{
+    return NixXML_parse_g_hash_table_verbose(element, "property", "name", userdata, generic_parse_expr);
 }
 
 static void *create_target(xmlNodePtr element, void *userdata)
@@ -105,9 +115,9 @@ static void parse_and_insert_target_attributes(xmlNodePtr element, void *table, 
         }
     }
     else if(xmlStrcmp(key, (xmlChar*) "properties") == 0)
-        target->properties_table = NixXML_parse_g_hash_table_verbose(element, "property", "name", userdata, NixXML_parse_value);
+        target->properties_table = parse_property_table(element, userdata);
     else if(xmlStrcmp(key, (xmlChar*) "containers") == 0)
-        target->containers_table = NixXML_parse_g_hash_table_verbose(element, "container", "name", userdata, parse_container);
+        target->containers_table = NixXML_parse_g_hash_table_verbose(element, "container", "name", userdata, parse_property_table);
 }
 
 static gpointer parse_target(xmlNodePtr element, void *userdata)
@@ -310,9 +320,14 @@ int compare_targets_tables(GHashTable *targets_table1, GHashTable *targets_table
 
 /* Nix printing infrastructure */
 
+static void print_generic_expr_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+{
+    NixXML_print_generic_expr_nix(file, (NixXML_Node*)value, indent_level, NixXML_print_g_ptr_array_elements_nix, NixXML_print_g_hash_table_attributes_nix);
+}
+
 static void print_properties_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
-    NixXML_print_g_hash_table_nix(file, (GHashTable*)value, indent_level, userdata, NixXML_print_string_nix);
+    NixXML_print_g_hash_table_nix(file, (GHashTable*)value, indent_level, userdata, print_generic_expr_nix);
 }
 
 static void print_containers_nix(FILE *file, const void *value, const int indent_level, void *userdata)
@@ -349,9 +364,14 @@ void print_targets_table_nix(FILE *file, const void *value, const int indent_lev
 
 /* XML printing infrastructure */
 
+static void print_generic_expr_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+{
+    NixXML_print_generic_expr_verbose_xml(file, (NixXML_Node*)value, indent_level, "property", "list", "attr", "name", type_property_name, NixXML_print_g_ptr_array_elements_xml, NixXML_print_g_hash_table_verbose_attributes_xml);
+}
+
 static void print_properties_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
 {
-    NixXML_print_g_hash_table_verbose_xml(file, (GHashTable*)value, "property", "name", indent_level, NULL, userdata, NixXML_print_string_xml);
+    NixXML_print_g_hash_table_verbose_xml(file, (GHashTable*)value, "property", "name", indent_level, NULL, userdata, print_generic_expr_xml);
 }
 
 static void print_containers_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
@@ -391,7 +411,13 @@ gchar *find_target_property(const Target *target, const gchar *name)
     if(target->properties_table == NULL || name == NULL)
         return NULL;
     else
-        return g_hash_table_lookup(target->properties_table, name);
+    {
+        NixXML_Node *node = g_hash_table_lookup(target->properties_table, name);
+        if(node->type == NIX_XML_TYPE_STRING)
+            return (gchar*)node->value;
+        else
+            return NULL;
+    }
 }
 
 gchar *find_target_key(const Target *target, const gchar *global_target_property)
@@ -410,34 +436,18 @@ static GHashTable *find_container(GHashTable *containers_table, const gchar *nam
         return g_hash_table_lookup(containers_table, name);
 }
 
-gchar **generate_activation_arguments(const Target *target, const gchar *container_name)
+xmlChar **generate_activation_arguments(const Target *target, const gchar *container_name)
 {
     GHashTable *container_table = find_container(target->containers_table, container_name);
 
     if(container_table == NULL)
     {
-        gchar **ret = (gchar**)g_malloc(sizeof(gchar*));
+        xmlChar **ret = (xmlChar**)malloc(sizeof(xmlChar*));
         ret[0] = NULL;
         return ret;
     }
     else
-    {
-        unsigned int i = 0;
-        gchar **arguments = (gchar**)g_malloc((g_hash_table_size(container_table) + 1) * sizeof(gchar*));
-        GHashTableIter iter;
-        gpointer key, value;
-
-        g_hash_table_iter_init(&iter, container_table);
-        while (g_hash_table_iter_next(&iter, &key, &value))
-        {
-            arguments[i] = g_strconcat((gchar*)key, "=", (gchar*)value, NULL);
-            i++;
-        }
-
-        arguments[i] = NULL;
-
-        return arguments;
-    }
+        return NixXML_generate_env_vars_with_generic_glib_data_structures(container_table);
 }
 
 int request_available_target_core(Target *target)

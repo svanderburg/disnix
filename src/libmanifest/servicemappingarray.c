@@ -178,13 +178,13 @@ static ServiceStatus attempt_to_map_service_mapping(ServiceMapping *mapping, GHa
 {
     if(request_available_target_core(target)) /* Check if machine has any cores available, if not wait and try again later */
     {
-        gchar **arguments = generate_activation_arguments(target, (gchar*)mapping->container); /* Generate an array of key=value pairs from container properties */
-        unsigned int arguments_size = g_strv_length(arguments); /* Determine length of the activation arguments array */
+        xmlChar **arguments = generate_activation_arguments(target, (gchar*)mapping->container); /* Generate an array of key=value pairs from container properties */
+        unsigned int arguments_size = g_strv_length((gchar**)arguments); /* Determine length of the activation arguments array */
         ManifestService *service = g_hash_table_lookup(services_table, (gchar*)mapping->service);
         pid_t pid = map_service_mapping(mapping, service, target, arguments, arguments_size); /* Execute the activation operation asynchronously */
 
         /* Cleanup */
-        g_strfreev(arguments);
+        NixXML_delete_env_variable_array(arguments);
 
         if(pid == -1)
         {

@@ -77,7 +77,7 @@ ServiceStatus;
  * @param arguments_length Length of the arguments array
  * @return The PID of the process invoked
  */
-typedef pid_t (*service_mapping_function) (ServiceMapping *mapping, ManifestService *service, Target *target, gchar **arguments, unsigned int arguments_length);
+typedef pid_t (*service_mapping_function) (ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar **arguments, unsigned int arguments_length);
 
 /**
  * Pointer to a function that gets executed when an operation on activation

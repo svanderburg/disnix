@@ -300,8 +300,8 @@ int map_snapshot_items(const GPtrArray *snapshots_array, GHashTable *services_ta
                 g_print("[target: %s]: Skip state of component: %s deployed to container: %s since machine is no longer present!\n", mapping->target, mapping->component, mapping->container);
             else if(!mapping->transferred && request_available_target_core(target)) /* Check if machine has any cores available, if not wait and try again later */
             {
-                gchar **arguments = generate_activation_arguments(target, (gchar*)mapping->container); /* Generate an array of key=value pairs from container properties */
-                unsigned int arguments_length = g_strv_length(arguments); /* Determine length of the activation arguments array */
+                xmlChar **arguments = generate_activation_arguments(target, (gchar*)mapping->container); /* Generate an array of key=value pairs from container properties */
+                unsigned int arguments_length = g_strv_length((gchar**)arguments); /* Determine length of the activation arguments array */
                 ManifestService *service = g_hash_table_lookup(services_table, mapping->service);
                 pid_t pid = map_snapshot_item(mapping, service, target, arguments, arguments_length);
                 gint *pid_ptr;
@@ -312,7 +312,7 @@ int map_snapshot_items(const GPtrArray *snapshots_array, GHashTable *services_ta
                 g_hash_table_insert(pid_table, pid_ptr, mapping);
 
                 /* Cleanup */
-                g_strfreev(arguments);
+                NixXML_delete_env_variable_array(arguments);
             }
         }
 

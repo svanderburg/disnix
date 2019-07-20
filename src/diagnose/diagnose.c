@@ -23,19 +23,20 @@
 #include <targetstable.h>
 #include <client-interface.h>
 #include <procreact_pid.h>
+#include <nixxml-generate-env.h>
 
 static int spawn_shell(GHashTable *targets_table, const ServiceMapping *mapping, const ManifestService *service, char *command)
 {
     Target *target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
-    gchar **arguments = generate_activation_arguments(target, (gchar*)mapping->container);
+    xmlChar **arguments = generate_activation_arguments(target, (gchar*)mapping->container);
     ProcReact_Status status;
     int exit_status;
 
     g_printerr("[%s]: Connecting to service: %s deployed to container: %s\n", mapping->target, service->pkg, mapping->container);
 
-    exit_status = procreact_wait_for_exit_status(exec_dysnomia_shell((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)service->type, arguments, g_strv_length(arguments), (char*)service->pkg, command), &status);
+    exit_status = procreact_wait_for_exit_status(exec_dysnomia_shell((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)service->type, (char**)arguments, g_strv_length((char**)arguments), (char*)service->pkg, command), &status);
 
-    g_strfreev(arguments);
+    NixXML_delete_env_variable_array(arguments);
 
     return exit_status;
 }

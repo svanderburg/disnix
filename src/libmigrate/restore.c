@@ -22,6 +22,7 @@
 #include <client-interface.h>
 #include <snapshotmappingarray.h>
 #include <targets-iterator.h>
+#include <nixxml-generate-env.h>
 
 /* Send snapshots infrastructure */
 
@@ -98,10 +99,10 @@ static int send_snapshots(GPtrArray *snapshot_mapping_array, GHashTable *targets
 
 /* Restore snapshot infrastructure */
 
-static pid_t restore_snapshot_on_target(SnapshotMapping *mapping, ManifestService *service, Target *target, gchar **arguments, unsigned int arguments_length)
+static pid_t restore_snapshot_on_target(SnapshotMapping *mapping, ManifestService *service, Target *target, xmlChar **arguments, unsigned int arguments_length)
 {
     g_print("[target: %s]: Restoring state of service: %s\n", mapping->target, mapping->component);
-    return exec_restore((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)service->type, arguments, arguments_length, (char*)service->pkg);
+    return exec_restore((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)service->type, (char**)arguments, arguments_length, (char*)service->pkg);
 }
 
 static void complete_restore_snapshot_on_target(SnapshotMapping *mapping, Target *target, ProcReact_Status status, int result)
@@ -152,8 +153,8 @@ static pid_t send_restore_and_clean_snapshot_on_target(void *data, Target *targe
         for(i = 0; i < snapshots_per_target_array->len; i++)
         {
             SnapshotMapping *mapping = g_ptr_array_index(snapshots_per_target_array, i);
-            gchar **arguments = generate_activation_arguments(target, (gchar*)mapping->container); /* Generate an array of key=value pairs from container properties */
-            unsigned int arguments_length = g_strv_length(arguments); /* Determine length of the activation arguments array */
+            xmlChar **arguments = generate_activation_arguments(target, (gchar*)mapping->container); /* Generate an array of key=value pairs from container properties */
+            unsigned int arguments_length = g_strv_length((gchar**)arguments); /* Determine length of the activation arguments array */
             ManifestService *service = g_hash_table_lookup(send_snapshots_data->services_table, (gchar*)mapping->container);
 
             if(!procreact_wait_for_boolean(send_snapshot_mapping(mapping, target, send_snapshots_data->flags), &status) || (status != PROCREACT_STATUS_OK)
@@ -161,11 +162,11 @@ static pid_t send_restore_and_clean_snapshot_on_target(void *data, Target *targe
               || !procreact_wait_for_boolean(clean_snapshot_mapping(mapping, target, send_snapshots_data->keep), &status) || (status != PROCREACT_STATUS_OK))
             {
                 exit_status = 1;
-                g_strfreev(arguments);
+                NixXML_delete_env_variable_array(arguments);
                 break;
             }
 
-            g_strfreev(arguments);
+            NixXML_delete_env_variable_array(arguments);
         }
 
         g_ptr_array_free(snapshots_per_target_array, TRUE);

@@ -153,3 +153,23 @@ void *NixXML_parse_g_hash_table_verbose(xmlNodePtr element, const char *child_el
 {
     return NixXML_parse_verbose_attrset(element, child_element_name, name_property_name, userdata, NixXML_create_g_hash_table, parse_object, NixXML_insert_into_g_hash_table);
 }
+
+/* Generate environment variables functionality */
+
+xmlChar **NixXML_generate_env_vars_from_g_hash_table(GHashTable *hash_table, void *userdata, NixXML_GenerateEnvValueFunc generate_value)
+{
+    GHashTableIter iter;
+    gpointer key, obj;
+    xmlChar **result = (xmlChar**)malloc((g_hash_table_size(hash_table) + 1) * sizeof(xmlChar*));
+    unsigned int i = 0;
+
+    g_hash_table_iter_init(&iter, hash_table);
+    while(g_hash_table_iter_next(&iter, &key, &obj))
+    {
+        result[i] = NixXML_generate_env_variable((xmlChar*)key, obj, userdata, generate_value);
+        i++;
+    }
+
+    result[i] = NULL; /* Add NULL termination to the end */
+    return result;
+}

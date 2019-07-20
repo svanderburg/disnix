@@ -339,39 +339,17 @@ static void print_interdependencies(const GPtrArray *inter_dependency_array)
     }
 }
 
-void print_activation_array(const GPtrArray *activation_array)
-{
-    unsigned int i;
-
-    for(i = 0; i < activation_array->len; i++)
-    {
-	ActivationMapping *mapping = g_ptr_array_index(activation_array, i);
-
-	g_print("key: %s\n", mapping->key);
-	g_print("target: %s\n", mapping->target);
-	g_print("container: %s\n", mapping->container);
-	g_print("service: %s\n", mapping->service);
-	g_print("type: %s\n", mapping->type);
-	g_print("dependsOn:\n");
-	print_interdependencies(mapping->depends_on);
-	g_print("connectsTo:\n");
-	print_interdependencies(mapping->connects_to);
-
-	g_print("\n");
-    }
-}
-
 static ActivationStatus attempt_to_map_activation_mapping(ActivationMapping *mapping, Target *target, GHashTable *pid_table, map_activation_mapping_function map_activation_mapping)
 {
     if(request_available_target_core(target)) /* Check if machine has any cores available, if not wait and try again later */
     {
-        gchar **arguments = generate_activation_arguments(target, (gchar*)mapping->container); /* Generate an array of key=value pairs from container properties */
-        unsigned int arguments_size = g_strv_length(arguments); /* Determine length of the activation arguments array */
+        xmlChar **arguments = generate_activation_arguments(target, (gchar*)mapping->container); /* Generate an array of key=value pairs from container properties */
+        unsigned int arguments_size = g_strv_length((gchar**)arguments); /* Determine length of the activation arguments array */
         pid_t pid = map_activation_mapping(mapping, target, arguments, arguments_size); /* Execute the activation operation asynchronously */
-        
+
         /* Cleanup */
-        g_strfreev(arguments);
-        
+        NixXML_delete_env_variable_array(arguments);
+
         if(pid == -1)
         {
             g_printerr("[target: %s]: Cannot fork process for service: %s!\n", mapping->target, mapping->key);
@@ -381,7 +359,7 @@ static ActivationStatus attempt_to_map_activation_mapping(ActivationMapping *map
         {
             gint *pid_ptr = g_malloc(sizeof(gint));
             *pid_ptr = pid;
-            
+
             mapping->status = ACTIVATIONMAPPING_IN_PROGRESS; /* Mark activation mapping as in progress */
             g_hash_table_insert(pid_table, pid_ptr, mapping); /* Add mapping to the pids table so that we can retrieve its status later */
             return ACTIVATION_IN_PROGRESS;

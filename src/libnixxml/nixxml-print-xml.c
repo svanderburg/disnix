@@ -84,7 +84,7 @@ void NixXML_print_string_as_int_xml(FILE *file, const void *value, const int ind
 
 void NixXML_print_string_as_float_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
 {
-    print_type_suffix(file, type_property_name, "int");
+    print_type_suffix(file, type_property_name, "float");
     print_string_xml(file, (const char*)value);
 }
 
@@ -124,7 +124,6 @@ void NixXML_print_simple_attribute_xml(FILE *file, const char *name, const void 
     NixXML_print_open_root_tag(file, name);
     print_value(file, value, indent_level, type_property_name, userdata);
     NixXML_print_close_root_tag(file, name);
-    NixXML_print_indentation(file, indent_level);
 }
 
 void NixXML_print_verbose_attribute_xml(FILE *file, const char *child_element_name, const char *name_property_name, const char *name, const void *value, const int indent_level, const char *type_property_name, void *userdata, NixXML_PrintXMLValueFunc print_value)
@@ -134,7 +133,6 @@ void NixXML_print_verbose_attribute_xml(FILE *file, const char *child_element_na
     NixXML_print_open_verbose_attr_tag(file, child_element_name, name_property_name, name);
     print_value(file, value, indent_level, type_property_name, userdata);
     NixXML_print_close_root_tag(file, child_element_name);
-    NixXML_print_indentation(file, indent_level);
 }
 
 void NixXML_print_simple_attrset_xml(FILE *file, const void *table, const int indent_level, const char *type_property_name, void *userdata, NixXML_PrintSimpleXMLMembersFunc print_attributes, NixXML_PrintXMLValueFunc print_value)

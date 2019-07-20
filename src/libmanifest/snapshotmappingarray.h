@@ -73,7 +73,7 @@ SnapshotMapping;
  * @param arguments_length Length of the arguments array
  * @return PID of the spawned process
  */
-typedef pid_t (*map_snapshot_item_function) (SnapshotMapping *mapping, ManifestService *service, Target *target, gchar **arguments, unsigned int arguments_length);
+typedef pid_t (*map_snapshot_item_function) (SnapshotMapping *mapping, ManifestService *service, Target *target, xmlChar **arguments, unsigned int arguments_length);
 
 /**
  * Function that gets executed when a mapping function completes.

@@ -138,7 +138,7 @@ gchar *find_target_key(const Target *target, const gchar *global_target_property
  * @param container_name Name of the container to deploy to
  * @return String with environment variable settings
  */
-gchar **generate_activation_arguments(const Target *target, const gchar *container_name);
+xmlChar **generate_activation_arguments(const Target *target, const gchar *container_name);
 
 /**
  * Requests a CPU core for deployment utilisation.

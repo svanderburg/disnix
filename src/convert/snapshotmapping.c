@@ -256,41 +256,41 @@ int map_snapshot_items(const GPtrArray *snapshots_array, const GPtrArray *target
     unsigned int num_processed = 0;
     int status = TRUE;
     GHashTable *pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, NULL);
-    
+
     while(num_processed < snapshots_array->len)
     {
         unsigned int i;
-    
+
         for(i = 0; i < snapshots_array->len; i++)
         {
             SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
             Target *target = find_target(target_array, (gchar*)mapping->target);
-            
+
             if(target == NULL)
                 g_print("[target: %s]: Skip state of component: %s deployed to container: %s since machine is no longer present!\n", mapping->target, mapping->component, mapping->container);
             else if(!mapping->transferred && request_available_target_core(target)) /* Check if machine has any cores available, if not wait and try again later */
             {
-                gchar **arguments = generate_activation_arguments(target, (gchar*)mapping->container); /* Generate an array of key=value pairs from container properties */
-                unsigned int arguments_length = g_strv_length(arguments); /* Determine length of the activation arguments array */
+                xmlChar **arguments = generate_activation_arguments(target, (gchar*)mapping->container); /* Generate an array of key=value pairs from container properties */
+                unsigned int arguments_length = g_strv_length((gchar**)arguments); /* Determine length of the activation arguments array */
                 pid_t pid = map_snapshot_item(mapping, target, arguments, arguments_length);
                 gint *pid_ptr;
-                
+
                 /* Add pid and mapping to the hash table */
                 pid_ptr = g_malloc(sizeof(gint));
                 *pid_ptr = pid;
                 g_hash_table_insert(pid_table, pid_ptr, mapping);
-              
+
                 /* Cleanup */
-                g_strfreev(arguments);
+                NixXML_delete_env_variable_array(arguments);
             }
         }
-    
+
         if(!wait_to_complete_snapshot_item(pid_table, target_array, complete_snapshot_item_mapping))
             status = FALSE;
-        
+
         num_processed++;
     }
-    
+
     g_hash_table_destroy(pid_table);
     return status;
 }

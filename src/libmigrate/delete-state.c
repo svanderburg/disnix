@@ -22,10 +22,10 @@
 #include <snapshotmappingarray.h>
 #include <targetstable.h>
 
-static pid_t delete_state_on_target(SnapshotMapping *mapping, ManifestService *service, Target *target, gchar **arguments, unsigned int arguments_length)
+static pid_t delete_state_on_target(SnapshotMapping *mapping, ManifestService *service, Target *target, xmlChar **arguments, unsigned int arguments_length)
 {
     g_print("[target: %s]: Deleting obsolete state of service: %s\n", mapping->target, mapping->component);
-    return exec_delete_state((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)service->type, arguments, arguments_length, (char*)service->pkg);
+    return exec_delete_state((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)service->type, (char**)arguments, arguments_length, (char*)service->pkg);
 }
 
 static void complete_delete_state_on_target(SnapshotMapping *mapping, Target *target, ProcReact_Status status, int result)

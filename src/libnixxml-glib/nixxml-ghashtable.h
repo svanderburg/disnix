@@ -24,6 +24,7 @@
 #include "nixxml-parse.h"
 #include "nixxml-print-nix.h"
 #include "nixxml-print-xml.h"
+#include "nixxml-generate-env.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -230,6 +231,16 @@ void *NixXML_parse_g_hash_table_simple(xmlNodePtr element, void *userdata, NixXM
  * @return A pointer to a GHashTable
  */
 void *NixXML_parse_g_hash_table_verbose(xmlNodePtr element, const char *child_element_name, const char *name_property_name, void *userdata, NixXML_ParseObjectFunc parse_object);
+
+/**
+ * Generates a string vector of environment variable assignments from all
+ * members in a given hash table.
+ *
+ * @param hash_table Pointer to a GHashTable
+ * @param userdata Arbitrary user data that is propagated to all generate functions
+ * @param generate_value A pointer to a function that generates an environment variable representation of a provided value
+ */
+xmlChar **NixXML_generate_env_vars_from_g_hash_table(GHashTable *hash_table, void *userdata, NixXML_GenerateEnvValueFunc generate_value);
 
 #ifdef __cplusplus
 }

@@ -118,11 +118,10 @@ void destroy_edges_table(GHashTable *edges_table)
 void print_edges_table(GHashTable *edges_table, int ordering)
 {
     GHashTableIter iter;
-    gpointer *key;
-    gpointer *value;
+    gpointer key, value;
 
     g_hash_table_iter_init(&iter, edges_table);
-    while(g_hash_table_iter_next(&iter, (gpointer*)&key, (gpointer*)&value))
+    while(g_hash_table_iter_next(&iter, &key, &value))
     {
         unsigned int i;
         GPtrArray *dependency_array = (GPtrArray*)value;

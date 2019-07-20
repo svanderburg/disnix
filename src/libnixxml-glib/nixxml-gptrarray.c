@@ -95,3 +95,20 @@ void *NixXML_parse_g_ptr_array(xmlNodePtr element, const char *child_element_nam
 {
     return NixXML_parse_list(element, child_element_name, userdata, NixXML_create_g_ptr_array, NixXML_add_value_to_g_ptr_array, parse_object, NixXML_finalize_g_ptr_array);
 }
+
+xmlChar *NixXML_generate_env_value_from_g_ptrarray(const void *value, void *userdata, NixXML_GenerateEnvValueFunc generate_value)
+{
+    const GPtrArray *array = (const GPtrArray*)value;
+    unsigned int i;
+    xmlChar *result = NULL;
+
+    for(i = 0; i < array->len; i++)
+    {
+        gpointer value = g_ptr_array_index(array, i);
+        xmlChar *env = generate_value(value, userdata);
+        result = NixXML_append_value_to_list_env_value(result, env);
+        xmlFree(env);
+    }
+
+    return result;
+}
