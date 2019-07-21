@@ -33,9 +33,6 @@ typedef struct
     /* Contains container-specific configuration properties */
     GHashTable *containers_table;
 
-    /* Contains the attribute name of the target machine */
-    xmlChar *name;
-
     /* Contains the system architecture identifier of the system */
     xmlChar *system;
 

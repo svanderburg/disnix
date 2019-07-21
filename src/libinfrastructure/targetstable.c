@@ -95,9 +95,7 @@ static void parse_and_insert_target_attributes(xmlNodePtr element, void *table, 
 {
     Target *target = (Target*)table;
 
-    if(xmlStrcmp(key, (xmlChar*) "name") == 0)
-        target->name = NixXML_parse_value(element, userdata);
-    else if(xmlStrcmp(key, (xmlChar*) "system") == 0)
+    if(xmlStrcmp(key, (xmlChar*) "system") == 0)
         target->system = NixXML_parse_value(element, userdata);
     else if(xmlStrcmp(key, (xmlChar*) "clientInterface") == 0)
         target->client_interface = NixXML_parse_value(element, userdata);
@@ -250,7 +248,6 @@ static void delete_target(Target *target)
     delete_properties_table(target->properties_table);
     delete_containers_table(target->containers_table);
 
-    xmlFree(target->name);
     xmlFree(target->system);
     xmlFree(target->client_interface);
     xmlFree(target->target_property);
@@ -306,7 +303,6 @@ static int compare_targets(const gpointer left, const gpointer right)
 
     return (compare_property_tables(target1->properties_table, target2->properties_table)
       && compare_container_tables(target1->containers_table, target2->containers_table)
-      && (xmlStrcmp(target1->name, target2->name) == 0)
       && (xmlStrcmp(target1->system, target2->system) == 0)
       && (xmlStrcmp(target1->client_interface, target2->client_interface) == 0)
       && (xmlStrcmp(target1->target_property, target2->target_property) == 0)
@@ -341,8 +337,6 @@ static void print_target_attributes_nix(FILE *file, const void *value, const int
 
     NixXML_print_attribute_nix(file, "properties", target->properties_table, indent_level, userdata, print_properties_nix);
     NixXML_print_attribute_nix(file, "containers", target->containers_table, indent_level, userdata, print_containers_nix);
-    if(target->name != NULL)
-        NixXML_print_attribute_nix(file, "name", target->name, indent_level, userdata, NixXML_print_string_nix);
     if(target->system != NULL)
         NixXML_print_attribute_nix(file, "system", target->system, indent_level, userdata, NixXML_print_string_nix);
     if(target->client_interface != NULL)
@@ -385,8 +379,6 @@ static void print_target_attributes_xml(FILE *file, const void *value, const int
 
     NixXML_print_simple_attribute_xml(file, "properties", target->properties_table, indent_level, NULL, userdata, print_properties_xml);
     NixXML_print_simple_attribute_xml(file, "containers", target->containers_table, indent_level, NULL, userdata, print_containers_xml);
-    if(target->name != NULL)
-        NixXML_print_simple_attribute_xml(file, "name", target->name, indent_level, NULL, userdata, NixXML_print_string_xml);
     if(target->system != NULL)
         NixXML_print_simple_attribute_xml(file, "system", target->system, indent_level, NULL, userdata, NixXML_print_string_xml);
     if(target->client_interface != NULL)

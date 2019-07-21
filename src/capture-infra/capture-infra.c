@@ -21,13 +21,7 @@
 #include <stdlib.h>
 #include <targets-iterator.h>
 #include <client-interface.h>
-
-typedef struct
-{
-    gchar *target_name;
-    char **config;
-}
-CapturedConfig;
+#include "nixxml-ghashtable-iter.h"
 
 static ProcReact_Future capture_infra_on_target(void *data, Target *target, gchar *client_interface, gchar *target_key)
 {
@@ -36,53 +30,39 @@ static ProcReact_Future capture_infra_on_target(void *data, Target *target, gcha
 
 static void complete_capture_infra_on_target(void *data, Target *target, gchar *target_key, ProcReact_Future *future, ProcReact_Status status)
 {
-    GPtrArray *configs_array = (GPtrArray*)data;
+    GHashTable *configs_table = (GHashTable*)data;
 
     if(status != PROCREACT_STATUS_OK || future->result == NULL)
         g_printerr("[target: %s]: Cannot capture the infrastructure!\n", target_key);
     else
-    {
-        CapturedConfig *config = (CapturedConfig*)g_malloc(sizeof(CapturedConfig));
-        config->target_name = (gchar*)target->name;
-        config->config = future->result;
-
-        g_ptr_array_add(configs_array, config);
-    }
+        g_hash_table_insert(configs_table, target_key, future->result);
 }
 
-static gint compare_captured_config(const void *l, const void *r)
+static void print_configs_table(GHashTable *configs_table)
 {
-    const CapturedConfig *left = *((CapturedConfig **)l);
-    const CapturedConfig *right = *((CapturedConfig **)r);
+    NixXML_GHashTableOrderedIter iter;
+    gchar *key;
+    gpointer value;
 
-    return g_strcmp0(left->target_name, right->target_name);
-}
-
-static void print_configs_array(GPtrArray *configs_array)
-{
-    unsigned int i;
-
-    /* Sort the captured configs so that the overall result is always displayed in a deterministic order */
-    g_ptr_array_sort(configs_array, compare_captured_config);
-
-    /* Print the captured configs per machine */
+    /* Print the captured configs per machine in deterministic order */
     g_print("{\n");
 
-    for(i = 0; i < configs_array->len; i++)
+    NixXML_g_hash_table_ordered_iter_init(&iter, configs_table);
+    while(NixXML_g_hash_table_ordered_iter_next(&iter, &key, &value))
     {
-        CapturedConfig *config = g_ptr_array_index(configs_array, i);
+        char **config = (char**)value;
         char *line;
         unsigned int count = 0;
 
-        g_print("  \"%s\" = ", config->target_name);
+        g_print("  \"%s\" = ", key);
 
         /* Iterate over each line of the captured config */
-        while((line = config->config[count]) != NULL)
+        while((line = config[count]) != NULL)
         {
             g_print("%s", line);
             count++;
 
-            if(config->config[count] != NULL)
+            if(config[count] != NULL)
                 g_print("\n  ");
         }
 
@@ -90,20 +70,20 @@ static void print_configs_array(GPtrArray *configs_array)
     }
 
     g_print("}\n");
+
+    NixXML_g_hash_table_ordered_iter_destroy(&iter);
 }
 
-static void delete_configs_array(GPtrArray *configs_array)
+static void delete_configs_table(GHashTable *configs_table)
 {
-    unsigned int i;
+    GHashTableIter iter;
+    gpointer key, value;
 
-    for(i = 0; i < configs_array->len; i++)
-    {
-        CapturedConfig *config = g_ptr_array_index(configs_array, i);
-        procreact_free_string_array(config->config);
-        g_free(config);
-    }
+    g_hash_table_iter_init(&iter, configs_table);
+    while (g_hash_table_iter_next(&iter, &key, &value))
+        procreact_free_string_array((char**)value);
 
-    g_ptr_array_free(configs_array, TRUE);
+    g_hash_table_destroy(configs_table);
 }
 
 int capture_infra(gchar *interface, gchar *target_property, gchar *infrastructure_expr, const int xml)
@@ -122,19 +102,19 @@ int capture_infra(gchar *interface, gchar *target_property, gchar *infrastructur
 
         if(check_targets_table(targets_table))
         {
-            GPtrArray *configs_array = g_ptr_array_new();
+            GHashTable *configs_table = g_hash_table_new(g_str_hash, g_str_equal);
 
             /* Iterate over targets and capture their infrastructure configurations */
-            ProcReact_FutureIterator iterator = create_target_future_iterator(targets_table, target_property, interface, capture_infra_on_target, complete_capture_infra_on_target, configs_array);
+            ProcReact_FutureIterator iterator = create_target_future_iterator(targets_table, target_property, interface, capture_infra_on_target, complete_capture_infra_on_target, configs_table);
             procreact_fork_in_parallel_buffer_and_wait(&iterator);
             exit_status = !target_iterator_has_succeeded(iterator.data);
 
             /* Print the captured configurations */
-            print_configs_array(configs_array);
+            print_configs_table(configs_table);
 
             /* Cleanup */
             destroy_target_future_iterator(&iterator);
-            delete_configs_array(configs_array);
+            delete_configs_table(configs_table);
         }
         else
             exit_status = 1;
