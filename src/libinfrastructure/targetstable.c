@@ -78,7 +78,7 @@ static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
 
 static void *generic_parse_expr(xmlNodePtr element, void *userdata)
 {
-    return NixXML_generic_parse_expr(element, "type", "name", NixXML_create_g_ptr_array, NixXML_create_g_hash_table, NixXML_add_value_to_g_ptr_array, NixXML_insert_into_g_hash_table, NixXML_finalize_g_ptr_array);
+    return NixXML_generic_parse_expr_glib(element, "type", "name", userdata);
 }
 
 static void *parse_property_table(xmlNodePtr element, void *userdata)
@@ -318,7 +318,7 @@ int compare_targets_tables(GHashTable *targets_table1, GHashTable *targets_table
 
 static void print_generic_expr_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
-    NixXML_print_generic_expr_nix(file, (NixXML_Node*)value, indent_level, NixXML_print_g_ptr_array_elements_nix, NixXML_print_g_hash_table_attributes_nix);
+    NixXML_print_generic_expr_glib_nix(file, (const NixXML_Node*)value, indent_level);
 }
 
 static void print_properties_nix(FILE *file, const void *value, const int indent_level, void *userdata)
@@ -360,7 +360,7 @@ void print_targets_table_nix(FILE *file, const void *value, const int indent_lev
 
 static void print_generic_expr_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
 {
-    NixXML_print_generic_expr_verbose_xml(file, (NixXML_Node*)value, indent_level, "property", "list", "attr", "name", type_property_name, NixXML_print_g_ptr_array_elements_xml, NixXML_print_g_hash_table_verbose_attributes_xml);
+    NixXML_print_generic_expr_glib_verbose_xml(file, (const NixXML_Node*)value, indent_level, "property", "attr", "name", "list", "type");
 }
 
 static void print_properties_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
@@ -439,7 +439,7 @@ xmlChar **generate_activation_arguments(const Target *target, const gchar *conta
         return ret;
     }
     else
-        return NixXML_generate_env_vars_with_generic_glib_data_structures(container_table);
+        return NixXML_generate_env_vars_generic_glib(container_table);
 }
 
 int request_available_target_core(Target *target)

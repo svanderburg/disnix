@@ -118,6 +118,7 @@ void NixXML_print_g_hash_table_simple_attributes_xml(FILE *file, const void *val
  * @param file File descriptor to write to
  * @param hash_table An GHashTable instance
  * @param indent_level Specifies the indent level, or -1 to disable indentation
+ * @param type_property_name Name of the type property or NULL to not display any type annotations
  * @param userdata Arbitrary user data that gets propagated to all print functions
  * @param print_value Pointer to a function that prints an element value
  */
@@ -143,6 +144,7 @@ void NixXML_print_g_hash_table_simple_ordered_attributes_xml(FILE *file, const v
  * @param file File descriptor to write to
  * @param hash_table An GHashTable instance
  * @param indent_level Specifies the indent level, or -1 to disable indentation
+ * @param type_property_name Name of the type property or NULL to not display any type annotations
  * @param userdata Arbitrary user data that gets propagated to all print functions
  * @param print_value Pointer to a function that prints an element value
  */

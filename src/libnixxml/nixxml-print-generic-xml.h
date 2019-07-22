@@ -31,7 +31,7 @@
 typedef struct
 {
     /** Name of the list elements */
-    const char *child_element_name;
+    const char *list_element_name;
     /** Pointer to a function that prints the list elements */
     NixXML_PrintXMLListMembersFunc print_list_elements;
     /** Pointer to a function that prints the attributes */
@@ -82,12 +82,12 @@ void NixXML_print_expr_simple_xml(FILE *file, const void *value, const int inden
  * @param value Root XML_Node of the data structure to print
  * @param indent_level Specifies the indent level, or -1 to disable indentation
  * @param root_element_name Name of the root element
- * @param child_element_name Name of the list elements
+ * @param list_element_name Name of the list elements
  * @param type_property_name Name of the type property or NULL to not display any type annotations
  * @param print_list_elements Pointer to a function that prints the list elements
  * @param print_attributes Pointer to a function that prints the attributes
  */
-void NixXML_print_generic_expr_simple_xml(FILE *file, const NixXML_Node *value, const int indent_level, const char *root_element_name, const char *child_element_name, const char *type_property_name, NixXML_PrintXMLListMembersFunc print_list_elements, NixXML_PrintSimpleXMLMembersFunc print_attributes);
+void NixXML_print_generic_expr_simple_xml(FILE *file, const NixXML_Node *value, const int indent_level, const char *root_element_name, const char *list_element_name, const char *type_property_name, NixXML_PrintXMLListMembersFunc print_list_elements, NixXML_PrintSimpleXMLMembersFunc print_attributes);
 
 /**
  * Internal function (that can be integrated into the printing infrastructure)

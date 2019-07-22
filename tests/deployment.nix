@@ -352,7 +352,7 @@ simpleTest {
       $result = $coordinator->mustSucceed("${env} disnix-env --delete-all-generations | wc -l");
 
       if($result == 0) {
-          print "We have no symlinks";
+          print "We have no symlinks\n";
       } else {
           die "We should have no symlinks, instead we have: $result";
       }

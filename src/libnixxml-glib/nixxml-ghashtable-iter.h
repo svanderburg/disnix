@@ -56,7 +56,7 @@ void NixXML_g_hash_table_ordered_iter_init(NixXML_GHashTableOrderedIter *iter, G
  *
  * @param iter A NixXML_GHashTableOrderedIter
  * @param key A location to store the key
- * @oaram value A location to store the value
+ * @param value A location to store the value
  */
 gboolean NixXML_g_hash_table_ordered_iter_next(NixXML_GHashTableOrderedIter *iter, gchar **key, gpointer *value);
 

@@ -155,7 +155,7 @@ static pid_t send_restore_and_clean_snapshot_on_target(void *data, Target *targe
             SnapshotMapping *mapping = g_ptr_array_index(snapshots_per_target_array, i);
             xmlChar **arguments = generate_activation_arguments(target, (gchar*)mapping->container); /* Generate an array of key=value pairs from container properties */
             unsigned int arguments_length = g_strv_length((gchar**)arguments); /* Determine length of the activation arguments array */
-            ManifestService *service = g_hash_table_lookup(send_snapshots_data->services_table, (gchar*)mapping->container);
+            ManifestService *service = g_hash_table_lookup(send_snapshots_data->services_table, (gchar*)mapping->service);
 
             if(!procreact_wait_for_boolean(send_snapshot_mapping(mapping, target, send_snapshots_data->flags), &status) || (status != PROCREACT_STATUS_OK)
               || !procreact_wait_for_boolean(restore_snapshot_on_target(mapping, service, target, arguments, arguments_length), &status) || (status != PROCREACT_STATUS_OK)
