@@ -22,21 +22,7 @@
 #include <stdio.h>
 #include <glib.h>
 #include <libxml/parser.h>
-
-typedef struct
-{
-    /* Name of the service */
-    xmlChar *name;
-    /** Nix store path to the built service artifact */
-    xmlChar *pkg;
-    /** Activation type */
-    xmlChar *type;
-    /* Array of inter-dependency mappings */
-    GPtrArray *depends_on;
-    /* Array of inter-dependency mappings for which activation ordering does not matter */
-    GPtrArray *connects_to;
-}
-ManifestService;
+#include "manifestservice.h"
 
 GHashTable *parse_services_table(xmlNodePtr element, void *userdata);
 

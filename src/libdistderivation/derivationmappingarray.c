@@ -48,6 +48,14 @@ GPtrArray *parse_derivation_mapping_array(xmlNodePtr element)
     return NixXML_parse_g_ptr_array(element, "mapping", NULL, parse_derivation_item);
 }
 
+static void delete_derivation_item(DerivationItem *item)
+{
+    xmlFree(item->derivation);
+    xmlFree(item->interface);
+    g_strfreev(item->result);
+    g_free(item);
+}
+
 void delete_derivation_mapping_array(GPtrArray *derivation_array)
 {
     if(derivation_array != NULL)
@@ -57,14 +65,28 @@ void delete_derivation_mapping_array(GPtrArray *derivation_array)
         for(i = 0; i < derivation_array->len; i++)
         {
             DerivationItem *item = g_ptr_array_index(derivation_array, i);
-            xmlFree(item->derivation);
-            xmlFree(item->interface);
-            g_strfreev(item->result);
-            g_free(item);
+            delete_derivation_item(item);
         }
 
         g_ptr_array_free(derivation_array, TRUE);
     }
+}
+
+static int check_derivation_item(const DerivationItem *item)
+{
+    if(item->derivation == NULL)
+    {
+        g_printerr("derivationmapping.derivation is not set!\n");
+        return FALSE;
+    }
+
+    if(item->interface == NULL)
+    {
+        g_printerr("derivationmapping.interface is not set!\n");
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 int check_derivation_mapping_array(const GPtrArray *derivation_array)
@@ -75,13 +97,8 @@ int check_derivation_mapping_array(const GPtrArray *derivation_array)
     {
         DerivationItem *item = g_ptr_array_index(derivation_array, i);
 
-        if(item->derivation == NULL || item->interface == NULL)
-        {
-            /* Check if all mandatory properties have been provided */
-            g_printerr("A mandatory property seems to be missing. Have you provided a correct\n");
-            g_printerr("distributed derivation file?\n");
+        if(!check_derivation_item(item))
             return FALSE;
-        }
     }
 
     return TRUE;
