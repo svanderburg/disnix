@@ -21,7 +21,7 @@
 #include <build.h>
 #include <distributedderivation.h>
 #include <derivationmappingarray.h>
-#include <interfaces.h>
+#include <interfacestable.h>
 #include <client-interface.h>
 
 int run_build(const gchar *distributed_derivation_file, const unsigned int max_concurrent_transfers)

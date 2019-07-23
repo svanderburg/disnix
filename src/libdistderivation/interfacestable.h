@@ -17,23 +17,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_INTERDEPENDENCY_MAPPING_ARRAY_H
-#define __DISNIX_INTERDEPENDENCY_MAPPING_ARRAY_H
-
+#ifndef __DISNIX_INTERFACESTABLE_H
+#define __DISNIX_INTERFACESTABLE_H
 #include <glib.h>
 #include <libxml/parser.h>
-#include "interdependencymapping.h"
+#include "interface.h"
 
-GPtrArray *parse_interdependency_mapping_array(xmlNodePtr element, void *userdata);
+GHashTable *parse_interfaces(xmlNodePtr element);
 
-int check_interdependency_mapping_array(const GPtrArray *interdependency_mapping_array);
+/**
+ * Deletes an array with interfaces.
+ *
+ * @param interfaces_table Hash table with interfaces
+ */
+void delete_interfaces_table(GHashTable *interfaces_table);
 
-void delete_interdependency_mapping_array(GPtrArray *interdependency_mapping_array);
-
-int compare_interdependency_mapping_arrays(const GPtrArray *interdependency_mapping_array1, const GPtrArray *interdependency_mapping_array2);
-
-void print_interdependency_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata);
-
-void print_interdependency_mapping_array_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+int check_interfaces_table(GHashTable *interfaces_table);
 
 #endif

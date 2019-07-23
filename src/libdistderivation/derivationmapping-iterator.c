@@ -19,7 +19,7 @@
 
 #include "derivationmapping-iterator.h"
 
-static int has_next_derivation_item(void *data)
+static int has_next_derivation_mapping(void *data)
 {
     DerivationIteratorData *derivation_iterator_data = (DerivationIteratorData*)data;
     return has_next_iteration_process(&derivation_iterator_data->model_iterator_data);
@@ -31,14 +31,14 @@ static pid_t next_derivation_process(void *data)
     DerivationIteratorData *derivation_iterator_data = (DerivationIteratorData*)data;
 
     /* Retrieve derivation item, interface pair */
-    DerivationItem *item = g_ptr_array_index(derivation_iterator_data->derivation_array, derivation_iterator_data->model_iterator_data.index);
-    Interface *interface = g_hash_table_lookup(derivation_iterator_data->interfaces_table, (gchar*)item->interface);
+    DerivationMapping *mapping = g_ptr_array_index(derivation_iterator_data->derivation_mapping_array, derivation_iterator_data->model_iterator_data.index);
+    Interface *interface = g_hash_table_lookup(derivation_iterator_data->interfaces_table, (gchar*)mapping->interface);
 
-    /* Invoke the next derivation item operation process */
-    pid_t pid = derivation_iterator_data->map_derivation_item_function.pid(derivation_iterator_data->data, item, interface);
+    /* Invoke the next derivation mapping operation process */
+    pid_t pid = derivation_iterator_data->map_derivation_mapping_function.pid(derivation_iterator_data->data, mapping, interface);
 
     /* Increase the iterator index and update the pid table */
-    next_iteration_process(&derivation_iterator_data->model_iterator_data, pid, item);
+    next_iteration_process(&derivation_iterator_data->model_iterator_data, pid, mapping);
 
     /* Return the pid of the invoked process */
     return pid;
@@ -48,32 +48,32 @@ static void complete_derivation_process(void *data, pid_t pid, ProcReact_Status 
 {
     DerivationIteratorData *derivation_iterator_data = (DerivationIteratorData*)data;
 
-    /* Retrieve the completed item */
-    DerivationItem *item = complete_iteration_process(&derivation_iterator_data->model_iterator_data, pid, status, result);
+    /* Retrieve the completed mapping */
+    DerivationMapping *mapping = complete_iteration_process(&derivation_iterator_data->model_iterator_data, pid, status, result);
 
     /* Invoke callback that handles the completion of derivation item mapping */
-    derivation_iterator_data->complete_derivation_item_mapping_function.pid(derivation_iterator_data->data, item, status, result);
+    derivation_iterator_data->complete_derivation_mapping_function.pid(derivation_iterator_data->data, mapping, status, result);
 }
 
-static DerivationIteratorData *create_common_iterator(const GPtrArray *derivation_array, GHashTable *interfaces_table, void *data)
+static DerivationIteratorData *create_common_iterator(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table, void *data)
 {
     DerivationIteratorData *derivation_iterator_data = (DerivationIteratorData*)g_malloc(sizeof(DerivationIteratorData));
 
-    init_model_iterator_data(&derivation_iterator_data->model_iterator_data, derivation_array->len);
-    derivation_iterator_data->derivation_array = derivation_array;
+    init_model_iterator_data(&derivation_iterator_data->model_iterator_data, derivation_mapping_array->len);
+    derivation_iterator_data->derivation_mapping_array = derivation_mapping_array;
     derivation_iterator_data->interfaces_table = interfaces_table;
     derivation_iterator_data->data = data;
 
     return derivation_iterator_data;
 }
 
-ProcReact_PidIterator create_derivation_pid_iterator(const GPtrArray *derivation_array, GHashTable *interfaces_table, map_derivation_item_pid_function map_derivation_item, complete_derivation_item_mapping_pid_function complete_derivation_item_mapping, void *data)
+ProcReact_PidIterator create_derivation_pid_iterator(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table, map_derivation_mapping_pid_function map_derivation_mapping, complete_derivation_mapping_pid_function complete_derivation_mapping, void *data)
 {
-    DerivationIteratorData *derivation_iterator_data = create_common_iterator(derivation_array, interfaces_table, data);
-    derivation_iterator_data->map_derivation_item_function.pid = map_derivation_item;
-    derivation_iterator_data->complete_derivation_item_mapping_function.pid = complete_derivation_item_mapping;
+    DerivationIteratorData *derivation_iterator_data = create_common_iterator(derivation_mapping_array, interfaces_table, data);
+    derivation_iterator_data->map_derivation_mapping_function.pid = map_derivation_mapping;
+    derivation_iterator_data->complete_derivation_mapping_function.pid = complete_derivation_mapping;
 
-    return procreact_initialize_pid_iterator(has_next_derivation_item, next_derivation_process, procreact_retrieve_boolean, complete_derivation_process, derivation_iterator_data);
+    return procreact_initialize_pid_iterator(has_next_derivation_mapping, next_derivation_process, procreact_retrieve_boolean, complete_derivation_process, derivation_iterator_data);
 }
 
 static ProcReact_Future next_derivation_future(void *data)
@@ -82,14 +82,14 @@ static ProcReact_Future next_derivation_future(void *data)
     DerivationIteratorData *derivation_iterator_data = (DerivationIteratorData*)data;
 
     /* Retrieve derivation item, interface pair */
-    DerivationItem *item = g_ptr_array_index(derivation_iterator_data->derivation_array, derivation_iterator_data->model_iterator_data.index);
-    Interface *interface = g_hash_table_lookup(derivation_iterator_data->interfaces_table, (gchar*)item->interface);
+    DerivationMapping *mapping = g_ptr_array_index(derivation_iterator_data->derivation_mapping_array, derivation_iterator_data->model_iterator_data.index);
+    Interface *interface = g_hash_table_lookup(derivation_iterator_data->interfaces_table, (gchar*)mapping->interface);
 
     /* Invoke the next derivation item operation process */
-    ProcReact_Future future = derivation_iterator_data->map_derivation_item_function.future(derivation_iterator_data->data, item, interface);
+    ProcReact_Future future = derivation_iterator_data->map_derivation_mapping_function.future(derivation_iterator_data->data, mapping, interface);
 
     /* Increase the iterator and update the pid table */
-    next_iteration_future(&derivation_iterator_data->model_iterator_data, &future, item);
+    next_iteration_future(&derivation_iterator_data->model_iterator_data, &future, mapping);
 
     /* Return the pid of the invoked process */
     return future;
@@ -99,20 +99,20 @@ static void complete_derivation_future(void *data, ProcReact_Future *future, Pro
 {
     DerivationIteratorData *derivation_iterator_data = (DerivationIteratorData*)data;
 
-    /* Retrieve the completed item */
-    DerivationItem *item = complete_iteration_future(&derivation_iterator_data->model_iterator_data, future, status);
+    /* Retrieve the completed mapping */
+    DerivationMapping *mapping = complete_iteration_future(&derivation_iterator_data->model_iterator_data, future, status);
 
     /* Invoke callback that handles the completion of derivation item mapping */
-    derivation_iterator_data->complete_derivation_item_mapping_function.future(derivation_iterator_data->data, item, future, status);
+    derivation_iterator_data->complete_derivation_mapping_function.future(derivation_iterator_data->data, mapping, future, status);
 }
 
-ProcReact_FutureIterator create_derivation_future_iterator(const GPtrArray *derivation_array, GHashTable *interfaces_table, map_derivation_item_future_function map_derivation_item, complete_derivation_item_mapping_future_function complete_derivation_item_mapping, void *data)
+ProcReact_FutureIterator create_derivation_future_iterator(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table, map_derivation_mapping_future_function map_derivation_mapping, complete_derivation_mapping_future_function complete_derivation_mapping, void *data)
 {
-    DerivationIteratorData *derivation_iterator_data = create_common_iterator(derivation_array, interfaces_table, data);
-    derivation_iterator_data->map_derivation_item_function.future = map_derivation_item;
-    derivation_iterator_data->complete_derivation_item_mapping_function.future = complete_derivation_item_mapping;
+    DerivationIteratorData *derivation_iterator_data = create_common_iterator(derivation_mapping_array, interfaces_table, data);
+    derivation_iterator_data->map_derivation_mapping_function.future = map_derivation_mapping;
+    derivation_iterator_data->complete_derivation_mapping_function.future = complete_derivation_mapping;
 
-    return procreact_initialize_future_iterator(has_next_derivation_item, next_derivation_future, complete_derivation_future, derivation_iterator_data);
+    return procreact_initialize_future_iterator(has_next_derivation_mapping, next_derivation_future, complete_derivation_future, derivation_iterator_data);
 }
 
 static void destroy_derivation_iterator_data(DerivationIteratorData *derivation_iterator_data)

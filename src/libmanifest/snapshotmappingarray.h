@@ -24,45 +24,7 @@
 #include <procreact_pid.h>
 #include <targetstable.h>
 #include "servicestable.h"
-
-/**
- * @brief Contains the values that constitute a key uniquely referring to a snapshot mapping.
- */
-typedef struct
-{
-    /** Name of the mutable component */
-    xmlChar *component;
-
-    /** Container in which the mutable component is deployed */
-    xmlChar *container;
-
-    /** Target property referring to the target machine to which the service is deployed */
-    xmlChar *target;
-}
-SnapshotMappingKey;
-
-/**
- * @brief Contains all properties to snapshot state on a specific machine.
- * This struct maps (component,container,target) -> (transferred)
- */
-typedef struct
-{
-    /** Name of the mutable component */
-    xmlChar *component;
-
-    /** Container in which the mutable component is deployed */
-    xmlChar *container;
-
-    /** Target property referring to the target machine to which the service is deployed */
-    xmlChar *target;
-
-    /** Hash code that uniquely defines a service */
-    xmlChar *service;
-
-    /** Indicates whether the snapshot has been transferred or not */
-    gboolean transferred;
-}
-SnapshotMapping;
+#include "snapshotmapping.h"
 
 /**
  * Function that spawns a process for a snapshot mapping.
@@ -83,8 +45,6 @@ typedef pid_t (*map_snapshot_item_function) (SnapshotMapping *mapping, ManifestS
  * @param result TRUE if the mapping operation succeeded, else FALSE
  */
 typedef void (*complete_snapshot_item_mapping_function) (SnapshotMapping *mapping, Target *target, ProcReact_Status status, int result);
-
-gint compare_snapshot_mapping_keys(const SnapshotMappingKey **l, const SnapshotMappingKey **r);
 
 /**
  * Creates an array with activation mappings from the corresponding sub section

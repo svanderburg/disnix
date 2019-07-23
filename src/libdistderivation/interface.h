@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_INTERFACES_H
-#define __DISNIX_INTERFACES_H
+#ifndef __DISNIX_INTERFACE_H
+#define __DISNIX_INTERFACE_H
 #include <glib.h>
 #include <libxml/parser.h>
 
@@ -35,15 +35,10 @@ typedef struct
 }
 Interface;
 
-GHashTable *parse_interfaces(xmlNodePtr element);
+void *parse_interface(xmlNodePtr element, void *userdata);
 
-/**
- * Deletes an array with interfaces.
- *
- * @param interfaces_table Hash table with interfaces
- */
-void delete_interfaces_table(GHashTable *interfaces_table);
+void delete_interface(Interface *interface);
 
-int check_interfaces_table(GHashTable *interfaces_table);
+int check_interface(const Interface *interface);
 
 #endif

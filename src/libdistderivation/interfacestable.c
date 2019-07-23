@@ -17,39 +17,43 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "derivationmappingarray.h"
-#include <nixxml-gptrarray.h>
+#include "interfacestable.h"
+#include <stdlib.h>
+#include <nixxml-ghashtable.h>
 
-GPtrArray *parse_derivation_mapping_array(xmlNodePtr element)
+GHashTable *parse_interfaces(xmlNodePtr element)
 {
-    return NixXML_parse_g_ptr_array(element, "mapping", NULL, parse_derivation_mapping);
+    return NixXML_parse_g_hash_table_verbose(element, "interface", "name", NULL, parse_interface);
 }
 
-void delete_derivation_mapping_array(GPtrArray *derivation_mapping_array)
+void delete_interfaces_table(GHashTable *interfaces_table)
 {
-    if(derivation_mapping_array != NULL)
+    if(interfaces_table != NULL)
     {
-        unsigned int i;
+        GHashTableIter iter;
+        gpointer key, value;
 
-        for(i = 0; i < derivation_mapping_array->len; i++)
+        g_hash_table_iter_init(&iter, interfaces_table);
+        while(g_hash_table_iter_next(&iter, &key, &value))
         {
-            DerivationMapping *mapping = g_ptr_array_index(derivation_mapping_array, i);
-            delete_derivation_mapping(mapping);
+            Interface *interface = (Interface*)value;
+            delete_interface(interface);
         }
 
-        g_ptr_array_free(derivation_mapping_array, TRUE);
+        g_hash_table_destroy(interfaces_table);
     }
 }
 
-int check_derivation_mapping_array(const GPtrArray *derivation_mapping_array)
+int check_interfaces_table(GHashTable *interfaces_table)
 {
-    unsigned int i;
+    GHashTableIter iter;
+    gpointer key, value;
 
-    for(i = 0; i < derivation_mapping_array->len; i++)
+    g_hash_table_iter_init(&iter, interfaces_table);
+    while(g_hash_table_iter_next(&iter, &key, &value))
     {
-        DerivationMapping *mapping = g_ptr_array_index(derivation_mapping_array, i);
-
-        if(!check_derivation_mapping(mapping))
+        Interface *interface = (Interface*)value;
+        if(!check_interface(interface))
             return FALSE;
     }
 

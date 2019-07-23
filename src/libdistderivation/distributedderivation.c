@@ -19,7 +19,7 @@
 
 #include "distributedderivation.h"
 #include "derivationmappingarray.h"
-#include "interfaces.h"
+#include "interfacestable.h"
 
 #include <libxml/parser.h>
 #include <nixxml-parse.h>

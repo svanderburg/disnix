@@ -17,10 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "interfaces.h"
-#include <stdlib.h>
-#include <nixxml-ghashtable.h>
-#include <nixxml-gptrarray.h>
+#include "interface.h"
+#include <nixxml-parse.h>
 
 static void *create_interface(xmlNodePtr element, void *userdata)
 {
@@ -39,52 +37,29 @@ static void insert_interface_attributes(void *table, const xmlChar *key, void *v
         xmlFree(value);
 }
 
-static gpointer parse_interface(xmlNodePtr element, void *userdata)
+void *parse_interface(xmlNodePtr element, void *userdata)
 {
     return NixXML_parse_simple_attrset(element, userdata, create_interface, NixXML_parse_value, insert_interface_attributes);
 }
 
-GHashTable *parse_interfaces(xmlNodePtr element)
-{
-    return NixXML_parse_g_hash_table_verbose(element, "interface", "name", NULL, parse_interface);
-}
-
-static void delete_interface(Interface *interface)
+void delete_interface(Interface *interface)
 {
     g_free(interface->target_address);
     g_free(interface->client_interface);
     g_free(interface);
 }
 
-void delete_interfaces_table(GHashTable *interfaces_table)
+int check_interface(const Interface *interface)
 {
-    if(interfaces_table != NULL)
+    if(interface->target_address == NULL)
     {
-        GHashTableIter iter;
-        gpointer key, value;
-
-        g_hash_table_iter_init(&iter, interfaces_table);
-        while (g_hash_table_iter_next(&iter, &key, &value))
-        {
-            Interface *interface = (Interface*)value;
-            delete_interface(interface);
-        }
-
-        g_hash_table_destroy(interfaces_table);
+        g_printerr("interface.targetAddress is not set!\n");
+        return FALSE;
     }
-}
-
-int check_interfaces_table(GHashTable *interfaces_table)
-{
-    GHashTableIter iter;
-    gpointer key, value;
-
-    g_hash_table_iter_init(&iter, interfaces_table);
-    while (g_hash_table_iter_next(&iter, &key, &value))
+    else if(interface->client_interface == NULL)
     {
-        Interface *interface = (Interface*)value;
-        if(interface->target_address == NULL || interface->client_interface == NULL)
-            return FALSE;
+        g_printerr("interface.clientInterface is not set!\n");
+        return FALSE;
     }
 
     return TRUE;

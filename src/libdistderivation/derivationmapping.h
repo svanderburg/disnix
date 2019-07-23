@@ -17,23 +17,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_INTERDEPENDENCY_MAPPING_ARRAY_H
-#define __DISNIX_INTERDEPENDENCY_MAPPING_ARRAY_H
-
-#include <glib.h>
+#ifndef __DISNIX_DERIVATIONMAPPING_H
+#define __DISNIX_DERIVATIONMAPPING_H
 #include <libxml/parser.h>
-#include "interdependencymapping.h"
+#include <glib.h>
 
-GPtrArray *parse_interdependency_mapping_array(xmlNodePtr element, void *userdata);
+/**
+ * @brief Contains a mapping of a Nix store derivation to a Disnix Service target
+ */
+typedef struct
+{
+    /** Nix store derivation path */
+    xmlChar *derivation;
+    /** Address of a disnix service */
+    xmlChar *interface;
+    /** Nix store paths of the build result, or NULL if it has not yet been realised */
+    gchar **result;
+}
+DerivationMapping;
 
-int check_interdependency_mapping_array(const GPtrArray *interdependency_mapping_array);
+void *parse_derivation_mapping(xmlNodePtr element, void *userdata);
 
-void delete_interdependency_mapping_array(GPtrArray *interdependency_mapping_array);
+void delete_derivation_mapping(DerivationMapping *mapping);
 
-int compare_interdependency_mapping_arrays(const GPtrArray *interdependency_mapping_array1, const GPtrArray *interdependency_mapping_array2);
-
-void print_interdependency_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata);
-
-void print_interdependency_mapping_array_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+int check_derivation_mapping(const DerivationMapping *mapping);
 
 #endif

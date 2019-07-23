@@ -28,71 +28,6 @@
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
-gint compare_snapshot_mapping_keys(const SnapshotMappingKey **l, const SnapshotMappingKey **r)
-{
-    const SnapshotMappingKey *left = *l;
-    const SnapshotMappingKey *right = *r;
-
-    gint status = xmlStrcmp(left->target, right->target);
-
-    if(status == 0)
-    {
-        gint status = xmlStrcmp(left->container, right->container);
-
-        if(status == 0)
-            return xmlStrcmp(left->component, right->component);
-        else
-            return status;
-    }
-    else
-        return status;
-}
-
-static gint compare_snapshot_mapping(const SnapshotMapping **l, const SnapshotMapping **r)
-{
-    return compare_snapshot_mapping_keys((const SnapshotMappingKey **)l, (const SnapshotMappingKey **)r);
-}
-
-static int mapping_is_selected(const SnapshotMapping *mapping, const gchar *container, const gchar *component)
-{
-    return (container == NULL || xmlStrcmp((const xmlChar*) container, mapping->container) == 0) && (component == NULL || xmlStrcmp((const xmlChar*) component, mapping->component) == 0);
-}
-
-static void delete_snapshot_mapping(SnapshotMapping *mapping)
-{
-    xmlFree(mapping->component);
-    xmlFree(mapping->container);
-    xmlFree(mapping->target);
-    xmlFree(mapping->service);
-    g_free(mapping);
-}
-
-static void *create_snapshot_mapping(xmlNodePtr element, void *userdata)
-{
-    return g_malloc0(sizeof(SnapshotMapping));
-}
-
-static void insert_snapshot_mapping_attributes(void *table, const xmlChar *key, void *value, void *userdata)
-{
-    SnapshotMapping *mapping = (SnapshotMapping*)table;
-
-    if(xmlStrcmp(key, (xmlChar*) "component") == 0)
-        mapping->component = value;
-    else if(xmlStrcmp(key, (xmlChar*) "container") == 0)
-        mapping->container = value;
-    else if(xmlStrcmp(key, (xmlChar*) "target") == 0)
-        mapping->target = value;
-    else if(xmlStrcmp(key, (xmlChar*) "service") == 0)
-        mapping->service = value;
-    else
-        xmlFree(value);
-}
-
-static gpointer parse_snapshot_mapping(xmlNodePtr element, void *userdata)
-{
-    return NixXML_parse_simple_attrset(element, userdata, create_snapshot_mapping, NixXML_parse_value, insert_snapshot_mapping_attributes);
-}
-
 static GPtrArray *filter_selected_mappings(GPtrArray *snapshots_array, const gchar *container_filter, const gchar *component_filter)
 {
     if(component_filter == NULL && container_filter == NULL)
@@ -143,27 +78,6 @@ void delete_snapshot_mapping_array(GPtrArray *snapshots_array)
 
         g_ptr_array_free(snapshots_array, TRUE);
     }
-}
-
-static int check_snapshot_mapping(const SnapshotMapping *mapping)
-{
-    if(mapping->component == NULL)
-    {
-        g_printerr("mapping.component is not set!\n");
-        return FALSE;
-    }
-    else if(mapping->container == NULL)
-    {
-        g_printerr("mapping.container is not set!\n");
-        return FALSE;
-    }
-    else if(mapping->service == NULL)
-    {
-        g_printerr("mapping.service is not set!\n");
-        return FALSE;
-    }
-
-    return TRUE;
 }
 
 int check_snapshot_mapping_array(const GPtrArray *snapshots_array)
@@ -337,41 +251,9 @@ void reset_snapshot_items_transferred_status(GPtrArray *snapshots_array)
     }
 }
 
-static void print_snapshot_mapping_attributes_nix(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)
-{
-    SnapshotMapping *mapping = (SnapshotMapping*)value;
-
-    NixXML_print_attribute_nix(file, "service", mapping->service, indent_level, userdata, NixXML_print_string_nix);
-    NixXML_print_attribute_nix(file, "component", mapping->component, indent_level, userdata, NixXML_print_string_nix);
-    NixXML_print_attribute_nix(file, "container", mapping->container, indent_level, userdata, NixXML_print_string_nix);
-    if(mapping->target != NULL)
-        NixXML_print_attribute_nix(file, "target", mapping->target, indent_level, userdata, NixXML_print_string_nix);
-}
-
-static void print_snapshot_mapping_nix(FILE *file, const void *value, const int indent_level, void *userdata)
-{
-    NixXML_print_attrset_nix(file, value, indent_level, userdata, print_snapshot_mapping_attributes_nix, NULL);
-}
-
 void print_snapshot_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
     NixXML_print_g_ptr_array_nix(file, (const GPtrArray*)value, indent_level, userdata, print_snapshot_mapping_nix);
-}
-
-static void print_snapshot_mapping_attributes_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata, NixXML_PrintXMLValueFunc print_value)
-{
-    SnapshotMapping *mapping = (SnapshotMapping*)value;
-
-    NixXML_print_simple_attribute_xml(file, "service", mapping->service, indent_level, NULL, userdata, NixXML_print_string_xml);
-    NixXML_print_simple_attribute_xml(file, "component", mapping->component, indent_level, NULL, userdata, NixXML_print_string_xml);
-    NixXML_print_simple_attribute_xml(file, "container", mapping->container, indent_level, NULL, userdata, NixXML_print_string_xml);
-    if(mapping->target != NULL)
-        NixXML_print_simple_attribute_xml(file, "target", mapping->target, indent_level, NULL, userdata, NixXML_print_string_xml);
-}
-
-static void print_snapshot_mapping_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
-{
-    NixXML_print_simple_attrset_xml(file, value, indent_level, type_property_name, userdata, print_snapshot_mapping_attributes_xml, NULL);
 }
 
 void print_snapshot_mapping_array_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
