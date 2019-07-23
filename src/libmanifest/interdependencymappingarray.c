@@ -84,10 +84,10 @@ int compare_interdependency_mapping_arrays(const GPtrArray *interdependency_mapp
 
 void print_interdependency_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
-    NixXML_print_g_ptr_array_nix(file, value, indent_level, userdata, print_interdependency_mapping_nix);
+    NixXML_print_g_ptr_array_nix(file, value, indent_level, userdata, (NixXML_PrintValueFunc)print_interdependency_mapping_nix);
 }
 
 void print_interdependency_mapping_array_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
 {
-    NixXML_print_g_ptr_array_xml(file, (const GPtrArray*)value, "mapping", indent_level, NULL, userdata, print_interdependency_mapping_xml);
+    NixXML_print_g_ptr_array_xml(file, (const GPtrArray*)value, "mapping", indent_level, NULL, userdata, (NixXML_PrintXMLValueFunc)print_interdependency_mapping_xml);
 }

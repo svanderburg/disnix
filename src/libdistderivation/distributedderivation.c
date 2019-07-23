@@ -20,7 +20,6 @@
 #include "distributedderivation.h"
 #include "derivationmappingarray.h"
 #include "interfacestable.h"
-
 #include <libxml/parser.h>
 #include <nixxml-parse.h>
 
@@ -34,9 +33,9 @@ static void parse_and_insert_distributed_derivation_attributes(xmlNodePtr elemen
     DistributedDerivation *distributed_derivation = (DistributedDerivation*)table;
 
     if(xmlStrcmp(element->name, (xmlChar*) "derivationMappings") == 0)
-        distributed_derivation->derivation_mapping_array = parse_derivation_mapping_array(element);
+        distributed_derivation->derivation_mapping_array = parse_derivation_mapping_array(element, userdata);
     else if(xmlStrcmp(element->name, (xmlChar*) "interfaces") == 0)
-        distributed_derivation->interfaces_table = parse_interfaces(element);
+        distributed_derivation->interfaces_table = parse_interfaces_table(element, userdata);
 }
 
 static DistributedDerivation *parse_distributed_derivation(xmlNodePtr element, void *userdata)

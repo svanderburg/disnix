@@ -20,9 +20,9 @@
 #include "derivationmappingarray.h"
 #include <nixxml-gptrarray.h>
 
-GPtrArray *parse_derivation_mapping_array(xmlNodePtr element)
+GPtrArray *parse_derivation_mapping_array(xmlNodePtr element, void *userdata)
 {
-    return NixXML_parse_g_ptr_array(element, "mapping", NULL, parse_derivation_mapping);
+    return NixXML_parse_g_ptr_array(element, "mapping", userdata, parse_derivation_mapping);
 }
 
 void delete_derivation_mapping_array(GPtrArray *derivation_mapping_array)

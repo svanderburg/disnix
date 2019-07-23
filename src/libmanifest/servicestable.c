@@ -9,11 +9,7 @@ GHashTable *parse_services_table(xmlNodePtr element, void *userdata)
 
 void delete_services_table(GHashTable *services_table)
 {
-    if(services_table != NULL)
-    {
-        g_hash_table_foreach(services_table, delete_manifest_service_func, NULL);
-        g_hash_table_destroy(services_table);
-    }
+    delete_hash_table(services_table, (DeleteFunction)delete_manifest_service);
 }
 
 int check_services_table(GHashTable *services_table)
@@ -26,7 +22,7 @@ int check_services_table(GHashTable *services_table)
 
 int compare_services_tables(GHashTable *services_table1, GHashTable *services_table2)
 {
-    return compare_hash_tables(services_table1, services_table2, compare_manifest_services);
+    return compare_hash_tables(services_table1, services_table2, (CompareFunction)compare_manifest_services);
 }
 
 GHashTable *generate_union_services_table(GHashTable *left, GHashTable *right)
@@ -53,10 +49,10 @@ GHashTable *generate_union_services_table(GHashTable *left, GHashTable *right)
 
 void print_services_table_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
-    NixXML_print_g_hash_table_ordered_nix(file, (GHashTable*)value, indent_level, userdata, print_manifest_service_nix);
+    NixXML_print_g_hash_table_ordered_nix(file, (GHashTable*)value, indent_level, userdata, (NixXML_PrintValueFunc)print_manifest_service_nix);
 }
 
 void print_services_table_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
 {
-    NixXML_print_g_hash_table_verbose_ordered_xml(file, (GHashTable*)value, "service", "name", indent_level, NULL, userdata, print_manifest_service_xml);
+    NixXML_print_g_hash_table_verbose_ordered_xml(file, (GHashTable*)value, "service", "name", indent_level, NULL, userdata, (NixXML_PrintXMLValueFunc)print_manifest_service_xml);
 }

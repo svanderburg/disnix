@@ -23,7 +23,7 @@
 #include <libxml/parser.h>
 #include "interface.h"
 
-GHashTable *parse_interfaces(xmlNodePtr element);
+GHashTable *parse_interfaces_table(xmlNodePtr element, void *userdata);
 
 /**
  * Deletes an array with interfaces.

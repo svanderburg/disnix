@@ -30,7 +30,7 @@
  * @param element Root XML element of the sub section that defines derivation items
  * @return GPtrArray of derivation items.
  */
-GPtrArray *parse_derivation_mapping_array(xmlNodePtr element);
+GPtrArray *parse_derivation_mapping_array(xmlNodePtr element, void *userdata);
 
 /**
  * Deletes an array with derivation items

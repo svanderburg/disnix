@@ -101,13 +101,16 @@ static void delete_containers_table(GHashTable *containers_table)
 
 void delete_target(Target *target)
 {
-    delete_properties_table(target->properties_table);
-    delete_containers_table(target->containers_table);
+    if(target != NULL)
+    {
+        delete_properties_table(target->properties_table);
+        delete_containers_table(target->containers_table);
 
-    xmlFree(target->system);
-    xmlFree(target->client_interface);
-    xmlFree(target->target_property);
-    g_free(target);
+        xmlFree(target->system);
+        xmlFree(target->client_interface);
+        xmlFree(target->target_property);
+        g_free(target);
+    }
 }
 
 int check_target(const Target *target)
@@ -123,20 +126,17 @@ int check_target(const Target *target)
 
 static int compare_container_tables(GHashTable *containers_table1, GHashTable *containers_table2)
 {
-    return compare_hash_tables(containers_table1, containers_table2, (int (*) (const gpointer left, const gpointer right)) compare_property_tables);
+    return compare_hash_tables(containers_table1, containers_table2, (CompareFunction)compare_property_tables);
 }
 
-int compare_targets(const gpointer left, const gpointer right)
+int compare_targets(const Target *left, const Target *right)
 {
-    const Target *target1 = (const Target*)left;
-    const Target *target2 = (const Target*)right;
-
-    return (compare_property_tables(target1->properties_table, target2->properties_table)
-      && compare_container_tables(target1->containers_table, target2->containers_table)
-      && (xmlStrcmp(target1->system, target2->system) == 0)
-      && (xmlStrcmp(target1->client_interface, target2->client_interface) == 0)
-      && (xmlStrcmp(target1->target_property, target2->target_property) == 0)
-      && (target1->num_of_cores == target2->num_of_cores));
+    return (compare_property_tables(left->properties_table, right->properties_table)
+      && compare_container_tables(left->containers_table, right->containers_table)
+      && (xmlStrcmp(left->system, right->system) == 0)
+      && (xmlStrcmp(left->client_interface, right->client_interface) == 0)
+      && (xmlStrcmp(left->target_property, right->target_property) == 0)
+      && (left->num_of_cores == right->num_of_cores));
 }
 
 /* Nix printing infrastructure */
@@ -171,9 +171,9 @@ static void print_target_attributes_nix(FILE *file, const void *value, const int
     NixXML_print_attribute_nix(file, "numOfCores", &target->num_of_cores, indent_level, userdata, NixXML_print_int_nix);
 }
 
-void print_target_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+void print_target_nix(FILE *file, const Target *target, const int indent_level, void *userdata)
 {
-    NixXML_print_attrset_nix(file, value, indent_level, userdata, print_target_attributes_nix, NULL);
+    NixXML_print_attrset_nix(file, target, indent_level, userdata, print_target_attributes_nix, NULL);
 }
 
 /* XML printing infrastructure */
@@ -208,9 +208,9 @@ static void print_target_attributes_xml(FILE *file, const void *value, const int
     NixXML_print_simple_attribute_xml(file, "numOfCores", &target->num_of_cores, indent_level, NULL, userdata, NixXML_print_int_xml);
 }
 
-void print_target_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+void print_target_xml(FILE *file, const Target *target, const int indent_level, const char *type_property_name, void *userdata)
 {
-    NixXML_print_simple_attrset_xml(file, value, indent_level, NULL, userdata, print_target_attributes_xml, NULL);
+    NixXML_print_simple_attrset_xml(file, target, indent_level, NULL, userdata, print_target_attributes_xml, NULL);
 }
 
 gchar *find_target_property(const Target *target, const gchar *name)

@@ -54,11 +54,14 @@ int mapping_is_selected(const SnapshotMapping *mapping, const gchar *container, 
 
 void delete_snapshot_mapping(SnapshotMapping *mapping)
 {
-    xmlFree(mapping->component);
-    xmlFree(mapping->container);
-    xmlFree(mapping->target);
-    xmlFree(mapping->service);
-    g_free(mapping);
+    if(mapping != NULL)
+    {
+        xmlFree(mapping->component);
+        xmlFree(mapping->container);
+        xmlFree(mapping->target);
+        xmlFree(mapping->service);
+        g_free(mapping);
+    }
 }
 
 static void *create_snapshot_mapping(xmlNodePtr element, void *userdata)
@@ -119,9 +122,9 @@ static void print_snapshot_mapping_attributes_nix(FILE *file, const void *value,
         NixXML_print_attribute_nix(file, "target", mapping->target, indent_level, userdata, NixXML_print_string_nix);
 }
 
-void print_snapshot_mapping_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+void print_snapshot_mapping_nix(FILE *file, const SnapshotMapping *mapping, const int indent_level, void *userdata)
 {
-    NixXML_print_attrset_nix(file, value, indent_level, userdata, print_snapshot_mapping_attributes_nix, NULL);
+    NixXML_print_attrset_nix(file, mapping, indent_level, userdata, print_snapshot_mapping_attributes_nix, NULL);
 }
 
 static void print_snapshot_mapping_attributes_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata, NixXML_PrintXMLValueFunc print_value)
@@ -135,7 +138,7 @@ static void print_snapshot_mapping_attributes_xml(FILE *file, const void *value,
         NixXML_print_simple_attribute_xml(file, "target", mapping->target, indent_level, NULL, userdata, NixXML_print_string_xml);
 }
 
-void print_snapshot_mapping_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+void print_snapshot_mapping_xml(FILE *file, const SnapshotMapping *mapping, const int indent_level, const char *type_property_name, void *userdata)
 {
-    NixXML_print_simple_attrset_xml(file, value, indent_level, type_property_name, userdata, print_snapshot_mapping_attributes_xml, NULL);
+    NixXML_print_simple_attrset_xml(file, mapping, indent_level, type_property_name, userdata, print_snapshot_mapping_attributes_xml, NULL);
 }

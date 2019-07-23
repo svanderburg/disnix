@@ -73,8 +73,8 @@ void *parse_snapshot_mapping(xmlNodePtr element, void *userdata);
 
 int check_snapshot_mapping(const SnapshotMapping *mapping);
 
-void print_snapshot_mapping_nix(FILE *file, const void *value, const int indent_level, void *userdata);
+void print_snapshot_mapping_nix(FILE *file, const SnapshotMapping *mapping, const int indent_level, void *userdata);
 
-void print_snapshot_mapping_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+void print_snapshot_mapping_xml(FILE *file, const SnapshotMapping *mapping, const int indent_level, const char *type_property_name, void *userdata);
 
 #endif

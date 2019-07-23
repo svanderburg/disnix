@@ -253,10 +253,10 @@ void reset_snapshot_items_transferred_status(GPtrArray *snapshots_array)
 
 void print_snapshot_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
-    NixXML_print_g_ptr_array_nix(file, (const GPtrArray*)value, indent_level, userdata, print_snapshot_mapping_nix);
+    NixXML_print_g_ptr_array_nix(file, (const GPtrArray*)value, indent_level, userdata, (NixXML_PrintValueFunc)print_snapshot_mapping_nix);
 }
 
 void print_snapshot_mapping_array_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
 {
-    NixXML_print_g_ptr_array_xml(file, (const GPtrArray*)value, "mapping", indent_level, type_property_name, userdata, print_snapshot_mapping_xml);
+    NixXML_print_g_ptr_array_xml(file, (const GPtrArray*)value, "mapping", indent_level, type_property_name, userdata, (NixXML_PrintXMLValueFunc)print_snapshot_mapping_xml);
 }

@@ -23,7 +23,13 @@
 
 typedef int (*CheckFunction) (const gpointer value);
 
-int compare_hash_tables(GHashTable *hash_table1, GHashTable *hash_table2, int (*compare_function) (const gpointer left, const gpointer right));
+typedef int (*DeleteFunction) (gpointer value);
+
+typedef int (*CompareFunction) (const gpointer left, const gpointer right);
+
+void delete_hash_table(GHashTable *hash_table, DeleteFunction delete_function);
+
+int compare_hash_tables(GHashTable *hash_table1, GHashTable *hash_table2, CompareFunction compare_function);
 
 int compare_xml_strings(const gpointer left, const gpointer right);
 

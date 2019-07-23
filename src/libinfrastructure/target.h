@@ -56,11 +56,11 @@ void delete_target(Target *target);
 
 int check_target(const Target *target);
 
-int compare_targets(const gpointer left, const gpointer right);
+int compare_targets(const Target *left, const Target *right);
 
-void print_target_nix(FILE *file, const void *value, const int indent_level, void *userdata);
+void print_target_nix(FILE *file, const Target *target, const int indent_level, void *userdata);
 
-void print_target_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+void print_target_xml(FILE *file, const Target *target, const int indent_level, const char *type_property_name, void *userdata);
 
 /**
  * Retrieves the value of a target property with the given name.

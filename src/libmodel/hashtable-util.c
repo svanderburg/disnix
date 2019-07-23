@@ -20,7 +20,22 @@
 #include "hashtable-util.h"
 #include <libxml/parser.h>
 
-int compare_hash_tables(GHashTable *hash_table1, GHashTable *hash_table2, int (*compare_function) (const gpointer left, const gpointer right))
+void delete_hash_table(GHashTable *hash_table, DeleteFunction delete_function)
+{
+    if(hash_table != NULL)
+    {
+        GHashTableIter iter;
+        gpointer key, value;
+
+        g_hash_table_iter_init(&iter, hash_table);
+        while(g_hash_table_iter_next(&iter, &key, &value))
+            delete_function(value);
+
+        g_hash_table_destroy(hash_table);
+    }
+}
+
+int compare_hash_tables(GHashTable *hash_table1, GHashTable *hash_table2, CompareFunction compare_function)
 {
     if(g_hash_table_size(hash_table1) == g_hash_table_size(hash_table2))
     {

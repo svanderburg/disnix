@@ -84,10 +84,13 @@ int check_interdependency_mapping(const InterDependencyMapping *mapping)
 
 void delete_interdependency_mapping(InterDependencyMapping *mapping)
 {
-    xmlFree(mapping->service);
-    xmlFree(mapping->container);
-    xmlFree(mapping->target);
-    g_free(mapping);
+    if(mapping != NULL)
+    {
+        xmlFree(mapping->service);
+        xmlFree(mapping->container);
+        xmlFree(mapping->target);
+        g_free(mapping);
+    }
 }
 
 InterDependencyMapping *find_interdependency_mapping(const GPtrArray *interdependency_mapping_array, const InterDependencyMapping *key)
@@ -110,9 +113,9 @@ static void print_interdependency_mapping_attributes_nix(FILE *file, const void 
         NixXML_print_attribute_nix(file, "target", mapping->target, indent_level, userdata, NixXML_print_string_nix);
 }
 
-void print_interdependency_mapping_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+void print_interdependency_mapping_nix(FILE *file, const InterDependencyMapping *mapping, const int indent_level, void *userdata)
 {
-    NixXML_print_attrset_nix(file, value, indent_level, userdata, print_interdependency_mapping_attributes_nix, NULL);
+    NixXML_print_attrset_nix(file, mapping, indent_level, userdata, print_interdependency_mapping_attributes_nix, NULL);
 }
 
 static void print_interdependency_mapping_attributes_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata, NixXML_PrintXMLValueFunc print_value)
@@ -125,7 +128,7 @@ static void print_interdependency_mapping_attributes_xml(FILE *file, const void 
         NixXML_print_simple_attribute_xml(file, "target", mapping->target, indent_level, NULL, userdata, NixXML_print_string_xml);
 }
 
-void print_interdependency_mapping_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+void print_interdependency_mapping_xml(FILE *file, const InterDependencyMapping *mapping, const int indent_level, const char *type_property_name, void *userdata)
 {
-    NixXML_print_simple_attrset_xml(file, value, indent_level, NULL, userdata, print_interdependency_mapping_attributes_xml, NULL);
+    NixXML_print_simple_attrset_xml(file, mapping, indent_level, NULL, userdata, print_interdependency_mapping_attributes_xml, NULL);
 }

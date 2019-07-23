@@ -1,7 +1,7 @@
 AM_CPPFLAGS = -DLOCALSTATEDIR=\"$(localstatedir)\"
 
 pkglib_LTLIBRARIES = libmanifest.la
-pkginclude_HEADERS = servicemappingarray.h profilemappingtable.h profilemapping-iterator.h snapshotmappingarray.h manifestservice.h servicestable.h interdependencymapping.h interdependencymappingarray.h manifest.h
+pkginclude_HEADERS = servicemappingarray.h profilemappingtable.h profilemapping-iterator.h snapshotmapping.h snapshotmappingarray.h manifestservice.h servicestable.h interdependencymapping.h interdependencymappingarray.h manifest.h
 
 libmanifest_la_SOURCES = servicemappingarray.c profilemappingtable.c profilemapping-iterator.c snapshotmapping.c snapshotmappingarray.c manifestservice.c servicestable.c interdependencymapping.c interdependencymappingarray.c manifest.c
 libmanifest_la_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) -I../libprocreact -I../libnixxml -I../libnixxml-glib -I../libmodel -I../libinfrastructure

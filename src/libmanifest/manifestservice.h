@@ -40,14 +40,14 @@ ManifestService;
 
 void *parse_manifest_service(xmlNodePtr element, void *userdata);
 
-void delete_manifest_service_func(gpointer key, gpointer value, gpointer user_data);
+void delete_manifest_service(ManifestService *service);
 
 int check_manifest_service(const ManifestService *service);
 
-int compare_manifest_services(const gpointer left, const gpointer right);
+int compare_manifest_services(const ManifestService *left, const ManifestService *right);
 
-void print_manifest_service_nix(FILE *file, const void *value, const int indent_level, void *userdata);
+void print_manifest_service_nix(FILE *file, const ManifestService *service, const int indent_level, void *userdata);
 
-void print_manifest_service_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+void print_manifest_service_xml(FILE *file, const ManifestService *service, const int indent_level, const char *type_property_name, void *userdata);
 
 #endif

@@ -154,9 +154,9 @@ static void print_manifest_attributes_xml(FILE *file, const void *value, const i
     NixXML_print_simple_attribute_xml(file, "infrastructure", manifest->targets_table, indent_level, NULL, userdata, print_targets_table_xml);
 }
 
-void print_manifest_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+void print_manifest_xml(FILE *file, const Manifest *manifest, const int indent_level, const char *type_property_name, void *userdata)
 {
-    NixXML_print_simple_attrset_xml(file, value, indent_level, NULL, userdata, print_manifest_attributes_xml, NULL);
+    NixXML_print_simple_attrset_xml(file, manifest, indent_level, NULL, userdata, print_manifest_attributes_xml, NULL);
 }
 
 gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, const gchar *profile)

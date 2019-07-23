@@ -30,7 +30,7 @@ void *parse_manifest_service(xmlNodePtr element, void *userdata)
     return NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_manifest_service, parse_and_insert_manifest_service_properties);
 }
 
-static void delete_manifest_service(ManifestService *service)
+void delete_manifest_service(ManifestService *service)
 {
     xmlFree(service->name);
     xmlFree(service->pkg);
@@ -38,11 +38,6 @@ static void delete_manifest_service(ManifestService *service)
     delete_interdependency_mapping_array(service->depends_on);
     delete_interdependency_mapping_array(service->connects_to);
     g_free(service);
-}
-
-void delete_manifest_service_func(gpointer key, gpointer value, gpointer user_data)
-{
-    delete_manifest_service((ManifestService*)value);
 }
 
 int check_manifest_service(const ManifestService *service)
@@ -69,16 +64,13 @@ int check_manifest_service(const ManifestService *service)
         check_interdependency_mapping_array(service->connects_to));
 }
 
-int compare_manifest_services(const gpointer left, const gpointer right)
+int compare_manifest_services(const ManifestService *left, const ManifestService *right)
 {
-    const ManifestService *service1 = (const ManifestService*)left;
-    const ManifestService *service2 = (const ManifestService*)right;
-
-    return (xmlStrcmp(service1->name, service2->name) == 0
-      && xmlStrcmp(service1->pkg, service2->pkg) == 0
-      && xmlStrcmp(service1->type, service2->type) == 0
-      && compare_interdependency_mapping_arrays(service1->depends_on, service2->depends_on)
-      && compare_interdependency_mapping_arrays(service1->connects_to, service2->connects_to));
+    return (xmlStrcmp(left->name, right->name) == 0
+      && xmlStrcmp(left->pkg, right->pkg) == 0
+      && xmlStrcmp(left->type, right->type) == 0
+      && compare_interdependency_mapping_arrays(left->depends_on, right->depends_on)
+      && compare_interdependency_mapping_arrays(left->connects_to, right->connects_to));
 }
 
 static void print_manifest_service_attributes_nix(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)
@@ -92,9 +84,9 @@ static void print_manifest_service_attributes_nix(FILE *file, const void *value,
     NixXML_print_attribute_nix(file, "connectsTo", service->connects_to, indent_level, userdata, print_interdependency_mapping_array_nix);
 }
 
-void print_manifest_service_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+void print_manifest_service_nix(FILE *file, const ManifestService *service, const int indent_level, void *userdata)
 {
-    NixXML_print_attrset_nix(file, value, indent_level, userdata, print_manifest_service_attributes_nix, NULL);
+    NixXML_print_attrset_nix(file, service, indent_level, userdata, print_manifest_service_attributes_nix, NULL);
 }
 
 static void print_manifest_service_attributes_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata, NixXML_PrintXMLValueFunc print_value)
@@ -108,7 +100,7 @@ static void print_manifest_service_attributes_xml(FILE *file, const void *value,
     NixXML_print_simple_attribute_xml(file, "connectsTo", service->connects_to, indent_level, NULL, userdata, print_interdependency_mapping_array_xml);
 }
 
-void print_manifest_service_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+void print_manifest_service_xml(FILE *file, const ManifestService *service, const int indent_level, const char *type_property_name, void *userdata)
 {
-    NixXML_print_simple_attrset_xml(file, value, indent_level, NULL, userdata, print_manifest_service_attributes_xml, NULL);
+    NixXML_print_simple_attrset_xml(file, service, indent_level, NULL, userdata, print_manifest_service_attributes_xml, NULL);
 }

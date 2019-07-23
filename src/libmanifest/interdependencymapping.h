@@ -56,8 +56,8 @@ void delete_interdependency_mapping(InterDependencyMapping *mapping);
  */
 InterDependencyMapping *find_interdependency_mapping(const GPtrArray *interdependency_mapping_array, const InterDependencyMapping *key);
 
-void print_interdependency_mapping_nix(FILE *file, const void *value, const int indent_level, void *userdata);
+void print_interdependency_mapping_nix(FILE *file, const InterDependencyMapping *mapping, const int indent_level, void *userdata);
 
-void print_interdependency_mapping_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+void print_interdependency_mapping_xml(FILE *file, const InterDependencyMapping *mapping, const int indent_level, const char *type_property_name, void *userdata);
 
 #endif

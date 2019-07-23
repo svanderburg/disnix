@@ -30,11 +30,7 @@ GHashTable *parse_profile_mapping_table(xmlNodePtr element, void *userdata)
 
 void delete_profile_mapping_table(GHashTable *profile_mapping_table)
 {
-    if(profile_mapping_table != NULL)
-    {
-        g_hash_table_foreach(profile_mapping_table, delete_xml_value, NULL);
-        g_hash_table_destroy(profile_mapping_table);
-    }
+    delete_hash_table(profile_mapping_table, (DeleteFunction)g_free);
 }
 
 int check_profile_mapping_table(GHashTable *profile_mapping_table)
