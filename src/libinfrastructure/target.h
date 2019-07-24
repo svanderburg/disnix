@@ -50,16 +50,57 @@ typedef struct
 }
 Target;
 
+/**
+ * Parses an XML document representing a target.
+ *
+ * @param element XML element to parse.
+ * @param userdata Arbitrary user data that is propagated to all parse functions
+ * @return Pointer to a parsed target struct instance. It should be removed from memory with delete_target()
+ */
 void *parse_target(xmlNodePtr element, void *userdata);
 
+/**
+ * Deletes a target and its properties from heap memory.
+ *
+ * @param target A target struct instance
+ */
 void delete_target(Target *target);
 
+/**
+ * Checks the properties of a target for validity
+ *
+ * @param target Target struct instance
+ */
 int check_target(const Target *target);
 
+/**
+ * Checks whether two target struct instances have the same properties
+ *
+ * @param left An instance of a target struct
+ * @param right An instance of a target struct
+ * @return TRUE if they have the same properties, else FALSE
+ */
 int compare_targets(const Target *left, const Target *right);
 
+/**
+ * Prints a Nix expression representation of a target.
+ *
+ * @param file File descriptor to write to
+ * @param target Target struct instance
+ * @param indent_level Specifies the indent level, or -1 to disable indentation
+ * @param userdata Arbitrary user data that gets propagated to all print functions
+ */
 void print_target_nix(FILE *file, const Target *target, const int indent_level, void *userdata);
 
+/**
+ * Prints an XML representation of a target.
+ *
+ * @param file File descriptor to write to
+ * @param target Target struct instance
+ * @param indent_level Specifies the indent level, or -1 to disable indentation
+ * @param type_property_name Name of the type property or NULL to not display any type annotations
+ * @param userdata Arbitrary user data that gets propagated to all print functions
+ */
 void print_target_xml(FILE *file, const Target *target, const int indent_level, const char *type_property_name, void *userdata);
 
 /**

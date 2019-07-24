@@ -53,6 +53,12 @@ DistributedDerivation *create_distributed_derivation(const gchar *distributed_de
  */
 void delete_distributed_derivation(DistributedDerivation *distributed_derivation);
 
+/**
+ * Checks whether a distributed derivation is valid.
+ *
+ * @param distributed_derivation Distributed derivation to check
+ * @return TRUE if the distributed derivation is valid, else FALSE
+ */
 int check_distributed_derivation(const DistributedDerivation *distributed_derivation);
 
 #endif

@@ -23,15 +23,28 @@
 #include <libxml/parser.h>
 #include "interface.h"
 
+/**
+ * Parses an interfaces table from a sub section of an XML document.
+ *
+ * @param element Root XML element of the sub section that defines interfaces
+ * @param userdata Arbitrary user data that is propagated to all parse functions
+ * @return A pointer to an interfaces table
+ */
 GHashTable *parse_interfaces_table(xmlNodePtr element, void *userdata);
 
 /**
- * Deletes an array with interfaces.
+ * Deletes an interfaces table from heap memory.
  *
  * @param interfaces_table Hash table with interfaces
  */
 void delete_interfaces_table(GHashTable *interfaces_table);
 
+/**
+ * Checks whether an interace table is valid.
+ *
+ * @param interfaces_table Hash table with interfaces
+ * @return TRUE if the interfaces all valid, else FALSE
+ */
 int check_interfaces_table(GHashTable *interfaces_table);
 
 #endif

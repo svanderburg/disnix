@@ -35,10 +35,28 @@ typedef struct
 }
 Interface;
 
+/**
+ * Parses an interface from a sub section of an XML document.
+ *
+ * @param element Root XML element of the sub section that defines an interface
+ * @param userdata Arbitrary user data that is propagated to all parse functions
+ * @return A pointer to an interface
+ */
 void *parse_interface(xmlNodePtr element, void *userdata);
 
+/**
+ * Deletes an interface struct instance from heap memory.
+ *
+ * @param interface An interface struct instance
+ */
 void delete_interface(Interface *interface);
 
+/**
+ * Checks whether an interface struct instance is valid.
+ *
+ * @param interface An interface struct instance
+ * @return TRUE if the interface is valid, else FALSE
+ */
 int check_interface(const Interface *interface);
 
 #endif

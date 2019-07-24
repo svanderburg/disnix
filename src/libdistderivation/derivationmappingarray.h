@@ -28,17 +28,24 @@
  * Parses all derivation mappings in a sub section of an XML document.
  *
  * @param element Root XML element of the sub section that defines derivation items
+ * @param userdata Arbitrary user data that is propagated to all parse functions
  * @return GPtrArray of derivation items.
  */
 GPtrArray *parse_derivation_mapping_array(xmlNodePtr element, void *userdata);
 
 /**
- * Deletes an array with derivation items
+ * Deletes an array with derivation mapping items
  *
- * @param derivation_array Derivation array to delete
+ * @param derivation_mapping_array Derivation mapping array to delete
  */
 void delete_derivation_mapping_array(GPtrArray *derivation_mapping_array);
 
+/**
+ * Checks whether a derivation mapping array and its contents is valid.
+ *
+ * @param derivation_mapping_array Derivation mapping array to delete
+ * @return TRUE if the derivation mapping array is valid, else FALSE
+ */
 int check_derivation_mapping_array(const GPtrArray *derivation_mapping_array);
 
 #endif
