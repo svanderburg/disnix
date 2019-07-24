@@ -44,23 +44,28 @@ void *parse_interface(xmlNodePtr element, void *userdata)
 
 void delete_interface(Interface *interface)
 {
-    g_free(interface->target_address);
-    g_free(interface->client_interface);
-    g_free(interface);
+    if(interface != NULL)
+    {
+        g_free(interface->target_address);
+        g_free(interface->client_interface);
+        g_free(interface);
+    }
 }
 
 int check_interface(const Interface *interface)
 {
+    int status = TRUE;
+
     if(interface->target_address == NULL)
     {
         g_printerr("interface.targetAddress is not set!\n");
-        return FALSE;
+        status = FALSE;
     }
     else if(interface->client_interface == NULL)
     {
         g_printerr("interface.clientInterface is not set!\n");
-        return FALSE;
+        status = FALSE;
     }
 
-    return TRUE;
+    return status;
 }

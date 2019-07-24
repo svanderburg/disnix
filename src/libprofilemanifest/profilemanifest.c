@@ -232,26 +232,26 @@ static void print_profile_manifest_attributes_nix(FILE *file, const void *value,
 {
     ProfileManifest *profile_manifest = (ProfileManifest*)value;
 
-    NixXML_print_attribute_nix(file, "services", profile_manifest->services_table, indent_level, userdata, print_services_table_nix);
-    NixXML_print_attribute_nix(file, "serviceMappings", profile_manifest->service_mapping_array, indent_level, userdata, print_service_mapping_array_nix);
-    NixXML_print_attribute_nix(file, "snapshotMappings", profile_manifest->snapshot_mapping_array, indent_level, userdata, print_snapshot_mapping_array_nix);
+    NixXML_print_attribute_nix(file, "services", profile_manifest->services_table, indent_level, userdata, (NixXML_PrintValueFunc)print_services_table_nix);
+    NixXML_print_attribute_nix(file, "serviceMappings", profile_manifest->service_mapping_array, indent_level, userdata, (NixXML_PrintValueFunc)print_service_mapping_array_nix);
+    NixXML_print_attribute_nix(file, "snapshotMappings", profile_manifest->snapshot_mapping_array, indent_level, userdata, (NixXML_PrintValueFunc)print_snapshot_mapping_array_nix);
 }
 
-void print_profile_manifest_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+void print_profile_manifest_nix(FILE *file, const ProfileManifest *profile_manifest, const int indent_level, void *userdata)
 {
-    NixXML_print_attrset_nix(file, value, indent_level, userdata, print_profile_manifest_attributes_nix, NULL);
+    NixXML_print_attrset_nix(file, profile_manifest, indent_level, userdata, print_profile_manifest_attributes_nix, NULL);
 }
 
 void print_profile_manifest_attributes_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata, NixXML_PrintXMLValueFunc print_value)
 {
     ProfileManifest *profile_manifest = (ProfileManifest*)value;
 
-    NixXML_print_simple_attribute_xml(file, "services", profile_manifest->services_table, indent_level, type_property_name, userdata, print_services_table_xml);
-    NixXML_print_simple_attribute_xml(file, "serviceMappings", profile_manifest->service_mapping_array, indent_level, type_property_name, userdata, print_service_mapping_array_xml);
-    NixXML_print_simple_attribute_xml(file, "snapshotMappings", profile_manifest->snapshot_mapping_array, indent_level, type_property_name, userdata, print_snapshot_mapping_array_xml);
+    NixXML_print_simple_attribute_xml(file, "services", profile_manifest->services_table, indent_level, type_property_name, userdata, (NixXML_PrintXMLValueFunc)print_services_table_xml);
+    NixXML_print_simple_attribute_xml(file, "serviceMappings", profile_manifest->service_mapping_array, indent_level, type_property_name, userdata, (NixXML_PrintXMLValueFunc)print_service_mapping_array_xml);
+    NixXML_print_simple_attribute_xml(file, "snapshotMappings", profile_manifest->snapshot_mapping_array, indent_level, type_property_name, userdata, (NixXML_PrintXMLValueFunc)print_snapshot_mapping_array_xml);
 }
 
-void print_profile_manifest_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+void print_profile_manifest_xml(FILE *file, const ProfileManifest *profile_manifest, const int indent_level, const char *type_property_name, void *userdata)
 {
-    NixXML_print_simple_attrset_xml(file, value, indent_level, type_property_name, userdata, print_profile_manifest_attributes_xml, NULL);
+    NixXML_print_simple_attrset_xml(file, profile_manifest, indent_level, type_property_name, userdata, print_profile_manifest_attributes_xml, NULL);
 }

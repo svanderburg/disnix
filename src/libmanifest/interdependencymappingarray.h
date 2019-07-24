@@ -32,8 +32,8 @@ void delete_interdependency_mapping_array(GPtrArray *interdependency_mapping_arr
 
 int compare_interdependency_mapping_arrays(const GPtrArray *interdependency_mapping_array1, const GPtrArray *interdependency_mapping_array2);
 
-void print_interdependency_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata);
+void print_interdependency_mapping_array_nix(FILE *file, const GPtrArray *interdependency_mapping_array, const int indent_level, void *userdata);
 
-void print_interdependency_mapping_array_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+void print_interdependency_mapping_array_xml(FILE *file, const GPtrArray *interdependency_mapping_array, const int indent_level, const char *type_property_name, void *userdata);
 
 #endif

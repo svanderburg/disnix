@@ -96,8 +96,8 @@ void print_text_from_profile_manifest(gchar *localstatedir, gchar *profile, int 
  *
  * @param profile_manifest_array An array of profile manifest entries
  */
-void print_profile_manifest_nix(FILE *file, const void *value, const int indent_level, void *userdata);
+void print_profile_manifest_nix(FILE *file, const ProfileManifest *profile_manifest, const int indent_level, void *userdata);
 
-void print_profile_manifest_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+void print_profile_manifest_xml(FILE *file, const ProfileManifest *profile_manifest, const int indent_level, const char *type_property_name, void *userdata);
 
 #endif

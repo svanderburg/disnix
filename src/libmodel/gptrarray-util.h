@@ -17,31 +17,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_HASHTABLE_UTIL_H
-#define __DISNIX_HASHTABLE_UTIL_H
+#ifndef __DISNIX_GPTRARRAY_UTIL_H
+#define __DISNIX_GPTRARRAY_UTIL_H
 #include <glib.h>
-#include <libxml/parser.h>
 
-typedef int (*CheckFunction) (const gpointer value);
+typedef void (*DeleteElementFunction) (gpointer value);
 
-typedef int (*DeleteFunction) (gpointer value);
+typedef int (*CheckElementFunction) (gconstpointer value);
 
-typedef int (*CompareFunction) (const gpointer left, const gpointer right);
+void delete_array(GPtrArray *array, DeleteElementFunction delete_element);
 
-void delete_hash_table(GHashTable *hash_table, DeleteFunction delete_function);
-
-void delete_property_table(GHashTable *property_table);
-
-int compare_hash_tables(GHashTable *hash_table1, GHashTable *hash_table2, CompareFunction compare_function);
-
-int compare_xml_strings(const xmlChar *left, const xmlChar *right);
-
-int compare_property_tables(GHashTable *property_table1, GHashTable *property_table2);
-
-int check_value_is_not_null(const gpointer value);
-
-int check_hash_table(GHashTable *hash_table, CheckFunction check_function);
-
-int check_property_table(GHashTable *property_table);
+int check_array(const GPtrArray *array, CheckElementFunction check_element);
 
 #endif

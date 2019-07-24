@@ -35,10 +35,7 @@ void delete_profile_mapping_table(GHashTable *profile_mapping_table)
 
 int check_profile_mapping_table(GHashTable *profile_mapping_table)
 {
-    if(profile_mapping_table == NULL)
-        return TRUE;
-    else
-        return check_property_table(profile_mapping_table);
+    return check_property_table(profile_mapping_table);
 }
 
 int compare_profile_mapping_tables(GHashTable *profile_mapping_table1, GHashTable *profile_mapping_table2)
@@ -46,12 +43,12 @@ int compare_profile_mapping_tables(GHashTable *profile_mapping_table1, GHashTabl
     return compare_property_tables(profile_mapping_table1, profile_mapping_table2);
 }
 
-void print_profile_mapping_table_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+void print_profile_mapping_table_nix(FILE *file, GHashTable *profile_mapping_table, const int indent_level, void *userdata)
 {
-    NixXML_print_g_hash_table_nix(file, (GHashTable*)value, indent_level, userdata, NixXML_print_store_path_nix);
+    NixXML_print_g_hash_table_nix(file, profile_mapping_table, indent_level, userdata, NixXML_print_store_path_nix);
 }
 
-void print_profile_mapping_table_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+void print_profile_mapping_table_xml(FILE *file, GHashTable *profile_mapping_table, const int indent_level, const char *type_property_name, void *userdata)
 {
-    NixXML_print_g_hash_table_verbose_xml(file, (GHashTable*)value, "profile", "name", indent_level, NULL, userdata, NixXML_print_string_xml);
+    NixXML_print_g_hash_table_verbose_xml(file, profile_mapping_table, "profile", "name", indent_level, NULL, userdata, NixXML_print_string_xml);
 }

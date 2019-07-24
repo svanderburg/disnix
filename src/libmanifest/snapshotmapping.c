@@ -64,7 +64,7 @@ void delete_snapshot_mapping(SnapshotMapping *mapping)
     }
 }
 
-static void *create_snapshot_mapping(xmlNodePtr element, void *userdata)
+static void *create_snapshot_mapping_from_element(xmlNodePtr element, void *userdata)
 {
     return g_malloc0(sizeof(SnapshotMapping));
 }
@@ -87,28 +87,30 @@ static void insert_snapshot_mapping_attributes(void *table, const xmlChar *key, 
 
 void *parse_snapshot_mapping(xmlNodePtr element, void *userdata)
 {
-    return NixXML_parse_simple_attrset(element, userdata, create_snapshot_mapping, NixXML_parse_value, insert_snapshot_mapping_attributes);
+    return NixXML_parse_simple_attrset(element, userdata, create_snapshot_mapping_from_element, NixXML_parse_value, insert_snapshot_mapping_attributes);
 }
 
 int check_snapshot_mapping(const SnapshotMapping *mapping)
 {
+    int status = TRUE;
+
     if(mapping->component == NULL)
     {
         g_printerr("mapping.component is not set!\n");
-        return FALSE;
+        status = FALSE;
     }
     else if(mapping->container == NULL)
     {
         g_printerr("mapping.container is not set!\n");
-        return FALSE;
+        status = FALSE;
     }
     else if(mapping->service == NULL)
     {
         g_printerr("mapping.service is not set!\n");
-        return FALSE;
+        status = FALSE;
     }
 
-    return TRUE;
+    return status;
 }
 
 static void print_snapshot_mapping_attributes_nix(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)

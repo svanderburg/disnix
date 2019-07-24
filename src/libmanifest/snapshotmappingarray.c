@@ -25,78 +25,52 @@
 #include <nixxml-ghashtable.h>
 #include <nixxml-gptrarray.h>
 #include "manifest.h"
+#include <gptrarray-util.h>
 
-#define min(a,b) ((a) < (b) ? (a) : (b))
-
-static GPtrArray *filter_selected_mappings(GPtrArray *snapshots_array, const gchar *container_filter, const gchar *component_filter)
+static GPtrArray *filter_selected_mappings(GPtrArray *snapshot_mapping_array, const gchar *container_filter, const gchar *component_filter)
 {
     if(component_filter == NULL && container_filter == NULL)
-        return snapshots_array;
+        return snapshot_mapping_array;
     else
     {
-        GPtrArray *filtered_snapshots_array = g_ptr_array_new();
+        GPtrArray *filtered_snapshot_mapping_array = g_ptr_array_new();
         unsigned int i;
 
-        for(i = 0; i < snapshots_array->len; i++)
+        for(i = 0; i < snapshot_mapping_array->len; i++)
         {
-            SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
+            SnapshotMapping *mapping = g_ptr_array_index(snapshot_mapping_array, i);
             if(mapping_is_selected(mapping, container_filter, component_filter))
-                g_ptr_array_add(filtered_snapshots_array, mapping);
+                g_ptr_array_add(filtered_snapshot_mapping_array, mapping);
             else
                 delete_snapshot_mapping(mapping);
         }
 
-        g_ptr_array_free(snapshots_array, TRUE);
-        return filtered_snapshots_array;
+        g_ptr_array_free(snapshot_mapping_array, TRUE);
+        return filtered_snapshot_mapping_array;
     }
 }
 
 GPtrArray *parse_snapshot_mapping_array(xmlNodePtr element, const gchar *container_filter, const gchar *component_filter, void *userdata)
 {
-    GPtrArray *snapshots_array = NixXML_parse_g_ptr_array(element, "mapping", userdata, parse_snapshot_mapping);
+    GPtrArray *snapshot_mapping_array = NixXML_parse_g_ptr_array(element, "mapping", userdata, parse_snapshot_mapping);
 
     /* Sort the snapshots array */
-    g_ptr_array_sort(snapshots_array, (GCompareFunc)compare_snapshot_mapping);
+    g_ptr_array_sort(snapshot_mapping_array, (GCompareFunc)compare_snapshot_mapping);
 
     /* Filter only selected mappings */
-    snapshots_array = filter_selected_mappings(snapshots_array, container_filter, component_filter);
+    snapshot_mapping_array = filter_selected_mappings(snapshot_mapping_array, container_filter, component_filter);
 
-    return snapshots_array;
+    return snapshot_mapping_array;
 }
 
-void delete_snapshot_mapping_array(GPtrArray *snapshots_array)
+void delete_snapshot_mapping_array(GPtrArray *snapshot_mapping_array)
 {
-    if(snapshots_array != NULL)
-    {
-        unsigned int i;
-
-        for(i = 0; i < snapshots_array->len; i++)
-        {
-            SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
-            delete_snapshot_mapping(mapping);
-        }
-
-        g_ptr_array_free(snapshots_array, TRUE);
-    }
+    delete_array(snapshot_mapping_array, (DeleteElementFunction)delete_snapshot_mapping);
 }
 
-int check_snapshot_mapping_array(const GPtrArray *snapshots_array)
+int check_snapshot_mapping_array(const GPtrArray *snapshot_mapping_array)
 {
-    if(snapshots_array == NULL)
-        return TRUE;
-    else
-    {
-        unsigned int i;
-
-        for(i = 0; i < snapshots_array->len; i++)
-        {
-            SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
-            if(!check_snapshot_mapping(mapping))
-                return FALSE;
-        }
-
-        return TRUE;
-    }
+    return check_array(snapshot_mapping_array, (CheckElementFunction)check_snapshot_mapping);
 }
 
 int compare_snapshot_mapping_arrays(const GPtrArray *snapshot_mapping_array1, const GPtrArray *snapshot_mapping_array2)
@@ -118,9 +92,9 @@ int compare_snapshot_mapping_arrays(const GPtrArray *snapshot_mapping_array1, co
         return FALSE;
 }
 
-SnapshotMapping *find_snapshot_mapping(const GPtrArray *snapshots_array, const SnapshotMappingKey *key)
+SnapshotMapping *find_snapshot_mapping(const GPtrArray *snapshot_mapping_array, const SnapshotMappingKey *key)
 {
-    SnapshotMapping **ret = bsearch(&key, snapshots_array->pdata, snapshots_array->len, sizeof(gpointer), (int (*)(const void*, const void*)) compare_snapshot_mapping);
+    SnapshotMapping **ret = bsearch(&key, snapshot_mapping_array->pdata, snapshot_mapping_array->len, sizeof(gpointer), (int (*)(const void*, const void*)) compare_snapshot_mapping);
 
     if(ret == NULL)
         return NULL;
@@ -128,30 +102,30 @@ SnapshotMapping *find_snapshot_mapping(const GPtrArray *snapshots_array, const S
         return *ret;
 }
 
-GPtrArray *subtract_snapshot_mappings(const GPtrArray *snapshots_array1, const GPtrArray *snapshots_array2)
+GPtrArray *subtract_snapshot_mappings(const GPtrArray *snapshot_mapping_array1, const GPtrArray *snapshot_mapping_array2)
 {
     GPtrArray *return_array = g_ptr_array_new();
     unsigned int i;
 
-    for(i = 0; i < snapshots_array1->len; i++)
+    for(i = 0; i < snapshot_mapping_array1->len; i++)
     {
-        SnapshotMapping *mapping = g_ptr_array_index(snapshots_array1, i);
+        SnapshotMapping *mapping = g_ptr_array_index(snapshot_mapping_array1, i);
 
-        if(find_snapshot_mapping(snapshots_array2, (SnapshotMappingKey*)mapping) == NULL)
+        if(find_snapshot_mapping(snapshot_mapping_array2, (SnapshotMappingKey*)mapping) == NULL)
             g_ptr_array_add(return_array, mapping);
     }
 
     return return_array;
 }
 
-GPtrArray *find_snapshot_mappings_per_target(const GPtrArray *snapshots_array, const gchar *target)
+GPtrArray *find_snapshot_mappings_per_target(const GPtrArray *snapshot_mapping_array, const gchar *target)
 {
     GPtrArray *return_array = g_ptr_array_new();
     unsigned int i;
 
-    for(i = 0; i < snapshots_array->len; i++)
+    for(i = 0; i < snapshot_mapping_array->len; i++)
     {
-        SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
+        SnapshotMapping *mapping = g_ptr_array_index(snapshot_mapping_array, i);
 
         if(xmlStrcmp(mapping->target, (const xmlChar*) target) == 0)
             g_ptr_array_add(return_array, mapping);
@@ -195,19 +169,19 @@ static int wait_to_complete_snapshot_item(GHashTable *pid_table, GHashTable *tar
         return TRUE;
 }
 
-int map_snapshot_items(const GPtrArray *snapshots_array, GHashTable *services_table, GHashTable *targets_table, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
+int map_snapshot_items(const GPtrArray *snapshot_mapping_array, GHashTable *services_table, GHashTable *targets_table, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
 {
     unsigned int num_processed = 0;
     int status = TRUE;
     GHashTable *pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, NULL);
 
-    while(num_processed < snapshots_array->len)
+    while(num_processed < snapshot_mapping_array->len)
     {
         unsigned int i;
 
-        for(i = 0; i < snapshots_array->len; i++)
+        for(i = 0; i < snapshot_mapping_array->len; i++)
         {
-            SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
+            SnapshotMapping *mapping = g_ptr_array_index(snapshot_mapping_array, i);
             Target *target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
 
             if(target == NULL)
@@ -240,23 +214,23 @@ int map_snapshot_items(const GPtrArray *snapshots_array, GHashTable *services_ta
     return status;
 }
 
-void reset_snapshot_items_transferred_status(GPtrArray *snapshots_array)
+void reset_snapshot_items_transferred_status(GPtrArray *snapshot_mapping_array)
 {
     unsigned int i;
 
-    for(i = 0; i < snapshots_array->len; i++)
+    for(i = 0; i < snapshot_mapping_array->len; i++)
     {
-        SnapshotMapping *mapping = g_ptr_array_index(snapshots_array, i);
+        SnapshotMapping *mapping = g_ptr_array_index(snapshot_mapping_array, i);
         mapping->transferred = FALSE;
     }
 }
 
-void print_snapshot_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+void print_snapshot_mapping_array_nix(FILE *file, const GPtrArray *snapshot_mapping_array, const int indent_level, void *userdata)
 {
-    NixXML_print_g_ptr_array_nix(file, (const GPtrArray*)value, indent_level, userdata, (NixXML_PrintValueFunc)print_snapshot_mapping_nix);
+    NixXML_print_g_ptr_array_nix(file, snapshot_mapping_array, indent_level, userdata, (NixXML_PrintValueFunc)print_snapshot_mapping_nix);
 }
 
-void print_snapshot_mapping_array_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+void print_snapshot_mapping_array_xml(FILE *file, const GPtrArray *snapshot_mapping_array, const int indent_level, const char *type_property_name, void *userdata)
 {
-    NixXML_print_g_ptr_array_xml(file, (const GPtrArray*)value, "mapping", indent_level, type_property_name, userdata, (NixXML_PrintXMLValueFunc)print_snapshot_mapping_xml);
+    NixXML_print_g_ptr_array_xml(file, snapshot_mapping_array, "mapping", indent_level, type_property_name, userdata, (NixXML_PrintXMLValueFunc)print_snapshot_mapping_xml);
 }

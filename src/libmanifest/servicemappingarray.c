@@ -24,8 +24,6 @@
 #include <nixxml-ghashtable.h>
 #include <nixxml-gptrarray.h>
 
-#define min(a,b) ((a) < (b) ? (a) : (b))
-
 gint compare_service_mappings(const ServiceMapping **l, const ServiceMapping **r)
 {
     return compare_interdependency_mappings((const InterDependencyMapping **)l, (const InterDependencyMapping **)r);
@@ -361,12 +359,12 @@ int traverse_service_mappings(GPtrArray *mappings, GPtrArray *union_array, GHash
     return success;
 }
 
-void print_service_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+void print_service_mapping_array_nix(FILE *file, const GPtrArray *service_mapping_array, const int indent_level, void *userdata)
 {
-    print_interdependency_mapping_array_nix(file, value, indent_level, userdata);
+    print_interdependency_mapping_array_nix(file, service_mapping_array, indent_level, userdata);
 }
 
-void print_service_mapping_array_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+void print_service_mapping_array_xml(FILE *file, const GPtrArray *service_mapping_array, const int indent_level, const char *type_property_name, void *userdata)
 {
-    print_interdependency_mapping_array_xml(file, value, indent_level, type_property_name, userdata);
+    print_interdependency_mapping_array_xml(file, service_mapping_array, indent_level, type_property_name, userdata);
 }

@@ -75,8 +75,8 @@ int check_targets_table(GHashTable *targets_table);
 
 int compare_targets_tables(GHashTable *targets_table1, GHashTable *targets_table2);
 
-void print_targets_table_nix(FILE *file, const void *value, const int indent_level, void *userdata);
+void print_targets_table_nix(FILE *file, GHashTable *targets_table, const int indent_level, void *userdata);
 
-void print_targets_table_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+void print_targets_table_xml(FILE *file, GHashTable *targets_table, const int indent_level, const char *type_property_name, void *userdata);
 
 #endif

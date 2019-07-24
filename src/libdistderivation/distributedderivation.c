@@ -73,6 +73,12 @@ DistributedDerivation *create_distributed_derivation(const gchar *distributed_de
     /* Parse distributed derivation */
     distributed_derivation = parse_distributed_derivation(node_root, NULL);
 
+    /* Set default values */
+    if(distributed_derivation->derivation_mapping_array == NULL)
+        distributed_derivation->derivation_mapping_array = g_ptr_array_new();
+    else if(distributed_derivation->interfaces_table == NULL)
+        distributed_derivation->interfaces_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+
     /* Cleanup */
     xmlFreeDoc(doc);
     xmlCleanupParser();
@@ -93,11 +99,13 @@ void delete_distributed_derivation(DistributedDerivation *distributed_derivation
 
 int check_distributed_derivation(const DistributedDerivation *distributed_derivation)
 {
-    if(distributed_derivation == NULL)
-        return TRUE;
-    else
-    {
-        return (check_derivation_mapping_array(distributed_derivation->derivation_mapping_array)
-          && check_interfaces_table(distributed_derivation->interfaces_table));
-    }
+    int status = TRUE;
+
+    if(!check_derivation_mapping_array(distributed_derivation->derivation_mapping_array))
+        status = FALSE;
+
+    if(!check_interfaces_table(distributed_derivation->interfaces_table))
+        status = FALSE;
+
+    return status;
 }

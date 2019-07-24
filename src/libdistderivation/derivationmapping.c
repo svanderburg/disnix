@@ -20,7 +20,7 @@
 #include "derivationmapping.h"
 #include <nixxml-parse.h>
 
-static void *create_derivation_mapping(xmlNodePtr element, void *userdata)
+static void *create_derivation_mapping_from_element(xmlNodePtr element, void *userdata)
 {
     return g_malloc0(sizeof(DerivationMapping));
 }
@@ -39,30 +39,35 @@ static void insert_derivation_mapping_attributes(void *table, const xmlChar *key
 
 void *parse_derivation_mapping(xmlNodePtr element, void *userdata)
 {
-    return NixXML_parse_simple_attrset(element, userdata, create_derivation_mapping, NixXML_parse_value, insert_derivation_mapping_attributes);
+    return NixXML_parse_simple_attrset(element, userdata, create_derivation_mapping_from_element, NixXML_parse_value, insert_derivation_mapping_attributes);
 }
 
 void delete_derivation_mapping(DerivationMapping *mapping)
 {
-    xmlFree(mapping->derivation);
-    xmlFree(mapping->interface);
-    g_strfreev(mapping->result);
-    g_free(mapping);
+    if(mapping != NULL)
+    {
+        xmlFree(mapping->derivation);
+        xmlFree(mapping->interface);
+        g_strfreev(mapping->result);
+        g_free(mapping);
+    }
 }
 
 int check_derivation_mapping(const DerivationMapping *mapping)
 {
+    int status = TRUE;
+
     if(mapping->derivation == NULL)
     {
         g_printerr("derivationmapping.derivation is not set!\n");
-        return FALSE;
+        status = FALSE;
     }
 
     if(mapping->interface == NULL)
     {
         g_printerr("derivationmapping.interface is not set!\n");
-        return FALSE;
+        status = FALSE;
     }
 
-    return TRUE;
+    return status;
 }

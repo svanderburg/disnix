@@ -44,7 +44,7 @@ int run_restore(const gchar *manifest_file, const unsigned int max_concurrent_tr
             else
                 previous_manifest = open_provided_or_previous_manifest_file(old_manifest, coordinator_profile_path, profile, MANIFEST_SNAPSHOT_MAPPINGS_FLAG, container_filter, component_filter);
 
-            if(check_manifest(previous_manifest))
+            if(previous_manifest == NULL || check_manifest(previous_manifest))
                 exit_status = !restore(manifest, previous_manifest, max_concurrent_transfers, flags, keep);
             else
                 exit_status = 1;

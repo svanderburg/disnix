@@ -60,63 +60,63 @@ GPtrArray *parse_snapshot_mapping_array(xmlNodePtr element, const gchar *contain
 /**
  * Deletes an array with snapshot mappings including its contents.
  *
- * @param snapshots_array Snapshots array to delete
+ * @param snapshot_mapping_array Snapshots array to delete
  */
-void delete_snapshot_mapping_array(GPtrArray *snapshots_array);
+void delete_snapshot_mapping_array(GPtrArray *snapshot_mapping_array);
 
-int check_snapshot_mapping_array(const GPtrArray *snapshots_array);
+int check_snapshot_mapping_array(const GPtrArray *snapshot_mapping_array);
 
 int compare_snapshot_mapping_arrays(const GPtrArray *snapshot_mapping_array1, const GPtrArray *snapshot_mapping_array2);
 
 /**
  * Returns the snapshots mapping with the given key in the snapshots array.
  *
- * @param snapshots_array Snapshots array
+ * @param snapshot_mapping_array Snapshots array
  * @param key Key of the snapshots mapping to find
  * @return The snapshot mapping with the specified key, or NULL if it cannot be found
  */
-SnapshotMapping *find_snapshot_mapping(const GPtrArray *snapshots_array, const SnapshotMappingKey *key);
+SnapshotMapping *find_snapshot_mapping(const GPtrArray *snapshot_mapping_array, const SnapshotMappingKey *key);
 
 /**
  * Subtract the snapshots from array1 that are in array2.
  *
- * @param snapshots_array1 Array to substract from
- * @param snapshots_array2 Array to substract
+ * @param snapshot_mapping_array1 Array to substract from
+ * @param snapshot_mapping_array2 Array to substract
  * @return An array with snapshot mappings with elements from array1 that are not in array2
  */
-GPtrArray *subtract_snapshot_mappings(const GPtrArray *snapshots_array1, const GPtrArray *snapshots_array2);
+GPtrArray *subtract_snapshot_mappings(const GPtrArray *snapshot_mapping_array1, const GPtrArray *snapshot_mapping_array2);
 
 /**
  * Finds all snapshot mappings that map to a specific target.
  *
- * @param snapshots_array Snapshots array
+ * @param snapshot_mapping_array Snapshots array
  * @param target Key that identifies a target machine
  * @return An array with snapshot mappings linked to the given target
  */
-GPtrArray *find_snapshot_mappings_per_target(const GPtrArray *snapshots_array, const gchar *target);
+GPtrArray *find_snapshot_mappings_per_target(const GPtrArray *snapshot_mapping_array, const gchar *target);
 
 /**
  * Maps over each snapshot mapping, asynchronously executes a function for each
  * item and ensures that for each machine only the allowed number of processes
  * are executed concurrently.
  *
- * @param snapshots_array Snapshots array
+ * @param snapshot_mapping_array Snapshots array
  * @param targets_table Hash table of targets
  * @param map_snapshot_item Function that gets executed for each snapshot item
  * @param complete_snapshot_item_mapping Function that gets executed when a mapping function completes
  * @return TRUE if all mappings were successfully executed, else FALSE
  */
-int map_snapshot_items(const GPtrArray *snapshots_array, GHashTable *services_table, GHashTable *targets_table, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping);
+int map_snapshot_items(const GPtrArray *snapshot_mapping_array, GHashTable *services_table, GHashTable *targets_table, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping);
 
 /**
  * Resets the transferred status on all items in the snapshots array
  *
- * @param snapshots_array Snapshots array
+ * @param snapshot_mapping_array Snapshots array
  */
-void reset_snapshot_items_transferred_status(GPtrArray *snapshots_array);
+void reset_snapshot_items_transferred_status(GPtrArray *snapshot_mapping_array);
 
-void print_snapshot_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata);
+void print_snapshot_mapping_array_nix(FILE *file, const GPtrArray *snapshot_mapping_array, const int indent_level, void *userdata);
 
-void print_snapshot_mapping_array_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+void print_snapshot_mapping_array_xml(FILE *file, const GPtrArray *snapshot_mapping_array, const int indent_level, const char *type_property_name, void *userdata);
 
 #endif

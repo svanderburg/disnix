@@ -172,10 +172,7 @@ void delete_targets_table(GHashTable *targets_table)
 
 int check_targets_table(GHashTable *targets_table)
 {
-    if(targets_table == NULL)
-        return TRUE;
-    else
-        return check_hash_table(targets_table, (CheckFunction)check_target);
+    return check_hash_table(targets_table, (CheckFunction)check_target);
 }
 
 int compare_targets_tables(GHashTable *targets_table1, GHashTable *targets_table2)
@@ -183,12 +180,12 @@ int compare_targets_tables(GHashTable *targets_table1, GHashTable *targets_table
     return compare_hash_tables(targets_table1, targets_table2, (CompareFunction)compare_targets);
 }
 
-void print_targets_table_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+void print_targets_table_nix(FILE *file, GHashTable *targets_table, const int indent_level, void *userdata)
 {
-    NixXML_print_g_hash_table_nix(file, (GHashTable*)value, indent_level, userdata, (NixXML_PrintValueFunc)print_target_nix);
+    NixXML_print_g_hash_table_nix(file, targets_table, indent_level, userdata, (NixXML_PrintValueFunc)print_target_nix);
 }
 
-void print_targets_table_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
+void print_targets_table_xml(FILE *file, GHashTable *targets_table, const int indent_level, const char *type_property_name, void *userdata)
 {
-    NixXML_print_g_hash_table_verbose_xml(file, (GHashTable*)value, "target", "name", indent_level, NULL, userdata, (NixXML_PrintXMLValueFunc)print_target_xml);
+    NixXML_print_g_hash_table_verbose_xml(file, targets_table, "target", "name", indent_level, NULL, userdata, (NixXML_PrintXMLValueFunc)print_target_xml);
 }

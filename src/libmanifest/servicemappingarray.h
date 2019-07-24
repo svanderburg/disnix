@@ -116,7 +116,7 @@ GPtrArray *parse_service_mapping_array(xmlNodePtr element, void *userdata);
 /**
  * Deletes an array with activation mappings including its contents.
  *
- * @param activation_array Activation array to delete
+ * @param service_mapping_array Activation array to delete
  */
 void delete_service_mapping_array(GPtrArray *service_mapping_array);
 
@@ -127,7 +127,7 @@ int compare_service_mapping_arrays(const GPtrArray *service_mapping_array1, cons
 /**
  * Returns the activation mapping with the given key in the activation array.
  *
- * @param activation_array Activation array
+ * @param service_mapping_array Activation array
  * @param key Key of the activation mapping to find
  * @return The activation mapping with the specified keys, or NULL if it cannot be found
  */
@@ -173,12 +173,12 @@ GPtrArray *substract_service_mapping_array(const GPtrArray *left, const GPtrArra
  * Searches for all the mappings in an array that have an inter-dependency
  * on the given mapping.
  *
- * @param activation_array Array of activation mappings
+ * @param service_mapping_array Array of activation mappings
  * @param mapping Activation mapping from which to derive the
  *                interdependent mapping
  * @return Array with interdependent activation mappings
  */
-GPtrArray *find_interdependent_service_mappings(GHashTable *services_table, const GPtrArray *activation_array, const ServiceMapping *mapping);
+GPtrArray *find_interdependent_service_mappings(GHashTable *services_table, const GPtrArray *service_mapping_array, const ServiceMapping *mapping);
 
 /**
  * Traverses the collection of activation mappings by recursively visiting the
@@ -226,8 +226,8 @@ ServiceStatus traverse_interdependent_mappings(GPtrArray *union_array, GHashTabl
  */
 int traverse_service_mappings(GPtrArray *mappings, GPtrArray *union_array, GHashTable *union_services_table, GHashTable *targets_table, iterate_strategy_function iterate_strategy, service_mapping_function map_service_mapping, complete_service_mapping_function complete_service_mapping);
 
-void print_service_mapping_array_nix(FILE *file, const void *value, const int indent_level, void *userdata);
+void print_service_mapping_array_nix(FILE *file, const GPtrArray *service_mapping_array, const int indent_level, void *userdata);
 
-void print_service_mapping_array_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+void print_service_mapping_array_xml(FILE *file, const GPtrArray *service_mapping_array, const int indent_level, const char *type_property_name, void *userdata);
 
 #endif

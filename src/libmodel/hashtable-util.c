@@ -18,7 +18,6 @@
  */
 
 #include "hashtable-util.h"
-#include <libxml/parser.h>
 
 void delete_hash_table(GHashTable *hash_table, DeleteFunction delete_function)
 {
@@ -33,6 +32,11 @@ void delete_hash_table(GHashTable *hash_table, DeleteFunction delete_function)
 
         g_hash_table_destroy(hash_table);
     }
+}
+
+void delete_property_table(GHashTable *property_table)
+{
+    delete_hash_table(property_table, (DeleteFunction)xmlFree);
 }
 
 int compare_hash_tables(GHashTable *hash_table1, GHashTable *hash_table2, CompareFunction compare_function)
@@ -62,14 +66,14 @@ int compare_hash_tables(GHashTable *hash_table1, GHashTable *hash_table2, Compar
         return FALSE;
 }
 
-int compare_xml_strings(const gpointer left, const gpointer right)
+int compare_xml_strings(const xmlChar *left, const xmlChar *right)
 {
-    return (xmlStrcmp((const xmlChar*)left, (const xmlChar*)right) == 0);
+    return (xmlStrcmp(left, right) == 0);
 }
 
 int compare_property_tables(GHashTable *property_table1, GHashTable *property_table2)
 {
-    return compare_hash_tables(property_table1, property_table2, compare_xml_strings);
+    return compare_hash_tables(property_table1, property_table2, (CompareFunction)compare_xml_strings);
 }
 
 int check_value_is_not_null(const gpointer value)
@@ -81,23 +85,22 @@ int check_hash_table(GHashTable *hash_table, CheckFunction check_function)
 {
     GHashTableIter iter;
     gpointer key, value;
+    int status = TRUE;
 
     g_hash_table_iter_init(&iter, hash_table);
     while(g_hash_table_iter_next(&iter, &key, &value))
     {
         if(!check_function(value))
-            return FALSE;
+        {
+            g_printerr("Hash table value with key: %s is invalid!\n", (gchar*)key);
+            status = FALSE;
+        }
     }
 
-    return TRUE;
+    return status;
 }
 
 int check_property_table(GHashTable *property_table)
 {
     return check_hash_table(property_table, check_value_is_not_null);
-}
-
-void delete_xml_value(gpointer key, gpointer value, gpointer user_data)
-{
-    xmlFree(value);
 }

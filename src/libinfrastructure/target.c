@@ -39,7 +39,7 @@ static void *parse_property_table(xmlNodePtr element, void *userdata)
     return NixXML_parse_g_hash_table_verbose(element, "property", "name", userdata, generic_parse_expr);
 }
 
-static void *create_target(xmlNodePtr element, void *userdata)
+static void *create_target_from_element(xmlNodePtr element, void *userdata)
 {
     return g_malloc0(sizeof(Target));
 }
@@ -73,37 +73,19 @@ static void parse_and_insert_target_attributes(xmlNodePtr element, void *table, 
 
 void *parse_target(xmlNodePtr element, void *userdata)
 {
-    return NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_target, parse_and_insert_target_attributes);
-}
-
-static void delete_properties_table(GHashTable *properties_table)
-{
-    if(properties_table != NULL)
-    {
-        g_hash_table_foreach(properties_table, delete_xml_value, NULL);
-        g_hash_table_destroy(properties_table);
-    }
-}
-
-static void delete_properties_func(gpointer key, gpointer value, gpointer user_data)
-{
-    delete_properties_table((GHashTable*)value);
+    return NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_target_from_element, parse_and_insert_target_attributes);
 }
 
 static void delete_containers_table(GHashTable *containers_table)
 {
-    if(containers_table != NULL)
-    {
-        g_hash_table_foreach(containers_table, delete_properties_func, NULL);
-        g_hash_table_destroy(containers_table);
-    }
+    delete_hash_table(containers_table, (DeleteFunction)delete_property_table);
 }
 
 void delete_target(Target *target)
 {
     if(target != NULL)
     {
-        delete_properties_table(target->properties_table);
+        delete_property_table(target->properties_table);
         delete_containers_table(target->containers_table);
 
         xmlFree(target->system);

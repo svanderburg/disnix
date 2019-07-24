@@ -42,7 +42,7 @@ gint compare_interdependency_mappings(const InterDependencyMapping **l, const In
         return status;
 }
 
-static void *create_interdependency_mapping(xmlNodePtr element, void *userdata)
+static void *create_interdependency_mapping_from_element(xmlNodePtr element, void *userdata)
 {
     return g_malloc0(sizeof(InterDependencyMapping));
 }
@@ -63,23 +63,25 @@ void insert_interdependency_mapping_attributes(void *table, const xmlChar *key, 
 
 void *parse_interdependency_mapping(xmlNodePtr element, void *userdata)
 {
-    return NixXML_parse_simple_attrset(element, userdata, create_interdependency_mapping, NixXML_parse_value, insert_interdependency_mapping_attributes);
+    return NixXML_parse_simple_attrset(element, userdata, create_interdependency_mapping_from_element, NixXML_parse_value, insert_interdependency_mapping_attributes);
 }
 
 int check_interdependency_mapping(const InterDependencyMapping *mapping)
 {
+    int status = TRUE;
+
     if(mapping->service == NULL)
     {
         g_printerr("mapping.service is not set!\n");
-        return FALSE;
+        status = FALSE;
     }
     else if(mapping->container == NULL)
     {
         g_printerr("mapping.container is not set!\n");
-        return FALSE;
+        status = FALSE;
     }
 
-    return TRUE;
+    return status;
 }
 
 void delete_interdependency_mapping(InterDependencyMapping *mapping)

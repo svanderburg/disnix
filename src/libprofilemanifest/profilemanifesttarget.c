@@ -81,7 +81,7 @@ static void print_profile_manifest_target_attributes_nix(FILE *file, const void 
 
     if(profile_manifest_target->profile != NULL)
         NixXML_print_attribute_nix(file, "profile", profile_manifest_target->profile, indent_level, userdata, NixXML_print_store_path_nix);
-    NixXML_print_attribute_nix(file, "profileManifest", profile_manifest_target->profile_manifest, indent_level, userdata, print_profile_manifest_nix);
+    NixXML_print_attribute_nix(file, "profileManifest", profile_manifest_target->profile_manifest, indent_level, userdata, (NixXML_PrintValueFunc)print_profile_manifest_nix);
 }
 
 static void print_profile_manifest_target_nix(FILE *file, const void *value, const int indent_level, void *userdata)
@@ -100,7 +100,7 @@ static void print_profile_manifest_target_attributes_xml(FILE *file, const void 
 
     if(profile_manifest_target->profile != NULL)
         NixXML_print_simple_attribute_xml(file, "profile", profile_manifest_target->profile, indent_level, type_property_name, userdata, NixXML_print_string_xml);
-    NixXML_print_simple_attribute_xml(file, "profileManifest", profile_manifest_target->profile_manifest, indent_level, type_property_name, userdata, print_profile_manifest_xml);
+    NixXML_print_simple_attribute_xml(file, "profileManifest", profile_manifest_target->profile_manifest, indent_level, type_property_name, userdata, (NixXML_PrintXMLValueFunc)print_profile_manifest_xml);
 }
 
 static void print_profile_manifest_target_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
