@@ -80,13 +80,18 @@ let
       }) architecture.services;
     };
 
-  augmentTargetsToInterDependencies = {architectureWithTargets}:
+  augmentTargetsToInterDependencies = {architectureWithTargets, defaultClientInterface, defaultTargetProperty}:
     let
       appendTargetsToDependencies = dependencies:
         lib.mapAttrs (name: dependency:
           rec {
             targets = if dependency ? targets
-              then normalizeTargets (selectContainers dependency.targets)
+              then normalizeTargets {
+                targets = selectContainers {
+                  inherit (dependency) targets type;
+                };
+                inherit defaultClientInterface defaultTargetProperty;
+              }
               else architectureWithTargets.services."${dependency.name}".targets;
             target = head targets;
           } // (removeAttrs dependency [ "targets" "target" ])
@@ -189,6 +194,7 @@ let
 
       architectureWithInterDependencyTargets = augmentTargetsToInterDependencies {
         architectureWithTargets = architectureWithNormalizedServiceTargets;
+        inherit defaultClientInterface defaultTargetProperty;
       };
 
       architectureWithPkgsPerSystem = evaluatePkgsPerSystem {

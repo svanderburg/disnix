@@ -146,7 +146,7 @@ simpleTest {
       $result = $coordinator->mustSucceed("${env} disnix-env --list-generations | wc -l");
 
       if($result == 2) {
-          print "We have two generation symlinks";
+          print "We have two generation symlinks\n";
       } else {
           die "We should have two generation symlinks, instead we have: $result"
       }
