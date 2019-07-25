@@ -126,7 +126,7 @@ gchar *find_target_key(const Target *target, const gchar *global_target_property
  * Generates a string vector with: 'name=value' pairs from the
  * target properties, which are passed to the activation module as
  * environment variables. The resulting string must be eventually be removed
- * from memory with g_strfreev()
+ * from memory with NixXML_delete_env_variable_array()
  *
  * @param target Struct with target properties
  * @param container_name Name of the container to deploy to

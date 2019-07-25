@@ -21,7 +21,7 @@
 #include <nixxml-print-nix.h>
 #include <nixxml-print-xml.h>
 #include <nixxml-ghashtable.h>
-#include "hashtable-util.h"
+#include "propertytable-util.h"
 
 GHashTable *parse_profile_mapping_table(xmlNodePtr element, void *userdata)
 {

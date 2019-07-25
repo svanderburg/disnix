@@ -32,6 +32,15 @@ void delete_interdependency_mapping_array(GPtrArray *interdependency_mapping_arr
 
 int compare_interdependency_mapping_arrays(const GPtrArray *interdependency_mapping_array1, const GPtrArray *interdependency_mapping_array2);
 
+/**
+ * Returns the dependency with the given keys in the inter dependency mapping array.
+ *
+ * @param interdependency_mapping_array An array of inter dependency mappings
+ * @param key Key of the dependency to find
+ * @return The dependency mapping with the specified keys, or NULL if it cannot be found
+ */
+InterDependencyMapping *find_interdependency_mapping(const GPtrArray *interdependency_mapping_array, const InterDependencyMapping *key);
+
 void print_interdependency_mapping_array_nix(FILE *file, const GPtrArray *interdependency_mapping_array, const int indent_level, void *userdata);
 
 void print_interdependency_mapping_array_xml(FILE *file, const GPtrArray *interdependency_mapping_array, const int indent_level, const char *type_property_name, void *userdata);

@@ -66,6 +66,17 @@ void *parse_interdependency_mapping(xmlNodePtr element, void *userdata)
     return NixXML_parse_simple_attrset(element, userdata, create_interdependency_mapping_from_element, NixXML_parse_value, insert_interdependency_mapping_attributes);
 }
 
+void delete_interdependency_mapping(InterDependencyMapping *mapping)
+{
+    if(mapping != NULL)
+    {
+        xmlFree(mapping->service);
+        xmlFree(mapping->container);
+        xmlFree(mapping->target);
+        g_free(mapping);
+    }
+}
+
 int check_interdependency_mapping(const InterDependencyMapping *mapping)
 {
     int status = TRUE;
@@ -82,27 +93,6 @@ int check_interdependency_mapping(const InterDependencyMapping *mapping)
     }
 
     return status;
-}
-
-void delete_interdependency_mapping(InterDependencyMapping *mapping)
-{
-    if(mapping != NULL)
-    {
-        xmlFree(mapping->service);
-        xmlFree(mapping->container);
-        xmlFree(mapping->target);
-        g_free(mapping);
-    }
-}
-
-InterDependencyMapping *find_interdependency_mapping(const GPtrArray *interdependency_mapping_array, const InterDependencyMapping *key)
-{
-    InterDependencyMapping **ret = bsearch(&key, interdependency_mapping_array->pdata, interdependency_mapping_array->len, sizeof(gpointer), (int (*)(const void*, const void*)) compare_interdependency_mappings);
-
-    if(ret == NULL)
-        return NULL;
-    else
-        return *ret;
 }
 
 static void print_interdependency_mapping_attributes_nix(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)

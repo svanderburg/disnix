@@ -28,6 +28,7 @@
 #include <nixxml-gptrarray.h>
 #include <nixxml-ghashtable.h>
 #include "hashtable-util.h"
+#include "propertytable-util.h"
 
 static void *generic_parse_expr(xmlNodePtr element, void *userdata)
 {

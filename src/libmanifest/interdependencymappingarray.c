@@ -57,6 +57,16 @@ int compare_interdependency_mapping_arrays(const GPtrArray *interdependency_mapp
         return FALSE;
 }
 
+InterDependencyMapping *find_interdependency_mapping(const GPtrArray *interdependency_mapping_array, const InterDependencyMapping *key)
+{
+    InterDependencyMapping **ret = bsearch(&key, interdependency_mapping_array->pdata, interdependency_mapping_array->len, sizeof(gpointer), (int (*)(const void*, const void*)) compare_interdependency_mappings);
+
+    if(ret == NULL)
+        return NULL;
+    else
+        return *ret;
+}
+
 void print_interdependency_mapping_array_nix(FILE *file, const GPtrArray *interdependency_mapping_array, const int indent_level, void *userdata)
 {
     NixXML_print_g_ptr_array_nix(file, interdependency_mapping_array, indent_level, userdata, (NixXML_PrintValueFunc)print_interdependency_mapping_nix);

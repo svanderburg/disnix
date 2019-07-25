@@ -38,7 +38,8 @@ pid_t release_locks_async(int log_fd, gchar *tmpdir, ProfileManifest *profile_ma
 /**
  * Queries all the properties of the entries stored in the profile manifest.
  *
- * @param profile_manifest_array An array of profile manifest entries
+ * @param localstatedir Directory in which a user's Nix profiles are stored
+ * @param profile Name of the Nix profile
  * @return A future that can be used to retrieve a NULL-terminated string array
  *   of derivation names
  */

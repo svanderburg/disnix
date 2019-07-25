@@ -37,27 +37,69 @@ typedef struct
 }
 InterDependencyMapping;
 
+/**
+ * Compares two interdependency mappings and indicates its sort order
+ *
+ * @param l Pointer to an inter dependency mapping instance
+ * @param r Pointer to an Inter dependency mapping instance
+ * @return 0 if they are equal, < 0 if l comes before r, > 0 if l comes after r
+ */
 gint compare_interdependency_mappings(const InterDependencyMapping **l, const InterDependencyMapping **r);
 
+/**
+ * Parses an attribute set member and inserts it into an InterDependencyMapping
+ * struct in one go.
+ *
+ * @param table Inter dependency mapping instance
+ * @param key Attribute key
+ * @param value Inter-dependency mapping instance
+ * @param userdata Arbitrary user data that is propagated to all parse functions
+ */
 void insert_interdependency_mapping_attributes(void *table, const xmlChar *key, void *value, void *userdata);
 
+/**
+ * Parses an XML document representing an interdependency mapping
+ *
+ * @param element XML element to parse.
+ * @param userdata Arbitrary user data that is propagated to all parse functions
+ * @return Pointer to a parsed interdependency mapping struct instance. It should be removed from memory with delete_interdependency_mapping()
+ */
 void *parse_interdependency_mapping(xmlNodePtr element, void *userdata);
 
-int check_interdependency_mapping(const InterDependencyMapping *mapping);
-
+/**
+ * Deletes an interdependency mapping instance from heap memory.
+ *
+ * @param mapping Inter dependency mapping instance
+ */
 void delete_interdependency_mapping(InterDependencyMapping *mapping);
 
 /**
- * Returns the dependency with the given keys in the dependsOn array.
+ * Checks whether an interdependency mapping is valid.
  *
- * @param depends_on dependsOn array
- * @param key Key of the dependency to find
- * @return The dependency mapping with the specified keys, or NULL if it cannot be found
+ * @param mapping Inter-dependency mapping instance
+ * @return TRUE if the interdependency mapping is valid, else FALSE
  */
-InterDependencyMapping *find_interdependency_mapping(const GPtrArray *interdependency_mapping_array, const InterDependencyMapping *key);
+int check_interdependency_mapping(const InterDependencyMapping *mapping);
 
+/**
+ * Prints a Nix expression representation of an interdependency mapping
+ *
+ * @param file File descriptor to write to
+ * @param mapping Inter-dependency mapping instance
+ * @param indent_level Specifies the indent level, or -1 to disable indentation
+ * @param userdata Arbitrary user data that gets propagated to all print functions
+ */
 void print_interdependency_mapping_nix(FILE *file, const InterDependencyMapping *mapping, const int indent_level, void *userdata);
 
+/**
+ * Prints an XML representation of an interdependency mapping.
+ *
+ * @param file File descriptor to write to
+ * @param mapping Inter-dependency mapping instance
+ * @param indent_level Specifies the indent level, or -1 to disable indentation
+ * @param type_property_name Name of the type property or NULL to not display any type annotations
+ * @param userdata Arbitrary user data that gets propagated to all print functions
+ */
 void print_interdependency_mapping_xml(FILE *file, const InterDependencyMapping *mapping, const int indent_level, const char *type_property_name, void *userdata);
 
 #endif

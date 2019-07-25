@@ -47,23 +47,6 @@ gint compare_snapshot_mapping(const SnapshotMapping **l, const SnapshotMapping *
     return compare_snapshot_mapping_keys((const SnapshotMappingKey **)l, (const SnapshotMappingKey **)r);
 }
 
-int mapping_is_selected(const SnapshotMapping *mapping, const gchar *container, const gchar *component)
-{
-    return (container == NULL || xmlStrcmp((const xmlChar*) container, mapping->container) == 0) && (component == NULL || xmlStrcmp((const xmlChar*) component, mapping->component) == 0);
-}
-
-void delete_snapshot_mapping(SnapshotMapping *mapping)
-{
-    if(mapping != NULL)
-    {
-        xmlFree(mapping->component);
-        xmlFree(mapping->container);
-        xmlFree(mapping->target);
-        xmlFree(mapping->service);
-        g_free(mapping);
-    }
-}
-
 static void *create_snapshot_mapping_from_element(xmlNodePtr element, void *userdata)
 {
     return g_malloc0(sizeof(SnapshotMapping));
@@ -88,6 +71,19 @@ static void insert_snapshot_mapping_attributes(void *table, const xmlChar *key, 
 void *parse_snapshot_mapping(xmlNodePtr element, void *userdata)
 {
     return NixXML_parse_simple_attrset(element, userdata, create_snapshot_mapping_from_element, NixXML_parse_value, insert_snapshot_mapping_attributes);
+}
+
+
+void delete_snapshot_mapping(SnapshotMapping *mapping)
+{
+    if(mapping != NULL)
+    {
+        xmlFree(mapping->component);
+        xmlFree(mapping->container);
+        xmlFree(mapping->target);
+        xmlFree(mapping->service);
+        g_free(mapping);
+    }
 }
 
 int check_snapshot_mapping(const SnapshotMapping *mapping)
@@ -143,4 +139,9 @@ static void print_snapshot_mapping_attributes_xml(FILE *file, const void *value,
 void print_snapshot_mapping_xml(FILE *file, const SnapshotMapping *mapping, const int indent_level, const char *type_property_name, void *userdata)
 {
     NixXML_print_simple_attrset_xml(file, mapping, indent_level, type_property_name, userdata, print_snapshot_mapping_attributes_xml, NULL);
+}
+
+int mapping_is_selected(const SnapshotMapping *mapping, const gchar *container_filter, const gchar *component_filter)
+{
+    return (container_filter == NULL || xmlStrcmp((const xmlChar*) container_filter, mapping->container) == 0) && (component_filter == NULL || xmlStrcmp((const xmlChar*) component_filter, mapping->component) == 0);
 }

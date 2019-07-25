@@ -38,7 +38,7 @@
  */
 typedef struct
 {
-    /** Hash table mapping targets to intra-dependency closures */
+    /** Hash table mapping targets to Nix profiles containing intra-dependency closures */
     GHashTable *profile_mapping_table;
 
     /** Hash table containing the properties of all services */
@@ -50,13 +50,14 @@ typedef struct
     /** Array of snapshots to be tranferred to a target machine */
     GPtrArray *snapshot_mapping_array;
 
-    /** Array containing the available target machines */
+    /** Hash table of the available target machines */
     GHashTable *targets_table;
 }
 Manifest;
 
 /**
- * Composes a manifest struct from a manifest file.
+ * Composes a manifest struct from a manifest file. The resulting manifest can
+ * be freed with delete_manifest() when it is not needed anymore.
  *
  * @param manifest_file Manifest file to open
  * @param flags Flags indicating which portions of the manifest should be parsed
@@ -73,12 +74,42 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
  */
 void delete_manifest(Manifest *manifest);
 
+/**
+ * Checks whether all properties of a manifest are valid.
+ *
+ * @param manifest Manifest struct instance
+ * @return TRUE if the manifest is valid, else FALSE
+ */
 int check_manifest(const Manifest *manifest);
 
+/**
+ * Checks whether two manifest struct instances are identical.
+ *
+ * @param manifest1 Manifest struct instance
+ * @param manifest2 Manifest struct instance
+ * @return TRUE if both instances are equal, else FALSE
+ */
 int compare_manifests(const Manifest *manifest1, const Manifest *manifest2);
 
+/**
+ * Prints a Nix expression representation of a manifest.
+ *
+ * @param file File descriptor to write to
+ * @param manifest Manifest struct instance
+ * @param indent_level Specifies the indent level, or -1 to disable indentation
+ * @param userdata Arbitrary user data that gets propagated to all print functions
+ */
 void print_manifest_nix(FILE *file, const Manifest *manifest, const int indent_level, void *userdata);
 
+/**
+ * Prints an XML representation of a manifest.
+ *
+ * @param file File descriptor to write to
+ * @param manifest Manifest struct instance
+ * @param indent_level Specifies the indent level, or -1 to disable indentation
+ * @param type_property_name Name of the type property or NULL to not display any type annotations
+ * @param userdata Arbitrary user data that gets propagated to all print functions
+ */
 void print_manifest_xml(FILE *file, const Manifest *manifest, const int indent_level, const char *type_property_name, void *userdata);
 
 /**

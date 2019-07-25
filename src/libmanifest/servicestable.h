@@ -24,18 +24,69 @@
 #include <libxml/parser.h>
 #include "manifestservice.h"
 
+/**
+ * Parses an XML document representing a manifest service
+ *
+ * @param element XML element to parse.
+ * @param userdata Arbitrary user data that is propagated to all parse functions
+ * @return Pointer to a parsed services table. It should be removed from memory with delete_services_table()
+ */
 GHashTable *parse_services_table(xmlNodePtr element, void *userdata);
 
+/**
+ * Deletes a services table and its content from heap memory.
+ *
+ * @param services_table A services table
+ */
 void delete_services_table(GHashTable *services_table);
 
+/**
+ * Checks a services table and its content for validity.
+ *
+ * @param services_table A services table
+ * @return TRUE if the services table is valid, else FALSE
+ */
 int check_services_table(GHashTable *services_table);
 
+/**
+ * Checks whether two services tables have the same content.
+ *
+ * @param services_table1 A services table
+ * @param services_table2 A services table
+ * @return TRUE if they are equal, else FALSE
+ */
 int compare_services_tables(GHashTable *services_table1, GHashTable *services_table2);
 
+/**
+ * Merges the content of two services table into one services table without
+ * copying the values. The resulting hash table should be removed with
+ * g_hash_table_destroy() if it is not needed anymore.
+ *
+ * @param left A services table
+ * @param right A services table
+ * @return A new hash table with the content of both tables merged
+ */
 GHashTable *generate_union_services_table(GHashTable *left, GHashTable *right);
 
+/**
+ * Prints a Nix expression representation of a services table.
+ *
+ * @param file File descriptor to write to
+ * @param services_table A services table
+ * @param indent_level Specifies the indent level, or -1 to disable indentation
+ * @param userdata Arbitrary user data that gets propagated to all print functions
+ */
 void print_services_table_nix(FILE *file, GHashTable *services_table, const int indent_level, void *userdata);
 
+/**
+ * Prints an XML representation of a services table.
+ *
+ * @param file File descriptor to write to
+ * @param services_table A services table
+ * @param indent_level Specifies the indent level, or -1 to disable indentation
+ * @param type_property_name Name of the type property or NULL to not display any type annotations
+ * @param userdata Arbitrary user data that gets propagated to all print functions
+ */
 void print_services_table_xml(FILE *file, GHashTable *services_table, const int indent_level, const char *type_property_name, void *userdata);
 
 #endif
