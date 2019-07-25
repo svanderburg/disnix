@@ -20,6 +20,7 @@
 #include "diagnose.h"
 #include <manifest.h>
 #include <servicemappingarray.h>
+#include <manifestservice.h>
 #include <targetstable.h>
 #include <client-interface.h>
 #include <procreact_pid.h>

@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <state-management.h>
 #include <servicemappingarray.h>
+#include <manifestservice.h>
 
 static int lock_or_unlock_services(int log_fd, ProfileManifest *profile_manifest, gchar *action, pid_t (*notify_function) (gchar *type, gchar *container, gchar *component, int stdout, int stderr))
 {

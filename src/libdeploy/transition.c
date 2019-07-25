@@ -18,7 +18,7 @@
  */
 
 #include "transition.h"
-#include <servicemappingarray.h>
+#include <servicemapping-traverse.h>
 #include <servicestable.h>
 #include <targetstable.h>
 #include <client-interface.h>

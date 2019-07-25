@@ -19,7 +19,7 @@
 
 #include "delete-state.h"
 #include <client-interface.h>
-#include <snapshotmappingarray.h>
+#include <snapshotmapping-traverse.h>
 #include <targetstable.h>
 
 static pid_t delete_state_on_target(SnapshotMapping *mapping, ManifestService *service, Target *target, xmlChar **arguments, unsigned int arguments_length)

@@ -20,7 +20,7 @@
 #include "restore.h"
 #include <sys/types.h>
 #include <client-interface.h>
-#include <snapshotmappingarray.h>
+#include <snapshotmapping-traverse.h>
 #include <targets-iterator.h>
 #include <nixxml-generate-env.h>
 
