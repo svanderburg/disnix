@@ -62,6 +62,16 @@ int compare_service_mapping_arrays(const GPtrArray *service_mapping_array1, cons
     return compare_interdependency_mapping_arrays(service_mapping_array1, service_mapping_array2);
 }
 
+void print_service_mapping_array_nix(FILE *file, const GPtrArray *service_mapping_array, const int indent_level, void *userdata)
+{
+    print_interdependency_mapping_array_nix(file, service_mapping_array, indent_level, userdata);
+}
+
+void print_service_mapping_array_xml(FILE *file, const GPtrArray *service_mapping_array, const int indent_level, const char *type_property_name, void *userdata)
+{
+    print_interdependency_mapping_array_xml(file, service_mapping_array, indent_level, type_property_name, userdata);
+}
+
 ServiceMapping *find_service_mapping(const GPtrArray *service_mapping_array, const InterDependencyMapping *key)
 {
     ServiceMapping **ret = bsearch(&key, service_mapping_array->pdata, service_mapping_array->len, sizeof(gpointer), (int (*)(const void*, const void*)) compare_service_mappings);
@@ -101,7 +111,7 @@ GPtrArray *intersect_service_mapping_array(const GPtrArray *left, const GPtrArra
     return return_array;
 }
 
-GPtrArray *union_service_mapping_array(GPtrArray *left, GPtrArray *right, const GPtrArray *intersect)
+GPtrArray *unify_service_mapping_array(GPtrArray *left, GPtrArray *right, const GPtrArray *intersect)
 {
     unsigned int i;
     GPtrArray *return_array = g_ptr_array_new();
@@ -149,14 +159,4 @@ GPtrArray *substract_service_mapping_array(const GPtrArray *left, const GPtrArra
 
     /* Return the service mapping array */
     return return_array;
-}
-
-void print_service_mapping_array_nix(FILE *file, const GPtrArray *service_mapping_array, const int indent_level, void *userdata)
-{
-    print_interdependency_mapping_array_nix(file, service_mapping_array, indent_level, userdata);
-}
-
-void print_service_mapping_array_xml(FILE *file, const GPtrArray *service_mapping_array, const int indent_level, const char *type_property_name, void *userdata)
-{
-    print_interdependency_mapping_array_xml(file, service_mapping_array, indent_level, type_property_name, userdata);
 }

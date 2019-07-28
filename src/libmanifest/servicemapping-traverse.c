@@ -72,7 +72,7 @@ static ServiceStatus attempt_to_map_service_mapping(ServiceMapping *mapping, GHa
         return SERVICE_WAIT;
 }
 
-static void wait_for_service_mapping_to_complete(GHashTable *pid_table, GHashTable *targets_table, complete_service_mapping_function complete_service_mapping)
+static void wait_for_service_mapping_to_complete(GHashTable *pid_table, GHashTable *services_table, GHashTable *targets_table, complete_service_mapping_function complete_service_mapping)
 {
     int wstatus;
 
@@ -85,11 +85,12 @@ static void wait_for_service_mapping_to_complete(GHashTable *pid_table, GHashTab
         ProcReact_Status status;
         int result = procreact_retrieve_boolean(pid, wstatus, &status);
         ServiceMapping *mapping = g_hash_table_lookup(pid_table, &pid);
+        ManifestService *service = g_hash_table_lookup(services_table, (gchar*)mapping->service);
         Target *target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
         g_hash_table_remove(pid_table, &pid);
 
         /* Complete the service mapping */
-        complete_service_mapping(mapping, target, status, result);
+        complete_service_mapping(mapping, service, target, status, result);
 
         /* Signal the target to make the CPU core available again */
         target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
@@ -97,12 +98,12 @@ static void wait_for_service_mapping_to_complete(GHashTable *pid_table, GHashTab
     }
 }
 
-ServiceStatus traverse_inter_dependency_mappings(GPtrArray *union_array, GHashTable *union_services_table, const InterDependencyMapping *key, GHashTable *targets_table, GHashTable *pid_table, service_mapping_function map_service_mapping)
+ServiceStatus traverse_inter_dependency_mappings(GPtrArray *unified_service_mapping_array, GHashTable *unified_services_table, const InterDependencyMapping *key, GHashTable *targets_table, GHashTable *pid_table, service_mapping_function map_service_mapping)
 {
     /* Retrieve the mapping from the union array */
-    ServiceMapping *actual_mapping = find_service_mapping(union_array, key);
+    ServiceMapping *actual_mapping = find_service_mapping(unified_service_mapping_array, key);
 
-    ManifestService *service = g_hash_table_lookup(union_services_table, actual_mapping->service);
+    ManifestService *service = g_hash_table_lookup(unified_services_table, actual_mapping->service);
 
     /* First, activate all inter-dependency mappings */
     if(service->depends_on != NULL)
@@ -113,7 +114,7 @@ ServiceStatus traverse_inter_dependency_mappings(GPtrArray *union_array, GHashTa
         for(i = 0; i < service->depends_on->len; i++)
         {
             InterDependencyMapping *dependency_mapping = g_ptr_array_index(service->depends_on, i);
-            status = traverse_inter_dependency_mappings(union_array, union_services_table, dependency_mapping, targets_table, pid_table, map_service_mapping);
+            status = traverse_inter_dependency_mappings(unified_service_mapping_array, unified_services_table, dependency_mapping, targets_table, pid_table, map_service_mapping);
 
             if(status != SERVICE_DONE)
                 return status; /* If any of the inter-dependencies has not been activated yet, relay its status */
@@ -133,7 +134,7 @@ ServiceStatus traverse_inter_dependency_mappings(GPtrArray *union_array, GHashTa
                     return SERVICE_ERROR;
                 }
                 else
-                    return attempt_to_map_service_mapping(actual_mapping, union_services_table, target, pid_table, map_service_mapping);
+                    return attempt_to_map_service_mapping(actual_mapping, unified_services_table, target, pid_table, map_service_mapping);
             }
         case SERVICE_MAPPING_ACTIVATED:
             return SERVICE_DONE;
@@ -144,13 +145,13 @@ ServiceStatus traverse_inter_dependency_mappings(GPtrArray *union_array, GHashTa
     }
 }
 
-ServiceStatus traverse_interdependent_mappings(GPtrArray *union_array, GHashTable *union_services_table, const InterDependencyMapping *key, GHashTable *targets_table, GHashTable *pid_table, service_mapping_function map_service_mapping)
+ServiceStatus traverse_interdependent_mappings(GPtrArray *unified_service_mapping_array, GHashTable *unified_services_table, const InterDependencyMapping *key, GHashTable *targets_table, GHashTable *pid_table, service_mapping_function map_service_mapping)
 {
     /* Retrieve the mapping from the union array */
-    ServiceMapping *actual_mapping = find_service_mapping(union_array, key);
+    ServiceMapping *actual_mapping = find_service_mapping(unified_service_mapping_array, key);
 
     /* Find all interdependent mapping on this mapping */
-    GPtrArray *interdependent_mappings = find_interdependent_service_mappings(union_services_table, union_array, actual_mapping);
+    GPtrArray *interdependent_mappings = find_interdependent_service_mappings(unified_services_table, unified_service_mapping_array, actual_mapping);
 
     /* First deactivate all mappings which have an inter-dependency on this mapping */
     unsigned int i;
@@ -158,7 +159,7 @@ ServiceStatus traverse_interdependent_mappings(GPtrArray *union_array, GHashTabl
     for(i = 0; i < interdependent_mappings->len; i++)
     {
         ServiceMapping *dependency_mapping = g_ptr_array_index(interdependent_mappings, i);
-        ServiceStatus status = traverse_interdependent_mappings(union_array, union_services_table, (InterDependencyMapping*)dependency_mapping, targets_table, pid_table, map_service_mapping);
+        ServiceStatus status = traverse_interdependent_mappings(unified_service_mapping_array, unified_services_table, (InterDependencyMapping*)dependency_mapping, targets_table, pid_table, map_service_mapping);
 
         if(status != SERVICE_DONE)
         {
@@ -175,7 +176,7 @@ ServiceStatus traverse_interdependent_mappings(GPtrArray *union_array, GHashTabl
         case SERVICE_MAPPING_ACTIVATED:
             {
                 Target *target = g_hash_table_lookup(targets_table, (gchar*)actual_mapping->target);
-                ManifestService *service = g_hash_table_lookup(union_services_table, (gchar*)actual_mapping->service);
+                ManifestService *service = g_hash_table_lookup(unified_services_table, (gchar*)actual_mapping->service);
 
                 if(target == NULL)
                 {
@@ -184,7 +185,7 @@ ServiceStatus traverse_interdependent_mappings(GPtrArray *union_array, GHashTabl
                     return SERVICE_DONE;
                 }
                 else
-                    return attempt_to_map_service_mapping(actual_mapping, union_services_table, target, pid_table, map_service_mapping);
+                    return attempt_to_map_service_mapping(actual_mapping, unified_services_table, target, pid_table, map_service_mapping);
             }
         case SERVICE_MAPPING_DEACTIVATED:
             return SERVICE_DONE;
@@ -195,7 +196,7 @@ ServiceStatus traverse_interdependent_mappings(GPtrArray *union_array, GHashTabl
     }
 }
 
-int traverse_service_mappings(GPtrArray *mappings, GPtrArray *union_array, GHashTable *union_services_table, GHashTable *targets_table, iterate_strategy_function iterate_strategy, service_mapping_function map_service_mapping, complete_service_mapping_function complete_service_mapping)
+int traverse_service_mappings(GPtrArray *mappings, GPtrArray *unified_service_mapping_array, GHashTable *unified_services_table, GHashTable *targets_table, iterate_strategy_function iterate_strategy, service_mapping_function map_service_mapping, complete_service_mapping_function complete_service_mapping)
 {
     GHashTable *pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, NULL);
     unsigned int num_done = 0;
@@ -209,7 +210,7 @@ int traverse_service_mappings(GPtrArray *mappings, GPtrArray *union_array, GHash
         for(i = 0; i < mappings->len; i++)
         {
             ServiceMapping *mapping = g_ptr_array_index(mappings, i);
-            ServiceStatus status = iterate_strategy(union_array, union_services_table, (InterDependencyMapping*)mapping, targets_table, pid_table, map_service_mapping);
+            ServiceStatus status = iterate_strategy(unified_service_mapping_array, unified_services_table, (InterDependencyMapping*)mapping, targets_table, pid_table, map_service_mapping);
 
             if(status == SERVICE_ERROR)
             {
@@ -219,7 +220,7 @@ int traverse_service_mappings(GPtrArray *mappings, GPtrArray *union_array, GHash
             else if(status == SERVICE_DONE)
                 num_done++;
 
-            wait_for_service_mapping_to_complete(pid_table, targets_table, complete_service_mapping);
+            wait_for_service_mapping_to_complete(pid_table, unified_services_table, targets_table, complete_service_mapping);
         }
     }
     while(num_done < mappings->len);

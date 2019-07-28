@@ -41,7 +41,7 @@ InterDependencyMapping;
  * Compares two interdependency mappings and indicates its sort order
  *
  * @param l Pointer to an inter dependency mapping instance
- * @param r Pointer to an Inter dependency mapping instance
+ * @param r Pointer to an inter dependency mapping instance
  * @return 0 if they are equal, < 0 if l comes before r, > 0 if l comes after r
  */
 gint compare_interdependency_mappings(const InterDependencyMapping **l, const InterDependencyMapping **r);

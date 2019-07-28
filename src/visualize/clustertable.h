@@ -25,11 +25,11 @@
  * Generates a cluster table, which contains for each target property
  * of a machine the deployed services.
  *
- * @param activation_array Array with activation mappings
+ * @param service_mapping_array Array with service mappings
  * @param targets_table Hash table with targets
  * @return Generated cluster table
  */ 
-GHashTable *generate_cluster_table(GPtrArray *activation_array, GHashTable *targets_table);
+GHashTable *generate_cluster_table(GPtrArray *service_mapping_array, GHashTable *targets_table);
 
 /**
  * Removes a clustered table including all its contents from memory
@@ -42,6 +42,7 @@ void destroy_cluster_table(GHashTable *cluster_table);
  * Prints the cluster table in dot format.
  *
  * @param cluster_table Clustered table to print
+ * @param services_table Hash table containing the available services and their properties
  * @param no_containers Indicates whether not to visualize the containers
  */
 void print_cluster_table(GHashTable *cluster_table, GHashTable *services_table, int no_containers);

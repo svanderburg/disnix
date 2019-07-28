@@ -40,7 +40,7 @@ int run_activate_system(const gchar *new_manifest, const gchar *old_manifest, co
             gchar *old_manifest_file = determine_manifest_to_open(old_manifest, coordinator_profile_path, profile);
             Manifest *previous_manifest = open_previous_manifest(old_manifest_file, MANIFEST_SERVICE_MAPPINGS_FLAG, NULL, NULL);
 
-            if(check_manifest(previous_manifest))
+            if(previous_manifest == NULL || check_manifest(previous_manifest))
             {
                 /* Do the activation process */
                 status = activate_system(manifest, previous_manifest, flags, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);

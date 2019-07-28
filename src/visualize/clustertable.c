@@ -33,59 +33,59 @@ static void destroy_container_value(gpointer data)
     g_ptr_array_free(services_array, TRUE);
 }
 
-GHashTable *generate_cluster_table(GPtrArray *activation_array, GHashTable *targets_table)
+GHashTable *generate_cluster_table(GPtrArray *service_mapping_array, GHashTable *targets_table)
 {
     unsigned int i;
-    
+
     /* Create empty hash table */
     GHashTable *cluster_table = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, destroy_cluster_value);
 
-    /* Check all activtion mappings */
-    for(i = 0; i < activation_array->len; i++)
+    /* Check all service mappings */
+    for(i = 0; i < service_mapping_array->len; i++)
     {
-	/* Get current mapping item */
-	ServiceMapping *mapping = g_ptr_array_index(activation_array, i);
-	
-	/* Get target property of the current mapping item */
-	Target *target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
-	gchar *target_key = find_target_key(target, NULL);
-	
-	/* See whether the target already exists in the table */
-	GHashTable *containers_table = g_hash_table_lookup(cluster_table, target_key);
-	GPtrArray *services_array;
-	gchar *container_key;
-	
-	/*
-	 * If the target is not yet in the table, create a new hashtable of containers
-	 * per machine
-	 */
-	
-	if(containers_table == NULL)
-	{
-	    containers_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, destroy_container_value);
-	    g_hash_table_insert(cluster_table, target_key, containers_table);
-	}
-	
-	/*
-	 * If the services are not yet in the containers table, add a new empty array
-	 * of services
-	 */
-	
-	container_key = g_strconcat(target_key, ":", mapping->container, NULL);
-	services_array = g_hash_table_lookup(containers_table, container_key);
-	
-	if(services_array == NULL)
-	{
-	    services_array = g_ptr_array_new();
-	    g_hash_table_insert(containers_table, container_key, services_array);
-	}
-	else
-	    g_free(container_key);
-	
-	/* Append service to the array */
-	g_ptr_array_add(services_array, mapping);
+        /* Get current mapping item */
+        ServiceMapping *mapping = g_ptr_array_index(service_mapping_array, i);
+
+        /* Get target property of the current mapping item */
+        Target *target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
+        gchar *target_key = find_target_key(target, NULL);
+
+        /* See whether the target already exists in the table */
+        GHashTable *containers_table = g_hash_table_lookup(cluster_table, target_key);
+        GPtrArray *services_array;
+        gchar *container_key;
+
+        /*
+         * If the target is not yet in the table, create a new hashtable of containers
+         * per machine
+         */
+
+        if(containers_table == NULL)
+        {
+            containers_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, destroy_container_value);
+            g_hash_table_insert(cluster_table, target_key, containers_table);
+        }
+
+        /*
+         * If the services are not yet in the containers table, add a new empty array
+         * of services
+         */
+
+        container_key = g_strconcat(target_key, ":", mapping->container, NULL);
+        services_array = g_hash_table_lookup(containers_table, container_key);
+
+        if(services_array == NULL)
+        {
+            services_array = g_ptr_array_new();
+            g_hash_table_insert(containers_table, container_key, services_array);
+        }
+        else
+            g_free(container_key);
+
+        /* Append service to the array */
+        g_ptr_array_add(services_array, mapping);
     }
-    
+
     /* Return the generated cluster table */
     return cluster_table;
 }

@@ -30,6 +30,7 @@
  * Function that spawns a process for a snapshot mapping.
  *
  * @param mapping A snapshot mapping from a snapshots array
+ * @param service Service that is mapped to the machine
  * @param target Target machine to which the snapshot is mapped
  * @param arguments Arguments passed to the client interface
  * @param arguments_length Length of the arguments array
@@ -41,17 +42,20 @@ typedef pid_t (*map_snapshot_item_function) (SnapshotMapping *mapping, ManifestS
  * Function that gets executed when a mapping function completes.
  *
  * @param mapping A snapshot mapping from a snapshots array
+ * @param service Service that is mapped to the machine
+ * @param target Target machine to which the snapshot is mapped
  * @param status Indicates whether the process terminated abnormally or not
  * @param result TRUE if the mapping operation succeeded, else FALSE
  */
-typedef void (*complete_snapshot_item_mapping_function) (SnapshotMapping *mapping, Target *target, ProcReact_Status status, int result);
+typedef void (*complete_snapshot_item_mapping_function) (SnapshotMapping *mapping, ManifestService *service, Target *target, ProcReact_Status status, int result);
 
 /**
  * Maps over each snapshot mapping, asynchronously executes a function for each
  * item and ensures that for each machine only the allowed number of processes
  * are executed concurrently.
  *
- * @param snapshot_mapping_array Snapshots array
+ * @param snapshot_mapping_array Snapshot mapping array
+ * @param services_table Hash table of services
  * @param targets_table Hash table of targets
  * @param map_snapshot_item Function that gets executed for each snapshot item
  * @param complete_snapshot_item_mapping Function that gets executed when a mapping function completes

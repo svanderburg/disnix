@@ -26,11 +26,24 @@
 #include "interdependencymappingarray.h"
 
 /**
- * Pointer to a function that executes an operation to modify an activation
+ * @brief Enumerates the possible outcomes of an operation on a service mapping
+ */
+typedef enum
+{
+    SERVICE_ERROR,
+    SERVICE_IN_PROGRESS,
+    SERVICE_WAIT,
+    SERVICE_DONE
+}
+ServiceStatus;
+
+/**
+ * Pointer to a function that executes an operation to modify a service
  * mapping's state.
  *
- * @param mapping An activation mapping to change the state for
- * @param target The properties of the target machine where the activation is mapped to
+ * @param mapping A service mapping to change the state for
+ * @param service The properties of the service that is to be mapped
+ * @param target The properties of the target machine where the service is mapped to
  * @param arguments Arguments to pass to the process
  * @param arguments_length Length of the arguments array
  * @return The PID of the process invoked
@@ -38,14 +51,16 @@
 typedef pid_t (*service_mapping_function) (ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar **arguments, unsigned int arguments_length);
 
 /**
- * Pointer to a function that gets executed when an operation on activation
+ * Pointer to a function that gets executed when an operation on a service
  * mapping completes.
  *
- * @param mapping An activation mapping to change the state for
+ * @param mapping An service mapping to change the state for
+ * @param service The properties of the service that is to be mapped
+ * @param target The properties of the target machine where the service is mapped to
  * @param status Indicates whether the process terminated abnormally or not
  * @param result TRUE if the operation succeeded, else FALSE
  */
-typedef void (*complete_service_mapping_function) (ServiceMapping *mapping, Target *target, ProcReact_Status status, int result);
+typedef void (*complete_service_mapping_function) (ServiceMapping *mapping, ManifestService *service, Target *target, ProcReact_Status status, int result);
 
 /**
  * Pointer to a function that traverses the collection of activation mappings
@@ -58,7 +73,7 @@ typedef void (*complete_service_mapping_function) (ServiceMapping *mapping, Targ
  * @param map_activation_mapping Pointer to a function that executes an operation modifying the deployment state of an activation mapping
  * @return Any of the activation status codes
  */
-typedef ServiceStatus (*iterate_strategy_function) (GPtrArray *union_service_mapping, GHashTable *union_services_table, const InterDependencyMapping *key, GHashTable *targets_table, GHashTable *pid_table, service_mapping_function map_service_mapping);
+typedef ServiceStatus (*iterate_strategy_function) (GPtrArray *unified_service_mapping_array, GHashTable *unified_services_table, const InterDependencyMapping *key, GHashTable *targets_table, GHashTable *pid_table, service_mapping_function map_service_mapping);
 
 /**
  * Searches for all the mappings in an array that have an inter-dependency
@@ -84,7 +99,7 @@ GPtrArray *find_interdependent_service_mappings(GHashTable *services_table, cons
  * @param map_activation_mapping Pointer to a function that executes an operation modifying the deployment state of an activation mapping
  * @return Any of the activation status codes
  */
-ServiceStatus traverse_inter_dependency_mappings(GPtrArray *union_array, GHashTable *union_services_table, const InterDependencyMapping *key, GHashTable *targets_table, GHashTable *pid_table, service_mapping_function map_service_mapping);
+ServiceStatus traverse_inter_dependency_mappings(GPtrArray *unified_service_mapping_array, GHashTable *unified_services_table, const InterDependencyMapping *key, GHashTable *targets_table, GHashTable *pid_table, service_mapping_function map_service_mapping);
 
 /**
  * Traverses the collection of activation mappings by recursively visting the
@@ -99,7 +114,7 @@ ServiceStatus traverse_inter_dependency_mappings(GPtrArray *union_array, GHashTa
  * @param map_activation_mapping Pointer to a function that executes an operation modifying the deployment state of an activation mapping
  * @return Any of the activation status codes
  */
-ServiceStatus traverse_interdependent_mappings(GPtrArray *union_array, GHashTable *union_services_table, const InterDependencyMapping *key, GHashTable *targets_table, GHashTable *pid_table, service_mapping_function map_service_mapping);
+ServiceStatus traverse_interdependent_mappings(GPtrArray *unified_service_mapping_array, GHashTable *unified_services_table, const InterDependencyMapping *key, GHashTable *targets_table, GHashTable *pid_table, service_mapping_function map_service_mapping);
 
 /**
  * Traverses the provided activation mappings according to some strategy,
@@ -115,6 +130,6 @@ ServiceStatus traverse_interdependent_mappings(GPtrArray *union_array, GHashTabl
  * @param complete_activation_mapping Pointer to function that gets executed when an operation on activation mapping completes
  * @return TRUE if all the activation mappings' states have been successfully changed, else FALSE
  */
-int traverse_service_mappings(GPtrArray *mappings, GPtrArray *union_array, GHashTable *union_services_table, GHashTable *targets_table, iterate_strategy_function iterate_strategy, service_mapping_function map_service_mapping, complete_service_mapping_function complete_service_mapping);
+int traverse_service_mappings(GPtrArray *mappings, GPtrArray *unified_service_mapping_array, GHashTable *unified_services_table, GHashTable *targets_table, iterate_strategy_function iterate_strategy, service_mapping_function map_service_mapping, complete_service_mapping_function complete_service_mapping);
 
 #endif

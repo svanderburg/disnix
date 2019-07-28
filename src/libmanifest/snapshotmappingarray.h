@@ -30,6 +30,7 @@
  * @param element XML root element of the sub section defining the mappings
  * @param container_filter Name of the container to filter on, or NULL to parse all containers
  * @param component_filter Name of the component to filter on, or NULL to parse all components
+ * @param userdata Arbitrary user data that is propagated to all parse functions
  * @return GPtrArray containing activation mappings
  */
 GPtrArray *parse_snapshot_mapping_array(xmlNodePtr element, const gchar *container_filter, const gchar *component_filter, void *userdata);
@@ -41,9 +42,43 @@ GPtrArray *parse_snapshot_mapping_array(xmlNodePtr element, const gchar *contain
  */
 void delete_snapshot_mapping_array(GPtrArray *snapshot_mapping_array);
 
+/**
+ * Checks whether an array of snapshot mappings is valid.
+ *
+ * @param snapshot_mapping_array A GPtrArray with snapshot mappings
+ * @return TRUE when the content is valid, else FALSE
+ */
 int check_snapshot_mapping_array(const GPtrArray *snapshot_mapping_array);
 
+/**
+ * Compares two snapshot mapping arrays and checks whether they have the same content
+ *
+ * @param snapshot_mapping_array1 A GPtrArray with snapshot mappings
+ * @param snapshot_mapping_array2 A GPtrArray with snapshot mappings
+ * @return TRUE if the arrays have equal content, else FALSE
+ */
 int compare_snapshot_mapping_arrays(const GPtrArray *snapshot_mapping_array1, const GPtrArray *snapshot_mapping_array2);
+
+/**
+ * Prints a Nix expression representation of a snapshot mapping array.
+ *
+ * @param file File descriptor to write to
+ * @param snapshot_mapping_array A GPtrArray with snapshot mappings
+ * @param indent_level Specifies the indent level, or -1 to disable indentation
+ * @param userdata Arbitrary user data that gets propagated to all print functions
+ */
+void print_snapshot_mapping_array_nix(FILE *file, const GPtrArray *snapshot_mapping_array, const int indent_level, void *userdata);
+
+/**
+ * Prints an XML representation of a snapshot mapping array.
+ *
+ * @param file File descriptor to write to
+ * @param snapshot_mapping_array A GPtrArray with snapshot mappings
+ * @param indent_level Specifies the indent level, or -1 to disable indentation
+ * @param type_property_name Name of the type property or NULL to not display any type annotations
+ * @param userdata Arbitrary user data that gets propagated to all print functions
+ */
+void print_snapshot_mapping_array_xml(FILE *file, const GPtrArray *snapshot_mapping_array, const int indent_level, const char *type_property_name, void *userdata);
 
 /**
  * Returns the snapshots mapping with the given key in the snapshots array.
@@ -78,9 +113,5 @@ GPtrArray *find_snapshot_mappings_per_target(const GPtrArray *snapshot_mapping_a
  * @param snapshot_mapping_array Snapshots array
  */
 void reset_snapshot_items_transferred_status(GPtrArray *snapshot_mapping_array);
-
-void print_snapshot_mapping_array_nix(FILE *file, const GPtrArray *snapshot_mapping_array, const int indent_level, void *userdata);
-
-void print_snapshot_mapping_array_xml(FILE *file, const GPtrArray *snapshot_mapping_array, const int indent_level, const char *type_property_name, void *userdata);
 
 #endif

@@ -21,70 +21,70 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-pid_t statemgmt_run_dysnomia_activity(gchar *type, gchar *activity, gchar *component, gchar *container, gchar **arguments, int stdout, int stderr)
+pid_t statemgmt_run_dysnomia_activity(gchar *type, gchar *activity, gchar *component, gchar *container, char **arguments, int stdout, int stderr)
 {
     pid_t pid = fork();
-    
+
     if(pid == 0)
     {
-        unsigned int i;
         char *const args[] = {"dysnomia", "--type", type, "--operation", activity, "--component", component, "--container", container, "--environment", NULL};
 
-        /* Compose environment variables out of the arguments */
-        for(i = 0; i < g_strv_length(arguments); i++)
+        /* Add environment variables */
+        unsigned int i = 0;
+
+        while(arguments[i] != NULL)
         {
-            gchar **name_value_pair = g_strsplit(arguments[i], "=", 2);
-            setenv(name_value_pair[0], name_value_pair[1], FALSE);
-            g_strfreev(name_value_pair);
+            putenv(arguments[i]);
+            i++;
         }
-        
+
         dup2(stdout, 1);
         dup2(stderr, 2);
         execvp(args[0], args);
         _exit(1);
     }
-    
+
     return pid;
 }
 
 ProcReact_Future statemgmt_query_all_snapshots(gchar *container, gchar *component, int stderr)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
-    
+
     if(future.pid == 0)
     {
         char *const args[] = {"dysnomia-snapshots", "--query-all", "--container", container, "--component", component, NULL};
 
         dup2(future.fd, 1);
         dup2(stderr, 2);
-        execvp("dysnomia-snapshots", args);
+        execvp(args[0], args);
         _exit(1);
     }
-    
+
     return future;
 }
 
 ProcReact_Future statemgmt_query_latest_snapshot(gchar *container, gchar *component, int stderr)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
-    
+
     if(future.pid == 0)
     {
         char *const args[] = {"dysnomia-snapshots", "--query-latest", "--container", container, "--component", component, NULL};
 
         dup2(future.fd, 1);
         dup2(stderr, 2);
-        execvp("dysnomia-snapshots", args);
+        execvp(args[0], args);
         _exit(1);
     }
-    
+
     return future;
 }
 
 ProcReact_Future statemgmt_print_missing_snapshots(gchar **component, int stderr)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
-    
+
     if(future.pid == 0)
     {
         unsigned int i, component_size = g_strv_length(component);
@@ -95,52 +95,52 @@ ProcReact_Future statemgmt_print_missing_snapshots(gchar **component, int stderr
 
         for(i = 0; i < component_size; i++)
             args[i + 2] = component[i];
-        
+
         args[i + 2] = NULL;
 
         dup2(future.fd, 1);
         dup2(stderr, 2);
-        execvp("dysnomia-snapshots", args);
+        execvp(args[0], args);
        _exit(1);
     }
-    
+
     return future;
 }
 
 pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **snapshots, int stdout, int stderr)
 {
     pid_t pid = fork();
-    
+
     if(pid == 0)
     {
         unsigned int i, snapshots_size = g_strv_length(snapshots);
         gchar **args = (gchar**)g_malloc((snapshots_size + 6) * sizeof(gchar*));
-        
+
         args[0] = "dysnomia-snapshots";
         args[1] = "--import";
         args[2] = "--container";
         args[3] = container;
         args[4] = "--component";
         args[5] = component;
-        
+
         for(i = 0; i < snapshots_size; i++)
             args[i + 6] = snapshots[i];
-        
+
         args[i + 6] = NULL;
-        
+
         dup2(stdout, 1);
         dup2(stderr, 2);
-        execvp("dysnomia-snapshots", args);
+        execvp(args[0], args);
         _exit(1);
     }
-    
+
     return pid;
 }
 
 ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
-    
+
     if(future.pid == 0)
     {
         unsigned int i, snapshots_size = g_strv_length(snapshots);
@@ -148,7 +148,7 @@ ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr)
 
         args[0] = "dysnomia-snapshots";
         args[1] = "--resolve";
-        
+
         for(i = 0; i < snapshots_size; i++)
             args[i + 2] = snapshots[i];
 
@@ -156,7 +156,7 @@ ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr)
 
         dup2(future.fd, 1);
         dup2(stderr, 2);
-        execvp("dysnomia-snapshots", args);
+        execvp(args[0], args);
         _exit(1);
     }
 
@@ -166,22 +166,22 @@ ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr)
 pid_t statemgmt_clean_snapshots(gint keep, gchar *container, gchar *component, int stdout, int stderr)
 {
     pid_t pid = fork();
-    
+
     if(pid == 0)
     {
         char **args = (char**)g_malloc(9 * sizeof(gchar*));
         unsigned int count = 4;
         char keep_str[15];
-        
+
         /* Convert keep value to string */
         sprintf(keep_str, "%d", keep);
-        
+
         /* Compose command-line arguments */
         args[0] = "dysnomia-snapshots";
         args[1] = "--gc";
         args[2] = "--keep";
         args[3] = keep_str;
-        
+
         if(g_strcmp0(container, "") != 0) /* Add container parameter, if requested */
         {
             args[count] = "--container";
@@ -189,7 +189,7 @@ pid_t statemgmt_clean_snapshots(gint keep, gchar *container, gchar *component, i
             args[count] = container;
             count++;
         }
-        
+
         if(g_strcmp0(component, "") != 0) /* Add component parameter, if requested */
         {
             args[count] = "--component";
@@ -197,25 +197,25 @@ pid_t statemgmt_clean_snapshots(gint keep, gchar *container, gchar *component, i
             args[count] = component;
             count++;
         }
-        
+
         args[count] = NULL;
-        
+
         dup2(stdout, 1);
         dup2(stderr, 2);
-        execvp("dysnomia-snapshots", args);
+        execvp(args[0], args);
         _exit(1);
     }
-    
+
     return pid;
 }
 
 gchar *statemgmt_capture_config(gchar *tmpdir, int stderr, pid_t *pid, int *temp_fd)
 {
     gchar *tempfilename = g_strconcat(tmpdir, "/disnix.XXXXXX", NULL);
-    
+
     /* Compose a temp file */
     *temp_fd = mkstemp(tempfilename);
-    
+
     if(*temp_fd == -1)
     {
         dprintf(stderr, "Error opening tempfile!\n");
@@ -230,13 +230,13 @@ gchar *statemgmt_capture_config(gchar *tmpdir, int stderr, pid_t *pid, int *temp
         if(*pid == 0)
         {
             char *const args[] = { "dysnomia-containers", "--generate-expr", NULL };
-            
+
             dup2(*temp_fd, 1);
             dup2(stderr, 2);
-            execvp("dysnomia-containers", args);
+            execvp(args[0], args);
             _exit(1);
         }
-        
+
         return tempfilename;
     }
 }
@@ -244,7 +244,7 @@ gchar *statemgmt_capture_config(gchar *tmpdir, int stderr, pid_t *pid, int *temp
 static pid_t lock_or_unlock_component(gchar *operation, gchar *type, gchar *container, gchar *component, int stdout, int stderr)
 {
     pid_t pid = fork();
-    
+
     if(pid == 0)
     {
         char *const args[] = {"dysnomia", "--type", type, "--operation", operation, "--container", container, "--component", component, "--environment", NULL};
@@ -253,7 +253,7 @@ static pid_t lock_or_unlock_component(gchar *operation, gchar *type, gchar *cont
         execvp(args[0], args);
         _exit(1);
     }
-    
+
     return pid;
 }
 
@@ -267,20 +267,19 @@ pid_t statemgmt_unlock_component(gchar *type, gchar *container, gchar *component
     return lock_or_unlock_component("unlock", type, container, component, stdout, stderr);
 }
 
-pid_t statemgmt_spawn_dysnomia_shell(gchar *type, gchar *component, gchar *container, gchar **arguments, gchar *command)
+pid_t statemgmt_spawn_dysnomia_shell(gchar *type, gchar *component, gchar *container, char **arguments, gchar *command)
 {
     pid_t pid = fork();
 
     if(pid == 0)
     {
-        /* Compose environment variables out of the arguments */
-        unsigned int i;
+        /* Add environment variables */
+        unsigned int i = 0;
 
-        for(i = 0; i < g_strv_length(arguments); i++)
+        while(arguments[i] != NULL)
         {
-            gchar **name_value_pair = g_strsplit(arguments[i], "=", 2);
-            setenv(name_value_pair[0], name_value_pair[1], FALSE);
-            g_strfreev(name_value_pair);
+            putenv(arguments[i]);
+            i++;
         }
 
         if(command == NULL)

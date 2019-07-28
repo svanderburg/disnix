@@ -28,14 +28,24 @@ GPtrArray *parse_interdependency_mapping_array(xmlNodePtr element, void *userdat
     return return_array;
 }
 
+void delete_interdependency_mapping_array(GPtrArray *interdependency_mapping_array)
+{
+    delete_array(interdependency_mapping_array, (DeleteElementFunction)delete_interdependency_mapping);
+}
+
 int check_interdependency_mapping_array(const GPtrArray *interdependency_mapping_array)
 {
     return check_array(interdependency_mapping_array, (CheckElementFunction)check_interdependency_mapping);
 }
 
-void delete_interdependency_mapping_array(GPtrArray *interdependency_mapping_array)
+void print_interdependency_mapping_array_nix(FILE *file, const GPtrArray *interdependency_mapping_array, const int indent_level, void *userdata)
 {
-    delete_array(interdependency_mapping_array, (DeleteElementFunction)delete_interdependency_mapping);
+    NixXML_print_g_ptr_array_nix(file, interdependency_mapping_array, indent_level, userdata, (NixXML_PrintValueFunc)print_interdependency_mapping_nix);
+}
+
+void print_interdependency_mapping_array_xml(FILE *file, const GPtrArray *interdependency_mapping_array, const int indent_level, const char *type_property_name, void *userdata)
+{
+    NixXML_print_g_ptr_array_xml(file, interdependency_mapping_array, "mapping", indent_level, NULL, userdata, (NixXML_PrintXMLValueFunc)print_interdependency_mapping_xml);
 }
 
 int compare_interdependency_mapping_arrays(const GPtrArray *interdependency_mapping_array1, const GPtrArray *interdependency_mapping_array2)
@@ -65,14 +75,4 @@ InterDependencyMapping *find_interdependency_mapping(const GPtrArray *interdepen
         return NULL;
     else
         return *ret;
-}
-
-void print_interdependency_mapping_array_nix(FILE *file, const GPtrArray *interdependency_mapping_array, const int indent_level, void *userdata)
-{
-    NixXML_print_g_ptr_array_nix(file, interdependency_mapping_array, indent_level, userdata, (NixXML_PrintValueFunc)print_interdependency_mapping_nix);
-}
-
-void print_interdependency_mapping_array_xml(FILE *file, const GPtrArray *interdependency_mapping_array, const int indent_level, const char *type_property_name, void *userdata)
-{
-    NixXML_print_g_ptr_array_xml(file, interdependency_mapping_array, "mapping", indent_level, NULL, userdata, (NixXML_PrintXMLValueFunc)print_interdependency_mapping_xml);
 }

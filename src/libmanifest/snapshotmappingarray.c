@@ -90,6 +90,16 @@ int compare_snapshot_mapping_arrays(const GPtrArray *snapshot_mapping_array1, co
         return FALSE;
 }
 
+void print_snapshot_mapping_array_nix(FILE *file, const GPtrArray *snapshot_mapping_array, const int indent_level, void *userdata)
+{
+    NixXML_print_g_ptr_array_nix(file, snapshot_mapping_array, indent_level, userdata, (NixXML_PrintValueFunc)print_snapshot_mapping_nix);
+}
+
+void print_snapshot_mapping_array_xml(FILE *file, const GPtrArray *snapshot_mapping_array, const int indent_level, const char *type_property_name, void *userdata)
+{
+    NixXML_print_g_ptr_array_xml(file, snapshot_mapping_array, "mapping", indent_level, type_property_name, userdata, (NixXML_PrintXMLValueFunc)print_snapshot_mapping_xml);
+}
+
 SnapshotMapping *find_snapshot_mapping(const GPtrArray *snapshot_mapping_array, const SnapshotMappingKey *key)
 {
     SnapshotMapping **ret = bsearch(&key, snapshot_mapping_array->pdata, snapshot_mapping_array->len, sizeof(gpointer), (int (*)(const void*, const void*)) compare_snapshot_mapping);
@@ -141,14 +151,4 @@ void reset_snapshot_items_transferred_status(GPtrArray *snapshot_mapping_array)
         SnapshotMapping *mapping = g_ptr_array_index(snapshot_mapping_array, i);
         mapping->transferred = FALSE;
     }
-}
-
-void print_snapshot_mapping_array_nix(FILE *file, const GPtrArray *snapshot_mapping_array, const int indent_level, void *userdata)
-{
-    NixXML_print_g_ptr_array_nix(file, snapshot_mapping_array, indent_level, userdata, (NixXML_PrintValueFunc)print_snapshot_mapping_nix);
-}
-
-void print_snapshot_mapping_array_xml(FILE *file, const GPtrArray *snapshot_mapping_array, const int indent_level, const char *type_property_name, void *userdata)
-{
-    NixXML_print_g_ptr_array_xml(file, snapshot_mapping_array, "mapping", indent_level, type_property_name, userdata, (NixXML_PrintXMLValueFunc)print_snapshot_mapping_xml);
 }

@@ -40,17 +40,17 @@ static gchar *compose_mapping_key(ServiceMapping *mapping, gchar *target_key)
     return g_strconcat((gchar*)mapping->service, ":", target_key, ":", (gchar*)mapping->container, NULL);
 }
 
-GHashTable *generate_edges_table(const GPtrArray *activation_array, GHashTable *services_table, GHashTable *targets_table, int ordering)
+GHashTable *generate_edges_table(const GPtrArray *service_mapping_array, GHashTable *services_table, GHashTable *targets_table, int ordering)
 {
     unsigned int i;
 
     /* Create empty hash table */
     GHashTable *edges_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, destroy_value);
 
-    for(i = 0; i < activation_array->len; i++)
+    for(i = 0; i < service_mapping_array->len; i++)
     {
 	/* Retrieve the current mapping from the array */
-	ServiceMapping *mapping = g_ptr_array_index(activation_array, i);
+	ServiceMapping *mapping = g_ptr_array_index(service_mapping_array, i);
 	ManifestService *service = g_hash_table_lookup(services_table, mapping->service);
 
 	/* Retrieve the target property */
@@ -88,7 +88,7 @@ GHashTable *generate_edges_table(const GPtrArray *activation_array, GHashTable *
 		InterDependencyMapping *dependency = g_ptr_array_index(inter_dependencies, j);
 		
 		/* Find the activation mapping in the activation array */
-		actual_mapping = find_service_mapping(activation_array, dependency);
+		actual_mapping = find_service_mapping(service_mapping_array, dependency);
 		
 		/* Get the target interface */
 		target = g_hash_table_lookup(targets_table, (gchar*)actual_mapping->target);

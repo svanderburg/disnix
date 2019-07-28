@@ -32,7 +32,7 @@ static pid_t take_snapshot_on_target(SnapshotMapping *mapping, ManifestService *
     return exec_snapshot((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)service->type, (char**)arguments, arguments_length, (char*)service->pkg);
 }
 
-static void complete_take_snapshot_on_target(SnapshotMapping *mapping, Target *target, ProcReact_Status status, int result)
+static void complete_take_snapshot_on_target(SnapshotMapping *mapping, ManifestService *service, Target *target, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
         g_printerr("[target: %s]: Cannot snapshot state of service: %s\n", mapping->target, mapping->component);

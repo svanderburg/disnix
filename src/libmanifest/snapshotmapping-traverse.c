@@ -22,7 +22,7 @@
 #include <sys/wait.h>
 #include <nixxml-generate-env.h>
 
-static int wait_to_complete_snapshot_item(GHashTable *pid_table, GHashTable *targets_table, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
+static int wait_to_complete_snapshot_item(GHashTable *pid_table, GHashTable *services_table, GHashTable *targets_table, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
 {
     if(g_hash_table_size(pid_table) > 0)
     {
@@ -33,8 +33,10 @@ static int wait_to_complete_snapshot_item(GHashTable *pid_table, GHashTable *tar
             return FALSE;
         else
         {
+            ManifestService *service;
             Target *target;
             ProcReact_Status status;
+            int result;
 
             /* Find the corresponding snapshot mapping and remove it from the pids table */
             SnapshotMapping *mapping = g_hash_table_lookup(pid_table, &pid);
@@ -48,8 +50,9 @@ static int wait_to_complete_snapshot_item(GHashTable *pid_table, GHashTable *tar
             signal_available_target_core(target);
 
             /* Return the status */
-            int result = procreact_retrieve_boolean(pid, wstatus, &status);
-            complete_snapshot_item_mapping(mapping, target, status, result);
+            result = procreact_retrieve_boolean(pid, wstatus, &status);
+            service = g_hash_table_lookup(services_table, mapping->service);
+            complete_snapshot_item_mapping(mapping, service, target, status, result);
             return(status == PROCREACT_STATUS_OK && result);
         }
     }
@@ -92,7 +95,7 @@ int map_snapshot_items(const GPtrArray *snapshot_mapping_array, GHashTable *serv
             }
         }
 
-        if(!wait_to_complete_snapshot_item(pid_table, targets_table, complete_snapshot_item_mapping))
+        if(!wait_to_complete_snapshot_item(pid_table, services_table, targets_table, complete_snapshot_item_mapping))
             status = FALSE;
 
         num_processed++;

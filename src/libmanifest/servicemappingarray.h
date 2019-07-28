@@ -48,92 +48,119 @@ typedef struct
     xmlChar *container;
     /** Name of the target machine to which the service is deployed */
     xmlChar *target;
-    /** Indicates the status of the activation mapping */
+    /** Indicates the status of the service mapping */
     ServiceMappingStatus status;
 }
 ServiceMapping;
 
 /**
- * @brief Enumerates the possible outcomes of an operation on a service mapping
+ * Compares two services mappings and determines their sort order.
+ *
+ * @param l Pointer to a service mapping instance
+ * @param r Pointer to a service mapping instance
+ * @return 0 if they are equal, < 0 if l comes before r, > 0 if l comes after r
  */
-typedef enum
-{
-    SERVICE_ERROR,
-    SERVICE_IN_PROGRESS,
-    SERVICE_WAIT,
-    SERVICE_DONE
-}
-ServiceStatus;
-
 gint compare_service_mappings(const ServiceMapping **l, const ServiceMapping **r);
 
 /**
- * Creates an array with activation mappings from the corresponding sub section
- * in an XML document.
+ * Creates an array with service mappings from the corresponding sub section
+ * in an XML document. The resulting array must be freed with
+ * delete_service_mapping_array() when it is not need anymore.
  *
  * @param element XML root element of the sub section defining the mappings
- * @return GPtrArray containing activation mappings
+ * @param userdata Arbitrary user data that is propagated to all parse functions
+ * @return GPtrArray containing service mappings
  */
 GPtrArray *parse_service_mapping_array(xmlNodePtr element, void *userdata);
 
 /**
- * Deletes an array with activation mappings including its contents.
+ * Deletes an array with service mappings including its contents.
  *
- * @param service_mapping_array Activation array to delete
+ * @param service_mapping_array A GPtrArray with service mappings
  */
 void delete_service_mapping_array(GPtrArray *service_mapping_array);
 
+/**
+ * Checks whether an array of service mappings is valid.
+ *
+ * @param service_mapping_array A GPtrArray with service mappings
+ * @return TRUE when the content is valid, else FALSE
+ */
 int check_service_mapping_array(const GPtrArray *service_mapping_array);
 
+/**
+ * Compares two service mapping arrays and checks whether they have the same content
+ *
+ * @param service_mapping_array1 A GPtrArray with service mappings
+ * @param service_mapping_array2 A GPtrArray with service mappings
+ * @return TRUE if the arrays have equal content, else FALSE
+ */
 int compare_service_mapping_arrays(const GPtrArray *service_mapping_array1, const GPtrArray *service_mapping_array2);
 
 /**
- * Returns the activation mapping with the given key in the activation array.
+ * Prints a Nix expression representation of a service mapping array.
  *
- * @param service_mapping_array Activation array
- * @param key Key of the activation mapping to find
- * @return The activation mapping with the specified keys, or NULL if it cannot be found
+ * @param file File descriptor to write to
+ * @param service_mapping_array A GPtrArray with service mappings
+ * @param indent_level Specifies the indent level, or -1 to disable indentation
+ * @param userdata Arbitrary user data that gets propagated to all print functions
+ */
+void print_service_mapping_array_nix(FILE *file, const GPtrArray *service_mapping_array, const int indent_level, void *userdata);
+
+/**
+ * Prints an XML representation of a service mapping array.
+ *
+ * @param file File descriptor to write to
+ * @param service_mapping_array A GPtrArray with service mappings
+ * @param indent_level Specifies the indent level, or -1 to disable indentation
+ * @param type_property_name Name of the type property or NULL to not display any type annotations
+ * @param userdata Arbitrary user data that gets propagated to all print functions
+ */
+void print_service_mapping_array_xml(FILE *file, const GPtrArray *service_mapping_array, const int indent_level, const char *type_property_name, void *userdata);
+
+/**
+ * Returns the service mapping with the given key in the service mapping array.
+ *
+ * @param service_mapping_array Service mapping array
+ * @param key Key of the service mapping to find
+ * @return The service mapping with the specified keys, or NULL if it cannot be found
  */
 ServiceMapping *find_service_mapping(const GPtrArray *service_mapping_array, const InterDependencyMapping *key);
 
 /**
- * Returns the intersection of the two given arrays.
+ * Returns the intersection of the two given service arrays.
  * The array that is returned contains pointers to elements in
  * both left and right, so it should be free with g_ptr_array_free().
  *
- * @param left Array with activation mappings
- * @param right Array with activation mappings
- * @return Array with activation mappings both in left and right
+ * @param left A GPtrArray with service mappings
+ * @param right A GPtrArray with service mappings
+ * @return Array with service mappings both in left and right
  */
 GPtrArray *intersect_service_mapping_array(const GPtrArray *left, const GPtrArray *right);
 
 /**
  * Returns the union of left and right using the intersection,
- * and marks all the activation mappings in left as inactive
- * and activation mappings in right as active.
+ * and marks all the service mappings in left as inactive
+ * and service mappings in right as active.
  *
- * @param left Array with activation mappings
- * @param right Array with activation mappings 
+ * @param left A GPtrArray with service mappings
+ * @param right A GPtrArray with service mappings
  * @param intersect Intersection of left and right
- * @return Array with activation mappings in both left and right,
+ * @return Array with service mappings in both left and right,
  *         marked as active and inactive
  */
-GPtrArray *union_service_mapping_array(GPtrArray *left, GPtrArray *right, const GPtrArray *intersect);
+GPtrArray *unify_service_mapping_array(GPtrArray *left, GPtrArray *right, const GPtrArray *intersect);
 
 /**
- * Returns a new array in which the activation mappings in
+ * Returns a new array in which the service mappings in
  * right and substracted from left.
  * The array that is returned contains pointers to elements in
  * left, so it should be free with g_ptr_array_free().
  *
- * @param left Array with activation mappings
- * @param right Array with activation mappings
+ * @param left A GPtrArray with service mappings
+ * @param right A GPtrArray with service mappings
  * @return Array with right substracted from left.
  */
 GPtrArray *substract_service_mapping_array(const GPtrArray *left, const GPtrArray *right);
-
-void print_service_mapping_array_nix(FILE *file, const GPtrArray *service_mapping_array, const int indent_level, void *userdata);
-
-void print_service_mapping_array_xml(FILE *file, const GPtrArray *service_mapping_array, const int indent_level, const char *type_property_name, void *userdata);
 
 #endif

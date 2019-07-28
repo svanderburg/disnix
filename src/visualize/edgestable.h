@@ -25,12 +25,13 @@
  * Generates a table which associates each activation mapping of
  * a manifest to a list of its inter-dependencies
  *
- * @param activation_array Array with activation mappings
+ * @param service_mapping_array Array with service mappings
+ * @param services_table Hash table containing the available services and their properties
  * @param targets_table Hash table with targets
  * @param ordering TRUE if strict ordering is required, else FALSE
  * @return Generated edges table
  */
-GHashTable *generate_edges_table(const GPtrArray *activation_array, GHashTable *services_table, GHashTable *targets_table, int ordering);
+GHashTable *generate_edges_table(const GPtrArray *service_mapping_array, GHashTable *services_table, GHashTable *targets_table, int ordering);
 
 /**
  * Removes an edges table including all its contents from memory.

@@ -24,7 +24,7 @@
 #include <unistd.h>
 #include <procreact_future.h>
 
-pid_t statemgmt_run_dysnomia_activity(gchar *type, gchar *activity, gchar *component, gchar *container, gchar **arguments, int stdout, int stderr);
+pid_t statemgmt_run_dysnomia_activity(gchar *type, gchar *activity, gchar *component, gchar *container, char **arguments, int stdout, int stderr);
 
 ProcReact_Future statemgmt_query_all_snapshots(gchar *container, gchar *component, int stderr);
 
@@ -44,6 +44,6 @@ pid_t statemgmt_lock_component(gchar *type, gchar *container, gchar *component, 
 
 pid_t statemgmt_unlock_component(gchar *type, gchar *container, gchar *component, int stdout, int stderr);
 
-pid_t statemgmt_spawn_dysnomia_shell(gchar *type, gchar *component, gchar *container, gchar **arguments, gchar *command);
+pid_t statemgmt_spawn_dysnomia_shell(gchar *type, gchar *component, gchar *container, char **arguments, gchar *command);
 
 #endif

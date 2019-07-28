@@ -61,7 +61,7 @@ static pid_t dry_run_deactivate_mapping(ServiceMapping *mapping, ManifestService
     return exec_true(); /* Execute dummy process */
 }
 
-static void complete_activation(ServiceMapping *mapping, Target *target, ProcReact_Status status, int result)
+static void complete_activation(ServiceMapping *mapping, ManifestService *service, Target *target, ProcReact_Status status, int result)
 {
     if(status == PROCREACT_STATUS_OK && result)
         mapping->status = SERVICE_MAPPING_ACTIVATED;
@@ -72,7 +72,7 @@ static void complete_activation(ServiceMapping *mapping, Target *target, ProcRea
     }
 }
 
-static void complete_deactivation(ServiceMapping *mapping, Target *target, ProcReact_Status status, int result)
+static void complete_deactivation(ServiceMapping *mapping, ManifestService *service, Target *target, ProcReact_Status status, int result)
 {
     if(status == PROCREACT_STATUS_OK && result)
         mapping->status = SERVICE_MAPPING_DEACTIVATED;
@@ -83,26 +83,26 @@ static void complete_deactivation(ServiceMapping *mapping, Target *target, ProcR
     }
 }
 
-static void mark_erroneous_mappings(GPtrArray *union_array, ServiceMappingStatus status)
+static void mark_erroneous_mappings(GPtrArray *unified_service_mapping_array, ServiceMappingStatus status)
 {
     unsigned int i;
 
-    for(i = 0; i < union_array->len; i++)
+    for(i = 0; i < unified_service_mapping_array->len; i++)
     {
-        ServiceMapping *mapping = g_ptr_array_index(union_array, i);
+        ServiceMapping *mapping = g_ptr_array_index(unified_service_mapping_array, i);
 
         if(mapping->status == SERVICE_MAPPING_ERROR)
             mapping->status = status;
     }
 }
 
-static int rollback_to_old_mappings(GPtrArray *union_service_array, GHashTable *union_services_table, GPtrArray *old_activation_mappings, GHashTable *targets_table, const unsigned int flags, service_mapping_function activate_mapping_function)
+static int rollback_to_old_mappings(GPtrArray *unified_service_mapping_array, GHashTable *unified_services_table, GPtrArray *old_activation_mappings, GHashTable *targets_table, const unsigned int flags, service_mapping_function activate_mapping_function)
 {
-    mark_erroneous_mappings(union_service_array, SERVICE_MAPPING_ACTIVATED); /* Mark erroneous mappings as activated */
-    return traverse_service_mappings(old_activation_mappings, union_service_array, union_services_table, targets_table, traverse_inter_dependency_mappings, activate_mapping_function, complete_activation);
+    mark_erroneous_mappings(unified_service_mapping_array, SERVICE_MAPPING_ACTIVATED); /* Mark erroneous mappings as activated */
+    return traverse_service_mappings(old_activation_mappings, unified_service_mapping_array, unified_services_table, targets_table, traverse_inter_dependency_mappings, activate_mapping_function, complete_activation);
 }
 
-static TransitionStatus deactivate_obsolete_mappings(GPtrArray *deactivation_array, GPtrArray *union_service_array, GHashTable *union_services_table, GHashTable *targets_table, GPtrArray *old_activation_mappings, const unsigned int flags, service_mapping_function activate_mapping_function, service_mapping_function deactivate_mapping_function)
+static TransitionStatus deactivate_obsolete_mappings(GPtrArray *deactivation_array, GPtrArray *unified_service_mapping_array, GHashTable *unified_services_table, GHashTable *targets_table, GPtrArray *old_activation_mappings, const unsigned int flags, service_mapping_function activate_mapping_function, service_mapping_function deactivate_mapping_function)
 {
     g_print("[coordinator]: Executing deactivation of services:\n");
 
@@ -110,7 +110,7 @@ static TransitionStatus deactivate_obsolete_mappings(GPtrArray *deactivation_arr
         return TRANSITION_SUCCESS;
     else
     {
-        if(traverse_service_mappings(deactivation_array, union_service_array, union_services_table, targets_table, traverse_interdependent_mappings, deactivate_mapping_function, complete_deactivation) && !interrupted)
+        if(traverse_service_mappings(deactivation_array, unified_service_mapping_array, unified_services_table, targets_table, traverse_interdependent_mappings, deactivate_mapping_function, complete_deactivation) && !interrupted)
             return TRANSITION_SUCCESS;
         else
         {
@@ -127,7 +127,7 @@ static TransitionStatus deactivate_obsolete_mappings(GPtrArray *deactivation_arr
             {
                 /* If the deactivation fails, perform a rollback */
                 g_printerr("[coordinator]: Deactivation failed! Doing a rollback...\n");
-                if(rollback_to_old_mappings(union_service_array, union_services_table, old_activation_mappings, targets_table, flags, activate_mapping_function))
+                if(rollback_to_old_mappings(unified_service_mapping_array, unified_services_table, old_activation_mappings, targets_table, flags, activate_mapping_function))
                     return TRANSITION_FAILED;
                 else
                 {
@@ -139,17 +139,17 @@ static TransitionStatus deactivate_obsolete_mappings(GPtrArray *deactivation_arr
     }
 }
 
-static int rollback_new_mappings(GPtrArray *activation_array, GPtrArray *union_service_array, GHashTable *union_services_table, GHashTable *targets_table, const unsigned int flags, service_mapping_function deactivate_mapping_function)
+static int rollback_new_mappings(GPtrArray *activation_array, GPtrArray *unified_service_mapping_array, GHashTable *unified_services_table, GHashTable *targets_table, const unsigned int flags, service_mapping_function deactivate_mapping_function)
 {
-    mark_erroneous_mappings(union_service_array, SERVICE_MAPPING_DEACTIVATED); /* Mark erroneous mappings as deactivated */
-    return traverse_service_mappings(activation_array, union_service_array, union_services_table, targets_table, traverse_interdependent_mappings, deactivate_mapping_function, complete_deactivation);
+    mark_erroneous_mappings(unified_service_mapping_array, SERVICE_MAPPING_DEACTIVATED); /* Mark erroneous mappings as deactivated */
+    return traverse_service_mappings(activation_array, unified_service_mapping_array, unified_services_table, targets_table, traverse_interdependent_mappings, deactivate_mapping_function, complete_deactivation);
 }
 
-static TransitionStatus activate_new_mappings(GPtrArray *activation_array, GPtrArray *union_service_array, GHashTable *union_services_table, GHashTable *targets_table, GPtrArray *old_activation_mappings, const unsigned int flags, service_mapping_function activate_mapping_function, service_mapping_function deactivate_mapping_function)
+static TransitionStatus activate_new_mappings(GPtrArray *activation_array, GPtrArray *unified_service_mapping_array, GHashTable *unified_services_table, GHashTable *targets_table, GPtrArray *old_activation_mappings, const unsigned int flags, service_mapping_function activate_mapping_function, service_mapping_function deactivate_mapping_function)
 {
     g_print("[coordinator]: Executing activation of services:\n");
 
-    if(traverse_service_mappings(activation_array, union_service_array, union_services_table, targets_table, traverse_inter_dependency_mappings, activate_mapping_function, complete_activation) && !interrupted)
+    if(traverse_service_mappings(activation_array, unified_service_mapping_array, unified_services_table, targets_table, traverse_inter_dependency_mappings, activate_mapping_function, complete_activation) && !interrupted)
         return TRANSITION_SUCCESS;
     else
     {
@@ -168,7 +168,7 @@ static TransitionStatus activate_new_mappings(GPtrArray *activation_array, GPtrA
             g_printerr("[coordinator]: Activation failed! Doing a rollback...\n");
 
             /* Roll back the new mappings */
-            if(!rollback_new_mappings(activation_array, union_service_array, union_services_table, targets_table, flags, deactivate_mapping_function))
+            if(!rollback_new_mappings(activation_array, unified_service_mapping_array, unified_services_table, targets_table, flags, deactivate_mapping_function))
             {
                 g_printerr("[coordinator]: New mappings rollback failed!\n\n");
                 return TRANSITION_NEW_MAPPINGS_ROLLBACK_FAILED; /* If the rollback failed, stop and notify the user to take manual action */
@@ -180,7 +180,7 @@ static TransitionStatus activate_new_mappings(GPtrArray *activation_array, GPtrA
             {
                 /* If the new mappings have been rolled backed, roll back to the old mappings */
 
-                if(rollback_to_old_mappings(union_service_array, union_services_table, old_activation_mappings, targets_table, flags, activate_mapping_function))
+                if(rollback_to_old_mappings(unified_service_mapping_array, unified_services_table, old_activation_mappings, targets_table, flags, activate_mapping_function))
                     return TRANSITION_FAILED;
                 else
                     return TRANSITION_OBSOLETE_MAPPINGS_ROLLBACK_FAILED;
@@ -191,10 +191,10 @@ static TransitionStatus activate_new_mappings(GPtrArray *activation_array, GPtrA
 
 TransitionStatus transition(Manifest *manifest, Manifest *previous_manifest, const unsigned int flags)
 {
-    GPtrArray *union_service_array;
+    GPtrArray *unified_service_mapping_array;
     GPtrArray *deactivation_array;
     GPtrArray *activation_array;
-    GHashTable *union_services_table;
+    GHashTable *unified_services_table;
     GPtrArray *previous_service_mapping_array;
     TransitionStatus status;
     service_mapping_function activate_mapping_function, deactivate_mapping_function;
@@ -203,10 +203,10 @@ TransitionStatus transition(Manifest *manifest, Manifest *previous_manifest, con
 
     if(previous_manifest == NULL)
     {
-        union_service_array = manifest->service_mapping_array;
+        unified_service_mapping_array = manifest->service_mapping_array;
         deactivation_array = NULL;
         activation_array = manifest->service_mapping_array;
-        union_services_table = manifest->services_table;
+        unified_services_table = manifest->services_table;
         previous_service_mapping_array = NULL;
     }
     else
@@ -220,9 +220,9 @@ TransitionStatus transition(Manifest *manifest, Manifest *previous_manifest, con
         g_print("[coordinator]: Mapping closures to activate:\n");
         activation_array = substract_service_mapping_array(manifest->service_mapping_array, intersection_array);
 
-        union_service_array = union_service_mapping_array(previous_manifest->service_mapping_array, manifest->service_mapping_array, intersection_array);
+        unified_service_mapping_array = unify_service_mapping_array(previous_manifest->service_mapping_array, manifest->service_mapping_array, intersection_array);
 
-        union_services_table = generate_union_services_table(manifest->services_table, previous_manifest->services_table);
+        unified_services_table = generate_union_services_table(manifest->services_table, previous_manifest->services_table);
 
         /* Remove obsolete intersection array */
         g_ptr_array_free(intersection_array, TRUE);
@@ -242,16 +242,16 @@ TransitionStatus transition(Manifest *manifest, Manifest *previous_manifest, con
     }
 
     /* Execute transition steps */
-    if((status = deactivate_obsolete_mappings(deactivation_array, union_service_array, union_services_table, manifest->targets_table, previous_service_mapping_array, flags, activate_mapping_function, deactivate_mapping_function)) == TRANSITION_SUCCESS
-      && (status = activate_new_mappings(activation_array, union_service_array, union_services_table, manifest->targets_table, previous_service_mapping_array, flags, activate_mapping_function, deactivate_mapping_function)) == TRANSITION_SUCCESS);
+    if((status = deactivate_obsolete_mappings(deactivation_array, unified_service_mapping_array, unified_services_table, manifest->targets_table, previous_service_mapping_array, flags, activate_mapping_function, deactivate_mapping_function)) == TRANSITION_SUCCESS
+      && (status = activate_new_mappings(activation_array, unified_service_mapping_array, unified_services_table, manifest->targets_table, previous_service_mapping_array, flags, activate_mapping_function, deactivate_mapping_function)) == TRANSITION_SUCCESS);
 
     /* Cleanup */
     if(previous_manifest != NULL)
     {
         g_ptr_array_free(deactivation_array, TRUE);
         g_ptr_array_free(activation_array, TRUE);
-        g_ptr_array_free(union_service_array, TRUE);
-        g_hash_table_destroy(union_services_table);
+        g_ptr_array_free(unified_service_mapping_array, TRUE);
+        g_hash_table_destroy(unified_services_table);
     }
 
     /* Returns the transition status */

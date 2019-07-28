@@ -28,7 +28,7 @@
  *
  * @param log_fd File descriptor of the log file that shows the output
  * @param tmpdir Directory in which temp files are stored
- * @param profile_manifest_array An array of profile manifest entries
+ * @param profile_manifest A profile manifest struct instance
  * @param profile Name of the profile to take the manifest from
  * @return TRUE if and only if the locking succeeded
  */
@@ -40,7 +40,7 @@ int acquire_locks(int log_fd, gchar *tmpdir, ProfileManifest *profile_manifest, 
  *
  * @param log_fd File descriptor of the log file that shows the output
  * @param tmpdir Directory in which temp files are stored
- * @param profile_manifest_array An array of profile manifest entries
+ * @param profile_manifest A profile manifest struct instance
  * @param profile Name of the profile to take the manifest from
  * @return TRUE if and only if the unlocking succeeded
  */
