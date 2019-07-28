@@ -21,7 +21,7 @@
 #include <interdependencymappingarray.h>
 #include <servicemappingarray.h>
 #include <snapshotmappingarray.h>
-#include <profilemanifesttarget.h>
+#include <profilemanifesttargettable.h>
 
 static GPtrArray *augment_local_dependencies(GPtrArray *dependency_mapping_array, xmlChar *target_key)
 {

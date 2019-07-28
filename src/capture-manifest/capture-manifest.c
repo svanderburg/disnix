@@ -21,7 +21,8 @@
 #include <targets-iterator.h>
 #include <client-interface.h>
 #include <profilemanifest.h>
-#include <profilemanifesttarget.h>
+#include <profilemanifesttargettable.h>
+#include <profilemanifesttarget-iterator.h>
 #include "aggregated-manifest.h"
 
 /* Resolve profiles infrastructure */
@@ -50,17 +51,17 @@ static void complete_query_requisites_on_target(void *data, Target *target, gcha
         ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)g_malloc(sizeof(ProfileManifestTarget));
         char **result = (char**)future->result;
         gint result_length = g_strv_length(result);
+        gchar *profile;
 
         if(result_length > 0)
         {
-            profile_manifest_target->profile = result[result_length - 1];
+            profile = result[result_length - 1];
             result[result_length - 1] = NULL;
         }
         else
-            profile_manifest_target->profile = NULL;
+            profile = NULL;
 
-        parse_profile_manifest_target(profile_manifest_target);
-
+        profile_manifest_target = parse_profile_manifest_target(profile);
         g_hash_table_insert(query_requisites_data->profile_manifest_target_table, target_key, profile_manifest_target);
 
         procreact_free_string_array(future->result);

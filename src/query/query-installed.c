@@ -19,7 +19,7 @@
 #include "query-installed.h"
 #include <targets-iterator.h>
 #include <client-interface.h>
-#include <profilemanifesttarget.h>
+#include <profilemanifesttargettable.h>
 #include <profilemanifest.h>
 
 typedef struct
