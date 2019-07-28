@@ -27,24 +27,48 @@
 #include "oldsnapshotmapping.h"
 #include <libxml/parser.h>
 
-static OldManifest *parse_old_manifest(xmlNodePtr element)
+static int check_version(xmlNodePtr element)
 {
-    OldManifest *manifest = (OldManifest*)g_malloc0(sizeof(OldManifest));
-    xmlNodePtr element_children = element->children;
+    xmlAttr *property = element->properties;
 
-    while(element_children != NULL)
+    while(property != NULL)
     {
-        if(xmlStrcmp(element_children->name, (xmlChar*) "distribution") == 0)
-            manifest->distribution_array = parse_distribution(element_children);
-        else if(xmlStrcmp(element_children->name, (xmlChar*) "activation") == 0)
-            manifest->activation_array = parse_activation(element_children);
-        else if(xmlStrcmp(element_children->name, (xmlChar*) "snapshots") == 0)
-            manifest->snapshots_array = parse_old_snapshots(element_children);
+        if(xmlStrcmp(property->name, (xmlChar*) "version") == 0 && xmlStrcmp(property->children->content, (xmlChar*) "1") == 0)
+            return TRUE;
 
-        element_children = element_children->next;
+        property = property->next;
     }
 
-    return manifest;
+    return FALSE;
+}
+
+
+static OldManifest *parse_old_manifest(xmlNodePtr element)
+{
+    if(check_version(element))
+    {
+        OldManifest *manifest = (OldManifest*)g_malloc0(sizeof(OldManifest));
+        xmlNodePtr element_children = element->children;
+
+        while(element_children != NULL)
+        {
+            if(xmlStrcmp(element_children->name, (xmlChar*) "distribution") == 0)
+                manifest->distribution_array = parse_distribution(element_children);
+            else if(xmlStrcmp(element_children->name, (xmlChar*) "activation") == 0)
+                manifest->activation_array = parse_activation(element_children);
+            else if(xmlStrcmp(element_children->name, (xmlChar*) "snapshots") == 0)
+                manifest->snapshots_array = parse_old_snapshots(element_children);
+
+            element_children = element_children->next;
+        }
+
+        return manifest;
+    }
+    else
+    {
+        g_printerr("Please provide a manifest file that uses the V1 structure!\n");
+        return NULL;
+    }
 }
 
 OldManifest *create_old_manifest(const gchar *manifest_file)

@@ -30,28 +30,52 @@
 #include <nixxml-print-nix.h>
 #include <nixxml-print-xml.h>
 
-static Manifest *parse_manifest(xmlNodePtr element, const unsigned int flags, const gchar *container_filter, const gchar *component_filter, void *userdata)
+static int check_version(xmlNodePtr element)
 {
-    Manifest *manifest = (Manifest*)g_malloc0(sizeof(Manifest));
-    xmlNodePtr element_children = element->children;
+    xmlAttr *property = element->properties;
 
-    while(element_children != NULL)
+    while(property != NULL)
     {
-        if((flags & MANIFEST_PROFILES_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "profiles") == 0)
-            manifest->profile_mapping_table = parse_profile_mapping_table(element_children, userdata);
-        else if(((flags & MANIFEST_SERVICE_MAPPINGS_FLAG) || (flags & MANIFEST_SNAPSHOT_MAPPINGS_FLAG)) && xmlStrcmp(element_children->name, (xmlChar*) "services") == 0)
-            manifest->services_table = parse_services_table(element_children, userdata);
-        else if((flags & MANIFEST_SERVICE_MAPPINGS_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "serviceMappings") == 0)
-            manifest->service_mapping_array = parse_service_mapping_array(element_children, userdata);
-        else if((flags & MANIFEST_SNAPSHOT_MAPPINGS_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "snapshotMappings") == 0)
-            manifest->snapshot_mapping_array = parse_snapshot_mapping_array(element_children, container_filter, component_filter, userdata);
-        else if((flags & MANIFEST_INFRASTRUCTURE_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "infrastructure") == 0)
-            manifest->targets_table = parse_targets_table(element_children, userdata);
+        if(xmlStrcmp(property->name, (xmlChar*) "version") == 0 && xmlStrcmp(property->children->content, (xmlChar*) "2") == 0)
+            return TRUE;
 
-        element_children = element_children->next;
+        property = property->next;
     }
 
-    return manifest;
+    return FALSE;
+}
+
+static Manifest *parse_manifest(xmlNodePtr element, const unsigned int flags, const gchar *container_filter, const gchar *component_filter, void *userdata)
+{
+    if(check_version(element))
+    {
+        Manifest *manifest = (Manifest*)g_malloc0(sizeof(Manifest));
+        xmlNodePtr child_element = element->children;
+
+        while(child_element != NULL)
+        {
+            if((flags & MANIFEST_PROFILES_FLAG) && xmlStrcmp(child_element->name, (xmlChar*) "profiles") == 0)
+                manifest->profile_mapping_table = parse_profile_mapping_table(child_element, userdata);
+            else if(((flags & MANIFEST_SERVICE_MAPPINGS_FLAG) || (flags & MANIFEST_SNAPSHOT_MAPPINGS_FLAG)) && xmlStrcmp(child_element->name, (xmlChar*) "services") == 0)
+                manifest->services_table = parse_services_table(child_element, userdata);
+            else if((flags & MANIFEST_SERVICE_MAPPINGS_FLAG) && xmlStrcmp(child_element->name, (xmlChar*) "serviceMappings") == 0)
+                manifest->service_mapping_array = parse_service_mapping_array(child_element, userdata);
+            else if((flags & MANIFEST_SNAPSHOT_MAPPINGS_FLAG) && xmlStrcmp(child_element->name, (xmlChar*) "snapshotMappings") == 0)
+                manifest->snapshot_mapping_array = parse_snapshot_mapping_array(child_element, container_filter, component_filter, userdata);
+            else if((flags & MANIFEST_INFRASTRUCTURE_FLAG) && xmlStrcmp(child_element->name, (xmlChar*) "infrastructure") == 0)
+                manifest->targets_table = parse_targets_table(child_element, userdata);
+
+            child_element = child_element->next;
+        }
+
+        return manifest;
+    }
+    else
+    {
+        g_printerr("Disnix requires a manifest that uses the version 2 structure!\n");
+        g_printerr("You can convert an old V1 version manifest file by running disnix-convert!\n");
+        return NULL;
+    }
 }
 
 Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, const gchar *container_filter, const gchar *component_filter)
@@ -84,16 +108,19 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
     manifest = parse_manifest(node_root, flags, container_filter, component_filter, NULL);
 
     /* Set default values */
-    if(manifest->profile_mapping_table == NULL)
-        manifest->profile_mapping_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-    if(manifest->services_table == NULL)
-        manifest->services_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-    if(manifest->service_mapping_array == NULL)
-        manifest->service_mapping_array = g_ptr_array_new();
-    if(manifest->snapshot_mapping_array == NULL)
-        manifest->snapshot_mapping_array = g_ptr_array_new();
-    if(manifest->targets_table == NULL)
-        manifest->targets_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+    if(manifest != NULL)
+    {
+        if(manifest->profile_mapping_table == NULL)
+            manifest->profile_mapping_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+        if(manifest->services_table == NULL)
+            manifest->services_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+        if(manifest->service_mapping_array == NULL)
+            manifest->service_mapping_array = g_ptr_array_new();
+        if(manifest->snapshot_mapping_array == NULL)
+            manifest->snapshot_mapping_array = g_ptr_array_new();
+        if(manifest->targets_table == NULL)
+            manifest->targets_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+    }
 
     /* Cleanup */
     xmlFreeDoc(doc);
