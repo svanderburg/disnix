@@ -30,7 +30,7 @@ static pid_t next_derivation_process(void *data)
     /* Declarations */
     DerivationIteratorData *derivation_iterator_data = (DerivationIteratorData*)data;
 
-    /* Retrieve derivation item, interface pair */
+    /* Retrieve derivation mapping, interface pair */
     DerivationMapping *mapping = g_ptr_array_index(derivation_iterator_data->derivation_mapping_array, derivation_iterator_data->model_iterator_data.index);
     Interface *interface = g_hash_table_lookup(derivation_iterator_data->interfaces_table, (gchar*)mapping->interface);
 
@@ -51,7 +51,7 @@ static void complete_derivation_process(void *data, pid_t pid, ProcReact_Status 
     /* Retrieve the completed mapping */
     DerivationMapping *mapping = complete_iteration_process(&derivation_iterator_data->model_iterator_data, pid, status, result);
 
-    /* Invoke callback that handles the completion of derivation item mapping */
+    /* Invoke callback that handles the completion of derivation mapping */
     derivation_iterator_data->complete_derivation_mapping_function.pid(derivation_iterator_data->data, mapping, status, result);
 }
 
@@ -81,11 +81,11 @@ static ProcReact_Future next_derivation_future(void *data)
     /* Declarations */
     DerivationIteratorData *derivation_iterator_data = (DerivationIteratorData*)data;
 
-    /* Retrieve derivation item, interface pair */
+    /* Retrieve derivation mapping, interface pair */
     DerivationMapping *mapping = g_ptr_array_index(derivation_iterator_data->derivation_mapping_array, derivation_iterator_data->model_iterator_data.index);
     Interface *interface = g_hash_table_lookup(derivation_iterator_data->interfaces_table, (gchar*)mapping->interface);
 
-    /* Invoke the next derivation item operation process */
+    /* Invoke the next derivation mapping operation process */
     ProcReact_Future future = derivation_iterator_data->map_derivation_mapping_function.future(derivation_iterator_data->data, mapping, interface);
 
     /* Increase the iterator and update the pid table */
@@ -102,7 +102,7 @@ static void complete_derivation_future(void *data, ProcReact_Future *future, Pro
     /* Retrieve the completed mapping */
     DerivationMapping *mapping = complete_iteration_future(&derivation_iterator_data->model_iterator_data, future, status);
 
-    /* Invoke callback that handles the completion of derivation item mapping */
+    /* Invoke callback that handles the completion of derivation mapping */
     derivation_iterator_data->complete_derivation_mapping_function.future(derivation_iterator_data->data, mapping, future, status);
 }
 
