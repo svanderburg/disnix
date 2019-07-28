@@ -90,7 +90,10 @@ typedef enum
     DISNIX_OPTION_NO_TARGET_PROFILES = 273,
 
     /* Visualize options */
-    DISNIX_OPTION_NO_CONTAINERS = 274
+    DISNIX_OPTION_NO_CONTAINERS = 274,
+
+    /* Convert options */
+    DISNIX_OPTION_INFRASTRUCTURE = 'i'
 }
 DisnixCommandLineOption;
 

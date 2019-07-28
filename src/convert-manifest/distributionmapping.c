@@ -18,7 +18,6 @@
  */
 
 #include "distributionmapping.h"
-#include <nixxml-ghashtable.h>
 #include <nixxml-gptrarray.h>
 
 static void *create_distribution_item(xmlNodePtr element, void *userdata)
@@ -64,18 +63,6 @@ void delete_distribution_array(GPtrArray *distribution_array)
         }
 
         g_ptr_array_free(distribution_array, TRUE);
-    }
-}
-
-void print_distribution_array(const GPtrArray *distribution_array)
-{
-    unsigned int i;
-
-    for(i = 0; i < distribution_array->len; i++)
-    {
-        DistributionItem* item = g_ptr_array_index(distribution_array, i);
-        g_print("profile: %s\n", item->profile);
-        g_print("target: %s\n\n", item->target);
     }
 }
 

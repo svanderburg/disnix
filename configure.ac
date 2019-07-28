@@ -118,6 +118,7 @@ src/capture-manifest/Makefile
 src/run-activity/Makefile
 src/migrate/Makefile
 src/deploy/Makefile
+src/convert-manifest/Makefile
 scripts/Makefile
 data/Makefile
 maintenance/Makefile
@@ -131,6 +132,7 @@ scripts/disnix-gendist-roundrobin
 scripts/disnix-reconstruct
 scripts/disnix-ssh-client
 scripts/disnix-normalize-infra
+scripts/disnix-convert
 doc/Makefile
 doc/manual/Makefile
 init.d/Makefile

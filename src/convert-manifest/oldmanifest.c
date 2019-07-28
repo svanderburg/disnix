@@ -17,32 +17,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "manifest.h"
+#include "oldmanifest.h"
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <pwd.h>
 #include "distributionmapping.h"
 #include "activationmapping.h"
-#include "snapshotmapping.h"
-#include "targets.h"
+#include "oldsnapshotmapping.h"
 #include <libxml/parser.h>
 
-static Manifest *parse_manifest(xmlNodePtr element, const unsigned int flags, const gchar *container_filter, const gchar *component_filter)
+static OldManifest *parse_old_manifest(xmlNodePtr element)
 {
-    Manifest *manifest = (Manifest*)g_malloc0(sizeof(Manifest));
+    OldManifest *manifest = (OldManifest*)g_malloc0(sizeof(OldManifest));
     xmlNodePtr element_children = element->children;
 
     while(element_children != NULL)
     {
-        if((flags & MANIFEST_DISTRIBUTION_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "distribution") == 0)
+        if(xmlStrcmp(element_children->name, (xmlChar*) "distribution") == 0)
             manifest->distribution_array = parse_distribution(element_children);
-        else if((flags & MANIFEST_ACTIVATION_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "activation") == 0)
+        else if(xmlStrcmp(element_children->name, (xmlChar*) "activation") == 0)
             manifest->activation_array = parse_activation(element_children);
-        else if((flags & MANIFEST_SNAPSHOT_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "snapshots") == 0)
-            manifest->snapshots_array = parse_snapshots(element_children, container_filter, component_filter);
-        else if((flags & MANIFEST_TARGETS_FLAG) && xmlStrcmp(element_children->name, (xmlChar*) "targets") == 0)
-            manifest->target_array = parse_targets(element_children);
+        else if(xmlStrcmp(element_children->name, (xmlChar*) "snapshots") == 0)
+            manifest->snapshots_array = parse_old_snapshots(element_children);
 
         element_children = element_children->next;
     }
@@ -50,11 +47,11 @@ static Manifest *parse_manifest(xmlNodePtr element, const unsigned int flags, co
     return manifest;
 }
 
-Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, const gchar *container_filter, const gchar *component_filter)
+OldManifest *create_old_manifest(const gchar *manifest_file)
 {
     xmlDocPtr doc;
     xmlNodePtr node_root;
-    Manifest *manifest;
+    OldManifest *manifest;
 
     /* Parse the XML document */
 
@@ -77,7 +74,7 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
     }
 
     /* Parse manifest */
-    manifest = parse_manifest(node_root, flags, container_filter, component_filter);
+    manifest = parse_old_manifest(node_root);
 
     /* Cleanup */
     xmlFreeDoc(doc);
@@ -87,27 +84,25 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
     return manifest;
 }
 
-int check_manifest(const Manifest *manifest)
+int check_old_manifest(const OldManifest *manifest)
 {
     return (check_distribution_array(manifest->distribution_array)
       && check_activation_array(manifest->activation_array)
-      && check_snapshots_array(manifest->snapshots_array)
-      && check_target_array(manifest->target_array));
+      && check_old_snapshots_array(manifest->snapshots_array));
 }
 
-void delete_manifest(Manifest *manifest)
+void delete_old_manifest(OldManifest *manifest)
 {
     if(manifest != NULL)
     {
         delete_distribution_array(manifest->distribution_array);
         delete_activation_array(manifest->activation_array);
-        delete_snapshots_array(manifest->snapshots_array);
-        delete_target_array(manifest->target_array);
+        delete_old_snapshots_array(manifest->snapshots_array);
         g_free(manifest);
     }
 }
 
-gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, const gchar *profile)
+static gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, const gchar *profile)
 {
     gchar *old_manifest_file;
     FILE *file;
@@ -132,44 +127,25 @@ gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, c
     return old_manifest_file;
 }
 
-Manifest *open_provided_or_previous_manifest_file(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const unsigned int flags, const gchar *container, const gchar *component)
+OldManifest *open_provided_or_previous_old_manifest_file(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile)
 {
     if(manifest_file == NULL)
     {
         /* If no manifest file has been provided, try opening the last deployed one */
         gchar *old_manifest_file = determine_previous_manifest_file(coordinator_profile_path, profile);
-        
+
         if(old_manifest_file == NULL)
             return NULL; /* There is no previously deployed manifest */
         else
         {
             /* Open the previously deployed manifest */
-            Manifest *manifest;
+            OldManifest *manifest;
             g_printerr("[coordinator]: Using previous manifest: %s\n", old_manifest_file);
-            manifest = create_manifest(old_manifest_file, flags, container, component);
+            manifest = create_old_manifest(old_manifest_file);
             g_free(old_manifest_file);
             return manifest;
         }
     }
     else
-        return create_manifest(manifest_file, flags, container, component); /* Open the provided manifest file */
-}
-
-gchar *determine_manifest_to_open(const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile)
-{
-    if(old_manifest == NULL)
-        return determine_previous_manifest_file(coordinator_profile_path, profile);
-    else
-        return g_strdup(old_manifest);
-}
-
-Manifest *open_previous_manifest(const gchar *manifest_file, const unsigned int flags, const gchar *container, const gchar *component)
-{
-    if(manifest_file == NULL)
-        return NULL;
-    else
-    {
-        g_printerr("[coordinator]: Using previous manifest: %s\n", manifest_file);
-        return create_manifest(manifest_file, flags, container, component);
-    }
+        return create_old_manifest(manifest_file); /* Open the provided manifest file */
 }

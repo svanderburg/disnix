@@ -21,7 +21,6 @@
 #define __DISNIX_DISTRIBUTIONMAPPING_H
 #include <glib.h>
 #include <libxml/parser.h>
-#include <targets.h>
 
 /**
  * @brief Contains a mapping of a Nix profile to a disnix service target
@@ -50,8 +49,6 @@ GPtrArray *parse_distribution(xmlNodePtr element);
  * @param distribution_array Array with distribution items
  */
 void delete_distribution_array(GPtrArray *distribution_array);
-
-void print_distribution_array(const GPtrArray *distribution_array);
 
 int check_distribution_array(const GPtrArray *distribution_array);
 

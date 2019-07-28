@@ -1,0 +1,165 @@
+#!/bin/bash
+set -e
+set -o pipefail
+shopt -s nullglob
+
+# Disnix - A Nix-based distributed service deployment tool
+# Copyright (C) 2008-2018  Sander van der Burg
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    cat <<EOF
+Usage: $0 [OPTION] -i infrastructure_expr [MANIFEST]
+
+The command \`disnix-convert' converts a deployment done with older versions
+of Disnix still using the V1 schema to V2.
+
+Options:
+  -i, --infrastructure=infrastructure_nix
+                              Infrastructure Nix expression which captures
+                              properties of machines in the network
+      --target-property=PROP  The target property of an infrastructure model,
+                              that specifies how to connect to the remote Disnix
+                              interface. (Defaults to hostname)
+      --interface=INTERFACE   Path to executable that communicates with a Disnix
+                              interface. Defaults to: disnix-ssh-client
+  -p, --profile=PROFILE       Name of the profile that is used for this system.
+                              Defaults to: default
+      --coordinator-profile-path=PATH
+                              Path where to store the coordinator profile
+                              generations
+      --no-coordinator-profile
+                              Specifies that the coordinator profile should not
+                              be updated
+      --no-target-profiles    Specifies that the target profiles should not be
+                              updated
+      --show-trace            Shows a trace of the output
+  -h, --help                  Shows the usage of this command to the user
+  -v, --version               Shows the version of this command to the user
+
+Environment:
+  DISNIX_CLIENT_INTERFACE    Sets the client interface (defaults to:
+                             disnix-ssh-client)
+  DISNIX_TARGET_PROPERTY     Sets the target property of an infrastructure
+                             model, that specifies how to connect to the remote
+                             Disnix interface. (Defaults to: hostname)
+EOF
+}
+
+# Shows the version of this command to the user
+
+showVersion()
+{
+    cat <<EOF
+$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+
+Copyright (C) 2008-2018 Sander van der Burg
+EOF
+}
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o i:p:hv -l interface:,target-property:,profile:,coordinator-profile-path:,no-coordinator-profile,no-target-profiles,show-trace,help,version -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -i|--infrastructure)
+            infrastructureFile=`readlink -f $2`
+            ;;
+        --interface)
+            interfaceArg="--interface $2"
+            ;;
+        --target-property)
+            targetPropertyArg="--target-property $2"
+            ;;
+        -p|--profile)
+            profile=$2
+            profileArg="--profile $2"
+            ;;
+        --coordinator-profile-path)
+            coordinatorProfilePathArg="--coordinator-profile-path $2"
+            ;;
+        --no-coordinator-profile)
+            noCoordinatorProfileArg="--no-coordinator-profile"
+            ;;
+        --no-target-profiles)
+            noTargetProfiles"--no-target-profiles"
+            ;;
+        --show-trace)
+            showTrace=1
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+        -v|--version)
+            showVersion
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
+
+# Autoconf settings
+
+export prefix=@prefix@
+
+# Import checks
+
+source @datadir@/@PACKAGE@/checks
+
+# Validate the given options
+
+checkInfrastructureFile
+checkProfile
+checkShowTrace
+checkTmpDir
+
+if [ -n "$1" ]
+then
+    manifestFile="$(readlink -f "$1")"
+fi
+
+# Convert the manifest, build and install it
+
+echo "[coordinator]: Converting old profile manifest..." >&2
+tempExpr=`mktemp -p $TMPDIR`
+disnix-convert-manifest $profileArg $targetPropertyArg $interfaceArg -i $infrastructureFile $manifestFile > $tempExpr
+
+echo "[coordinator]: Building converted deployment model..." >&2
+convertedManifest=`disnix-manifest --no-out-link $targetPropertyArg $interfaceArg $showTraceArg -D $tempExpr`
+
+echo "[coordinator]: Setting profiles..." >&2
+disnix-set $profileArg $coordinatorProfilePathArg $noCoordinatorProfileArg $noTargetProfiles $convertedManifest || (rm -f $tempExpr; false)
+rm -f $tempExpr
+echo "[coordinator]: Conversion done, you should not be able to deploy again by providing the --no-lock parameter to disnix-env" >&2
