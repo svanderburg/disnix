@@ -76,6 +76,22 @@ static GPtrArray *convert_dependencies(GPtrArray *dependency_array, GHashTable *
     return converted_dependency_array;
 }
 
+static gchar *find_service_key(GHashTable *services_table, xmlChar *pkg)
+{
+    GHashTableIter iter;
+    gpointer key, value;
+
+    g_hash_table_iter_init(&iter, services_table);
+    while(g_hash_table_iter_next(&iter, &key, &value))
+    {
+        ManifestService *service = (ManifestService*)value;
+        if(xmlStrcmp(service->pkg, pkg) == 0)
+            return (gchar*)key;
+    }
+
+    return NULL;
+}
+
 static Manifest *convert_manifest(OldManifest *old_manifest, GHashTable *targets_table)
 {
     unsigned int i;
@@ -162,7 +178,7 @@ static Manifest *convert_manifest(OldManifest *old_manifest, GHashTable *targets
             snapshot_mapping->component = old_snapshot_mapping->component;
             snapshot_mapping->container = old_snapshot_mapping->container;
             snapshot_mapping->target = (xmlChar*)target_name;
-            snapshot_mapping->service = old_snapshot_mapping->service;
+            snapshot_mapping->service = (xmlChar*)find_service_key(manifest->services_table, old_snapshot_mapping->service);
             g_ptr_array_add(manifest->snapshot_mapping_array, snapshot_mapping);
         }
     }

@@ -203,7 +203,8 @@ gchar *find_target_property(const Target *target, const gchar *name)
     else
     {
         NixXML_Node *node = g_hash_table_lookup(target->properties_table, name);
-        if(node->type == NIX_XML_TYPE_STRING)
+
+        if(node->type == NIX_XML_TYPE_STRING || node->type == NIX_XML_TYPE_INT || node->type == NIX_XML_TYPE_FLOAT || node->type == NIX_XML_TYPE_BOOL)
             return (gchar*)node->value;
         else
             return NULL;
