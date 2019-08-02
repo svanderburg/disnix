@@ -30,6 +30,24 @@ extern "C" {
 #endif
 
 /**
+ * Recursively deletes a node and all its node references including data
+ * structures managed by this sub library.
+ *
+ * @param node Pointer to an NixXML_Node instance
+ */
+void NixXML_delete_node_glib(NixXML_Node *node);
+
+/**
+ * Recursively compares two node object trees and checks whether they have equal
+ * content.
+ *
+ * @param left Pointer to an NixXML_Node instance
+ * @param right Pointer to an NixXML_Node instance
+ * @return TRUE if the object structures are equal, else FALSE
+ */
+int NixXML_compare_nodes_glib(const NixXML_Node *left, const NixXML_Node *right);
+
+/**
  * Recursively parses a type-annotated XML document using GHashTable structs
  * for representing attribute sets and GPtrArray for representing lists.
  *

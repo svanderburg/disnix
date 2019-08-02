@@ -55,6 +55,15 @@ NixXML_Node;
  */
 typedef void (*NixXML_DeleteObjectFunc) (void *data);
 
+/**
+ * Compares two data structures representing a list or attribute set.
+ *
+ * @param left Pointer to a data structure
+ * @param right Pointer to a data structure
+ * @return TRUE if both data structures are equal, else FALSE
+ */
+typedef int (*NixXML_CompareObjectFunc) (const void *left, const void *right);
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -67,6 +76,18 @@ extern "C" {
  * @param delete_table Pointer to a function that recursively deletes a table-like data structure
  */
 void NixXML_delete_node(NixXML_Node *node, NixXML_DeleteObjectFunc delete_list, NixXML_DeleteObjectFunc delete_table);
+
+/**
+ * Recursively compares a node and alls its node references to see whether they
+ * are equal.
+ *
+ * @param left Pointer to an NixXML_Node instance
+ * @param right Pointer to an NixXML_Node instance
+ * @param compare_lists Pointer to a function that compares two list-like data structures
+ * @param compare_tables Pointer to a function that compares two table-like data structures
+ * @return TRUE if the object structures are equal, else FALSE
+ */
+int NixXML_compare_nodes(const NixXML_Node *left, const NixXML_Node *right, NixXML_CompareObjectFunc compare_lists, NixXML_CompareObjectFunc compare_tables);
 
 #ifdef __cplusplus
 }

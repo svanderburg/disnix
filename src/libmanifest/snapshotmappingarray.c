@@ -23,7 +23,6 @@
 #include <nixxml-ghashtable.h>
 #include <nixxml-gptrarray.h>
 #include "manifest.h"
-#include <gptrarray-util.h>
 
 static GPtrArray *filter_selected_mappings(GPtrArray *snapshot_mapping_array, const gchar *container_filter, const gchar *component_filter)
 {
@@ -63,12 +62,12 @@ GPtrArray *parse_snapshot_mapping_array(xmlNodePtr element, const gchar *contain
 
 void delete_snapshot_mapping_array(GPtrArray *snapshot_mapping_array)
 {
-    delete_array(snapshot_mapping_array, (DeleteElementFunction)delete_snapshot_mapping);
+    NixXML_delete_g_ptr_array(snapshot_mapping_array, (NixXML_DeleteGPtrArrayElementFunc)delete_snapshot_mapping);
 }
 
 int check_snapshot_mapping_array(const GPtrArray *snapshot_mapping_array)
 {
-    return check_array(snapshot_mapping_array, (CheckElementFunction)check_snapshot_mapping);
+    return NixXML_check_g_ptr_array(snapshot_mapping_array, (NixXML_CheckGPtrArrayElementFunc)check_snapshot_mapping);
 }
 
 int compare_snapshot_mapping_arrays(const GPtrArray *snapshot_mapping_array1, const GPtrArray *snapshot_mapping_array2)

@@ -20,7 +20,6 @@
 #include "interfacestable.h"
 #include <stdlib.h>
 #include <nixxml-ghashtable.h>
-#include "hashtable-util.h"
 
 GHashTable *parse_interfaces_table(xmlNodePtr element, void *userdata)
 {
@@ -29,10 +28,10 @@ GHashTable *parse_interfaces_table(xmlNodePtr element, void *userdata)
 
 void delete_interfaces_table(GHashTable *interfaces_table)
 {
-    delete_hash_table(interfaces_table, (DeleteFunction)delete_interface);
+    NixXML_delete_g_hash_table(interfaces_table, (NixXML_DeleteGHashTableValueFunc)delete_interface);
 }
 
 int check_interfaces_table(GHashTable *interfaces_table)
 {
-    return check_hash_table(interfaces_table, (CheckFunction)check_interface);
+    return NixXML_check_g_hash_table(interfaces_table, (NixXML_CheckGHashTableValueFunc)check_interface);
 }

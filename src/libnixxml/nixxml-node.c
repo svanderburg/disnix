@@ -23,6 +23,9 @@
 #include <libxml/parser.h>
 #include <stdlib.h>
 
+#define TRUE 1
+#define FALSE 0
+
 void NixXML_delete_node(NixXML_Node *node, NixXML_DeleteObjectFunc delete_list, NixXML_DeleteObjectFunc delete_table)
 {
     if(node != NULL)
@@ -45,4 +48,27 @@ void NixXML_delete_node(NixXML_Node *node, NixXML_DeleteObjectFunc delete_list, 
 
         free(node);
     }
+}
+
+int NixXML_compare_nodes(const NixXML_Node *left, const NixXML_Node *right, NixXML_CompareObjectFunc compare_lists, NixXML_CompareObjectFunc compare_tables)
+{
+    if(left->type == right->type)
+    {
+        switch(left->type)
+        {
+            case NIX_XML_TYPE_STRING:
+            case NIX_XML_TYPE_INT:
+            case NIX_XML_TYPE_FLOAT:
+            case NIX_XML_TYPE_BOOL:
+                return (xmlStrcmp((xmlChar*)left->value, (xmlChar*)right->value) == 0);
+            case NIX_XML_TYPE_LIST:
+                return compare_lists(left, right);
+            case NIX_XML_TYPE_ATTRSET:
+                return compare_tables(left, right);
+            default:
+                return FALSE;
+        }
+    }
+    else
+        return FALSE;
 }

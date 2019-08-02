@@ -21,7 +21,6 @@
 #include <nixxml-print-nix.h>
 #include <nixxml-print-xml.h>
 #include <nixxml-ghashtable.h>
-#include "propertytable-util.h"
 
 GHashTable *parse_profile_mapping_table(xmlNodePtr element, void *userdata)
 {
@@ -30,17 +29,17 @@ GHashTable *parse_profile_mapping_table(xmlNodePtr element, void *userdata)
 
 void delete_profile_mapping_table(GHashTable *profile_mapping_table)
 {
-    delete_hash_table(profile_mapping_table, (DeleteFunction)g_free);
+    NixXML_delete_g_property_table(profile_mapping_table);
 }
 
 int check_profile_mapping_table(GHashTable *profile_mapping_table)
 {
-    return check_property_table(profile_mapping_table);
+    return NixXML_check_g_property_table(profile_mapping_table);
 }
 
 int compare_profile_mapping_tables(GHashTable *profile_mapping_table1, GHashTable *profile_mapping_table2)
 {
-    return compare_property_tables(profile_mapping_table1, profile_mapping_table2);
+    return NixXML_compare_g_property_tables(profile_mapping_table1, profile_mapping_table2);
 }
 
 void print_profile_mapping_table_nix(FILE *file, GHashTable *profile_mapping_table, const int indent_level, void *userdata)

@@ -1,6 +1,5 @@
 #include "servicestable.h"
 #include <nixxml-ghashtable.h>
-#include "hashtable-util.h"
 
 GHashTable *parse_services_table(xmlNodePtr element, void *userdata)
 {
@@ -9,17 +8,17 @@ GHashTable *parse_services_table(xmlNodePtr element, void *userdata)
 
 void delete_services_table(GHashTable *services_table)
 {
-    delete_hash_table(services_table, (DeleteFunction)delete_manifest_service);
+    NixXML_delete_g_hash_table(services_table, (NixXML_DeleteGHashTableValueFunc)delete_manifest_service);
 }
 
 int check_services_table(GHashTable *services_table)
 {
-    return check_hash_table(services_table, (CheckFunction)check_manifest_service);
+    return NixXML_check_g_hash_table(services_table, (NixXML_CheckGHashTableValueFunc)check_manifest_service);
 }
 
 int compare_services_tables(GHashTable *services_table1, GHashTable *services_table2)
 {
-    return compare_hash_tables(services_table1, services_table2, (CompareFunction)compare_manifest_services);
+    return NixXML_compare_g_hash_tables(services_table1, services_table2, (NixXML_CompareGHashTableValueFunc)compare_manifest_services);
 }
 
 GHashTable *generate_union_services_table(GHashTable *left, GHashTable *right)

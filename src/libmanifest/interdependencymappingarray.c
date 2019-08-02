@@ -19,7 +19,6 @@
 
 #include "interdependencymappingarray.h"
 #include <nixxml-gptrarray.h>
-#include <gptrarray-util.h>
 
 GPtrArray *parse_interdependency_mapping_array(xmlNodePtr element, void *userdata)
 {
@@ -30,12 +29,12 @@ GPtrArray *parse_interdependency_mapping_array(xmlNodePtr element, void *userdat
 
 void delete_interdependency_mapping_array(GPtrArray *interdependency_mapping_array)
 {
-    delete_array(interdependency_mapping_array, (DeleteElementFunction)delete_interdependency_mapping);
+    NixXML_delete_g_ptr_array(interdependency_mapping_array, (NixXML_DeleteGPtrArrayElementFunc)delete_interdependency_mapping);
 }
 
 int check_interdependency_mapping_array(const GPtrArray *interdependency_mapping_array)
 {
-    return check_array(interdependency_mapping_array, (CheckElementFunction)check_interdependency_mapping);
+    return NixXML_check_g_ptr_array(interdependency_mapping_array, (NixXML_CheckGPtrArrayElementFunc)check_interdependency_mapping);
 }
 
 void print_interdependency_mapping_array_nix(FILE *file, const GPtrArray *interdependency_mapping_array, const int indent_level, void *userdata)

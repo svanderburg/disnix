@@ -26,7 +26,6 @@
 #include <libxslt/transform.h>
 #include <nixxml-ghashtable.h>
 #include "package-management.h"
-#include "hashtable-util.h"
 
 static xmlDocPtr create_infrastructure_doc(gchar *infrastructureXML)
 {
@@ -167,17 +166,17 @@ GHashTable *create_targets_table(gchar *infrastructure_expr, const int xml, char
 
 void delete_targets_table(GHashTable *targets_table)
 {
-    delete_hash_table(targets_table, (DeleteFunction)delete_target);
+    NixXML_delete_g_hash_table(targets_table, (NixXML_DeleteGHashTableValueFunc)delete_target);
 }
 
 int check_targets_table(GHashTable *targets_table)
 {
-    return check_hash_table(targets_table, (CheckFunction)check_target);
+    return NixXML_check_g_hash_table(targets_table, (NixXML_CheckGHashTableValueFunc)check_target);
 }
 
 int compare_targets_tables(GHashTable *targets_table1, GHashTable *targets_table2)
 {
-    return compare_hash_tables(targets_table1, targets_table2, (CompareFunction)compare_targets);
+    return NixXML_compare_g_hash_tables(targets_table1, targets_table2, (NixXML_CompareGHashTableValueFunc)compare_targets);
 }
 
 void print_targets_table_nix(FILE *file, GHashTable *targets_table, const int indent_level, void *userdata)

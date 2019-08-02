@@ -19,7 +19,6 @@
 
 #include "derivationmappingarray.h"
 #include <nixxml-gptrarray.h>
-#include <gptrarray-util.h>
 
 GPtrArray *parse_derivation_mapping_array(xmlNodePtr element, void *userdata)
 {
@@ -28,10 +27,10 @@ GPtrArray *parse_derivation_mapping_array(xmlNodePtr element, void *userdata)
 
 void delete_derivation_mapping_array(GPtrArray *derivation_mapping_array)
 {
-    delete_array(derivation_mapping_array, (DeleteElementFunction)delete_derivation_mapping);
+    NixXML_delete_g_ptr_array(derivation_mapping_array, (NixXML_DeleteGPtrArrayElementFunc)delete_derivation_mapping);
 }
 
 int check_derivation_mapping_array(const GPtrArray *derivation_mapping_array)
 {
-    return check_array(derivation_mapping_array, (CheckElementFunction)check_derivation_mapping);
+    return NixXML_check_g_ptr_array(derivation_mapping_array, (NixXML_CheckGPtrArrayElementFunc)check_derivation_mapping);
 }

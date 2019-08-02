@@ -24,11 +24,9 @@
 #include <nixxml-print-xml.h>
 #include <nixxml-print-generic-nix.h>
 #include <nixxml-print-generic-xml.h>
-#include <nixxml-glib.h>
-#include <nixxml-gptrarray.h>
 #include <nixxml-ghashtable.h>
-#include "hashtable-util.h"
-#include "propertytable-util.h"
+#include <nixxml-gptrarray.h>
+#include <nixxml-glib.h>
 
 static void *generic_parse_expr(xmlNodePtr element, void *userdata)
 {
@@ -77,9 +75,14 @@ void *parse_target(xmlNodePtr element, void *userdata)
     return NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_target_from_element, parse_and_insert_target_attributes);
 }
 
+static void delete_property_table(GHashTable *property_table)
+{
+    NixXML_delete_g_hash_table(property_table, (NixXML_DeleteGHashTableValueFunc)NixXML_delete_node_glib);
+}
+
 static void delete_containers_table(GHashTable *containers_table)
 {
-    delete_hash_table(containers_table, (DeleteFunction)delete_property_table);
+    NixXML_delete_g_hash_table(containers_table, (NixXML_DeleteGHashTableValueFunc)delete_property_table);
 }
 
 void delete_target(Target *target)
@@ -107,14 +110,19 @@ int check_target(const Target *target)
     return TRUE;
 }
 
+static int compare_property_tables(GHashTable *property_table1, GHashTable *property_table2)
+{
+    return NixXML_compare_g_hash_tables(property_table1, property_table2, (NixXML_CompareGHashTableValueFunc)NixXML_compare_nodes_glib);
+}
+
 static int compare_container_tables(GHashTable *containers_table1, GHashTable *containers_table2)
 {
-    return compare_hash_tables(containers_table1, containers_table2, (CompareFunction)compare_property_tables);
+    return NixXML_compare_g_hash_tables(containers_table1, containers_table2, (NixXML_CompareGHashTableValueFunc)compare_property_tables);
 }
 
 int compare_targets(const Target *left, const Target *right)
 {
-    return (compare_property_tables(left->properties_table, right->properties_table)
+    return (NixXML_compare_g_property_tables(left->properties_table, right->properties_table)
       && compare_container_tables(left->containers_table, right->containers_table)
       && (xmlStrcmp(left->system, right->system) == 0)
       && (xmlStrcmp(left->client_interface, right->client_interface) == 0)

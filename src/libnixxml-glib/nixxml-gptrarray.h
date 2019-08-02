@@ -26,7 +26,29 @@
 #include "nixxml-print-xml.h"
 #include "nixxml-generate-env.h"
 
-typedef void (*NixXML_DeletePtrArrayElementFunc) (void *element);
+/**
+ * Deletes an element from a GPtrArray.
+ *
+ * @param element Element to delete
+ */
+typedef void (*NixXML_DeleteGPtrArrayElementFunc) (gpointer element);
+
+/**
+ * Checks whether an element in a GPtrArray is valid.
+ *
+ * @param element Element to check
+ * @return TRUE if the value is valid, else FALSE
+ */
+typedef int (*NixXML_CheckGPtrArrayElementFunc) (gconstpointer element);
+
+/**
+ * Compare two elements and checks whether they are equal.
+ *
+ * @param left Element to compare
+ * @param right Element to compare
+ * @return TRUE if both elements are equal, else FALSE
+ */
+typedef int (*NixXML_CompareGPtrArrayElementFunc) (gconstpointer left, gconstpointer right);
 
 #ifdef __cplusplus
 extern "C" {
@@ -67,14 +89,32 @@ void *NixXML_finalize_g_ptr_array(void *list, void *userdata);
  * @param array GPtrArray array to delete
  * @param delete_element Pointer to a function that deletes each element
  */
-void NixXML_delete_g_ptr_array(GPtrArray *array, NixXML_DeletePtrArrayElementFunc delete_element);
+void NixXML_delete_g_ptr_array(GPtrArray *array, NixXML_DeleteGPtrArrayElementFunc delete_element);
 
 /**
- * Deletes a pointer array and the values it refers to.by executing free()
+ * Deletes a pointer array and the values it refers to by executing free()
  *
  * @param array GPtrArray to delete
  */
 void NixXML_delete_g_values_array(GPtrArray *array);
+
+/**
+ * Checks the validity of all members in the GPtrArray.
+ *
+ * @param array GPtrArray array to check
+ * @param check_element Pointer to a function that cheks the validity of an element
+ * @return TRUE if all members are valid, else FALSE
+ */
+int NixXML_check_g_ptr_array(const GPtrArray *array, NixXML_CheckGPtrArrayElementFunc check_element);
+
+/**
+ * Compares two arrays and their content and checks whether they are equal.
+ *
+ * @param left GPtrArray to compare
+ * @param right GPtrArray to compare
+ * @param compare_element Pointer to a function that compares elements in the arrays
+ */
+int NixXML_compare_g_ptr_arrays(const GPtrArray *left, const GPtrArray *right, NixXML_CompareGPtrArrayElementFunc compare_element);
 
 /**
  * Prints a Nix representation of all elements in the array.
