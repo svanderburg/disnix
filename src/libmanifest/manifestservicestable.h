@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_SERVICESTABLE_H
-#define __DISNIX_SERVICESTABLE_H
+#ifndef __DISNIX_MANIFESTSERVICESTABLE_H
+#define __DISNIX_MANIFESTSERVICESTABLE_H
 #include <stdio.h>
 #include <glib.h>
 #include <libxml/parser.h>

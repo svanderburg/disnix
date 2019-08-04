@@ -23,6 +23,10 @@
 #define __NIXXML_UTIL_H
 #include <libxml/parser.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Checks whether the provided value is not NULL
  *
@@ -39,5 +43,9 @@ int NixXML_check_value_is_not_null(const void *value);
  * @return TRUE if the strings are equal, else FALSE
  */
 int NixXML_compare_xml_strings(const xmlChar *left, const xmlChar *right);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

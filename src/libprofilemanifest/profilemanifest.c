@@ -25,7 +25,7 @@
 #include <nixxml-parse.h>
 #include <nixxml-print-nix.h>
 #include <nixxml-print-xml.h>
-#include <servicestable.h>
+#include <manifestservicestable.h>
 #include <servicemappingarray.h>
 #include <snapshotmappingarray.h>
 

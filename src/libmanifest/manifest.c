@@ -23,7 +23,7 @@
 #include <pwd.h>
 #include <targetstable.h>
 #include "profilemappingtable.h"
-#include "servicestable.h"
+#include "manifestservicestable.h"
 #include "servicemappingarray.h"
 #include "snapshotmappingarray.h"
 #include <libxml/parser.h>

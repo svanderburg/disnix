@@ -19,7 +19,7 @@
 
 #include "transition.h"
 #include <servicemapping-traverse.h>
-#include <servicestable.h>
+#include <manifestservicestable.h>
 #include <targetstable.h>
 #include <client-interface.h>
 

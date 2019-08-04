@@ -21,7 +21,7 @@
 #define __DISNIX_SERVICEMAPPING_TRAVERSE_H
 #include <glib.h>
 #include <targetstable.h>
-#include "servicestable.h"
+#include "manifestservicestable.h"
 #include "servicemappingarray.h"
 #include "interdependencymappingarray.h"
 
