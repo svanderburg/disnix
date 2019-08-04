@@ -1,6 +1,6 @@
 /*
  * Disnix - A Nix-based distributed service deployment tool
- * Copyright (C) 2008-2018  Sander van der Burg
+ * Copyright (C) 2008-2019  Sander van der Burg
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,26 +31,25 @@ static char *default_target_property = "hostname";
 /* Default profile value */
 static char *default_profile = "default";
 
-
 char *check_interface_option(char *interface)
 {
     if(interface == NULL)
     {
         char *interface_env = getenv("DISNIX_CLIENT_INTERFACE");
-        
+
         if(interface_env == NULL)
             interface = default_interface;
         else
             interface = interface_env;
     }
-    
+
     return interface;
 }
 
 char *check_target_property_option(char *target_property)
 {
     char *target_property_env = getenv("DISNIX_TARGET_PROPERTY");
-    
+
     if(target_property_env == NULL)
         target_property = default_target_property;
     else
@@ -64,13 +63,13 @@ char *check_profile_option(char *profile)
     if(profile == NULL)
     {
         char *profile_env = getenv("DISNIX_PROFILE");
-        
+
         if(profile_env == NULL)
             profile = default_profile;
         else
             profile = profile_env;
     }
-    
+
     return profile;
 }
 
@@ -83,6 +82,6 @@ void print_version(const char *command)
 {
     printf(
     "%s (" PACKAGE_NAME ") " PACKAGE_VERSION "\n\n"
-    "Copyright (C) 2008-2018 Sander van der Burg\n"
+    "Copyright (C) 2008-2019 Sander van der Burg\n"
     , command);
 }

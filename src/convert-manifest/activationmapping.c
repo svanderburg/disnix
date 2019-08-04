@@ -1,6 +1,6 @@
 /*
  * Disnix - A Nix-based distributed service deployment tool
- * Copyright (C) 2008-2018  Sander van der Burg
+ * Copyright (C) 2008-2019  Sander van der Burg
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,14 +25,14 @@ static gint compare_activation_mapping_keys(const ActivationMappingKey **l, cons
 {
     const ActivationMappingKey *left = *l;
     const ActivationMappingKey *right = *r;
-    
+
     /* Compare the service keys */
     gint status = xmlStrcmp(left->key, right->key);
-    
+
     if(status == 0)
     {
         status = xmlStrcmp(left->target, right->target); /* If services are equal then compare the targets */
-        
+
         if(status == 0)
             return xmlStrcmp(left->container, right->container); /* If targets are equal then compare the containers */
         else

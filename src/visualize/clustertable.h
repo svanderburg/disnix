@@ -1,6 +1,6 @@
 /*
  * Disnix - A Nix-based distributed service deployment tool
- * Copyright (C) 2008-2018  Sander van der Burg
+ * Copyright (C) 2008-2019  Sander van der Burg
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,7 @@
  * @param service_mapping_array Array with service mappings
  * @param targets_table Hash table with targets
  * @return Generated cluster table
- */ 
+ */
 GHashTable *generate_cluster_table(GPtrArray *service_mapping_array, GHashTable *targets_table);
 
 /**

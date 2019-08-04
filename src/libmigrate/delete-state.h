@@ -1,6 +1,6 @@
 /*
  * Disnix - A Nix-based distributed service deployment tool
- * Copyright (C) 2008-2018  Sander van der Burg
+ * Copyright (C) 2008-2019  Sander van der Burg
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -30,4 +30,5 @@
  * @return TRUE if deleting the state completed successfully, else FALSE
  */
 int delete_obsolete_state(GPtrArray *snapshot_mapping_array, GHashTable *services_table, GHashTable *targets_table);
+
 #endif

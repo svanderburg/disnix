@@ -1,6 +1,6 @@
 /*
  * Disnix - A Nix-based distributed service deployment tool
- * Copyright (C) 2008-2018  Sander van der Burg
+ * Copyright (C) 2008-2019  Sander van der Burg
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -57,7 +57,7 @@ static void print_version(const char *command)
 {
     printf(
     "%s (" PACKAGE_NAME ") " PACKAGE_VERSION "\n\n"
-    "Copyright (C) 2008-2018 Sander van der Burg\n"
+    "Copyright (C) 2008-2019 Sander van der Burg\n"
     , command);
 }
 
