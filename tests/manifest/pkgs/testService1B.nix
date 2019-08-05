@@ -2,8 +2,9 @@
 
 stdenv.mkDerivation {
   name = "testService1B";
-  
+
   buildCommand = ''
-    echo "testService1B" > $out
+    mkdir -p $out
+    echo "testService1B" > $out/config
   '';
 }
