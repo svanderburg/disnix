@@ -241,35 +241,38 @@ in
 {
   profiles = lib.mapAttrs (targetName: paths:
     let
-      manifest = generateProfileManifest {
+      profileManifest = generateProfileManifest {
         inherit targetName services serviceMappings snapshotMappings;
+      };
+
+      profileManifestPkg = pkgs.stdenv.mkDerivation {
+        name = "profilemanifest";
+        buildInputs = [ pkgs.libxslt ];
+        manifestXML = builtins.toXML profileManifest;
+        passAsFile = [ "manifestXML" ];
+
+        buildCommand = ''
+          mkdir -p $out
+
+          if [ "$manifestXMLPath" != "" ]
+          then
+              xsltproc ${generateProfileManifestXSL} $manifestXMLPath > $out/profilemanifest.xml
+          else
+          (
+          cat <<EOF
+          $manifestXML
+          EOF
+          ) | xsltproc ${generateProfileManifestXSL} - > $out/profilemanifest.xml
+          fi
+        '';
       };
 
       generateProfileManifestXSL = ./generateprofilemanifest.xsl;
     in
     (pkgs.buildEnv {
       name = targetName;
-      inherit paths;
+      paths = [ profileManifestPkg ] ++ paths;
       ignoreCollisions = true;
-      manifest = pkgs.stdenv.mkDerivation {
-        name = "profilemanifest.xml";
-        buildInputs = [ pkgs.libxslt ];
-        manifestXML = builtins.toXML manifest;
-        passAsFile = [ "manifestXML" ];
-
-        buildCommand = ''
-          if [ "$manifestXMLPath" != "" ]
-          then
-              xsltproc ${generateProfileManifestXSL} $manifestXMLPath > $out
-          else
-          (
-          cat <<EOF
-          $manifestXML
-          EOF
-          ) | xsltproc ${generateProfileManifestXSL} - > $out
-          fi
-        '';
-      };
     }).outPath
   ) normalizedArchitecture.targetPackages;
 

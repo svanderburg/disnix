@@ -128,7 +128,7 @@ ProfileManifest *create_profile_manifest_from_file(const gchar *profile_manifest
 ProfileManifest *create_profile_manifest_from_current_deployment(gchar *localstatedir, gchar *profile)
 {
     ProfileManifest *profile_manifest;
-    gchar *profile_manifest_file = g_strconcat(localstatedir, "/nix/profiles/disnix/", profile, "/manifest", NULL);
+    gchar *profile_manifest_file = g_strconcat(localstatedir, "/nix/profiles/disnix/", profile, "/profilemanifest.xml", NULL);
 
     if(access(profile_manifest_file, F_OK) == -1)
     {
@@ -236,7 +236,7 @@ void print_services_per_container_in_profile_manifest(ProfileManifest *profile_m
 
 void print_text_from_profile_manifest(gchar *localstatedir, gchar *profile, int fd)
 {
-    gchar *profile_manifest_file = g_strconcat(localstatedir, "/nix/profiles/disnix/", profile, "/manifest", NULL);
+    gchar *profile_manifest_file = g_strconcat(localstatedir, "/nix/profiles/disnix/", profile, "/profilemanifest.xml", NULL);
     int file_fd;
 
     if((file_fd = open(profile_manifest_file, O_RDONLY)) != -1)

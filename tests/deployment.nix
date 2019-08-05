@@ -269,7 +269,7 @@ simpleTest {
       $coordinator->mustSucceed("${env} disnix-env --rollback");
 
       # We should have one service of type echo now on the testtarget1 machine
-      $testtarget1->mustSucceed("[ \"\$(xmllint --format /nix/var/nix/profiles/disnix/default/manifest | grep \"echo\" | wc -l)\" = \"2\" ]");
+      $testtarget1->mustSucceed("[ \"\$(xmllint --format /nix/var/nix/profiles/disnix/default/profilemanifest.xml | grep \"echo\" | wc -l)\" = \"2\" ]");
 
       # Roll back to the first deployed configuration
       $coordinator->mustSucceed("${env} disnix-env --switch-to-generation 1");

@@ -24,7 +24,7 @@
 ProfileManifestTarget *parse_profile_manifest_target(gchar *profile)
 {
     ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)g_malloc(sizeof(ProfileManifestTarget));
-    gchar *manifest_file = g_strconcat(profile, "/manifest", NULL);
+    gchar *manifest_file = g_strconcat(profile, "/profilemanifest.xml", NULL);
     profile_manifest_target->profile = profile;
     profile_manifest_target->profile_manifest = create_profile_manifest_from_file(manifest_file);
     g_free(manifest_file);
