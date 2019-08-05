@@ -29,6 +29,7 @@
 #include <libxml/parser.h>
 #include <nixxml-print-nix.h>
 #include <nixxml-print-xml.h>
+#include <nixxml-ghashtable.h>
 
 static int check_version(xmlNodePtr element)
 {
@@ -111,15 +112,15 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
     if(manifest != NULL)
     {
         if(manifest->profile_mapping_table == NULL)
-            manifest->profile_mapping_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+            manifest->profile_mapping_table = NixXML_create_g_hash_table();
         if(manifest->services_table == NULL)
-            manifest->services_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+            manifest->services_table = NixXML_create_g_hash_table();
         if(manifest->service_mapping_array == NULL)
             manifest->service_mapping_array = g_ptr_array_new();
         if(manifest->snapshot_mapping_array == NULL)
             manifest->snapshot_mapping_array = g_ptr_array_new();
         if(manifest->targets_table == NULL)
-            manifest->targets_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+            manifest->targets_table = NixXML_create_g_hash_table();
     }
 
     /* Cleanup */

@@ -20,7 +20,7 @@
 #include "nixxml-gptrarray.h"
 #include <stdlib.h>
 
-void *NixXML_create_g_ptr_array(xmlNodePtr element, void *userdata)
+void *NixXML_create_g_ptr_array_from_element(xmlNodePtr element, void *userdata)
 {
     return g_ptr_array_new();
 }
@@ -130,7 +130,7 @@ void NixXML_print_g_ptr_array_xml(FILE *file, const GPtrArray *array, const char
 
 void *NixXML_parse_g_ptr_array(xmlNodePtr element, const char *child_element_name, void *userdata, NixXML_ParseObjectFunc parse_object)
 {
-    return NixXML_parse_list(element, child_element_name, userdata, NixXML_create_g_ptr_array, NixXML_add_value_to_g_ptr_array, parse_object, NixXML_finalize_g_ptr_array);
+    return NixXML_parse_list(element, child_element_name, userdata, NixXML_create_g_ptr_array_from_element, NixXML_add_value_to_g_ptr_array, parse_object, NixXML_finalize_g_ptr_array);
 }
 
 xmlChar *NixXML_generate_env_value_from_g_ptrarray(const void *value, void *userdata, NixXML_GenerateEnvValueFunc generate_value)

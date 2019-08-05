@@ -55,6 +55,12 @@ extern "C" {
 #endif
 
 /**
+ * Creates an empty GHashTable suitable for storing data in a way that can be
+ * easily converted to a Nix attribute set.
+ */
+GHashTable *NixXML_create_g_hash_table(void);
+
+/**
  * Creates a new GHashTable by parsing the sub elements of a provided XML
  * element.
  *
@@ -62,7 +68,7 @@ extern "C" {
  * @param userdata Arbitrary user data that is propagated to all parse functions
  * @return A pointer to a GHashTable
  */
-void *NixXML_create_g_hash_table(xmlNodePtr element, void *userdata);
+void *NixXML_create_g_hash_table_from_element(xmlNodePtr element, void *userdata);
 
 /**
  * Deletes a GHashTable and all its values

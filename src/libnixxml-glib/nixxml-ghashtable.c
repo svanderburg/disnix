@@ -21,9 +21,14 @@
 #include <nixxml-util.h>
 #include "nixxml-ghashtable-iter.h"
 
-void *NixXML_create_g_hash_table(xmlNodePtr element, void *userdata)
+GHashTable *NixXML_create_g_hash_table(void)
 {
     return g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+}
+
+void *NixXML_create_g_hash_table_from_element(xmlNodePtr element, void *userdata)
+{
+    return NixXML_create_g_hash_table();
 }
 
 void NixXML_delete_g_hash_table(GHashTable *hash_table, NixXML_DeleteGHashTableValueFunc delete_function)
@@ -223,12 +228,12 @@ void NixXML_print_g_hash_table_verbose_ordered_xml(FILE *file, GHashTable *hash_
 
 void *NixXML_parse_g_hash_table_simple(xmlNodePtr element, void *userdata, NixXML_ParseObjectFunc parse_object)
 {
-    return NixXML_parse_simple_attrset(element, userdata, NixXML_create_g_hash_table, parse_object, NixXML_insert_into_g_hash_table);
+    return NixXML_parse_simple_attrset(element, userdata, NixXML_create_g_hash_table_from_element, parse_object, NixXML_insert_into_g_hash_table);
 }
 
 void *NixXML_parse_g_hash_table_verbose(xmlNodePtr element, const char *child_element_name, const char *name_property_name, void *userdata, NixXML_ParseObjectFunc parse_object)
 {
-    return NixXML_parse_verbose_attrset(element, child_element_name, name_property_name, userdata, NixXML_create_g_hash_table, parse_object, NixXML_insert_into_g_hash_table);
+    return NixXML_parse_verbose_attrset(element, child_element_name, name_property_name, userdata, NixXML_create_g_hash_table_from_element, parse_object, NixXML_insert_into_g_hash_table);
 }
 
 /* Generate environment variables functionality */

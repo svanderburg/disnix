@@ -62,7 +62,7 @@ extern "C" {
  * @param userdata Arbitrary user data that is propagated to all parse functions
  * @return A data structure that encapsulates a pointer array. It must be finalized to become a usable pointer array.
  */
-void *NixXML_create_g_ptr_array(xmlNodePtr element, void *userdata);
+void *NixXML_create_g_ptr_array_from_element(xmlNodePtr element, void *userdata);
 
 /**
  * Adds a value to a non-finalized pointer array.
