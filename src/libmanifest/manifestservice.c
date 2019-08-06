@@ -27,7 +27,19 @@ static void parse_and_insert_manifest_service_properties(xmlNodePtr element, voi
 
 void *parse_manifest_service(xmlNodePtr element, void *userdata)
 {
-    return NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_manifest_service_from_element, parse_and_insert_manifest_service_properties);
+    ManifestService *service = NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_manifest_service_from_element, parse_and_insert_manifest_service_properties);
+
+    /* Set default values */
+
+    if(service != NULL)
+    {
+        if(service->depends_on == NULL)
+            service->depends_on = g_ptr_array_new();
+        if(service->connects_to == NULL)
+            service->connects_to = g_ptr_array_new();
+    }
+
+    return service;
 }
 
 void delete_manifest_service(ManifestService *service)

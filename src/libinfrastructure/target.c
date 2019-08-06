@@ -72,7 +72,18 @@ static void parse_and_insert_target_attributes(xmlNodePtr element, void *table, 
 
 void *parse_target(xmlNodePtr element, void *userdata)
 {
-    return NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_target_from_element, parse_and_insert_target_attributes);
+    Target *target = NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_target_from_element, parse_and_insert_target_attributes);
+
+    /* Set default values */
+    if(target != NULL)
+    {
+        if(target->properties_table == NULL)
+            target->properties_table = NixXML_create_g_hash_table();
+        if(target->containers_table == NULL)
+            target->containers_table = NixXML_create_g_hash_table();
+    }
+
+    return target;
 }
 
 static void delete_property_table(GHashTable *property_table)
@@ -101,12 +112,6 @@ void delete_target(Target *target)
 
 int check_target(const Target *target)
 {
-    if(target->properties_table == NULL)
-    {
-        g_printerr("target.properties is not set!\n");
-        return FALSE;
-    }
-
     return TRUE;
 }
 

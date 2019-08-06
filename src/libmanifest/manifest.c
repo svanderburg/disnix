@@ -69,6 +69,21 @@ static Manifest *parse_manifest(xmlNodePtr element, const unsigned int flags, co
             child_element = child_element->next;
         }
 
+        /* Set default values */
+        if(manifest != NULL)
+        {
+            if(manifest->profile_mapping_table == NULL)
+                manifest->profile_mapping_table = NixXML_create_g_hash_table();
+            if(manifest->services_table == NULL)
+                manifest->services_table = NixXML_create_g_hash_table();
+            if(manifest->service_mapping_array == NULL)
+                manifest->service_mapping_array = g_ptr_array_new();
+            if(manifest->snapshot_mapping_array == NULL)
+                manifest->snapshot_mapping_array = g_ptr_array_new();
+            if(manifest->targets_table == NULL)
+                manifest->targets_table = NixXML_create_g_hash_table();
+        }
+
         return manifest;
     }
     else
@@ -107,21 +122,6 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
 
     /* Parse manifest */
     manifest = parse_manifest(node_root, flags, container_filter, component_filter, NULL);
-
-    /* Set default values */
-    if(manifest != NULL)
-    {
-        if(manifest->profile_mapping_table == NULL)
-            manifest->profile_mapping_table = NixXML_create_g_hash_table();
-        if(manifest->services_table == NULL)
-            manifest->services_table = NixXML_create_g_hash_table();
-        if(manifest->service_mapping_array == NULL)
-            manifest->service_mapping_array = g_ptr_array_new();
-        if(manifest->snapshot_mapping_array == NULL)
-            manifest->snapshot_mapping_array = g_ptr_array_new();
-        if(manifest->targets_table == NULL)
-            manifest->targets_table = NixXML_create_g_hash_table();
-    }
 
     /* Cleanup */
     xmlFreeDoc(doc);

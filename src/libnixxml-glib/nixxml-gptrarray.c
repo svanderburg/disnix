@@ -81,8 +81,8 @@ int NixXML_compare_g_ptr_arrays(const GPtrArray *left, const GPtrArray *right, N
 
         for(i = 0; i < left->len; i++)
         {
-            gpointer *value1 = g_ptr_array_index(left, i);
-            gpointer *value2 = g_ptr_array_index(right, i);
+            gpointer value1 = g_ptr_array_index(left, i);
+            gpointer value2 = g_ptr_array_index(right, i);
 
             if(!compare_element(value1, value2))
                 return FALSE;

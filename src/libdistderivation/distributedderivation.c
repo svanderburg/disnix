@@ -40,7 +40,18 @@ static void parse_and_insert_distributed_derivation_attributes(xmlNodePtr elemen
 
 static DistributedDerivation *parse_distributed_derivation(xmlNodePtr element, void *userdata)
 {
-    return NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_distributed_derivation_from_element, parse_and_insert_distributed_derivation_attributes);
+    DistributedDerivation *distributed_derivation = NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_distributed_derivation_from_element, parse_and_insert_distributed_derivation_attributes);
+
+    /* Set default values */
+    if(distributed_derivation != NULL)
+    {
+        if(distributed_derivation->derivation_mapping_array == NULL)
+            distributed_derivation->derivation_mapping_array = g_ptr_array_new();
+        else if(distributed_derivation->interfaces_table == NULL)
+            distributed_derivation->interfaces_table = NixXML_create_g_hash_table();
+    }
+
+    return distributed_derivation;
 }
 
 DistributedDerivation *create_distributed_derivation(const gchar *distributed_derivation_file)
@@ -72,15 +83,6 @@ DistributedDerivation *create_distributed_derivation(const gchar *distributed_de
 
     /* Parse distributed derivation */
     distributed_derivation = parse_distributed_derivation(node_root, NULL);
-
-    /* Set default values */
-    if(distributed_derivation != NULL)
-    {
-        if(distributed_derivation->derivation_mapping_array == NULL)
-            distributed_derivation->derivation_mapping_array = g_ptr_array_new();
-        else if(distributed_derivation->interfaces_table == NULL)
-            distributed_derivation->interfaces_table = NixXML_create_g_hash_table();
-    }
 
     /* Cleanup */
     xmlFreeDoc(doc);
