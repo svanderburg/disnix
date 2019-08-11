@@ -125,7 +125,7 @@ ServiceStatus traverse_interdependent_mappings(GPtrArray *unified_service_mappin
  * that has not yet been executed. Furthermore, it also limits the amount of
  * operations executed concurrently to a specified amount per machine.
  *
- * @param mappings An array of service mappings whose state needs to be changed.
+ * @param service_mapping_array An array of service mappings whose state needs to be changed.
  * @param unified_service_mapping_array An array of service mappings that exist in the previous and current configuration
  * @param unified_services_table A hash table of services that exist in the previous and current configuration
  * @param targets_table A hash table of targets
@@ -134,6 +134,6 @@ ServiceStatus traverse_interdependent_mappings(GPtrArray *unified_service_mappin
  * @param complete_service_mapping Pointer to function that gets executed when an operation on a service mapping completes
  * @return TRUE if all the service mappings' states have been successfully changed, else FALSE
  */
-int traverse_service_mappings(GPtrArray *mappings, GPtrArray *unified_service_mapping_array, GHashTable *unified_services_table, GHashTable *targets_table, iterate_strategy_function iterate_strategy, service_mapping_function map_service_mapping, complete_service_mapping_function complete_service_mapping);
+int traverse_service_mappings(GPtrArray *service_mapping_array, GPtrArray *unified_service_mapping_array, GHashTable *unified_services_table, GHashTable *targets_table, iterate_strategy_function iterate_strategy, service_mapping_function map_service_mapping, complete_service_mapping_function complete_service_mapping);
 
 #endif

@@ -196,7 +196,7 @@ ServiceStatus traverse_interdependent_mappings(GPtrArray *unified_service_mappin
     }
 }
 
-int traverse_service_mappings(GPtrArray *mappings, GPtrArray *unified_service_mapping_array, GHashTable *unified_services_table, GHashTable *targets_table, iterate_strategy_function iterate_strategy, service_mapping_function map_service_mapping, complete_service_mapping_function complete_service_mapping)
+int traverse_service_mappings(GPtrArray *service_mapping_array, GPtrArray *unified_service_mapping_array, GHashTable *unified_services_table, GHashTable *targets_table, iterate_strategy_function iterate_strategy, service_mapping_function map_service_mapping, complete_service_mapping_function complete_service_mapping)
 {
     GHashTable *pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, NULL);
     unsigned int num_done = 0;
@@ -207,9 +207,9 @@ int traverse_service_mappings(GPtrArray *mappings, GPtrArray *unified_service_ma
         unsigned int i;
         num_done = 0;
 
-        for(i = 0; i < mappings->len; i++)
+        for(i = 0; i < service_mapping_array->len; i++)
         {
-            ServiceMapping *mapping = g_ptr_array_index(mappings, i);
+            ServiceMapping *mapping = g_ptr_array_index(service_mapping_array, i);
             ServiceStatus status = iterate_strategy(unified_service_mapping_array, unified_services_table, (InterDependencyMapping*)mapping, targets_table, pid_table, map_service_mapping);
 
             if(status == SERVICE_ERROR)
@@ -223,7 +223,7 @@ int traverse_service_mappings(GPtrArray *mappings, GPtrArray *unified_service_ma
             wait_for_service_mapping_to_complete(pid_table, unified_services_table, targets_table, complete_service_mapping);
         }
     }
-    while(num_done < mappings->len);
+    while(num_done < service_mapping_array->len);
 
     g_hash_table_destroy(pid_table);
     return success;

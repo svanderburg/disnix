@@ -382,5 +382,11 @@ simpleTest {
       # Check if the packages have been properly installed as well
       $testtarget1->mustSucceed("/nix/var/nix/profiles/disnix/default/bin/curl --help");
       $testtarget2->mustSucceed("/nix/var/nix/profiles/disnix/default/bin/strace -h");
+
+      # Deploy using a deployment model that only deploys profiles. It should have the right packages installed.
+      $coordinator->mustSucceed("${env} disnix-env -D ${manifestTests}/deployment.nix");
+
+      $testtarget1->mustSucceed("/nix/var/nix/profiles/disnix/default/bin/curl --help");
+      $testtarget2->mustSucceed("/nix/var/nix/profiles/disnix/default/bin/strace -h");
     '';
 }
