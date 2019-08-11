@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <defaultoptions.h>
-#include "set-profiles.h"
+#include "run-set-profiles.h"
 
 static void print_usage(const char *command)
 {

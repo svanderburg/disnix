@@ -17,31 +17,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "set-profiles.h"
+#ifndef __DISNIX_SET_PROFILES_H
+#define __DISNIX_SET_PROFILES_H
+
+#define SET_NO_COORDINATOR_PROFILE 0x1
+#define SET_NO_TARGET_PROFILES 0x2
+
+#include <glib.h>
 #include <manifest.h>
 
-int run_set_profiles(const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const unsigned int flags)
-{
-    Manifest *manifest = create_manifest(manifest_file, MANIFEST_PROFILES_FLAG | MANIFEST_INFRASTRUCTURE_FLAG, NULL, NULL);
+/**
+ * Updates the coordinator profile referring to the last deployed manifest and
+ * target Disnix profiles containing the closures of all services deployed to a
+ * target machine.
+ *
+ * @param manifest Manifest containing all deployment information
+ * @param manifest_file Path to the manifest file
+ * @param coordinator_profile_path Path where the current deployment configuration must be stored
+ * @param profile Name of the distributed profile
+ * @param flags Set option flags
+ * @return TRUE if the profiles have been successfully set, else FALSE
+ */
+int set_profiles(const Manifest *manifest, const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const unsigned int flags);
 
-    if(manifest == NULL)
-    {
-        g_printerr("[coordinator]: Error opening manifest file!\n");
-        return 1;
-    }
-    else
-    {
-        int exit_status;
-
-        if(check_manifest(manifest))
-            exit_status = !set_profiles(manifest, manifest_file, coordinator_profile_path, profile, flags);
-        else
-            exit_status = 1;
-
-        /* Cleanup */
-        delete_manifest(manifest);
-
-        /* Return exit status */
-        return exit_status;
-    }
-}
+#endif

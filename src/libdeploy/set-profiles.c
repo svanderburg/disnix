@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "profiles.h"
+#include "set-profiles.h"
 #include <profilemapping-iterator.h>
 #include <targetstable.h>
 #include <client-interface.h>

@@ -85,7 +85,7 @@ int run_deploy(const gchar *new_manifest, gchar *old_manifest, const gchar *coor
                     case DEPLOY_STATE_FAIL:
                         {
                             g_printerr(
-                            "\nThe problem is a data migration issue, which must be manually diagnosed. To\n"
+                            "\nThe problem is a data migration issue and must be manually diagnosed. To\n"
                             "attempt migrating the data again, run:\n\n"
                             );
 
@@ -105,7 +105,7 @@ int run_deploy(const gchar *new_manifest, gchar *old_manifest, const gchar *coor
 
                             g_printerr("%s\n\n", new_manifest);
 
-                            g_printerr("If all problems have been resolved, the deployment must be made final. To\n");
+                            g_printerr("If all problems have been resolved, the deployment must be finalized. To\n");
                             g_printerr("accomplish this, run:\n\n");
 
                             g_printerr("$ disnix-set ");

@@ -3,7 +3,7 @@
 #include "distribute.h"
 #include "activate.h"
 #include "locking.h"
-#include "profiles.h"
+#include "set-profiles.h"
 
 static int distribute_closures(Manifest *manifest, const unsigned int max_concurrent_transfers)
 {

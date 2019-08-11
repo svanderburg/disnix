@@ -124,8 +124,8 @@ void print_manifest_xml(FILE *file, const Manifest *manifest, const int indent_l
 gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, const gchar *profile);
 
 /**
- * Opens the provided manifest or (if NULL) it attempts to open the manifest of
- * the last deployed configuration.
+ * Opens the provided manifest or (if the specified manifest file is NULL)
+ * attempts to open the manifest of the last deployed configuration.
  *
  * @param manifest_file Manifest file to open
  * @param coordinator_profile_path Path to the coordinator profile or NULL to consult the default profile path

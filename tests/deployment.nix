@@ -357,7 +357,7 @@ simpleTest {
           die "We should have no symlinks, instead we have: $result";
       }
 
-     $coordinator->mustSucceed("${env} disnix-reconstruct ${manifestTests}/infrastructure.nix");
+      $coordinator->mustSucceed("${env} disnix-reconstruct ${manifestTests}/infrastructure.nix");
       $result = $coordinator->mustSucceed("ls /nix/var/nix/profiles/per-user/root/disnix-coordinator | wc -l");
 
       if($result == 2) {
@@ -365,5 +365,22 @@ simpleTest {
       } else {
           die "We don't have any reconstructed manifests!";
       }
+
+      # Use disnix-env to perform another installation combined with
+      # supplemental packages.
+      $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix -P ${manifestTests}/pkgs.nix");
+
+      # Use disnix-query to see if the right services are installed on
+      # the right target platforms. This test should succeed.
+
+      $coordinator->mustSucceed("${env} disnix-query -f xml ${manifestTests}/infrastructure.nix > query.xml");
+
+      $coordinator->mustSucceed("xmllint --xpath \"/profileManifestTargets/target[\@name='testtarget1']/profileManifest/services/service[name='testService1']/name\" query.xml");
+      $coordinator->mustSucceed("xmllint --xpath \"/profileManifestTargets/target[\@name='testtarget2']/profileManifest/services/service[name='testService2']/name\" query.xml");
+      $coordinator->mustSucceed("xmllint --xpath \"/profileManifestTargets/target[\@name='testtarget2']/profileManifest/services/service[name='testService3']/name\" query.xml");
+
+      # Check if the packages have been properly installed as well
+      $testtarget1->mustSucceed("/nix/var/nix/profiles/disnix/default/bin/curl --help");
+      $testtarget2->mustSucceed("/nix/var/nix/profiles/disnix/default/bin/strace -h");
     '';
 }

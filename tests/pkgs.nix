@@ -46,5 +46,11 @@ simpleTest {
 
       # Deploy a configuration in which a service declares an inter-dependency. This is not allowed.
       $coordinator->mustFail("${env} disnix-manifest -s ${pkgsTests}/services-invalid.nix -i ${pkgsTests}/infrastructure.nix -d ${pkgsTests}/distribution-invalid.nix");
+
+      # Deploy a packages model and check whether the packages have become available
+      $coordinator->mustSucceed("${env} disnix-env -i ${pkgsTests}/infrastructure.nix -P ${pkgsTests}/pkgs.nix");
+
+      $testtarget1->mustSucceed("/nix/var/nix/profiles/disnix/default/bin/curl --help");
+      $testtarget2->mustSucceed("/nix/var/nix/profiles/disnix/default/bin/strace -h");
     '';
 }

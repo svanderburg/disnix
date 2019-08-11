@@ -17,27 +17,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_PROFILES_H
-#define __DISNIX_PROFILES_H
-
-#define SET_NO_COORDINATOR_PROFILE 0x1
-#define SET_NO_TARGET_PROFILES 0x2
-
+#ifndef __DISNIX_RUN_SET_PROFILES_H
+#define __DISNIX_RUN_SET_PROFILES_H
 #include <glib.h>
-#include <manifest.h>
+#include <set-profiles.h>
 
 /**
- * Updates the coordinator profile referring to the last deployed manifest and
- * target Disnix profiles containing the closures of all services deployed to a
- * target machine.
+ * Sets the Disnix profiles on the target machines and the Disnix coordinator
+ * profile on the coordinator machine so that the current configuration is known
+ * and the installed components are no longer considered garbage.
  *
- * @param manifest Manifest containing all deployment information
- * @param manifest_file Path to the manifest file
+ * @param manifest_file Path to the manifest file representing the deployment state
  * @param coordinator_profile_path Path where the current deployment configuration must be stored
  * @param profile Name of the distributed profile
- * @param flags Set option flags
- * @return TRUE if the profiles have been successfully set, else FALSE
+ * @param flags Set profile configuration flags
+ * @return 0 if everything succeeds, else a non-zero exit status
  */
-int set_profiles(const Manifest *manifest, const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const unsigned int flags);
+int run_set_profiles(const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const unsigned int flags);
 
 #endif

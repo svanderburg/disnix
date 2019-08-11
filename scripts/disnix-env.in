@@ -33,6 +33,7 @@ Usage: $0 -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
   or: $0 --delete-generations NUM [OPTION]
   or: $0 --delete-all-generations NUM [OPTION]
   or: $0 -A architecture_nix [OPTION]
+  or: $0 -D deployment_nix [OPTION]
 
 The command \`disnix-env' is used to install, upgrade, or roll back a
 service-oriented system in a given environment.
@@ -86,6 +87,13 @@ Options:
                                   captures all properties of the services and
                                   infrastructure including the distribution of
                                   services to targets
+  -D, --deployment=deployment_nix
+                                  Deployment Nix expression that describes all
+                                  the mappings that have a one-on-one
+                                  relationship with the deployment activities
+                                  that are carried out
+  -B, --build=build_nix           Build Nix expression that maps store
+                                  derivations to target machines in the network
       --switch-to-generation=NUM  Switches to a specific profile generation
       --rollback                  Switches back to the previously deployed
                                   configuration
@@ -172,7 +180,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:p:m:hv -l services:,infrastructure:,distribution:,packages:,architecture:,rollback,switch-to-generation:,list-generations,delete-generations:,delete-all-generations,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,delete-state,depth-first,keep:,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:D:p:m:hv -l services:,infrastructure:,distribution:,packages:,architecture:,deployment:,rollback,switch-to-generation:,list-generations,delete-generations:,delete-all-generations,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,delete-state,depth-first,keep:,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -201,6 +209,9 @@ do
             ;;
         -A|--architecture)
             architectureFile=`readlink -f $2`
+            ;;
+        -D|--deployment)
+            deploymentFile=`readlink -f $2`
             ;;
         --rollback)
             operation="switchGenerations"

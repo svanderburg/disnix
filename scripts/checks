@@ -193,11 +193,16 @@ generateModelArgs()
         architecture)
             modelArgs="-A $architectureFile"
             ;;
-        build)
-            modelArgs="-B $buildFile"
-            ;;
         deployment)
             modelArgs="-D $deploymentFile"
+
+            if [ "$buildFile" != "" ]
+            then
+                modelArgs="$modelArgs -B $buildFile"
+            fi
+            ;;
+        build)
+            modelArgs="-B $buildFile"
             ;;
     esac
 }
