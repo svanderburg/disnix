@@ -47,7 +47,7 @@ pid_t send_snapshots_to_target(void *data, Target *target, gchar *client_interfa
     {
         SendSnapshotsData *send_snapshots_data = (SendSnapshotsData*)data;
 
-        gchar *target_key = find_target_key(target, NULL);
+        gchar *target_key = find_target_key(target);
         GPtrArray *snapshots_per_target_array = find_snapshot_mappings_per_target(send_snapshots_data->snapshot_mapping_array, target_key);
         unsigned int i;
         int exit_status = 0;
@@ -79,7 +79,7 @@ void complete_send_snapshots_to_target(void *data, Target *target, gchar *target
 {
     if(status != PROCREACT_STATUS_OK || !result)
     {
-        gchar *target_key = find_target_key(target, NULL);
+        gchar *target_key = find_target_key(target);
         g_printerr("[target: %s]: Cannot retrieve snapshots!\n", target_key);
     }
 }
@@ -88,7 +88,7 @@ static int send_snapshots(GPtrArray *snapshot_mapping_array, GHashTable *targets
 {
     int success;
     SendSnapshotsData data = { snapshot_mapping_array, flags };
-    ProcReact_PidIterator iterator = create_target_pid_iterator(targets_table, NULL, NULL, send_snapshots_to_target, complete_send_snapshots_to_target, &data);
+    ProcReact_PidIterator iterator = create_target_pid_iterator(targets_table, send_snapshots_to_target, complete_send_snapshots_to_target, &data);
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
     success = target_iterator_has_succeeded(iterator.data);
 
@@ -144,7 +144,7 @@ static pid_t send_restore_and_clean_snapshot_on_target(void *data, Target *targe
     {
         SendRestoreAndCleanSnapshotsData *send_snapshots_data = (SendRestoreAndCleanSnapshotsData*)data;
 
-        gchar *target_key = find_target_key(target, NULL);
+        gchar *target_key = find_target_key(target);
         GPtrArray *snapshots_per_target_array = find_snapshot_mappings_per_target(send_snapshots_data->snapshot_mapping_array, target_key);
         unsigned int i;
         int exit_status = 0;
@@ -181,7 +181,7 @@ void complete_send_restore_and_clean_snapshots_on_target(void *data, Target *tar
 {
     if(status != PROCREACT_STATUS_OK || !result)
     {
-        gchar *target_key = find_target_key(target, NULL);
+        gchar *target_key = find_target_key(target);
         g_printerr("[target: %s]: Cannot send, restore or clean snapshots!\n", target_key);
     }
 }
@@ -190,7 +190,7 @@ static int restore_depth_first(GPtrArray *snapshot_mapping_array, GHashTable *se
 {
     int success;
     SendRestoreAndCleanSnapshotsData data = { services_table, snapshot_mapping_array, flags, keep };
-    ProcReact_PidIterator iterator = create_target_pid_iterator(targets_table, NULL, NULL, send_restore_and_clean_snapshot_on_target, complete_send_restore_and_clean_snapshots_on_target, &data);
+    ProcReact_PidIterator iterator = create_target_pid_iterator(targets_table, send_restore_and_clean_snapshot_on_target, complete_send_restore_and_clean_snapshots_on_target, &data);
 
     g_print("[coordinator]: Sending, restoring and cleaning snapshots...\n");
 

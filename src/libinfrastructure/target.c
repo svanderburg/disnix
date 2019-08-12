@@ -116,6 +116,7 @@ int check_target(const Target *target)
 {
     int status = TRUE;
 
+    /* Check properties */
     if(target->num_of_cores == 0)
     {
         g_printerr("target.numOfCores should be greater than 0\n");
@@ -132,6 +133,17 @@ int check_target(const Target *target)
     {
         g_printerr("target.clientInterface is unspecified!\n");
         status = FALSE;
+    }
+
+    if(status)
+    {
+        /* Check if target property is defined */
+
+        if(!g_hash_table_contains(target->properties_table, target->target_property))
+        {
+            g_printerr("Target defines: '%s' as a target property, but it does not exists in the properties attribute set!\n", target->target_property);
+            status = FALSE;
+        }
     }
 
     return status;
@@ -246,12 +258,9 @@ gchar *find_target_property(const Target *target, const gchar *name)
     }
 }
 
-gchar *find_target_key(const Target *target, const gchar *default_target_property)
+gchar *find_target_key(const Target *target)
 {
-    if(target->target_property == NULL)
-        return find_target_property(target, default_target_property);
-    else
-        return find_target_property(target, (gchar*)target->target_property);
+    return find_target_property(target, (gchar*)target->target_property);
 }
 
 static GHashTable *find_container(GHashTable *containers_table, const gchar *name)

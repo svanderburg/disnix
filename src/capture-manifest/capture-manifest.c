@@ -73,7 +73,7 @@ static int resolve_profiles(GHashTable *targets_table, gchar *interface, const g
     gchar *profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, NULL);
     QueryRequisitesData data = { profile_path, profile_manifest_target_table };
 
-    ProcReact_FutureIterator iterator = create_target_future_iterator(targets_table, target_property, interface, query_requisites_on_target, complete_query_requisites_on_target, &data);
+    ProcReact_FutureIterator iterator = create_target_future_iterator(targets_table, query_requisites_on_target, complete_query_requisites_on_target, &data);
 
     g_printerr("[coordinator]: Resolving target profile paths...\n");
 

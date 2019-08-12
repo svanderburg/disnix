@@ -55,7 +55,7 @@ GHashTable *generate_edges_table(const GPtrArray *service_mapping_array, GHashTa
 
 	/* Retrieve the target property */
 	Target *target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
-	gchar *target_key = find_target_key(target, NULL);
+	gchar *target_key = find_target_key(target);
 	
 	/* Generate an edge table key, which consist of Nix store component:targetProperty */
 	gchar *mapping_key = compose_mapping_key(mapping, target_key);
@@ -92,7 +92,7 @@ GHashTable *generate_edges_table(const GPtrArray *service_mapping_array, GHashTa
 		
 		/* Get the target interface */
 		target = g_hash_table_lookup(targets_table, (gchar*)actual_mapping->target);
-		target_key = find_target_key(target, NULL);
+		target_key = find_target_key(target);
 		
 		/* Generate mapping value from the service key and target property */
 		mapping_value = compose_mapping_key(actual_mapping, target_key);

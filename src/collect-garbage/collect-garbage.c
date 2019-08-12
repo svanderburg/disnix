@@ -59,7 +59,7 @@ int collect_garbage(gchar *interface, gchar *target_property, gchar *infrastruct
             /* Iterate over all targets and run collect garbage operation in parallel */
             gboolean delete_old = flags & FLAG_COLLECT_GARBAGE_DELETE_OLD;
             CollectGarbageData data = { delete_old };
-            ProcReact_PidIterator iterator = create_target_pid_iterator(targets_table, target_property, interface, collect_garbage_on_target, complete_collect_garbage_on_target, &data);
+            ProcReact_PidIterator iterator = create_target_pid_iterator(targets_table, collect_garbage_on_target, complete_collect_garbage_on_target, &data);
 
             procreact_fork_in_parallel_and_wait(&iterator);
             exit_status = !target_iterator_has_succeeded(iterator.data);

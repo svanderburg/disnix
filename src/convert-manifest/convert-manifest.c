@@ -38,7 +38,7 @@ static GHashTable *generate_target_mapping_table(GHashTable *targets_table)
     g_hash_table_iter_init(&iter, targets_table);
     while(g_hash_table_iter_next(&iter, &key, &value))
     {
-        gchar *target_key = find_target_key((Target*)value, NULL);
+        gchar *target_key = find_target_key((Target*)value);
         g_hash_table_insert(target_mapping_table, target_key, key);
     }
 

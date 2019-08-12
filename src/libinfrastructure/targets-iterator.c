@@ -35,15 +35,10 @@ static pid_t next_target_process(void *data)
     void *key, *value;
     g_hash_table_iter_next(&target_iterator_data->iter, &key, &value);
     Target *target = (Target*)value;
-    gchar *client_interface = (gchar*)target->client_interface;
-    gchar *target_key = find_target_key(target, target_iterator_data->target_property);
-
-    /* If no client interface is provided by the infrastructure model, use global one */
-    if(client_interface == NULL)
-        client_interface = target_iterator_data->interface;
+    gchar *target_key = find_target_key(target);
 
     /* Invoke the next distribution item operation process */
-    pid = target_iterator_data->map_target_function.pid(target_iterator_data->data, target, client_interface, target_key);
+    pid = target_iterator_data->map_target_function.pid(target_iterator_data->data, target, (gchar*)target->client_interface, target_key);
 
     /* Increase the iterator index and update the pid table */
     next_iteration_process(&target_iterator_data->model_iterator_data, pid, target);
@@ -58,7 +53,7 @@ static void complete_target_process(void *data, pid_t pid, ProcReact_Status stat
 
     /* Retrieve the completed item */
     Target *target = complete_iteration_process(&target_iterator_data->model_iterator_data, pid, status, result);
-    gchar *target_key = find_target_key(target, target_iterator_data->target_property);
+    gchar *target_key = find_target_key(target);
 
     /* Invoke callback that handles completion of the target */
     target_iterator_data->complete_target_mapping_function.pid(target_iterator_data->data, target, target_key, status, result);
@@ -74,15 +69,10 @@ static ProcReact_Future next_target_future(void *data)
     void *key, *value;
     g_hash_table_iter_next(&target_iterator_data->iter, &key, &value);
     Target *target = (Target*)value;
-    gchar *client_interface = (gchar*)target->client_interface;
-    gchar *target_key = find_target_key(target, target_iterator_data->target_property);
-
-    /* If no client interface is provided by the infrastructure model, use global one */
-    if(client_interface == NULL)
-        client_interface = target_iterator_data->interface;
+    gchar *target_key = find_target_key(target);
 
     /* Invoke the next distribution item operation process */
-    future = target_iterator_data->map_target_function.future(target_iterator_data->data, target, client_interface, target_key);
+    future = target_iterator_data->map_target_function.future(target_iterator_data->data, target, (gchar*)target->client_interface, target_key);
 
     /* Increase the iterator index and update the pid table */
     next_iteration_future(&target_iterator_data->model_iterator_data, &future, target);
@@ -97,29 +87,27 @@ static void complete_target_future(void *data, ProcReact_Future *future, ProcRea
 
     /* Retrieve corresponding target and properties of the pid */
     Target *target = complete_iteration_future(&target_iterator_data->model_iterator_data, future, status);
-    gchar *target_key = find_target_key(target, target_iterator_data->target_property);
+    gchar *target_key = find_target_key(target);
 
     /* Invoke callback that handles completion of the target */
     target_iterator_data->complete_target_mapping_function.future(target_iterator_data->data, target, target_key, future, status);
 }
 
-static TargetIteratorData *create_common_iterator(GHashTable *targets_table, const gchar *target_property, gchar *interface, void *data)
+static TargetIteratorData *create_common_iterator(GHashTable *targets_table, void *data)
 {
     TargetIteratorData *target_iterator_data = (TargetIteratorData*)g_malloc(sizeof(TargetIteratorData));
 
     init_model_iterator_data(&target_iterator_data->model_iterator_data, g_hash_table_size(targets_table));
     target_iterator_data->targets_table = targets_table;
     g_hash_table_iter_init(&target_iterator_data->iter, target_iterator_data->targets_table);
-    target_iterator_data->target_property = target_property;
-    target_iterator_data->interface = interface;
     target_iterator_data->data = data;
 
     return target_iterator_data;
 }
 
-ProcReact_PidIterator create_target_pid_iterator(GHashTable *targets_table, const gchar *target_property, gchar *interface, map_target_pid_function map_target, complete_target_mapping_pid_function complete_target_mapping, void *data)
+ProcReact_PidIterator create_target_pid_iterator(GHashTable *targets_table, map_target_pid_function map_target, complete_target_mapping_pid_function complete_target_mapping, void *data)
 {
-    TargetIteratorData *target_iterator_data = create_common_iterator(targets_table, target_property, interface, data);
+    TargetIteratorData *target_iterator_data = create_common_iterator(targets_table, data);
 
     target_iterator_data->map_target_function.pid = map_target;
     target_iterator_data->complete_target_mapping_function.pid = complete_target_mapping;
@@ -127,9 +115,9 @@ ProcReact_PidIterator create_target_pid_iterator(GHashTable *targets_table, cons
     return procreact_initialize_pid_iterator(has_next_target, next_target_process, procreact_retrieve_boolean, complete_target_process, target_iterator_data);
 }
 
-ProcReact_FutureIterator create_target_future_iterator(GHashTable *targets_table, const gchar *target_property, gchar *interface, map_target_future_function map_target, complete_target_mapping_future_function complete_target_mapping, void *data)
+ProcReact_FutureIterator create_target_future_iterator(GHashTable *targets_table, map_target_future_function map_target, complete_target_mapping_future_function complete_target_mapping, void *data)
 {
-    TargetIteratorData *target_iterator_data = create_common_iterator(targets_table, target_property, interface, data);
+    TargetIteratorData *target_iterator_data = create_common_iterator(targets_table, data);
 
     target_iterator_data->map_target_function.future = map_target;
     target_iterator_data->complete_target_mapping_function.future = complete_target_mapping;

@@ -131,7 +131,28 @@ GHashTable *create_targets_table_from_nix(char *infrastructure_expr, char *defau
     return targets_table;
 }
 
-GHashTable *create_targets_table_from_xml(const char *infrastructure_xml)
+static void augment_default_properties(GHashTable *targets_table, char *default_target_property, char *default_client_interface)
+{
+    if(default_target_property != NULL || default_client_interface != NULL)
+    {
+        GHashTableIter iter;
+        gpointer key, value;
+
+        g_hash_table_iter_init(&iter, targets_table);
+        while(g_hash_table_iter_next(&iter, &key, &value))
+        {
+            Target *target = (Target*)value;
+
+            if(target->target_property == NULL)
+                target->target_property = xmlStrdup((xmlChar*)default_target_property);
+
+            if(target->client_interface == NULL)
+                target->client_interface = xmlStrdup((xmlChar*)default_client_interface);
+        }
+    }
+}
+
+GHashTable *create_targets_table_from_xml(const char *infrastructure_xml, char *default_target_property, char *default_client_interface)
 {
     /* Declarations */
     xmlDocPtr doc;
@@ -148,6 +169,9 @@ GHashTable *create_targets_table_from_xml(const char *infrastructure_xml)
     /* Create a targets table from the XML document */
     targets_table = create_targets_table_from_doc(doc);
 
+    /* Augment default properties where needed */
+    augment_default_properties(targets_table, default_target_property, default_client_interface);
+
     /* Cleanup */
     xmlFreeDoc(doc);
     xmlCleanupParser();
@@ -159,7 +183,7 @@ GHashTable *create_targets_table_from_xml(const char *infrastructure_xml)
 GHashTable *create_targets_table(gchar *infrastructure_expr, const int xml, char *default_target_property, char *default_client_interface)
 {
     if(xml)
-        return create_targets_table_from_xml(infrastructure_expr);
+        return create_targets_table_from_xml(infrastructure_expr, default_target_property, default_client_interface);
     else
         return create_targets_table_from_nix(infrastructure_expr, default_target_property, default_client_interface);
 }

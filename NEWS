@@ -1,5 +1,7 @@
 Version 0.9
 ===========
+- libmanifest, libdistderivation and libinfrastructure models are more sophistically checked for missing properties and dangling references
+
 - Added option to display output in XML format for disnix-query
 
 - The profile manifest file structure has been revised and are now XML-based instead of linefeed separated text files

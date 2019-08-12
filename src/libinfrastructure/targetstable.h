@@ -54,9 +54,11 @@ GHashTable *create_targets_table_from_nix(char *infrastructure_expr, char *defau
  * Creates a hash table with targets from an infrastructure XML configuration
  *
  * @param infrastructure_xml Path to the infrastructure XML file
+ * @param default_target_property Specifies the default target property to use if none was provided by a target
+ * @param default_client_interface Specifies the default client interface to use if none was provided by a target
  * @return GHashTable with targets
  */
-GHashTable *create_targets_table_from_xml(const char *infrastructure_xml);
+GHashTable *create_targets_table_from_xml(const char *infrastructure_xml, char *default_target_property, char *default_client_interface);
 
 /**
  * Creates a hash table with targets from an infrastructure configuration

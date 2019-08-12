@@ -105,7 +105,7 @@ int capture_infra(gchar *interface, gchar *target_property, gchar *infrastructur
             GHashTable *configs_table = g_hash_table_new(g_str_hash, g_str_equal);
 
             /* Iterate over targets and capture their infrastructure configurations */
-            ProcReact_FutureIterator iterator = create_target_future_iterator(targets_table, target_property, interface, capture_infra_on_target, complete_capture_infra_on_target, configs_table);
+            ProcReact_FutureIterator iterator = create_target_future_iterator(targets_table, capture_infra_on_target, complete_capture_infra_on_target, configs_table);
             procreact_fork_in_parallel_buffer_and_wait(&iterator);
             exit_status = !target_iterator_has_succeeded(iterator.data);
 

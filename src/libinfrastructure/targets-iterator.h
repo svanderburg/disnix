@@ -45,10 +45,6 @@ typedef struct
     /** Hash table with targets */
     GHashTableIter iter;
     GHashTable *targets_table;
-    /** Global key that is used if no target property is defined by the target machine */
-    const gchar *target_property;
-    /** Command-line tool that is invoked to reach the target machine */
-    gchar *interface;
 
     /** Function that executes a process for each target */
     union
@@ -114,28 +110,24 @@ TargetIteratorData;
  * provided functions on start and completion.
  *
  * @param targets_table Hash table with targets
- * @param target_property Global key that is used if no target property is defined by the target machine
- * @param interface Command-line tool that is invoked to reach the target machine
  * @param map_target Function that executes a process for each target
  * @param complete_target_mapping Function that gets executed when a process completes for a target
  * @param data Pointer to arbitrary data passed to the above functions
  * @return A PID iterator that can be used to traverse the targets
  */
-ProcReact_PidIterator create_target_pid_iterator(GHashTable *targets_table, const gchar *target_property, gchar *interface, map_target_pid_function map_target, complete_target_mapping_pid_function complete_target_mapping, void *data);
+ProcReact_PidIterator create_target_pid_iterator(GHashTable *targets_table, map_target_pid_function map_target, complete_target_mapping_pid_function complete_target_mapping, void *data);
 
 /**
  * Creates a new future iterator that steps over each target and executes the
  * provided functions on start and completion.
  *
  * @param targets_table Hash table with targets
- * @param target_property Global key that is used if no target property is defined by the target machine
- * @param interface Command-line tool that is invoked to reach the target machine
  * @param map_target Function that executes a process for each target
  * @param complete_target_mapping Function that gets executed when a process completes for a target
  * @param data Pointer to arbitrary data passed to the above functions
  * @return A future iterator that can be used to traverse the targets
  */
-ProcReact_FutureIterator create_target_future_iterator(GHashTable *targets_table, const gchar *target_property, gchar *interface, map_target_future_function map_target, complete_target_mapping_future_function complete_target_mapping, void *data);
+ProcReact_FutureIterator create_target_future_iterator(GHashTable *targets_table, map_target_future_function map_target, complete_target_mapping_future_function complete_target_mapping, void *data);
 
 /**
  * Destroys all resources allocated with a target PID iterator

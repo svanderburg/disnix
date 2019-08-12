@@ -91,7 +91,7 @@ int query_installed(gchar *interface, gchar *target_property, gchar *infrastruct
             /* Iterate over targets and capture their installed services */
             GHashTable *profile_manifest_target_table = g_hash_table_new(g_str_hash, g_str_equal);
             QueryInstalledServicesData data = { profile, profile_manifest_target_table };
-            ProcReact_FutureIterator iterator = create_target_future_iterator(targets_table, target_property, interface, query_installed_services_on_target, complete_query_installed_services_on_target, &data);
+            ProcReact_FutureIterator iterator = create_target_future_iterator(targets_table, query_installed_services_on_target, complete_query_installed_services_on_target, &data);
             procreact_fork_in_parallel_buffer_and_wait(&iterator);
             exit_status = !target_iterator_has_succeeded(iterator.data);
 
