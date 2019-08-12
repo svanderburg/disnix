@@ -40,7 +40,9 @@ static void *parse_property_table(xmlNodePtr element, void *userdata)
 
 static void *create_target_from_element(xmlNodePtr element, void *userdata)
 {
-    return g_malloc0(sizeof(Target));
+    Target *target = g_malloc0(sizeof(Target));
+    target->num_of_cores = 1;
+    return target;
 }
 
 static void parse_and_insert_target_attributes(xmlNodePtr element, void *table, const xmlChar *key, void *userdata)
@@ -112,7 +114,27 @@ void delete_target(Target *target)
 
 int check_target(const Target *target)
 {
-    return TRUE;
+    int status = TRUE;
+
+    if(target->num_of_cores == 0)
+    {
+        g_printerr("target.numOfCores should be greater than 0\n");
+        status = FALSE;
+    }
+
+    if(target->target_property == NULL)
+    {
+        g_printerr("target.targetProperty is unspecified!\n");
+        status = FALSE;
+    }
+
+    if(target->client_interface == NULL)
+    {
+        g_printerr("target.clientInterface is unspecified!\n");
+        status = FALSE;
+    }
+
+    return status;
 }
 
 static int compare_property_tables(GHashTable *property_table1, GHashTable *property_table2)
@@ -224,10 +246,10 @@ gchar *find_target_property(const Target *target, const gchar *name)
     }
 }
 
-gchar *find_target_key(const Target *target, const gchar *global_target_property)
+gchar *find_target_key(const Target *target, const gchar *default_target_property)
 {
     if(target->target_property == NULL)
-        return find_target_property(target, global_target_property);
+        return find_target_property(target, default_target_property);
     else
         return find_target_property(target, (gchar*)target->target_property);
 }

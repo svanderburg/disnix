@@ -102,15 +102,44 @@ void delete_distributed_derivation(DistributedDerivation *distributed_derivation
     }
 }
 
+static int check_derivation_mapping_array_references(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table)
+{
+    int status = TRUE;
+    unsigned int i;
+
+    for(i = 0; i < derivation_mapping_array->len; i++)
+    {
+        DerivationMapping *mapping = g_ptr_array_index(derivation_mapping_array, i);
+
+        if(!g_hash_table_contains(interfaces_table, (gchar*)mapping->interface))
+        {
+            g_printerr("Derivation mapping: %d contains an incorrect reference to interface: %s\n", i, mapping->interface);
+            status = FALSE;
+        }
+    }
+
+    return status;
+}
+
 int check_distributed_derivation(const DistributedDerivation *distributed_derivation)
 {
     int status = TRUE;
+
+    /* Check properties */
 
     if(!check_derivation_mapping_array(distributed_derivation->derivation_mapping_array))
         status = FALSE;
 
     if(!check_interfaces_table(distributed_derivation->interfaces_table))
         status = FALSE;
+
+    if(status)
+    {
+        /* Check the references of the mappings */
+
+        if(!check_derivation_mapping_array_references(distributed_derivation->derivation_mapping_array, distributed_derivation->interfaces_table))
+            status = FALSE;
+    }
 
     return status;
 }

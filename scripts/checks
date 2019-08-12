@@ -195,11 +195,6 @@ generateModelArgs()
             ;;
         deployment)
             modelArgs="-D $deploymentFile"
-
-            if [ "$buildFile" != "" ]
-            then
-                modelArgs="$modelArgs -B $buildFile"
-            fi
             ;;
         build)
             modelArgs="-B $buildFile"

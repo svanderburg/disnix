@@ -117,10 +117,10 @@ gchar *find_target_property(const Target *target, const gchar *name);
  * the machine.
  *
  * @param target A target struct containing properties of a target machine
- * @param global_target_property Global key that is used if no target property is defined by the target machine
+ * @param default_target_property Global key that is used if no target property is defined by the target machine
  * @return The key value of identifying the machine or NULL if it does not exists
  */
-gchar *find_target_key(const Target *target, const gchar *global_target_property);
+gchar *find_target_key(const Target *target, const gchar *default_target_property);
 
 /**
  * Generates a string vector with: 'name=value' pairs from the

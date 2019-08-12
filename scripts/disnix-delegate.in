@@ -98,7 +98,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:m:hv -l services:,infrastructure:,distribution:,packages:,architecture:,build:,interface:,target-property:,max-concurrent-transfers:,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:B:m:hv -l services:,infrastructure:,distribution:,packages:,architecture:,build:,interface:,target-property:,max-concurrent-transfers:,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then

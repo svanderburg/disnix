@@ -61,7 +61,8 @@ int check_interface(const Interface *interface)
         g_printerr("interface.targetAddress is not set!\n");
         status = FALSE;
     }
-    else if(interface->client_interface == NULL)
+
+    if(interface->client_interface == NULL)
     {
         g_printerr("interface.clientInterface is not set!\n");
         status = FALSE;

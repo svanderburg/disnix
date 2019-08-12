@@ -131,9 +131,61 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
     return manifest;
 }
 
+static int check_service_mapping_array_references(const GPtrArray *service_mapping_array, GHashTable *services_table, GHashTable *targets_table)
+{
+    unsigned int i;
+    int status = TRUE;
+
+    for(i = 0; i < service_mapping_array->len; i++)
+    {
+        ServiceMapping *mapping = g_ptr_array_index(service_mapping_array, i);
+
+        if(!g_hash_table_contains(services_table, (gchar*)mapping->service))
+        {
+            g_printerr("Service mapping: %d contains an incorrect reference to service: %s\n", i, mapping->service);
+            status = FALSE;
+        }
+
+        if(!g_hash_table_contains(targets_table, (gchar*)mapping->target))
+        {
+            g_printerr("Service mapping: %d contains an incorrect reference to target: %s\n", i, mapping->target);
+            status = FALSE;
+        }
+    }
+
+    return status;
+}
+
+static int check_snapshot_mapping_array_references(const GPtrArray *snapshot_mapping_array, GHashTable *services_table, GHashTable *targets_table)
+{
+    unsigned int i;
+    int status = TRUE;
+
+    for(i = 0; i < snapshot_mapping_array->len; i++)
+    {
+        SnapshotMapping *mapping = g_ptr_array_index(snapshot_mapping_array, i);
+
+        if(!g_hash_table_contains(services_table, (gchar*)mapping->service))
+        {
+            g_printerr("Service mapping: %d contains an incorrect reference to service: %s\n", i, mapping->service);
+            status = FALSE;
+        }
+
+        if(!g_hash_table_contains(targets_table, (gchar*)mapping->target))
+        {
+            g_printerr("Service mapping: %d contains an incorrect reference to target: %s\n", i, mapping->target);
+            status = FALSE;
+        }
+    }
+
+    return status;
+}
+
 int check_manifest(const Manifest *manifest)
 {
     int status = TRUE;
+
+    /* Check properties */
 
     if(!check_profile_mapping_table(manifest->profile_mapping_table))
         status = FALSE;
@@ -145,6 +197,17 @@ int check_manifest(const Manifest *manifest)
         status = FALSE;
     if(!check_targets_table(manifest->targets_table))
         status = FALSE;
+
+    if(status)
+    {
+        /* Check the references of the mappings */
+
+        if(!check_service_mapping_array_references(manifest->service_mapping_array, manifest->services_table, manifest->targets_table))
+            status = FALSE;
+
+        if(!check_snapshot_mapping_array_references(manifest->snapshot_mapping_array, manifest->services_table, manifest->targets_table))
+            status = FALSE;
+    }
 
     return status;
 }

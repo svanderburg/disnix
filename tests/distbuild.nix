@@ -50,5 +50,8 @@ simpleTest {
       my @testService1 = grep(/\-testService1/, @closure);
 
       $coordinator->mustFail("nix-store -l @testService1");
+
+      # Perform a build process with a build model.
+      $coordinator->mustSucceed("${env} disnix-delegate -B ${manifestTests}/build.nix");
     '';
 }

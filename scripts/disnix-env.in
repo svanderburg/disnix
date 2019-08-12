@@ -92,8 +92,6 @@ Options:
                                   the mappings that have a one-on-one
                                   relationship with the deployment activities
                                   that are carried out
-  -B, --build=build_nix           Build Nix expression that maps store
-                                  derivations to target machines in the network
       --switch-to-generation=NUM  Switches to a specific profile generation
       --rollback                  Switches back to the previously deployed
                                   configuration
