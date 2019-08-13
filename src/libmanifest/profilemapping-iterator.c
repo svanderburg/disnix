@@ -19,70 +19,71 @@
 
 #include "profilemapping-iterator.h"
 
-static int has_next_distribution_item(void *data)
+static int has_next_profile_mapping(void *data)
 {
-    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
-    return has_next_iteration_process(&distribution_iterator_data->model_iterator_data);
+    ProfileMappingIteratorData *profile_mapping_iterator_data = (ProfileMappingIteratorData*)data;
+    return has_next_iteration_process(&profile_mapping_iterator_data->model_iterator_data);
 }
 
-static pid_t next_distribution_process(void *data)
+static pid_t next_profile_mapping_process(void *data)
 {
     /* Declarations */
-    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
+    ProfileMappingIteratorData *profile_mapping_iterator_data = (ProfileMappingIteratorData*)data;
 
-    /* Retrieve distributionitem, target pair */
+    /* Retrieve profile mapping, target pair */
     void *key, *value;
-    g_hash_table_iter_next(&distribution_iterator_data->iter, &key, &value);
+    g_hash_table_iter_next(&profile_mapping_iterator_data->iter, &key, &value);
     gchar *target_name = (gchar*)key;
     xmlChar *profile_name = (xmlChar*)value;
-    Target *target = g_hash_table_lookup(distribution_iterator_data->targets_table, target_name);
+    Target *target = g_hash_table_lookup(profile_mapping_iterator_data->targets_table, target_name);
 
-    /* Invoke the next distribution item operation process */
-    pid_t pid = distribution_iterator_data->map_distribution_item(distribution_iterator_data->data, profile_name, target_name, target);
+    /* Invoke the next profile mapping operation process */
+    pid_t pid = profile_mapping_iterator_data->map_profile_mapping(profile_mapping_iterator_data->data, target_name, profile_name, target);
 
     /* Increase the iterator index and update the pid table */
-    next_iteration_process(&distribution_iterator_data->model_iterator_data, pid, target_name);
+    next_iteration_process(&profile_mapping_iterator_data->model_iterator_data, pid, target_name);
 
     /* Return the pid of the invoked process */
     return pid;
 }
 
-static void complete_distribution_process(void *data, pid_t pid, ProcReact_Status status, int result)
+static void complete_profile_mapping_process(void *data, pid_t pid, ProcReact_Status status, int result)
 {
-    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)data;
+    ProfileMappingIteratorData *profile_mapping_iterator_data = (ProfileMappingIteratorData*)data;
 
     /* Retrieve the completed item */
-    gchar *target_name = complete_iteration_process(&distribution_iterator_data->model_iterator_data, pid, status, result);
-    xmlChar *profile_name = g_hash_table_lookup(distribution_iterator_data->profile_mapping_table, target_name);
+    gchar *target_name = complete_iteration_process(&profile_mapping_iterator_data->model_iterator_data, pid, status, result);
+    xmlChar *profile_name = g_hash_table_lookup(profile_mapping_iterator_data->profile_mapping_table, target_name);
+    Target *target = g_hash_table_lookup(profile_mapping_iterator_data->targets_table, target_name);
 
-    /* Invoke callback that handles completion of distribution item */
-    distribution_iterator_data->complete_distribution_item_mapping(distribution_iterator_data->data, profile_name, target_name, status, result);
+    /* Invoke callback that handles completion of the profile mapping */
+    profile_mapping_iterator_data->complete_map_profile_mapping(profile_mapping_iterator_data->data, target_name, profile_name, target, status, result);
 }
 
-ProcReact_PidIterator create_distribution_iterator(GHashTable *profile_mapping_table, GHashTable *targets_table, map_distribution_item_function map_distribution_item, complete_distribution_item_mapping_function complete_distribution_item_mapping, void *data)
+ProcReact_PidIterator create_profile_mapping_iterator(GHashTable *profile_mapping_table, GHashTable *targets_table, map_profile_mapping_function map_profile_mapping, complete_map_profile_mapping_function complete_map_profile_mapping, void *data)
 {
-    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)g_malloc(sizeof(DistributionIteratorData));
+    ProfileMappingIteratorData *profile_mapping_iterator_data = (ProfileMappingIteratorData*)g_malloc(sizeof(ProfileMappingIteratorData));
 
-    init_model_iterator_data(&distribution_iterator_data->model_iterator_data, g_hash_table_size(profile_mapping_table));
-    distribution_iterator_data->profile_mapping_table = profile_mapping_table;
-    g_hash_table_iter_init(&distribution_iterator_data->iter, distribution_iterator_data->profile_mapping_table);
-    distribution_iterator_data->targets_table = targets_table;
-    distribution_iterator_data->map_distribution_item = map_distribution_item;
-    distribution_iterator_data->complete_distribution_item_mapping = complete_distribution_item_mapping;
-    distribution_iterator_data->data = data;
+    init_model_iterator_data(&profile_mapping_iterator_data->model_iterator_data, g_hash_table_size(profile_mapping_table));
+    profile_mapping_iterator_data->profile_mapping_table = profile_mapping_table;
+    g_hash_table_iter_init(&profile_mapping_iterator_data->iter, profile_mapping_iterator_data->profile_mapping_table);
+    profile_mapping_iterator_data->targets_table = targets_table;
+    profile_mapping_iterator_data->map_profile_mapping = map_profile_mapping;
+    profile_mapping_iterator_data->complete_map_profile_mapping = complete_map_profile_mapping;
+    profile_mapping_iterator_data->data = data;
 
-    return procreact_initialize_pid_iterator(has_next_distribution_item, next_distribution_process, procreact_retrieve_boolean, complete_distribution_process, distribution_iterator_data);
+    return procreact_initialize_pid_iterator(has_next_profile_mapping, next_profile_mapping_process, procreact_retrieve_boolean, complete_profile_mapping_process, profile_mapping_iterator_data);
 }
 
-void destroy_distribution_iterator(ProcReact_PidIterator *iterator)
+void destroy_profile_mapping_iterator(ProcReact_PidIterator *iterator)
 {
-    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)iterator->data;
-    destroy_model_iterator_data(&distribution_iterator_data->model_iterator_data);
-    g_free(distribution_iterator_data);
+    ProfileMappingIteratorData *profile_mapping_iterator_data = (ProfileMappingIteratorData*)iterator->data;
+    destroy_model_iterator_data(&profile_mapping_iterator_data->model_iterator_data);
+    g_free(profile_mapping_iterator_data);
 }
 
-int distribution_iterator_has_succeeded(const ProcReact_PidIterator *iterator)
+int profile_mapping_iterator_has_succeeded(const ProcReact_PidIterator *iterator)
 {
-    DistributionIteratorData *distribution_iterator_data = (DistributionIteratorData*)iterator->data;
-    return distribution_iterator_data->model_iterator_data.success;
+    ProfileMappingIteratorData *profile_mapping_iterator_data = (ProfileMappingIteratorData*)iterator->data;
+    return profile_mapping_iterator_data->model_iterator_data.success;
 }

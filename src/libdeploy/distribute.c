@@ -22,14 +22,14 @@
 #include <profilemapping-iterator.h>
 #include <targetstable.h>
 
-static pid_t transfer_distribution_item_to(void *data, xmlChar *profile_name, gchar *target_name, Target *target)
+static pid_t transfer_profile_mapping_to(void *data, gchar *target_name, xmlChar *profile_name, Target *target)
 {
     char *paths[] = { (char*)profile_name, NULL };
     g_print("[target: %s]: Receiving intra-dependency closure of profile: %s\n", target_name, profile_name);
     return exec_copy_closure_to((char*)target->client_interface, (char*)target_name, paths);
 }
 
-static void complete_transfer_distribution_item_to(void *data, xmlChar *profile_name, gchar *target_name, ProcReact_Status status, int result)
+static void complete_transfer_profile_mapping_to(void *data, gchar *target_name, xmlChar *profile_name, Target *target, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
         g_printerr("[target: %s]: Cannot receive intra-dependency closure of profile: %s\n", target_name, profile_name);
@@ -37,14 +37,14 @@ static void complete_transfer_distribution_item_to(void *data, xmlChar *profile_
 
 int distribute(const Manifest *manifest, const unsigned int max_concurrent_transfers)
 {
-    /* Iterate over the distribution mappings, limiting concurrency to the desired concurrent transfers and distribute them */
+    /* Iterate over the profile mappings, limiting concurrency to the desired concurrent transfers and distribute them */
     int success;
-    ProcReact_PidIterator iterator = create_distribution_iterator(manifest->profile_mapping_table, manifest->targets_table, transfer_distribution_item_to, complete_transfer_distribution_item_to, NULL);
+    ProcReact_PidIterator iterator = create_profile_mapping_iterator(manifest->profile_mapping_table, manifest->targets_table, transfer_profile_mapping_to, complete_transfer_profile_mapping_to, NULL);
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
-    success = distribution_iterator_has_succeeded(&iterator);
+    success = profile_mapping_iterator_has_succeeded(&iterator);
 
     /* Delete resources */
-    destroy_distribution_iterator(&iterator);
+    destroy_profile_mapping_iterator(&iterator);
 
     /* Return status */
     return success;

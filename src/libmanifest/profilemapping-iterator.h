@@ -24,75 +24,78 @@
 #include <modeliterator.h>
 #include "profilemappingtable.h"
 
-/** Pointer to a function that executes an operation for each distribution item */
-typedef pid_t (*map_distribution_item_function) (void *data, xmlChar *profile_name, gchar *target_name, Target *target);
-
-/** Pointer to a function that gets executed when a process completes for a distribution item */
-typedef void (*complete_distribution_item_mapping_function) (void *data, xmlChar *profile_name, gchar *target_name, ProcReact_Status status, int result);
+/**
+ * Pointer to a function that executes an operation for each profile mapping
+ *
+ * @param data An arbitrary data structure
+ * @param target_name Name of the target in the table
+ * @param profile_name Path to the Nix profile
+ * @param target The corresponding target machine of the profile mapping
+ * @return The PID of the spawned process
+ */
+typedef pid_t (*map_profile_mapping_function) (void *data, gchar *target_name, xmlChar *profile_name, Target *target);
 
 /**
- * @brief Iterator that can be used to execute a process for each distribution item
+ * Pointer to a function that gets executed when a process completes for a profile mapping
+ *
+ * @param data An arbitrary data structure
+ * @param target_name Name of the target in the table
+ * @param profile_name Path to the Nix profile
+ * @param target The corresponding target machine of the profile mapping
+ * @param status Indicates whether the process terminated abnormally or not
+ * @param result TRUE if the operation succeeded, else FALSE
+ */
+typedef void (*complete_map_profile_mapping_function) (void *data, gchar *target_name, xmlChar *profile_name, Target *target, ProcReact_Status status, int result);
+
+/**
+ * @brief Iterator that can be used to execute a process for each profile mapping
  */
 typedef struct
 {
     /** Common properties for all model iterators */
     ModelIteratorData model_iterator_data;
-    /** Hash table with distribution items */
+    /** Hash table iterator */
     GHashTableIter iter;
+    /** Hash table with profile mappings */
     GHashTable *profile_mapping_table;
     /** Hash table with target items */
     GHashTable *targets_table;
 
-    /**
-     * Pointer to a function that executes an operation for each distribution item
-     *
-     * @param data An arbitrary data structure
-     * @param item A distribution item from the manifest
-     * @param target The corresponding target machine of the distribution item
-     * @return The PID of the spawned process
-     */
-    map_distribution_item_function map_distribution_item;
-
-    /**
-     * Pointer to a function that gets executed when a process completes for a distribution item
-     *
-     * @param data An arbitrary data structure
-     * @param item A distribution item from the manifest
-     * @param status Indicates whether the process terminated abnormally or not
-     * @param result TRUE if the operation succeeded, else FALSE
-     */
-    complete_distribution_item_mapping_function complete_distribution_item_mapping;
+    /** Pointer to a function that executes an operation for each profile mapping */
+    map_profile_mapping_function map_profile_mapping;
+    /** Pointer to a function that gets executed when a process completes for a profile mapping */
+    complete_map_profile_mapping_function complete_map_profile_mapping;
 
     /** Pointer to arbitrary data passed to the above functions */
     void *data;
 }
-DistributionIteratorData;
+ProfileMappingIteratorData;
 
 /**
- * Creates a new iterator that steps over each distribution item and target and
+ * Creates a new iterator that steps over each profile mapping and
  * executes the provided functions on start and completion.
  *
- * @param profile_mapping_table Array with distribution items
+ * @param profile_mapping_table Hash table with profile mappings
  * @param targets_table Hash table of targets
- * @param map_distribution_item Pointer to a function that executes an operation for each distribution item
- * @param complete_distribution_item_mapping Pointer to a function that gets executed when a process completes for a distribution item
+ * @param map_profile_mapping Pointer to a function that executes an operation for each distribution item
+ * @param complete_map_profile_mapping Pointer to a function that gets executed when a process completes for a profile mapping
  * @param data Pointer to arbitrary data passed to the above functions
- * @return A PID iterator that can be used to traverse the distribution items
+ * @return A PID iterator that can be used to traverse the profile mappings
  */
-ProcReact_PidIterator create_distribution_iterator(GHashTable *profile_mapping_table, GHashTable *targets_table, map_distribution_item_function map_distribution_item, complete_distribution_item_mapping_function complete_distribution_item_mapping, void *data);
+ProcReact_PidIterator create_profile_mapping_iterator(GHashTable *profile_mapping_table, GHashTable *targets_table, map_profile_mapping_function map_profile_mapping, complete_map_profile_mapping_function complete_map_profile_mapping, void *data);
 
 /**
- * Destroys the resources attached to the given distribution iterator.
+ * Destroys the resources attached to the given profile mapping iterator.
  *
- * @param iterator Pid iterator constructed with create_distribution_iterator()
+ * @param iterator Pid iterator constructed with create_profile_mapping_iterator()
  */
-void destroy_distribution_iterator(ProcReact_PidIterator *iterator);
+void destroy_profile_mapping_iterator(ProcReact_PidIterator *iterator);
 
 /**
  * Returns the success status of the overall iteration process.
  *
  * @return TRUE if all the operations of the iterator have succeeded else FALSE.
  */
-int distribution_iterator_has_succeeded(const ProcReact_PidIterator *iterator);
+int profile_mapping_iterator_has_succeeded(const ProcReact_PidIterator *iterator);
 
 #endif

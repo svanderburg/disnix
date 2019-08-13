@@ -25,14 +25,46 @@
 #include "derivationmappingarray.h"
 #include "interfacestable.h"
 
-/** Pointer to a function that executes a process for each derivation mapping */
+/**
+ * Pointer to a function that executes a process for each derivation mapping.
+ *
+ * @param data An arbitrary data structure
+ * @param mapping A derivation mapping from the distributed derivation
+ * @param interface The corresponding interface of the derivation mapping
+ * @return The PID of the spawned process
+ */
 typedef pid_t (*map_derivation_mapping_pid_function) (void *data, DerivationMapping *mapping, Interface *interface);
-/** Pointer to a function that constructs a future for each derivation mapping */
+
+/**
+ * Pointer to a function that constructs a future for each derivation mapping
+ *
+ * @param data An arbitrary data structure
+ * @param mapping A derivation mapping from the distributed derivation
+ * @param interface The corresponding interface of the derivation mapping
+ * @return A future instance
+ */
 typedef ProcReact_Future (*map_derivation_mapping_future_function) (void *data, DerivationMapping *mapping, Interface *interface);
 
-/** Pointer to a function that gets executed when a process completes for a derivation mapping */
+/**
+ * Pointer to a function that gets executed when a process completes for
+ * a derivation mapping.
+ *
+ * @param data An arbitrary data structure
+ * @param mapping A derivation mapping from the distributed derivation
+ * @param status Indicates whether the process terminated abnormally or not
+ * @param result TRUE if the operation succeeded, else FALSE
+ */
 typedef void (*complete_derivation_mapping_pid_function) (void *data, DerivationMapping *mapping, ProcReact_Status status, int result);
-/** Pointer to a function that gets executed when a future completes for a derivation mapping */
+
+/**
+ * Pointer to a function that gets executed when a future completes for
+ * a derivation mapping.
+ *
+ * @param data An arbitrary data structure
+ * @param mapping A derivation mapping from the distributed derivation
+ * @param future The future that has completed
+ * @param status Indicates whether the process terminated abnormally or not
+ */
 typedef void (*complete_derivation_mapping_future_function) (void *data, DerivationMapping *mapping, ProcReact_Future *future, ProcReact_Status status);
 
 /**
@@ -50,23 +82,9 @@ typedef struct
     /** Function that maps over each mapping in the derivation mapping array */
     union
     {
-        /**
-         * Pointer to a function that executes a process for each derivation mapping.
-         *
-         * @param data An arbitrary data structure
-         * @param mapping A derivation mapping from the distributed derivation
-         * @param interface The corresponding interface of the derivation mapping
-         * @return The PID of the spawned process
-         */
+        /** Pointer to a function that executes a process for each derivation mapping */
         map_derivation_mapping_pid_function pid;
-        /**
-         * Pointer to a function that constructs a future for each derivation mapping
-         *
-         * @param data An arbitrary data structure
-         * @param mapping A derivation mapping from the distributed derivation
-         * @param interface The corresponding interface of the derivation mapping
-         * @return A future instance
-         */
+        /** Pointer to a function that constructs a future for each derivation mapping */
         map_derivation_mapping_future_function future;
     }
     map_derivation_mapping_function;
@@ -74,25 +92,9 @@ typedef struct
     /** Function that gets executed when a mapping function completes */
     union
     {
-        /**
-         * Pointer to a function that gets executed when a process completes for
-         * a derivation mapping.
-         *
-         * @param data An arbitrary data structure
-         * @param mapping A derivation mapping from the distributed derivation
-         * @param status Indicates whether the process terminated abnormally or not
-         * @param result TRUE if the operation succeeded, else FALSE
-         */
+        /** Pointer to a function that gets executed when a process completes for a derivation mapping */
         complete_derivation_mapping_pid_function pid;
-        /**
-         * Pointer to a function that gets executed when a future completes for
-         * a derivation mapping.
-         *
-         * @param data An arbitrary data structure
-         * @param mapping A derivation mapping from the distributed derivation
-         * @param future The future that has completed
-         * @param status Indicates whether the process terminated abnormally or not
-         */
+        /** Pointer to a function that gets executed when a future completes for a derivation mapping */
         complete_derivation_mapping_future_function future;
     }
     complete_derivation_mapping_function;
@@ -100,7 +102,7 @@ typedef struct
     /** Pointer to arbitrary data passed to the above functions */
     void *data;
 }
-DerivationIteratorData;
+DerivationMappingIteratorData;
 
 /**
  * Creates a new PID iterator that steps over each derivation mapping and interface
@@ -113,7 +115,7 @@ DerivationIteratorData;
  * @param data Pointer to arbitrary data passed to the above functions
  * @return A PID iterator that can be used to traverse the derivation mappings
  */
-ProcReact_PidIterator create_derivation_pid_iterator(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table, map_derivation_mapping_pid_function map_derivation_mapping, complete_derivation_mapping_pid_function complete_derivation_mapping, void *data);
+ProcReact_PidIterator create_derivation_mapping_pid_iterator(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table, map_derivation_mapping_pid_function map_derivation_mapping, complete_derivation_mapping_pid_function complete_derivation_mapping, void *data);
 
 /**
  * Creates a new future iterator that steps over each derivation mapping and
@@ -126,28 +128,28 @@ ProcReact_PidIterator create_derivation_pid_iterator(const GPtrArray *derivation
  * @param data Pointer to arbitrary data passed to the above functions
  * @return A future iterator that can be used to traverse the derivation mappings
  */
-ProcReact_FutureIterator create_derivation_future_iterator(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table, map_derivation_mapping_future_function map_derivation_mapping, complete_derivation_mapping_future_function complete_derivation_mapping, void *data);
+ProcReact_FutureIterator create_derivation_mapping_future_iterator(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table, map_derivation_mapping_future_function map_derivation_mapping, complete_derivation_mapping_future_function complete_derivation_mapping, void *data);
 
 /**
  * Destroys all resources allocated with the provided derivation PID iterator
  *
  * @param iterator A derivation PID iterator instance
  */
-void destroy_derivation_pid_iterator(ProcReact_PidIterator *iterator);
+void destroy_derivation_mapping_pid_iterator(ProcReact_PidIterator *iterator);
 
 /**
  * Destroys all resources allocated with the provided derivation future iterator
  *
  * @param iterator A derivation future iterator instance
  */
-void destroy_derivation_future_iterator(ProcReact_FutureIterator *iterator);
+void destroy_derivation_mapping_future_iterator(ProcReact_FutureIterator *iterator);
 
 /**
  * Checks whether all iteration steps have succeeded.
  *
- * @param derivation_iterator_data Struct with properties that facilitate iteration over derivation mappings
+ * @param derivation_mapping_iterator_data Struct with properties that facilitate iteration over derivation mappings
  * @return TRUE if it indicates success, else FALSE
  */
-int derivation_iterator_has_succeeded(const DerivationIteratorData *derivation_iterator_data);
+int derivation_mapping_iterator_has_succeeded(const DerivationMappingIteratorData *derivation_mapping_iterator_data);
 
 #endif

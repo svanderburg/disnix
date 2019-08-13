@@ -38,17 +38,17 @@ static void complete_copy_derivation_mapping_to(void *data, DerivationMapping *m
         g_printerr("[target: %s]: Cannot receive intra-dependency closure of store derivation: %s\n", mapping->interface, mapping->derivation);
 }
 
-static int distribute_derivations(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table, const unsigned int max_concurrent_transfers)
+static int distribute_derivation_mappings(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table, const unsigned int max_concurrent_transfers)
 {
     int success;
-    ProcReact_PidIterator iterator = create_derivation_pid_iterator(derivation_mapping_array, interfaces_table, copy_derivation_mapping_to, complete_copy_derivation_mapping_to, NULL);
+    ProcReact_PidIterator iterator = create_derivation_mapping_pid_iterator(derivation_mapping_array, interfaces_table, copy_derivation_mapping_to, complete_copy_derivation_mapping_to, NULL);
 
     g_print("[coordinator]: Distributing store derivation files...\n");
 
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
-    success = derivation_iterator_has_succeeded(iterator.data);
+    success = derivation_mapping_iterator_has_succeeded(iterator.data);
 
-    destroy_derivation_pid_iterator(&iterator);
+    destroy_derivation_mapping_pid_iterator(&iterator);
     return success;
 }
 
@@ -71,14 +71,14 @@ static void complete_realise_derivation_mapping(void *data, DerivationMapping *m
 static int realise(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table)
 {
     int success;
-    ProcReact_FutureIterator iterator = create_derivation_future_iterator(derivation_mapping_array, interfaces_table, realise_derivation_mapping, complete_realise_derivation_mapping, NULL);
+    ProcReact_FutureIterator iterator = create_derivation_mapping_future_iterator(derivation_mapping_array, interfaces_table, realise_derivation_mapping, complete_realise_derivation_mapping, NULL);
     procreact_fork_in_parallel_buffer_and_wait(&iterator);
 
     g_print("[coordinator]: Realising store derivation files...\n");
 
-    success = derivation_iterator_has_succeeded(iterator.data);
+    success = derivation_mapping_iterator_has_succeeded(iterator.data);
 
-    destroy_derivation_future_iterator(&iterator);
+    destroy_derivation_mapping_future_iterator(&iterator);
     return success;
 }
 
@@ -111,14 +111,14 @@ static void complete_copy_result_from(void *data, DerivationMapping *mapping, Pr
 static int retrieve_results(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table, const unsigned int max_concurrent_transfers)
 {
     int success;
-    ProcReact_PidIterator iterator = create_derivation_pid_iterator(derivation_mapping_array, interfaces_table, copy_result_from, complete_copy_result_from, NULL);
+    ProcReact_PidIterator iterator = create_derivation_mapping_pid_iterator(derivation_mapping_array, interfaces_table, copy_result_from, complete_copy_result_from, NULL);
 
     g_print("[coordinator]: Retrieving build results...\n");
 
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
-    success = derivation_iterator_has_succeeded(iterator.data);
+    success = derivation_mapping_iterator_has_succeeded(iterator.data);
 
-    destroy_derivation_pid_iterator(&iterator);
+    destroy_derivation_mapping_pid_iterator(&iterator);
     return success;
 }
 
@@ -126,7 +126,7 @@ static int retrieve_results(const GPtrArray *derivation_mapping_array, GHashTabl
 
 int build(DistributedDerivation *distributed_derivation, const unsigned int max_concurrent_transfers)
 {
-    return (distribute_derivations(distributed_derivation->derivation_mapping_array, distributed_derivation->interfaces_table, max_concurrent_transfers) /* Distribute derivations to target machines */
+    return (distribute_derivation_mappings(distributed_derivation->derivation_mapping_array, distributed_derivation->interfaces_table, max_concurrent_transfers) /* Distribute derivations to target machines */
       && realise(distributed_derivation->derivation_mapping_array, distributed_derivation->interfaces_table) /* Realise derivations on target machines */
       && retrieve_results(distributed_derivation->derivation_mapping_array, distributed_derivation->interfaces_table, max_concurrent_transfers)); /* Retrieve back the build results */
 }

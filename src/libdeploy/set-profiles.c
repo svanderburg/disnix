@@ -23,14 +23,14 @@
 #include <client-interface.h>
 #include <package-management.h>
 
-static pid_t set_distribution_item(void *data, xmlChar *profile_name, gchar *target_name, Target *target)
+static pid_t set_profile_mapping(void *data, gchar *target_name, xmlChar *profile_name, Target *target)
 {
     char *profile = (char*)data;
     g_print("[target: %s]: Setting Disnix profile: %s\n", target_name, profile_name);
     return exec_set((char*)target->client_interface, (char*)target_name, profile, (char*)profile_name);
 }
 
-static void complete_set_distribution_item(void *data, xmlChar *profile_name, gchar *target_name, ProcReact_Status status, int result)
+static void complete_set_profile_mapping(void *data, gchar *target_name, xmlChar *profile_name, Target *target, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
         g_printerr("[target: %s]: Cannot set Disnix profile: %s\n", target_name, profile_name);
@@ -38,13 +38,13 @@ static void complete_set_distribution_item(void *data, xmlChar *profile_name, gc
 
 static int set_target_profiles(GHashTable *profile_mapping_table, GHashTable *targets_table, gchar *profile)
 {
-    /* Iterate over the distribution mappings, limiting concurrency to the desired concurrent transfers and distribute them */
+    /* Iterate over the profile mappings, limiting concurrency to the desired concurrent transfers and distribute them */
     int success;
-    ProcReact_PidIterator iterator = create_distribution_iterator(profile_mapping_table, targets_table, set_distribution_item, complete_set_distribution_item, profile);
+    ProcReact_PidIterator iterator = create_profile_mapping_iterator(profile_mapping_table, targets_table, set_profile_mapping, complete_set_profile_mapping, profile);
     procreact_fork_in_parallel_and_wait(&iterator);
-    success = distribution_iterator_has_succeeded(&iterator);
+    success = profile_mapping_iterator_has_succeeded(&iterator);
 
-    destroy_distribution_iterator(&iterator);
+    destroy_profile_mapping_iterator(&iterator);
 
     return success;
 }
