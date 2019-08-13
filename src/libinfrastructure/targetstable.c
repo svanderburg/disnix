@@ -127,7 +127,7 @@ GHashTable *create_targets_table_from_nix(char *infrastructure_expr, char *defau
     free(infrastructureXML);
     xmlCleanupParser();
 
-    /* Return the targets table*/
+    /* Return the targets table */
     return targets_table;
 }
 

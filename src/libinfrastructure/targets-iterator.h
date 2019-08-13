@@ -25,15 +25,47 @@
 #include <procreact_future_iterator.h>
 #include "targetstable.h"
 
-/** Pointer to a function that executes a process for each target */
-typedef pid_t (*map_target_pid_function) (void *data, Target *target, gchar *client_interface, gchar *target_key);
-/** Pointer to a function that constructs a future for each target */
-typedef ProcReact_Future (*map_target_future_function) (void *data, Target *target, gchar *client_interface, gchar *target_key);
+/**
+ * Pointer to a function that executes a process for each target
+ *
+ * @param data An arbitrary data structure
+ * @param target_key Key that uniquely identifies the machine
+ * @param target A target from the target array
+ * @return The PID of the spawned process
+ */
+typedef pid_t (*map_target_pid_function) (void *data, gchar *target_key, Target *target);
 
-/** Pointer to a function that gets executed when a process completes for a target */
-typedef void (*complete_target_mapping_pid_function) (void *data, Target *target, gchar *target_key, ProcReact_Status status, int result);
-/** Pointer to a function that constructs a future when a process completes for a target */
-typedef void (*complete_target_mapping_future_function) (void *data, Target *target, gchar *target_key, ProcReact_Future *future, ProcReact_Status status);
+/**
+ * Pointer to a function that constructs a future for each target
+ *
+ * @param data An arbitrary data structure
+ * @param target_key Key that uniquely identifies the machine
+ * @param target A target from the target array
+ * @return A future instance
+ */
+typedef ProcReact_Future (*map_target_future_function) (void *data, gchar *target_key, Target *target);
+
+/**
+ * Pointer to a function that gets executed when a process completes for a target
+ *
+ * @param data An arbitrary data structure
+ * @param target_key Key that uniquely identifies the machine
+ * @param target A target from the target array
+ * @param status Indicates whether the process terminated abnormally or not
+ * @param result TRUE if the operation succeeded, else FALSE
+ */
+typedef void (*complete_target_mapping_pid_function) (void *data, gchar *target_key, Target *target, ProcReact_Status status, int result);
+
+/**
+ * Pointer to a function that constructs a future when a process completes for a target
+ *
+ * @param data An arbitrary data structure
+ * @param target_key Key that uniquely identifies the machine
+ * @param target A target from the target array
+ * @param future The future that has completed
+ * @param status Indicates whether the process terminated abnormally or not
+ */
+typedef void (*complete_target_mapping_future_function) (void *data, gchar *target_key, Target *target, ProcReact_Future *future, ProcReact_Status status);
 
 /**
  * @brief Iterator that can be used to execute a process for each target
@@ -42,33 +74,17 @@ typedef struct
 {
     /** Common properties for all model iterators */
     ModelIteratorData model_iterator_data;
-    /** Hash table with targets */
+    /** Iterator for the hash table with targets */
     GHashTableIter iter;
+    /** Hash table with targets */
     GHashTable *targets_table;
 
     /** Function that executes a process for each target */
     union
     {
-        /**
-         * Pointer to a function that executes a process for each target
-         *
-         * @param data An arbitrary data structure
-         * @param target A target from the target array
-         * @param client_interface Executable to invoke to reach the target machine
-         * @param target_key Key that uniquely identifies the machine
-         * @return The PID of the spawned process
-         */
+        /** Pointer to a function that executes a process for each target */
         map_target_pid_function pid;
-
-        /**
-         * Pointer to a function that constructs a future for each target
-         *
-         * @param data An arbitrary data structure
-         * @param target A target from the target array
-         * @param client_interface Executable to invoke to reach the target machine
-         * @param target_key Key that uniquely identifies the machine
-         * @return A future instance
-         */
+        /** Pointer to a function that constructs a future for each target */
         map_target_future_function future;
     }
     map_target_function;
@@ -76,26 +92,9 @@ typedef struct
     /** Function that gets executed when a process completes for a target */
     union
     {
-        /**
-         * Pointer to a function that gets executed when a process completes for a target
-         *
-         * @param data An arbitrary data structure
-         * @param target A target from the target array
-         * @param target_key Key that uniquely identifies the machine
-         * @param status Indicates whether the process terminated abnormally or not
-         * @param result TRUE if the operation succeeded, else FALSE
-         */
+        /** Pointer to a function that gets executed when a process completes for a target */
         complete_target_mapping_pid_function pid;
-
-        /**
-         * Pointer to a function that constructs a future when a process completes for a target
-         *
-         * @param data An arbitrary data structure
-         * @param target A target from the target array
-         * @param target_key Key that uniquely identifies the machine
-         * @param future The future that has completed
-         * @param status Indicates whether the process terminated abnormally or not
-         */
+        /** Pointer to a function that constructs a future when a process completes for a target */
         complete_target_mapping_future_function future;
     }
     complete_target_mapping_function;

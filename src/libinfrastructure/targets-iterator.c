@@ -38,7 +38,7 @@ static pid_t next_target_process(void *data)
     gchar *target_key = find_target_key(target);
 
     /* Invoke the next distribution item operation process */
-    pid = target_iterator_data->map_target_function.pid(target_iterator_data->data, target, (gchar*)target->client_interface, target_key);
+    pid = target_iterator_data->map_target_function.pid(target_iterator_data->data, target_key, target);
 
     /* Increase the iterator index and update the pid table */
     next_iteration_process(&target_iterator_data->model_iterator_data, pid, target);
@@ -56,7 +56,7 @@ static void complete_target_process(void *data, pid_t pid, ProcReact_Status stat
     gchar *target_key = find_target_key(target);
 
     /* Invoke callback that handles completion of the target */
-    target_iterator_data->complete_target_mapping_function.pid(target_iterator_data->data, target, target_key, status, result);
+    target_iterator_data->complete_target_mapping_function.pid(target_iterator_data->data, target_key, target, status, result);
 }
 
 static ProcReact_Future next_target_future(void *data)
@@ -72,7 +72,7 @@ static ProcReact_Future next_target_future(void *data)
     gchar *target_key = find_target_key(target);
 
     /* Invoke the next distribution item operation process */
-    future = target_iterator_data->map_target_function.future(target_iterator_data->data, target, (gchar*)target->client_interface, target_key);
+    future = target_iterator_data->map_target_function.future(target_iterator_data->data, target_key, target);
 
     /* Increase the iterator index and update the pid table */
     next_iteration_future(&target_iterator_data->model_iterator_data, &future, target);
@@ -90,7 +90,7 @@ static void complete_target_future(void *data, ProcReact_Future *future, ProcRea
     gchar *target_key = find_target_key(target);
 
     /* Invoke callback that handles completion of the target */
-    target_iterator_data->complete_target_mapping_function.future(target_iterator_data->data, target, target_key, future, status);
+    target_iterator_data->complete_target_mapping_function.future(target_iterator_data->data, target_key, target, future, status);
 }
 
 static TargetIteratorData *create_common_iterator(GHashTable *targets_table, void *data)

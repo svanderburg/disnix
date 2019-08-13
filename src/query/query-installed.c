@@ -29,13 +29,13 @@ typedef struct
 }
 QueryInstalledServicesData;
 
-static ProcReact_Future query_installed_services_on_target(void *data, Target *target, gchar *client_interface, gchar *target_key)
+static ProcReact_Future query_installed_services_on_target(void *data, gchar *target_key, Target *target)
 {
     QueryInstalledServicesData *query_installed_services_data = (QueryInstalledServicesData*)data;
-    return exec_query_installed(client_interface, target_key, query_installed_services_data->profile);
+    return exec_query_installed((char*)target->client_interface, target_key, query_installed_services_data->profile);
 }
 
-static void complete_query_installed_services_on_target(void *data, Target *target, gchar *target_key, ProcReact_Future *future, ProcReact_Status status)
+static void complete_query_installed_services_on_target(void *data, gchar *target_key, Target *target, ProcReact_Future *future, ProcReact_Status status)
 {
     QueryInstalledServicesData *query_installed_services_data = (QueryInstalledServicesData*)data;
 

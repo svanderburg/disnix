@@ -58,7 +58,7 @@ static pid_t retrieve_snapshot_mapping(SnapshotMapping *mapping, Target *target,
     return exec_copy_snapshots_from((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)mapping->component, (flags & FLAG_ALL));
 }
 
-pid_t retrieve_snapshots_from_target(void *data, Target *target, gchar *client_interface, gchar *target_key)
+pid_t retrieve_snapshots_from_target(void *data, gchar *target_key, Target *target)
 {
     pid_t pid = fork();
 
@@ -94,7 +94,7 @@ pid_t retrieve_snapshots_from_target(void *data, Target *target, gchar *client_i
     return pid;
 }
 
-void complete_retrieve_snapshots_from_target(void *data, Target *target, gchar *target_key, ProcReact_Status status, int result)
+void complete_retrieve_snapshots_from_target(void *data, gchar *target_key, Target *target, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
     {
@@ -138,7 +138,7 @@ TakeRetrieveAndCleanSnapshotsData;
 
 /* Snapshot depth-first infrastructure */
 
-static pid_t take_retrieve_and_clean_snapshot_on_target(void *data, Target *target, gchar *client_interface, gchar *target_key)
+static pid_t take_retrieve_and_clean_snapshot_on_target(void *data, gchar *target_key, Target *target)
 {
     pid_t pid = fork();
 
@@ -179,7 +179,7 @@ static pid_t take_retrieve_and_clean_snapshot_on_target(void *data, Target *targ
     return pid;
 }
 
-void complete_take_retrieve_and_clean_snapshots_on_target(void *data, Target *target, gchar *target_key, ProcReact_Status status, int result)
+void complete_take_retrieve_and_clean_snapshots_on_target(void *data, gchar *target_key, Target *target, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
     {

@@ -34,13 +34,13 @@ typedef struct
 }
 QueryRequisitesData;
 
-static ProcReact_Future query_requisites_on_target(void *data, Target *target, gchar *client_interface, gchar *target_key)
+static ProcReact_Future query_requisites_on_target(void *data, gchar *target_key, Target *target)
 {
     QueryRequisitesData *query_requisites_data = (QueryRequisitesData*)data;
-    return exec_query_requisites(client_interface, target_key, query_requisites_data->profile_path);
+    return exec_query_requisites((char*)target->client_interface, target_key, query_requisites_data->profile_path);
 }
 
-static void complete_query_requisites_on_target(void *data, Target *target, gchar *target_key, ProcReact_Future *future, ProcReact_Status status)
+static void complete_query_requisites_on_target(void *data, gchar *target_key, Target *target, ProcReact_Future *future, ProcReact_Status status)
 {
     QueryRequisitesData *query_requisites_data = (QueryRequisitesData*)data;
 

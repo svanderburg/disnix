@@ -27,14 +27,14 @@ typedef struct
 }
 CollectGarbageData;
 
-static pid_t collect_garbage_on_target(void *data, Target *target, gchar *client_interface, gchar *target_key)
+static pid_t collect_garbage_on_target(void *data, gchar *target_key, Target *target)
 {
     CollectGarbageData *collect_garbage_data = (CollectGarbageData*)data;
     g_print("[target: %s]: Running garbage collector\n", target_key);
-    return exec_collect_garbage(client_interface, target_key, collect_garbage_data->delete_old);
+    return exec_collect_garbage((char*)target->client_interface, target_key, collect_garbage_data->delete_old);
 }
 
-static void complete_collect_garbage_on_target(void *data, Target *target, gchar *target_key, ProcReact_Status status, int result)
+static void complete_collect_garbage_on_target(void *data, gchar *target_key, Target *target, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
         g_printerr("[target: %s]: Garbage collection failed!\n", target_key);

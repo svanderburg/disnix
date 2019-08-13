@@ -23,12 +23,12 @@
 #include <client-interface.h>
 #include "nixxml-ghashtable-iter.h"
 
-static ProcReact_Future capture_infra_on_target(void *data, Target *target, gchar *client_interface, gchar *target_key)
+static ProcReact_Future capture_infra_on_target(void *data, gchar *target_key, Target *target)
 {
-    return exec_capture_config(client_interface, target_key);
+    return exec_capture_config((char*)target->client_interface, target_key);
 }
 
-static void complete_capture_infra_on_target(void *data, Target *target, gchar *target_key, ProcReact_Future *future, ProcReact_Status status)
+static void complete_capture_infra_on_target(void *data, gchar *target_key, Target *target, ProcReact_Future *future, ProcReact_Status status)
 {
     GHashTable *configs_table = (GHashTable*)data;
 

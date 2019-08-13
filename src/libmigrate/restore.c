@@ -39,7 +39,7 @@ static pid_t send_snapshot_mapping(SnapshotMapping *mapping, Target *target, con
     return exec_copy_snapshots_to((gchar*)target->client_interface, (gchar*)mapping->target, (gchar*)mapping->container, (gchar*)mapping->component, (flags & FLAG_ALL));
 }
 
-pid_t send_snapshots_to_target(void *data, Target *target, gchar *client_interface, gchar *target_key)
+pid_t send_snapshots_to_target(void *data, gchar *target_key, Target *target)
 {
     pid_t pid = fork();
 
@@ -75,7 +75,7 @@ pid_t send_snapshots_to_target(void *data, Target *target, gchar *client_interfa
     return pid;
 }
 
-void complete_send_snapshots_to_target(void *data, Target *target, gchar *target_key, ProcReact_Status status, int result)
+void complete_send_snapshots_to_target(void *data, gchar *target_key, Target *target, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
     {
@@ -136,7 +136,7 @@ SendRestoreAndCleanSnapshotsData;
 
 /* Restore depth-first infrastructure */
 
-static pid_t send_restore_and_clean_snapshot_on_target(void *data, Target *target, gchar *client_interface, gchar *target_key)
+static pid_t send_restore_and_clean_snapshot_on_target(void *data, gchar *target_key, Target *target)
 {
     pid_t pid = fork();
 
@@ -177,7 +177,7 @@ static pid_t send_restore_and_clean_snapshot_on_target(void *data, Target *targe
     return pid;
 }
 
-void complete_send_restore_and_clean_snapshots_on_target(void *data, Target *target, gchar *target_key, ProcReact_Status status, int result)
+void complete_send_restore_and_clean_snapshots_on_target(void *data, gchar *target_key, Target *target, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
     {
