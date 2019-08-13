@@ -214,14 +214,10 @@ TransitionStatus transition(Manifest *manifest, Manifest *previous_manifest, con
         GPtrArray *intersection_array = intersect_service_mapping_array(manifest->service_mapping_array, previous_manifest->service_mapping_array);
         previous_service_mapping_array = previous_manifest->service_mapping_array;
 
-        g_print("[coordinator]: Mapping closures to deactivate:\n");
         deactivation_array = substract_service_mapping_array(previous_manifest->service_mapping_array, intersection_array);
-
-        g_print("[coordinator]: Mapping closures to activate:\n");
         activation_array = substract_service_mapping_array(manifest->service_mapping_array, intersection_array);
 
         unified_service_mapping_array = unify_service_mapping_array(previous_manifest->service_mapping_array, manifest->service_mapping_array, intersection_array);
-
         unified_services_table = generate_union_services_table(manifest->services_table, previous_manifest->services_table);
 
         /* Remove obsolete intersection array */

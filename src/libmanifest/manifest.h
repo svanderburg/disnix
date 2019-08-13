@@ -131,14 +131,30 @@ gchar *determine_previous_manifest_file(const gchar *coordinator_profile_path, c
  * @param coordinator_profile_path Path to the coordinator profile or NULL to consult the default profile path
  * @param profile Name of the Disnix profile that identifies the deployment (typically: default)
  * @param flags Flags indicating which portions of the manifest should be parsed
- * @param container Name of the container to filter on, or NULL to parse all containers
- * @param component Name of the component to filter on, or NULL to parse all components
+ * @param container_filter Name of the container to filter on, or NULL to parse all containers
+ * @param component_filter Name of the component to filter on, or NULL to parse all components
  * @return The provided manifest, previous manifest, or NULL in case of an error
  */
-Manifest *open_provided_or_previous_manifest_file(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const unsigned int flags, const gchar *container, const gchar *component);
+Manifest *open_provided_or_previous_manifest_file(const gchar *manifest_file, const gchar *coordinator_profile_path, gchar *profile, const unsigned int flags, const gchar *container_filter, const gchar *component_filter);
 
+/**
+ * Opens the old manifest file, or if it is NULL the previous manifest in the
+ * coordinator profile.
+ *
+ * @param old_manifest Path to the previous manifest file
+ * @param coordinator_profile_path Path to the coordinator profile or NULL to consult the default profile path
+ * @param profile Name of the Disnix profile that identifies the deployment (typically: default)
+ */
 gchar *determine_manifest_to_open(const gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile);
 
-Manifest *open_previous_manifest(const gchar *manifest_file, const unsigned int flags, const gchar *container, const gchar *component);
+/**
+ * Opens the previous provided manifest file
+ *
+ * @param manifest_file Manifest file to open
+ * @param flags Flags indicating which portions of the manifest should be parsed
+ * @param container_filter Name of the container to filter on, or NULL to parse all containers
+ * @param component_filter Name of the component to filter on, or NULL to parse all components
+ */
+Manifest *open_previous_manifest(const gchar *manifest_file, const unsigned int flags, const gchar *container_filter, const gchar *component_filter);
 
 #endif

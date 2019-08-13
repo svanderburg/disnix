@@ -322,13 +322,13 @@ gchar *determine_manifest_to_open(const gchar *old_manifest, const gchar *coordi
         return g_strdup(old_manifest);
 }
 
-Manifest *open_previous_manifest(const gchar *manifest_file, const unsigned int flags, const gchar *container, const gchar *component)
+Manifest *open_previous_manifest(const gchar *manifest_file, const unsigned int flags, const gchar *container_filter, const gchar *component_filter)
 {
     if(manifest_file == NULL)
         return NULL;
     else
     {
         g_printerr("[coordinator]: Using previous manifest: %s\n", manifest_file);
-        return create_manifest(manifest_file, flags, container, component);
+        return create_manifest(manifest_file, flags, container_filter, component_filter);
     }
 }
