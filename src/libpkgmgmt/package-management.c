@@ -44,18 +44,18 @@ pid_t pkgmgmt_import_closure(const char *closure, int stdout, int stderr)
     else
     {
         pid_t pid = fork();
-        
+
         if(pid == 0)
         {
             char *const args[] = {NIX_STORE_CMD, "--import", NULL};
-            
+
             dup2(closure_fd, 0);
             dup2(stdout, 1);
             dup2(stderr, 2);
-            execvp(NIX_STORE_CMD, args);
+            execvp(args[0], args);
             _exit(1);
         }
-        
+
         return pid;
     }
 }
@@ -64,7 +64,7 @@ gchar *pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr, pid
 {
     gchar *tempfilename = g_strconcat(tmpdir, "/disnix.XXXXXX", NULL);
     *temp_fd = mkstemp(tempfilename);
-    
+
     if(*temp_fd == -1)
     {
         g_free(tempfilename);
@@ -73,7 +73,7 @@ gchar *pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr, pid
     else
     {
         *pid = fork();
-        
+
         if(*pid == 0)
         {
             unsigned int i, derivation_length = g_strv_length(derivation);
@@ -89,10 +89,10 @@ gchar *pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr, pid
 
             dup2(*temp_fd, 1);
             dup2(stderr, 2);
-            execvp(NIX_STORE_CMD, args);
+            execvp(args[0], args);
             _exit(1);
         }
-        
+
         return tempfilename;
     }
 }
@@ -114,13 +114,13 @@ ProcReact_Future pkgmgmt_print_invalid_packages(gchar **derivation, int stderr)
             args[i + 3] = derivation[i];
 
         args[i + 3] = NULL;
-        
+
         dup2(future.fd, 1); /* Attach write-end to stdout */
         dup2(stderr, 2); /* Attach logger to stderr */
-        execvp(NIX_STORE_CMD, args);
+        execvp(args[0], args);
         _exit(1);
     }
-    
+
     return future;
 }
 
@@ -143,10 +143,10 @@ ProcReact_Future pkgmgmt_realise(gchar **derivation, int stderr)
 
         dup2(future.fd, 1); /* Attach write-end to stdout */
         dup2(stderr, 2); /* Attach logger to stderr */
-        execvp(NIX_STORE_CMD, args);
+        execvp(args[0], args);
         _exit(1);
     }
-    
+
     return future;
 }
 
@@ -156,25 +156,25 @@ pid_t pkgmgmt_set_profile(gchar *profile, gchar *derivation, int stdout, int std
     ssize_t resolved_path_size;
     char resolved_path[BUFFER_SIZE];
     pid_t pid;
-    
+
     mkdir(LOCALSTATEDIR "/nix/profiles/disnix", 0755);
     profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, NULL);
-    
+
     /* Resolve the manifest file to which the disnix profile points */
     resolved_path_size = readlink(profile_path, resolved_path, BUFFER_SIZE);
-    
+
     if(resolved_path_size != -1 && (strlen(profile_path) != resolved_path_size || strncmp(resolved_path, profile_path, resolved_path_size) != 0)) /* If the symlink resolves not to itself, we get a generation symlink that we must resolve again */
     {
         gchar *generation_path;
 
         resolved_path[resolved_path_size] = '\0';
-        
+
         generation_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", resolved_path, NULL);
         resolved_path_size = readlink(generation_path, resolved_path, BUFFER_SIZE);
-        
+
         g_free(generation_path);
     }
-    
+
     pid = fork();
 
     if(pid == 0)
@@ -184,14 +184,14 @@ pid_t pkgmgmt_set_profile(gchar *profile, gchar *derivation, int stdout, int std
             char *const args[] = {NIX_ENV_CMD, "-p", profile_path, "--set", derivation, NULL};
             dup2(stdout, 1);
             dup2(stderr, 2);
-            execvp(NIX_ENV_CMD, args);
+            execvp(args[0], args);
             dprintf(stderr, "Error with executing nix-env\n");
             _exit(1);
         }
         else
             _exit(0);
     }
-    
+
     g_free(profile_path);
     return pid;
 }
@@ -207,7 +207,7 @@ ProcReact_Future pkgmgmt_query_requisites(gchar **derivation, int stderr)
 
         args[0] = NIX_STORE_CMD;
         args[1] = "-qR";
-        
+
         for(i = 0; i < derivation_size; i++)
             args[i + 2] = derivation[i];
 
@@ -215,37 +215,37 @@ ProcReact_Future pkgmgmt_query_requisites(gchar **derivation, int stderr)
 
         dup2(future.fd, 1);
         dup2(stderr, 2);
-        execvp(NIX_STORE_CMD, args);
+        execvp(args[0], args);
         _exit(1);
     }
-    
+
     return future;
 }
 
 pid_t pkgmgmt_collect_garbage(int delete_old, int stdout, int stderr)
 {
     pid_t pid = fork();
-    
+
     if(pid == 0)
     {
         dup2(stdout, 1);
         dup2(stderr, 2);
-        
+
         if(delete_old)
         {
             char *const args[] = {NIX_COLLECT_GARBAGE_CMD, "-d", NULL};
-            execvp(NIX_COLLECT_GARBAGE_CMD, args);
+            execvp(args[0], args);
         }
         else
         {
             char *const args[] = {NIX_COLLECT_GARBAGE_CMD, NULL};
-            execvp(NIX_COLLECT_GARBAGE_CMD, args);
+            execvp(args[0], args);
         }
-        
+
         dprintf(stderr, "Error with executing garbage collect process\n");
         _exit(1);
     }
-    
+
     return pid;
 }
 
@@ -300,7 +300,7 @@ static pid_t execute_set_coordinator_profile(gchar *profile_path, gchar *manifes
     if(pid == 0)
     {
         char *const args[] = {NIX_ENV_CMD, "-p", profile_path, "--set", manifest_file_path, NULL};
-        execvp(NIX_ENV_CMD, args);
+        execvp(args[0], args);
         _exit(1);
     }
 
@@ -311,7 +311,7 @@ static gchar *compose_coordinator_profile_basedir(const gchar *coordinator_profi
 {
     /* Get current username */
     char *username = (getpwuid(geteuid()))->pw_name;
-    
+
     if(coordinator_profile_path == NULL)
         return g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator", NULL);
     else
@@ -339,7 +339,7 @@ static int compare_profile_paths(const gchar *profile_path, char *resolved_path,
 static ssize_t resolve_profile_symlink(gchar *profile_path, gchar *profile_base_dir, char *resolved_path)
 {
     ssize_t resolved_path_size = readlink(profile_path, resolved_path, RESOLVED_PATH_MAX_SIZE);
-    
+
     if(resolved_path_size == -1)
         return -1;
     else
@@ -347,14 +347,14 @@ static ssize_t resolve_profile_symlink(gchar *profile_path, gchar *profile_base_
         if(!compare_profile_paths(profile_path, resolved_path, resolved_path_size)) /* If the symlink resolves not to itself, we get a generation symlink that we must resolve again */
         {
             gchar *generation_path;
-            
+
             resolved_path[resolved_path_size] = '\0';
             generation_path = g_strconcat(profile_base_dir, "/", resolved_path, NULL);
             resolved_path_size = readlink(generation_path, resolved_path, RESOLVED_PATH_MAX_SIZE);
-            
+
             g_free(generation_path);
         }
-        
+
         return resolved_path_size;
     }
 }
@@ -365,10 +365,10 @@ int pkgmgmt_set_coordinator_profile(const gchar *coordinator_profile_path, const
     char resolved_path[RESOLVED_PATH_MAX_SIZE];
     ssize_t resolved_path_size;
     int exit_status;
-    
+
     /* Determine which profile path to use, if a coordinator profile path is given use this value otherwise the default */
     profile_base_dir = compose_coordinator_profile_basedir(coordinator_profile_path);
-    
+
     /* Create the profile directory */
     if(mkdir(profile_base_dir, 0755) == -1 && errno != EEXIST)
     {
@@ -376,10 +376,10 @@ int pkgmgmt_set_coordinator_profile(const gchar *coordinator_profile_path, const
         g_free(profile_base_dir);
         return FALSE;
     }
-    
+
     /* Determine the path to the profile */
     profile_path = g_strconcat(profile_base_dir, "/", profile, NULL);
-    
+
     /* Resolve the manifest file to which the coordinator profile points */
     resolved_path_size = resolve_profile_symlink(profile_path, profile_base_dir, resolved_path);
 
@@ -389,25 +389,25 @@ int pkgmgmt_set_coordinator_profile(const gchar *coordinator_profile_path, const
          * Execute nix-env --set operation to change the coordinator profile so
          * that the new configuration is known
          */
-        
+
         gchar *manifest_file_path = normalize_manifest_path(manifest_file); /* Normalize manifest file path */
         pid_t pid = execute_set_coordinator_profile(profile_path, manifest_file_path);
         ProcReact_Status status;
         int result = procreact_wait_for_boolean(pid, &status);
-        
+
         /* If the process suceeds the the operation succeeded */
         exit_status = (status == PROCREACT_STATUS_OK && result);
-        
+
         /* Cleanup */
         g_free(manifest_file_path);
     }
     else
         exit_status = TRUE;
-    
+
     /* Cleanup */
     g_free(profile_base_dir);
     g_free(profile_path);
-    
+
     /* Return status */
     return exit_status;
 }

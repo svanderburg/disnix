@@ -57,7 +57,7 @@ disnix-reconstruct.1.xml: disnix-reconstruct.1
 	$(SHELL) ../maintenance/man2docbook.bash $<
 
 disnix-normalize-infra.1: disnix-normalize-infra.in
-	$(HELP2MAN) --output=$@ --no-info --name 'Reconstructs the deployment manifest on the coordinator machine from the manifests on the target machines' "$(SHELL) disnix-reconstruct"
+	$(HELP2MAN) --output=$@ --no-info --name 'Normalizes an infrastructure model with default settings and displays an XML representation of it' "$(SHELL) disnix-normalize-infra"
 
 disnix-normalize-infra.1.xml: disnix-normalize-infra.1
 	$(SHELL) ../maintenance/man2docbook.bash $<

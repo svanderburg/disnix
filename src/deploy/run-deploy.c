@@ -22,16 +22,75 @@
 #include <interrupt.h>
 #include <deploy.h>
 
-static void printProfileArg(const gchar *profile)
+static void print_profile_arg(const gchar *profile)
 {
     if(g_strcmp0(profile, "default") != 0)
          g_printerr(" -p %s", profile);
 }
 
-static void printCoordinatorProfilePathArg(const gchar *coordinator_profile_path)
+static void print_coordinator_profile_path_arg(const gchar *coordinator_profile_path)
 {
     if(coordinator_profile_path != NULL)
         g_printerr(" --coordinator-profile-path %s", coordinator_profile_path);
+}
+
+static void print_state_notification(const gchar *coordinator_profile_path, const gchar *profile, const gchar *old_manifest_file)
+{
+    g_printerr(
+    "\nNOTE: Deleting state has been disabled! This means that the state of the\n"
+    "services that have been moved from one machine to another were copied, but not\n"
+    "deleted from their previous locations!\n\n"
+
+    "To actually remove the old obsolete state, run the following command:\n\n"
+    );
+
+    g_printerr("$ disnix-delete-state");
+
+    print_profile_arg(profile);
+    print_coordinator_profile_path_arg(coordinator_profile_path);
+
+    g_printerr(" %s\n\n", old_manifest_file);
+}
+
+static void print_deploy_fail_message(void)
+{
+    g_printerr("The deployment failed! Please inspect the output to diagnose any problems!\n");
+}
+
+static void print_deploy_state_fail_message(const gchar *coordinator_profile_path, const gchar *profile, const unsigned int flags, const gchar *old_manifest_file, const gchar *new_manifest)
+{
+    g_printerr(
+    "\nThe problem is a data migration issue and must be manually diagnosed. To\n"
+    "attempt migrating the data again, run:\n\n"
+
+    "$ disnix-migrate"
+    );
+
+    print_profile_arg(profile);
+    print_coordinator_profile_path_arg(coordinator_profile_path);
+
+    if(flags & FLAG_NO_UPGRADE)
+        g_printerr(" --no-upgrade");
+
+    if(flags & FLAG_DELETE_STATE)
+        g_printerr(" --delete-state");
+
+    if(old_manifest_file != NULL)
+        g_printerr(" -o %s", old_manifest_file);
+
+    g_printerr("%s\n\n", new_manifest);
+
+    g_printerr(
+    "If all problems have been resolved, the deployment must be finalized. To\n"
+    "accomplish this, run:\n\n"
+
+    "$ disnix-set "
+    );
+
+    print_profile_arg(profile);
+    print_coordinator_profile_path_arg(coordinator_profile_path);
+
+    g_printerr(" %s\n\n", new_manifest);
 }
 
 int run_deploy(const gchar *new_manifest, gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const unsigned int max_concurrent_transfers, const int keep, const unsigned int flags)
@@ -62,60 +121,14 @@ int run_deploy(const gchar *new_manifest, gchar *old_manifest, const gchar *coor
                     case DEPLOY_OK:
                         /* Display warning if state has been moved, but removed from old location */
                         if(!(flags & FLAG_DELETE_STATE) && old_manifest_file != NULL)
-                        {
-                            g_printerr(
-                            "\nNOTE: Deleting state has been disabled! This means that the state of the\n"
-                            "services that have been moved from one machine to another were copied, but not\n"
-                            "deleted from their previous locations!\n\n"
-
-                            "To actually remove the old obsolete state, run the following command:\n\n"
-                            );
-
-                            g_printerr("$ disnix-delete-state");
-
-                            printProfileArg(profile);
-                            printCoordinatorProfilePathArg(coordinator_profile_path);
-
-                            g_printerr(" %s\n\n", old_manifest_file);
-                        }
+                            print_state_notification(coordinator_profile_path, profile, old_manifest_file);
                         break;
                     case DEPLOY_FAIL:
-                        g_printerr("The deployment failed! Please inspect the output to diagnose any problems!\n");
+                        print_deploy_fail_message();
                         break;
                     case DEPLOY_STATE_FAIL:
-                        {
-                            g_printerr(
-                            "\nThe problem is a data migration issue and must be manually diagnosed. To\n"
-                            "attempt migrating the data again, run:\n\n"
-                            );
-
-                            g_printerr("$ disnix-migrate");
-
-                            printProfileArg(profile);
-                            printCoordinatorProfilePathArg(coordinator_profile_path);
-
-                            if(flags & FLAG_NO_UPGRADE)
-                                g_printerr(" --no-upgrade");
-
-                            if(flags & FLAG_DELETE_STATE)
-                                g_printerr(" --delete-state");
-
-                            if(old_manifest_file != NULL)
-                                g_printerr(" -o %s", old_manifest_file);
-
-                            g_printerr("%s\n\n", new_manifest);
-
-                            g_printerr("If all problems have been resolved, the deployment must be finalized. To\n");
-                            g_printerr("accomplish this, run:\n\n");
-
-                            g_printerr("$ disnix-set ");
-
-                            printProfileArg(profile);
-                            printCoordinatorProfilePathArg(coordinator_profile_path);
-
-                            g_printerr(" %s\n\n", new_manifest);
-                            break;
-                        }
+                        print_deploy_state_fail_message(coordinator_profile_path, profile, flags, old_manifest_file, new_manifest);
+                        break;
                 }
             }
             else
