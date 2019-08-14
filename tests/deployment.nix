@@ -60,18 +60,17 @@ simpleTest {
 
       $coordinator->mustSucceed("${env} disnix-query -f xml ${manifestTests}/infrastructure.nix > query.xml");
 
-      $coordinator->mustSucceed("xmllint --xpath \"/profileManifestTargets/target[\@name='testtarget1']/profileManifest/services/service[name='testService1']/name\" query.xml");
-      $coordinator->mustSucceed("xmllint --xpath \"/profileManifestTargets/target[\@name='testtarget2']/profileManifest/services/service[name='testService2']/name\" query.xml");
-      $coordinator->mustSucceed("xmllint --xpath \"/profileManifestTargets/target[\@name='testtarget2']/profileManifest/services/service[name='testService3']/name\" query.xml");
+      my $testService1PkgElem = $coordinator->mustSucceed("xmllint --xpath \"/profileManifestTargets/target[\@name='testtarget1']/profileManifest/services/service[name='testService1']/pkg\" query.xml");
+      my $testService2PkgElem = $coordinator->mustSucceed("xmllint --xpath \"/profileManifestTargets/target[\@name='testtarget2']/profileManifest/services/service[name='testService2']/pkg\" query.xml");
+      my $testService3PkgElem = $coordinator->mustSucceed("xmllint --xpath \"/profileManifestTargets/target[\@name='testtarget2']/profileManifest/services/service[name='testService3']/pkg\" query.xml");
 
       # Check the disnix logfiles to see whether it has indeed activated
       # the services in the distribution model. This test should
       # succeed.
 
-      # TODO: activation check
-      #$testtarget1->mustSucceed("[ \"\$(cat /var/log/disnix/8 | grep \"activate: lines[3]\")\" != \"\" ]");
-      #$testtarget2->mustSucceed("[ \"\$(cat /var/log/disnix/3 | grep \"activate: lines[7]\")\" != \"\" ]");
-      #$testtarget2->mustSucceed("[ \"\$(cat /var/log/disnix/4 | grep \"activate: lines[8]\")\" != \"\" ]");
+      $testtarget1->mustSucceed("[ \"\$(cat /var/log/disnix/8 | grep \"activate: ".(substr $testService1PkgElem, 5, -7)."\")\" != \"\" ]");
+      $testtarget2->mustSucceed("[ \"\$(cat /var/log/disnix/3 | grep \"activate: ".(substr $testService2PkgElem, 5, -7)."\")\" != \"\" ]");
+      $testtarget2->mustSucceed("[ \"\$(cat /var/log/disnix/4 | grep \"activate: ".(substr $testService3PkgElem, 5, -7)."\")\" != \"\" ]");
 
       # Check if there is only one generation link in the coordinator profile
       # folder and one generation link in the target profiles folder on each
