@@ -1,0 +1,2 @@
+pkgdata_DATA = manifest.nix gendist-roundrobin.nix instantiate.nix wrap-architecture.nix normalize-infrastructure.nix normalize-architecture.nix generate-manifest.nix generate-distributed-derivation.nix roundrobin.nix infrastructure-xml.nix
+EXTRA_DIST = manifest.nix gendist-roundrobin.nix instantiate.nix wrap-architecture.nix normalize-infrastructure.nix normalize-architecture.nix generate-manifest.nix generate-distributed-derivation.nix roundrobin.nix infrastructure-xml.nix

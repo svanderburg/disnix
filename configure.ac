@@ -120,7 +120,8 @@ src/migrate/Makefile
 src/deploy/Makefile
 src/convert-manifest/Makefile
 scripts/Makefile
-data/Makefile
+nix/Makefile
+xsl/Makefile
 maintenance/Makefile
 scripts/disnix-copy-closure
 scripts/disnix-copy-snapshots
