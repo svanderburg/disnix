@@ -21,7 +21,7 @@
 				</imageobject>
 			</mediaobject>
 		</figure>
-		
+
 		<para>
 			<xref linkend="fig-communicationflow" /> illustrates the communication flow of the disnix deployment utilities, such as <command>disnix-env</command>.
 			When executing a deployment step that needs to be executed remotely,
@@ -38,7 +38,7 @@
 			snapshotting, and restoring.
 		</para>
 	</section>
-	
+
 	<section>
 		<title>Composition of <command>disnix-env</command></title>
 		

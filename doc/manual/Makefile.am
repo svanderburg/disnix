@@ -14,9 +14,9 @@ dblatex_opts = \
  -P doc.collab.show=0 \
  -P latex.output.revhistory=0
 
-FIGURES = model.png stafftracker.png disnixwinservice.png virtualhosts1.png virtualhosts2.png virtualhosts3.png communicationflow.png disnix-env.png
+FIGURES = model.png stafftracker.png disnixwinservice.png virtualhosts1.png virtualhosts2.png virtualhosts3.png communicationflow.png disnix-env.png transformations.png
 
-MANUAL_SRCS = index.xml introduction.xml overview.xml installation.xml basicusage.xml state.xml targetspecific.xml packages.xml dysnomia-modules.xml advanced-options.xml images style.css
+MANUAL_SRCS = index.xml introduction.xml overview.xml installation.xml basicusage.xml state.xml targetspecific.xml packages.xml transformations.xml dysnomia-modules.xml advanced-options.xml images style.css
 
 version.txt:
 	echo -n $(VERSION) > version.txt

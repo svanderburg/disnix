@@ -587,15 +587,15 @@ let customPkgs = import ../top-level/all-packages.nix { inherit system; }; <co x
 in
 rec { <co xml:id='co-rec2' />
 ### Databases
-  zipcodes = { 
+  zipcodes = {
     name = "zipcodes"; 
     pkg = customPkgs.zipcodes; 
     dependsOn = {};
     type = "mysql-database";
   };
   ...
-  
-### Web services  
+
+### Web services
 
   ZipcodeService = { <co xml:id='co-service' />
     name = "ZipcodeService"; <co xml:id='co-serviceName' />
@@ -776,38 +776,38 @@ rec { <co xml:id='co-rec2' />
     properties = {
       hostname = "test1.example.org";
     };
-    
+
     containers = {
       tomcat-webapplication = {
         tomcatPort = 8080;
       };
     };
-    
+
     system = "i686-linux";
   };
-  
+
   test2 = { <co xml:id='co-target' />
     properties = { <co xml:id='co-target-properties' />
       hostname = "test2.example.org"; <co xml:id='co-hostname' />
     };
-    
+
     containers = { <co xml:id='co-target-containers' />
       tomcat-webapplication = {
         tomcatPort = 8080;
       };
-      
+
       mysql-database = {
         mysqlPort = 3306; <co xml:id='co-mysqlPort' />
         mysqlUsername = "root";
         mysqlPassword = "admin";
       };
     };
-    
+
     system = "x86_64-linux"; <co xml:id='co-system' />
     numOfCores = 1; <co xml:id='co-numOfCores' />
     targetProperty = "hostname"; <co xml:id='co-targetProperty' />
     clientInterface = "disnix-ssh-client"; <co xml:id='co-clientInterface' />
-  }; 
+  };
 }
 </programlisting>
 			</example>
@@ -961,24 +961,24 @@ $ disnix-capture-infra infrastructure-basic.nix
     properties = {
       "hostname" = "test1.example.org";
     };
-    
+
     containers = {
       "tomcat-webapplication" = {
         "tomcatPort" = "8080";
       };
     };
   };
-  
+
   test2 = {
     properties = {
       "hostname" = "test2.example.org";
     };
-    
+
     containers = {
       "tomcat-webapplication" = {
         "tomcatPort" = "8080";
       };
-      
+
       mysql-database = {
         "mysqlPort" = "3306";
         "mysqlUsername" = "root";
@@ -988,7 +988,6 @@ $ disnix-capture-infra infrastructure-basic.nix
   };
 }
 </screen>
-			
 			<para>
 				Alternatively, if only NixOS machines are used, an infrastructure model can be generated
 				from a network of NixOS configurations. See the DisnixOS extension, descibed in <xref linkend="chap-extensions" /> for

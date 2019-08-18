@@ -1,0 +1,656 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="chap-transformation">
+
+	<title>The Disnix model transformation pipeline</title>
+
+	<para>
+		As explained in <xref linkend="chap-basicusage" /> and <xref linkend="chap-packages" />
+		the Disnix input models (services, infrastructure, distribution and packages models) are <emphasis>declarative</emphasis> --
+		the models express properties of a service-oriented system and Disnix <emphasis>infers</emphasis> all activities that it needs to execute to get the system deployed, such as building
+		the services, transferring services and their intra-dependencies to target machines in the network and activating the services in the right order.
+	</para>
+
+	<para>
+		Although it may look conceptually simple, inferring deployment activities is all but a trivial job. Whilst the Disnix input models are declarative, they are not
+		<emphasis>executable</emphasis> -- there is not a one-on-one mapping between properties in the input models and the activities that Disnix needs to carry out.
+		To allow deployment activities to be executed, the input models need to be transformed into a single executable model. The transformation pipeline generates several intermediate models
+		to achieve this goal.
+	</para>
+
+	<para>
+		<figure xml:id="fig-transformations">
+			<title>Disnix inputs models and intermediate models</title>
+			<mediaobject>
+				<imageobject>
+					<imagedata fileref="transformations.png" format="PNG"/>
+				</imageobject>
+			</mediaobject>
+		</figure>
+	</para>
+
+	<para>
+		<xref linkend="fig-transformations" /> is a diagram that summarizes the transformation proces and the intermediate models:
+	</para>
+
+	<itemizedlist>
+		<listitem>
+			<para>
+				The <emphasis>deployment architecture</emphasis> model unifies the four separated models: services, infrastructure, distribution and packages
+				models into one single declarative specification. The distribution concern is eliminated by merging the distribution model properties
+				into the services model properties.
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				The <emphasis>normalized deployment architecture</emphasis> is an augmented version of the deployment architecture model with default properties and evaluated
+				package build functions (for each service) added to the Nix profiles to be distributed to the target machines.
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				The <emphasis>deployment</emphasis> model is a specification that provides one-on-one mappings of Nix profiles to machines, services to containers, and
+				snapshots to containers. From this specification Disnix can automatically infer the activities for the distribution, activation and data migration phases.
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				The <emphasis>build</emphasis> model is a specification that provides one-on-one mappings of Nix store derivation files to target machines. From this specification
+				Disnix can delegate builds to remote machines and fetch their results back.
+			</para>
+		</listitem>
+	</itemizedlist>
+
+	<para>
+		In addition to the common Disnix inputs models, it is also possible to provide specifications of the intermediate models and use them for deploying a service oriented system.
+		Having the ability to work with intermediate models is useful for experimentation and integration purposes.
+		The next sections explain the purposes of the artifacts, how they are specified and how they can be used.
+	</para>
+
+	<section>
+		<title>Unifying the input models into a single specification: deployment architecture model</title>
+
+		<para>
+			The first step in transforming the input models into a single executable specification, is unifying the specifications
+			into one single declarative specification, that is called <emphasis>deployment architecture</emphasis> model.
+
+			<example xml:id="ex-deployment-architecture-model">
+				<title>Deployment architecture model for the <code>StaffTracker</code> example</title>
+<programlisting>
+{system, pkgs}:
+
+let customPkgs = import ../top-level/all-packages.nix { inherit system; };
+in
+{
+  targetPackages = { <co xml:id='co-architecture-model-packages' />
+    test1 = [
+      pkgs.wget
+    ];
+    test2 = [
+      pkgs.curl
+    ];
+  };
+
+  services = rec { <co xml:id='co-architecture-model-services' />
+
+    StaffService = {
+      name = "StaffService";
+      pkg = customPkgs.StaffService;
+      dependsOn = {
+        inherit staff;
+      };
+      type = "tomcat-webapplication";
+
+      targets = [ infrastructure.test1 infrastructure.test2 ]; <co xml:id='co-architecture-model-targets' />
+    };
+
+    ...
+  };
+
+  infrastructure = { <co xml:id='co-architecture-model-infrastructure' />
+    test1 = {
+      properties = {
+        hostname = "test1.example.org";
+      };
+
+      containers = {
+        tomcat-webapplication = {
+          tomcatPort = 8080;
+        };
+      };
+
+      system = "i686-linux";
+    };
+
+    ...
+  };
+}
+</programlisting>
+			</example>
+		</para>
+
+		<para>
+			<xref linkend="ex-deployment-architecture-model" /> shows a deployment architecture model for a particular
+			deployment scenario of the <code>StaffTracker</code> system.
+		</para>
+
+		<calloutlist>
+			<callout arearefs='co-architecture-model-packages'>
+				<para>
+					The <varname>targetPackages</varname> attribute refers to the properties that were originally
+					defined in a packages model, such as <xref linkend="ex-packages-model-nixpkgs" />.
+				</para>
+			</callout>
+
+			<callout arearefs='co-architecture-model-services'>
+				<para>
+					The <varname>services</varname> attribute refers to the services that were originally defined in
+					the services model shown in <xref linkend="ex-services-model" /> and captures the exact same properties.
+				</para>
+			</callout>
+
+			<callout arearefs='co-architecture-model-infrastructure'>
+				<para>
+					The <varname>infrastructure</varname> attribute refers to the target machines that were orginally defined in the
+					infrastructure model shown in <xref linkend="ex-infrastructure-model" /> and captures the exact same properties.
+				</para>
+			</callout>
+
+			<callout arearefs='co-architecture-model-targets'>
+				<para>
+					The distribution concern is completely eliminated in the deployment architecture model. The distribution mappings
+					defined in <xref linkend="ex-distribution-model" /> have been augmented to the corresponding services. For example,
+					the targets of the <varname>StaffService</varname> mapping have been augmented as the <varname>targets</varname> attribute
+					to the <varname>StaffService</varname> service.
+				</para>
+			</callout>
+		</calloutlist>
+
+		<para>
+			In addition to the standard Disnix input possible models, it is also possible to write a deployment architecture model and deploy it as follows:
+<screen>
+$ disnix-env -A architecture.nix
+</screen>
+		</para>
+	</section>
+
+	<section>
+		<title>Normalizing the deployment architecture model</title>
+
+		<para>
+			Unifying models into a single deployment architecture specification is a good
+			first step in producing an executable specification, but more needs to be
+			done to fully reach that goal.
+		</para>
+
+		<para>
+			There are certain deployment properties that are left unspecified. For some
+			configuration properties, Disnix provides reasonable default values, such as:
+		</para>
+
+		<itemizedlist>
+			<listitem>
+				<para>
+					Each service can indicate whether they want their state to be managed by Dysnomia
+					(with the property: <varname>deployState</varname>), so that data will automatically be migrated
+					when moving the service from one machine to another. The default setting is <code>false</code>
+					and can be overridden with the <code>--deploy-state</code> parameter.
+				</para>
+				<para>
+					If a service does not specify this property, then Disnix will automatically propagate the default setting as a parameter.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Every target machine in the infrastructure model also has specialized
+					settings for connecting to the target machines, building packages and running
+					tasks concurrently:
+<programlisting>
+test2 = {
+  properties = {
+    hostname = "test2.example.org";
+  };
+
+  containers = {
+    tomcat-webapplication = {
+      tomcatPort = 8080;
+    };
+
+    mysql-database = {
+      mysqlPort = 3306;
+      mysqlUsername = "root";
+      mysqlPassword = "admin";
+    };
+
+    system = "x86_64-linux";
+    numOfCores = 1;
+    clientInterface = "disnix-ssh-client";
+    targetProperty = "hostname";
+  };
+};
+</programlisting>
+				</para>
+				<para>
+					If none of these advanced settings are provided, Disnix will assume
+					that the every target machine has the same system architecture (<varname>system</varname>)
+					as the coordinator machine (so that the Nix package manager does not have
+					to delegate a build to a machine that has a compatible architecture), we use the Disnix
+					SSH client (<code>disnix-ssh-client</code>) interface executable (<varname>clientInterface</varname>)
+					to connect to the target machine (using the <varname>hostname</varname> property as a connection
+					string) and we only run one activity per target machine concurrently: <varname>numOfCores</varname>.
+				</para>
+			</listitem>
+		</itemizedlist>
+
+		<para>
+			In addition to unspecified properties (that need to be augmented with default
+			values), we also have properties that are abstract specifications. These
+			specifications need to be translated into more concrete representations:
+		</para>
+
+		<itemizedlist>
+			<listitem>
+				<para>
+					As explained in <xref linkend="chap-advanced-options" />, the <varname>targets</varname>
+					property -- that maps services to target machines -- does not only map services to machines, but
+					also to container services hosted on that machine. In most cases, you will only use one container
+					instance per service type -- for example, running two MySQL DBMS services (e.g. one on TCP port
+					<code>3306</code> and another on <code>3307</code>) is far less common use case scenario.
+				</para>
+				<para>
+					If no container mapping is provided, Disnix will do an auto-mapping to a container service
+					that corresponds to the service's type property.
+				</para>
+				<para>
+					The <varname>staff</varname> databases's <varname>targets</varname> property
+					gets translated into the following property:
+<programlisting>
+{system, pkgs}:
+
+rec
+{
+  services = rec {
+    staff = {
+      name = "staff";
+      ...
+
+      targets = [
+        rec {
+          selectedContainer = "mysql-database";
+
+          container = {
+            mysqlPort = 3306;
+            mysqlUsername = "root";
+            mysqlPassword = builtins.readFile ./mysqlpw;
+          };
+
+          properties = {
+            hostname = "test2.example.org";
+          };
+
+          clientInterface = "disnix-ssh-client";
+          targetProperty = "hostname";
+          numOfCores = 1;
+          system = "x86_64-linux";
+        }
+      ];
+    };
+  };
+
+  infrastructure = ...
+}
+</programlisting>
+				</para>
+				<para>
+					As may be observed, the target provides a <varname>selectedContainer</varname>
+					property to indicate to what container the service needs to be deployed.
+					The properties of all the containers that the service does not need to know
+					about are discarded.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Another property that needs to be extended is the inter-dependency specifications
+					(<varname>dependsOn</varname> and <varname>connectsTo</varname>). Typically,
+					inter-dependency specifications are only specified on a functional level -- a service
+					typically only specifies that it depends on another service disregarding the location
+					where that service may have been deployed.
+				</para>
+				<para>
+					If no target location is specified, then Disnix will assume that the service has
+					an inter-dependency on all possible locations where that dependency may be
+					deployed. If an inter-dependency is redundantly deployed, then that service also
+					has an inter-dependency on all redundant replicas.
+				</para>
+				<para>
+					The fact that it is also possible to specify the targets of the inter-dependencies,
+					makes it also possible to optimize certain deployments. For example, you can also
+					optimize a service's performance by forcing it to bind to an inter-dependency that
+					is deployed to the same target machine, so that it will not be affected by slow network
+					connectivity.
+				</para>
+				<para>
+					The dependsOn property of the <varname>StaffService</varname> service will translate to:
+<programlisting>
+dependsOn = {
+  staff = {
+    name = "staff";
+    pkg = customPkgs.staff;
+    dependsOn = {};
+    type = "mysql-database";
+
+    targets = [
+      {
+        selectedContainer = "mysql-database";
+
+        container = {
+          mysqlPort = 3306;
+          mysqlUsername = "root";
+          mysqlPassword = "admin";
+        };
+
+        properties = {
+          hostname = "test2.example.org";
+        };
+      }
+    ];
+  };
+};
+</programlisting>
+					In the above code fragment, the inter-dependency has been augmented with a <varname>targets</varname>
+					property corresponding to the targets where that inter-dependency has been deployed to.
+				</para>
+			</listitem>
+		</itemizedlist>
+
+		<para>
+			The last ingredient to generate an executable specification is building the services from source code so that we can map
+			their build results to the target machines. To accomplish this, Disnix generates two invisible helper attributes for
+			each service:
+<programlisting>
+StaffService = {
+  name = "StraffTracker";
+  pkg = customPkgs.StaffService;
+  dependsOn = {
+    inherit staff;
+  };
+  type = "tomcat-webapplication";
+
+  ...
+
+  _systemsPerTarget = [ "x86_64-linux" "x86_64-darwin" ];
+  _pkgsPerSystems = {
+    "x86_64-linux" = "/nix/store/91abq...-StaffService";
+    "x86_64-darwin" = "/nix/store/f1ap2...-StaffService";
+  };
+};
+</programlisting>
+		</para>
+
+		<para>
+			The above code example shows the two "hidden" properties augmented to the <varname>StaffService</varname> service:
+		</para>
+
+		<itemizedlist>
+			<listitem>
+				<para>
+					The <varname>_systemsPerTarget</varname> specifies for which CPU architecture/operating systems the service
+					must be built. Normally, services are target agnostic and should always yield the same Nix store path (with
+					a build that is nearly bit-identical), but the system architecture of the target machine is an exception to
+					deviate from this property -- it is also possible to deploy the same service to different CPU architectures/operating
+					systems. In such cases the build result could be different.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					The <varname>_pkgsPerSystem</varname> specifies for each system architecture, the Nix store path to the build
+					result. A side effect of evaluating the Nix store path is the service also gets built from source code.
+				</para>
+			</listitem>
+		</itemizedlist>
+
+		<para>
+			Finally, it will compose a deployment architecture model attribute named: <varname>targetPackages</varname>
+			(or augment the existing <varname>targetPackages</varname> attribute set if one exists already) that refers to a list of
+			Nix store paths to be distributed to each machine in the network:
+<programlisting>
+{
+  targetPackages = {
+    test1 = [
+      "/nix/store/91abq...-HelloDBService"
+    ];
+
+    test2 = [
+      "/nix/store/p9af1...-HelloMySQLDB"
+    ];
+  };
+
+  services = ...
+  infrastructure = ...
+}
+</programlisting>
+		</para>
+	</section>
+
+	<section>
+		<title>Generating a deployment model</title>
+
+		<para>
+			With a normalized architecture model, we can generate an executable specification that is called the
+			<emphasis>deployment model</emphasis>. The deployment model can be used for executing all remaining
+			activities after the services have been built.
+		</para>
+
+		<para>
+			<example xml:id="ex-deployment-model">
+				<title>A deployment model for the <code>StaffTracker</code> example</title>
+<programlisting>
+{
+  profiles = { <co xml:id='co-deploy-model-profiles' />
+    test1 = "/nix/store/...-test1";
+    test2 = "/nix/store/...-test2";
+  };
+
+  services = { <co xml:id='co-deploy-model-services' />
+    "ekfekrerw..." = {
+      name = "staff";
+      pkg = "/nix/store/...";
+      type = "mysql-database";
+      dependsOn = [
+      ];
+      connectsTo = [
+      ];
+    };
+
+    "dfsjs9349..." = {
+      name = "StaffService";
+      pkg = "/nix/store/...";
+      type = "tomcat-webapplication";
+      dependsOn = [
+        { target = "test1";
+          container = "mysql-database";
+          service = "ekfekrerw...";
+        }
+      ];
+      connectsTo = [
+      ];
+    };
+  };
+
+  infrastructure = { <co xml:id='co-deploy-model-infrastructure' />
+    test1 = {
+      properties = {
+        hostname = "test1.example.org";
+      };
+      containers = {
+        apache-webapplication = {
+          documentRoot = "/var/www";
+        };
+      };
+      system = "x86_64-linux";
+      numOfCores = 1;
+      clientInterface = "disnix-ssh-client";
+      targetProperty = "hostname";
+    };
+    test2 = {
+      properties = {
+        hostname = "test2.example.org";
+      };
+      containers = {
+        mysql-database = {
+          mysqlPort = "3306";
+        };
+      };
+      system = "x86_64-linux";
+      numOfCores = 1;
+      clientInterface = "disnix-ssh-client";
+      targetProperty = "hostname";
+    };
+  };
+
+  serviceMappings = [ <co xml:id='co-deploy-model-service-mappings' />
+    { service = "ekfekrerw...";
+      target = "test2";
+      container = "mysql-database";
+    }
+    { service = "dfsjs9349...";
+      target = "test1";
+      container = "tomcat-webapplication";
+    }
+  ];
+
+  snapshotMappings = [ <co xml:id='co-deploy-model-snapshot-mappings' />
+    { service = "ekfekrerw...";
+      component = "rooms";
+      container = "mysql-database";
+      target = "test2";
+    }
+  ];
+}
+</programlisting>
+			</example>
+
+			<xref linkend="ex-deployment-model" /> shows an example of a deployment model where the normalized deployment architecture model can be translated to:
+		</para>
+
+		<calloutlist>
+			<callout arearefs='co-deploy-model-profiles'>
+				<para>
+					The <varname>profiles</varname> attribute refers to Nix profiles
+					mapped to target machines and is derived from the <varname>targetPackages</varname>
+					property in the normalized deployment architecture model. From the <varname>profiles</varname>
+					property Disnix derives all steps of the <emphasis>distribution phase</emphasis> in which
+					all packages and their intra-dependencies are copied to machines in the network.
+				</para>
+			</callout>
+			<callout arearefs='co-deploy-model-services'>
+				<para>
+					The <varname>services</varname> attribute refers to all services that can be mapped to machines.
+					The keys in this attribute set are SHA256 hash codes are recursively computed from the
+					Nix store path of the package, the type, and all the inter-dependency mappings.
+					Using hash codes to identify the services makes it possible to easily see whether a service is
+					identical to another or not (by comparing hash codes), so that upgrades can be done more efficiently.
+				</para>
+			</callout>
+			<callout arearefs='co-deploy-model-infrastructure'>
+				<para>
+					The <varname>infrastructure</varname> attribute is unchanged compared to the deployment
+					architecture model and still stores target machine properties.
+				</para>
+			</callout>
+			<callout arearefs='co-deploy-model-service-mappings'>
+				<para>
+					The <varname>serviceMappings</varname> attribute maps services in the <varname>services</varname>
+					attribute set, to target machines in the network stored in the <varname>infrastructure</varname>
+					attribute set and containers hosted on the target machines.
+				</para>
+				<para>
+					From these mappings, Disnix can derive the steps to activate and deactivate the
+					services of which a system is composed, ensure that all dependencies are present
+					and that the services are activated or deactivated in the right order.
+				</para>
+			</callout>
+			<callout arearefs='co-deploy-model-snapshot-mappings'>
+				<para>
+					The <varname>snapshotMappings</varname> attribute state that for each services mapped to a
+					target machines and container, we also want to <emphasis>migrate</emphasis> the state
+					(by taking and restoring snapshots) if the service gets moved from one machine to another.
+				</para>
+			</callout>
+		</calloutlist>
+
+		<para>
+			Although a deployment model is quite low-level, it is also possible to manually write one, and deploy it by running:
+<screen>
+$ disnix-env -D deployment.nix
+</screen>
+			<command>disnix-env</command> invokes an external executable called: <command>disnix-deploy</command> that executes
+			the remaining activities of deployment process after the build process succeeds.
+			<command>disnix-depoy</command> as well as the tools that execute individual deployment activities are driven by <emphasis>manifest</emphasis>
+			files. A manifest file is simply a one-on-one translation of the deployment model in the Nix expression language
+			to XML following the NixXML convention.
+		</para>
+	</section>
+
+	<section>
+		<title>Generating a build model</title>
+
+		<para>
+			As explained in <xref linkend="chap-basicusage" />, Disnix can also optionally delegate builds to the target machines in the network.
+			When build delegation is enabled, Disnix generates a <emphasis>build model</emphasis> from a normalized deployment architecture model:
+
+			<example xml:id="ex-build-model">
+				<title>A build model for the <code>StaffTracker</code> example</title>
+<programlisting>
+{
+  derivations = [ <co xml:id='co-build-model-derivations' />
+    { "/nix/store/staff-....drv"; interface = "test1"; }
+    { "/nix/store/StaffService-....drv"; interface = "test2"; }
+  ];
+
+  interfaces = { <co xml:id='co-build-model-interfaces' />
+    test1 = {
+      targetAddress = "test1.example.org";
+      clientInterface = "disnix-ssh-client";
+    };
+
+    test2 = {
+      targetAddress = "test2.example.org";
+      clientInterface = "disnix-ssh-client";
+    };
+  };
+}
+</programlisting>
+			</example>
+			<xref linkend="ex-build-model" /> shows an example of a build model where the normalized deployment architecture model can be translated to:
+		</para>
+
+		<calloutlist>
+			<callout arearefs='co-build-model-derivations'>
+				<para>
+					The <varname>derivations</varname> attribute maps Nix store derivation files to machines in the network that should perform the build.
+					This information is used by Disnix to delegate store derivation closure to target machines, use Nix to build the packages
+					remotely, and fetch the build results back to the coordinator machine.
+				</para>
+			</callout>
+			<callout arearefs='co-build-model-interfaces'>
+				<para>
+					The <varname>interfaces</varname> attribute is a sub set of the <varname>infrastructure</varname> model that contains
+					the connectivity settings for each target machine.
+				</para>
+			</callout>
+		</calloutlist>
+
+		<para>
+			By running the following command, you can execute a build model to delegate builds to
+			remote machines and fetch their results back:
+<screen>
+$ disnix-delegate -B build.nix
+</screen>
+			If the build delegation option is enabled (for example, by passing <code>--build-on-targets</code>
+			parameter to <command>disnix-env</command>) then Disnix will work a so-called <emphasis>distributed derivation file</emphasis>.
+			Similar to a manifest file, a distributed derivation file is a one-on-one translation from the build model
+			written in the Nix expression language to XML using the NixXML convention.
+		</para>
+	</section>
+</chapter>

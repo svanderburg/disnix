@@ -3,7 +3,7 @@
          xml:id="chap-packages">
 
 	<title>Using Disnix as a remote package deployer</title>
-	
+
 	<para>
 		As described in the previous chapters, Disnix's primary purpose is deploying <emphasis>systems</emphasis> that
 		can be decomposed into <emphasis>services</emphasis> to networks of machines.
@@ -11,7 +11,7 @@
 		This chapter describes how we can do remote package deployment by instructing Disnix to only use a relevant
 		subset of features.
 	</para>
-	
+
 	<section>
 		<title>Specifying packages as services</title>
 		
@@ -37,12 +37,12 @@
 
 stdenv.mkDerivation {
   name = "mc-4.8.12";
-  
+
   src = fetchurl {
     url = http://www.midnight-commander.org/downloads/mc-4.8.12.tar.bz2;
     sha256 = "15lkwcis0labshq9k8c2fqdwv8az2c87qpdqwp5p31s8gb1gqm0h";
   };
-  
+
   buildInputs = [ pkgconfig perl glib gpm slang zip unzip file gettext
       libX11 libICE e2fsprogs ];
 
@@ -57,7 +57,7 @@ stdenv.mkDerivation {
 		      </example>
 		</para>
 	</section>
-	
+
 	<section>
 		<title>Composing packages locally</title>
 
@@ -92,7 +92,7 @@ in
 self
 			</programlisting>
 		</example>
-		
+
 		<para>
 			<xref linkend="ex-packages-composition" /> composes the Midnight Commander package by providing its intra-dependencies
 			as function parameters. The third attribute (<varname>mc</varname>) invokes a function named: <code>callPackage {}</code>
@@ -203,6 +203,16 @@ $ disnix-env -i infrastructure.nix -P packages.nix
 <screen>
 $ disnix-env --build-on-targets -i infrastructure.nix -P packages.nix
 </screen>
+		</para>
+
+		<para>
+			It is also possible to combine a packages model with the traditional three Disnix input models:
+<screen>
+$ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix -P packages.nix
+</screen>
+			When combining a packages model with the traditional three Disnix models, it
+			is possible to deploy additional supplemental packages in conjunction with
+			the services that Disnix deploys.
 		</para>
 	</section>
 
