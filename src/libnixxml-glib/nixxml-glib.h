@@ -48,8 +48,21 @@ void NixXML_delete_node_glib(NixXML_Node *node);
 int NixXML_compare_nodes_glib(const NixXML_Node *left, const NixXML_Node *right);
 
 /**
- * Recursively parses a type-annotated XML document using GHashTable structs
- * for representing attribute sets and GPtrArray for representing lists.
+ * Recursively parses a type-annotated XML document (with simple notation for
+ * attribute sets) using GHashTable structs for representing attribute sets and
+ * GPtrArray for representing lists.
+ *
+ * @param element Root element of the XML document
+ * @param type_property_name Name of the attribute that contains the type annotation
+ * @param userdata Parameters propagated to all parse functions
+ * @return A NixXML_Node
+ */
+void *NixXML_generic_parse_simple_expr_glib(xmlNodePtr element, const char *type_property_name, void *userdata);
+
+/**
+ * Recursively parses a type-annotated XML document (with verbose notation for
+ * attribute sets) using GHashTable structs for representing attribute sets and
+ * GPtrArray for representing lists.
  *
  * @param element Root element of the XML document
  * @param type_property_name Name of the attribute that contains the type annotation
@@ -57,7 +70,7 @@ int NixXML_compare_nodes_glib(const NixXML_Node *left, const NixXML_Node *right)
  * @param userdata Parameters propagated to all parse functions
  * @return A NixXML_Node
  */
-void *NixXML_generic_parse_expr_glib(xmlNodePtr element, const char *type_property_name, const char *name_property_name, void *userdata);
+void *NixXML_generic_parse_verbose_expr_glib(xmlNodePtr element, const char *type_property_name, const char *name_property_name, void *userdata);
 
 /**
  * Generically prints a Nix representation of a data structure of XML_Node

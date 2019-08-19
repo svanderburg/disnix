@@ -62,9 +62,9 @@ int NixXML_compare_nodes(const NixXML_Node *left, const NixXML_Node *right, NixX
             case NIX_XML_TYPE_BOOL:
                 return (xmlStrcmp((xmlChar*)left->value, (xmlChar*)right->value) == 0);
             case NIX_XML_TYPE_LIST:
-                return compare_lists(left, right);
+                return compare_lists(left->value, right->value);
             case NIX_XML_TYPE_ATTRSET:
-                return compare_tables(left, right);
+                return compare_tables(left->value, right->value);
             default:
                 return FALSE;
         }

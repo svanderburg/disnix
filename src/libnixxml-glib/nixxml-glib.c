@@ -57,9 +57,14 @@ int NixXML_compare_nodes_glib(const NixXML_Node *left, const NixXML_Node *right)
     return NixXML_compare_nodes(left, right, (NixXML_CompareObjectFunc)compare_lists, (NixXML_CompareObjectFunc)compare_attrsets);
 }
 
-void *NixXML_generic_parse_expr_glib(xmlNodePtr element, const char *type_property_name, const char *name_property_name, void *userdata)
+void *NixXML_generic_parse_simple_expr_glib(xmlNodePtr element, const char *type_property_name, void *userdata)
 {
-    return NixXML_generic_parse_expr(element, type_property_name, name_property_name, NixXML_create_g_ptr_array_from_element, NixXML_create_g_hash_table_from_element, NixXML_add_value_to_g_ptr_array, NixXML_insert_into_g_hash_table, NixXML_finalize_g_ptr_array);
+    return NixXML_generic_parse_simple_expr(element, type_property_name, NixXML_create_g_ptr_array_from_element, NixXML_create_g_hash_table_from_element, NixXML_add_value_to_g_ptr_array, NixXML_insert_into_g_hash_table, NixXML_finalize_g_ptr_array);
+}
+
+void *NixXML_generic_parse_verbose_expr_glib(xmlNodePtr element, const char *type_property_name, const char *name_property_name, void *userdata)
+{
+    return NixXML_generic_parse_verbose_expr(element, type_property_name, name_property_name, NixXML_create_g_ptr_array_from_element, NixXML_create_g_hash_table_from_element, NixXML_add_value_to_g_ptr_array, NixXML_insert_into_g_hash_table, NixXML_finalize_g_ptr_array);
 }
 
 void NixXML_print_generic_expr_glib_nix(FILE *file, const NixXML_Node *node, const int indent_level)

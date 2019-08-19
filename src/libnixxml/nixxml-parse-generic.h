@@ -34,6 +34,8 @@ typedef struct
     const char *type_property_name;
     /** Name of the attribute that refers to the name of attribute */
     const char *name_property_name;
+    /** Indicates whether we should parse verbose XML or simple XML */
+    int verbose_xml;
     /** Pointer to a function that constructs a list-like data structure */
     NixXML_CreateObjectFunc create_list;
     /** Pointer to a function that constructs a table-like data structure */
@@ -144,7 +146,23 @@ void *NixXML_finalize_generic_list(void *list, void *userdata);
 void *NixXML_parse_expr(xmlNodePtr element, void *userdata);
 
 /**
- * Recursively parses a type-annotated XML document.
+ * Recursively parses a type-annotated XML document using the simple notation
+ * for attribute sets.
+ *
+ * @param element Root element of the XML document
+ * @param type_property_name Name of the attribute that contains the type annotation
+ * @param create_list Pointer to a function that constructs a list-like data structure
+ * @param create_table Pointer to a function that constructs a table-like data structure
+ * @param add_element Pointer to a function that adds an element to the list-like data structure
+ * @param insert_object Pointer to a function that inserts an object into the table-like data structure
+ * @param finalize_list Pointer to a function that finalizes the list-like data structure by carrying out additional house keeping tasks
+ * @return A list-like or table-like data structure, string or NULL if the data cannot be parsed.
+ */
+NixXML_Node *NixXML_generic_parse_simple_expr(xmlNodePtr element, const char *type_property_name, NixXML_CreateObjectFunc create_list, NixXML_CreateObjectFunc create_table, NixXML_AddElementFunc add_element, NixXML_InsertObjectFunc insert_object, NixXML_FinalizeListFunc finalize_list);
+
+/**
+ * Recursively parses a type-annotated XML document using the verbose notation
+ * for attribute sets.
  *
  * @param element Root element of the XML document
  * @param type_property_name Name of the attribute that contains the type annotation
@@ -156,7 +174,7 @@ void *NixXML_parse_expr(xmlNodePtr element, void *userdata);
  * @param finalize_list Pointer to a function that finalizes the list-like data structure by carrying out additional house keeping tasks
  * @return A list-like or table-like data structure, string or NULL if the data cannot be parsed.
  */
-NixXML_Node *NixXML_generic_parse_expr(xmlNodePtr element, const char *type_property_name, const char *name_property_name, NixXML_CreateObjectFunc create_list, NixXML_CreateObjectFunc create_table, NixXML_AddElementFunc add_element, NixXML_InsertObjectFunc insert_object, NixXML_FinalizeListFunc finalize_list);
+NixXML_Node *NixXML_generic_parse_verbose_expr(xmlNodePtr element, const char *type_property_name, const char *name_property_name, NixXML_CreateObjectFunc create_list, NixXML_CreateObjectFunc create_table, NixXML_AddElementFunc add_element, NixXML_InsertObjectFunc insert_object, NixXML_FinalizeListFunc finalize_list);
 
 #ifdef __cplusplus
 }

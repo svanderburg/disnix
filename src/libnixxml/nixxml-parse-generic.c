@@ -21,6 +21,9 @@
 
 #include "nixxml-parse-generic.h"
 
+#define TRUE 1
+#define FALSE 0
+
 static void *parse_generic_value(xmlNodePtr element, NixXML_Type type, void *userdata)
 {
     NixXML_Node *node = (NixXML_Node*)malloc(sizeof(NixXML_Node));
@@ -108,7 +111,12 @@ void *NixXML_parse_expr(xmlNodePtr element, void *userdata)
     else if(xmlStrcmp(type, (xmlChar*) "list") == 0)
         return NixXML_parse_list(element, NULL, params, NixXML_create_generic_list, NixXML_add_element_to_generic_list, NixXML_parse_expr, NixXML_finalize_generic_list);
     else if(xmlStrcmp(type, (xmlChar*) "attrs") == 0)
-        return NixXML_parse_verbose_attrset(element, NULL, params->name_property_name, params, NixXML_create_generic_attrset, NixXML_parse_expr, NixXML_insert_object_into_generic_attrset);
+    {
+        if(params->verbose_xml)
+            return NixXML_parse_verbose_attrset(element, NULL, params->name_property_name, params, NixXML_create_generic_attrset, NixXML_parse_expr, NixXML_insert_object_into_generic_attrset);
+        else
+            return NixXML_parse_simple_attrset(element, params, NixXML_create_generic_attrset, NixXML_parse_expr, NixXML_insert_object_into_generic_attrset);
+    }
     else if(xmlStrcmp(type, (xmlChar*) "string") == 0)
         return NixXML_parse_generic_string(element, userdata);
     else if(xmlStrcmp(type, (xmlChar*) "int") == 0)
@@ -124,15 +132,32 @@ void *NixXML_parse_expr(xmlNodePtr element, void *userdata)
     }
 }
 
-NixXML_Node *NixXML_generic_parse_expr(xmlNodePtr element, const char *type_property_name, const char *name_property_name, NixXML_CreateObjectFunc create_list, NixXML_CreateObjectFunc create_table, NixXML_AddElementFunc add_element, NixXML_InsertObjectFunc insert_object, NixXML_FinalizeListFunc finalize_list)
+NixXML_Node *NixXML_generic_parse_simple_expr(xmlNodePtr element, const char *type_property_name, NixXML_CreateObjectFunc create_list, NixXML_CreateObjectFunc create_table, NixXML_AddElementFunc add_element, NixXML_InsertObjectFunc insert_object, NixXML_FinalizeListFunc finalize_list)
 {
     NixXML_ParseExprParams params;
     params.type_property_name = type_property_name;
-    params.name_property_name = name_property_name;
+    params.name_property_name = NULL;
+    params.verbose_xml = FALSE;
     params.create_list = create_list;
     params.create_table = create_table;
     params.add_element = add_element;
     params.insert_object = insert_object;
     params.finalize_list = finalize_list;
+
+    return (NixXML_Node*)NixXML_parse_expr(element, &params);
+}
+
+NixXML_Node *NixXML_generic_parse_verbose_expr(xmlNodePtr element, const char *type_property_name, const char *name_property_name, NixXML_CreateObjectFunc create_list, NixXML_CreateObjectFunc create_table, NixXML_AddElementFunc add_element, NixXML_InsertObjectFunc insert_object, NixXML_FinalizeListFunc finalize_list)
+{
+    NixXML_ParseExprParams params;
+    params.type_property_name = type_property_name;
+    params.name_property_name = name_property_name;
+    params.verbose_xml = TRUE;
+    params.create_list = create_list;
+    params.create_table = create_table;
+    params.add_element = add_element;
+    params.insert_object = insert_object;
+    params.finalize_list = finalize_list;
+
     return (NixXML_Node*)NixXML_parse_expr(element, &params);
 }

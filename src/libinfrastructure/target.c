@@ -27,16 +27,8 @@
 #include <nixxml-ghashtable.h>
 #include <nixxml-gptrarray.h>
 #include <nixxml-glib.h>
-
-static void *generic_parse_expr(xmlNodePtr element, void *userdata)
-{
-    return NixXML_generic_parse_expr_glib(element, "type", "name", userdata);
-}
-
-static void *parse_property_table(xmlNodePtr element, void *userdata)
-{
-    return NixXML_parse_g_hash_table_verbose(element, "property", "name", userdata, generic_parse_expr);
-}
+#include "targetpropertiestable.h"
+#include "containerstable.h"
 
 static void *create_target_from_element(xmlNodePtr element, void *userdata)
 {
@@ -67,9 +59,9 @@ static void parse_and_insert_target_attributes(xmlNodePtr element, void *table, 
         }
     }
     else if(xmlStrcmp(key, (xmlChar*) "properties") == 0)
-        target->properties_table = parse_property_table(element, userdata);
+        target->properties_table = parse_target_properties_table(element, userdata);
     else if(xmlStrcmp(key, (xmlChar*) "containers") == 0)
-        target->containers_table = NixXML_parse_g_hash_table_verbose(element, "container", "name", userdata, parse_property_table);
+        target->containers_table = parse_containers_table(element, userdata);
 }
 
 void *parse_target(xmlNodePtr element, void *userdata)
@@ -88,21 +80,11 @@ void *parse_target(xmlNodePtr element, void *userdata)
     return target;
 }
 
-static void delete_property_table(GHashTable *property_table)
-{
-    NixXML_delete_g_hash_table(property_table, (NixXML_DeleteGHashTableValueFunc)NixXML_delete_node_glib);
-}
-
-static void delete_containers_table(GHashTable *containers_table)
-{
-    NixXML_delete_g_hash_table(containers_table, (NixXML_DeleteGHashTableValueFunc)delete_property_table);
-}
-
 void delete_target(Target *target)
 {
     if(target != NULL)
     {
-        delete_property_table(target->properties_table);
+        delete_target_properties_table(target->properties_table);
         delete_containers_table(target->containers_table);
 
         xmlFree(target->system);
@@ -149,19 +131,9 @@ int check_target(const Target *target)
     return status;
 }
 
-static int compare_property_tables(GHashTable *property_table1, GHashTable *property_table2)
-{
-    return NixXML_compare_g_hash_tables(property_table1, property_table2, (NixXML_CompareGHashTableValueFunc)NixXML_compare_nodes_glib);
-}
-
-static int compare_container_tables(GHashTable *containers_table1, GHashTable *containers_table2)
-{
-    return NixXML_compare_g_hash_tables(containers_table1, containers_table2, (NixXML_CompareGHashTableValueFunc)compare_property_tables);
-}
-
 int compare_targets(const Target *left, const Target *right)
 {
-    return (NixXML_compare_g_property_tables(left->properties_table, right->properties_table)
+    return (compare_target_properties_tables(left->properties_table, right->properties_table)
       && compare_container_tables(left->containers_table, right->containers_table)
       && (xmlStrcmp(left->system, right->system) == 0)
       && (xmlStrcmp(left->client_interface, right->client_interface) == 0)
@@ -171,27 +143,12 @@ int compare_targets(const Target *left, const Target *right)
 
 /* Nix printing infrastructure */
 
-static void print_generic_expr_nix(FILE *file, const void *value, const int indent_level, void *userdata)
-{
-    NixXML_print_generic_expr_glib_nix(file, (const NixXML_Node*)value, indent_level);
-}
-
-static void print_properties_nix(FILE *file, const void *value, const int indent_level, void *userdata)
-{
-    NixXML_print_g_hash_table_nix(file, (GHashTable*)value, indent_level, userdata, print_generic_expr_nix);
-}
-
-static void print_containers_nix(FILE *file, const void *value, const int indent_level, void *userdata)
-{
-    NixXML_print_g_hash_table_nix(file, (GHashTable*)value, indent_level, userdata, print_properties_nix);
-}
-
 static void print_target_attributes_nix(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)
 {
     Target *target = (Target*)value;
 
-    NixXML_print_attribute_nix(file, "properties", target->properties_table, indent_level, userdata, print_properties_nix);
-    NixXML_print_attribute_nix(file, "containers", target->containers_table, indent_level, userdata, print_containers_nix);
+    NixXML_print_attribute_nix(file, "properties", target->properties_table, indent_level, userdata, (NixXML_PrintValueFunc)print_target_properties_table_nix);
+    NixXML_print_attribute_nix(file, "containers", target->containers_table, indent_level, userdata, (NixXML_PrintValueFunc)print_containers_table_nix);
     if(target->system != NULL)
         NixXML_print_attribute_nix(file, "system", target->system, indent_level, userdata, NixXML_print_string_nix);
     if(target->client_interface != NULL)
@@ -208,27 +165,12 @@ void print_target_nix(FILE *file, const Target *target, const int indent_level, 
 
 /* XML printing infrastructure */
 
-static void print_generic_expr_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
-{
-    NixXML_print_generic_expr_glib_verbose_xml(file, (const NixXML_Node*)value, indent_level, "property", "attr", "name", "list", "type");
-}
-
-static void print_properties_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
-{
-    NixXML_print_g_hash_table_verbose_xml(file, (GHashTable*)value, "property", "name", indent_level, NULL, userdata, print_generic_expr_xml);
-}
-
-static void print_containers_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata)
-{
-    NixXML_print_g_hash_table_verbose_xml(file, (GHashTable*)value, "container", "name", indent_level, NULL, userdata, print_properties_xml);
-}
-
 static void print_target_attributes_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata, NixXML_PrintXMLValueFunc print_value)
 {
     Target *target = (Target*)value;
 
-    NixXML_print_simple_attribute_xml(file, "properties", target->properties_table, indent_level, NULL, userdata, print_properties_xml);
-    NixXML_print_simple_attribute_xml(file, "containers", target->containers_table, indent_level, NULL, userdata, print_containers_xml);
+    NixXML_print_simple_attribute_xml(file, "properties", target->properties_table, indent_level, NULL, userdata, (NixXML_PrintXMLValueFunc)print_target_properties_table_xml);
+    NixXML_print_simple_attribute_xml(file, "containers", target->containers_table, indent_level, NULL, userdata, (NixXML_PrintXMLValueFunc)print_containers_table_xml);
     if(target->system != NULL)
         NixXML_print_simple_attribute_xml(file, "system", target->system, indent_level, NULL, userdata, NixXML_print_string_xml);
     if(target->client_interface != NULL)

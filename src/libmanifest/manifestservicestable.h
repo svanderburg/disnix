@@ -25,7 +25,7 @@
 #include "manifestservice.h"
 
 /**
- * Parses an XML document representing a manifest service
+ * Parses an XML document representing a manifest service table
  *
  * @param element XML element to parse.
  * @param userdata Arbitrary user data that is propagated to all parse functions
