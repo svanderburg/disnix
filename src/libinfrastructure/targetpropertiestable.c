@@ -23,7 +23,7 @@
 
 static void *generic_parse_expr(xmlNodePtr element, void *userdata)
 {
-    return NixXML_generic_parse_expr_glib(element, "type", "name", userdata);
+    return NixXML_generic_parse_verbose_expr_glib(element, "type", "name", userdata);
 }
 
 void *parse_target_properties_table(xmlNodePtr element, void *userdata)
