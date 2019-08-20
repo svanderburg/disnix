@@ -36,6 +36,8 @@ simpleTest {
       # which should return the path we have given.
       # This test should succeed.
 
+      $server->waitForJob("sshd");
+
       my $result = $client->mustSucceed("${env} disnix-ssh-client --target server --print-invalid /nix/store/00000000000000000000000000000000-invalid");
 
       if($result =~ /\/nix\/store\/00000000000000000000000000000000-invalid/) {
