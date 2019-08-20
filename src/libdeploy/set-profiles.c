@@ -26,8 +26,9 @@
 static pid_t set_profile_mapping(void *data, gchar *target_name, xmlChar *profile_name, Target *target)
 {
     char *profile = (char*)data;
+    gchar *target_property = find_target_key(target);
     g_print("[target: %s]: Setting Disnix profile: %s\n", target_name, profile_name);
-    return exec_set((char*)target->client_interface, (char*)target_name, profile, (char*)profile_name);
+    return exec_set((char*)target->client_interface, target_property, profile, (char*)profile_name);
 }
 
 static void complete_set_profile_mapping(void *data, gchar *target_name, xmlChar *profile_name, Target *target, ProcReact_Status status, int result)

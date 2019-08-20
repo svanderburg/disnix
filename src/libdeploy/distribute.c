@@ -25,8 +25,9 @@
 static pid_t transfer_profile_mapping_to(void *data, gchar *target_name, xmlChar *profile_name, Target *target)
 {
     char *paths[] = { (char*)profile_name, NULL };
+    gchar *target_property = find_target_key(target);
     g_print("[target: %s]: Receiving intra-dependency closure of profile: %s\n", target_name, profile_name);
-    return exec_copy_closure_to((char*)target->client_interface, (char*)target_name, paths);
+    return exec_copy_closure_to((char*)target->client_interface, target_property, paths);
 }
 
 static void complete_transfer_profile_mapping_to(void *data, gchar *target_name, xmlChar *profile_name, Target *target, ProcReact_Status status, int result)

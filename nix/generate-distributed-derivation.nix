@@ -22,7 +22,6 @@ let
 
   generateDistributedDerivation = {architecture}:
     {
-      #build = generateDerivationPerTarget architecture.services;
       derivationMappings = generateDerivationMappings {
         inherit (architecture) targetPackages;
       };
