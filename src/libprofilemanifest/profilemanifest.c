@@ -59,6 +59,8 @@ ProfileManifest *create_profile_manifest_from_string(char *result)
     xmlNodePtr node_root;
     ProfileManifest *profile_manifest;
 
+    g_printerr("RESULT: %s\n", result);
+
     if((doc = xmlParseDoc((xmlChar*)result)) == NULL)
     {
         g_printerr("Error with parsing the profile manifest XML file!\n");
