@@ -39,68 +39,70 @@ static void print_usage(const char *command)
     "Options:\n\n"
 
     "Operations:\n"
-    "  --import                   Imports a given closure into the Nix store of the\n"
+    "      --import               Imports a given closure into the Nix store of the\n"
     "                             target machine\n"
-    "  --export                   Exports the closure of a given Nix store path of\n"
+    "      --export               Exports the closure of a given Nix store path of\n"
     "                             the target machine into a file\n"
-    "  --print-invalid            Prints all the paths that are not valid in the Nix\n"
+    "      --print-invalid        Prints all the paths that are not valid in the Nix\n"
     "                             store of the target machine\n"
     "  -r, --realise              Realises the given store derivation on the target\n"
     "                             machine\n"
-    "  --set                      Creates a Disnix profile only containing the given\n"
+    "      --set                  Creates a Disnix profile only containing the given\n"
     "                             derivation on the target machine\n"
     "  -q, --query-installed      Queries all the installed services on the given\n"
     "                             target machine\n"
-    "  --query-requisites         Queries all the requisites (intra-dependencies) of\n"
+    "      --query-requisites     Queries all the requisites (intra-dependencies) of\n"
     "                             the given services on the target machine\n"
-    "  --collect-garbage          Collects garbage on the given target machine\n"
-    "  --activate                 Activates the given service on the target machine\n"
-    "  --deactivate               Deactivates the given service on the target machine\n"
-    "  --lock                     Acquires a lock on a Disnix profile of the target\n"
+    "      --collect-garbage      Collects garbage on the given target machine\n"
+    "      --activate             Activates the given service on the target machine\n"
+    "      --deactivate           Deactivates the given service on the target machine\n"
+    "      --lock                 Acquires a lock on a Disnix profile of the target\n"
     "                             machine\n"
-    "  --unlock                   Release the lock on a Disnix profile of the target\n"
+    "      --unlock               Release the lock on a Disnix profile of the target\n"
     "                             machine\n"
-    "  --snapshot                 Snapshots the logical state of a component on the\n"
+    "      --snapshot             Snapshots the logical state of a component on the\n"
     "                             given target machine\n"
-    "  --restore                  Restores the logical state of a component on the\n"
+    "      --restore              Restores the logical state of a component on the\n"
     "                             given target machine\n"
-    "  --delete-state             Deletes the state of a component on the given\n"
+    "      --delete-state         Deletes the state of a component on the given\n"
     "                             machine\n"
-    "  --query-all-snapshots      Queries all available snapshots of a component on\n"
+    "      --query-all-snapshots  Queries all available snapshots of a component on\n"
     "                             the given target machine\n"
-    "  --query-latest-snapshot    Queries the latest snapshot of a component on the\n"
+    "      --query-latest-snapshot\n"
+    "                             Queries the latest snapshot of a component on the\n"
     "                             given target machine\n"
-    "  --print-missing-snapshots  Prints the paths of all snapshots not present on\n"
+    "      --print-missing-snapshots\n"
+    "                             Prints the paths of all snapshots not present on\n"
     "                             the given target machine\n"
-    "  --import-snapshots         Imports the specified snapshots into the remote\n"
+    "      --import-snapshots     Imports the specified snapshots into the remote\n"
     "                             snapshot store\n"
-    "  --export-snapshots         Exports the specified snapshot to the local\n"
+    "      --export-snapshots     Exports the specified snapshot to the local\n"
     "                             snapshot store\n"
-    "  --resolve-snapshots        Converts the relative paths to the snapshots to\n"
+    "      --resolve-snapshots    Converts the relative paths to the snapshots to\n"
     "                             absolute paths\n"
-    "  --clean-snapshots          Removes older snapshots from the snapshot store\n"
-    "  --capture-config           Captures the configuration of the machine from the\n"
+    "      --clean-snapshots      Removes older snapshots from the snapshot store\n"
+    "      --capture-config       Captures the configuration of the machine from the\n"
     "                             Dysnomia container properties in a Nix expression\n"
-    "  --help                     Shows the usage of this command to the user\n"
-    "  --version                  Shows the version of this command to the user\n"
+    "      --help                 Shows the usage of this command to the user\n"
+    "      --version              Shows the version of this command to the user\n"
 
     "\nGeneral options:\n"
     "  -t, --target=TARGET        Specifies the target to connect to. This property\n"
     "                             is ignored by this client because it only supports\n"
     "                             loopback connections.\n"
-    "  --session-bus              Connects to the session bus instead of the system\n"
+    "      --session-bus          Connects to the session bus instead of the system\n"
     "                             bus. This is useful for testing/debugging purposes\n"
 
     "\nImport/Export/Import snapshots/Export snapshots options:\n"
-    "  --localfile                Specifies that the given paths are stored locally\n"
+    "      --localfile            Specifies that the given paths are stored locally\n"
     "                             and must be transferred to the remote machine if\n"
     "                             needed\n"
-    "  --remotefile               Specifies that the given paths are stored remotely\n"
+    "      --remotefile           Specifies that the given paths are stored remotely\n"
     "                             and must transferred from the remote machine if\n"
     "                             needed\n"
 
     "\nShell options:\n"
-    "  --command=COMMAND          Commands to execute in the shell session\n"
+    "      --command=COMMAND      Commands to execute in the shell session\n"
 
     "\nSet/Query installed/Lock/Unlock options:\n"
     "  -p, --profile=PROFILE      Name of the Disnix profile. Defaults to: default\n"
@@ -110,11 +112,11 @@ static void print_usage(const char *command)
     "                             profiles must be removed as well\n"
 
     "\nActivation/Deactivation/Snapshot/Restore/Delete state options:\n"
-    "  --type=TYPE                Specifies the activation module that should be\n"
+    "      --type=TYPE            Specifies the activation module that should be\n"
     "                             used, such as echo or process.\n"
-    "  --arguments=ARGUMENTS      Specifies the arguments passed to the Dysnomia\n"
+    "      --arguments=ARGUMENTS  Specifies the arguments passed to the Dysnomia\n"
     "                             module, which is a string with key=value pairs\n"
-    "  --container=CONTAINER      Name of the container in which the component is\n"
+    "      --container=CONTAINER  Name of the container in which the component is\n"
     "                             managed. If omitted it will default to the same\n"
     "                             value as the type.\n"
 
@@ -123,7 +125,7 @@ static void print_usage(const char *command)
     "  -c, --component=COMPONENT  Name of the component hosted in a container\n"
 
     "\nClean snapshots options:\n"
-    "  --keep=NUM                 Amount of snapshot generations to keep. Defaults\n"
+    "      --keep=NUM             Amount of snapshot generations to keep. Defaults\n"
     "                             to: 1\n"
     "  -C, --container=CONTAINER  Name of the container to filter on\n"
     "  -c, --component=COMPONENT  Name of the component to filter on\n"
@@ -187,7 +189,7 @@ int main(int argc, char *argv[])
     gchar **derivation = NULL, **arguments = NULL;
     unsigned int derivation_size = 0, arguments_size = 0, flags = 0;
     int keep = 1;
-    
+
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "rqt:p:dC:c:hv", long_options, &option_index)) != -1)
     {
@@ -305,10 +307,10 @@ int main(int argc, char *argv[])
                 return 0;
         }
     }
-    
+
     /* Validate options */
     profile = check_profile_option(profile);
-    
+
     /* Validate non-options */
     while(optind < argc)
     {
@@ -317,14 +319,14 @@ int main(int argc, char *argv[])
         derivation_size++;
         optind++;
     }
-    
+
     derivation = g_realloc(derivation, (derivation_size + 1) * sizeof(gchar*));
     derivation[derivation_size] = NULL;
-    
+
     /* Add NULL termination to the arguments vector */
     arguments = g_realloc(arguments, (arguments_size + 1) * sizeof(gchar*));
     arguments[arguments_size] = NULL;
-    
+
     /* Execute Disnix client */
     return run_disnix_client(operation, derivation, flags, profile, arguments, type, container, component, keep);
 }

@@ -44,54 +44,56 @@ standard \`disnix-client' which only provides loopback access.
 Options:
 
 Operations:
-  --import                   Imports a given closure into the Nix store of the
+      --import               Imports a given closure into the Nix store of the
                              target machine. Optionally, transfers the closure
                              from this machine to the target machine
-  --export                   Exports the closure of a given Nix store path of
+      --export               Exports the closure of a given Nix store path of
                              the target machine into a file, and optionally
                              downloads it
-  --print-invalid            Prints all the paths that are not valid in the Nix
+      --print-invalid        Prints all the paths that are not valid in the Nix
                              store of the target machine
   -r, --realise              Realises the given store derivation on the target
                              machine
-  --set                      Creates a Disnix profile only containing the given
+      --set                  Creates a Disnix profile only containing the given
                              derivation on the target machine
   -q, --query-installed      Queries all the installed services on the given
                              target machine
-  --query-requisites         Queries all the requisites (intra-dependencies) of
+      --query-requisites     Queries all the requisites (intra-dependencies) of
                              the given services on the target machine
-  --collect-garbage          Collects garbage on the given target machine
-  --activate                 Activates the given service on the target machine
-  --deactivate               Deactivates the given service on the target machine
-  --lock                     Acquires a lock on a Disnix profile of the target
+      --collect-garbage      Collects garbage on the given target machine
+      --activate             Activates the given service on the target machine
+      --deactivate           Deactivates the given service on the target machine
+      --lock                 Acquires a lock on a Disnix profile of the target
                              machine
-  --unlock                   Release the lock on a Disnix profile of the target
+      --unlock               Release the lock on a Disnix profile of the target
                              machine
-  --snapshot                 Snapshots the logical state of a component on the
+      --snapshot             Snapshots the logical state of a component on the
                              given target machine
-  --restore                  Restores the logical state of a component on the
+      --restore              Restores the logical state of a component on the
                              given target machine
-  --delete-state             Deletes the state of a component on the given
+      --delete-state         Deletes the state of a component on the given
                              machine
-  --query-all-snapshots      Queries all available snapshots of a component on
+      --query-all-snapshots  Queries all available snapshots of a component on
                              the given target machine
-  --query-latest-snapshot    Queries the latest snapshot of a component on the
+      --query-latest-snapshot
+                             Queries the latest snapshot of a component on the
                              given target machine
-  --print-missing-snapshots  Prints the paths of all snapshots not present on
+      --print-missing-snapshots
+                             Prints the paths of all snapshots not present on
                              the given target machine
-  --import-snapshots         Imports the specified snapshots into the remote
+      --import-snapshots     Imports the specified snapshots into the remote
                              snapshot store
-  --export-snapshots         Exports the specified snapshot to the local
+      --export-snapshots     Exports the specified snapshot to the local
                              snapshot store
-  --resolve-snapshots        Converts the relative paths to the snapshots to
+      --resolve-snapshots    Converts the relative paths to the snapshots to
                              absolute paths
-  --clean-snapshots          Removes older snapshots from the snapshot store
-  --capture-config           Captures the configuration of the machine from the
+      --clean-snapshots      Removes older snapshots from the snapshot store
+      --capture-config       Captures the configuration of the machine from the
                              Dysnomia container properties in a Nix expression
-  --shell                    Spawns a Dysnomia shell to run arbitrary
+      --shell                Spawns a Dysnomia shell to run arbitrary
                              maintenance tasks
-  --help                     Shows the usage of this command to the user
-  --version                  Shows the version of this command to the user
+      --help                 Shows the usage of this command to the user
+      --version              Shows the version of this command to the user
 
 General options:
   -t, --target=TARGET        Specifies the hostname and optional port number of
@@ -99,10 +101,10 @@ General options:
                              machine
 
 Import/Export/Import snapshots/Export snapshots options:
-  --localfile                Specifies that the given paths are stored locally
+      --localfile            Specifies that the given paths are stored locally
                              and must be transferred to the remote machine if
                              needed
-  --remotefile               Specifies that the given paths are stored remotely
+      --remotefile           Specifies that the given paths are stored remotely
                              and must transferred from the remote machine if
                              needed
 
@@ -114,23 +116,23 @@ Collect garbage options:
                              profiles must be removed as well
 
 Activation/Deactivation/Snapshot/Restore/Delete state/Shell options:
-  --type=TYPE                Specifies the activation module that should be
+      --type=TYPE            Specifies the activation module that should be
                              used, such as echo or process.
-  --arguments=ARGUMENTS      Specifies the arguments passed to the Dysnomia
+      --arguments=ARGUMENTS  Specifies the arguments passed to the Dysnomia
                              module, which is a string with key=value pairs
-  --container=CONTAINER      Name of the container in which the component is
+      --container=CONTAINER  Name of the container in which the component is
                              managed. If omitted it will default to the same
                              value as the type.
 
 Shell options:
-  --command=COMMAND          Commands to execute in the shell session
+      --command=COMMAND      Commands to execute in the shell session
 
 Query all snapshots/Query latest snapshot options:
   -C, --container=CONTAINER  Name of the container in which the component is managed
   -c, --component=COMPONENT  Name of the component hosted in a container
 
 Clean snapshots options:
-  --keep=NUM                 Amount of snapshot generations to keep. Defaults
+      --keep=NUM             Amount of snapshot generations to keep. Defaults
                              to: 1
   -C, --container=CONTAINER  Name of the container to filter on
   -c, --component=COMPONENT  Name of the component to filter on
@@ -325,7 +327,7 @@ do
             showVersion
             exit 0
     esac
-    
+
     shift
 done
 
@@ -373,7 +375,7 @@ checkTmpDir
 case "$operation" in
     import)
         checkLocalOrRemoteFile
-        
+
         # A localfile must first be transferred
         if [ "$localfile" != "" ]
         then
@@ -382,7 +384,7 @@ case "$operation" in
         else
             remoteClosure="$@"
         fi
-        
+
         # Import the closure into the Nix store
         ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --import $remoteClosure
         ;;
@@ -390,7 +392,7 @@ case "$operation" in
         checkLocalOrRemoteFile
 
         closure=`ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --export $@`
-        
+
         # A remote file must be downloaded afterwards
         if [ "$remotefile" = "1" ]
         then
@@ -470,7 +472,7 @@ case "$operation" in
         ;;
     import-snapshots)
         checkLocalOrRemoteFile
-        
+
         # A localfile must first be transferred
         if [ "$localfile" = "1" ]
         then
@@ -480,7 +482,7 @@ case "$operation" in
         else
             remoteSnapshots=$@
         fi
-        
+
         ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --container $container --component $component --import-snapshots $remoteSnapshots
         ;;
     export-snapshots)
@@ -499,12 +501,12 @@ case "$operation" in
         then
             containerArg="--container $container"
         fi
-        
+
         if [ "$component" != "" ]
         then
             componentArg="--component $component"
         fi
-        
+
         ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --clean-snapshots --keep $keep $containerArg $componentArg "$@"
         ;;
     capture-config)
