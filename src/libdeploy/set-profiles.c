@@ -23,18 +23,18 @@
 #include <client-interface.h>
 #include <package-management.h>
 
-static pid_t set_profile_mapping(void *data, gchar *target_name, xmlChar *profile_name, Target *target)
+static pid_t set_profile_mapping(void *data, gchar *target_name, xmlChar *profile_path, Target *target)
 {
     char *profile = (char*)data;
     gchar *target_property = find_target_key(target);
-    g_print("[target: %s]: Setting Disnix profile: %s\n", target_name, profile_name);
-    return exec_set((char*)target->client_interface, target_property, profile, (char*)profile_name);
+    g_print("[target: %s]: Setting Disnix profile: %s\n", target_name, profile_path);
+    return exec_set((char*)target->client_interface, target_property, profile, (char*)profile_path);
 }
 
-static void complete_set_profile_mapping(void *data, gchar *target_name, xmlChar *profile_name, Target *target, ProcReact_Status status, int result)
+static void complete_set_profile_mapping(void *data, gchar *target_name, xmlChar *profile_path, Target *target, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
-        g_printerr("[target: %s]: Cannot set Disnix profile: %s\n", target_name, profile_name);
+        g_printerr("[target: %s]: Cannot set Disnix profile: %s\n", target_name, profile_path);
 }
 
 static int set_target_profiles(GHashTable *profile_mapping_table, GHashTable *targets_table, gchar *profile)

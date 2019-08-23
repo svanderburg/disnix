@@ -29,23 +29,23 @@
  *
  * @param data An arbitrary data structure
  * @param target_name Name of the target in the table
- * @param profile_name Path to the Nix profile
+ * @param profile_path Path to the Nix profile
  * @param target The corresponding target machine of the profile mapping
  * @return The PID of the spawned process
  */
-typedef pid_t (*map_profile_mapping_function) (void *data, gchar *target_name, xmlChar *profile_name, Target *target);
+typedef pid_t (*map_profile_mapping_function) (void *data, gchar *target_name, xmlChar *profile_path, Target *target);
 
 /**
  * Pointer to a function that gets executed when a process completes for a profile mapping
  *
  * @param data An arbitrary data structure
  * @param target_name Name of the target in the table
- * @param profile_name Path to the Nix profile
+ * @param profile_path Path to the Nix profile
  * @param target The corresponding target machine of the profile mapping
  * @param status Indicates whether the process terminated abnormally or not
  * @param result TRUE if the operation succeeded, else FALSE
  */
-typedef void (*complete_map_profile_mapping_function) (void *data, gchar *target_name, xmlChar *profile_name, Target *target, ProcReact_Status status, int result);
+typedef void (*complete_map_profile_mapping_function) (void *data, gchar *target_name, xmlChar *profile_path, Target *target, ProcReact_Status status, int result);
 
 /**
  * @brief Iterator that can be used to execute a process for each profile mapping

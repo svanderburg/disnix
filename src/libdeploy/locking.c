@@ -27,18 +27,18 @@ extern volatile int interrupted;
 
 /* Unlock infrastructure */
 
-static pid_t unlock_profile_mapping(void *data, gchar *target_name, xmlChar *profile_name, Target *target)
+static pid_t unlock_profile_mapping(void *data, gchar *target_name, xmlChar *profile_path, Target *target)
 {
     char *profile = (char*)data;
     gchar *target_property = find_target_key(target);
-    g_print("[target: %s]: Releasing a lock on profile: %s\n", target_name, profile_name);
+    g_print("[target: %s]: Releasing a lock on profile: %s\n", target_name, profile_path);
     return exec_unlock((char*)target->client_interface, target_property, profile);
 }
 
-static void complete_unlock_profile_mapping(void *data, gchar *target_name, xmlChar *profile_name, Target *target, ProcReact_Status status, int result)
+static void complete_unlock_profile_mapping(void *data, gchar *target_name, xmlChar *profile_path, Target *target, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
-        g_printerr("[target: %s]: Cannot unlock profile: %s\n", target_name, profile_name);
+        g_printerr("[target: %s]: Cannot unlock profile: %s\n", target_name, profile_path);
 }
 
 int unlock(GHashTable *profile_mapping_table, GHashTable *targets_table, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void))
@@ -70,22 +70,22 @@ typedef struct
 }
 LockData;
 
-static pid_t lock_profile_mapping(void *data, gchar *target_name, xmlChar *profile_name, Target *target)
+static pid_t lock_profile_mapping(void *data, gchar *target_name, xmlChar *profile_path, Target *target)
 {
     LockData *lock_data = (LockData*)data;
     gchar *target_property = find_target_key(target);
-    g_print("[target: %s]: Acquiring a lock on profile: %s\n", target_name, profile_name);
+    g_print("[target: %s]: Acquiring a lock on profile: %s\n", target_name, profile_path);
     return exec_lock((char*)target->client_interface, target_property, lock_data->profile);
 }
 
-static void complete_lock_profile_mapping(void *data, gchar *target_name, xmlChar *profile_name, Target *target, ProcReact_Status status, int result)
+static void complete_lock_profile_mapping(void *data, gchar *target_name, xmlChar *profile_path, Target *target, ProcReact_Status status, int result)
 {
     LockData *lock_data = (LockData*)data;
 
     if(status != PROCREACT_STATUS_OK || !result)
-        g_printerr("[target: %s]: Cannot lock profile: %s\n", target_name, profile_name);
+        g_printerr("[target: %s]: Cannot lock profile: %s\n", target_name, profile_path);
     else
-        g_hash_table_insert(lock_data->lock_table, target_name, profile_name);
+        g_hash_table_insert(lock_data->lock_table, target_name, profile_path);
 }
 
 int lock(GHashTable *profile_mapping_table, GHashTable *targets_table, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void))

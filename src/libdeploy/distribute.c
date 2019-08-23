@@ -22,18 +22,18 @@
 #include <profilemapping-iterator.h>
 #include <targetstable.h>
 
-static pid_t transfer_profile_mapping_to(void *data, gchar *target_name, xmlChar *profile_name, Target *target)
+static pid_t transfer_profile_mapping_to(void *data, gchar *target_name, xmlChar *profile_path, Target *target)
 {
-    char *paths[] = { (char*)profile_name, NULL };
+    char *paths[] = { (char*)profile_path, NULL };
     gchar *target_property = find_target_key(target);
-    g_print("[target: %s]: Receiving intra-dependency closure of profile: %s\n", target_name, profile_name);
+    g_print("[target: %s]: Receiving intra-dependency closure of profile: %s\n", target_name, profile_path);
     return exec_copy_closure_to((char*)target->client_interface, target_property, paths);
 }
 
-static void complete_transfer_profile_mapping_to(void *data, gchar *target_name, xmlChar *profile_name, Target *target, ProcReact_Status status, int result)
+static void complete_transfer_profile_mapping_to(void *data, gchar *target_name, xmlChar *profile_path, Target *target, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
-        g_printerr("[target: %s]: Cannot receive intra-dependency closure of profile: %s\n", target_name, profile_name);
+        g_printerr("[target: %s]: Cannot receive intra-dependency closure of profile: %s\n", target_name, profile_path);
 }
 
 int distribute(const Manifest *manifest, const unsigned int max_concurrent_transfers)

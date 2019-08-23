@@ -83,10 +83,9 @@ int map_snapshot_items(const GPtrArray *snapshot_mapping_array, GHashTable *serv
                 unsigned int arguments_length = g_strv_length((gchar**)arguments); /* Determine length of the activation arguments array */
                 ManifestService *service = g_hash_table_lookup(services_table, mapping->service);
                 pid_t pid = map_snapshot_item(mapping, service, target, arguments, arguments_length);
-                gint *pid_ptr;
 
                 /* Add pid and mapping to the hash table */
-                pid_ptr = g_malloc(sizeof(gint));
+                gint *pid_ptr = g_malloc(sizeof(gint));
                 *pid_ptr = pid;
                 g_hash_table_insert(pid_table, pid_ptr, mapping);
 
