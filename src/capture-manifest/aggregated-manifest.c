@@ -23,7 +23,7 @@
 #include <snapshotmappingarray.h>
 #include <profilemanifesttargettable.h>
 
-static GPtrArray *augment_local_dependencies(GPtrArray *dependency_mapping_array, xmlChar *target_key)
+static GPtrArray *augment_local_dependencies(GPtrArray *dependency_mapping_array)
 {
     GPtrArray *augmented_dependency_mapping_array = g_ptr_array_new();
     unsigned int i;
@@ -34,11 +34,7 @@ static GPtrArray *augment_local_dependencies(GPtrArray *dependency_mapping_array
         InterDependencyMapping *augmented_mapping = (InterDependencyMapping*)g_malloc(sizeof(InterDependencyMapping));
         augmented_mapping->service = mapping->service;
         augmented_mapping->container = mapping->container;
-
-        if(mapping->target == NULL)
-            augmented_mapping->target = target_key;
-        else
-            augmented_mapping->target = mapping->target;
+        augmented_mapping->target = mapping->target;
 
         g_ptr_array_add(augmented_dependency_mapping_array, augmented_mapping);
     }
@@ -46,7 +42,7 @@ static GPtrArray *augment_local_dependencies(GPtrArray *dependency_mapping_array
     return augmented_dependency_mapping_array;
 }
 
-static void aggregate_service_tables(GHashTable *aggregated_services_table, GHashTable *services_table, xmlChar *target_key)
+static void aggregate_service_tables(GHashTable *aggregated_services_table, GHashTable *services_table)
 {
     GHashTableIter iter;
     gpointer key, value;
@@ -62,14 +58,14 @@ static void aggregate_service_tables(GHashTable *aggregated_services_table, GHas
             aggregated_service->name = service->name;
             aggregated_service->pkg = service->pkg;
             aggregated_service->type = service->type;
-            aggregated_service->depends_on = augment_local_dependencies(service->depends_on, target_key);
-            aggregated_service->connects_to = augment_local_dependencies(service->connects_to, target_key);
+            aggregated_service->depends_on = augment_local_dependencies(service->depends_on);
+            aggregated_service->connects_to = augment_local_dependencies(service->connects_to);
             g_hash_table_insert(aggregated_services_table, key, aggregated_service);
         }
     }
 }
 
-static void aggregate_service_mapping_array(GPtrArray *aggregated_service_mapping_array, GPtrArray *service_mapping_array, xmlChar *target_key)
+static void aggregate_service_mapping_array(GPtrArray *aggregated_service_mapping_array, GPtrArray *service_mapping_array)
 {
     unsigned int i;
 
@@ -79,13 +75,13 @@ static void aggregate_service_mapping_array(GPtrArray *aggregated_service_mappin
         ServiceMapping *aggregated_mapping = (ServiceMapping*)g_malloc(sizeof(ServiceMapping));
         aggregated_mapping->service = mapping->service;
         aggregated_mapping->container = mapping->container;
-        aggregated_mapping->target = target_key;
+        aggregated_mapping->target = mapping->target;
 
         g_ptr_array_add(aggregated_service_mapping_array, aggregated_mapping);
     }
 }
 
-static void aggregate_snapshot_mapping_array(GPtrArray *aggregated_snapshot_mapping_array, GPtrArray *snapshot_mapping_array, xmlChar *target_key)
+static void aggregate_snapshot_mapping_array(GPtrArray *aggregated_snapshot_mapping_array, GPtrArray *snapshot_mapping_array)
 {
     unsigned int i;
 
@@ -96,7 +92,7 @@ static void aggregate_snapshot_mapping_array(GPtrArray *aggregated_snapshot_mapp
         aggregated_mapping->service = mapping->service;
         aggregated_mapping->component = mapping->component;
         aggregated_mapping->container = mapping->container;
-        aggregated_mapping->target = target_key;
+        aggregated_mapping->target = mapping->target;
 
         g_ptr_array_add(aggregated_snapshot_mapping_array, aggregated_mapping);
     }
@@ -125,12 +121,12 @@ Manifest *aggregate_manifest(GHashTable *profile_manifest_target_table, GHashTab
 
         g_hash_table_insert(manifest->profile_mapping_table, target_key, profile_manifest_target->profile);
 
-        aggregate_service_tables(manifest->services_table, profile_manifest_target->profile_manifest->services_table, target_key);
+        aggregate_service_tables(manifest->services_table, profile_manifest_target->profile_manifest->services_table);
 
-        aggregate_service_mapping_array(manifest->service_mapping_array, profile_manifest_target->profile_manifest->service_mapping_array, target_key);
+        aggregate_service_mapping_array(manifest->service_mapping_array, profile_manifest_target->profile_manifest->service_mapping_array);
         g_ptr_array_sort(manifest->service_mapping_array, (GCompareFunc)compare_service_mappings);
 
-        aggregate_snapshot_mapping_array(manifest->snapshot_mapping_array, profile_manifest_target->profile_manifest->snapshot_mapping_array, target_key);
+        aggregate_snapshot_mapping_array(manifest->snapshot_mapping_array, profile_manifest_target->profile_manifest->snapshot_mapping_array);
         g_ptr_array_sort(manifest->snapshot_mapping_array, (GCompareFunc)compare_snapshot_mapping_keys);
     }
 

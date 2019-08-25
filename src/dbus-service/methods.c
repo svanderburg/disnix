@@ -19,6 +19,7 @@
 
 #include "methods.h"
 #include <stdio.h>
+#include <unistd.h>
 #include <glib.h>
 #include "logging.h"
 #include "locking.h"
@@ -26,6 +27,8 @@
 #include "signaling.h"
 #include "package-management.h"
 #include "state-management.h"
+
+#define BUFFER_SIZE 1024
 
 extern char *tmpdir, *logdir;
 
@@ -251,12 +254,14 @@ gboolean on_handle_lock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *inv
     if(log_fd != -1)
     {
         ProfileManifest *profile_manifest;
+        char buffer[BUFFER_SIZE];
 
         /* Print log entry */
         dprintf(log_fd, "Acquiring lock on profile: %s\n", arg_profile);
 
         /* Lock the disnix instance */
-        profile_manifest = create_profile_manifest_from_current_deployment(LOCALSTATEDIR, (gchar*)arg_profile);
+        gethostname(buffer, BUFFER_SIZE);
+        profile_manifest = create_profile_manifest_from_current_deployment(LOCALSTATEDIR, (gchar*)arg_profile, buffer);
 
         if(profile_manifest == NULL)
         {
@@ -291,12 +296,14 @@ gboolean on_handle_unlock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *i
     if(log_fd != -1)
     {
         ProfileManifest *profile_manifest;
+        char buffer[BUFFER_SIZE];
 
         /* Print log entry */
         dprintf(log_fd, "Releasing lock on profile: %s\n", arg_profile);
 
         /* Unlock the Disnix instance */
-        profile_manifest = create_profile_manifest_from_current_deployment(LOCALSTATEDIR, (gchar*)arg_profile);
+        gethostname(buffer, BUFFER_SIZE);
+        profile_manifest = create_profile_manifest_from_current_deployment(LOCALSTATEDIR, (gchar*)arg_profile, buffer);
 
         if(profile_manifest == NULL || check_profile_manifest(profile_manifest))
             signal_boolean_result(release_locks_async(log_fd, tmpdir, profile_manifest, (gchar*)arg_profile), object, arg_pid, log_fd);

@@ -31,6 +31,8 @@
 #include <nixxml-print-xml.h>
 #include <nixxml-ghashtable.h>
 
+#define BUFFER_SIZE 1024
+
 static int check_version(xmlNodePtr element)
 {
     xmlAttr *property = element->properties;
@@ -99,6 +101,7 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
     xmlDocPtr doc;
     xmlNodePtr node_root;
     Manifest *manifest;
+    char buffer[BUFFER_SIZE];
 
     /* Parse the XML document */
 
@@ -120,8 +123,10 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
         return NULL;
     }
 
+    gethostname(buffer, BUFFER_SIZE);
+
     /* Parse manifest */
-    manifest = parse_manifest(node_root, flags, container_filter, component_filter, NULL);
+    manifest = parse_manifest(node_root, flags, container_filter, component_filter, buffer);
 
     /* Cleanup */
     xmlFreeDoc(doc);

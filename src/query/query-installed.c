@@ -45,7 +45,7 @@ static void complete_query_installed_services_on_target(void *data, gchar *targe
     {
         ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)g_malloc(sizeof(ProfileManifestTarget));
         profile_manifest_target->profile = NULL;
-        profile_manifest_target->profile_manifest = create_profile_manifest_from_string(future->result);
+        profile_manifest_target->profile_manifest = create_profile_manifest_from_string(future->result, target_key);
 
         g_hash_table_insert(query_installed_services_data->profile_manifest_target_table, target_key, profile_manifest_target);
 

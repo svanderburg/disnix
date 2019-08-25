@@ -21,12 +21,12 @@
 #include <nixxml-print-nix.h>
 #include <nixxml-print-xml.h>
 
-ProfileManifestTarget *parse_profile_manifest_target(gchar *profile)
+ProfileManifestTarget *parse_profile_manifest_target(gchar *profile, gchar *default_target)
 {
     ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)g_malloc(sizeof(ProfileManifestTarget));
     gchar *manifest_file = g_strconcat(profile, "/profilemanifest.xml", NULL);
     profile_manifest_target->profile = profile;
-    profile_manifest_target->profile_manifest = create_profile_manifest_from_file(manifest_file);
+    profile_manifest_target->profile_manifest = create_profile_manifest_from_file(manifest_file, default_target);
     g_free(manifest_file);
     return profile_manifest_target;
 }

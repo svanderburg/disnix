@@ -43,18 +43,20 @@ ProfileManifest;
  * file stored in the given profile.
  *
  * @param result A string containing the XML document to parse
+ * @param default_target Target to refer to if none is defined
  * @return A profile manifest instance or NULL if an error has occured
  */
-ProfileManifest *create_profile_manifest_from_string(char *result);
+ProfileManifest *create_profile_manifest_from_string(char *result, gchar *default_target);
 
 /**
  * Composes a profile manifest struct instance from the provided manifest
  * configuration file.
  *
  * @param profile_manifest_file Path to a profile manifest file
+ * @param default_target Target to refer to if none is defined
  * @return A profile manifest instance or NULL if an error has occured
  */
-ProfileManifest *create_profile_manifest_from_file(const gchar *profile_manifest_file);
+ProfileManifest *create_profile_manifest_from_file(const gchar *profile_manifest_file, gchar *default_target);
 
 /**
  * Composes a profile manifest struct instance from the manifest configuration
@@ -62,9 +64,10 @@ ProfileManifest *create_profile_manifest_from_file(const gchar *profile_manifest
  *
  * @param localstatedir Directory if which Nix's state files are stored
  * @param profile Name of the profile to take the manifest from
+ * @param default_target Target to refer to if none is defined
  * @return An array of pointers to profile manifest entries or NULL if an error has occured
  */
-ProfileManifest *create_profile_manifest_from_current_deployment(gchar *localstatedir, gchar *profile);
+ProfileManifest *create_profile_manifest_from_current_deployment(gchar *localstatedir, gchar *profile, gchar *default_target);
 
 /**
  * Deletes a profile manifest struct and its contents from heap memory.

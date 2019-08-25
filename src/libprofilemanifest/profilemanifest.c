@@ -67,7 +67,7 @@ static ProfileManifest *parse_profile_manifest(xmlNodePtr element, void *userdat
     return profile_manifest;
 }
 
-ProfileManifest *create_profile_manifest_from_string(char *result)
+ProfileManifest *create_profile_manifest_from_string(char *result, gchar *default_target)
 {
     xmlDocPtr doc;
     xmlNodePtr node_root;
@@ -92,7 +92,7 @@ ProfileManifest *create_profile_manifest_from_string(char *result)
     }
 
     /* Parse manifest */
-    profile_manifest = parse_profile_manifest(node_root, NULL);
+    profile_manifest = parse_profile_manifest(node_root, default_target);
 
     /* Cleanup */
     xmlFreeDoc(doc);
@@ -102,7 +102,7 @@ ProfileManifest *create_profile_manifest_from_string(char *result)
     return profile_manifest;
 }
 
-ProfileManifest *create_profile_manifest_from_file(const gchar *profile_manifest_file)
+ProfileManifest *create_profile_manifest_from_file(const gchar *profile_manifest_file, gchar *default_target)
 {
     xmlDocPtr doc;
     xmlNodePtr node_root;
@@ -129,7 +129,7 @@ ProfileManifest *create_profile_manifest_from_file(const gchar *profile_manifest
     }
 
     /* Parse manifest */
-    profile_manifest = parse_profile_manifest(node_root, NULL);
+    profile_manifest = parse_profile_manifest(node_root, default_target);
 
     /* Cleanup */
     xmlFreeDoc(doc);
@@ -139,7 +139,7 @@ ProfileManifest *create_profile_manifest_from_file(const gchar *profile_manifest
     return profile_manifest;
 }
 
-ProfileManifest *create_profile_manifest_from_current_deployment(gchar *localstatedir, gchar *profile)
+ProfileManifest *create_profile_manifest_from_current_deployment(gchar *localstatedir, gchar *profile, gchar *default_target)
 {
     ProfileManifest *profile_manifest;
     gchar *profile_manifest_file = g_strconcat(localstatedir, "/nix/profiles/disnix/", profile, "/profilemanifest.xml", NULL);
@@ -157,7 +157,7 @@ ProfileManifest *create_profile_manifest_from_current_deployment(gchar *localsta
         profile_manifest->snapshot_mapping_array = g_ptr_array_new();
     }
     else
-        profile_manifest = create_profile_manifest_from_file(profile_manifest_file);
+        profile_manifest = create_profile_manifest_from_file(profile_manifest_file, default_target);
 
     g_free(profile_manifest_file);
     return profile_manifest;

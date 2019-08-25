@@ -29,6 +29,8 @@
 #include <profilemanifest.h>
 #include <profilelocking.h>
 
+#define BUFFER_SIZE 1024
+
 static gchar *check_dysnomia_activity_parameters(gchar *type, gchar **derivation, gchar *container, gchar **arguments)
 {
     if(type == NULL)
@@ -106,6 +108,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
     pid_t pid;
     gchar *tempfilename;
     ProfileManifest *profile_manifest;
+    char buffer[BUFFER_SIZE];
 
     /* Determine the temp directory */
     tmpdir = getenv("TMPDIR");
@@ -196,7 +199,8 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
                 exit_status = procreact_wait_for_exit_status(statemgmt_run_dysnomia_activity((gchar*)type, "restore", derivation[0], (gchar*)container, arguments, 1, 2), &status);
             break;
         case OP_LOCK:
-            profile_manifest = create_profile_manifest_from_current_deployment(LOCALSTATEDIR, (gchar*)profile);
+            gethostname(buffer, BUFFER_SIZE);
+            profile_manifest = create_profile_manifest_from_current_deployment(LOCALSTATEDIR, (gchar*)profile, buffer);
 
             if(profile_manifest == NULL)
             {
@@ -218,7 +222,8 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
             }
             break;
         case OP_UNLOCK:
-            profile_manifest = create_profile_manifest_from_current_deployment(LOCALSTATEDIR, (gchar*)profile);
+            gethostname(buffer, BUFFER_SIZE);
+            profile_manifest = create_profile_manifest_from_current_deployment(LOCALSTATEDIR, (gchar*)profile, buffer);
 
             if(profile_manifest == NULL)
             {

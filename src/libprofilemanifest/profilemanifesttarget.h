@@ -40,9 +40,10 @@ ProfileManifestTarget;
  * target instance from it.
  *
  * @param profile_path Path to a Nix profile containing all services deployed to a machine
+ & @param default_target Target to refer to if none is defined
  * @return A profile manifest target instance
  */
-ProfileManifestTarget *parse_profile_manifest_target(gchar *profile_path);
+ProfileManifestTarget *parse_profile_manifest_target(gchar *profile_path, gchar *default_target);
 
 /**
  * Deletes a profile manifest target from heap memory.

@@ -61,7 +61,7 @@ static void complete_query_requisites_on_target(void *data, gchar *target_key, T
         else
             profile = NULL;
 
-        profile_manifest_target = parse_profile_manifest_target(profile);
+        profile_manifest_target = parse_profile_manifest_target(profile, target_key);
         g_hash_table_insert(query_requisites_data->profile_manifest_target_table, target_key, profile_manifest_target);
 
         procreact_free_string_array(future->result);

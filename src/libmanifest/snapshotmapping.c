@@ -18,12 +18,9 @@
  */
 
 #include "snapshotmapping.h"
-#include <unistd.h>
 #include <nixxml-parse.h>
 #include <nixxml-print-nix.h>
 #include <nixxml-print-xml.h>
-
-#define BUFFER_SIZE 1024
 
 gint compare_snapshot_mapping_keys(const SnapshotMappingKey **l, const SnapshotMappingKey **r)
 {
@@ -77,13 +74,7 @@ void *parse_snapshot_mapping(xmlNodePtr element, void *userdata)
 
     /* Set default values */
     if(mapping->target == NULL)
-    {
-        char buffer[BUFFER_SIZE]; /* If no target is set, then use the hostname */
-        int status = gethostname(buffer, BUFFER_SIZE);
-
-        if(status != -1)
-            mapping->target = xmlStrdup((xmlChar*)buffer);
-    }
+        mapping->target = xmlStrdup((xmlChar*)userdata);
 
     return mapping;
 }
