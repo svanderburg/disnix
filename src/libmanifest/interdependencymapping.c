@@ -18,9 +18,12 @@
  */
 
 #include "interdependencymapping.h"
+#include <unistd.h>
 #include <nixxml-parse.h>
 #include <nixxml-print-nix.h>
 #include <nixxml-print-xml.h>
+
+#define BUFFER_SIZE 1024
 
 gint compare_interdependency_mappings(const InterDependencyMapping **l, const InterDependencyMapping **r)
 {
@@ -63,7 +66,19 @@ void insert_interdependency_mapping_attributes(void *table, const xmlChar *key, 
 
 void *parse_interdependency_mapping(xmlNodePtr element, void *userdata)
 {
-    return NixXML_parse_simple_attrset(element, userdata, create_interdependency_mapping_from_element, NixXML_parse_value, insert_interdependency_mapping_attributes);
+    InterDependencyMapping *mapping = NixXML_parse_simple_attrset(element, userdata, create_interdependency_mapping_from_element, NixXML_parse_value, insert_interdependency_mapping_attributes);
+
+    /* Set default values */
+    if(mapping->target == NULL)
+    {
+        char buffer[BUFFER_SIZE]; /* If no target is set, then use the hostname */
+        int status = gethostname(buffer, BUFFER_SIZE);
+
+        if(status != -1)
+            mapping->target = xmlStrdup((xmlChar*)buffer);
+    }
+
+    return mapping;
 }
 
 void delete_interdependency_mapping(InterDependencyMapping *mapping)
@@ -91,6 +106,11 @@ int check_interdependency_mapping(const InterDependencyMapping *mapping)
         g_printerr("mapping.container is not set!\n");
         status = FALSE;
     }
+    else if(mapping->target == NULL)
+    {
+        g_printerr("mapping.target is not set!\n");
+        status = FALSE;
+    }
 
     return status;
 }
@@ -101,8 +121,7 @@ static void print_interdependency_mapping_attributes_nix(FILE *file, const void 
 
     NixXML_print_attribute_nix(file, "service", mapping->service, indent_level, userdata, NixXML_print_string_nix);
     NixXML_print_attribute_nix(file, "container", mapping->container, indent_level, userdata, NixXML_print_string_nix);
-    if(mapping->target != NULL)
-        NixXML_print_attribute_nix(file, "target", mapping->target, indent_level, userdata, NixXML_print_string_nix);
+    NixXML_print_attribute_nix(file, "target", mapping->target, indent_level, userdata, NixXML_print_string_nix);
 }
 
 void print_interdependency_mapping_nix(FILE *file, const InterDependencyMapping *mapping, const int indent_level, void *userdata)
@@ -116,8 +135,7 @@ static void print_interdependency_mapping_attributes_xml(FILE *file, const void 
 
     NixXML_print_simple_attribute_xml(file, "service", mapping->service, indent_level, NULL, userdata, NixXML_print_string_xml);
     NixXML_print_simple_attribute_xml(file, "container", mapping->container, indent_level, NULL, userdata, NixXML_print_string_xml);
-    if(mapping->target != NULL)
-        NixXML_print_simple_attribute_xml(file, "target", mapping->target, indent_level, NULL, userdata, NixXML_print_string_xml);
+    NixXML_print_simple_attribute_xml(file, "target", mapping->target, indent_level, NULL, userdata, NixXML_print_string_xml);
 }
 
 void print_interdependency_mapping_xml(FILE *file, const InterDependencyMapping *mapping, const int indent_level, const char *type_property_name, void *userdata)

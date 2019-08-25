@@ -19,8 +19,11 @@
 
 #include "servicemappingarray.h"
 #include <stdlib.h>
+#include <unistd.h>
 #include <nixxml-ghashtable.h>
 #include <nixxml-gptrarray.h>
+
+#define BUFFER_SIZE 1024
 
 gint compare_service_mappings(const ServiceMapping **l, const ServiceMapping **r)
 {
@@ -32,9 +35,21 @@ static void *create_service_mapping(xmlNodePtr element, void *userdata)
     return g_malloc0(sizeof(ServiceMapping));
 }
 
-static gpointer parse_service_mapping(xmlNodePtr element, void *userdata)
+static void *parse_service_mapping(xmlNodePtr element, void *userdata)
 {
-    return NixXML_parse_simple_attrset(element, userdata, create_service_mapping, NixXML_parse_value, insert_interdependency_mapping_attributes);
+    ServiceMapping *mapping = NixXML_parse_simple_attrset(element, userdata, create_service_mapping, NixXML_parse_value, insert_interdependency_mapping_attributes);
+
+    /* Set default values */
+    if(mapping->target == NULL)
+    {
+        char buffer[BUFFER_SIZE]; /* If no target is set, then use the hostname */
+        int status = gethostname(buffer, BUFFER_SIZE);
+
+        if(status != -1)
+            mapping->target = xmlStrdup((xmlChar*)buffer);
+    }
+
+    return mapping;
 }
 
 GPtrArray *parse_service_mapping_array(xmlNodePtr element, void *userdata)

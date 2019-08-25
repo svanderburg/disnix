@@ -18,9 +18,12 @@
  */
 
 #include "snapshotmapping.h"
+#include <unistd.h>
 #include <nixxml-parse.h>
 #include <nixxml-print-nix.h>
 #include <nixxml-print-xml.h>
+
+#define BUFFER_SIZE 1024
 
 gint compare_snapshot_mapping_keys(const SnapshotMappingKey **l, const SnapshotMappingKey **r)
 {
@@ -70,7 +73,19 @@ static void insert_snapshot_mapping_attributes(void *table, const xmlChar *key, 
 
 void *parse_snapshot_mapping(xmlNodePtr element, void *userdata)
 {
-    return NixXML_parse_simple_attrset(element, userdata, create_snapshot_mapping_from_element, NixXML_parse_value, insert_snapshot_mapping_attributes);
+    SnapshotMapping *mapping = NixXML_parse_simple_attrset(element, userdata, create_snapshot_mapping_from_element, NixXML_parse_value, insert_snapshot_mapping_attributes);
+
+    /* Set default values */
+    if(mapping->target == NULL)
+    {
+        char buffer[BUFFER_SIZE]; /* If no target is set, then use the hostname */
+        int status = gethostname(buffer, BUFFER_SIZE);
+
+        if(status != -1)
+            mapping->target = xmlStrdup((xmlChar*)buffer);
+    }
+
+    return mapping;
 }
 
 void delete_snapshot_mapping(SnapshotMapping *mapping)
@@ -104,6 +119,11 @@ int check_snapshot_mapping(const SnapshotMapping *mapping)
         g_printerr("mapping.service is not set!\n");
         status = FALSE;
     }
+    else if(mapping->target == NULL)
+    {
+        g_printerr("mapping.target is not set!\n");
+        status = FALSE;
+    }
 
     return status;
 }
@@ -115,8 +135,7 @@ static void print_snapshot_mapping_attributes_nix(FILE *file, const void *value,
     NixXML_print_attribute_nix(file, "service", mapping->service, indent_level, userdata, NixXML_print_string_nix);
     NixXML_print_attribute_nix(file, "component", mapping->component, indent_level, userdata, NixXML_print_string_nix);
     NixXML_print_attribute_nix(file, "container", mapping->container, indent_level, userdata, NixXML_print_string_nix);
-    if(mapping->target != NULL)
-        NixXML_print_attribute_nix(file, "target", mapping->target, indent_level, userdata, NixXML_print_string_nix);
+    NixXML_print_attribute_nix(file, "target", mapping->target, indent_level, userdata, NixXML_print_string_nix);
 }
 
 void print_snapshot_mapping_nix(FILE *file, const SnapshotMapping *mapping, const int indent_level, void *userdata)
@@ -131,8 +150,7 @@ static void print_snapshot_mapping_attributes_xml(FILE *file, const void *value,
     NixXML_print_simple_attribute_xml(file, "service", mapping->service, indent_level, NULL, userdata, NixXML_print_string_xml);
     NixXML_print_simple_attribute_xml(file, "component", mapping->component, indent_level, NULL, userdata, NixXML_print_string_xml);
     NixXML_print_simple_attribute_xml(file, "container", mapping->container, indent_level, NULL, userdata, NixXML_print_string_xml);
-    if(mapping->target != NULL)
-        NixXML_print_simple_attribute_xml(file, "target", mapping->target, indent_level, NULL, userdata, NixXML_print_string_xml);
+    NixXML_print_simple_attribute_xml(file, "target", mapping->target, indent_level, NULL, userdata, NixXML_print_string_xml);
 }
 
 void print_snapshot_mapping_xml(FILE *file, const SnapshotMapping *mapping, const int indent_level, const char *type_property_name, void *userdata)
