@@ -9,7 +9,7 @@ rec {
     pkg = customPkgs.testService1;
     type = "echo";
   };
-  
+
   testService2 = {
     name = "testService2";
     pkg = customPkgs.testService2;
@@ -18,7 +18,7 @@ rec {
     };
     type = "echo";
   };
-  
+
   testService3 = {
     name = "testService3";
     pkg = customPkgs.testService3;

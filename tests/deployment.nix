@@ -382,6 +382,21 @@ simpleTest {
       $testtarget1->mustSucceed("/nix/var/nix/profiles/disnix/default/bin/curl --help");
       $testtarget2->mustSucceed("/nix/var/nix/profiles/disnix/default/bin/strace -h");
 
+      # Use disnix-diagnose to execute a remote command
+      # Check if this_component environment variable refers to testService1
+      $coordinator->mustSucceed("${env} disnix-diagnose -S testService1 --command 'echo \$this_component' | grep testService1");
+
+      # Use disnix-diagnose to execute a remote command on a specific target
+      # Check if this_component environment variable refers to testService1
+      $coordinator->mustSucceed("${env} disnix-diagnose -S testService1 -t testtarget1 --command 'echo \$this_component' | grep testService1");
+
+      # Use disnix-diagnose to execute a remote command on a specific target and container
+      # Check if this_component environment variable refers to testService1
+      $coordinator->mustSucceed("${env} disnix-diagnose -S testService1 -t testtarget1 -c echo --command 'echo \$this_component' | grep testService1");
+
+      # Use disnix-diagnose to execute a remote command on the wrong target. This should fail
+      $coordinator->mustFail("${env} disnix-diagnose -S testService1 -t testtarget2 --command 'echo \$this_component' | grep testService1");
+
       # Deploy using a deployment model that only deploys profiles. It should have the right packages installed.
       $coordinator->mustSucceed("${env} disnix-env -D ${manifestTests}/deployment.nix");
 
