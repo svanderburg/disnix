@@ -32,6 +32,14 @@
 void delete_profile_manifest_target_table(GHashTable *profile_manifest_target_table);
 
 /**
+ * Checks whether all profile manifest targets in the hash table are valid.
+ *
+ * @param profile_manifest_target_table Hash table of profile manifest targets
+ * @return TRUE if the profile manifest targets are valid, else FALSE
+ */
+int check_profile_manifest_target_table(GHashTable *profile_manifest_target_table);
+
+/**
  * Prints for each target the deployed services.
  *
  * @param profile_manifest_target_table Hash table of profile manifest targets

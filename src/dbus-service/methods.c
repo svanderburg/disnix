@@ -260,12 +260,18 @@ gboolean on_handle_lock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *inv
 
         if(profile_manifest == NULL)
         {
-            dprintf(log_fd, "Corrupt profile manifest: a service or type is missing!\n");
+            dprintf(log_fd, "Corrupt profile manifest: cannot open profile manifest!\n");
             org_nixos_disnix_disnix_emit_failure(object, arg_pid);
         }
         else
         {
-            signal_boolean_result(acquire_locks_async(log_fd, tmpdir, profile_manifest, (gchar*)arg_profile), object, arg_pid, log_fd);
+            if(check_profile_manifest(profile_manifest))
+                signal_boolean_result(acquire_locks_async(log_fd, tmpdir, profile_manifest, (gchar*)arg_profile), object, arg_pid, log_fd);
+            else
+            {
+                dprintf(log_fd, "Corrupt profile manifest: a service or type is missing!\n");
+                org_nixos_disnix_disnix_emit_failure(object, arg_pid);
+            }
 
             /* Cleanup */
             delete_profile_manifest(profile_manifest);
@@ -291,10 +297,17 @@ gboolean on_handle_unlock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *i
 
         /* Unlock the Disnix instance */
         profile_manifest = create_profile_manifest_from_current_deployment(LOCALSTATEDIR, (gchar*)arg_profile);
-        signal_boolean_result(release_locks_async(log_fd, tmpdir, profile_manifest, (gchar*)arg_profile), object, arg_pid, log_fd);
 
-       /* Cleanup */
-       delete_profile_manifest(profile_manifest);
+        if(profile_manifest == NULL || check_profile_manifest(profile_manifest))
+            signal_boolean_result(release_locks_async(log_fd, tmpdir, profile_manifest, (gchar*)arg_profile), object, arg_pid, log_fd);
+        else
+        {
+            dprintf(log_fd, "Corrupt profile manifest: a service or type is missing!\n");
+            org_nixos_disnix_disnix_emit_failure(object, arg_pid);
+        }
+
+        /* Cleanup */
+        delete_profile_manifest(profile_manifest);
     }
 
     org_nixos_disnix_disnix_complete_unlock(object, invocation);

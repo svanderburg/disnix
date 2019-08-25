@@ -25,6 +25,7 @@
 #include <nixxml-parse.h>
 #include <nixxml-print-nix.h>
 #include <nixxml-print-xml.h>
+#include <nixxml-ghashtable.h>
 #include <manifestservicestable.h>
 #include <servicemappingarray.h>
 #include <snapshotmappingarray.h>
@@ -50,7 +51,20 @@ static void parse_and_insert_profile_manifest_attributes(xmlNodePtr element, voi
 
 static ProfileManifest *parse_profile_manifest(xmlNodePtr element, void *userdata)
 {
-    return NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_profile_manifest_from_element, parse_and_insert_profile_manifest_attributes);
+    ProfileManifest *profile_manifest = NixXML_parse_simple_heterogeneous_attrset(element, userdata, create_profile_manifest_from_element, parse_and_insert_profile_manifest_attributes);
+
+    /* Set default values */
+    if(profile_manifest != NULL)
+    {
+        if(profile_manifest->services_table == NULL)
+            profile_manifest->services_table = NixXML_create_g_hash_table();
+        if(profile_manifest->service_mapping_array == NULL)
+            profile_manifest->service_mapping_array = g_ptr_array_new();
+        if(profile_manifest->snapshot_mapping_array == NULL)
+            profile_manifest->snapshot_mapping_array = g_ptr_array_new();
+    }
+
+    return profile_manifest;
 }
 
 ProfileManifest *create_profile_manifest_from_string(char *result)
@@ -135,10 +149,12 @@ ProfileManifest *create_profile_manifest_from_current_deployment(gchar *localsta
         /*
          * If no manifest profile exists means we have an initial deployment.
          * Return an empty profile manifest instead of NULL to indicate that
-           this is not a failure
+         * this is not a failure
          */
-        profile_manifest = g_malloc0(sizeof(ProfileManifest));
+        profile_manifest = g_malloc(sizeof(ProfileManifest));
+        profile_manifest->services_table = NixXML_create_g_hash_table();
         profile_manifest->service_mapping_array = g_ptr_array_new();
+        profile_manifest->snapshot_mapping_array = g_ptr_array_new();
     }
     else
         profile_manifest = create_profile_manifest_from_file(profile_manifest_file);
@@ -156,6 +172,22 @@ void delete_profile_manifest(ProfileManifest *profile_manifest)
         delete_snapshot_mapping_array(profile_manifest->snapshot_mapping_array);
         g_free(profile_manifest);
     }
+}
+
+int check_profile_manifest(const ProfileManifest *profile_manifest)
+{
+    int status = TRUE;
+
+    if(!check_services_table(profile_manifest->services_table))
+        status = FALSE;
+
+    if(!check_service_mapping_array(profile_manifest->service_mapping_array))
+        status = FALSE;
+
+    if(!check_snapshot_mapping_array(profile_manifest->snapshot_mapping_array))
+        status = FALSE;
+
+    return status;
 }
 
 static void print_profile_manifest_attributes_nix(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)

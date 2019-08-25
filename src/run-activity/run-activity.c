@@ -200,13 +200,21 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
 
             if(profile_manifest == NULL)
             {
-                dprintf(2, "Corrupt profile manifest: a service or type is missing!\n");
+                dprintf(2, "Corrupt profile manifest: cannot open profile manifest!\n");
                 exit_status = 1;
             }
             else
             {
-                exit_status = !acquire_locks(2, tmpdir, profile_manifest, profile);
-                delete_profile_manifest(profile_manifest);
+                if(check_profile_manifest(profile_manifest))
+                {
+                    exit_status = !acquire_locks(2, tmpdir, profile_manifest, profile);
+                    delete_profile_manifest(profile_manifest);
+                }
+                else
+                {
+                    dprintf(2, "Corrupt profile manifest: a service or type is missing!\n");
+                    exit_status = 1;
+                }
             }
             break;
         case OP_UNLOCK:
@@ -214,13 +222,21 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
 
             if(profile_manifest == NULL)
             {
-                dprintf(2, "Corrupt profile manifest: a service or type is missing!\n");
+                dprintf(2, "Corrupt profile manifest: cannot open profile manifest!\n");
                 exit_status = 1;
             }
             else
             {
-                exit_status = !release_locks(2, tmpdir, profile_manifest, profile);
-                delete_profile_manifest(profile_manifest);
+                if(check_profile_manifest(profile_manifest))
+                {
+                    exit_status = !release_locks(2, tmpdir, profile_manifest, profile);
+                    delete_profile_manifest(profile_manifest);
+                }
+                else
+                {
+                    dprintf(2, "Corrupt profile manifest: a service or type is missing!\n");
+                    exit_status = 1;
+                }
             }
             break;
         case OP_QUERY_ALL_SNAPSHOTS:

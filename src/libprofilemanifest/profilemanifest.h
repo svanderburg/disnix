@@ -74,6 +74,14 @@ ProfileManifest *create_profile_manifest_from_current_deployment(gchar *localsta
 void delete_profile_manifest(ProfileManifest *profile_manifest);
 
 /**
+ * Checks whether a profile manifest is valid.
+ *
+ * @param profile_manifest A profile manifest struct instance
+ * @return TRUE if the profile manifest is valid, else FALSE
+ */
+int check_profile_manifest(const ProfileManifest *profile_manifest);
+
+/**
  * Prints a Nix expression representation of a profile manifest.
  *
  * @param file File descriptor to write to

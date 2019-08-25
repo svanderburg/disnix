@@ -53,21 +53,21 @@ static void complete_query_installed_services_on_target(void *data, gchar *targe
     }
 }
 
-static void print_installed_services(QueryInstalledServicesData *query_installed_services_data, OutputFormat format)
+static void print_installed_services(GHashTable *profile_manifest_target_table, OutputFormat format)
 {
     switch(format)
     {
         case FORMAT_SERVICES:
-            print_services_in_profile_manifest_target_table(query_installed_services_data->profile_manifest_target_table);
+            print_services_in_profile_manifest_target_table(profile_manifest_target_table);
             break;
         case FORMAT_CONTAINERS:
-            print_services_per_container_in_profile_manifest_target_table(query_installed_services_data->profile_manifest_target_table);
+            print_services_per_container_in_profile_manifest_target_table(profile_manifest_target_table);
             break;
         case FORMAT_NIX:
-            print_profile_manifest_target_table_nix(query_installed_services_data->profile_manifest_target_table, NULL);
+            print_profile_manifest_target_table_nix(profile_manifest_target_table, NULL);
             break;
         case FORMAT_XML:
-            print_profile_manifest_target_table_xml(query_installed_services_data->profile_manifest_target_table, NULL);
+            print_profile_manifest_target_table_xml(profile_manifest_target_table, NULL);
             break;
     }
 }
@@ -96,7 +96,13 @@ int query_installed(gchar *interface, gchar *target_property, gchar *infrastruct
             exit_status = !target_iterator_has_succeeded(iterator.data);
 
             /* Print the captured configurations */
-            print_installed_services(&data, format);
+            if(exit_status == 0)
+            {
+                if(check_profile_manifest_target_table(data.profile_manifest_target_table))
+                     print_installed_services(data.profile_manifest_target_table, format);
+                else
+                     exit_status = 1;
+            }
 
             /* Cleanup */
             destroy_target_future_iterator(&iterator);

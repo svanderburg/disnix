@@ -41,6 +41,17 @@ void delete_profile_manifest_target(ProfileManifestTarget *profile_manifest_targ
     }
 }
 
+int check_profile_manifest_target(const ProfileManifestTarget *profile_manifest_target)
+{
+    if(profile_manifest_target->profile_manifest == NULL)
+    {
+        g_printerr("profilemanifesttarget.profileManifest is not set!\n");
+        return FALSE;
+    }
+    else
+        return check_profile_manifest(profile_manifest_target->profile_manifest);
+}
+
 static void print_profile_manifest_target_attributes_nix(FILE *file, const void *value, const int indent_level, void *userdata, NixXML_PrintValueFunc print_value)
 {
     ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)value;

@@ -139,7 +139,8 @@ int capture_manifest(gchar *interface, gchar *target_property, gchar *infrastruc
             GHashTable *profile_manifest_target_table = g_hash_table_new(g_str_hash, g_str_equal);
 
             if(resolve_profiles(targets_table, interface, target_property, profile, profile_manifest_target_table)
-              && retrieve_profiles(interface, profile_manifest_target_table, max_concurrent_transfers))
+              && retrieve_profiles(interface, profile_manifest_target_table, max_concurrent_transfers)
+              && check_profile_manifest_target_table(profile_manifest_target_table))
             {
                 Manifest *manifest = aggregate_manifest(profile_manifest_target_table, targets_table);
                 print_manifest_nix(stdout, manifest, 0, NULL);

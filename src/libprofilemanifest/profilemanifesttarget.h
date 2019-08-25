@@ -52,6 +52,14 @@ ProfileManifestTarget *parse_profile_manifest_target(gchar *profile_path);
 void delete_profile_manifest_target(ProfileManifestTarget *profile_manifest_target);
 
 /**
+ * Checks the validity of a profile manifest target.
+ *
+ * @param profile_manifest_target A profile manifest target instance
+ * @return TRUE if the profile manifest target is valid, else FALSE
+ */
+int check_profile_manifest_target(const ProfileManifestTarget *profile_manifest_target);
+
+/**
  * Prints a Nix expression representation of a profile manifest target.
  *
  * @param file File descriptor to write to

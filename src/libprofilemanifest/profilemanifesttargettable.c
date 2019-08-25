@@ -23,17 +23,12 @@
 
 void delete_profile_manifest_target_table(GHashTable *profile_manifest_target_table)
 {
-    GHashTableIter iter;
-    gpointer key, value;
+    NixXML_delete_g_hash_table(profile_manifest_target_table, (NixXML_DeleteGHashTableValueFunc)delete_profile_manifest_target);
+}
 
-    g_hash_table_iter_init(&iter, profile_manifest_target_table);
-    while(g_hash_table_iter_next(&iter, &key, &value))
-    {
-        ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)value;
-        delete_profile_manifest_target(profile_manifest_target);
-    }
-
-    g_hash_table_destroy(profile_manifest_target_table);
+int check_profile_manifest_target_table(GHashTable *profile_manifest_target_table)
+{
+    return NixXML_check_g_hash_table(profile_manifest_target_table, (NixXML_CheckGHashTableValueFunc)check_profile_manifest_target);
 }
 
 void print_services_in_profile_manifest_target_table(GHashTable *profile_manifest_target_table)

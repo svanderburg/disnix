@@ -73,7 +73,6 @@ void *parse_snapshot_mapping(xmlNodePtr element, void *userdata)
     return NixXML_parse_simple_attrset(element, userdata, create_snapshot_mapping_from_element, NixXML_parse_value, insert_snapshot_mapping_attributes);
 }
 
-
 void delete_snapshot_mapping(SnapshotMapping *mapping)
 {
     if(mapping != NULL)
