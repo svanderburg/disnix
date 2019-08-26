@@ -28,9 +28,9 @@
 
 static pid_t take_snapshot_on_target(SnapshotMapping *mapping, ManifestService *service, Target *target, xmlChar **arguments, unsigned int arguments_length)
 {
-    gchar *target_property = find_target_key(target);
+    gchar *target_key = find_target_key(target);
     g_print("[target: %s]: Snapshotting state of service: %s\n", mapping->target, mapping->component);
-    return exec_snapshot((char*)target->client_interface, target_property, (char*)mapping->container, (char*)service->type, (char**)arguments, arguments_length, (char*)service->pkg);
+    return exec_snapshot((char*)target->client_interface, target_key, (char*)mapping->container, (char*)service->type, (char**)arguments, arguments_length, (char*)service->pkg);
 }
 
 static void complete_take_snapshot_on_target(SnapshotMapping *mapping, ManifestService *service, Target *target, ProcReact_Status status, int result)
@@ -55,12 +55,12 @@ RetrieveSnapshotsData;
 
 static pid_t retrieve_snapshot_mapping(SnapshotMapping *mapping, Target *target, const unsigned int flags)
 {
-    gchar *target_property = find_target_key(target);
+    gchar *target_key = find_target_key(target);
     g_print("[target: %s]: Retrieving snapshots of component: %s deployed to container: %s\n", mapping->target, mapping->component, mapping->container);
-    return exec_copy_snapshots_from((char*)target->client_interface, target_property, (char*)mapping->container, (char*)mapping->component, (flags & FLAG_ALL));
+    return exec_copy_snapshots_from((char*)target->client_interface, target_key, (char*)mapping->container, (char*)mapping->component, (flags & FLAG_ALL));
 }
 
-pid_t retrieve_snapshots_from_target(void *data, gchar *target_key, Target *target)
+pid_t retrieve_snapshots_from_target(void *data, gchar *target_name, Target *target)
 {
     pid_t pid = fork();
 
@@ -96,13 +96,10 @@ pid_t retrieve_snapshots_from_target(void *data, gchar *target_key, Target *targ
     return pid;
 }
 
-void complete_retrieve_snapshots_from_target(void *data, gchar *target_key, Target *target, ProcReact_Status status, int result)
+void complete_retrieve_snapshots_from_target(void *data, gchar *target_name, Target *target, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
-    {
-        gchar *target_key = find_target_key(target);
-        g_printerr("[target: %s]: Cannot send snapshots!\n", target_key);
-    }
+        g_printerr("[target: %s]: Cannot send snapshots!\n", target_name);
 }
 
 static int retrieve_snapshots(GPtrArray *snapshots_array, GHashTable *targets_table, const unsigned int max_concurrent_transfers, const unsigned int flags)
@@ -125,9 +122,9 @@ static int retrieve_snapshots(GPtrArray *snapshots_array, GHashTable *targets_ta
 
 static pid_t clean_snapshot_mapping(SnapshotMapping *mapping, Target *target, int keep)
 {
-    gchar *target_property = find_target_key(target);
+    gchar *target_key = find_target_key(target);
     g_print("[target: %s]: Cleaning snapshots of component: %s deployed to container: %s\n", mapping->target, mapping->component, mapping->container);
-    return exec_clean_snapshots((char*)target->client_interface, target_property, keep, (char*)mapping->container, (char*)mapping->component);
+    return exec_clean_snapshots((char*)target->client_interface, target_key, keep, (char*)mapping->container, (char*)mapping->component);
 }
 
 typedef struct
@@ -141,7 +138,7 @@ TakeRetrieveAndCleanSnapshotsData;
 
 /* Snapshot depth-first infrastructure */
 
-static pid_t take_retrieve_and_clean_snapshot_on_target(void *data, gchar *target_key, Target *target)
+static pid_t take_retrieve_and_clean_snapshot_on_target(void *data, gchar *target_name, Target *target)
 {
     pid_t pid = fork();
 
@@ -182,13 +179,10 @@ static pid_t take_retrieve_and_clean_snapshot_on_target(void *data, gchar *targe
     return pid;
 }
 
-void complete_take_retrieve_and_clean_snapshots_on_target(void *data, gchar *target_key, Target *target, ProcReact_Status status, int result)
+void complete_take_retrieve_and_clean_snapshots_on_target(void *data, gchar *target_name, Target *target, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
-    {
-        gchar *target_key = find_target_key(target);
-        g_printerr("[target: %s]: Cannot take, send or clean snapshots!\n", target_key);
-    }
+        g_printerr("[target: %s]: Cannot take, send or clean snapshots!\n", target_name);
 }
 
 static int snapshot_depth_first(GPtrArray *snapshot_mapping_array, GHashTable *services_table, GHashTable *targets_table, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep)

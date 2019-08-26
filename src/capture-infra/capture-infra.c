@@ -23,19 +23,20 @@
 #include <client-interface.h>
 #include "nixxml-ghashtable-iter.h"
 
-static ProcReact_Future capture_infra_on_target(void *data, gchar *target_key, Target *target)
+static ProcReact_Future capture_infra_on_target(void *data, gchar *target_name, Target *target)
 {
+    gchar *target_key = find_target_key(target);
     return exec_capture_config((char*)target->client_interface, target_key);
 }
 
-static void complete_capture_infra_on_target(void *data, gchar *target_key, Target *target, ProcReact_Future *future, ProcReact_Status status)
+static void complete_capture_infra_on_target(void *data, gchar *target_name, Target *target, ProcReact_Future *future, ProcReact_Status status)
 {
     GHashTable *configs_table = (GHashTable*)data;
 
     if(status != PROCREACT_STATUS_OK || future->result == NULL)
-        g_printerr("[target: %s]: Cannot capture the infrastructure!\n", target_key);
+        g_printerr("[target: %s]: Cannot capture the infrastructure!\n", target_name);
     else
-        g_hash_table_insert(configs_table, target_key, future->result);
+        g_hash_table_insert(configs_table, target_name, future->result);
 }
 
 static void print_configs_table(GHashTable *configs_table)

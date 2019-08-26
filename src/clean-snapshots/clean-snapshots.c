@@ -29,18 +29,19 @@ typedef struct
 }
 CleanSnapshotsData;
 
-static pid_t clean_snapshots_on_target(void *data, gchar *target_key, Target *target)
+static pid_t clean_snapshots_on_target(void *data, gchar *target_name, Target *target)
 {
     CleanSnapshotsData *clean_snapshots_data = (CleanSnapshotsData*)data;
+    gchar *target_key = find_target_key(target);
 
-    g_print("[target: %s]: Running snapshot garbage collector!\n", target_key);
+    g_print("[target: %s]: Running snapshot garbage collector!\n", target_name);
     return exec_clean_snapshots((char*)target->client_interface, target_key, clean_snapshots_data->keep, clean_snapshots_data->container, clean_snapshots_data->component);
 }
 
-static void complete_clean_snapshots_on_target(void *data, gchar *target_key, Target *target, ProcReact_Status status, int result)
+static void complete_clean_snapshots_on_target(void *data, gchar *target_name, Target *target, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
-        g_printerr("[target: %s]: Snapshot garbage collection failed\n", target_key);
+        g_printerr("[target: %s]: Snapshot garbage collection failed\n", target_name);
 }
 
 int clean_snapshots(gchar *interface, gchar *target_property, gchar *infrastructure_expr, int keep, gchar *container, gchar *component, const int xml)

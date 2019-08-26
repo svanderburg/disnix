@@ -29,25 +29,26 @@ typedef struct
 }
 QueryInstalledServicesData;
 
-static ProcReact_Future query_installed_services_on_target(void *data, gchar *target_key, Target *target)
+static ProcReact_Future query_installed_services_on_target(void *data, gchar *target_name, Target *target)
 {
     QueryInstalledServicesData *query_installed_services_data = (QueryInstalledServicesData*)data;
+    gchar *target_key = find_target_key(target);
     return exec_query_installed((char*)target->client_interface, target_key, query_installed_services_data->profile);
 }
 
-static void complete_query_installed_services_on_target(void *data, gchar *target_key, Target *target, ProcReact_Future *future, ProcReact_Status status)
+static void complete_query_installed_services_on_target(void *data, gchar *target_name, Target *target, ProcReact_Future *future, ProcReact_Status status)
 {
     QueryInstalledServicesData *query_installed_services_data = (QueryInstalledServicesData*)data;
 
     if(status != PROCREACT_STATUS_OK || future->result == NULL)
-        g_printerr("[target: %s]: Cannot query the installed services!\n", target_key);
+        g_printerr("[target: %s]: Cannot query the installed services!\n", target_name);
     else
     {
         ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)g_malloc(sizeof(ProfileManifestTarget));
         profile_manifest_target->profile = NULL;
-        profile_manifest_target->profile_manifest = create_profile_manifest_from_string(future->result, target_key);
+        profile_manifest_target->profile_manifest = create_profile_manifest_from_string(future->result, target_name);
 
-        g_hash_table_insert(query_installed_services_data->profile_manifest_target_table, target_key, profile_manifest_target);
+        g_hash_table_insert(query_installed_services_data->profile_manifest_target_table, target_name, profile_manifest_target);
 
         free(future->result);
     }

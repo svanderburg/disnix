@@ -34,14 +34,12 @@ static pid_t next_target_process(void *data)
     /* Retrieve distributionitem, target pair */
     void *key, *value;
     g_hash_table_iter_next(&target_iterator_data->iter, &key, &value);
-    Target *target = (Target*)value;
-    gchar *target_key = find_target_key(target);
 
     /* Invoke the next distribution item operation process */
-    pid = target_iterator_data->map_target_function.pid(target_iterator_data->data, target_key, target);
+    pid = target_iterator_data->map_target_function.pid(target_iterator_data->data, (gchar*)key, (Target*)value);
 
     /* Increase the iterator index and update the pid table */
-    next_iteration_process(&target_iterator_data->model_iterator_data, pid, target);
+    next_iteration_process(&target_iterator_data->model_iterator_data, pid, (gchar*)key);
 
     /* Return the pid of the invoked process */
     return pid;
@@ -52,11 +50,11 @@ static void complete_target_process(void *data, pid_t pid, ProcReact_Status stat
     TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
 
     /* Retrieve the completed item */
-    Target *target = complete_iteration_process(&target_iterator_data->model_iterator_data, pid, status, result);
-    gchar *target_key = find_target_key(target);
+    gchar *target_name = complete_iteration_process(&target_iterator_data->model_iterator_data, pid, status, result);
+    Target *target = g_hash_table_lookup(target_iterator_data->targets_table, target_name);
 
     /* Invoke callback that handles completion of the target */
-    target_iterator_data->complete_target_mapping_function.pid(target_iterator_data->data, target_key, target, status, result);
+    target_iterator_data->complete_target_mapping_function.pid(target_iterator_data->data, target_name, target, status, result);
 }
 
 static ProcReact_Future next_target_future(void *data)
@@ -69,13 +67,12 @@ static ProcReact_Future next_target_future(void *data)
     void *key, *value;
     g_hash_table_iter_next(&target_iterator_data->iter, &key, &value);
     Target *target = (Target*)value;
-    gchar *target_key = find_target_key(target);
 
     /* Invoke the next distribution item operation process */
-    future = target_iterator_data->map_target_function.future(target_iterator_data->data, target_key, target);
+    future = target_iterator_data->map_target_function.future(target_iterator_data->data, (gchar*)key, target);
 
     /* Increase the iterator index and update the pid table */
-    next_iteration_future(&target_iterator_data->model_iterator_data, &future, target);
+    next_iteration_future(&target_iterator_data->model_iterator_data, &future, (gchar*)key);
 
     /* Return the future of the invoked process */
     return future;
@@ -86,11 +83,11 @@ static void complete_target_future(void *data, ProcReact_Future *future, ProcRea
     TargetIteratorData *target_iterator_data = (TargetIteratorData*)data;
 
     /* Retrieve corresponding target and properties of the pid */
-    Target *target = complete_iteration_future(&target_iterator_data->model_iterator_data, future, status);
-    gchar *target_key = find_target_key(target);
+    gchar *target_name = complete_iteration_future(&target_iterator_data->model_iterator_data, future, status);
+    Target *target = g_hash_table_lookup(target_iterator_data->targets_table, target_name);
 
     /* Invoke callback that handles completion of the target */
-    target_iterator_data->complete_target_mapping_function.future(target_iterator_data->data, target_key, target, future, status);
+    target_iterator_data->complete_target_mapping_function.future(target_iterator_data->data, target_name, target, future, status);
 }
 
 static TargetIteratorData *create_common_iterator(GHashTable *targets_table, void *data)

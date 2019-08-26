@@ -30,9 +30,9 @@ extern volatile int interrupted;
 static pid_t unlock_profile_mapping(void *data, gchar *target_name, xmlChar *profile_path, Target *target)
 {
     char *profile = (char*)data;
-    gchar *target_property = find_target_key(target);
+    gchar *target_key = find_target_key(target);
     g_print("[target: %s]: Releasing a lock on profile: %s\n", target_name, profile_path);
-    return exec_unlock((char*)target->client_interface, target_property, profile);
+    return exec_unlock((char*)target->client_interface, target_key, profile);
 }
 
 static void complete_unlock_profile_mapping(void *data, gchar *target_name, xmlChar *profile_path, Target *target, ProcReact_Status status, int result)
@@ -73,9 +73,9 @@ LockData;
 static pid_t lock_profile_mapping(void *data, gchar *target_name, xmlChar *profile_path, Target *target)
 {
     LockData *lock_data = (LockData*)data;
-    gchar *target_property = find_target_key(target);
+    gchar *target_key = find_target_key(target);
     g_print("[target: %s]: Acquiring a lock on profile: %s\n", target_name, profile_path);
-    return exec_lock((char*)target->client_interface, target_property, lock_data->profile);
+    return exec_lock((char*)target->client_interface, target_key, lock_data->profile);
 }
 
 static void complete_lock_profile_mapping(void *data, gchar *target_name, xmlChar *profile_path, Target *target, ProcReact_Status status, int result)

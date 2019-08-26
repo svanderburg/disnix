@@ -29,13 +29,14 @@
 static int spawn_shell(GHashTable *targets_table, const ServiceMapping *mapping, const ManifestService *service, char *command)
 {
     Target *target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
+    gchar *target_key = find_target_key(target);
     xmlChar **arguments = generate_activation_arguments(target, (gchar*)mapping->container);
     ProcReact_Status status;
     int exit_status;
 
     g_printerr("[%s]: Connecting to service: %s deployed to container: %s\n", mapping->target, service->pkg, mapping->container);
 
-    exit_status = procreact_wait_for_exit_status(exec_dysnomia_shell((char*)target->client_interface, (char*)mapping->target, (char*)mapping->container, (char*)service->type, (char**)arguments, g_strv_length((char**)arguments), (char*)service->pkg, command), &status);
+    exit_status = procreact_wait_for_exit_status(exec_dysnomia_shell((char*)target->client_interface, target_key, (char*)mapping->container, (char*)service->type, (char**)arguments, g_strv_length((char**)arguments), (char*)service->pkg, command), &status);
 
     NixXML_delete_env_variable_array(arguments);
 

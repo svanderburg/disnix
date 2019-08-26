@@ -34,18 +34,19 @@ typedef struct
 }
 QueryRequisitesData;
 
-static ProcReact_Future query_requisites_on_target(void *data, gchar *target_key, Target *target)
+static ProcReact_Future query_requisites_on_target(void *data, gchar *target_name, Target *target)
 {
     QueryRequisitesData *query_requisites_data = (QueryRequisitesData*)data;
+    gchar *target_key = find_target_key(target);
     return exec_query_requisites((char*)target->client_interface, target_key, query_requisites_data->profile_path);
 }
 
-static void complete_query_requisites_on_target(void *data, gchar *target_key, Target *target, ProcReact_Future *future, ProcReact_Status status)
+static void complete_query_requisites_on_target(void *data, gchar *target_name, Target *target, ProcReact_Future *future, ProcReact_Status status)
 {
     QueryRequisitesData *query_requisites_data = (QueryRequisitesData*)data;
 
     if(status != PROCREACT_STATUS_OK || future->result == NULL)
-        g_printerr("[target: %s]: Cannot query the requisites of the profile!\n", target_key);
+        g_printerr("[target: %s]: Cannot query the requisites of the profile!\n", target_name);
     else
     {
         ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)g_malloc(sizeof(ProfileManifestTarget));
@@ -61,8 +62,8 @@ static void complete_query_requisites_on_target(void *data, gchar *target_key, T
         else
             profile = NULL;
 
-        profile_manifest_target = parse_profile_manifest_target(profile, target_key);
-        g_hash_table_insert(query_requisites_data->profile_manifest_target_table, target_key, profile_manifest_target);
+        profile_manifest_target = parse_profile_manifest_target(profile, target_name);
+        g_hash_table_insert(query_requisites_data->profile_manifest_target_table, target_name, profile_manifest_target);
 
         procreact_free_string_array(future->result);
     }
@@ -89,25 +90,25 @@ static int resolve_profiles(GHashTable *targets_table, gchar *interface, const g
 
 /* Retrieve profiles infrastructure */
 
-pid_t retrieve_profile_manifest_target(void *data, gchar *target_key, ProfileManifestTarget *profile_manifest_target)
+static pid_t retrieve_profile_manifest_target(void *data, gchar *target_name, ProfileManifestTarget *profile_manifest_target, Target *target)
 {
     gchar *interface = (gchar*)data;
     gchar *paths[] = { profile_manifest_target->profile, NULL };
+    gchar *target_key = find_target_key(target);
 
     return exec_copy_closure_from(interface, target_key, paths);
 }
 
-void complete_retrieve_profile_manifest_target(void *data, ProfileManifestTarget *profile_manifest_target, ProcReact_Status status, int result)
+static void complete_retrieve_profile_manifest_target(void *data, gchar *target_name, ProfileManifestTarget *profile_manifest_target, Target *target, ProcReact_Status status, int result)
 {
     if(status != PROCREACT_STATUS_OK || !result)
-        //g_printerr("[target: %s]: Cannot retrieve intra-dependency closure of profile!\n", target_key); // TODO: reintroduce target_key
-        g_printerr("Cannot retrieve intra-dependency closure of profile!\n");
+        g_printerr("[target: %s]: Cannot retrieve intra-dependency closure of profile!\n", target_name);
 }
 
-static int retrieve_profiles(gchar *interface, GHashTable *profile_manifest_target_table, const unsigned int max_concurrent_transfers)
+static int retrieve_profiles(gchar *interface, GHashTable *profile_manifest_target_table, GHashTable *targets_table, const unsigned int max_concurrent_transfers)
 {
     int success;
-    ProcReact_PidIterator iterator = create_profile_manifest_target_iterator(profile_manifest_target_table, retrieve_profile_manifest_target, complete_retrieve_profile_manifest_target, interface);
+    ProcReact_PidIterator iterator = create_profile_manifest_target_iterator(profile_manifest_target_table, retrieve_profile_manifest_target, complete_retrieve_profile_manifest_target, targets_table, interface);
 
     g_printerr("[coordinator]: Retrieving intra-dependency closures of the profiles...\n");
 
@@ -139,7 +140,7 @@ int capture_manifest(gchar *interface, gchar *target_property, gchar *infrastruc
             GHashTable *profile_manifest_target_table = g_hash_table_new(g_str_hash, g_str_equal);
 
             if(resolve_profiles(targets_table, interface, target_property, profile, profile_manifest_target_table)
-              && retrieve_profiles(interface, profile_manifest_target_table, max_concurrent_transfers)
+              && retrieve_profiles(interface, profile_manifest_target_table, targets_table, max_concurrent_transfers)
               && check_profile_manifest_target_table(profile_manifest_target_table))
             {
                 Manifest *manifest = aggregate_manifest(profile_manifest_target_table, targets_table);

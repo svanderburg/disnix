@@ -41,7 +41,7 @@ void next_iteration_process(ModelIteratorData *model_iterator_data, pid_t pid, g
 {
     /* Increase the iterator index */
     model_iterator_data->index++;
-    
+
     if(pid > 0)
     {
         /* Add pid to the pid table so that we know what the corresponding item is */
@@ -61,11 +61,11 @@ gpointer complete_iteration_process(ModelIteratorData *model_iterator_data, pid_
     /* Retrieve corresponding derivation item of the pid */
     gint *pid_ptr = &pid;
     gpointer item = g_hash_table_lookup(model_iterator_data->pid_table, pid_ptr);
-    
+
     /* If anything failed, set the overall success status to FALSE */
     if(status != PROCREACT_STATUS_OK || !result)
         model_iterator_data->success = FALSE;
-    
+
     return item;
 }
 
@@ -74,10 +74,10 @@ gpointer complete_iteration_future(ModelIteratorData *model_iterator_data, ProcR
     /* Retrieve corresponding derivation item of the pid */
     gint *pid_ptr = &future->pid;
     gpointer item = g_hash_table_lookup(model_iterator_data->pid_table, pid_ptr);
-    
+
     /* If anything failed, set the overall success status to FALSE */
     if(status != PROCREACT_STATUS_OK || future->result == NULL)
         model_iterator_data->success = FALSE;
-    
+
     return item;
 }

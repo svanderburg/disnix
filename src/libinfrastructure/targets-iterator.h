@@ -29,43 +29,43 @@
  * Pointer to a function that executes a process for each target
  *
  * @param data An arbitrary data structure
- * @param target_key Key that uniquely identifies the machine
- * @param target A target from the target array
+ * @param target_name Name that uniquely identifies the machine
+ * @param target A target from the targets table
  * @return The PID of the spawned process
  */
-typedef pid_t (*map_target_pid_function) (void *data, gchar *target_key, Target *target);
+typedef pid_t (*map_target_pid_function) (void *data, gchar *target_name, Target *target);
 
 /**
  * Pointer to a function that constructs a future for each target
  *
  * @param data An arbitrary data structure
- * @param target_key Key that uniquely identifies the machine
- * @param target A target from the target array
+ * @param target_name Name that uniquely identifies the machine
+ * @param target A target from the targets table
  * @return A future instance
  */
-typedef ProcReact_Future (*map_target_future_function) (void *data, gchar *target_key, Target *target);
+typedef ProcReact_Future (*map_target_future_function) (void *data, gchar *target_name, Target *target);
 
 /**
  * Pointer to a function that gets executed when a process completes for a target
  *
  * @param data An arbitrary data structure
- * @param target_key Key that uniquely identifies the machine
- * @param target A target from the target array
+ * @param target_name Name that uniquely identifies the machine
+ * @param target A target from the targets table
  * @param status Indicates whether the process terminated abnormally or not
  * @param result TRUE if the operation succeeded, else FALSE
  */
-typedef void (*complete_target_mapping_pid_function) (void *data, gchar *target_key, Target *target, ProcReact_Status status, int result);
+typedef void (*complete_target_mapping_pid_function) (void *data, gchar *target_name, Target *target, ProcReact_Status status, int result);
 
 /**
  * Pointer to a function that constructs a future when a process completes for a target
  *
  * @param data An arbitrary data structure
- * @param target_key Key that uniquely identifies the machine
- * @param target A target from the target array
+ * @param target_name Name that uniquely identifies the machine
+ * @param target A target from the targets table
  * @param future The future that has completed
  * @param status Indicates whether the process terminated abnormally or not
  */
-typedef void (*complete_target_mapping_future_function) (void *data, gchar *target_key, Target *target, ProcReact_Future *future, ProcReact_Status status);
+typedef void (*complete_target_mapping_future_function) (void *data, gchar *target_name, Target *target, ProcReact_Future *future, ProcReact_Status status);
 
 /**
  * @brief Iterator that can be used to execute a process for each target

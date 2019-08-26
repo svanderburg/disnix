@@ -34,12 +34,13 @@ static pid_t next_profile_manifest_target_process(void *data)
     void *key, *value;
     g_hash_table_iter_next(&iterator_data->iter, &key, &value);
     ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)value;
+    Target *target = g_hash_table_lookup(iterator_data->targets_table, (gchar*)key);
 
     /* Invoke the next profile manifest target operation process */
-    pid_t pid = iterator_data->map_profilemanifesttarget(iterator_data->data, (gchar*)key, profile_manifest_target);
+    pid_t pid = iterator_data->map_profilemanifesttarget(iterator_data->data, (gchar*)key, profile_manifest_target, target);
 
     /* Increase the iterator index and update the pid table */
-    next_iteration_process(&iterator_data->model_iterator_data, pid, profile_manifest_target);
+    next_iteration_process(&iterator_data->model_iterator_data, pid, (gchar*)key);
 
     /* Return the pid of the invoked process */
     return pid;
@@ -50,13 +51,15 @@ static void complete_profile_manifest_target_process(void *data, pid_t pid, Proc
     ProfileManifestTargetIteratorData *iterator_data = (ProfileManifestTargetIteratorData*)data;
 
     /* Retrieve the completed profile manifest target */
-    ProfileManifestTarget *profile_manifest_target = complete_iteration_process(&iterator_data->model_iterator_data, pid, status, result);
+    gchar *target_name = complete_iteration_process(&iterator_data->model_iterator_data, pid, status, result);
+    ProfileManifestTarget *profile_manifest_target = g_hash_table_lookup(iterator_data->profile_manifest_target_table, target_name);
+    Target *target = g_hash_table_lookup(iterator_data->targets_table, target_name);
 
     /* Invoke callback that handles completion a profile manifest target */
-    iterator_data->complete_profilemanifesttarget(iterator_data->data, profile_manifest_target, status, result);
+    iterator_data->complete_profilemanifesttarget(iterator_data->data, target_name, profile_manifest_target, target, status, result);
 }
 
-ProcReact_PidIterator create_profile_manifest_target_iterator(GHashTable *profile_manifest_target_table, map_profilemanifesttarget_function map_profilemanifesttarget, complete_profilemanifesttarget_function complete_profilemanifesttarget, void *data)
+ProcReact_PidIterator create_profile_manifest_target_iterator(GHashTable *profile_manifest_target_table, map_profilemanifesttarget_function map_profilemanifesttarget, complete_profilemanifesttarget_function complete_profilemanifesttarget, GHashTable *targets_table, void *data)
 {
     ProfileManifestTargetIteratorData *profile_manifest_target_iterator_data = (ProfileManifestTargetIteratorData*)g_malloc(sizeof(ProfileManifestTargetIteratorData));
 
@@ -65,6 +68,7 @@ ProcReact_PidIterator create_profile_manifest_target_iterator(GHashTable *profil
     g_hash_table_iter_init(&profile_manifest_target_iterator_data->iter, profile_manifest_target_iterator_data->profile_manifest_target_table);
     profile_manifest_target_iterator_data->map_profilemanifesttarget = map_profilemanifesttarget;
     profile_manifest_target_iterator_data->complete_profilemanifesttarget = complete_profilemanifesttarget;
+    profile_manifest_target_iterator_data->targets_table = targets_table;
     profile_manifest_target_iterator_data->data = data;
 
     return procreact_initialize_pid_iterator(has_next_profile_manifest_target_process, next_profile_manifest_target_process, procreact_retrieve_boolean, complete_profile_manifest_target_process, profile_manifest_target_iterator_data);

@@ -39,9 +39,9 @@ static void print_activation_step(const gchar *activity, const ServiceMapping *m
 
 static pid_t activate_mapping(ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar **arguments, const unsigned int arguments_length)
 {
-    gchar *target_property = find_target_key(target);
+    gchar *target_key = find_target_key(target);
     print_activation_step("Activating", mapping, service, arguments, arguments_length); /* Print debug message */
-    return exec_activate((char*)target->client_interface, target_property, (char*)mapping->container, (char*)service->type, (char**)arguments, arguments_length, (char*)service->pkg);
+    return exec_activate((char*)target->client_interface, target_key, (char*)mapping->container, (char*)service->type, (char**)arguments, arguments_length, (char*)service->pkg);
 }
 
 static pid_t dry_run_activate_mapping(ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar **arguments, const unsigned int arguments_length)
@@ -52,9 +52,9 @@ static pid_t dry_run_activate_mapping(ServiceMapping *mapping, ManifestService *
 
 static pid_t deactivate_mapping(ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar **arguments, const unsigned int arguments_length)
 {
-    gchar *target_property = find_target_key(target);
+    gchar *target_key = find_target_key(target);
     print_activation_step("Deactivating", mapping, service, arguments, arguments_length); /* Print debug message */
-    return exec_deactivate((char*)target->client_interface, target_property, (char*)mapping->container, (char*)service->type, (char**)arguments, arguments_length, (char*)service->pkg);
+    return exec_deactivate((char*)target->client_interface, target_key, (char*)mapping->container, (char*)service->type, (char**)arguments, arguments_length, (char*)service->pkg);
 }
 
 static pid_t dry_run_deactivate_mapping(ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar **arguments, const unsigned int arguments_length)
