@@ -52,6 +52,9 @@ typedef struct
 
     /** Hash table of the available target machines */
     GHashTable *targets_table;
+
+    /** Indicates whether the manifest has the correct version */
+    int correct_version;
 }
 Manifest;
 

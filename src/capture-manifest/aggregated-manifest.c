@@ -112,6 +112,7 @@ Manifest *aggregate_manifest(GHashTable *profile_manifest_target_table, GHashTab
     manifest->services_table = g_hash_table_new(g_str_hash, g_str_equal);
     manifest->service_mapping_array = g_ptr_array_new();
     manifest->snapshot_mapping_array = g_ptr_array_new();
+    manifest->correct_version = TRUE;
 
     g_hash_table_iter_init(&iter, profile_manifest_target_table);
     while(g_hash_table_iter_next(&iter, &key, &value))

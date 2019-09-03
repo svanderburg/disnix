@@ -183,6 +183,9 @@ static Manifest *convert_manifest(OldManifest *old_manifest, GHashTable *targets
         }
     }
 
+    /* Set correct version to TRUE */
+    manifest->correct_version = TRUE;
+
     return manifest;
 }
 

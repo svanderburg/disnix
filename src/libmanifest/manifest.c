@@ -84,15 +84,25 @@ static Manifest *parse_manifest(xmlNodePtr element, const unsigned int flags, co
                 manifest->snapshot_mapping_array = g_ptr_array_new();
             if(manifest->targets_table == NULL)
                 manifest->targets_table = NixXML_create_g_hash_table();
+
+            manifest->correct_version = TRUE;
         }
 
         return manifest;
     }
     else
     {
+        Manifest *manifest = (Manifest*)g_malloc(sizeof(Manifest));
+        manifest->profile_mapping_table = NixXML_create_g_hash_table();
+        manifest->services_table = NixXML_create_g_hash_table();
+        manifest->service_mapping_array = g_ptr_array_new();
+        manifest->snapshot_mapping_array = g_ptr_array_new();
+        manifest->targets_table = NixXML_create_g_hash_table();
+        manifest->correct_version = FALSE;
         g_printerr("Disnix requires a manifest that uses the version 2 structure!\n");
         g_printerr("You can convert an old V1 version manifest file by running disnix-convert!\n");
-        return NULL;
+
+        return manifest;
     }
 }
 
@@ -192,6 +202,8 @@ int check_manifest(const Manifest *manifest)
 
     /* Check properties */
 
+    if(!manifest->correct_version)
+        status = FALSE;
     if(!check_profile_mapping_table(manifest->profile_mapping_table))
         status = FALSE;
     if(!check_services_table(manifest->services_table))
