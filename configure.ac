@@ -70,7 +70,7 @@ AC_ARG_WITH(dbus-sys, [  --with-dbus-sys=<dir>   where D-BUS system.d directory 
 if ! test -z "$with_dbus_sys" ; then
     DBUS_SYS_DIR="$with_dbus_sys"
 else
-    DBUS_SYS_DIR="$sysconfdir/dbus-1/system.d"
+    DBUS_SYS_DIR="$datadir/dbus-1/system.d"
 fi
 AC_SUBST(DBUS_SYS_DIR)
 
