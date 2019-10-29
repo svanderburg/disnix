@@ -44,7 +44,7 @@ void *NixXML_parse_value(xmlNodePtr element, void *userdata)
     if(element->children != NULL && element->children->type == XML_TEXT_NODE)
         return xmlStrdup(element->children->content);
     else
-        return NULL;
+        return xmlStrdup((xmlChar*) ""); /* If there are no children we convert to an empty string. This is to cover the scenario when a XML shorttag is defined. It would be NULL otherwise. */
 }
 
 void *NixXML_parse_int(xmlNodePtr element, void *userdata)
