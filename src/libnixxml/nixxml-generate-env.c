@@ -50,6 +50,14 @@ xmlChar *NixXML_generate_env_value_from_bool(const void *value, void *userdata)
         return xmlStrdup((xmlChar*) "");
 }
 
+xmlChar *NixXML_generate_env_value_from_bool_string(const void *value, void *userdata)
+{
+    if(xmlStrcmp((xmlChar*)value, (xmlChar*) "true") == 0)
+        return xmlStrdup((xmlChar*) "1");
+    else
+        return xmlStrdup((xmlChar*) "");
+}
+
 xmlChar *NixXML_append_value_to_list_env_value(xmlChar *value, const xmlChar *add_value)
 {
     if(value == NULL)

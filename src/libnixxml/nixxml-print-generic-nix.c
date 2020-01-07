@@ -36,6 +36,9 @@ void NixXML_print_expr_nix(FILE *file, const void *value, const int indent_level
         case NIX_XML_TYPE_BOOL:
             NixXML_print_value_nix(file, node->value, indent_level, userdata);
             break;
+        case NIX_XML_TYPE_PATH:
+            NixXML_print_path_nix(file, node->value, indent_level, userdata);
+            break;
         case NIX_XML_TYPE_LIST:
             NixXML_print_list_nix(file, node->value, indent_level, userdata, params->print_list_elements, NixXML_print_expr_nix);
             break;

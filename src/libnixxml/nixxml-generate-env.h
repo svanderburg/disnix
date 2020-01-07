@@ -74,6 +74,16 @@ xmlChar *NixXML_generate_env_value_from_float(const void *value, void *userdata)
 xmlChar *NixXML_generate_env_value_from_bool(const void *value, void *userdata);
 
 /**
+ * Converts a string representing a boolean value ("true" or "false") to an
+ * environment variable representation.
+ *
+ * @param value Pointer to a data structure to convert
+ * @param userdata Arbitrary user data that is propagated to all generate functions
+ * @return The environment variable representation of the value
+ */
+xmlChar *NixXML_generate_env_value_from_bool_string(const void *value, void *userdata);
+
+/**
  * Appends another string value to a generate environment for a list.
  *
  * @param value A partial environment variable representation of a list

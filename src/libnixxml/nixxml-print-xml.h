@@ -116,6 +116,17 @@ void NixXML_print_close_root_tag(FILE *file, const char *root_element_name);
 void NixXML_print_string_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
 
 /**
+ * Prints a string and annotates it with a path type.
+ *
+ * @param file File descriptor to write to
+ * @param value Pointer to the first character of a string
+ * @param indent_level Specifies the indent level, or -1 to disable indentation
+ * @param type_property_name Name of the type property or NULL to not display any type annotations
+ * @param userdata Arbitrary user data that gets propagated to all print functions
+ */
+void NixXML_print_string_as_path_xml(FILE *file, const void *value, const int indent_level, const char *type_property_name, void *userdata);
+
+/**
  * Prints a string and annotates it with an integer type.
  *
  * @param file File descriptor to write to

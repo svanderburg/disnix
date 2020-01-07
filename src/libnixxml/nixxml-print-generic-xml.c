@@ -31,6 +31,9 @@ void NixXML_print_expr_simple_xml(FILE *file, const void *value, const int inden
         case NIX_XML_TYPE_STRING:
             NixXML_print_string_xml(file, node->value, indent_level, type_property_name, userdata);
             break;
+        case NIX_XML_TYPE_PATH:
+            NixXML_print_string_as_path_xml(file, node->value, indent_level, type_property_name, userdata);
+            break;
         case NIX_XML_TYPE_INT:
             NixXML_print_string_as_int_xml(file, node->value, indent_level, type_property_name, userdata);
             break;
@@ -73,6 +76,9 @@ void NixXML_print_expr_verbose_xml(FILE *file, const void *value, const int inde
             break;
         case NIX_XML_TYPE_STRING:
             NixXML_print_string_xml(file, node->value, indent_level, type_property_name, userdata);
+            break;
+        case NIX_XML_TYPE_PATH:
+            NixXML_print_string_as_path_xml(file, node->value, indent_level, type_property_name, userdata);
             break;
         case NIX_XML_TYPE_FLOAT:
             NixXML_print_string_as_float_xml(file, node->value, indent_level, type_property_name, userdata);

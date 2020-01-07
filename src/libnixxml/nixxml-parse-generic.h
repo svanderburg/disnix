@@ -81,13 +81,22 @@ void *NixXML_parse_generic_int(xmlNodePtr element, void *userdata);
 void *NixXML_parse_generic_float(xmlNodePtr element, void *userdata);
 
 /**
- * Parser a boolean node.
+ * Parses a boolean node.
  *
  * @param element XML element to parse.
  * @param userdata Parameters propagated to all parse functions
  * @return A NiXML_Node with a bool type
  */
 void *NixXML_parse_generic_bool(xmlNodePtr element, void *userdata);
+
+/**
+ * Parses a path node.
+ *
+ * @param element XML element to parse.
+ * @param userdata Parameters propagated to all parse functions
+ * @return A NiXML_Node with a bool type
+ */
+void *NixXML_parse_generic_path(xmlNodePtr element, void *userdata);
 
 /**
  * Generically parses a list.

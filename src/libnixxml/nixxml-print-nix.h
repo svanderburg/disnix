@@ -70,6 +70,16 @@ void NixXML_print_string_nix(FILE *file, const void *value, const int indent_lev
 void NixXML_print_value_nix(FILE *file, const void *value, const int indent_level, void *userdata);
 
 /**
+ * Prints a string as a path, escaped it when needed.
+ *
+ * @param file File descriptor to write to
+ * @param value Pointer to the first character of a string
+ * @param indent_level Specifies the indent level, or -1 to disable indentation
+ * @param userdata Arbitrary user data that gets propagated to all print functions
+ */
+void NixXML_print_path_nix(FILE *file, const void *value, const int indent_level, void *userdata);
+
+/**
  * Prints an interger.
  *
  * @param file File descriptor to write to

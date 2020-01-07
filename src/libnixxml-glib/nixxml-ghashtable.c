@@ -110,7 +110,8 @@ int NixXML_compare_g_property_tables(GHashTable *property_table1, GHashTable *pr
 void NixXML_insert_into_g_hash_table(void *table, const xmlChar *key, void *value, void *userdata)
 {
     GHashTable *hash_table = (GHashTable*)table;
-    g_hash_table_insert(hash_table, g_strdup((gchar*)key), value);
+    if(value != NULL)
+        g_hash_table_insert(hash_table, g_strdup((gchar*)key), value);
 }
 
 /* Nix printing */

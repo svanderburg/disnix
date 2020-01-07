@@ -20,6 +20,10 @@
  */
 
 #include "nixxml-print-nix.h"
+#include <string.h>
+
+#define TRUE 1
+#define FALSE 0
 
 void NixXML_print_string_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
@@ -56,6 +60,49 @@ void NixXML_print_string_nix(FILE *file, const void *value, const int indent_lev
 void NixXML_print_value_nix(FILE *file, const void *value, const int indent_level, void *userdata)
 {
     fprintf(file, "%s", (const char*)value);
+}
+
+void NixXML_print_path_nix(FILE *file, const void *value, const int indent_level, void *userdata)
+{
+    const char *string_value = (const char*)value;
+    unsigned int i = 0;
+    int has_spaces = FALSE;
+
+    /* Check if the path contains whitespaces */
+
+    while(string_value[i] != '\0')
+    {
+        if(string_value[i] == ' ')
+        {
+            has_spaces = TRUE;
+            break;
+        }
+
+        i++;
+    }
+
+
+    /* Print the path */
+
+    if(has_spaces)
+    {
+        fprintf(file, "/. +");
+        NixXML_print_string_nix(file, value, indent_level, userdata);
+    }
+    else
+    {
+        if((strlen(string_value) > 0 && string_value[0] == '/') /* Check whether we need can literally print the path */
+          || (strlen(string_value) > 1 && string_value[0] == '.' && string_value[1] == '/'))
+            NixXML_print_value_nix(file, value, indent_level, userdata);
+        else if(strcmp(string_value, "") == 0 || strcmp(string_value, ".") == 0) /* An empty string or . is considered current directory that requires a dedicated construct */
+            fprintf(file, "./.");
+        else
+        {
+            /* Otherwise, we consider the path a relative path */
+            fprintf(file, "./");
+            NixXML_print_value_nix(file, value, indent_level, userdata);
+        }
+    }
 }
 
 void NixXML_print_int_nix(FILE *file, const void *value, const int indent_level, void *userdata)

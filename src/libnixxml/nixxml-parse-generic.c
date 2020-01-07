@@ -52,6 +52,11 @@ void *NixXML_parse_generic_bool(xmlNodePtr element, void *userdata)
     return parse_generic_value(element, NIX_XML_TYPE_BOOL, userdata);
 }
 
+void *NixXML_parse_generic_path(xmlNodePtr element, void *userdata)
+{
+    return parse_generic_value(element, NIX_XML_TYPE_PATH, userdata);
+}
+
 void *NixXML_create_generic_list(xmlNodePtr element, void *userdata)
 {
     NixXML_ParseExprParams *params = (NixXML_ParseExprParams*)userdata;
@@ -119,6 +124,8 @@ void *NixXML_parse_expr(xmlNodePtr element, void *userdata)
     }
     else if(xmlStrcmp(type, (xmlChar*) "string") == 0)
         return NixXML_parse_generic_string(element, userdata);
+    else if(xmlStrcmp(type, (xmlChar*) "path") == 0)
+        return NixXML_parse_generic_path(element, userdata);
     else if(xmlStrcmp(type, (xmlChar*) "int") == 0)
         return NixXML_parse_generic_int(element, userdata);
     else if(xmlStrcmp(type, (xmlChar*) "float") == 0)

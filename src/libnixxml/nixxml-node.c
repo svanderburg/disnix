@@ -36,6 +36,7 @@ void NixXML_delete_node(NixXML_Node *node, NixXML_DeleteObjectFunc delete_list, 
             case NIX_XML_TYPE_INT:
             case NIX_XML_TYPE_FLOAT:
             case NIX_XML_TYPE_BOOL:
+            case NIX_XML_TYPE_PATH:
                 xmlFree(node->value);
                 break;
             case NIX_XML_TYPE_LIST:
@@ -60,6 +61,7 @@ int NixXML_compare_nodes(const NixXML_Node *left, const NixXML_Node *right, NixX
             case NIX_XML_TYPE_INT:
             case NIX_XML_TYPE_FLOAT:
             case NIX_XML_TYPE_BOOL:
+            case NIX_XML_TYPE_PATH:
                 return (xmlStrcmp((xmlChar*)left->value, (xmlChar*)right->value) == 0);
             case NIX_XML_TYPE_LIST:
                 return compare_lists(left->value, right->value);

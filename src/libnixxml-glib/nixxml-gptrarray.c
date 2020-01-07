@@ -28,7 +28,9 @@ void *NixXML_create_g_ptr_array_from_element(xmlNodePtr element, void *userdata)
 void NixXML_add_value_to_g_ptr_array(void *list, void *value, void *userdata)
 {
     GPtrArray *array = (GPtrArray*)list;
-    g_ptr_array_add(array, value);
+
+    if(value != NULL)
+        g_ptr_array_add(array, value);
 }
 
 void *NixXML_finalize_g_ptr_array(void *list, void *userdata)

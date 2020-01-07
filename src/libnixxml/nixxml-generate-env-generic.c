@@ -29,13 +29,12 @@ xmlChar *NixXML_generate_env_value_from_node(const void *value, void *userdata)
     switch(node->type)
     {
         case NIX_XML_TYPE_STRING:
-            return NixXML_generate_env_value_from_string(node->value, userdata);
+        case NIX_XML_TYPE_PATH:
         case NIX_XML_TYPE_INT:
-            return NixXML_generate_env_value_from_int(node->value, userdata);
         case NIX_XML_TYPE_FLOAT:
-            return NixXML_generate_env_value_from_float(node->value, userdata);
+            return NixXML_generate_env_value_from_string(node->value, userdata);
         case NIX_XML_TYPE_BOOL:
-            return NixXML_generate_env_value_from_bool(node->value, userdata);
+            return NixXML_generate_env_value_from_bool_string(node->value, userdata);
         case NIX_XML_TYPE_ATTRSET:
             return NULL;
         case NIX_XML_TYPE_LIST:
