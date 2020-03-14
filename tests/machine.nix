@@ -13,23 +13,23 @@
     inherit dysnomia enableMultiUser;
   };
 
-  users.extraUsers = [
-    { uid = 1000;
-      name = "unprivileged";
+  users.extraUsers = {
+    unprivileged = {
+      uid = 1000;
       group = "users";
       shell = "/bin/sh";
       description = "Unprivileged user for the disnix-service";
-    }
+    };
 
-    { uid = 1001;
-      name = "privileged";
+    privileged = {
+      uid = 1001;
       group = "users";
       shell = "/bin/sh";
       extraGroups = [ "disnix" ];
       description = "Privileged user for the disnix-service";
-    }
-  ];
-  
+    };
+  };
+
   # We can't download any substitutes in a test environment. To make tests
   # faster, we disable substitutes so that Nix does not waste any time by
   # attempting to download them.
