@@ -12,6 +12,15 @@ let
   getTargetProperty = target:
     getAttr target.targetProperty target.properties;
 
+  generateDependencyMappingsForOrderedDependencies = {service, services, targetAliases}:
+    (generateDependencyMappings {
+      inherit service services targetAliases;
+      dependencyType = "dependsOn";
+    }) ++ (generateDependencyMappings {
+      inherit service services targetAliases;
+      dependencyType = "activatesAfter";
+    });
+
   generateDependencyMappings = {services, service, dependencyType, targetAliases}:
     lib.flatten (map (dependencyName:
       let
@@ -29,10 +38,9 @@ let
             inherit (dependencyService) name type;
             pkg = dependencyService._pkgsPerSystem."${target.system}".outPath;
 
-            dependsOn = generateDependencyMappings {
+            dependsOn = generateDependencyMappingsForOrderedDependencies {
               inherit services targetAliases;
               service = dependencyService;
-              dependencyType = "dependsOn";
             };
           };
           container = target.selectedContainer;
@@ -46,9 +54,8 @@ let
       let
         pkg = service._pkgsPerSystem."${system}".outPath;
 
-        dependsOn = generateDependencyMappings {
-          inherit services service targetAliases;
-          dependencyType = "dependsOn";
+        dependsOn = generateDependencyMappingsForOrderedDependencies {
+          inherit service services targetAliases;
         };
       in
       {
@@ -64,6 +71,8 @@ let
             inherit services service targetAliases;
             dependencyType = "connectsTo";
           };
+        } // lib.optionalAttrs (service ? providesContainers) {
+          inherit (service) providesContainers;
         };
       }
     ) (attrNames service._pkgsPerSystem);
@@ -82,9 +91,8 @@ let
         targetProperty = getTargetProperty target;
         targetName = getAttr targetProperty targetAliases;
 
-        dependsOn = generateDependencyMappings {
-          inherit services service targetAliases;
-          dependencyType = "dependsOn";
+        dependsOn = generateDependencyMappingsForOrderedDependencies {
+          inherit service services targetAliases;
         };
       in
       {
@@ -104,9 +112,8 @@ let
         targetProperty = getTargetProperty target;
         targetName = getAttr targetProperty targetAliases;
 
-        dependsOn = generateDependencyMappings {
-          inherit services service targetAliases;
-          dependencyType = "dependsOn";
+        dependsOn = generateDependencyMappingsForOrderedDependencies {
+          inherit service services targetAliases;
         };
 
         pkg = service._pkgsPerSystem."${target.system}".outPath;

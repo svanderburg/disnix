@@ -68,6 +68,13 @@
                 </mapping>
               </xsl:for-each>
             </connectsTo>
+            <providesContainers>
+              <xsl:for-each select="attrs/attr[@name='providesContainers']/attrs/attr">
+                <container name="{@name}">
+                  <xsl:apply-templates select="*" />
+                </container>
+              </xsl:for-each>
+            </providesContainers>
           </service>
         </xsl:for-each>
       </services>

@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <state-management.h>
 #include <servicemappingarray.h>
+#include <manifestservicestable.h>
 #include <manifestservice.h>
 
 static int lock_or_unlock_services(int log_fd, ProfileManifest *profile_manifest, gchar *action, pid_t (*notify_function) (gchar *type, gchar *container, gchar *component, int stdout, int stderr))
@@ -22,9 +23,16 @@ static int lock_or_unlock_services(int log_fd, ProfileManifest *profile_manifest
         pid_t pid;
         ProcReact_Status status;
         int result;
+        ManifestService *container_service;
+        xmlChar *type;
 
-        dprintf(log_fd, "Notifying %s on %s: of type: %s in container: %s\n", action, service->pkg, service->type, mapping->container);
-        pid = notify_function((gchar*)service->type, (gchar*)mapping->container, (gchar*)service->pkg, log_fd, log_fd);
+        if((container_service = find_container_service_dependency(profile_manifest->services_table, service, mapping->container, mapping->target)) == NULL)
+            type = service->type;
+        else
+            type = container_service->pkg;
+
+        dprintf(log_fd, "Notifying %s on %s: of type: %s in container: %s\n", action, service->pkg, type, mapping->container);
+        pid = notify_function((gchar*)type, (gchar*)mapping->container, (gchar*)service->pkg, log_fd, log_fd);
         result = procreact_wait_for_boolean(pid, &status);
 
         if(status != PROCREACT_STATUS_OK || !result)

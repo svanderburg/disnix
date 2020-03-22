@@ -22,11 +22,11 @@
 #include <snapshotmapping-traverse.h>
 #include <targetstable.h>
 
-static pid_t delete_state_on_target(SnapshotMapping *mapping, ManifestService *service, Target *target, xmlChar **arguments, unsigned int arguments_length)
+static pid_t delete_state_on_target(SnapshotMapping *mapping, ManifestService *service, Target *target, xmlChar *type, xmlChar **arguments, unsigned int arguments_length)
 {
     gchar *target_key = find_target_key(target);
     g_print("[target: %s]: Deleting obsolete state of service: %s\n", mapping->target, mapping->component);
-    return exec_delete_state((char*)target->client_interface, target_key, (char*)mapping->container, (char*)service->type, (char**)arguments, arguments_length, (char*)service->pkg);
+    return exec_delete_state((char*)target->client_interface, target_key, (char*)mapping->container, (char*)type, (char**)arguments, arguments_length, (char*)service->pkg);
 }
 
 static void complete_delete_state_on_target(SnapshotMapping *mapping, ManifestService *service, Target *target, ProcReact_Status status, int result)

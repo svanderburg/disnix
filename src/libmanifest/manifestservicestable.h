@@ -89,4 +89,6 @@ void print_services_table_nix(FILE *file, GHashTable *services_table, const int 
  */
 void print_services_table_xml(FILE *file, GHashTable *services_table, const int indent_level, const char *type_property_name, void *userdata);
 
+ManifestService *find_container_service_dependency(GHashTable *services_table, const ManifestService *manifest_service, const xmlChar *container, const xmlChar *target);
+
 #endif

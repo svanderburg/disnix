@@ -25,11 +25,11 @@
 
 extern volatile int interrupted;
 
-static void print_activation_step(const gchar *activity, const ServiceMapping *mapping, const ManifestService *service, xmlChar **arguments, const unsigned int arguments_length)
+static void print_activation_step(const gchar *activity, const ServiceMapping *mapping, const ManifestService *service, xmlChar *type, xmlChar **arguments, const unsigned int arguments_length)
 {
     unsigned int i;
 
-    g_print("[target: %s]: %s service with key: %s and package: %s of type: %s in container: %s, arguments: ", mapping->target, activity, mapping->service, service->pkg, service->type, mapping->container);
+    g_print("[target: %s]: %s service with key: %s and package: %s of type: %s in container: %s, arguments: ", mapping->target, activity, mapping->service, service->pkg, type, mapping->container);
 
     for(i = 0; i < arguments_length; i++)
         g_print("%s ", arguments[i]);
@@ -37,29 +37,29 @@ static void print_activation_step(const gchar *activity, const ServiceMapping *m
     g_print("\n");
 }
 
-static pid_t activate_mapping(ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar **arguments, const unsigned int arguments_length)
+static pid_t activate_mapping(ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar *type, xmlChar **arguments, const unsigned int arguments_length)
 {
     gchar *target_key = find_target_key(target);
-    print_activation_step("Activating", mapping, service, arguments, arguments_length); /* Print debug message */
-    return exec_activate((char*)target->client_interface, target_key, (char*)mapping->container, (char*)service->type, (char**)arguments, arguments_length, (char*)service->pkg);
+    print_activation_step("Activating", mapping, service, type, arguments, arguments_length); /* Print debug message */
+    return exec_activate((char*)target->client_interface, target_key, (char*)mapping->container, (char*)type, (char**)arguments, arguments_length, (char*)service->pkg);
 }
 
-static pid_t dry_run_activate_mapping(ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar **arguments, const unsigned int arguments_length)
+static pid_t dry_run_activate_mapping(ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar *type, xmlChar **arguments, const unsigned int arguments_length)
 {
-    print_activation_step("Dry-run activating", mapping, service, arguments, arguments_length); /* Print debug message */
+    print_activation_step("Dry-run activating", mapping, service, type, arguments, arguments_length); /* Print debug message */
     return exec_true(); /* Execute dummy process */
 }
 
-static pid_t deactivate_mapping(ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar **arguments, const unsigned int arguments_length)
+static pid_t deactivate_mapping(ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar *type, xmlChar **arguments, const unsigned int arguments_length)
 {
     gchar *target_key = find_target_key(target);
-    print_activation_step("Deactivating", mapping, service, arguments, arguments_length); /* Print debug message */
-    return exec_deactivate((char*)target->client_interface, target_key, (char*)mapping->container, (char*)service->type, (char**)arguments, arguments_length, (char*)service->pkg);
+    print_activation_step("Deactivating", mapping, service, type, arguments, arguments_length); /* Print debug message */
+    return exec_deactivate((char*)target->client_interface, target_key, (char*)mapping->container, (char*)type, (char**)arguments, arguments_length, (char*)service->pkg);
 }
 
-static pid_t dry_run_deactivate_mapping(ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar **arguments, const unsigned int arguments_length)
+static pid_t dry_run_deactivate_mapping(ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar *type, xmlChar **arguments, const unsigned int arguments_length)
 {
-    print_activation_step("Dry-run deactivating", mapping, service, arguments, arguments_length); /* Print debug message */
+    print_activation_step("Dry-run deactivating", mapping, service, type, arguments, arguments_length); /* Print debug message */
     return exec_true(); /* Execute dummy process */
 }
 

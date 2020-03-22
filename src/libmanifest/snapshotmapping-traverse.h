@@ -32,11 +32,12 @@
  * @param mapping A snapshot mapping from a snapshots array
  * @param service Service that is mapped to the machine
  * @param target Target machine to which the snapshot is mapped
+ * @param type Module that executes state deployment activities
  * @param arguments Arguments passed to the client interface
  * @param arguments_length Length of the arguments array
  * @return PID of the spawned process
  */
-typedef pid_t (*map_snapshot_item_function) (SnapshotMapping *mapping, ManifestService *service, Target *target, xmlChar **arguments, unsigned int arguments_length);
+typedef pid_t (*map_snapshot_item_function) (SnapshotMapping *mapping, ManifestService *service, Target *target, xmlChar *type, xmlChar **arguments, unsigned int arguments_length);
 
 /**
  * Function that gets executed when a mapping function completes.

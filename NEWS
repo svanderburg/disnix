@@ -1,3 +1,9 @@
+version 0.10
+============
+- Services can also be exposed as containers. This makes it possible to deploy both an application server as well as the applications hosted by it as a Disnix service
+
+- Introduced activatesAfter property. It can be used for ordering the activation, but not propagating any inter-dependency parameters
+
 Version 0.9
 ===========
 - libmanifest, libdistderivation and libinfrastructure models are more sophistically checked for missing properties and dangling references

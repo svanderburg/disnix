@@ -44,11 +44,12 @@ ServiceStatus;
  * @param mapping A service mapping to change the state for
  * @param service The properties of the service that is to be mapped
  * @param target The properties of the target machine where the service is mapped to
+ * @param type Module that executes state deployment activities
  * @param arguments Arguments to pass to the process
  * @param arguments_length Length of the arguments array
  * @return The PID of the process invoked
  */
-typedef pid_t (*service_mapping_function) (ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar **arguments, unsigned int arguments_length);
+typedef pid_t (*service_mapping_function) (ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar *type, xmlChar **arguments, unsigned int arguments_length);
 
 /**
  * Pointer to a function that gets executed when an operation on a service

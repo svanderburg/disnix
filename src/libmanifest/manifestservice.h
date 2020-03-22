@@ -38,6 +38,8 @@ typedef struct
     GPtrArray *depends_on;
     /* Array of inter-dependency mappings for which activation ordering does not matter */
     GPtrArray *connects_to;
+    /* Exposes container-specific configuration properties that the service might expose */
+    GHashTable *provides_containers_table;
 }
 ManifestService;
 
@@ -94,5 +96,7 @@ void print_manifest_service_nix(FILE *file, const ManifestService *service, cons
  * @param userdata Arbitrary user data that gets propagated to all print functions
  */
 void print_manifest_service_xml(FILE *file, const ManifestService *service, const int indent_level, const char *type_property_name, void *userdata);
+
+xmlChar **generate_activation_arguments_for_container_service(const ManifestService *service, const gchar *container_name);
 
 #endif

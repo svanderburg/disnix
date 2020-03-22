@@ -60,6 +60,7 @@ static void aggregate_service_tables(GHashTable *aggregated_services_table, GHas
             aggregated_service->type = service->type;
             aggregated_service->depends_on = augment_local_dependencies(service->depends_on);
             aggregated_service->connects_to = augment_local_dependencies(service->connects_to);
+            aggregated_service->provides_containers_table = service->provides_containers_table;
             g_hash_table_insert(aggregated_services_table, key, aggregated_service);
         }
     }

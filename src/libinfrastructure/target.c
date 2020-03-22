@@ -213,7 +213,7 @@ static GHashTable *find_container(GHashTable *containers_table, const gchar *nam
         return g_hash_table_lookup(containers_table, name);
 }
 
-xmlChar **generate_activation_arguments(const Target *target, const gchar *container_name)
+xmlChar **generate_activation_arguments_for_target(const Target *target, const gchar *container_name)
 {
     GHashTable *container_table = find_container(target->containers_table, container_name);
 

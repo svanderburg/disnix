@@ -24,21 +24,24 @@
 #include <targetstable.h>
 #include <client-interface.h>
 #include <procreact_pid.h>
-#include <nixxml-generate-env.h>
+#include <manifestservicestable.h>
+#include <mappingparameters.h>
 
-static int spawn_shell(GHashTable *targets_table, const ServiceMapping *mapping, const ManifestService *service, char *command)
+static int spawn_shell(GHashTable *services_table, GHashTable *targets_table, const ServiceMapping *mapping, const ManifestService *service, char *command)
 {
     Target *target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
     gchar *target_key = find_target_key(target);
-    xmlChar **arguments = generate_activation_arguments(target, (gchar*)mapping->container);
+
+    MappingParameters params = create_mapping_parameters(mapping->service, mapping->container, mapping->target, services_table, target);
+
     ProcReact_Status status;
     int exit_status;
 
     g_printerr("[%s]: Connecting to service: %s deployed to container: %s\n", mapping->target, service->pkg, mapping->container);
 
-    exit_status = procreact_wait_for_exit_status(exec_dysnomia_shell((char*)target->client_interface, target_key, (char*)mapping->container, (char*)service->type, (char**)arguments, g_strv_length((char**)arguments), (char*)service->pkg, command), &status);
+    exit_status = procreact_wait_for_exit_status(exec_dysnomia_shell((char*)target->client_interface, target_key, (char*)mapping->container, (char*)params.type, (char**)params.arguments, params.arguments_size, (char*)params.service->pkg, command), &status);
 
-    NixXML_delete_env_variable_array(arguments);
+    destroy_mapping_parameters(&params);
 
     return exit_status;
 }
@@ -99,7 +102,7 @@ int diagnose(const char *service_name, const int show_mappings, const char *mani
             {
                 ServiceMapping *mapping = g_ptr_array_index(candidate_mappings_array, 0);
                 ManifestService *service = g_hash_table_lookup(manifest->services_table, mapping->service);
-                exit_status = spawn_shell(manifest->targets_table, mapping, service, command);
+                exit_status = spawn_shell(manifest->services_table, manifest->targets_table, mapping, service, command);
             }
             else
             {
@@ -119,7 +122,7 @@ int diagnose(const char *service_name, const int show_mappings, const char *mani
                     {
                         ServiceMapping *mapping = g_ptr_array_index(candidate_mappings_array, i);
                         ManifestService *service = g_hash_table_lookup(manifest->services_table, mapping->service);
-                        exit_status = spawn_shell(manifest->targets_table, mapping, service, command);
+                        exit_status = spawn_shell(manifest->services_table, manifest->targets_table, mapping, service, command);
 
                         if(exit_status != 0)
                             break;

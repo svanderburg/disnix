@@ -19,6 +19,7 @@
 
 #include "manifestservicestable.h"
 #include <nixxml-ghashtable.h>
+#include "interdependencymapping.h"
 
 GHashTable *parse_services_table(xmlNodePtr element, void *userdata)
 {
@@ -70,4 +71,23 @@ void print_services_table_nix(FILE *file, GHashTable *services_table, const int 
 void print_services_table_xml(FILE *file, GHashTable *services_table, const int indent_level, const char *type_property_name, void *userdata)
 {
     NixXML_print_g_hash_table_verbose_ordered_xml(file, services_table, "service", "name", indent_level, NULL, userdata, (NixXML_PrintXMLValueFunc)print_manifest_service_xml);
+}
+
+ManifestService *find_container_service_dependency(GHashTable *services_table, const ManifestService *manifest_service, const xmlChar *container, const xmlChar *target)
+{
+    unsigned int i;
+
+    for(i = 0; i < manifest_service->depends_on->len; i++)
+    {
+        InterDependencyMapping *dependency_mapping = g_ptr_array_index(manifest_service->depends_on, i);
+
+        if((target == NULL && dependency_mapping->target == NULL) || xmlStrcmp(target, dependency_mapping->target) == 0)
+        {
+            ManifestService *dependency_service = g_hash_table_lookup(services_table, (gchar*)dependency_mapping->service);
+            if(g_hash_table_contains(dependency_service->provides_containers_table, (gchar*)container))
+                return dependency_service;
+        }
+    }
+
+    return NULL;
 }
