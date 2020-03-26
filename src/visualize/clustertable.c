@@ -95,6 +95,42 @@ void destroy_cluster_table(GHashTable *cluster_table)
     g_hash_table_destroy(cluster_table);
 }
 
+static void print_service_label(ManifestService *service)
+{
+    g_print("%s", service->name);
+
+    if(g_hash_table_size(service->provides_containers_table) == 1)
+    {
+        GHashTableIter iter;
+        gpointer key, value;
+
+        g_hash_table_iter_init(&iter, service->provides_containers_table);
+        while(g_hash_table_iter_next(&iter, &key, &value))
+            g_print("->\\n%s", (gchar*)key);
+    }
+    else if(g_hash_table_size(service->provides_containers_table) > 1)
+    {
+        GHashTableIter iter;
+        gpointer key, value;
+        int first = TRUE;
+
+        g_print("\\n; -> { ");
+
+        g_hash_table_iter_init(&iter, service->provides_containers_table);
+        while(g_hash_table_iter_next(&iter, &key, &value))
+        {
+            if(first)
+                first = FALSE;
+            else
+                g_print("\\n, ");
+
+            g_print("%s", (gchar*)key);
+        }
+
+        g_print("\\n}");
+    }
+}
+
 static void print_container_table(GHashTable *services_table, GHashTable *container_table, int id, gchar *target, int no_containers)
 {
     GHashTableIter iter;
@@ -127,7 +163,15 @@ static void print_container_table(GHashTable *services_table, GHashTable *contai
         {
             ServiceMapping *mapping = g_ptr_array_index(cluster_array, i);
             ManifestService *service = g_hash_table_lookup(services_table, (gchar*)mapping->service);
-            g_print("\"%s:%s:%s\" [ label = \"%s\" ];\n", mapping->service, target, mapping->container, service->name);
+
+            g_print("\"%s:%s:%s\" [ label = \"", mapping->service, target, mapping->container);
+            print_service_label(service);
+            g_print("\"");
+
+            if(g_hash_table_size(service->provides_containers_table) > 0)
+                g_print(", peripheries=2");
+
+            g_print(" ];\n");
         }
 
         if(!no_containers)
