@@ -29,7 +29,7 @@ static void print_activation_step(const gchar *activity, const ServiceMapping *m
 {
     unsigned int i;
 
-    g_print("[target: %s]: %s service with key: %s and package: %s of type: %s in container: %s, arguments: ", mapping->target, activity, mapping->service, service->pkg, type, mapping->container);
+    g_print("[target: %s]: %s service with key: %s and package: %s with module: %s in container: %s, arguments: ", mapping->target, activity, mapping->service, service->pkg, type, mapping->container);
 
     for(i = 0; i < arguments_length; i++)
         g_print("%s ", arguments[i]);

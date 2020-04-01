@@ -140,6 +140,12 @@ simpleTest {
 
       $client->mustSucceed("${env} disnix-manifest -s ${manifestTests}/services-cyclic.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-cyclic.nix");
 
+      # Ordered service dependencies. We have one service that creates a file
+      # and another that checks it contents. The latter does not know the
+      # former's configuration property. It should still get activated last.
+
+      $client->mustSucceed("${env} disnix-manifest -s ${manifestTests}/services-ordering.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-ordering.nix");
+
       # Initialize testService1
       @closure = split('\n', $client->mustSucceed("nix-store -qR $manifest"));
       my @testService1 = grep(/\-testService1/, @closure);

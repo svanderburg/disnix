@@ -36,4 +36,8 @@ rec {
   cyclicTestService2 = import ./cyclicTestService2.nix {
     inherit (pkgs) stdenv;
   };
+
+  afterProcess = import ./after-process.nix {
+    inherit (pkgs) stdenv;
+  };
 }
