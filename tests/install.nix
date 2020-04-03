@@ -126,6 +126,9 @@ simpleTest {
       } else {
           die "testService2B not found!";
       }
+      # Initialize testService1
+      @closure = split('\n', $client->mustSucceed("nix-store -qR $manifest"));
+      my @testService1 = grep(/\-testService1/, @closure);
 
       # Incomplete distribution test. Here we have a complete
       # inter-dependency specification in the services model, but we
@@ -139,16 +142,6 @@ simpleTest {
       # not trigger an error, because the activation ordering is disregarded.
 
       $client->mustSucceed("${env} disnix-manifest -s ${manifestTests}/services-cyclic.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-cyclic.nix");
-
-      # Ordered service dependencies. We have one service that creates a file
-      # and another that checks it contents. The latter does not know the
-      # former's configuration property. It should still get activated last.
-
-      $client->mustSucceed("${env} disnix-manifest -s ${manifestTests}/services-ordering.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-ordering.nix");
-
-      # Initialize testService1
-      @closure = split('\n', $client->mustSucceed("nix-store -qR $manifest"));
-      my @testService1 = grep(/\-testService1/, @closure);
 
       # Test a packages model, a Nix specification that specifies the content of
       # the Nix profiles for each machine

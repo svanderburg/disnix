@@ -402,5 +402,11 @@ simpleTest {
 
       $testtarget1->mustSucceed("/nix/var/nix/profiles/disnix/default/bin/curl --help");
       $testtarget2->mustSucceed("/nix/var/nix/profiles/disnix/default/bin/strace -h");
+
+      # Ordered service dependencies. We have one service that creates a file
+      # and another that checks it contents. The latter does not know the
+      # former's configuration property. It should still get activated last.
+
+      $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-ordering.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-ordering.nix >&2");
     '';
 }
