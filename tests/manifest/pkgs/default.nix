@@ -40,4 +40,12 @@ rec {
   afterProcess = import ./after-process.nix {
     inherit (pkgs) stdenv;
   };
+
+  testServiceContainerProvider = import ./testServiceContainerProvider.nix {
+    inherit (pkgs) stdenv;
+  };
+
+  testServiceContainerConsumer = import ./testServiceContainerConsumer.nix {
+    inherit (pkgs) stdenv;
+  };
 }

@@ -407,6 +407,23 @@ simpleTest {
       # and another that checks it contents. The latter does not know the
       # former's configuration property. It should still get activated last.
 
-      $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-ordering.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-ordering.nix >&2");
+      $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-ordering.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-ordering.nix");
+
+      # Deploy a system with a service that provides a container. Another
+      # service gets activated into that container. Check whether the exposed
+      # 'hello' property has the right value in the output of the consumer
+      # service.
+      $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-containers.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-containers.nix --no-lock");
+      $testtarget1->mustSucceed("cat /tmp/echo_output | grep 'hello=hello-from-service-container\$'");
+
+      # The same testcase as the previous, but it uses a more verbose notation
+      # in the services model.
+      $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-containers-verbose.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-containers.nix --no-lock");
+      $testtarget1->mustSucceed("cat /tmp/echo_output | grep 'hello=hello-from-service-container\$'");
+
+      # Testcase that works with an echo container as part of the infrastructure.
+      # It checks whether the exposed 'hello' property matches what we expect.
+      $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-infracontainer.nix -i ${manifestTests}/infrastructure-container.nix -d ${manifestTests}/distribution-infracontainer.nix --no-lock");
+      $testtarget1->mustSucceed("cat /var/log/disnix/* | grep 'hello=hello-from-infrastructure-container\$'");
     '';
 }
