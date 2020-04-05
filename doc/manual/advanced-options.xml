@@ -402,4 +402,30 @@ StaffTracker = {
 			that have a ring structure.
 		</para>
 	</section>
+
+	<section>
+		<title>Disregarding inter-dependency parameter propagation</title>
+
+		<para>
+			In addition to disregaring the ordering property of inter-dependencies (but still propagating
+			the inter-dependencies and its properties as function parameters), it is also possible to do the opposite --
+			not propagating the inter-dependency and its properties, but maintaing
+			the activation order. This can be done by using the <varname>activatesAfter</varname> parameter
+			instead of the <varname>dependsOn</varname> parameter.
+		</para>
+
+		<para>
+			This property should only be used in exceptional cases. For example, it is internally used by
+			Disnix to ensure that a service providing a container gets activated before a service that needs
+			to be embedded in it, without propagating the container service as an inter-dependency parameter.
+		</para>
+		<para>
+			The inter-dependency parameter must be dropped to ensure that containers on infrastructure level
+			and service level can be used in an identical way.
+			Otherwise, two different kinds of Disnix expressions are needed to work
+			with a container that is provided by a service and by a target machine in the infrastructure model --
+			one that references container properties from the service properties of an inter-dependency
+			and one that uses the container properties from a target in the infrastructure model.
+		</para>
+	</section>
 </chapter>
