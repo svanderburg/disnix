@@ -97,6 +97,15 @@ void print_manifest_service_nix(FILE *file, const ManifestService *service, cons
  */
 void print_manifest_service_xml(FILE *file, const ManifestService *service, const int indent_level, const char *type_property_name, void *userdata);
 
+/**
+ * Generates a string vector with: 'name=value' pairs from the
+ * target properties, which are passed to the activation module as
+ * environment variables. The resulting string must be eventually be removed
+ * from memory with NixXML_delete_env_variable_array()
+ *
+ * @param service A manifest service struct instance
+ * @param container_name Name of the container to deploy to
+ */
 xmlChar **generate_activation_arguments_for_container_service(const ManifestService *service, const gchar *container_name);
 
 #endif
