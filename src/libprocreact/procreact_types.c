@@ -122,7 +122,7 @@ static void append_or_concatenate_buffer(char **tokens, char *buf, unsigned int 
         size_t concat_token_length = last_token_length + token_length;
 
         tokens[tokens_length - 1] = (char*)realloc(tokens[tokens_length - 1], concat_token_length + 1);
-        strncpy(tokens[tokens_length - 1] + last_token_length, token, token_length);
+        memcpy(tokens[tokens_length - 1] + last_token_length, token, token_length);
         tokens[tokens_length - 1][concat_token_length] = '\0';
 
         /* Cleanup obsolete old token */
