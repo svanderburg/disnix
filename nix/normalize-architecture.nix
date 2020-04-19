@@ -240,22 +240,29 @@ let
     filter (target: target ? providedByService) targets;
 
   convertServiceContainerTargetsToInterDependencies = {services, targets}:
-    listToAttrs (map (target:
-      let
-        containerService = getAttr target.providedByService services;
-        serviceTargetProperty = getTargetProperty target;
-      in
-      { inherit (containerService) name;
-        value = containerService // {
+    let
+      containerMappingPerTarget = (map (target:
+        let
+          containerService = getAttr target.providedByService services;
+          serviceTargetProperty = getTargetProperty target;
+        in
+        containerService // {
           targets = filter (target:
             let
               containerTargetProperty = getTargetProperty target;
             in
             serviceTargetProperty == containerTargetProperty
           ) containerService.targets;
-        };
+        }
+      ) targets);
+    in
+    lib.foldr (service: dependencies:
+      dependencies // {
+        "${service.name}" = (if hasAttr service.name dependencies then service // {
+          targets = dependencies."${service.name}".targets or [] ++ service.targets or [];
+        } else service);
       }
-    ) targets);
+    ) {} containerMappingPerTarget;
 
   augmentServiceContainerDependenciesToService = {services, service}:
     let
@@ -274,12 +281,12 @@ let
 
   augmentServiceContainerDependencies = {architecture}:
     architecture // {
-       services = lib.mapAttrs (serviceName: service:
-         augmentServiceContainerDependenciesToService {
-           inherit (architecture) services;
-           inherit service;
-         }
-       ) architecture.services;
+      services = lib.mapAttrs (serviceName: service:
+        augmentServiceContainerDependenciesToService {
+          inherit (architecture) services;
+          inherit service;
+        }
+      ) architecture.services;
     };
 
   generateNormalizedDeploymentArchitecture = {architectureFun, nixpkgs, defaultClientInterface, defaultTargetProperty, defaultDeployState}:
