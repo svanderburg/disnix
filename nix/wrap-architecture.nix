@@ -1,7 +1,7 @@
 {lib}:
 
 let
-  inherit (builtins) isAttrs isList elem hasAttr;
+  inherit (builtins) isAttrs isList elem hasAttr all attrNames;
 
   generateInverseDistribution = {services, infrastructure, distribution}:
     let
@@ -25,14 +25,20 @@ let
       }
     ) infrastructure;
 
-  augmentTargetsToServices = {services, distribution}:
-    lib.mapAttrs (name: service:
-      if service ? targets then service else service // {
-        targets = if hasAttr name distribution then distribution."${name}"
-          else [];
-      }
-    ) services;
+  checkServiceReferencesInDistribution = {distribution, services}:
+    all (serviceName: hasAttr serviceName services) (attrNames distribution);
 
+  augmentTargetsToServices = {services, distribution}:
+    if checkServiceReferencesInDistribution {
+      inherit services distribution;
+    } then
+      lib.mapAttrs (name: service:
+        if service ? targets then service else service // {
+          targets = if hasAttr name distribution then distribution."${name}"
+            else [];
+        }
+      ) services
+    else throw "The distribution model contains a mapping of a service that is not in the services model!";
 in
 {servicesFun ? null, infrastructure, distributionFun ? null, packagesFun ? null}:
 

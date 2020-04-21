@@ -143,6 +143,12 @@ simpleTest {
 
       $client->mustSucceed("${env} disnix-manifest -s ${manifestTests}/services-cyclic.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-cyclic.nix");
 
+      # Missing service in distribution model test. We use a distribution model
+      # that maps a service to a machine, but the service does not exist in the
+      # services model. As a result, it should fail.
+
+      $client->mustFail("${env} disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-missing.nix");
+
       # Test a packages model, a Nix specification that specifies the content of
       # the Nix profiles for each machine
 
