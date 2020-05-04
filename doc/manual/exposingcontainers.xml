@@ -1,0 +1,296 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="chap-exposingcontainers">
+
+	<title>Exposing services as containers</title>
+
+	<para>
+		The StaffTracker example system shown in <xref linkend="chap-basicusage" /> is only partially automated --
+		Disnix only automates the deployment of the functional/application services of which
+		a system consists, namely: Java web applications (that are supposed to be embedded in Apache Tomcat) and MySQL databases (that need to be
+		managed by a MySQL DBMS).
+	</para>
+
+	<para>
+		The underlying container services: Apache Tomcat and the MySQL DBMS are not managed by Disnix. These services must be deployed by other means first. If they are
+		not present, Dysnomia cannot provide the Dysnomia modules required to manage the life-cycles of application services embedded inside the container services.
+	</para>
+
+	<para>
+		Fortunately, it is also possible to let Disnix expose services as container providers and use these services as deployment targets for application
+		services. Then a system can be fully managed by Disnix.
+	</para>
+
+	<section xml:id="sec-annotating-services-with-container-properties">
+		<title>Annotating services with container properties</title>
+
+		<para>
+			Exposing a service as a container provider can be done by adding a property named: <varname>providesContainers</varname> to a service in the services model.
+		</para>
+
+		<example xml:id="ex-providescontainers">
+			<title>A container providers annotated Apache Tomcat service</title>
+<programlisting>
+simpleAppservingTomcat = rec {
+  name = "simpleAppservingTomcat";
+  pkg = constructors.simpleAppservingTomcat { <co xml:id='co-compose-tomcat' />
+    inherit httpPort;
+    commonLibs = [ "${pkgs.mysql_jdbc}/share/java/mysql-connector-java.jar" ];
+  };
+  httpPort = 8080;
+  catalinaBaseDir = "/var/tomcat/webapps";
+  type = "systemd-unit";
+
+  providesContainers = { <co xml:id='co-providesContainers' />
+    tomcat-webapplication = {
+      httpPort = 8080;
+      catalinaBaseDir = "/var/tomcat/webapps";
+    };
+  };
+};
+</programlisting>
+		</example>
+
+		<para>
+			<xref linkend="ex-providescontainers" /> shows an example of an annotated service in the Disnix service model.
+			This service expose Apache Tomcat as a container provider for services deployed to the <varname>tomcat-webapplication</varname>
+			container:
+		</para>
+
+		<calloutlist>
+			<callout arearefs='co-providesContainers'>
+				<para>
+					The <varname>providesContainers</varname> attribute specifies which container services need to be exposed.
+					In our example, it exposes a container named: <varname>tomcat-webapplication</varname>.
+				</para>
+				<para>
+					Moreover, the container configuration exposes the following
+					properties: <varname>httpPort</varname>
+					that specifies the TCP port handles HTTP traffic, and <varname>catalinaBaseDir</varname>: a directory in which Java
+					web application archives (WAR files) can be copied, that are automatically hot deployed.
+				</para>
+				<para>
+					The <varname>providesContainers</varname> property refers to an attribute set. This also makes
+					it possible to expose more than one container.
+				</para>
+			</callout>
+			<callout arearefs='co-compose-tomcat'>
+				<para>
+					As with application services, the <varname>pkg</varname> attribute refers to a function that constructs
+					the service from its build inputs. In addition, the service needs to be configured in such a way that it uses the
+					configuration values that it exposes through the container properties.
+				</para>
+				<para>
+					For example, the Apache Tomcat
+					service must be configured in such a way that it serves HTTP traffic over the port that we expose
+					as a container property.
+				</para>
+			</callout>
+		</calloutlist>
+
+		<para>
+			In addition to exposing containers, there two additional requirements we must meet when we build/configure
+			a container providing service.
+		</para>
+
+		<example xml:id="ex-build-container-providing-service">
+			<title>A partial Apache Tomcat configuration expression</title>
+<programlisting>
+{stdenv, dysnomia, httpPort, catalinaBaseDir, instanceSuffix ? ""}:
+
+stdenv.mkDerivation {
+  name = "simpleAppservingTomcat";
+  ...
+  postInstall = ''
+    # Add Dysnomia container configuration file for a Tomcat web application
+    mkdir -p $out/etc/dysnomia/containers <co xml:id="co-generate-container-config" />
+    cat &gt; $out/etc/dysnomia/containers/tomcat-webapplication${instanceSuffix} &lt;&lt;EOF
+    tomcatPort=${toString httpPort}
+    catalinaBaseDir=${catalinaBaseDir}
+    EOF
+
+    # Copy the Dysnomia module that manages an Apache Tomcat web application
+    mkdir -p $out/libexec/dysnomia <co xml:id="co-include-tomcat-dysnomia-module" />
+    ln -s ${dysnomia}/libexec/dysnomia/tomcat-webapplication $out/libexec/dysnomia
+  '';
+}
+</programlisting>
+		</example>
+
+		<para>
+			<xref linkend="ex-build-container-providing-service" /> is a partial Nix expression (that leaves out the build instructions) for Apache Tomcat,
+			showing how to expose container services:
+		</para>
+
+		<calloutlist>
+			<callout arearefs='co-generate-container-config'>
+				<para>
+					These shell commands generate a container configuration file. The properties in this configuration file are not used by the Disnix deployment
+					system directly, but makes it possible for containers to become discoverable by the <command>disnix-capture-infra</command> tool.
+				</para>
+			</callout>
+			<callout arearefs='co-include-tomcat-dysnomia-module'>
+				<para>
+					To allow a service to activate itself, or to manage other life-cycle steps, we must include a Dysnomia module that takes
+					care of executing the relevant deployment activities. In this particular example, we will copy the <command>tomcat-webapplication</command>
+					module from the Dysnomia distribution.
+				</para>
+				<para>
+					It is also possible to provide your own implementation of the required Dysnomia module
+					that follows the guidelines descibed in <xref linkend="chap-dysnomia-modules" />.
+				</para>
+			</callout>
+		</calloutlist>
+	</section>
+
+	<section>
+		<title>Deploying application services to container services</title>
+
+		<para>
+			Deploying an application service to a container providing service, can be done by mapping both services to the same target in the distribution model:
+		</para>
+
+		<example xml:id="ex-distribution-model-container-services">
+			<title>A distribution model mapping an application services to a container service</title>
+<programlisting>
+{infrastructure}:
+
+{
+  simpleAppservingTomcat = [ infrastructure.test1 ]; <co xml:id="co-map-container-service" />
+  GeolocationService = [ infrastructure.test1 ]; <co xml:id="co-map-application-service" />
+}
+</programlisting>
+		</example>
+
+		<para>
+			<xref linkend="ex-distribution-model-container-services" /> is a distribution model that maps both an application service
+			and underlying container service to the same target machine:
+		</para>
+
+		<calloutlist>
+			<callout arearefs='co-map-container-service'>
+				<para>
+					This line maps the <varname>simpleAppservingTomcat</varname> service that exposes the
+					<varname>tomcat-webapplication</varname> container as described in <xref linkend="sec-annotating-services-with-container-properties" />
+					to the <varname>test1</varname> machine in the infrastructure model.
+				</para>
+			</callout>
+			<callout arearefs='co-map-application-service'>
+				<para>
+					This line maps the <varname>GeolocationService</varname> application service described in <xref linkend="chap-basicusage" /> to
+					the <varname>test1</varname> machine in the infrastructure model.
+				</para>
+				<para>
+					The <varname>GeolocationService</varname> has a property: <varname>type</varname> that refers to <varname>tomcat-webapplication</varname>.
+					By default, Disnix takes the value of a service's <varname>type</varname> as a container name, unless we use the more verbose notation
+					for distribution mappings described in
+					<xref linkend="chap-advanced-options" />.
+				</para>
+			</callout>
+		</calloutlist>
+
+		<para>
+			When an application service and container service are deployed to the same target machine, then Disnix will automatically detect
+			that there is a service that provides the required
+			container, and will use the properties and Dysnomia module provided by that particular service.
+		</para>
+
+		<para>
+			If no service on the same target provides a container that an application service needs, then Disnix will use the container specifications
+			from the infrastructure model, and
+			assumes that the container service has already been deployed by other means.
+		</para>
+	</section>
+
+	<section>
+		<title>Simplifying the container annotations</title>
+
+		<para>
+			The service configuration shown in <xref linkend="ex-providescontainers" /> suffices to expose a container, but the notation that it uses
+			is very verbose. Moreover, it exposes redundant data. In most cases, we only want to expose a single container.
+			For single containers, we can use a more simplified notation.
+		</para>
+
+		<example xml:id="ex-providescontainer">
+			<title>A simplified container provider annotated Apache Tomcat service</title>
+<programlisting>
+simpleAppservingTomcat = rec {
+  name = "simpleAppservingTomcat";
+  pkg = constructors.simpleAppservingTomcat {
+    inherit httpPort;
+    commonLibs = [ "${pkgs.mysql_jdbc}/share/java/mysql-connector-java.jar" ];
+  };
+  httpPort = 8080;
+  catalinaBaseDir = "/var/tomcat/webapps";
+  type = "systemd-unit";
+  providesContainer = "tomcat-webapplication"; <co xml:id="co-provides-container" />
+};
+</programlisting>
+		</example>
+
+		<para>
+			In <xref linkend="ex-providescontainer" /> we have simplified the example to only expose one container, as specified by the <varname>providesContainer</varname>
+			property <xref linkend="co-provides-container" />. It will automatically expose all non-reserved service properties as container
+			properties -- this means that <varname>httpPort</varname> and <varname>catalinaBaseDir</varname> become container properties, while
+			the remainder of the service properties are ignored, because they serve a specific purpose for Disnix.
+		</para>
+
+		<para>
+			The example still contains a bit of redundant information -- it exposes <varname>httpPort</varname> both as a container/service
+			property as well as a parameter to the constructor function. We can get rid of this redundancy by encapsulating the service configuration
+			in a wrapper function:
+		</para>
+
+		<example xml:id="ex-providescontainer-constructor">
+			<title>Constructing an Apache Tomcat service with a constructor function</title>
+<programlisting>
+simpleAppservingTomcat = constructors.simpleAppservingTomcat {
+  httpPort = 8080;
+  commonLibs = [ "${pkgs.mysql_jdbc}/share/java/mysql-connector-java.jar" ];
+  type = "systemd-unit";
+};
+</programlisting>
+		</example>
+
+		<para>
+			In <xref linkend="ex-providescontainer-constructor" /> all redundancy has been eliminated simplifying the configuration of
+			the Apache Tomcat service even further.
+		</para>
+	</section>
+
+	<section>
+		<title>Limitations</title>
+
+		<para>
+			Although it is possible to fully automate the deployment of certain kinds systems, by deploying both their container and application services, there
+			are still limitations to using container deployment:
+			<itemizedlist>
+				<listitem>
+					<simpara>
+						You still need to obtain target machines and install the required basic software package on them, such as Nix, Dysnomia and Disnix.
+						This is not something Disnix can automate.
+					</simpara>
+				</listitem>
+				<listitem>
+					<simpara>
+						If you want to deploy processes that are managed by the target system's PID 1 process, such as <varname>systemd</varname>, Disnix
+						cannot manage it for you. Instead, it must provided by the target system's system distribution.
+					</simpara>
+				</listitem>
+				<listitem>
+					<simpara>
+						Not all container providers can be deployed with Nix and Disnix. For example, one of the public Disnix examples shows how
+						to deploy web applications to Internet Information Services, and database to MS SQL server on Windows. These container services cannot be deployed
+						with Nix/Disnix, but you can use Disnix to build the applications services and deploy them to these target containers.
+					</simpara>
+				</listitem>
+				<listitem>
+					<simpara>
+						In some organizations, application services and container services are managed by different teams. In such scenarios, it is probably
+						better to leave their deployment processes separated.
+					</simpara>
+				</listitem>
+			</itemizedlist>
+		</para>
+	</section>
+</chapter>

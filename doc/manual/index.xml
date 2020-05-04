@@ -27,10 +27,11 @@
       <year>2017</year>
       <year>2018</year>
       <year>2019</year>
+      <year>2020</year>
       <holder>Sander van der Burg</holder>
     </copyright>
 
-    <date>September 2019</date>
+    <date>June 2020</date>
   </info>
 
   <xi:include href="introduction.xml" />
@@ -42,6 +43,7 @@
   <xi:include href="architecture.xml" />
   <xi:include href="packages.xml" />
   <xi:include href="dysnomia-modules.xml" />
+  <xi:include href="exposingcontainers.xml" />
   <xi:include href="advanced-options.xml" />
   <xi:include href="transformations.xml" />
   <xi:include href="extensions.xml" />

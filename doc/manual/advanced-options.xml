@@ -189,31 +189,31 @@ ZipcodeService = {
     properties = {
       hostname = "test1.example.org";
     };
-    
+
     containers = {
-      tomcat-first = {
+      tomcat-webapplication-primary = {
         tomcatPort = 8080;
       };
-      
-      tomcat-second = {
+
+      tomcat-webapplication-secondary = {
         tomcatPort = 8081;
       };
     };
   };
-  
+
   test2 = {
     properties = {
       hostname = "test2.example.org";
     };
-    
+
     containers = {
-      mysql-first = {
+      mysql-database-primary = {
         mysqlPort = 3306;
         mysqlUsername = "root";
         mysqlPassword = "admin";
       };
-      
-      mysql-second = {
+
+      mysql-database-secondary = {
         mysqlPort = 3307;
         mysqlUsername = "root";
         mysqlPassword = "secret";
@@ -241,15 +241,15 @@ ZipcodeService = {
 
 {
   zipcodes = {
-    targets = [ { target = infrastructure.test2; container = "mysql-first"; } ]; <co xml:id='co-mysql-first' />
+    targets = [ { target = infrastructure.test2; container = "mysql-database-primary"; } ]; <co xml:id='co-mysql-database-primary' />
   };
   ZipcodeService = {
-    targets = [ { target = infrastructure.test1; container = "tomcat-second"; } ]; <co xml:id='co-tomcat-second' />
+    targets = [ { target = infrastructure.test1; container = "tomcat-webapplication-secondary"; } ]; <co xml:id='co-tomcat-webapplication-secondary' />
   };
   StaffTracker = {
     targets = [ <co xml:id='co-multi-containers' />
-      { target = infrastructure.test1; container = "tomcat-first"; }
-      { target = infrastructure.test1; container = "tomcat-second"; }
+      { target = infrastructure.test1; container = "tomcat-webapplication-primary"; }
+      { target = infrastructure.test1; container = "tomcat-webapplication-secondary"; }
     ];
   };
   ...
@@ -263,15 +263,15 @@ ZipcodeService = {
 		</para>
 			
 		<calloutlist>
-			<callout arearefs='co-mysql-first'>
+			<callout arearefs='co-mysql-database-primary'>
 				<para>
-					This mapping states that the <varname>zipcodes</varname> database should be deployed to the first MySQL instance container (<varname>mysql-first</varname>)
+					This mapping states that the <varname>zipcodes</varname> database should be deployed to the first MySQL instance container (<varname>mysql-database-primary</varname>)
 					on machine <varname>test2</varname>.
 				</para>
 			</callout>
-			<callout arearefs='co-tomcat-second'>
+			<callout arearefs='co-tomcat-webapplication-secondary'>
 				<para>
-					This mapping states that the <varname>ZipcodeService</varname> application should be deployed to the second Apache Tomcat container (<varname>tomcat-second</varname>)
+					This mapping states that the <varname>ZipcodeService</varname> application should be deployed to the second Apache Tomcat container (<varname>tomcat-webapplication-secondary</varname>)
 					on machine <varname>test1</varname>.
 				</para>
 			</callout>
@@ -279,6 +279,129 @@ ZipcodeService = {
 				<para>
 					It also possible to map a service to multiple containers on multiple machines. This line states that the <varname>StaffTracker</varname> service should be deployed
 					to both the first and second Apache Tomcat container on machine <varname>test1</varname>.
+				</para>
+			</callout>
+		</calloutlist>
+
+		<para>
+			As with single container instance deployments, we can also deploy multiple instances of container providing services, as described in <xref linkend="chap-exposingcontainers" />.
+			For example, to allow two Apache Tomcat instances to co-exist on one machine, we must configure them in such a way that their
+			resources do not conflict:
+		</para>
+		<example xml:id="ex-services-multiple-container-providing">
+			<title>Services model providing two instances of a container providing service</title>
+<programlisting>
+{ pkgs, system, distribution, invDistribution
+, stateDir ? "/var"
+, runtimeDir ? "${stateDir}/run"
+, logDir ? "${stateDir}/log"
+, cacheDir ? "${stateDir}/cache"
+, tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
+, forceDisableUserChange ? false
+, processManager ? "systemd"
+}:
+
+let
+  constructors = import ../../../nix-processmgmt/examples/service-containers-agnostic/constructors.nix {
+    inherit pkgs stateDir runtimeDir logDir cacheDir tmpDir forceDisableUserChange processManager;
+  };
+in
+rec {
+  simpleAppservingTomcat-primary = constructors.simpleAppservingTomcat {
+    instanceSuffix = "-primary";
+    httpPort = 8080;
+    httpsPort = 8443;
+    serverPort = 8005;
+    ajpPort = 8009;
+    commonLibs = [ "${pkgs.mysql_jdbc}/share/java/mysql-connector-java.jar" ];
+    type = "systemd-unit";
+  }; # This resulting attribute set exposes the property: providesContainer = "tomcat-webapplication-primary"
+
+  simpleAppservingTomcat-secondary = constructors.simpleAppservingTomcat {
+    instanceSuffix = "-secondary";
+    httpPort = 8081;
+    httpsPort = 8444;
+    serverPort = 8006;
+    ajpPort = 8010;
+    commonLibs = [ "${pkgs.mysql_jdbc}/share/java/mysql-connector-java.jar" ];
+    type = "systemd-unit";
+  }; # This resulting attribute set exposes the property: providesContainer = "tomcat-webapplication-secondary"
+
+  ...
+}
+</programlisting>
+		</example>
+
+		<para>
+			The partial services model in <xref linkend="ex-services-multiple-container-providing" /> specifies two Apache Tomcat instances that
+			can co-exist on the same machine, because their resources, such as the TCP ports they need to bind to, have been configured in
+			such a way that they do not conflict.
+		</para>
+
+		<para>
+			We can automatically deploy Java web applications to these Apache Tomcat container services, by mapping them to the same machine
+			in the distribution model:
+		</para>
+
+		<example xml:id="ex-distribution-multiple-container-providing">
+			<title>Distribution model mapping application services to multiple instances of container providers</title>
+<programlisting>
+{infrastructure}:
+
+{
+  # Container providers
+
+  simpleAppservingTomcat-primary = [ infrastructure.test2 ]; <co xml:id="map-multiple-container-providers" />
+  simpleAppservingTomcat-secondary = [ infrastructure.test2 ];
+
+  # Application components
+
+  GeolocationService = { <co xml:id="map-multiple-application-services" />
+    targets = [
+      { target = infrastructure.test2;
+        container = "tomcat-webapplication-primary";
+      }
+    ];
+  };
+  RoomService = {
+    targets = [
+      { target = infrastructure.test2;
+        container = "tomcat-webapplication-secondary";
+      }
+    ];
+  };
+  StaffTracker = {
+    targets = [
+      { target = infrastructure.test2;
+        container = "tomcat-webapplication-secondary";
+      }
+    ];
+  };
+  ...
+}
+</programlisting>
+		</example>
+
+		<para>
+			<xref linkend="ex-distribution-multiple-container-providing" /> is a partial distribution model that does the following:
+		</para>
+
+		<calloutlist>
+			<callout arearefs='map-multiple-container-providers'>
+				<para>
+					The mappings in this section distribute two Apache Tomcat instances to the same machine: <varname>test2</varname>.
+					As shown in <xref linkend="ex-services-multiple-container-providing" /> they can co-exist one the same
+					machine, because they do not require any conflicting resources.
+				</para>
+			</callout>
+			<callout arearefs='map-multiple-application-services'>
+				<para>
+					The remaining entries in the distribution model map application services to the primary and secondary Apache
+					Tomcat instances. Disnix knows that the Apache Tomcat services in the first section
+					<xref linkend="map-multiple-container-providers" /> are their target containers, because
+					they are distributed to the same machine (<varname>test2</varname>) and expose containers with the same identifiers
+					as the <varname>container</varname> property in the mapping (<varname>tomcat-webapplication-primary</varname> and
+					<varname>tomcat-webapplication-secondary</varname>).
 				</para>
 			</callout>
 		</calloutlist>
