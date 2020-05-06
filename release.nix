@@ -135,6 +135,9 @@ let
         pkgs = import ./tests/pkgs.nix {
           inherit nixpkgs dysnomia disnix;
         };
+        daemon = import ./tests/daemon.nix {
+          inherit nixpkgs disnix;
+        };
       };
 
     release = pkgs.releaseTools.aggregate {

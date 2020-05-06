@@ -44,10 +44,16 @@ static void print_usage(const char *command)
     "executing deployment operations instead of SSH.\n\n"
 
     "Options:\n"
+    "  -D, --daemon       Daemonize the service, instead of running it in the\n"
+    "                     foreground\n"
     "      --session-bus  Register the Disnix service on the session bus instead of\n"
     "                     the system bus (useful for testing)\n"
-    "      --log-dir      Specify the directory in which the logfiles are stored\n"
+    "      --log-dir      Specifies the directory in which the logfiles are stored\n"
     "                     (defaults to: /var/log/disnix)\n"
+    "      --pid-file     Specifies the location where the PID file of the daemon\n"
+    "                     is stored (defaults to: /var/run/disnix-service.pid)\n"
+    "      --log-file     Specifies to which file the general daemon output messages\n"
+    "                     should be logged (defaults to: /var/log/disnix.log)\n"
     "  -h, --help         Shows the usage of this command to the user\n"
     "  -v, --version      Shows the version of this command to the user\n"
     );
@@ -67,26 +73,41 @@ int main(int argc, char *argv[])
     int c, option_index = 0;
     struct option long_options[] =
     {
+        {"daemon", no_argument, 0, 'D'},
         {"session-bus", no_argument, 0, 's'},
         {"log-dir", required_argument, 0, 'l'},
+        {"pid-file", required_argument, 0, 'p'},
+        {"log-file", required_argument, 0, 'L'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0}
     };
-    
+
     int session_bus = FALSE;
+    int daemon = FALSE;
     char *logdir = "/var/log/disnix";
-    
+    char *pid_file = "/var/run/disnix-service.pid";
+    char *log_file = "/var/log/disnix.log";
+
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "hv", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "Dhv", long_options, &option_index)) != -1)
     {
         switch(c)
         {
+            case 'D':
+                daemon = TRUE;
+                break;
             case 's':
                 session_bus = TRUE;
                 break;
             case 'l':
                 logdir = optarg;
+                break;
+            case 'p':
+                pid_file = optarg;
+                break;
+            case 'L':
+                log_file = optarg;
                 break;
             case 'h':
                 print_usage(argv[0]);
@@ -101,5 +122,8 @@ int main(int argc, char *argv[])
     }
 
     /* Start the program with the given options */
-    return start_disnix_service(session_bus, logdir);
+    if(daemon)
+        return start_disnix_service_daemon(session_bus, logdir, pid_file, log_file);
+    else
+        return start_disnix_service_foreground(session_bus, logdir);
 }

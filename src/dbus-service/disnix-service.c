@@ -18,13 +18,16 @@
  */
 
 #include "disnix-service.h"
+#include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <glib.h>
+#include <glib-unix.h>
 #include "disnix-dbus.h"
 #include "jobmanagement.h"
 #include "logging.h"
 #include "methods.h"
+#include "daemonize.h"
 
 /* Server settings variables */
 
@@ -34,12 +37,18 @@ char *tmpdir;
 /* Path to the log directory */
 extern char *logdir;
 
+typedef struct
+{
+    FILE *log_fd;
+}
+DBusCallbackData;
+
 static void on_bus_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
     GError *error = NULL;
     /* Create interface skeleton */
     OrgNixosDisnixDisnix *interface = org_nixos_disnix_disnix_skeleton_new();
-    
+
     /* Register a signal for each method */
     g_signal_connect(interface, "handle-get-job-id", G_CALLBACK(on_handle_get_job_id), NULL);
     g_signal_connect(interface, "handle-import", G_CALLBACK(on_handle_import), NULL);
@@ -65,7 +74,7 @@ static void on_bus_acquired(GDBusConnection *connection, const gchar *name, gpoi
     g_signal_connect(interface, "handle-clean-snapshots", G_CALLBACK(on_handle_clean_snapshots), NULL);
     g_signal_connect(interface, "handle-get-logdir", G_CALLBACK(on_handle_get_logdir), NULL);
     g_signal_connect(interface, "handle-capture-config", G_CALLBACK(on_handle_capture_config), NULL);
-    
+
     /* Export skeleton */
     if(!g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(interface),
         connection,
@@ -84,74 +93,164 @@ static void on_name_acquired(GDBusConnection *connection, const gchar *name, gpo
 
 static void on_name_lost(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
-    g_printerr("Name lost: %s\n", name);
-    
+    DBusCallbackData *data = (DBusCallbackData*)user_data;
+
+    fprintf(data->log_fd, "Name lost: %s\n", name);
+
     if (connection == NULL)
-        g_printerr("No D-Bus connection has been established!\n");
+        fprintf(data->log_fd, "No D-Bus connection has been established!\n");
     else
-        g_printerr("A D-Bus connection seems to have been established!\n");
+        fprintf(data->log_fd, "A D-Bus connection seems to have been established!\n");
 
     exit(1);
 }
 
-int start_disnix_service(int session_bus, char *log_path)
+static void configure_tmp_dir(void)
 {
+    tmpdir = getenv("TMPDIR");
+
+    if(tmpdir == NULL)
+        tmpdir = "/tmp";
+}
+
+typedef struct
+{
+    /* Indicates whether we want to connect to the session bus or system bus */
+    int session_bus;
+    /* Path where Disnix should should store logs of the activities that it executes */
+    char *log_path;
     /* GLib mainloop that keeps the server running */
     GMainLoop *mainloop;
-    
     /* ID of the bus owner */
     guint owner_id;
-    
+    /* File where the daemon should write general log messages */
+    FILE *log_fd;
+    /* Pid file of the daemon or NULL if it the services runs in foreground mode */
+    char *pid_file;
+}
+DaemonData;
+
+static gboolean handle_termination(gpointer user_data)
+{
+    GMainLoop *mainloop = (GMainLoop*)user_data;
+    g_main_loop_quit(mainloop);
+    return TRUE;
+}
+
+static int initialize_disnix_service(void *data)
+{
+    DaemonData *daemon_data = (DaemonData*)data;
+
+    /* Data to propagate to the DBus callback functions */
+    DBusCallbackData callback_data;
+    callback_data.log_fd = daemon_data->log_fd;
+
     /* Determine the temp directory */
-    tmpdir = getenv("TMPDIR");
-    
-    if(tmpdir == NULL)
-	tmpdir = "/tmp";
-    
+    configure_tmp_dir();
+
     /* Determine the log directory */
-    set_logdir(log_path);
-    
+    set_logdir(daemon_data->log_path);
+
     /* Create a GMainloop with initial state of 'not running' (FALSE) */
-    mainloop = g_main_loop_new(NULL, FALSE);
-    if(mainloop == NULL)
+    daemon_data->mainloop = g_main_loop_new(NULL, FALSE);
+    if(daemon_data->mainloop == NULL)
     {
-        g_printerr("ERROR: Failed to create the mainloop!\n");
+        fprintf(daemon_data->log_fd, "ERROR: Failed to create the mainloop!\n");
         return 1;
     }
-    
+
     /* Figure out what the next job id number is */
     determine_next_pid(logdir);
-    
+
     /* Connect to the system/session bus */
-    if(session_bus)
+    if(daemon_data->session_bus)
     {
-        owner_id = g_bus_own_name(G_BUS_TYPE_SESSION,
+        daemon_data->owner_id = g_bus_own_name(G_BUS_TYPE_SESSION,
             "org.nixos.disnix.Disnix",
             G_BUS_NAME_OWNER_FLAGS_NONE,
             on_bus_acquired,
             on_name_acquired,
             on_name_lost,
-            NULL,
+            &callback_data,
             NULL);
     }
     else
     {
-        owner_id = g_bus_own_name(G_BUS_TYPE_SYSTEM,
+        daemon_data->owner_id = g_bus_own_name(G_BUS_TYPE_SYSTEM,
             "org.nixos.disnix.Disnix",
             G_BUS_NAME_OWNER_FLAGS_NONE,
             on_bus_acquired,
             on_name_acquired,
             on_name_lost,
-            NULL,
+            &callback_data,
             NULL);
     }
-    
+
+    if(daemon_data->pid_file != NULL)
+    {
+        g_unix_signal_add(SIGTERM, handle_termination, daemon_data->mainloop);
+        g_unix_signal_add(SIGINT, handle_termination, daemon_data->mainloop);
+    }
+
+    return TRUE;
+}
+
+static int start_disnix_service(void *data)
+{
+    DaemonData *daemon_data = (DaemonData*)data;
+
     /* Starting the main loop */
-    g_print("The Disnix service is running!\n");
-    g_main_loop_run(mainloop);
-    
-    g_bus_unown_name(owner_id);
-    
-    /* The main loop should not be stopped, but if it does return the exit failure status */
-    return 1;
+    fprintf(daemon_data->log_fd, "The Disnix service is running!\n");
+    fflush(daemon_data->log_fd);
+
+    g_main_loop_run(daemon_data->mainloop);
+
+    g_bus_unown_name(daemon_data->owner_id);
+
+    if(daemon_data->pid_file == NULL)
+        return 1; /* The main loop should not be stopped in foreground mode, but if it does return the exit failure status */
+    else
+    {
+        unlink(daemon_data->pid_file);
+        return 0;
+    }
+}
+
+int start_disnix_service_foreground(int session_bus, char *log_path)
+{
+    DaemonData data;
+    data.session_bus = session_bus;
+    data.log_path = log_path;
+    data.log_fd = stderr;
+    data.pid_file = NULL;
+
+    initialize_disnix_service(&data);
+    return start_disnix_service(&data);
+}
+
+int start_disnix_service_daemon(int session_bus, char *log_path, char *pid_file, char *log_file)
+{
+    FILE *log_fd = fopen(log_file, "a");
+
+    if(log_fd == NULL)
+    {
+        fprintf(stderr, "Cannot open log file: %s for writing!\n", log_file);
+        return 1;
+    }
+    else
+    {
+        DaemonData data;
+
+        data.session_bus = session_bus;
+        data.log_path = log_path;
+        data.log_fd = log_fd;
+        data.pid_file = pid_file;
+
+        DaemonStatus status = daemonize(pid_file, &data, initialize_disnix_service, start_disnix_service);
+
+        print_daemon_status(status, stderr);
+
+        fclose(log_fd);
+        return status;
+    }
 }
