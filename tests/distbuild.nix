@@ -32,6 +32,9 @@ simpleTest {
       $coordinator->copyFileFromHost("key", "/root/.ssh/id_dsa");
       $coordinator->mustSucceed("chmod 600 /root/.ssh/id_dsa");
 
+      $testtarget1->waitForJob("disnix");
+      $testtarget2->waitForJob("disnix");
+
       # Deploy the complete environment and build all the services on
       # the target machines. This test should succeed.
       my $result = $coordinator->mustSucceed("${env} disnix-env --build-on-targets -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-simple.nix");

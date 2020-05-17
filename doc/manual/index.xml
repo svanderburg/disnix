@@ -70,7 +70,7 @@
       <xi:include href="../../src/activate/disnix-activate.1.xml" />
       <xi:include href="../../src/build/disnix-build.1.xml" />
       <xi:include href="../../src/dbus-service/disnix-client.1.xml" />
-      <xi:include href="../../scripts/disnix-copy-closure.1.xml" />
+      <xi:include href="../../src/copy-closure/disnix-copy-closure.1.xml" />
       <xi:include href="../../scripts/disnix-copy-snapshots.1.xml" />
       <xi:include href="../../src/delete-state/disnix-delete-state.1.xml" />
       <xi:include href="../../src/distribute/disnix-distribute.1.xml" />

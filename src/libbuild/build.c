@@ -22,6 +22,7 @@
 #include <derivationmapping-iterator.h>
 #include <interfacestable.h>
 #include <client-interface.h>
+#include <copy-closure.h>
 
 /* Distribute store derivations infrastructure */
 
@@ -29,7 +30,7 @@ static pid_t copy_derivation_mapping_to(void *data, DerivationMapping *mapping, 
 {
     char *paths[] = { (char*)mapping->derivation, NULL };
     g_print("[target: %s]: Receiving intra-dependency closure of store derivation: %s\n", mapping->interface, mapping->derivation);
-    return exec_copy_closure_to((char*)interface->client_interface, (char*)interface->target_address, paths);
+    return copy_closure_to((char*)interface->client_interface, (char*)interface->target_address, "/tmp", paths);
 }
 
 static void complete_copy_derivation_mapping_to(void *data, DerivationMapping *mapping, ProcReact_Status status, int result)
@@ -99,7 +100,7 @@ static pid_t copy_result_from(void *data, DerivationMapping *mapping, Interface 
 
     g_print("\n");
 
-    return exec_copy_closure_from((char*)interface->client_interface, (char*)interface->target_address, mapping->result);
+    return copy_closure_from((char*)interface->client_interface, (char*)interface->target_address, mapping->result);
 }
 
 static void complete_copy_result_from(void *data, DerivationMapping *mapping, ProcReact_Status status, int result)

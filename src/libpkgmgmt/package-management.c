@@ -38,9 +38,12 @@
 pid_t pkgmgmt_import_closure(const char *closure, int stdout, int stderr)
 {
     int closure_fd = open(closure, O_RDONLY);
-    
+
     if(closure_fd == -1)
+    {
+        g_printerr("Cannot open closure file: [%s]\n", closure);
         return -1;
+    }
     else
     {
         pid_t pid = fork();
@@ -58,6 +61,14 @@ pid_t pkgmgmt_import_closure(const char *closure, int stdout, int stderr)
 
         return pid;
     }
+}
+
+int pkgmgmt_import_closure_sync(const char *closure, int stdout, int stderr)
+{
+    ProcReact_Status status;
+    pid_t pid = pkgmgmt_import_closure(closure, stdout, stderr);
+    int exit_status = procreact_wait_for_boolean(pid, &status);
+    return (status == PROCREACT_STATUS_OK && exit_status);
 }
 
 gchar *pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr, pid_t *pid, int *temp_fd)
@@ -97,6 +108,24 @@ gchar *pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr, pid
     }
 }
 
+gchar *pkgmgmt_export_closure_sync(gchar *tmpdir, gchar **derivation, int stderr)
+{
+    pid_t pid;
+    int temp_fd;
+    char *tempfile = pkgmgmt_export_closure(tmpdir, derivation, stderr, &pid, &temp_fd);
+    ProcReact_Status status;
+    int exit_status = procreact_wait_for_boolean(pid, &status);
+    close(temp_fd);
+
+    if(status == PROCREACT_STATUS_OK && exit_status)
+        return tempfile;
+    else
+    {
+        g_free(tempfile);
+        return NULL;
+    }
+}
+
 ProcReact_Future pkgmgmt_print_invalid_packages(gchar **derivation, int stderr)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
@@ -122,6 +151,18 @@ ProcReact_Future pkgmgmt_print_invalid_packages(gchar **derivation, int stderr)
     }
 
     return future;
+}
+
+char **pkgmgmt_print_invalid_packages_sync(gchar **derivation, int stderr)
+{
+    ProcReact_Status status;
+    ProcReact_Future future = pkgmgmt_print_invalid_packages(derivation, stderr);
+    char **result = procreact_future_get(&future, &status);
+
+    if(status == PROCREACT_STATUS_OK)
+        return result;
+    else
+        return NULL;
 }
 
 ProcReact_Future pkgmgmt_realise(gchar **derivation, int stderr)
@@ -220,6 +261,18 @@ ProcReact_Future pkgmgmt_query_requisites(gchar **derivation, int stderr)
     }
 
     return future;
+}
+
+char **pkgmgmt_query_requisites_sync(gchar **derivation, int stderr)
+{
+    ProcReact_Future future = pkgmgmt_query_requisites(derivation, stderr);
+    ProcReact_Status status;
+    char **result = procreact_future_get(&future, &status);
+
+    if(status == PROCREACT_STATUS_OK)
+        return result;
+    else
+        return NULL;
 }
 
 pid_t pkgmgmt_collect_garbage(int delete_old, int stdout, int stderr)

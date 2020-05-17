@@ -160,26 +160,6 @@ pid_t exec_set(gchar *interface, gchar *target, gchar *profile, gchar *component
 ProcReact_Future exec_query_installed(gchar *interface, gchar *target, gchar *profile);
 
 /**
- * Invokes the copy closure process to copy a closure from a machine
- *
- * @param interface Path to the interface executable
- * @param target Target Address of the remote interface
- * @param paths Nix store paths to copy (including all intra-dependencies)
- * @return PID of the client interface process performing the operation, or -1 in case of a failure
- */
-pid_t exec_copy_closure_from(gchar *interface, gchar *target, gchar **paths);
-
-/**
- * Invokes the copy closure process to copy a closure to a machine
- *
- * @param interface Path to the interface executable
- * @param target Target Address of the remote interface
- * @param paths Nix store paths to copy (including all intra-dependencies)
- * @return PID of the client interface process performing the operation, or -1 in case of a failure
- */
-pid_t exec_copy_closure_to(gchar *interface, gchar *target, gchar **paths);
-
-/**
  * Invokes the copy snapshots process to copy snapshots from a machine
  *
  * @param interface Path to the interface executable
@@ -240,10 +220,25 @@ ProcReact_Future exec_capture_config(gchar *interface, gchar *target);
  *
  * @param interface Path to the interface executable
  * @param target Target Address of the remote interface
- * @param derivation Derivation to query the requisities from
+ * @param derivation Array of derivations to query the requisities from
+ * @param derivation_length Length of the derivations array
  * @return Future struct of the client interface process performing the operation
  */
-ProcReact_Future exec_query_requisites(gchar *interface, gchar *target, gchar *derivation);
+ProcReact_Future exec_query_requisites(gchar *interface, gchar *target, gchar **derivation, unsigned int derivation_length);
+
+char **exec_query_requisites_sync(gchar *interface, gchar *target, gchar **derivation, unsigned int derivation_length);
+
+ProcReact_Future exec_print_invalid(gchar *interface, gchar *target, gchar **paths, unsigned int paths_length);
+
+char **exec_print_invalid_sync(gchar *interface, gchar *target, gchar **paths, unsigned int paths_length);
+
+pid_t exec_import_local_closure(gchar *interface, gchar *target, char *closure);
+
+int exec_import_local_closure_sync(gchar *interface, gchar *target, char *closure);
+
+ProcReact_Future exec_export_remote_closure(gchar *interface, gchar *target, char **paths, unsigned int paths_length);
+
+char *exec_export_remote_closure_sync(gchar *interface, gchar *target, char **paths, unsigned int paths_length);
 
 /**
  * Invokes the true command for testing purposes.

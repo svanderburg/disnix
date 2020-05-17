@@ -23,6 +23,7 @@
 #include <profilemanifest.h>
 #include <profilemanifesttargettable.h>
 #include <profilemanifesttarget-iterator.h>
+#include <copy-closure.h>
 #include "aggregated-manifest.h"
 
 /* Resolve profiles infrastructure */
@@ -38,7 +39,9 @@ static ProcReact_Future query_requisites_on_target(void *data, gchar *target_nam
 {
     QueryRequisitesData *query_requisites_data = (QueryRequisitesData*)data;
     gchar *target_key = find_target_key(target);
-    return exec_query_requisites((char*)target->client_interface, target_key, query_requisites_data->profile_path);
+    gchar *derivations[] = { query_requisites_data->profile_path, NULL };
+
+    return exec_query_requisites((char*)target->client_interface, target_key, derivations, 1);
 }
 
 static void complete_query_requisites_on_target(void *data, gchar *target_name, Target *target, ProcReact_Future *future, ProcReact_Status status)
@@ -96,7 +99,7 @@ static pid_t retrieve_profile_manifest_target(void *data, gchar *target_name, Pr
     gchar *paths[] = { profile_manifest_target->profile, NULL };
     gchar *target_key = find_target_key(target);
 
-    return exec_copy_closure_from(interface, target_key, paths);
+    return copy_closure_from(interface, target_key, paths);
 }
 
 static void complete_retrieve_profile_manifest_target(void *data, gchar *target_name, ProfileManifestTarget *profile_manifest_target, Target *target, ProcReact_Status status, int result)

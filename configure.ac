@@ -104,6 +104,7 @@ src/libprofilemanifest/Makefile
 src/libmigrate/Makefile
 src/libbuild/Makefile
 src/libdeploy/Makefile
+src/copy-closure/Makefile
 src/distribute/Makefile
 src/lock/Makefile
 src/set/Makefile
@@ -123,7 +124,6 @@ scripts/Makefile
 nix/Makefile
 xsl/Makefile
 maintenance/Makefile
-scripts/disnix-copy-closure
 scripts/disnix-copy-snapshots
 scripts/disnix-delegate
 scripts/disnix-env

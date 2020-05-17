@@ -25,7 +25,7 @@
 /* Default interface value */
 static char *default_interface = "disnix-ssh-client";
 
-/* Default target property value */ 
+/* Default target property value */
 static char *default_target_property = "hostname";
 
 /* Default profile value */
