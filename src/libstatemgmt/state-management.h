@@ -28,13 +28,23 @@ pid_t statemgmt_run_dysnomia_activity(gchar *type, gchar *activity, gchar *compo
 
 ProcReact_Future statemgmt_query_all_snapshots(gchar *container, gchar *component, int stderr);
 
+char **statemgmt_query_all_snapshots_sync(gchar *container, gchar *component, int stderr);
+
 ProcReact_Future statemgmt_query_latest_snapshot(gchar *container, gchar *component, int stderr);
+
+char **statemgmt_query_latest_snapshot_sync(gchar *container, gchar *component, int stderr);
 
 ProcReact_Future statemgmt_print_missing_snapshots(gchar **component, int stderr);
 
+char **statemgmt_print_missing_snapshots_sync(gchar **component, int stderr);
+
 pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **snapshots, int stdout, int stderr);
 
+int statemgmt_import_snapshots_sync(gchar *container, gchar *component, gchar **snapshots, int stdout, int stderr);
+
 ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr);
+
+char **statemgmt_resolve_snapshots_sync(gchar **snapshots, int stderr);
 
 pid_t statemgmt_clean_snapshots(gint keep, gchar *container, gchar *component, int stdout, int stderr);
 

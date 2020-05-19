@@ -34,7 +34,7 @@ simpleTest {
 
       # Use disnix-env to perform a new installation.
       # This test should succeed.
-      $coordinator->mustSucceed("${env} disnix-env -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure.nix -d ${snapshotTests}/distribution-simple.nix");
+      $coordinator->mustSucceed("${env} disnix-env -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure.nix -d ${snapshotTests}/distribution-simple.nix >&2");
 
       # Check if both machines have state deployed
       my $result = $testtarget1->mustSucceed("cat /var/db/testService1/state");

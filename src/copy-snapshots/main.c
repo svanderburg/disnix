@@ -21,38 +21,41 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <defaultoptions.h>
-#include <copy-closure.h>
+#include <copy-snapshots.h>
 
 static void print_usage(const char *command)
 {
     printf(
-    "Usage: %s [OPTION] --to --target TARGET paths\n"
-    "  or: %s [OPTION] --from --target TARGET paths\n\n"
+    "Usage: %s [OPTION] --from --target TARGET -c CONTAINER -C COMPONENT\n"
+    "  or: %s [OPTION] --to --target TARGET -c CONTAINER -C COMPONENT\n\n"
     , command, command);
 
     puts(
-    "The command `disnix-copy-closure' copies a Nix store component and all its\n"
-    "intra-dependencies to or from a given target machine through a Disnix\n"
-    "interface. This process is very efficient, because it scans for all\n"
-    "intra-dependencies and only copies the missing parts.\n\n"
-
-    "This command is very similar to the `nix-copy-closure' command, except that it\n"
-    "uses a Disnix interface for transport (which optionally uses SSH or a custom\n"
-    "protocol) instead of using SSH directly.\n\n"
+    "The command `disnix-copy-snapshots' transfers the logical state (typically\n"
+    "represented as snapshots in a consistent and portable format) of a component\n"
+    "residing in a container from and to a remote machine through a Disnix interface.\n\n"
 
     "Options:\n"
-    "      --to                   Copy closure to the given target\n"
-    "      --from                 Copy closure from the given target\n"
+    "      --to                   Copy snapshots to the given target\n"
+    "      --from                 Copy snapshots from the given target\n"
     "  -t, --target=TARGET        Address of the Disnix service running on the remote\n"
     "                             machine\n"
+    "  -c, --container=CONTAINER  Name of the container in which the mutable\n"
+    "                             component is deployed\n"
+    "  -C, --component=COMPONENT  Name of the mutable component to take snapshots from\n"
+    "      --all                  Transfer all snapshot generations instead of the\n"
+    "                             latest only\n"
     "      --interface=INTERFACE  Path to executable that communicates with a Disnix\n"
     "                             interface. Defaults to: disnix-ssh-client\n"
     "  -h, --help                 Shows the usage of this command to the user\n"
     "  -v, --version              Shows the version of this command to the user\n\n"
 
     "Environment:\n"
-    "  DISNIX_CLIENT_INTERFACE    Sets the client interface (which defaults to:\n"
+    "  DISNIX_CLIENT_INTERFACE    Sets the client interface (defaults to:\n"
     "                             disnix-ssh-client)\n"
+    "  DYSNOMIA_STATEDIR          Specifies where the snapshots must be stored on the\n"
+    "                             coordinator machine (defaults to:\n"
+    "                             /var/state/dysnomia)\n"
     );
 }
 
@@ -65,6 +68,9 @@ int main(int argc, char *argv[])
         {"from", no_argument, 0, 'F'},
         {"to", no_argument, 0, 'T'},
         {"target", required_argument, 0, 't'},
+        {"container", required_argument, 0, DISNIX_OPTION_CONTAINER},
+        {"component", required_argument, 0, DISNIX_OPTION_COMPONENT},
+        {"all", no_argument, 0, DISNIX_OPTION_ALL},
         {"interface", required_argument, 0, DISNIX_OPTION_INTERFACE},
         {"help", no_argument, 0, DISNIX_OPTION_HELP},
         {"version", no_argument, 0, DISNIX_OPTION_VERSION},
@@ -74,11 +80,12 @@ int main(int argc, char *argv[])
     int to = FALSE;
     char *interface = NULL;
     char *target = NULL;
-    char *tmpdir = NULL;
-    char **derivations;
+    char *container = NULL;
+    char *component = NULL;
+    int all = FALSE;
 
     /* Parse command-line options */
-    while((c = getopt_long(argc, argv, "t:hv", long_options, &option_index)) != -1)
+    while((c = getopt_long(argc, argv, "t:C:c:hv", long_options, &option_index)) != -1)
     {
         switch(c)
         {
@@ -90,6 +97,15 @@ int main(int argc, char *argv[])
                 break;
             case 't':
                 target = optarg;
+                break;
+            case DISNIX_OPTION_CONTAINER:
+                container = optarg;
+                break;
+            case DISNIX_OPTION_COMPONENT:
+                component = optarg;
+                break;
+            case DISNIX_OPTION_ALL:
+                all = TRUE;
                 break;
             case DISNIX_OPTION_INTERFACE:
                 interface = optarg;
@@ -110,21 +126,17 @@ int main(int argc, char *argv[])
 
     interface = check_interface_option(interface);
 
-    if(tmpdir == NULL)
+    if(container == NULL)
     {
-        tmpdir = getenv("TMPDIR");
-
-        if(tmpdir == NULL)
-            tmpdir = "/tmp";
-    }
-
-    if(optind >= argc)
-    {
-        fprintf(stderr, "At least one path to the Nix store must be specified!\n");
+        fprintf(stderr, "ERROR: We need a container parameter!\n");
         return 1;
     }
-    else
-        derivations = argv + optind;
+
+    if(component == NULL)
+    {
+        fprintf(stderr, "ERROR: We need a component parameter!\n");
+        return 1;
+    }
 
     /* Execute operation */
 
@@ -134,7 +146,7 @@ int main(int argc, char *argv[])
         return 1;
     }
     else if(to)
-        return !copy_closure_to_sync(interface, target, tmpdir, derivations);
+        return !copy_snapshots_to_sync(interface, target, container, component, all);
     else if(from)
-        return !copy_closure_from_sync(interface, target, derivations);
+        return !copy_snapshots_from_sync(interface, target, container, component, all);
 }

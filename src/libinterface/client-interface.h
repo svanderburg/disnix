@@ -240,6 +240,38 @@ ProcReact_Future exec_export_remote_closure(gchar *interface, gchar *target, cha
 
 char *exec_export_remote_closure_sync(gchar *interface, gchar *target, char **paths, unsigned int paths_length);
 
+ProcReact_Future exec_query_all_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component);
+
+char **exec_query_all_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component);
+
+ProcReact_Future exec_query_latest_snapshot(gchar *interface, gchar *target, gchar *container, gchar *component);
+
+char **exec_query_latest_snapshot_sync(gchar *interface, gchar *target, gchar *container, gchar *component);
+
+ProcReact_Future exec_print_missing_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
+
+char **exec_print_missing_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
+
+ProcReact_Future exec_print_missing_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
+
+char **exec_print_missing_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
+
+ProcReact_Future exec_resolve_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
+
+char **exec_resolve_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
+
+pid_t exec_import_local_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length);
+
+int exec_import_local_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length);
+
+pid_t exec_import_remote_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length);
+
+int exec_import_remote_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length);
+
+ProcReact_Future exec_export_remote_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
+
+char **exec_export_remote_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
+
 /**
  * Invokes the true command for testing purposes.
  */

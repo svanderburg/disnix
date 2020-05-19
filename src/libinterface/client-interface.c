@@ -472,8 +472,314 @@ char *exec_export_remote_closure_sync(gchar *interface, gchar *target, char **pa
     ProcReact_Future future = exec_export_remote_closure(interface, target, paths, paths_length);
     char *result = procreact_future_get(&future, &status);
 
-    if(result[strlen(result) - 1] == '\n') // Strip trailing linefeed, if needed
-        result[strlen(result) - 1] = '\0';
+    if(status == PROCREACT_STATUS_OK)
+    {
+        if(result[strlen(result) - 1] == '\n') // Strip trailing linefeed, if needed
+            result[strlen(result) - 1] = '\0';
+
+        return result;
+    }
+    else
+        return NULL;
+}
+
+ProcReact_Future exec_query_all_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component)
+{
+    ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
+
+    if(future.pid == 0)
+    {
+        unsigned int count = 0;
+        unsigned int num_of_extra_params = 0;
+
+        if(container != NULL)
+            num_of_extra_params += 2;
+
+        if(component != NULL)
+            num_of_extra_params += 2;
+
+        char **args = (char**)malloc((5 + num_of_extra_params) * sizeof(char*));
+        args[0] = interface;
+        args[1] = "--target";
+        args[2] = target;
+        args[3] = "--query-all-snapshots";
+
+        if(container != NULL)
+        {
+            args[count + 4] = "--container";
+            args[count + 5] = container;
+            count += 2;
+        }
+
+        if(component != NULL)
+        {
+            args[count + 4] = "--component";
+            args[count + 5] = component;
+            count += 2;
+        }
+
+        args[count + 4] = NULL;
+
+        dup2(future.fd, 1);
+        execvp(args[0], args);
+        _exit(1);
+    }
+
+    return future;
+}
+
+char **exec_query_all_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component)
+{
+    ProcReact_Status status;
+    ProcReact_Future future = exec_query_all_snapshots(interface, target, container, component);
+    char **result = procreact_future_get(&future, &status);
+
+    if(status == PROCREACT_STATUS_OK)
+        return result;
+    else
+        return NULL;
+}
+
+ProcReact_Future exec_query_latest_snapshot(gchar *interface, gchar *target, gchar *container, gchar *component)
+{
+    ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
+
+    if(future.pid == 0)
+    {
+        unsigned int count = 0;
+        unsigned int num_of_extra_params = 0;
+
+        if(container != NULL)
+            num_of_extra_params += 2;
+
+        if(component != NULL)
+            num_of_extra_params += 2;
+
+        char **args = (char**)malloc((5 + num_of_extra_params) * sizeof(char*));
+        args[0] = interface;
+        args[1] = "--target";
+        args[2] = target;
+        args[3] = "--query-latest-snapshot";
+
+        if(container != NULL)
+        {
+            args[count + 4] = "--container";
+            args[count + 5] = container;
+            count += 2;
+        }
+
+        if(component != NULL)
+        {
+            args[count + 4] = "--component";
+            args[count + 5] = component;
+            count += 2;
+        }
+
+        args[count + 4] = NULL;
+
+        dup2(future.fd, 1);
+        execvp(args[0], args);
+        _exit(1);
+    }
+
+    return future;
+}
+
+char **exec_query_latest_snapshot_sync(gchar *interface, gchar *target, gchar *container, gchar *component)
+{
+    ProcReact_Status status;
+    ProcReact_Future future = exec_query_latest_snapshot(interface, target, container, component);
+    char **result = procreact_future_get(&future, &status);
+
+    if(status == PROCREACT_STATUS_OK)
+        return result;
+    else
+        return NULL;
+}
+
+ProcReact_Future exec_print_missing_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length)
+{
+    ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
+
+    if(future.pid == 0)
+    {
+        unsigned int i;
+        char **args = (char**)malloc((5 + snapshots_length) * sizeof(char*));
+        args[0] = interface;
+        args[1] = "--target";
+        args[2] = target;
+        args[3] = "--print-missing-snapshots";
+
+        for(i = 0; i < snapshots_length; i++)
+            args[i + 4] = snapshots[i];
+
+        args[i + 4] = NULL;
+
+        dup2(future.fd, 1);
+        execvp(args[0], args);
+        _exit(1);
+    }
+
+    return future;
+}
+
+char **exec_print_missing_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length)
+{
+    ProcReact_Status status;
+    ProcReact_Future future = exec_print_missing_snapshots(interface, target, snapshots, snapshots_length);
+    char **result = procreact_future_get(&future, &status);
+
+    if(status == PROCREACT_STATUS_OK)
+        return result;
+    else
+        return NULL;
+}
+
+ProcReact_Future exec_resolve_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length)
+{
+    ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
+
+    if(future.pid == 0)
+    {
+        unsigned int i;
+        char **args = (char**)malloc((5 + snapshots_length) * sizeof(char*));
+        args[0] = interface;
+        args[1] = "--target";
+        args[2] = target;
+        args[3] = "--resolve-snapshots";
+
+        for(i = 0; i < snapshots_length; i++)
+            args[i + 4] = snapshots[i];
+
+        args[i + 4] = NULL;
+
+        dup2(future.fd, 1);
+        execvp(args[0], args);
+        _exit(1);
+    }
+
+    return future;
+}
+
+char **exec_resolve_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length)
+{
+    ProcReact_Status status;
+    ProcReact_Future future = exec_resolve_snapshots(interface, target, snapshots, snapshots_length);
+    char **result = procreact_future_get(&future, &status);
+
+    if(status == PROCREACT_STATUS_OK)
+        return result;
+    else
+        return NULL;
+}
+
+pid_t exec_import_local_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length)
+{
+    pid_t pid = fork();
+
+    if(pid == 0)
+    {
+        unsigned int i;
+        char **args = (char**)malloc((10 + snapshots_length) * sizeof(char*));
+        args[0] = interface;
+        args[1] = "--target";
+        args[2] = target;
+        args[3] = "--import-snapshots";
+        args[4] = "--localfile";
+        args[5] = "--container";
+        args[6] = container;
+        args[7] = "--component";
+        args[8] = component;
+
+        for(i = 0; i < snapshots_length; i++)
+            args[i + 9] = snapshots[i];
+
+        args[i + 9] = NULL;
+
+        execvp(args[0], args);
+        _exit(1);
+    }
+
+    return pid;
+}
+
+int exec_import_local_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length)
+{
+    ProcReact_Status status;
+    pid_t pid = exec_import_local_snapshots(interface, target, container, component, snapshots, snapshots_length);
+    int exit_status = procreact_wait_for_boolean(pid, &status);
+    return(status == PROCREACT_STATUS_OK && exit_status);
+}
+
+pid_t exec_import_remote_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length)
+{
+    pid_t pid = fork();
+
+    if(pid == 0)
+    {
+        unsigned int i;
+        char **args = (char**)malloc((10 + snapshots_length) * sizeof(char*));
+        args[0] = interface;
+        args[1] = "--target";
+        args[2] = target;
+        args[3] = "--import-snapshots";
+        args[4] = "--remotefile";
+        args[5] = "--container";
+        args[6] = container;
+        args[7] = "--component";
+        args[8] = component;
+
+        for(i = 0; i < snapshots_length; i++)
+            args[i + 9] = snapshots[i];
+
+        args[i + 9] = NULL;
+
+        execvp(args[0], args);
+        _exit(1);
+    }
+
+    return pid;
+}
+
+int exec_import_remote_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length)
+{
+    ProcReact_Status status;
+    pid_t pid = exec_import_remote_snapshots(interface, target, container, component, snapshots, snapshots_length);
+    int exit_status = procreact_wait_for_boolean(pid, &status);
+    return(status == PROCREACT_STATUS_OK && exit_status);
+}
+
+ProcReact_Future exec_export_remote_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length)
+{
+    ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
+
+    if(future.pid == 0)
+    {
+        unsigned int i;
+        char **args = (char**)malloc((5 + snapshots_length) * sizeof(char*));
+        args[0] = interface;
+        args[1] = "--target";
+        args[2] = target;
+        args[3] = "--export-snapshots";
+
+        for(i = 0; i < snapshots_length; i++)
+            args[i + 4] = snapshots[i];
+
+        args[i + 4] = NULL;
+
+        dup2(future.fd, 1);
+        execvp(args[0], args);
+        _exit(1);
+    }
+
+    return future;
+}
+
+char **exec_export_remote_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length)
+{
+    ProcReact_Status status;
+    ProcReact_Future future = exec_export_remote_snapshots(interface, target, snapshots, snapshots_length);
+    char **result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)
         return result;

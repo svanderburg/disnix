@@ -64,6 +64,18 @@ ProcReact_Future statemgmt_query_all_snapshots(gchar *container, gchar *componen
     return future;
 }
 
+char **statemgmt_query_all_snapshots_sync(gchar *container, gchar *component, int stderr)
+{
+    ProcReact_Status status;
+    ProcReact_Future future = statemgmt_query_all_snapshots(container, component, stderr);
+    char **result = procreact_future_get(&future, &status);
+
+    if(status == PROCREACT_STATUS_OK)
+        return result;
+    else
+        return NULL;
+}
+
 ProcReact_Future statemgmt_query_latest_snapshot(gchar *container, gchar *component, int stderr)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
@@ -79,6 +91,18 @@ ProcReact_Future statemgmt_query_latest_snapshot(gchar *container, gchar *compon
     }
 
     return future;
+}
+
+char **statemgmt_query_latest_snapshot_sync(gchar *container, gchar *component, int stderr)
+{
+    ProcReact_Status status;
+    ProcReact_Future future = statemgmt_query_latest_snapshot(container, component, stderr);
+    char **result = procreact_future_get(&future, &status);
+
+    if(status == PROCREACT_STATUS_OK)
+        return result;
+    else
+        return NULL;
 }
 
 ProcReact_Future statemgmt_print_missing_snapshots(gchar **component, int stderr)
@@ -105,6 +129,18 @@ ProcReact_Future statemgmt_print_missing_snapshots(gchar **component, int stderr
     }
 
     return future;
+}
+
+char **statemgmt_print_missing_snapshots_sync(gchar **component, int stderr)
+{
+    ProcReact_Status status;
+    ProcReact_Future future = statemgmt_print_missing_snapshots(component, stderr);
+    char **result = procreact_future_get(&future, &status);
+
+    if(status == PROCREACT_STATUS_OK)
+        return result;
+    else
+        return NULL;
 }
 
 pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **snapshots, int stdout, int stderr)
@@ -137,6 +173,14 @@ pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **sna
     return pid;
 }
 
+int statemgmt_import_snapshots_sync(gchar *container, gchar *component, gchar **snapshots, int stdout, int stderr)
+{
+    ProcReact_Status status;
+    pid_t pid = statemgmt_import_snapshots(container, component, snapshots, stdout, stderr);
+    int exit_status = procreact_wait_for_boolean(pid, &status);
+    return (status == PROCREACT_STATUS_OK && exit_status);
+}
+
 ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
@@ -161,6 +205,18 @@ ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr)
     }
 
     return future;
+}
+
+char **statemgmt_resolve_snapshots_sync(gchar **snapshots, int stderr)
+{
+    ProcReact_Status status;
+    ProcReact_Future future = statemgmt_resolve_snapshots(snapshots, stderr);
+    char **result = procreact_future_get(&future, &status);
+
+    if(status == PROCREACT_STATUS_OK)
+        return result;
+    else
+        return NULL;
 }
 
 pid_t statemgmt_clean_snapshots(gint keep, gchar *container, gchar *component, int stdout, int stderr)
