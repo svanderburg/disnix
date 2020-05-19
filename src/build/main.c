@@ -65,6 +65,7 @@ int main(int argc, char *argv[])
     };
 
     unsigned int max_concurrent_transfers = DISNIX_DEFAULT_MAX_NUM_OF_CONCURRENT_TRANSFERS;
+    char *tmpdir = NULL;
 
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "m:hv", long_options, &option_index)) != -1)
@@ -88,11 +89,13 @@ int main(int argc, char *argv[])
 
     /* Validate options */
 
+    tmpdir = check_tmpdir(tmpdir);
+
     if(optind >= argc)
     {
         fprintf(stderr, "ERROR: No distributed derivation file specified!\n");
         return 1;
     }
     else
-        return run_build(argv[optind], max_concurrent_transfers); /* Perform distributed build operation */
+        return run_build(argv[optind], max_concurrent_transfers, tmpdir); /* Perform distributed build operation */
 }

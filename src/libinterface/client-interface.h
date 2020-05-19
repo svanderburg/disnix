@@ -160,30 +160,6 @@ pid_t exec_set(gchar *interface, gchar *target, gchar *profile, gchar *component
 ProcReact_Future exec_query_installed(gchar *interface, gchar *target, gchar *profile);
 
 /**
- * Invokes the copy snapshots process to copy snapshots from a machine
- *
- * @param interface Path to the interface executable
- * @param target Target Address of the remote interface
- * @param container Name of the container in which the component is deployed
- * @param component Name of the component of which state snapshots should be copied
- * @param all Indicates whether all generations of snapshots must be transferred
- * @return PID of the client interface process performing the operation, or -1 in case of a failure
- */
-pid_t exec_copy_snapshots_from(gchar *interface, gchar *target, gchar *container, gchar *component, gboolean all);
-
-/**
- * Invokes the copy snapshots process to copy snapshots to a machine
- *
- * @param interface Path to the interface executable
- * @param target Target Address of the remote interface
- * @param container Name of the container in which the component is deployed
- * @param component Name of the component of which state snapshots should be copied
- * @param all Indicates whether all generations of snapshots must be transferred
- * @return PID of the client interface process performing the operation, or -1 in case of a failure
- */
-pid_t exec_copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar *component, gboolean all);
-
-/**
  * Invokes the Dysnomia snapshot garbage collect operation through a Disnix client interface
  *
  * @param interface Path to the interface executable

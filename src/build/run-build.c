@@ -24,7 +24,7 @@
 #include <interfacestable.h>
 #include <client-interface.h>
 
-int run_build(const gchar *distributed_derivation_file, const unsigned int max_concurrent_transfers)
+int run_build(const gchar *distributed_derivation_file, const unsigned int max_concurrent_transfers, char *tmpdir)
 {
     DistributedDerivation *distributed_derivation = create_distributed_derivation(distributed_derivation_file);
 
@@ -38,7 +38,7 @@ int run_build(const gchar *distributed_derivation_file, const unsigned int max_c
         int exit_status;
 
         if(check_distributed_derivation(distributed_derivation))
-            exit_status = !build(distributed_derivation, max_concurrent_transfers); /* Execute remote builds */
+            exit_status = !build(distributed_derivation, max_concurrent_transfers, tmpdir); /* Execute remote builds */
         else
             exit_status = 1;
 

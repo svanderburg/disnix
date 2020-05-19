@@ -27,8 +27,9 @@
  *
  * @param manifest_file Path to the manifest file which maps services to machines
  * @param max_concurrent_transfers Specifies the maximum amount of concurrent transfers
+ * @param tmpdir Directory in which the temp files should be stored
  * @return 0 if everything succeeds, else a non-zero exit status
  */
-int run_distribute(const gchar *manifest_file, const unsigned int max_concurrent_transfers);
+int run_distribute(const gchar *manifest_file, const unsigned int max_concurrent_transfers, char *tmpdir);
 
 #endif

@@ -25,10 +25,11 @@
 
 static pid_t transfer_profile_mapping_to(void *data, gchar *target_name, xmlChar *profile_path, Target *target)
 {
+    char *tmpdir = (char*)data;
     char *paths[] = { (char*)profile_path, NULL };
     gchar *target_key = find_target_key(target);
     g_print("[target: %s]: Receiving intra-dependency closure of profile: %s\n", target_name, profile_path);
-    return copy_closure_to((char*)target->client_interface, target_key, "/tmp", paths);
+    return copy_closure_to((char*)target->client_interface, target_key, tmpdir, paths);
 }
 
 static void complete_transfer_profile_mapping_to(void *data, gchar *target_name, xmlChar *profile_path, Target *target, ProcReact_Status status, int result)
@@ -37,11 +38,11 @@ static void complete_transfer_profile_mapping_to(void *data, gchar *target_name,
         g_printerr("[target: %s]: Cannot receive intra-dependency closure of profile: %s\n", target_name, profile_path);
 }
 
-int distribute(const Manifest *manifest, const unsigned int max_concurrent_transfers)
+int distribute(const Manifest *manifest, const unsigned int max_concurrent_transfers, char *tmpdir)
 {
     /* Iterate over the profile mappings, limiting concurrency to the desired concurrent transfers and distribute them */
     int success;
-    ProcReact_PidIterator iterator = create_profile_mapping_iterator(manifest->profile_mapping_table, manifest->targets_table, transfer_profile_mapping_to, complete_transfer_profile_mapping_to, NULL);
+    ProcReact_PidIterator iterator = create_profile_mapping_iterator(manifest->profile_mapping_table, manifest->targets_table, transfer_profile_mapping_to, complete_transfer_profile_mapping_to, tmpdir);
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
     success = profile_mapping_iterator_has_succeeded(&iterator);
 

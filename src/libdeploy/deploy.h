@@ -44,12 +44,13 @@ DeployStatus;
  * @param profile Name of the distributed profile
  * @param coordinator_profile_path Path where the current deployment configuration must be stored
  * @param max_concurrent_transfers Specifies the maximum amount of concurrent transfers
+ * @param tmpdir Directory in which the temp files should be stored
  * @param keep Indicates how many snapshot generations should be kept remotely while executing the depth first operation
  * @param flags Deployment option flags
  * @param pre_hook Pointer to a function that gets executed before a series of critical operations start. This function can be used to catch a SIGINT signal and do a proper rollback. If the pointer is NULL then no function is executed.
  * @param pre_hook Pointer to a function that gets executed after the critical operations are done. This function can be used to restore the handler for the SIGINT to normal. If the pointer is NULL then no function is executed.
  * @return One of the possible outcomes in the DeployStatus enumeration
  */
-DeployStatus deploy(gchar *old_manifest_file, const gchar *new_manifest_fike, Manifest *manifest, Manifest *old_manifest, gchar *profile, const gchar *coordinator_profile_path, const unsigned int max_concurrent_transfers, const unsigned int keep, const unsigned int flags, void (*pre_hook) (void), void (*post_hook) (void));
+DeployStatus deploy(gchar *old_manifest_file, const gchar *new_manifest_fike, Manifest *manifest, Manifest *old_manifest, gchar *profile, const gchar *coordinator_profile_path, const unsigned int max_concurrent_transfers, char *tmpdir, const unsigned int keep, const unsigned int flags, void (*pre_hook) (void), void (*post_hook) (void));
 
 #endif

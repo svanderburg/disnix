@@ -78,7 +78,7 @@ static void print_deploy_state_fail_message(const gchar *coordinator_profile_pat
     if(old_manifest_file != NULL)
         g_printerr(" -o %s", old_manifest_file);
 
-    g_printerr("%s\n\n", new_manifest);
+    g_printerr(" %s\n\n", new_manifest);
 
     g_printerr(
     "If all problems have been resolved, the deployment must be finalized. To\n"
@@ -93,7 +93,7 @@ static void print_deploy_state_fail_message(const gchar *coordinator_profile_pat
     g_printerr(" %s\n\n", new_manifest);
 }
 
-int run_deploy(const gchar *new_manifest, gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const unsigned int max_concurrent_transfers, const int keep, const unsigned int flags)
+int run_deploy(const gchar *new_manifest, gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const unsigned int max_concurrent_transfers, const int keep, const unsigned int flags, char *tmpdir)
 {
     Manifest *manifest = create_manifest(new_manifest, MANIFEST_ALL_FLAGS, NULL, NULL);
 
@@ -114,7 +114,7 @@ int run_deploy(const gchar *new_manifest, gchar *old_manifest, const gchar *coor
             if(previous_manifest == NULL || check_manifest(previous_manifest))
             {
                 /* Execute the deployment process */
-                status = deploy(old_manifest_file, new_manifest, manifest, previous_manifest, profile, coordinator_profile_path, max_concurrent_transfers, keep, flags, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
+                status = deploy(old_manifest_file, new_manifest, manifest, previous_manifest, profile, coordinator_profile_path, max_concurrent_transfers, tmpdir, keep, flags, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
 
                 switch(status)
                 {

@@ -22,7 +22,7 @@
 #include <manifest.h>
 #include "distribute.h"
 
-int run_distribute(const gchar *manifest_file, const unsigned int max_concurrent_transfers)
+int run_distribute(const gchar *manifest_file, const unsigned int max_concurrent_transfers, char *tmpdir)
 {
     /* Generate a distribution array from the manifest file */
     Manifest *manifest = create_manifest(manifest_file, MANIFEST_PROFILES_FLAG | MANIFEST_INFRASTRUCTURE_FLAG, NULL, NULL);
@@ -37,7 +37,7 @@ int run_distribute(const gchar *manifest_file, const unsigned int max_concurrent
         int exit_status;
 
         if(check_manifest(manifest))
-            exit_status = !distribute(manifest, max_concurrent_transfers); /* Iterate over the distribution mappings, limiting concurrency to the desired concurrent transfers and distribute them */
+            exit_status = !distribute(manifest, max_concurrent_transfers, tmpdir); /* Iterate over the distribution mappings, limiting concurrency to the desired concurrent transfers and distribute them */
         else
             exit_status = 1;
 

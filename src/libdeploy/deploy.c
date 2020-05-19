@@ -5,10 +5,10 @@
 #include "locking.h"
 #include "set-profiles.h"
 
-static int distribute_closures(Manifest *manifest, const unsigned int max_concurrent_transfers)
+static int distribute_closures(Manifest *manifest, const unsigned int max_concurrent_transfers, char *tmpdir)
 {
     g_print("[coordinator]: Distributing intra-dependency closures...\n");
-    return distribute(manifest, max_concurrent_transfers);
+    return distribute(manifest, max_concurrent_transfers, tmpdir);
 }
 
 static TransitionStatus activate_new_configuration(gchar *old_manifest_file, const gchar *new_manifest, Manifest *manifest, Manifest *old_manifest, gchar *profile, const gchar *coordinator_profile_path, const unsigned int flags, void (*pre_hook) (void), void (*post_hook) (void))
@@ -68,9 +68,9 @@ static int set_all_profiles(Manifest *manifest, const gchar *new_manifest, const
     return set_profiles(manifest, new_manifest, coordinator_profile_path, profile, 0);
 }
 
-DeployStatus deploy(gchar *old_manifest_file, const gchar *new_manifest_file, Manifest *manifest, Manifest *old_manifest, gchar *profile, const gchar *coordinator_profile_path, const unsigned int max_concurrent_transfers, const unsigned int keep, const unsigned int flags, void (*pre_hook) (void), void (*post_hook) (void))
+DeployStatus deploy(gchar *old_manifest_file, const gchar *new_manifest_file, Manifest *manifest, Manifest *old_manifest, gchar *profile, const gchar *coordinator_profile_path, const unsigned int max_concurrent_transfers, char *tmpdir, const unsigned int keep, const unsigned int flags, void (*pre_hook) (void), void (*post_hook) (void))
 {
-    if(!distribute_closures(manifest, max_concurrent_transfers))
+    if(!distribute_closures(manifest, max_concurrent_transfers, tmpdir))
         return DEPLOY_FAIL;
 
     if(!acquire_locks(manifest, flags, profile, pre_hook, post_hook))

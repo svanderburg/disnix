@@ -22,6 +22,6 @@
 #include <glib.h>
 #include <deploymentflags.h>
 
-int run_deploy(const gchar *new_manifest, gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const unsigned int max_concurrent_transfers, const int keep, const unsigned int flags);
+int run_deploy(const gchar *new_manifest, gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const unsigned int max_concurrent_transfers, const int keep, const unsigned int flags, char *tmpdir);
 
 #endif

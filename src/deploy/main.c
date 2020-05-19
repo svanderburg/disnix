@@ -115,6 +115,7 @@ int main(int argc, char *argv[])
     char *old_manifest = NULL;
     char *profile = NULL;
     char *coordinator_profile_path = NULL;
+    char *tmpdir = NULL;
 
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "m:o:p:hv", long_options, &option_index)) != -1)
@@ -172,6 +173,7 @@ int main(int argc, char *argv[])
     /* Validate options */
 
     profile = check_profile_option(profile);
+    tmpdir = check_tmpdir(tmpdir);
 
     if(optind >= argc)
         manifest_file = NULL;
@@ -181,5 +183,5 @@ int main(int argc, char *argv[])
     if(check_global_delete_state())
         flags |= FLAG_DELETE_STATE;
 
-    return run_deploy(manifest_file, old_manifest, coordinator_profile_path, profile, max_concurrent_transfers, keep, flags); /* Execute deploy operation */
+    return run_deploy(manifest_file, old_manifest, coordinator_profile_path, profile, max_concurrent_transfers, keep, flags, tmpdir); /* Execute deploy operation */
 }

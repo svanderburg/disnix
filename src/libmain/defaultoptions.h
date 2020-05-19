@@ -113,7 +113,7 @@ char *check_interface_option(char *interface);
  * a default value.
  *
  * @param target_property Target property value to check
- * @return @return The given target property if set, or the default target property through the environment variable
+ * @return The given target property if set, or the default target property through the environment variable
  */
 char *check_target_property_option(char *target_property);
 
@@ -132,6 +132,15 @@ char *check_profile_option(char *profile);
  * @return TRUE if it has been enabled, else FALSE
  */
 int check_global_delete_state(void);
+
+/**
+ * Checks the tmpdir option. If NULL, it will take the value defined in the
+ * TMPDIR environment variable, or else it will use a default value.
+ *
+ * @param tmpdir Path to a temp directory to check
+ * @return The given tmpdir, or else the default temp directory
+ */
+char *check_tmpdir(char *tmpdir);
 
 /**
  * Prints the name, version, package and copyright statement for a command

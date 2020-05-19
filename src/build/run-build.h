@@ -25,11 +25,12 @@
  * Executes a distributed build. First Nix store derivation closures are copied
  * to target machines in the network. Then the remote builds are performed
  * and finally the build results are copied back to the coordinator machine.
- * 
+ *
  * @param distributed_derivation_file Path to the distributed derivation file
  * @param max_concurrent_transfers Specifies the maximum amount of concurrent transfers
+ * @param tmpdir Directory in which the temp files should be stored
  * @return 0 if everything succeeds, or else a non-zero exit value
  */
-int run_build(const gchar *distributed_derivation_file, const unsigned int max_concurrent_transfers);
+int run_build(const gchar *distributed_derivation_file, const unsigned int max_concurrent_transfers, char *tmpdir);
 
 #endif

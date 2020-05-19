@@ -31,6 +31,9 @@ static char *default_target_property = "hostname";
 /* Default profile value */
 static char *default_profile = "default";
 
+/* Default tmpdir value */
+static char *default_tmpdir = "/tmp";
+
 char *check_interface_option(char *interface)
 {
     if(interface == NULL)
@@ -76,6 +79,21 @@ char *check_profile_option(char *profile)
 int check_global_delete_state(void)
 {
     return (getenv("DISNIX_DELETE_STATE") != NULL && strcmp(getenv("DISNIX_DELETE_STATE"), "1") == 0);
+}
+
+char *check_tmpdir(char *tmpdir)
+{
+    if(tmpdir == NULL)
+    {
+        char *tmpdir_env = getenv("TMPDIR");
+
+        if(tmpdir_env == NULL)
+            tmpdir = default_tmpdir;
+        else
+            tmpdir = tmpdir_env;
+    }
+
+    return tmpdir;
 }
 
 void print_version(const char *command)

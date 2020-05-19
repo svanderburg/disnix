@@ -27,8 +27,9 @@
  *
  * @param manifest Manifest containing all deployment information
  * @param max_concurrent_transfers Specifies the maximum amount of concurrent transfers
+ * @param tmpdir Directory in which the temp files should be stored
  * @return TRUE if all closures have been successfully transferred, else FALSE
  */
-int distribute(const Manifest *manifest, const unsigned int max_concurrent_transfers);
+int distribute(const Manifest *manifest, const unsigned int max_concurrent_transfers, char *tmpdir);
 
 #endif

@@ -28,9 +28,10 @@
 
 static pid_t copy_derivation_mapping_to(void *data, DerivationMapping *mapping, Interface *interface)
 {
+    char *tmpdir = (char*)data;
     char *paths[] = { (char*)mapping->derivation, NULL };
     g_print("[target: %s]: Receiving intra-dependency closure of store derivation: %s\n", mapping->interface, mapping->derivation);
-    return copy_closure_to((char*)interface->client_interface, (char*)interface->target_address, "/tmp", paths);
+    return copy_closure_to((char*)interface->client_interface, (char*)interface->target_address, tmpdir, paths);
 }
 
 static void complete_copy_derivation_mapping_to(void *data, DerivationMapping *mapping, ProcReact_Status status, int result)
@@ -39,10 +40,10 @@ static void complete_copy_derivation_mapping_to(void *data, DerivationMapping *m
         g_printerr("[target: %s]: Cannot receive intra-dependency closure of store derivation: %s\n", mapping->interface, mapping->derivation);
 }
 
-static int distribute_derivation_mappings(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table, const unsigned int max_concurrent_transfers)
+static int distribute_derivation_mappings(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table, const unsigned int max_concurrent_transfers, char *tmpdir)
 {
     int success;
-    ProcReact_PidIterator iterator = create_derivation_mapping_pid_iterator(derivation_mapping_array, interfaces_table, copy_derivation_mapping_to, complete_copy_derivation_mapping_to, NULL);
+    ProcReact_PidIterator iterator = create_derivation_mapping_pid_iterator(derivation_mapping_array, interfaces_table, copy_derivation_mapping_to, complete_copy_derivation_mapping_to, tmpdir);
 
     g_print("[coordinator]: Distributing store derivation files...\n");
 
@@ -125,9 +126,9 @@ static int retrieve_results(const GPtrArray *derivation_mapping_array, GHashTabl
 
 /* Build orchestration */
 
-int build(DistributedDerivation *distributed_derivation, const unsigned int max_concurrent_transfers)
+int build(DistributedDerivation *distributed_derivation, const unsigned int max_concurrent_transfers, char *tmpdir)
 {
-    return (distribute_derivation_mappings(distributed_derivation->derivation_mapping_array, distributed_derivation->interfaces_table, max_concurrent_transfers) /* Distribute derivations to target machines */
+    return (distribute_derivation_mappings(distributed_derivation->derivation_mapping_array, distributed_derivation->interfaces_table, max_concurrent_transfers, tmpdir) /* Distribute derivations to target machines */
       && realise(distributed_derivation->derivation_mapping_array, distributed_derivation->interfaces_table) /* Realise derivations on target machines */
       && retrieve_results(distributed_derivation->derivation_mapping_array, distributed_derivation->interfaces_table, max_concurrent_transfers)); /* Retrieve back the build results */
 }

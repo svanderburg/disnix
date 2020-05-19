@@ -27,8 +27,9 @@
  *
  * @param distributed_derivation Configuration specifying a mapping between store derivations and machines
  * @param max_concurrent_transfers Specifies the maximum amount of concurrent transfers
+ * @param tmpdir Directory in which the temp files should be stored
  * @return TRUE if all the remote builds succeed, else FALSE
  */
-int build(DistributedDerivation *distributed_derivation, const unsigned int max_concurrent_transfers);
+int build(DistributedDerivation *distributed_derivation, const unsigned int max_concurrent_transfers, char *tmpdir);
 
 #endif
