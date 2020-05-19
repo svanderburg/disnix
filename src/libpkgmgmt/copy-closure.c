@@ -10,26 +10,32 @@ int copy_closure_to_sync(gchar *interface, gchar *target, gchar *tmpdir, gchar *
 
     if(requisites == NULL)
         exit_status = FALSE;
-    else if(g_strv_length(requisites) > 0)
+    else
     {
-        char **invalid_paths = exec_print_invalid_sync(interface, target, requisites, g_strv_length(requisites));
-
-        if(invalid_paths == NULL)
-            exit_status = FALSE;
-        else if(g_strv_length(invalid_paths) > 0)
+        if(g_strv_length(requisites) > 0)
         {
-            char *tempfile = pkgmgmt_export_closure_sync(tmpdir, invalid_paths, 2);
+            char **invalid_paths = exec_print_invalid_sync(interface, target, requisites, g_strv_length(requisites));
 
-            if(tempfile == NULL)
+            if(invalid_paths == NULL)
                 exit_status = FALSE;
             else
             {
-                exit_status = exec_import_local_closure_sync(interface, target, tempfile);
-                unlink(tempfile);
-                g_free(tempfile);
-            }
+                if(g_strv_length(invalid_paths) > 0)
+                {
+                    char *tempfile = pkgmgmt_export_closure_sync(tmpdir, invalid_paths, 2);
 
-            procreact_free_string_array(invalid_paths);
+                    if(tempfile == NULL)
+                        exit_status = FALSE;
+                    else
+                    {
+                        exit_status = exec_import_local_closure_sync(interface, target, tempfile);
+                        unlink(tempfile);
+                        g_free(tempfile);
+                    }
+                }
+
+                procreact_free_string_array(invalid_paths);
+            }
         }
 
         procreact_free_string_array(requisites);
@@ -55,26 +61,32 @@ int copy_closure_from_sync(gchar *interface, gchar *target, gchar **derivation)
 
     if(requisites == NULL)
         exit_status = FALSE;
-    else if(g_strv_length(requisites) > 0)
+    else
     {
-        char **invalid_paths = pkgmgmt_print_invalid_packages_sync(requisites, 2);
-
-        if(invalid_paths == NULL)
-            exit_status = FALSE;
-        else if(g_strv_length(invalid_paths) > 0)
+        if(g_strv_length(requisites) > 0)
         {
-            char *tempfile = exec_export_remote_closure_sync(interface, target, invalid_paths, g_strv_length(requisites));
+            char **invalid_paths = pkgmgmt_print_invalid_packages_sync(requisites, 2);
 
-            if(tempfile == NULL)
+            if(invalid_paths == NULL)
                 exit_status = FALSE;
             else
             {
-                exit_status = pkgmgmt_import_closure_sync(tempfile, 1, 2);
-                unlink(tempfile);
-                free(tempfile);
-            }
+                if(g_strv_length(invalid_paths) > 0)
+                {
+                    char *tempfile = exec_export_remote_closure_sync(interface, target, invalid_paths, g_strv_length(requisites));
 
-            procreact_free_string_array(invalid_paths);
+                    if(tempfile == NULL)
+                        exit_status = FALSE;
+                    else
+                    {
+                        exit_status = pkgmgmt_import_closure_sync(tempfile, 1, 2);
+                        unlink(tempfile);
+                        free(tempfile);
+                    }
+                }
+
+                procreact_free_string_array(invalid_paths);
+            }
         }
 
         procreact_free_string_array(requisites);
