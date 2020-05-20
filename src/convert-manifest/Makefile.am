@@ -12,7 +12,7 @@ noinst_DATA = disnix-convert-manifest.1.xml
 man1_MANS = disnix-convert-manifest.1
 
 disnix_convert_manifest_SOURCES = activationmapping.c convert-manifest.c distributionmapping.c oldmanifest.c oldsnapshotmapping.c main.c
-disnix_convert_manifest_LDADD = ../libprocreact/libprocreact.la ../libinfrastructure/libinfrastructure.la ../libmain/libmain.la ../libinterface/libinterface.la ../libmanifest/libmanifest.la
-disnix_convert_manifest_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) -I../libprocreact -I../libnixxml -I../libnixxml-glib -I../libinfrastructure -I../libmain -I../libinterface -I../libmodel -I../libmanifest
+disnix_convert_manifest_LDADD = ../libprocreact/libprocreact.la ../libinfrastructure/libinfrastructure.la ../libmain/libmain.la ../libmanifest/libmanifest.la
+disnix_convert_manifest_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) -I../libprocreact -I../libnixxml -I../libnixxml-glib -I../libinfrastructure -I../libmain -I../libmodel -I../libmanifest
 
 EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

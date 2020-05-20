@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_CLIENT_INTERFACE_H
-#define __DISNIX_CLIENT_INTERFACE_H
+#ifndef __DISNIX_REMOTE_STATE_MANAGEMENT_H
+#define __DISNIX_REMOTE_STATE_MANAGEMENT_H
 
 #include <unistd.h>
 #include <glib.h>
@@ -130,36 +130,6 @@ pid_t exec_delete_state(gchar *interface, gchar *target, gchar *container, gchar
 pid_t exec_dysnomia_shell(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service, gchar *command);
 
 /**
- * Invokes the collect garbage operation through a Disnix client interface
- *
- * @param interface Path to the interface executable
- * @param target Target Address of the remote interface
- * @param delete_old Indicates whether old profile generations must be removed
- * @return PID of the client interface process performing the operation, or -1 in case of a failure
- */
-pid_t exec_collect_garbage(gchar *interface, gchar *target, const gboolean delete_old);
-
-/**
- * Invokes the set operation through a Disnix client interface
- *
- * @param interface Path to the interface executable
- * @param target Target Address of the remote interface
- * @param profile Identifier of the distributed profile
- * @param component Component which becomes the contents of the profile
- */
-pid_t exec_set(gchar *interface, gchar *target, gchar *profile, gchar *component);
-
-/**
- * Invokes the the query installed operation through a Disnix client interface
- *
- * @param interface Path to the interface executable
- * @param target Target Address of the remote interface
- * @param profile Identifier of the distributed profile
- * @return Future struct of the client interface process performing the operation
- */
-ProcReact_Future exec_query_installed(gchar *interface, gchar *target, gchar *profile);
-
-/**
  * Invokes the Dysnomia snapshot garbage collect operation through a Disnix client interface
  *
  * @param interface Path to the interface executable
@@ -172,16 +142,6 @@ ProcReact_Future exec_query_installed(gchar *interface, gchar *target, gchar *pr
 pid_t exec_clean_snapshots(gchar *interface, gchar *target, int keep, char *container, char *component);
 
 /**
- * Invokes the realise operation through a Disnix client interface
- *
- * @param interface Path to the interface executable
- * @param target Target Address of the remote interface
- * @param derivation Derivation to build
- * @return Future struct of the client interface process performing the operation
- */
-ProcReact_Future exec_realise(gchar *interface, gchar *target, gchar *derivation);
-
-/**
  * Captures the configuration from the Dysnomia container configuration files
  * and generates a Nix expression from it.
  *
@@ -190,31 +150,6 @@ ProcReact_Future exec_realise(gchar *interface, gchar *target, gchar *derivation
  * @return Future struct of the client interface process performing the operation
  */
 ProcReact_Future exec_capture_config(gchar *interface, gchar *target);
-
-/**
- * Queries the requisites of a given derivation
- *
- * @param interface Path to the interface executable
- * @param target Target Address of the remote interface
- * @param derivation Array of derivations to query the requisities from
- * @param derivation_length Length of the derivations array
- * @return Future struct of the client interface process performing the operation
- */
-ProcReact_Future exec_query_requisites(gchar *interface, gchar *target, gchar **derivation, unsigned int derivation_length);
-
-char **exec_query_requisites_sync(gchar *interface, gchar *target, gchar **derivation, unsigned int derivation_length);
-
-ProcReact_Future exec_print_invalid(gchar *interface, gchar *target, gchar **paths, unsigned int paths_length);
-
-char **exec_print_invalid_sync(gchar *interface, gchar *target, gchar **paths, unsigned int paths_length);
-
-pid_t exec_import_local_closure(gchar *interface, gchar *target, char *closure);
-
-int exec_import_local_closure_sync(gchar *interface, gchar *target, char *closure);
-
-ProcReact_Future exec_export_remote_closure(gchar *interface, gchar *target, char **paths, unsigned int paths_length);
-
-char *exec_export_remote_closure_sync(gchar *interface, gchar *target, char **paths, unsigned int paths_length);
 
 ProcReact_Future exec_query_all_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component);
 

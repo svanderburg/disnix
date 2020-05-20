@@ -20,7 +20,7 @@
 #include "capture-infra.h"
 #include <stdlib.h>
 #include <targets-iterator.h>
-#include <client-interface.h>
+#include <remote-state-management.h>
 #include "nixxml-ghashtable-iter.h"
 
 static ProcReact_Future capture_infra_on_target(void *data, gchar *target_name, Target *target)

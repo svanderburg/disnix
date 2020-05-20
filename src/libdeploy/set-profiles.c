@@ -20,7 +20,7 @@
 #include "set-profiles.h"
 #include <profilemapping-iterator.h>
 #include <targetstable.h>
-#include <client-interface.h>
+#include <remote-package-management.h>
 #include <package-management.h>
 
 static pid_t set_profile_mapping(void *data, gchar *target_name, xmlChar *profile_path, Target *target)

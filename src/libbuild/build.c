@@ -21,8 +21,8 @@
 #include <distributedderivation.h>
 #include <derivationmapping-iterator.h>
 #include <interfacestable.h>
-#include <client-interface.h>
 #include <copy-closure.h>
+#include <remote-package-management.h>
 
 /* Distribute store derivations infrastructure */
 

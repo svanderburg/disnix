@@ -21,7 +21,7 @@
 #include <servicemapping-traverse.h>
 #include <manifestservicestable.h>
 #include <targetstable.h>
-#include <client-interface.h>
+#include <remote-state-management.h>
 
 extern volatile int interrupted;
 

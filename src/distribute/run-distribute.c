@@ -18,7 +18,6 @@
  */
 
 #include "run-distribute.h"
-#include <client-interface.h>
 #include <manifest.h>
 #include "distribute.h"
 

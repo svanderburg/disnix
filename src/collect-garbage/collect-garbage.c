@@ -19,7 +19,7 @@
 
 #include "collect-garbage.h"
 #include <targets-iterator.h>
-#include <client-interface.h>
+#include <remote-package-management.h>
 
 typedef struct
 {

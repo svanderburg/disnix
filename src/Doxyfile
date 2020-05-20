@@ -792,7 +792,6 @@ INPUT                  = activate \
                          distribute \
                          libdistderivation \
                          libinfrastructure \
-                         libinterface \
                          libmain \
                          libmanifest \
                          libpkgmgmt \

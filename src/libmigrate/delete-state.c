@@ -18,7 +18,7 @@
  */
 
 #include "delete-state.h"
-#include <client-interface.h>
+#include <remote-state-management.h>
 #include <snapshotmapping-traverse.h>
 #include <targetstable.h>
 

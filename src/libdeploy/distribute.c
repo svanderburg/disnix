@@ -18,7 +18,7 @@
  */
 
 #include "distribute.h"
-#include <client-interface.h>
+#include <remote-package-management.h>
 #include <profilemapping-iterator.h>
 #include <targetstable.h>
 #include <copy-closure.h>

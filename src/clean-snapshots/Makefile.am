@@ -10,7 +10,7 @@ noinst_DATA = disnix-clean-snapshots.1.xml
 man1_MANS = disnix-clean-snapshots.1
 
 disnix_clean_snapshots_SOURCES = clean-snapshots.c main.c
-disnix_clean_snapshots_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) $(LIBXSLT_CFLAGS) -I../libprocreact -I../libnixxml -I../libinfrastructure -I../libmain -I../libinterface -I../libmodel
-disnix_clean_snapshots_LDADD = $(GLIB2_LIBS) ../libprocreact/libprocreact.la ../libinfrastructure/libinfrastructure.la ../libmain/libmain.la ../libinterface/libinterface.la
+disnix_clean_snapshots_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) $(LIBXSLT_CFLAGS) -I../libprocreact -I../libnixxml -I../libinfrastructure -I../libmain -I../libstatemgmt -I../libmodel
+disnix_clean_snapshots_LDADD = $(GLIB2_LIBS) ../libprocreact/libprocreact.la ../libinfrastructure/libinfrastructure.la ../libmain/libmain.la ../libstatemgmt/libstatemgmt.la
 
 EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

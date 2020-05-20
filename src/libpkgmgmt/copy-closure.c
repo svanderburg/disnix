@@ -18,9 +18,9 @@
  */
 
 #include "copy-closure.h"
-#include <package-management.h>
-#include <client-interface.h>
 #include <procreact_types.h>
+#include "package-management.h"
+#include "remote-package-management.h"
 
 int copy_closure_to_sync(gchar *interface, gchar *target, gchar *tmpdir, gchar **derivation)
 {

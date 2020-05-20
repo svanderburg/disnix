@@ -19,7 +19,7 @@
 
 #include "snapshot.h"
 #include <sys/types.h>
-#include <client-interface.h>
+#include <remote-state-management.h>
 #include <snapshotmapping-traverse.h>
 #include <manifestservicestable.h>
 #include <targets-iterator.h>
@@ -59,7 +59,6 @@ static pid_t retrieve_snapshot_mapping(SnapshotMapping *mapping, Target *target,
 {
     gchar *target_key = find_target_key(target);
     g_print("[target: %s]: Retrieving snapshots of component: %s deployed to container: %s\n", mapping->target, mapping->component, mapping->container);
-    //return exec_copy_snapshots_from((char*)target->client_interface, target_key, (char*)mapping->container, (char*)mapping->component, (flags & FLAG_ALL));
     return copy_snapshots_from((char*)target->client_interface, target_key, (char*)mapping->container, (char*)mapping->component, flags & FLAG_ALL);
 }
 

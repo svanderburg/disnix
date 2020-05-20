@@ -19,7 +19,7 @@
 #include "capture-manifest.h"
 #include <stdio.h>
 #include <targets-iterator.h>
-#include <client-interface.h>
+#include <remote-package-management.h>
 #include <profilemanifest.h>
 #include <profilemanifesttargettable.h>
 #include <profilemanifesttarget-iterator.h>

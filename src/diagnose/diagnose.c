@@ -22,7 +22,7 @@
 #include <servicemappingarray.h>
 #include <manifestservice.h>
 #include <targetstable.h>
-#include <client-interface.h>
+#include <remote-state-management.h>
 #include <procreact_pid.h>
 #include <manifestservicestable.h>
 #include <mappingparameters.h>

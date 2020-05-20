@@ -18,7 +18,7 @@
  */
 #include "query-installed.h"
 #include <targets-iterator.h>
-#include <client-interface.h>
+#include <remote-package-management.h>
 #include <profilemanifesttargettable.h>
 #include <profilemanifest.h>
 

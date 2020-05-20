@@ -12,7 +12,7 @@ noinst_DATA = disnix-set.1.xml
 man1_MANS = disnix-set.1
 
 disnix_set_SOURCES = run-set-profiles.c main.c
-disnix_set_CFLAGS = $(GLIB2_CFLAGS) -I../libprocreact -I../libmanifest -I../libmain -I../libinterface -I../libpkgmgmt -I../libmodel -I../libdeploy
-disnix_set_LDADD = $(GLIB2_LIBS) ../libprocreact/libprocreact.la ../libmanifest/libmanifest.la ../libmain/libmain.la ../libinterface/libinterface.la ../libpkgmgmt/libpkgmgmt.la ../libdeploy/libdeploy.la
+disnix_set_CFLAGS = $(GLIB2_CFLAGS) -I../libprocreact -I../libmanifest -I../libmain -I../libpkgmgmt -I../libmodel -I../libdeploy
+disnix_set_LDADD = $(GLIB2_LIBS) ../libprocreact/libprocreact.la ../libmanifest/libmanifest.la ../libmain/libmain.la ../libpkgmgmt/libpkgmgmt.la ../libdeploy/libdeploy.la
 
 EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

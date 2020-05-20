@@ -19,7 +19,6 @@
 
 #include "run-delete-state.h"
 #include "delete-state.h"
-#include <client-interface.h>
 #include <manifest.h>
 #include <snapshotmappingarray.h>
 #include <targetstable.h>

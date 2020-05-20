@@ -12,7 +12,7 @@ noinst_DATA = disnix-capture-manifest.1.xml
 man1_MANS = disnix-capture-manifest.1
 
 disnix_capture_manifest_SOURCES = aggregated-manifest.c capture-manifest.c main.c
-disnix_capture_manifest_LDADD = ../libprocreact/libprocreact.la ../libinfrastructure/libinfrastructure.la ../libmain/libmain.la ../libinterface/libinterface.la ../libprofilemanifest/libprofilemanifest.la ../libpkgmgmt/libpkgmgmt.la ../libmanifest/libmanifest.la
-disnix_capture_manifest_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) -I../libprocreact -I../libnixxml -I../libinfrastructure -I../libmain -I../libinterface -I../libmodel -I../libprofilemanifest -I../libpkgmgmt -I../libmanifest
+disnix_capture_manifest_LDADD = ../libprocreact/libprocreact.la ../libinfrastructure/libinfrastructure.la ../libmain/libmain.la ../libprofilemanifest/libprofilemanifest.la ../libpkgmgmt/libpkgmgmt.la ../libmanifest/libmanifest.la
+disnix_capture_manifest_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) -I../libprocreact -I../libnixxml -I../libinfrastructure -I../libmain -I../libmodel -I../libprofilemanifest -I../libpkgmgmt -I../libmanifest
 
 EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

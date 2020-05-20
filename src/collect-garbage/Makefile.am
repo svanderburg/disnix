@@ -10,7 +10,7 @@ noinst_DATA = disnix-collect-garbage.1.xml
 man1_MANS = disnix-collect-garbage.1
 
 disnix_collect_garbage_SOURCES = collect-garbage.c main.c
-disnix_collect_garbage_LDADD = ../libprocreact/libprocreact.la ../libinfrastructure/libinfrastructure.la ../libmain/libmain.la ../libinterface/libinterface.la
-disnix_collect_garbage_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) $(LIBXSLT_CFLAGS) -I../libprocreact -I../libnixxml -I../libinfrastructure -I../libmain -I../libinterface -I../libmodel
+disnix_collect_garbage_LDADD = ../libprocreact/libprocreact.la ../libinfrastructure/libinfrastructure.la ../libmain/libmain.la ../libpkgmgmt/libpkgmgmt.la
+disnix_collect_garbage_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) $(LIBXSLT_CFLAGS) -I../libprocreact -I../libnixxml -I../libinfrastructure -I../libmain -I../libpkgmgmt -I../libmodel
 
 EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

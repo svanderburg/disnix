@@ -21,7 +21,7 @@
 #include <profilemapping-iterator.h>
 #include <manifest.h>
 #include <targetstable.h>
-#include <client-interface.h>
+#include <remote-state-management.h>
 
 extern volatile int interrupted;
 

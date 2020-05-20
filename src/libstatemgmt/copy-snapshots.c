@@ -21,8 +21,8 @@
 #include <libgen.h>
 #include <unistd.h>
 #include <procreact_types.h>
-#include <client-interface.h>
 #include "state-management.h"
+#include "remote-state-management.h"
 
 int copy_snapshots_to_sync(gchar *interface, gchar *target, gchar *container, gchar *component, int all)
 {
