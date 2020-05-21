@@ -425,5 +425,11 @@ simpleTest {
       # It checks whether the exposed 'hello' property matches what we expect.
       $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-infracontainer.nix -i ${manifestTests}/infrastructure-container.nix -d ${manifestTests}/distribution-infracontainer.nix --no-lock");
       $testtarget1->mustSucceed("cat /var/log/disnix/* | grep 'hello=hello-from-infrastructure-container\$'");
+
+      # Testcase the undeploys everything.
+      $coordinator->mustSucceed("${env} disnix-env --undeploy -i ${manifestTests}/infrastructure-container.nix");
+      $coordinator->mustSucceed("${env} disnix-query -f xml ${manifestTests}/infrastructure-container.nix > query.xml");
+      $coordinator->mustFail("xmllint --xpath \"/profileManifestTargets/target[\@name='testtarget1']/profileManifest/services/*\" query.xml");
+      $coordinator->mustFail("xmllint --xpath \"/profileManifestTargets/target[\@name='testtarget2']/profileManifest/services/*\" query.xml");
     '';
 }

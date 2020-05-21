@@ -28,6 +28,7 @@ showUsage()
 Usage: $0 -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
   or: $0 -P packages_nix -i infrastructure_nix [OPTION]
   or: $0 --rollback [OPTION]
+  or: $0 --undeploy [OPTION]
   or: $0 --switch-generation NUM [OPTION]
   or: $0 --list-generations [OPTION]
   or: $0 --delete-generations NUM [OPTION]
@@ -92,6 +93,8 @@ Options:
                                   the mappings that have a one-on-one
                                   relationship with the deployment activities
                                   that are carried out
+      --undeploy                  Generates a manifest file that conveniently
+                                  undeploys all services
       --switch-to-generation=NUM  Switches to a specific profile generation
       --rollback                  Switches back to the previously deployed
                                   configuration
@@ -178,7 +181,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:D:p:m:hv -l services:,infrastructure:,distribution:,packages:,architecture:,deployment:,rollback,switch-to-generation:,list-generations,delete-generations:,delete-all-generations,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,delete-state,depth-first,keep:,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:D:p:m:hv -l services:,infrastructure:,distribution:,packages:,architecture:,deployment:,rollback,undeploy,switch-to-generation:,list-generations,delete-generations:,delete-all-generations,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,delete-state,depth-first,keep:,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -213,6 +216,10 @@ do
             ;;
         --rollback)
             operation="switchGenerations"
+            ;;
+        --undeploy)
+            undeploy=1
+            operation="undeploy"
             ;;
         --switch-to-generation)
             operation="switchGenerations"

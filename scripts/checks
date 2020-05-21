@@ -150,7 +150,11 @@ checkModels()
 
 checkDeployModels()
 {
-    if [ "$deploymentFile" = "" ]
+    if [ "$undeploy" = "1" ]
+    then
+        deploymentModel="undeploy"
+        checkInfrastructureFile
+    elif [ "$deploymentFile" = "" ]
     then
         checkModels
     else
@@ -199,6 +203,9 @@ generateModelArgs()
         build)
             modelArgs="-B $buildFile"
             ;;
+        undeploy)
+            modelArgs="--undeploy -i $infrastructureFile"
+            ;;
     esac
 }
 
@@ -228,6 +235,9 @@ generateNixBuildArgs()
             ;;
         deployment)
             conversionArgs="--argstr deploymentFile $(readlink -f $deploymentFile)"
+            ;;
+        undeploy)
+            conversionArgs="--argstr infrastructureFile $(readlink -f $infrastructureFile)"
             ;;
     esac
 }

@@ -118,4 +118,27 @@ in
       manifest = import deploymentFile;
       pkgs = import nixpkgs {};
     };
+
+  generateUndeploymentManifest =
+    { infrastructureFile
+    , nixpkgs ? <nixpkgs>
+    , targetProperty
+    , clientInterface
+    , deployState ? false
+    }:
+
+    let
+      pkgs = import nixpkgs {};
+    in
+    generateManifestFromArchitectureFun {
+      architectureFun =
+        {system, pkgs}:
+
+        {
+          services = {};
+          infrastructure = import infrastructureFile;
+        };
+
+      inherit nixpkgs pkgs targetProperty clientInterface deployState;
+    };
 }

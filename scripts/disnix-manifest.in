@@ -26,6 +26,7 @@ showUsage()
     cat <<EOF
 Usage: $0 -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
   or: $0 -P packages_nix -i infrastructure_nix [OPTION]
+  or: $0 --undeploy -i infrastructure_nix [OPTION]
   or: $0 -A architecture_nix [OPTION]
   or: $0 -D deployment_nix [OPTION]
 
@@ -66,6 +67,8 @@ Options:
                               Deployment Nix expression that describes all the
                               mappings that have a one-on-one relationship with
                               the deployment activities that are carried out
+      --undeploy              Generates a manifest file that conveniently
+                              undeploys all services
       --target-property=PROP  The target property of an infrastructure model,
                               that specifies how to connect to the remote Disnix
                               interface. (Defaults to hostname)
@@ -102,7 +105,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:D:hv -l services:,infrastructure:,distribution:,packages:,architecture:,deployment:,target-property:,interface:,deploy-state,no-out-link,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:D:hv -l services:,infrastructure:,distribution:,packages:,architecture:,deployment:,undeploy,target-property:,interface:,deploy-state,no-out-link,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -134,6 +137,9 @@ do
             ;;
         -D|--deployment)
             deploymentFile=`readlink -f $2`
+            ;;
+        --undeploy)
+            undeploy=1
             ;;
         --target-property)
             targetProperty=$2
@@ -200,6 +206,9 @@ case "$deploymentModel" in
         ;;
     deployment)
         conversionArgs="$conversionArgs -A generateManifestFromDeploymentModel"
+        ;;
+    undeploy)
+        conversionArgs="$conversionArgs -A generateUndeploymentManifest"
         ;;
 esac
 
