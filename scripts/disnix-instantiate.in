@@ -59,6 +59,9 @@ Options:
   -B, --build=build_nix
                               Build Nix expression that maps store derivations
                               to target machines in the network
+      --extra-params          A string with an attribute set in the Nix
+                              expression language propagating extra parameters
+                              to input models
       --target-property=PROP  The target property of an infrastructure model,
                               that specifies how to connect to the remote Disnix
                               interface. (Defaults to: hostname)
@@ -91,7 +94,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:B:hv -l services:,infrastructure:,distribution:,packages:,architecture:,build:,target-property:,interface:,no-out-link,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:B:hv -l services:,infrastructure:,distribution:,packages:,architecture:,build:,extra-params:,target-property:,interface:,no-out-link,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -123,6 +126,9 @@ do
             ;;
         -B|--build)
             buildFile=`readlink -f $2`
+            ;;
+        --extra-params)
+            extraParamsArg=("--arg" "extraParams" "$2")
             ;;
         --target-property)
             targetProperty=$2
@@ -189,4 +195,5 @@ nix-build --argstr targetProperty $targetProperty \
     $noOutLinkArg \
     $showTraceArg \
     $conversionArgs \
+    "${extraParamsArg[@]}" \
     "$(readlink -f @datadir@/@PACKAGE@/instantiate.nix)"

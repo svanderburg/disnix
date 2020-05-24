@@ -122,6 +122,9 @@ Options:
       --build-on-targets          Build the services on the target machines in
                                   the network instead of managing the build by
                                   the coordinator
+      --extra-params              A string with an attribute set in the Nix
+                                  expression language propagating extra
+                                  parameters to the input models
       --coordinator-profile-path=PATH
                                   Path where to store the coordinator profile
                                   generations
@@ -143,7 +146,6 @@ Options:
                                   efficient, but slower.
       --keep=NUM                  Amount of snapshot generations to keep.
                                   Defaults to: 1
-
       --show-trace                Shows a trace of the output
   -h, --help                      Shows the usage of this command
   -v, --version                   Shows the version of this command
@@ -181,7 +183,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:D:p:m:hv -l services:,infrastructure:,distribution:,packages:,architecture:,deployment:,rollback,undeploy,switch-to-generation:,list-generations,delete-generations:,delete-all-generations,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,delete-state,depth-first,keep:,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:D:p:m:hv -l services:,infrastructure:,distribution:,packages:,architecture:,deployment:,rollback,undeploy,switch-to-generation:,list-generations,delete-generations:,delete-all-generations,interface:,target-property:,deploy-state,profile:,max-concurrent-transfers:,build-on-targets,extra-params:,coordinator-profile-path:,no-upgrade,no-lock,no-coordinator-profile,no-target-profiles,no-migration,delete-state,depth-first,keep:,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -220,6 +222,9 @@ do
         --undeploy)
             undeploy=1
             operation="undeploy"
+            ;;
+        --extra-params)
+            extraParamsArg=("--extra-params" "$2")
             ;;
         --switch-to-generation)
             operation="switchGenerations"
@@ -380,7 +385,7 @@ produceManifest()
     fi
 
     echo "[coordinator]: Building manifest..."
-    manifest=`disnix-manifest $modelArgs --target-property $targetProperty --no-out-link --interface $interface $deployStateArg $showTraceArg`
+    manifest=`disnix-manifest $modelArgs --target-property $targetProperty --no-out-link --interface $interface "${extraParamsArg[@]}" $deployStateArg $showTraceArg`
 }
 
 deploy()

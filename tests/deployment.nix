@@ -426,6 +426,19 @@ simpleTest {
       $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-infracontainer.nix -i ${manifestTests}/infrastructure-container.nix -d ${manifestTests}/distribution-infracontainer.nix --no-lock");
       $testtarget1->mustSucceed("cat /var/log/disnix/* | grep 'hello=hello-from-infrastructure-container\$'");
 
+      # Testcase that deploys a parametrized services model. We should get a
+      # service deployed that has a different name (myService) instead of the
+      # default (testService)
+      $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-parametrized.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-parametrized.nix --extra-params '{ prefix = \"myService\"; }'");
+      $coordinator->mustSucceed("${env} disnix-query -f xml ${manifestTests}/infrastructure.nix > query.xml");
+      $result = $coordinator->mustSucceed("xmllint --xpath \"/profileManifestTargets/target[\@name='testtarget1']/profileManifest/services/service[name='testPrefixService']/pkg\" query.xml");
+
+      if($result =~ /-myService/) {
+          print "The result contains myService!\n";
+      } else {
+          die "The result should contain: myService";
+      }
+
       # Testcase the undeploys everything.
       $coordinator->mustSucceed("${env} disnix-env --undeploy -i ${manifestTests}/infrastructure-container.nix");
       $coordinator->mustSucceed("${env} disnix-query -f xml ${manifestTests}/infrastructure-container.nix > query.xml");

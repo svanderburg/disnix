@@ -472,6 +472,45 @@ $ disnix-diagnose -S StaffTracker --show-mappings
 	</section>
 
 	<section>
+		<title>Propagating arbitrary function parameters to the input models</title>
+
+		<para>
+			Most of the input models that Disnix uses are function definitions that require a standard set of parameters.
+			It is also possible to extend this set of standard parameters with custom parameters, and propagate arbitrary
+			values from the command-line.
+		</para>
+
+		<para>
+			For example, the services model shown earlier in <xref linkend="ex-services-multiple-container-providing" />
+			defines a number of additional parameters beyond the required parameters in the services model
+			(<varname>pkgs</varname>, <varname>system</varname>, <varname>distribution</varname> and <varname>invDistribution</varname>).
+		</para>
+
+		<para>
+			In the example, it is also possible to configure the process manager (<varname>processManager</varname>),
+			the default state directory (<varname>stateDir</varname>) and specify whether we
+			want to force disabling changing user permissions (<varname>forceDisableUserChange</varname>), that
+			is particularly useful to facilitate unprivileged user deployments.
+			If we want to easily change these parameters, we can propagate a set of parameters on the command-line.
+		</para>
+
+<screen>
+$ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix --extra-params '{ processManager = "sysvinit"; stateDir = "/home/sander/var"; forceDisableUserChange = true; }'
+</screen>
+		<para>
+			The above command-line invocation changes the process manager to: <code>sysvinit</code>, the state directory
+			to: <code>/home/sander/var</code> and enables forcing user permissions not to change.
+			This particular configuration allows me to deploy an entire system as an unprivileged user.
+		</para>
+
+		<para>
+			In addition to the services model, it is also possible to use the same mechanism to propagate extra
+			parameters to the distribution model and the deployment architecture model described in
+			the next chapter.
+		</para>
+	</section>
+
+	<section>
 		<title>Disregarding the inter-dependency activation order</title>
 
 		<para>

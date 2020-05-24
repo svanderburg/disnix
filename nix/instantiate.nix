@@ -31,6 +31,7 @@ let
     , pkgs
     , clientInterface
     , targetProperty
+    , extraParams
     }:
 
     let
@@ -43,7 +44,7 @@ let
       };
 
       architecture = normalizeArchitecture {
-        inherit architectureFun nixpkgs;
+        inherit architectureFun nixpkgs extraParams;
         defaultClientInterface = clientInterface;
         defaultTargetProperty = targetProperty;
         defaultDeployState = false;
@@ -62,6 +63,7 @@ in
     { architectureFile
     , targetProperty
     , clientInterface
+    , extraParams ? {}
     , nixpkgs ? <nixpkgs>
     }:
 
@@ -71,7 +73,7 @@ in
     in
     generateDistributedDerivationFromArchitectureFun {
       inherit architectureFun;
-      inherit nixpkgs pkgs targetProperty clientInterface;
+      inherit nixpkgs pkgs targetProperty clientInterface extraParams;
     };
 
   generateDistributedDerivationFromModels =
@@ -81,6 +83,7 @@ in
     , packagesFile ? null
     , targetProperty
     , clientInterface
+    , extraParams ? {}
     , nixpkgs ? <nixpkgs>
     }:
 
@@ -97,12 +100,13 @@ in
       };
 
       architectureFun = wrapArchitecture {
-        inherit servicesFun infrastructure distributionFun packagesFun;
+        inherit servicesFun infrastructure distributionFun packagesFun extraParams;
       };
     in
     generateDistributedDerivationFromArchitectureFun {
       inherit architectureFun;
       inherit nixpkgs pkgs targetProperty clientInterface;
+      extraParams = {};
     };
 
   generateDistributedDerivationFromBuildModel =

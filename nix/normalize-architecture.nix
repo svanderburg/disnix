@@ -180,7 +180,7 @@ let
       }) architectureWithTargets.services;
     };
 
-  evaluatePkgsPerSystem = {architecture, architectureFun, nixpkgs}:
+  evaluatePkgsPerSystem = {architecture, architectureFun, nixpkgs, extraParams}:
     architecture // {
       services = lib.mapAttrs (name: service:
         let
@@ -188,7 +188,10 @@ let
           interDependencies = (service.connectsTo or {}) // (service.dependsOn or {});
 
           buildFun = system:
-            (architectureFun { inherit system; pkgs = import nixpkgs { inherit system; }; }).services."${name}".pkg;
+            (architectureFun ({
+              inherit system;
+              pkgs = import nixpkgs { inherit system; };
+            }) // extraParams).services."${name}".pkg;
         in
         service // {
           _systemsPerTarget = map (target:
@@ -289,11 +292,11 @@ let
       ) architecture.services;
     };
 
-  generateNormalizedDeploymentArchitecture = {architectureFun, nixpkgs, defaultClientInterface, defaultTargetProperty, defaultDeployState}:
+  generateNormalizedDeploymentArchitecture = {architectureFun, nixpkgs, defaultClientInterface, defaultTargetProperty, defaultDeployState, extraParams}:
     let
-      architectureBasis = architectureFun {
+      architectureBasis = architectureFun ({
         pkgs = import nixpkgs {}; system = null; # TODO: Use default pkgs or use 'lib' parameter (the latter is probably better)
-      };
+      } // extraParams);
 
       checkedArchitecture = checkServiceNames {
         architecture = architectureBasis;
@@ -339,7 +342,7 @@ let
 
       architectureWithPkgsPerSystem = evaluatePkgsPerSystem {
         architecture = architectureWithInterDependencyTargets;
-        inherit architectureFun nixpkgs;
+        inherit architectureFun nixpkgs extraParams;
       };
 
       architectureWithPkgsPerTarget = generatePkgsPerTarget {

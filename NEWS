@@ -1,5 +1,7 @@
 version 0.10
 ============
+- Introduced the --extra-params option to propagate additional parameters to the input models
+
 - disnix-env provides the --undeploy option that can be used to conveniently undeploy an entire system
 
 - The functionality of disnix-copy-closure and disnix-copy-snapshots are now reimplemented as C API calls in libpkgmgmt and libstatemgmt

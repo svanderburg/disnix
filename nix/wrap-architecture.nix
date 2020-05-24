@@ -1,7 +1,7 @@
 {lib}:
 
 let
-  inherit (builtins) isAttrs isList elem hasAttr all attrNames;
+  inherit (builtins) isAttrs isList elem hasAttr all attrNames intersectAttrs functionArgs;
 
   generateInverseDistribution = {services, infrastructure, distribution}:
     let
@@ -40,23 +40,26 @@ let
       ) services
     else throw "The distribution model contains a mapping of a service that is not in the services model!";
 in
-{servicesFun ? null, infrastructure, distributionFun ? null, packagesFun ? null}:
+{servicesFun ? null, infrastructure, distributionFun ? null, packagesFun ? null, extraParams}:
 
   {pkgs, system}:
 
   let
-    distribution = if distributionFun == null then {} else distributionFun {
-      inherit infrastructure;
-    };
+    extraServiceParams = intersectAttrs (functionArgs servicesFun) extraParams;
+    extraDistributionParams = intersectAttrs (functionArgs distributionFun) extraParams;
 
-    services = if servicesFun == null then {} else servicesFun {
+    distribution = if distributionFun == null then {} else distributionFun ({
+      inherit infrastructure;
+    } // extraDistributionParams);
+
+    services = if servicesFun == null then {} else servicesFun ({
       inherit pkgs system;
       inherit distribution;
 
       invDistribution = generateInverseDistribution {
         inherit services infrastructure distribution;
       };
-    };
+    } // extraServiceParams);
 
     servicesWithTargets = augmentTargetsToServices {
       inherit services distribution;

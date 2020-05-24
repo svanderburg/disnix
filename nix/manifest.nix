@@ -32,6 +32,7 @@ let
     , clientInterface
     , targetProperty
     , deployState
+    , extraParams
     }:
 
     let
@@ -45,7 +46,7 @@ let
       };
 
       architecture = normalizeArchitecture {
-        inherit architectureFun nixpkgs;
+        inherit architectureFun nixpkgs extraParams;
         defaultClientInterface = clientInterface;
         defaultTargetProperty = targetProperty;
         defaultDeployState = deployState;
@@ -65,6 +66,7 @@ in
     , targetProperty
     , clientInterface
     , deployState ? false
+    , extraParams ? {}
     , nixpkgs ? <nixpkgs>
     }:
 
@@ -74,7 +76,7 @@ in
     in
     generateManifestFromArchitectureFun {
       inherit architectureFun;
-      inherit nixpkgs pkgs targetProperty clientInterface deployState;
+      inherit nixpkgs pkgs targetProperty clientInterface deployState extraParams;
     };
 
   generateManifestFromModels =
@@ -85,6 +87,7 @@ in
     , targetProperty
     , clientInterface
     , deployState ? false
+    , extraParams ? {}
     , nixpkgs ? <nixpkgs>
     }:
 
@@ -101,12 +104,13 @@ in
       };
 
       architectureFun = wrapArchitecture {
-        inherit servicesFun infrastructure distributionFun packagesFun;
+        inherit servicesFun infrastructure distributionFun packagesFun extraParams;
       };
     in
     generateManifestFromArchitectureFun {
       inherit architectureFun;
       inherit nixpkgs pkgs targetProperty clientInterface deployState;
+      extraParams = {};
     };
 
   generateManifestFromDeploymentModel =
@@ -140,5 +144,6 @@ in
         };
 
       inherit nixpkgs pkgs targetProperty clientInterface deployState;
+      extraParams = {};
     };
 }

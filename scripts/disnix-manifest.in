@@ -76,6 +76,9 @@ Options:
                               interface. Defaults to: disnix-ssh-client
       --deploy-state          Indicates whether to globally deploy state
                               (disabled by default)
+      --extra-params          A string with an attribute set in the Nix
+                              expression language propagating extra parameters
+                              to the input models
       --no-out-link           Do not create a 'result' symlink
       --show-trace            Shows a trace of the output
   -h, --help                  Shows the usage of this command to the user
@@ -105,7 +108,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:D:hv -l services:,infrastructure:,distribution:,packages:,architecture:,deployment:,undeploy,target-property:,interface:,deploy-state,no-out-link,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:D:hv -l services:,infrastructure:,distribution:,packages:,architecture:,deployment:,undeploy,target-property:,interface:,deploy-state,extra-params:,no-out-link,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -149,6 +152,9 @@ do
             ;;
         --deploy-state)
             deployState=1
+            ;;
+        --extra-params)
+            extraParamsArg=("--arg" "extraParams" "$2")
             ;;
         --no-out-link)
             noOutLink=1
@@ -218,4 +224,5 @@ nix-build --argstr targetProperty $targetProperty \
     $noOutLinkArg \
     $showTraceArg \
     $conversionArgs \
+    "${extraParamsArg[@]}" \
     "$(readlink -f @datadir@/@PACKAGE@/manifest.nix)"

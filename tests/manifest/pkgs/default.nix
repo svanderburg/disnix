@@ -48,4 +48,8 @@ rec {
   testServiceContainerConsumer = import ./testServiceContainerConsumer.nix {
     inherit (pkgs) stdenv;
   };
+
+  testPrefixService = import ./testPrefixService.nix {
+    inherit (pkgs) stdenv;
+  };
 }

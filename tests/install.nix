@@ -126,6 +126,7 @@ simpleTest {
       } else {
           die "testService2B not found!";
       }
+
       # Initialize testService1
       @closure = split('\n', $client->mustSucceed("nix-store -qR $manifest"));
       my @testService1 = grep(/\-testService1/, @closure);
@@ -167,7 +168,21 @@ simpleTest {
 
       $client->mustSucceed("${env} disnix-manifest -A ${manifestTests}/architecture.nix");
 
+      # Test a parametrized services model. The name of the resulting service
+      # (myService) should be different than the default (testService).
+
+      $manifest = $client->mustSucceed("${env} disnix-manifest -s ${manifestTests}/services-parametrized.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-parametrized.nix --extra-params '{ prefix = \"myService\"; }'");
+      $closure = $client->mustSucceed("nix-store -qR $manifest");
+
+      if($closure =~ /\-myService/) {
+          print "Found myService package in the closure!\n";
+      } else {
+          die "myService should be in the closure: $closure";
+      }
+
       #### Test disnix-copy-closure
+
+      $manifest = $client->mustSucceed("${env} disnix-manifest -s ${manifestTests}/services-composition.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-composition.nix");
 
       # Test copy closure. Here, we first dermine the closure of
       # testService3 and then we copy the closure of testService3 from

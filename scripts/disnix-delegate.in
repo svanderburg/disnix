@@ -62,6 +62,9 @@ Options:
                                   services to targets
   -B, --build=build_nix           Build Nix expression that maps store
                                   derivations to target machines in the network
+      --extra-params              A string with an attribute set in the Nix
+                                  expression language propagating extra
+                                  parameters to input models
       --target-property=PROP      The target property of an infrastructure
                                   model, that specifies how to connect to the
                                   remote Disnix interface. (Defaults to
@@ -98,7 +101,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:B:m:hv -l services:,infrastructure:,distribution:,packages:,architecture:,build:,interface:,target-property:,max-concurrent-transfers:,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:d:P:A:B:m:hv -l services:,infrastructure:,distribution:,packages:,architecture:,build:,extra-params:,interface:,target-property:,max-concurrent-transfers:,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -133,6 +136,9 @@ do
             ;;
         -m|--max-concurrent-transfers)
             maxConcurrentTransfersArg="-m $2"
+            ;;
+        --extra-params)
+            extraParamsArg=("--arg" "extraParams" "$2")
             ;;
         --show-trace)
             showTraceArg="--show-trace"
@@ -174,7 +180,7 @@ checkTargetProperty
 
 echo "[coordinator]: Instantiating store derivations..."
 generateModelArgs
-distributedDerivation=`disnix-instantiate $modelArgs --target-property $targetProperty --interface $interface --no-out-link $showTraceArg`
+distributedDerivation=`disnix-instantiate $modelArgs --target-property $targetProperty --interface $interface "${extraParamsArg[@]}" --no-out-link $showTraceArg`
 
 echo "[coordinator]: Remotely building services..."
 disnix-build $maxConcurrentTransfersArg $distributedDerivation
