@@ -78,7 +78,57 @@ $ export DISNIX_TARGET_PROPERTY=sshTarget
 			for more information.
 		</para>
 	</section>
-	
+
+	<section>
+		<title>Deploying a system locally</title>
+
+		<para>
+			For experimentation purposes and small systems, it can also be quite useful to deploy a system
+			entirely to a local machine. As described in the previous section, it is possible to specify
+			alternative client interfaces to use different communication protocols.
+		</para>
+
+		<para>
+			To directly connect to the local Disnix D-Bus service (without any network connection), you
+			can change the client interface to:
+		</para>
+
+<screen>
+$ export DISNIX_CLIENT_INTERFACE=disnix-client
+</screen>
+
+		<para>
+			It is also possible to completely bypass the D-Bus service and directly execute the deployment
+			activities, with the following client interface:
+		</para>
+
+<screen>
+$ export DISNIX_CLIENT_INTERFACE=disnix-runactivity
+</screen>
+
+
+		<para>
+			The above client interface is particularly useful for unprivileged user deployments. In addition
+			to a single-user Nix installation, it does not require anything else.
+		</para>
+
+		<example xml:id="ex-infrastructure-local">
+			<title>Infrastructure model describing localhost</title>
+<programlisting>
+{
+  localhost.properties.hostname = "localhost";
+}
+</programlisting>
+		</example>
+
+
+		<para>
+			After changing the client interface, you can write an infrastructure model with one machine
+			representing your <varname>localhost</varname>, for example as shown in <xref linkend="ex-infrastructure-local" />,
+			and map all services in the distribution model to the <varname>localhost</varname> machine.
+		</para>
+	</section>
+
 	<section>
 		<title>Managing multiple distributed system configurations</title>
 		
