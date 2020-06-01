@@ -47,8 +47,8 @@ let
         preDist = ''
           make -C doc/manual install prefix=$out
 
-          #make -C doc/manual index.pdf prefix=$out
-          #cp doc/manual/index.pdf $out/index.pdf
+          make -C doc/manual index.pdf prefix=$out
+          cp doc/manual/index.pdf $out/index.pdf
 
           make -C src apidox
           cp -av doc/apidox $out/share/doc/disnix
@@ -81,8 +81,7 @@ let
           buildInputs = [ pkgconfig glib libxml2 libxslt getopt nixUnstable dysnomia ]
             ++ lib.optionals (!stdenv.isLinux) [ libiconv gettext ];
 
-          CFLAGS = "-Wall -ggdb";
-          dontStrip = true;
+          CFLAGS = "-Wall";
         });
 
     tests =
