@@ -160,6 +160,7 @@ let
         tests.datamigration
         tests.locking
         tests.pkgs
+        tests.daemon
       ];
       meta.description = "Release-critical builds";
     };

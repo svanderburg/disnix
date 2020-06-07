@@ -1,5 +1,5 @@
-let
-  generateManifestFromDeploymentModel =
+rec {
+  generateManifestXMLFromManifestModel =
     {manifest, pkgs}:
 
     let
@@ -27,12 +27,12 @@ let
 
   generateManifestFromArchitectureFun =
     { architectureFun
-    , nixpkgs
+    , nixpkgs ? <nixpkgs>
     , pkgs
     , clientInterface
     , targetProperty
     , deployState
-    , extraParams
+    , extraParams ? {}
     }:
 
     let
@@ -56,11 +56,10 @@ let
         normalizedArchitecture = architecture;
       };
     in
-    generateManifestFromDeploymentModel {
+    generateManifestXMLFromManifestModel {
       inherit manifest pkgs;
     };
-in
-{
+
   generateManifestFromArchitectureModel =
     { architectureFile
     , targetProperty
@@ -118,7 +117,7 @@ in
     , nixpkgs ? <nixpkgs>
     }:
 
-    generateManifestFromDeploymentModel {
+    generateManifestXMLFromManifestModel {
       manifest = import deploymentFile;
       pkgs = import nixpkgs {};
     };
