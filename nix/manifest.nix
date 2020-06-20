@@ -1,14 +1,12 @@
 rec {
-  generateManifestXMLFromManifestModel =
-    {manifest, pkgs}:
-
+  generateManifestXMLFromDeploymentModel = {deploymentModel, pkgs}:
     let
       generateManifestXSL = ./generatemanifest.xsl;
     in
     pkgs.stdenv.mkDerivation {
       name = "manifest.xml";
       buildInputs = [ pkgs.libxslt ];
-      manifestXML = builtins.toXML manifest;
+      manifestXML = builtins.toXML deploymentModel;
       passAsFile = [ "manifestXML" ];
 
       buildCommand = ''
@@ -40,24 +38,24 @@ rec {
         inherit (pkgs) lib;
       };
 
-      generateManifest = import ./generate-manifest.nix {
+      generateDeploymentModel = import ./generate-deployment-model.nix {
         inherit pkgs;
         inherit (pkgs) lib;
       };
 
-      architecture = normalizeArchitecture {
+      normalizedArchitecture = normalizeArchitecture.generateNormalizedDeploymentArchitecture {
         inherit architectureFun nixpkgs extraParams;
         defaultClientInterface = clientInterface;
         defaultTargetProperty = targetProperty;
         defaultDeployState = deployState;
       };
 
-      manifest = generateManifest {
-        normalizedArchitecture = architecture;
+      deploymentModel = generateDeploymentModel.generateDeploymentModel {
+        inherit normalizedArchitecture;
       };
     in
-    generateManifestXMLFromManifestModel {
-      inherit manifest pkgs;
+    generateManifestXMLFromDeploymentModel {
+      inherit deploymentModel pkgs;
     };
 
   generateManifestFromArchitectureModel =
@@ -117,8 +115,8 @@ rec {
     , nixpkgs ? <nixpkgs>
     }:
 
-    generateManifestXMLFromManifestModel {
-      manifest = import deploymentFile;
+    generateManifestXMLFromDeploymentModel {
+      deploymentModel = import deploymentFile;
       pkgs = import nixpkgs {};
     };
 

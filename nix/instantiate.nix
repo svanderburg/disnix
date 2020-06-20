@@ -1,14 +1,12 @@
-let
-  generateDistributedDerivationFromBuildModel =
-    { distributedDerivation, pkgs }:
-
+rec {
+  generateDistributedDerivationXMLFromBuildModel = {buildModel, pkgs}:
     let
       generateDistributedDerivationXSL = ./generatedistributedderivation.xsl;
     in
     pkgs.stdenv.mkDerivation {
-      name = "distributedDerivation.xml";
+      name = "distributedderivation.xml";
       buildInputs = [ pkgs.libxslt ];
-      distributedDerivationXML = builtins.toXML distributedDerivation;
+      distributedDerivationXML = builtins.toXML buildModel;
       passAsFile = [ "distributedDerivationXML" ];
 
       buildCommand = ''
@@ -39,26 +37,26 @@ let
         inherit (pkgs) lib;
       };
 
-      generateDistributedDerivation = import ./generate-distributed-derivation.nix {
+      generateBuildModel = import ./generate-build-model.nix {
         inherit (pkgs) lib;
+        inherit pkgs;
       };
 
-      architecture = normalizeArchitecture {
+      normalizedArchitecture = normalizeArchitecture.generateNormalizedDeploymentArchitecture {
         inherit architectureFun nixpkgs extraParams;
         defaultClientInterface = clientInterface;
         defaultTargetProperty = targetProperty;
         defaultDeployState = false;
       };
 
-      distributedDerivation = generateDistributedDerivation {
-        inherit architecture;
+      buildModel = generateBuildModel.generateBuildModel {
+        inherit normalizedArchitecture;
       };
     in
-    generateDistributedDerivationFromBuildModel {
-      inherit distributedDerivation pkgs;
+    generateDistributedDerivationXMLFromBuildModel {
+      inherit buildModel pkgs;
     };
-in
-{
+
   generateDistributedDerivationFromArchitectureModel =
     { architectureFile
     , targetProperty
@@ -72,8 +70,7 @@ in
       pkgs = import nixpkgs {};
     in
     generateDistributedDerivationFromArchitectureFun {
-      inherit architectureFun;
-      inherit nixpkgs pkgs targetProperty clientInterface extraParams;
+      inherit architectureFun nixpkgs pkgs targetProperty clientInterface extraParams;
     };
 
   generateDistributedDerivationFromModels =
@@ -114,8 +111,8 @@ in
     , nixpkgs ? <nixpkgs>
     }:
 
-    generateDistributedDerivationFromBuildModel {
-      distributedDerivation = import buildFile;
+    generateDistributedDerivationXMLFromBuildModel {
+      buildModel = import buildFile;
       pkgs = import nixpkgs {};
     };
 }
