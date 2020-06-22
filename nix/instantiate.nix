@@ -96,7 +96,7 @@ rec {
         inherit (pkgs) lib;
       };
 
-      architectureFun = wrapArchitecture {
+      architectureFun = wrapArchitecture.wrapBasicInputsModelsIntoArchitectureFun {
         inherit servicesFun infrastructure distributionFun packagesFun extraParams;
       };
     in
