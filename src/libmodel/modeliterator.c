@@ -32,7 +32,7 @@ void destroy_model_iterator_data(ModelIteratorData *model_iterator_data)
     g_hash_table_destroy(model_iterator_data->pid_table);
 }
 
-int has_next_iteration_process(ModelIteratorData *model_iterator_data)
+ProcReact_bool has_next_iteration_process(ModelIteratorData *model_iterator_data)
 {
     return model_iterator_data->index < model_iterator_data->length;
 }

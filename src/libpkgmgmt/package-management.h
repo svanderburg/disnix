@@ -26,7 +26,7 @@
 
 pid_t pkgmgmt_import_closure(const char *closure, int stdout, int stderr);
 
-int pkgmgmt_import_closure_sync(const char *closure, int stdout, int stderr);
+ProcReact_bool pkgmgmt_import_closure_sync(const char *closure, int stdout, int stderr);
 
 gchar *pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr, pid_t *pid, int *temp_fd);
 
@@ -54,6 +54,6 @@ ProcReact_Future pkgmgmt_normalize_infrastructure(gchar *infrastructure_expr, gc
 
 char *pkgmgmt_normalize_infrastructure_sync(gchar *infrastructure_expr, gchar *default_target_property, gchar *default_client_interface);
 
-int pkgmgmt_set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *manifest_file, const gchar *profile);
+ProcReact_bool pkgmgmt_set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *manifest_file, const gchar *profile);
 
 #endif

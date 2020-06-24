@@ -10,6 +10,6 @@ man1_MANS = disnix-copy-closure.1
 
 disnix_copy_closure_SOURCES = main.c
 disnix_copy_closure_LDADD = ../libmain/libmain.la ../libpkgmgmt/libpkgmgmt.la
-disnix_copy_closure_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) $(LIBXSLT_CFLAGS) -I../libmain -I../libpkgmgmt
+disnix_copy_closure_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) $(LIBXSLT_CFLAGS) -I../libmain -I../libpkgmgmt -I../libprocreact
 
 EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

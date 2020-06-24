@@ -40,7 +40,7 @@ char **statemgmt_print_missing_snapshots_sync(gchar **component, int stderr);
 
 pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **snapshots, int stdout, int stderr);
 
-int statemgmt_import_snapshots_sync(gchar *container, gchar *component, gchar **snapshots, int stdout, int stderr);
+ProcReact_bool statemgmt_import_snapshots_sync(gchar *container, gchar *component, gchar **snapshots, int stdout, int stderr);
 
 ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr);
 

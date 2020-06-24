@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 Sander van der Burg
+ * Copyright (c) 2016-2020 Sander van der Burg
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -32,33 +32,33 @@ ProcReact_PidIterator procreact_initialize_pid_iterator(ProcReact_PidIteratorHas
     return iterator;
 }
 
-int procreact_spawn_next_pid(ProcReact_PidIterator *iterator)
+ProcReact_bool procreact_spawn_next_pid(ProcReact_PidIterator *iterator)
 {
     if(iterator->has_next(iterator->data))
     {
         pid_t pid = iterator->next(iterator->data);
-        
+
         if(pid == -1)
             iterator->complete(iterator->data, pid, PROCREACT_STATUS_FORK_FAIL, -1);
         else
             iterator->running_processes++;
-        
+
         return TRUE;
     }
     else
         return FALSE;
 }
 
-int procreact_wait_for_process_to_complete(ProcReact_PidIterator *iterator)
+ProcReact_bool procreact_wait_for_process_to_complete(ProcReact_PidIterator *iterator)
 {
     if(iterator->running_processes > 0)
     {
         int wstatus, result;
         ProcReact_Status status;
-        
+
         /* Wait for one of the processes to finish */
         pid_t pid = wait(&wstatus);
-        
+
         if(pid > 0)
         {
             result = iterator->retrieve(pid, wstatus, &status);
@@ -66,9 +66,9 @@ int procreact_wait_for_process_to_complete(ProcReact_PidIterator *iterator)
         }
         else
             result = 1;
-        
+
         iterator->complete(iterator->data, pid, status, result);
-        
+
         return TRUE;
     }
     else
@@ -79,7 +79,7 @@ void procreact_fork_in_parallel_and_wait(ProcReact_PidIterator *iterator)
 {
     /* Fork all processes in parallel */
     while(procreact_spawn_next_pid(iterator));
-    
+
     /* Wait for all running processes to complete */
     while(procreact_wait_for_process_to_complete(iterator));
 }
@@ -88,12 +88,12 @@ void procreact_fork_and_wait_in_parallel_limit(ProcReact_PidIterator *iterator, 
 {
     /* Repeat this until all processes have been spawned and finished */
     int has_running_processes = FALSE;
-    
+
     while(has_running_processes || iterator->has_next(iterator->data))
     {
         /* Fork at most the 'limit' number of processes in parallel */
         while(iterator->running_processes < limit && procreact_spawn_next_pid(iterator));
-        
+
         /* Wait for one of the processes to finish */
         has_running_processes = procreact_wait_for_process_to_complete(iterator);
     }

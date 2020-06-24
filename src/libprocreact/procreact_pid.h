@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 Sander van der Burg
+ * Copyright (c) 2016-2020 Sander van der Burg
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -22,6 +22,7 @@
 #ifndef __PROCREACT_PID_H
 #define __PROCREACT_PID_H
 #include <unistd.h>
+#include "procreact_util.h"
 
 /**
  * @brief An enumeration of possible outcomes after executing a process
@@ -61,7 +62,7 @@ int procreact_retrieve_exit_status(pid_t pid, int wstatus, ProcReact_Status *sta
  * @param status Status option that will be set to any of the status codes
  * @return TRUE if the exit status is 0, else FALSE
  */
-int procreact_retrieve_boolean(pid_t pid, int wstatus, ProcReact_Status *status);
+ProcReact_bool procreact_retrieve_boolean(pid_t pid, int wstatus, ProcReact_Status *status);
 
 /**
  * Waits for a process to complete and retrieves the end result by invoking a

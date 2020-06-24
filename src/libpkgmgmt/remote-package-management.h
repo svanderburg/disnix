@@ -83,7 +83,7 @@ char **exec_print_invalid_sync(gchar *interface, gchar *target, gchar **paths, u
 
 pid_t exec_import_local_closure(gchar *interface, gchar *target, char *closure);
 
-int exec_import_local_closure_sync(gchar *interface, gchar *target, char *closure);
+ProcReact_bool exec_import_local_closure_sync(gchar *interface, gchar *target, char *closure);
 
 ProcReact_Future exec_export_remote_closure(gchar *interface, gchar *target, char **paths, unsigned int paths_length);
 

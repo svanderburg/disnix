@@ -184,7 +184,7 @@ pid_t exec_import_local_closure(gchar *interface, gchar *target, char *closure)
     return pid;
 }
 
-int exec_import_local_closure_sync(gchar *interface, gchar *target, char *closure)
+ProcReact_bool exec_import_local_closure_sync(gchar *interface, gchar *target, char *closure)
 {
     ProcReact_Status status;
     pid_t pid = exec_import_local_closure(interface, target, closure);

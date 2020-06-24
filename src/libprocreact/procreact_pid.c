@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 Sander van der Burg
+ * Copyright (c) 2016-2020 Sander van der Burg
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -57,7 +57,7 @@ int procreact_wait_and_retrieve(pid_t pid, ProcReact_RetrieveResult retrieve, Pr
     else
     {
         int wstatus;
-    
+
         if(waitpid(pid, &wstatus, 0) == -1)
         {
             *status = PROCREACT_STATUS_WAIT_FAIL;

@@ -34,7 +34,7 @@ typedef struct
     /** Contains the length of the array */
     unsigned int length;
     /** Indicates the success status of the iteration */
-    int success;
+    ProcReact_bool success;
     /** Hash table keeping track with PID belongs to which iteration item */
     GHashTable *pid_table;
 }
@@ -60,7 +60,7 @@ void destroy_model_iterator_data(ModelIteratorData *model_iterator_data);
  *
  * @return TRUE if there is a next element, else FALSE
  */
-int has_next_iteration_process(ModelIteratorData *model_iterator_data);
+ProcReact_bool has_next_iteration_process(ModelIteratorData *model_iterator_data);
 
 /**
  * Increases the iterator index and adds the given item to the pids table so

@@ -438,7 +438,7 @@ pid_t exec_import_local_snapshots(gchar *interface, gchar *target, gchar *contai
     return pid;
 }
 
-int exec_import_local_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length)
+ProcReact_bool exec_import_local_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length)
 {
     ProcReact_Status status;
     pid_t pid = exec_import_local_snapshots(interface, target, container, component, snapshots, snapshots_length);
@@ -476,7 +476,7 @@ pid_t exec_import_remote_snapshots(gchar *interface, gchar *target, gchar *conta
     return pid;
 }
 
-int exec_import_remote_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length)
+ProcReact_bool exec_import_remote_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length)
 {
     ProcReact_Status status;
     pid_t pid = exec_import_remote_snapshots(interface, target, container, component, snapshots, snapshots_length);

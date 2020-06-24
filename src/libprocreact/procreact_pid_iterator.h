@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 Sander van der Burg
+ * Copyright (c) 2016-2020 Sander van der Burg
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -22,9 +22,10 @@
 #ifndef __PROCREACT_PID_ITERATOR_H
 #define __PROCREACT_PID_ITERATOR_H
 #include "procreact_pid.h"
+#include "procreact_util.h"
 
 /** Pointer to a function that determines whether there is a next element in the collection */
-typedef int (*ProcReact_PidIteratorHasNext) (void *data);
+typedef ProcReact_bool (*ProcReact_PidIteratorHasNext) (void *data);
 
 /** Pointer to a function that spawns the next process in the collection */
 typedef pid_t (*ProcReact_PidIteratorNext) (void *data);
@@ -47,7 +48,7 @@ struct ProcReact_PidIterator
      * @return int TRUE if there is a next element, else FALSE
      */
     ProcReact_PidIteratorHasNext has_next;
-    
+
     /**
      * Function that spawns the next process in the collection
      *
@@ -55,7 +56,7 @@ struct ProcReact_PidIterator
      * @return PID of the spawned process
      */
     ProcReact_PidIteratorNext next;
-    
+
     /**
      * Function that retrieves the end result from the exit status
      *
@@ -65,7 +66,7 @@ struct ProcReact_PidIterator
      * @return The result derived from the exit status
      */
     ProcReact_RetrieveResult retrieve;
-    
+
     /**
      * Function that gets executed when a processes finishes
      *
@@ -75,10 +76,10 @@ struct ProcReact_PidIterator
      * @param result Contains the result from the retrieval function
      */
     ProcReact_PidIteratorComplete complete;
-    
+
     /** Arbitrary data structure used to compute the overall end result */
     void *data;
-    
+
     /** Memorizes the amount of processes running concurrently */
     unsigned int running_processes;
 };
@@ -101,7 +102,7 @@ ProcReact_PidIterator procreact_initialize_pid_iterator(ProcReact_PidIteratorHas
  * @param iterator PID iterator
  * @return TRUE if there are more processes in the collection, FALSE if all have been spawned
  */
-int procreact_spawn_next_pid(ProcReact_PidIterator *iterator);
+ProcReact_bool procreact_spawn_next_pid(ProcReact_PidIterator *iterator);
 
 /**
  * Waits for any process to complete and executes its corresponding complete callback.
@@ -109,7 +110,7 @@ int procreact_spawn_next_pid(ProcReact_PidIterator *iterator);
  * @param iterator PID iterator
  * @return TRUE if there are any running processes completed, else FALSE
  */
-int procreact_wait_for_process_to_complete(ProcReact_PidIterator *iterator);
+ProcReact_bool procreact_wait_for_process_to_complete(ProcReact_PidIterator *iterator);
 
 /**
  * Spawns all processes in a collection in parallel and waits for their

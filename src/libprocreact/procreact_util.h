@@ -19,32 +19,9 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __PROCREACT_SIGNAL_H
-#define __PROCREACT_SIGNAL_H
-#include "procreact_pid_iterator.h"
+#ifndef __PROCREACT_UTIL_H
+#define __PROCREACT_UTIL_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * Configures a SIGCHLD handler that indicates that processes have finished
- * whose results must be gathered.
- *
- * @return Same return value as sigaction()
- */
-int procreact_register_signal_handler(void);
-
-/**
- * Waits for all completed processes to finish (if any have been registered as
- * such) and gathers their results.
- *
- * @param iterator PID iterator
- */
-void procreact_complete_all_finished_processes(ProcReact_PidIterator *iterator);
-
-#ifdef __cplusplus
-}
-#endif
+typedef int ProcReact_bool;
 
 #endif

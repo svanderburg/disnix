@@ -173,7 +173,7 @@ pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **sna
     return pid;
 }
 
-int statemgmt_import_snapshots_sync(gchar *container, gchar *component, gchar **snapshots, int stdout, int stderr)
+ProcReact_bool statemgmt_import_snapshots_sync(gchar *container, gchar *component, gchar **snapshots, int stdout, int stderr)
 {
     ProcReact_Status status;
     pid_t pid = statemgmt_import_snapshots(container, component, snapshots, stdout, stderr);

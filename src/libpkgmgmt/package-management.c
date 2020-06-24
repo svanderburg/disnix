@@ -63,7 +63,7 @@ pid_t pkgmgmt_import_closure(const char *closure, int stdout, int stderr)
     }
 }
 
-int pkgmgmt_import_closure_sync(const char *closure, int stdout, int stderr)
+ProcReact_bool pkgmgmt_import_closure_sync(const char *closure, int stdout, int stderr)
 {
     ProcReact_Status status;
     pid_t pid = pkgmgmt_import_closure(closure, stdout, stderr);
@@ -412,7 +412,7 @@ static ssize_t resolve_profile_symlink(gchar *profile_path, gchar *profile_base_
     }
 }
 
-int pkgmgmt_set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *manifest_file, const gchar *profile)
+ProcReact_bool pkgmgmt_set_coordinator_profile(const gchar *coordinator_profile_path, const gchar *manifest_file, const gchar *profile)
 {
     gchar *profile_base_dir, *profile_path;
     char resolved_path[RESOLVED_PATH_MAX_SIZE];

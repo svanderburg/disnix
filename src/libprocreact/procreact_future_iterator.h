@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 Sander van der Burg
+ * Copyright (c) 2016-2020 Sander van der Burg
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -23,9 +23,10 @@
 #define __PROCREACT_FUTURE_ITERATOR_H
 #include "procreact_pid.h"
 #include "procreact_future.h"
+#include "procreact_util.h"
 
 /** Pointer to a function that determines whether there is a next element in the collection */
-typedef int (*ProcReact_FutureIteratorHasNext) (void *data);
+typedef ProcReact_bool (*ProcReact_FutureIteratorHasNext) (void *data);
 
 /** Pointer to a function that spawns the next future in the collection */
 typedef ProcReact_Future (*ProcReact_FutureIteratorNext) (void *data);
@@ -104,7 +105,7 @@ void procreact_destroy_future_iterator(ProcReact_FutureIterator *iterator);
  * @param iterator Future iterator
  * @return TRUE if there are more processes in the collection, FALSE if all have been spawned
  */
-int procreact_spawn_next_future(ProcReact_FutureIterator *iterator);
+ProcReact_bool procreact_spawn_next_future(ProcReact_FutureIterator *iterator);
 
 /**
  * Reads the data from the read-end of each pipe of a running process and
