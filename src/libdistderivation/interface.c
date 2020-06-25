@@ -52,9 +52,9 @@ void delete_interface(Interface *interface)
     }
 }
 
-int check_interface(const Interface *interface)
+NixXML_bool check_interface(const Interface *interface)
 {
-    int status = TRUE;
+    NixXML_bool status = TRUE;
 
     if(interface->target_address == NULL)
     {

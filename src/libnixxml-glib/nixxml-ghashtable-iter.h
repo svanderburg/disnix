@@ -1,6 +1,6 @@
 /*
  * libnixxml - GLib integration with libnixxml
- * Copyright (C) 2019  Sander van der Burg
+ * Copyright (C) 2019-2020  Sander van der Burg
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

@@ -21,6 +21,7 @@
 #define __DISNIX_CONTAINERSTABLE_H
 #include <libxml/parser.h>
 #include <glib.h>
+#include <nixxml-types.h>
 
 /**
  * Parses an XML document representing a containers table
@@ -45,7 +46,7 @@ void delete_containers_table(GHashTable *containers_table);
  * @param containers_table2 A containers table
  * @return TRUE if they are equal, else FALSE
  */
-int compare_container_tables(GHashTable *containers_table1, GHashTable *containers_table2);
+NixXML_bool compare_container_tables(GHashTable *containers_table1, GHashTable *containers_table2);
 
 /**
  * Prints a Nix expression representation of a containers table.

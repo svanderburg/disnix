@@ -21,6 +21,7 @@
 #define __DISNIX_SNAPSHOTMAPPING_H
 #include <glib.h>
 #include <libxml/parser.h>
+#include <nixxml-types.h>
 
 /**
  * @brief Contains the values that constitute a key uniquely referring to a snapshot mapping.
@@ -101,7 +102,7 @@ void delete_snapshot_mapping(SnapshotMapping *mapping);
  * @param mapping Snapshot mapping instance
  * @return TRUE if the snapshot mapping is valid, else FALSE
  */
-int check_snapshot_mapping(const SnapshotMapping *mapping);
+NixXML_bool check_snapshot_mapping(const SnapshotMapping *mapping);
 
 /**
  * Prints a Nix expression representation of a snapshot mapping

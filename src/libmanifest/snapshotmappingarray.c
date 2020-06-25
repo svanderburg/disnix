@@ -65,12 +65,12 @@ void delete_snapshot_mapping_array(GPtrArray *snapshot_mapping_array)
     NixXML_delete_g_ptr_array(snapshot_mapping_array, (NixXML_DeleteGPtrArrayElementFunc)delete_snapshot_mapping);
 }
 
-int check_snapshot_mapping_array(const GPtrArray *snapshot_mapping_array)
+NixXML_bool check_snapshot_mapping_array(const GPtrArray *snapshot_mapping_array)
 {
     return NixXML_check_g_ptr_array(snapshot_mapping_array, (NixXML_CheckGPtrArrayElementFunc)check_snapshot_mapping);
 }
 
-int compare_snapshot_mapping_arrays(const GPtrArray *snapshot_mapping_array1, const GPtrArray *snapshot_mapping_array2)
+NixXML_bool compare_snapshot_mapping_arrays(const GPtrArray *snapshot_mapping_array1, const GPtrArray *snapshot_mapping_array2)
 {
     if(snapshot_mapping_array1->len == snapshot_mapping_array2->len)
     {

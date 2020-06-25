@@ -46,7 +46,7 @@ void delete_services_table(GHashTable *services_table);
  * @param services_table A services table
  * @return TRUE if the services table is valid, else FALSE
  */
-int check_services_table(GHashTable *services_table);
+NixXML_bool check_services_table(GHashTable *services_table);
 
 /**
  * Checks whether two services tables have the same content.
@@ -55,7 +55,7 @@ int check_services_table(GHashTable *services_table);
  * @param services_table2 A services table
  * @return TRUE if they are equal, else FALSE
  */
-int compare_services_tables(GHashTable *services_table1, GHashTable *services_table2);
+NixXML_bool compare_services_tables(GHashTable *services_table1, GHashTable *services_table2);
 
 /**
  * Merges the content of two services table into one services table without

@@ -1,6 +1,6 @@
 /*
  * libnixxml - GLib integration with libnixxml
- * Copyright (C) 2019  Sander van der Burg
+ * Copyright (C) 2019-2020  Sander van der Burg
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,6 +25,7 @@
 #include "nixxml-print-nix.h"
 #include "nixxml-print-xml.h"
 #include "nixxml-generate-env.h"
+#include "nixxml-types.h"
 
 /**
  * Deletes an element from a GPtrArray.
@@ -105,7 +106,7 @@ void NixXML_delete_g_values_array(GPtrArray *array);
  * @param check_element Pointer to a function that cheks the validity of an element
  * @return TRUE if all members are valid, else FALSE
  */
-int NixXML_check_g_ptr_array(const GPtrArray *array, NixXML_CheckGPtrArrayElementFunc check_element);
+NixXML_bool NixXML_check_g_ptr_array(const GPtrArray *array, NixXML_CheckGPtrArrayElementFunc check_element);
 
 /**
  * Compares two arrays and their content and checks whether they are equal.
@@ -114,7 +115,7 @@ int NixXML_check_g_ptr_array(const GPtrArray *array, NixXML_CheckGPtrArrayElemen
  * @param right GPtrArray to compare
  * @param compare_element Pointer to a function that compares elements in the arrays
  */
-int NixXML_compare_g_ptr_arrays(const GPtrArray *left, const GPtrArray *right, NixXML_CompareGPtrArrayElementFunc compare_element);
+NixXML_bool NixXML_compare_g_ptr_arrays(const GPtrArray *left, const GPtrArray *right, NixXML_CompareGPtrArrayElementFunc compare_element);
 
 /**
  * Prints a Nix representation of all elements in the array.

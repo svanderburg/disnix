@@ -91,9 +91,9 @@ void delete_snapshot_mapping(SnapshotMapping *mapping)
     }
 }
 
-int check_snapshot_mapping(const SnapshotMapping *mapping)
+NixXML_bool check_snapshot_mapping(const SnapshotMapping *mapping)
 {
-    int status = TRUE;
+    NixXML_bool status = TRUE;
 
     if(mapping->component == NULL)
     {

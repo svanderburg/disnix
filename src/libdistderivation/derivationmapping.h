@@ -21,6 +21,7 @@
 #define __DISNIX_DERIVATIONMAPPING_H
 #include <libxml/parser.h>
 #include <glib.h>
+#include <nixxml-types.h>
 
 /**
  * @brief Contains a mapping of a Nix store derivation to a Disnix Service target
@@ -58,6 +59,6 @@ void delete_derivation_mapping(DerivationMapping *mapping);
  * @param mapping A derivation mapping struct instance
  * @return TRUE if the derivation mapping is valid, else FALSE
  */
-int check_derivation_mapping(const DerivationMapping *mapping);
+NixXML_bool check_derivation_mapping(const DerivationMapping *mapping);
 
 #endif

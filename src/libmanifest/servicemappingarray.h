@@ -22,6 +22,7 @@
 #include <glib.h>
 #include <procreact_pid.h>
 #include <libxml/parser.h>
+#include <nixxml-types.h>
 #include "manifestservice.h"
 #include "interdependencymappingarray.h"
 
@@ -86,7 +87,7 @@ void delete_service_mapping_array(GPtrArray *service_mapping_array);
  * @param service_mapping_array A GPtrArray with service mappings
  * @return TRUE when the content is valid, else FALSE
  */
-int check_service_mapping_array(const GPtrArray *service_mapping_array);
+NixXML_bool check_service_mapping_array(const GPtrArray *service_mapping_array);
 
 /**
  * Compares two service mapping arrays and checks whether they have the same content
@@ -95,7 +96,7 @@ int check_service_mapping_array(const GPtrArray *service_mapping_array);
  * @param service_mapping_array2 A GPtrArray with service mappings
  * @return TRUE if the arrays have equal content, else FALSE
  */
-int compare_service_mapping_arrays(const GPtrArray *service_mapping_array1, const GPtrArray *service_mapping_array2);
+NixXML_bool compare_service_mapping_arrays(const GPtrArray *service_mapping_array1, const GPtrArray *service_mapping_array2);
 
 /**
  * Prints a Nix expression representation of a service mapping array.

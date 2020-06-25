@@ -63,10 +63,10 @@ static int wait_to_complete_snapshot_item(GHashTable *pid_table, GHashTable *ser
         return TRUE;
 }
 
-int map_snapshot_items(const GPtrArray *snapshot_mapping_array, GHashTable *services_table, GHashTable *targets_table, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
+ProcReact_bool map_snapshot_items(const GPtrArray *snapshot_mapping_array, GHashTable *services_table, GHashTable *targets_table, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping)
 {
     unsigned int num_processed = 0;
-    int status = TRUE;
+    ProcReact_bool status = TRUE;
     GHashTable *pid_table = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, NULL);
 
     while(num_processed < snapshot_mapping_array->len)

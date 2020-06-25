@@ -21,6 +21,7 @@
 #define __DISNIX_INTERFACE_H
 #include <glib.h>
 #include <libxml/parser.h>
+#include <nixxml-types.h>
 
 /**
  * @brief Contains properties to interface with a target machine for building
@@ -57,6 +58,6 @@ void delete_interface(Interface *interface);
  * @param interface An interface struct instance
  * @return TRUE if the interface is valid, else FALSE
  */
-int check_interface(const Interface *interface);
+NixXML_bool check_interface(const Interface *interface);
 
 #endif

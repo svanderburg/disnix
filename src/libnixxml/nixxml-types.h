@@ -19,34 +19,9 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __NIXXML_UTIL_H
-#define __NIXXML_UTIL_H
-#include <libxml/parser.h>
-#include "nixxml-types.h"
+#ifndef __NIXXML_TYPES_H
+#define __NIXXML_TYPES_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * Checks whether the provided value is not NULL
- *
- * @param value Pointer to a value
- * @return TRUE if the valid is not NULL, else FALSE
- */
-NixXML_bool NixXML_check_value_is_not_null(const void *value);
-
-/**
- * Checks whether the provided strings are equal.
- *
- * @param left A string value
- * @param right A string value
- * @return TRUE if the strings are equal, else FALSE
- */
-NixXML_bool NixXML_compare_xml_strings(const xmlChar *left, const xmlChar *right);
-
-#ifdef __cplusplus
-}
-#endif
+typedef int NixXML_bool;
 
 #endif

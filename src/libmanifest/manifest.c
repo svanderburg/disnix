@@ -146,10 +146,10 @@ Manifest *create_manifest(const gchar *manifest_file, const unsigned int flags, 
     return manifest;
 }
 
-static int check_service_mapping_array_references(const GPtrArray *service_mapping_array, GHashTable *services_table, GHashTable *targets_table)
+static NixXML_bool check_service_mapping_array_references(const GPtrArray *service_mapping_array, GHashTable *services_table, GHashTable *targets_table)
 {
     unsigned int i;
-    int status = TRUE;
+    NixXML_bool status = TRUE;
 
     for(i = 0; i < service_mapping_array->len; i++)
     {
@@ -171,10 +171,10 @@ static int check_service_mapping_array_references(const GPtrArray *service_mappi
     return status;
 }
 
-static int check_snapshot_mapping_array_references(const GPtrArray *snapshot_mapping_array, GHashTable *services_table, GHashTable *targets_table)
+static NixXML_bool check_snapshot_mapping_array_references(const GPtrArray *snapshot_mapping_array, GHashTable *services_table, GHashTable *targets_table)
 {
     unsigned int i;
-    int status = TRUE;
+    NixXML_bool status = TRUE;
 
     for(i = 0; i < snapshot_mapping_array->len; i++)
     {
@@ -196,9 +196,9 @@ static int check_snapshot_mapping_array_references(const GPtrArray *snapshot_map
     return status;
 }
 
-int check_manifest(const Manifest *manifest)
+NixXML_bool check_manifest(const Manifest *manifest)
 {
-    int status = TRUE;
+    NixXML_bool status = TRUE;
 
     /* Check properties */
 
@@ -242,7 +242,7 @@ void delete_manifest(Manifest *manifest)
     }
 }
 
-int compare_manifests(const Manifest *manifest1, const Manifest *manifest2)
+NixXML_bool compare_manifests(const Manifest *manifest1, const Manifest *manifest2)
 {
     return (compare_profile_mapping_tables(manifest1->profile_mapping_table, manifest2->profile_mapping_table)
       && compare_services_tables(manifest1->services_table, manifest2->services_table)

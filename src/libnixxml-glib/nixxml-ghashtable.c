@@ -1,6 +1,6 @@
 /*
  * libnixxml - GLib integration with libnixxml
- * Copyright (C) 2019  Sander van der Burg
+ * Copyright (C) 2019-2020  Sander van der Burg
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -51,11 +51,11 @@ void NixXML_delete_g_property_table(GHashTable *property_table)
     NixXML_delete_g_hash_table(property_table, (NixXML_DeleteGHashTableValueFunc)xmlFree);
 }
 
-int NixXML_check_g_hash_table(GHashTable *hash_table, NixXML_CheckGHashTableValueFunc check_function)
+NixXML_bool NixXML_check_g_hash_table(GHashTable *hash_table, NixXML_CheckGHashTableValueFunc check_function)
 {
     GHashTableIter iter;
     gpointer key, value;
-    int status = TRUE;
+    NixXML_bool status = TRUE;
 
     g_hash_table_iter_init(&iter, hash_table);
     while(g_hash_table_iter_next(&iter, &key, &value))
@@ -70,12 +70,12 @@ int NixXML_check_g_hash_table(GHashTable *hash_table, NixXML_CheckGHashTableValu
     return status;
 }
 
-int NixXML_check_g_property_table(GHashTable *property_table)
+NixXML_bool NixXML_check_g_property_table(GHashTable *property_table)
 {
     return NixXML_check_g_hash_table(property_table, NixXML_check_value_is_not_null);
 }
 
-int NixXML_compare_g_hash_tables(GHashTable *hash_table1, GHashTable *hash_table2, NixXML_CompareGHashTableValueFunc compare_function)
+NixXML_bool NixXML_compare_g_hash_tables(GHashTable *hash_table1, GHashTable *hash_table2, NixXML_CompareGHashTableValueFunc compare_function)
 {
     if(g_hash_table_size(hash_table1) == g_hash_table_size(hash_table2))
     {
@@ -102,7 +102,7 @@ int NixXML_compare_g_hash_tables(GHashTable *hash_table1, GHashTable *hash_table
         return FALSE;
 }
 
-int NixXML_compare_g_property_tables(GHashTable *property_table1, GHashTable *property_table2)
+NixXML_bool NixXML_compare_g_property_tables(GHashTable *property_table1, GHashTable *property_table2)
 {
     return NixXML_compare_g_hash_tables(property_table1, property_table2, (NixXML_CompareGHashTableValueFunc)NixXML_compare_xml_strings);
 }

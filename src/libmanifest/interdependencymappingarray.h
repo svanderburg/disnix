@@ -22,6 +22,7 @@
 
 #include <glib.h>
 #include <libxml/parser.h>
+#include <nixxml-types.h>
 #include "interdependencymapping.h"
 
 /**
@@ -48,7 +49,7 @@ void delete_interdependency_mapping_array(GPtrArray *interdependency_mapping_arr
  * @param interdependency_mapping_array A GPtrArray with interdependency mappings
  * @return TRUE when the content is valid, else FALSE
  */
-int check_interdependency_mapping_array(const GPtrArray *interdependency_mapping_array);
+NixXML_bool check_interdependency_mapping_array(const GPtrArray *interdependency_mapping_array);
 
 /**
  * Compares two interdependency mapping arrays and checks whether they have the
@@ -58,7 +59,7 @@ int check_interdependency_mapping_array(const GPtrArray *interdependency_mapping
  * @param interdependency_mapping_array2 A GPtrArray with interdependency mappings
  * @return TRUE if their content is equal, else FALSE
  */
-int compare_interdependency_mapping_arrays(const GPtrArray *interdependency_mapping_array1, const GPtrArray *interdependency_mapping_array2);
+NixXML_bool compare_interdependency_mapping_arrays(const GPtrArray *interdependency_mapping_array1, const GPtrArray *interdependency_mapping_array2);
 
 /**
  * Prints a Nix expression representation of an inter-dependency mapping array.

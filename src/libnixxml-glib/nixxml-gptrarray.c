@@ -1,6 +1,6 @@
 /*
  * libnixxml - GLib integration with libnixxml
- * Copyright (C) 2019  Sander van der Burg
+ * Copyright (C) 2019-2020  Sander van der Burg
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -59,10 +59,10 @@ void NixXML_delete_g_values_array(GPtrArray *array)
     NixXML_delete_g_ptr_array(array, free);
 }
 
-int NixXML_check_g_ptr_array(const GPtrArray *array, NixXML_CheckGPtrArrayElementFunc check_element)
+NixXML_bool NixXML_check_g_ptr_array(const GPtrArray *array, NixXML_CheckGPtrArrayElementFunc check_element)
 {
     unsigned int i;
-    int status = TRUE;
+    NixXML_bool status = TRUE;
 
     for(i = 0; i < array->len; i++)
     {
@@ -75,7 +75,7 @@ int NixXML_check_g_ptr_array(const GPtrArray *array, NixXML_CheckGPtrArrayElemen
     return status;
 }
 
-int NixXML_compare_g_ptr_arrays(const GPtrArray *left, const GPtrArray *right, NixXML_CompareGPtrArrayElementFunc compare_element)
+NixXML_bool NixXML_compare_g_ptr_arrays(const GPtrArray *left, const GPtrArray *right, NixXML_CompareGPtrArrayElementFunc compare_element)
 {
     if(left->len == right->len)
     {

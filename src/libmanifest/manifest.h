@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <glib.h>
+#include <nixxml-types.h>
 
 #define MANIFEST_PROFILES_FLAG 0x1
 #define MANIFEST_SERVICE_MAPPINGS_FLAG 0x2
@@ -83,7 +84,7 @@ void delete_manifest(Manifest *manifest);
  * @param manifest Manifest struct instance
  * @return TRUE if the manifest is valid, else FALSE
  */
-int check_manifest(const Manifest *manifest);
+NixXML_bool check_manifest(const Manifest *manifest);
 
 /**
  * Checks whether two manifest struct instances are identical.
@@ -92,7 +93,7 @@ int check_manifest(const Manifest *manifest);
  * @param manifest2 Manifest struct instance
  * @return TRUE if both instances are equal, else FALSE
  */
-int compare_manifests(const Manifest *manifest1, const Manifest *manifest2);
+NixXML_bool compare_manifests(const Manifest *manifest1, const Manifest *manifest2);
 
 /**
  * Prints a Nix expression representation of a manifest.

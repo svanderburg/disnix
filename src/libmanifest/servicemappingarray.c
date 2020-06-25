@@ -58,12 +58,12 @@ void delete_service_mapping_array(GPtrArray *service_mapping_array)
     delete_interdependency_mapping_array(service_mapping_array);
 }
 
-int check_service_mapping_array(const GPtrArray *service_mapping_array)
+NixXML_bool check_service_mapping_array(const GPtrArray *service_mapping_array)
 {
     return check_interdependency_mapping_array(service_mapping_array);
 }
 
-int compare_service_mapping_arrays(const GPtrArray *service_mapping_array1, const GPtrArray *service_mapping_array2)
+NixXML_bool compare_service_mapping_arrays(const GPtrArray *service_mapping_array1, const GPtrArray *service_mapping_array2)
 {
     return compare_interdependency_mapping_arrays(service_mapping_array1, service_mapping_array2);
 }

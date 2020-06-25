@@ -180,7 +180,7 @@ GHashTable *create_targets_table_from_xml(const char *infrastructure_xml, char *
     return targets_table;
 }
 
-GHashTable *create_targets_table(gchar *infrastructure_expr, const int xml, char *default_target_property, char *default_client_interface)
+GHashTable *create_targets_table(gchar *infrastructure_expr, const NixXML_bool xml, char *default_target_property, char *default_client_interface)
 {
     if(xml)
         return create_targets_table_from_xml(infrastructure_expr, default_target_property, default_client_interface);
@@ -193,12 +193,12 @@ void delete_targets_table(GHashTable *targets_table)
     NixXML_delete_g_hash_table(targets_table, (NixXML_DeleteGHashTableValueFunc)delete_target);
 }
 
-int check_targets_table(GHashTable *targets_table)
+NixXML_bool check_targets_table(GHashTable *targets_table)
 {
     return NixXML_check_g_hash_table(targets_table, (NixXML_CheckGHashTableValueFunc)check_target);
 }
 
-int compare_targets_tables(GHashTable *targets_table1, GHashTable *targets_table2)
+NixXML_bool compare_targets_tables(GHashTable *targets_table1, GHashTable *targets_table2)
 {
     return NixXML_compare_g_hash_tables(targets_table1, targets_table2, (NixXML_CompareGHashTableValueFunc)compare_targets);
 }

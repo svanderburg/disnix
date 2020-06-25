@@ -73,7 +73,7 @@ static void print_installed_services(GHashTable *profile_manifest_target_table, 
     }
 }
 
-int query_installed(gchar *interface, gchar *target_property, gchar *infrastructure_expr, gchar *profile, OutputFormat format, const int xml)
+int query_installed(gchar *interface, gchar *target_property, gchar *infrastructure_expr, gchar *profile, OutputFormat format, const NixXML_bool xml)
 {
     /* Retrieve an array of all target machines from the infrastructure expression */
     GHashTable *targets_table = create_targets_table(infrastructure_expr, xml, target_property, interface);

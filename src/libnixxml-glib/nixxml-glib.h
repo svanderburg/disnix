@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Sander van der Burg
+ * Copyright (c) 2019-2020 Sander van der Burg
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,6 +24,7 @@
 #include <libxml/parser.h>
 #include <glib.h>
 #include "nixxml-node.h"
+#include "nixxml-types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,7 +46,7 @@ void NixXML_delete_node_glib(NixXML_Node *node);
  * @param right Pointer to an NixXML_Node instance
  * @return TRUE if the object structures are equal, else FALSE
  */
-int NixXML_compare_nodes_glib(const NixXML_Node *left, const NixXML_Node *right);
+NixXML_bool NixXML_compare_nodes_glib(const NixXML_Node *left, const NixXML_Node *right);
 
 /**
  * Recursively parses a type-annotated XML document (with simple notation for

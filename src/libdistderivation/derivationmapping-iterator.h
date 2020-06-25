@@ -54,7 +54,7 @@ typedef ProcReact_Future (*map_derivation_mapping_future_function) (void *data, 
  * @param status Indicates whether the process terminated abnormally or not
  * @param result TRUE if the operation succeeded, else FALSE
  */
-typedef void (*complete_derivation_mapping_pid_function) (void *data, DerivationMapping *mapping, ProcReact_Status status, int result);
+typedef void (*complete_derivation_mapping_pid_function) (void *data, DerivationMapping *mapping, ProcReact_Status status, ProcReact_bool result);
 
 /**
  * Pointer to a function that gets executed when a future completes for
@@ -150,6 +150,6 @@ void destroy_derivation_mapping_future_iterator(ProcReact_FutureIterator *iterat
  * @param derivation_mapping_iterator_data Struct with properties that facilitate iteration over derivation mappings
  * @return TRUE if it indicates success, else FALSE
  */
-int derivation_mapping_iterator_has_succeeded(const DerivationMappingIteratorData *derivation_mapping_iterator_data);
+ProcReact_bool derivation_mapping_iterator_has_succeeded(const DerivationMappingIteratorData *derivation_mapping_iterator_data);
 
 #endif

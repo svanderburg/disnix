@@ -53,9 +53,9 @@ void delete_derivation_mapping(DerivationMapping *mapping)
     }
 }
 
-int check_derivation_mapping(const DerivationMapping *mapping)
+NixXML_bool check_derivation_mapping(const DerivationMapping *mapping)
 {
-    int status = TRUE;
+    NixXML_bool status = TRUE;
 
     if(mapping->derivation == NULL)
     {

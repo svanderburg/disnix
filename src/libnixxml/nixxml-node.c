@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Sander van der Burg
+ * Copyright (c) 2019-2020 Sander van der Burg
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -51,7 +51,7 @@ void NixXML_delete_node(NixXML_Node *node, NixXML_DeleteObjectFunc delete_list, 
     }
 }
 
-int NixXML_compare_nodes(const NixXML_Node *left, const NixXML_Node *right, NixXML_CompareObjectFunc compare_lists, NixXML_CompareObjectFunc compare_tables)
+NixXML_bool NixXML_compare_nodes(const NixXML_Node *left, const NixXML_Node *right, NixXML_CompareObjectFunc compare_lists, NixXML_CompareObjectFunc compare_tables)
 {
     if(left->type == right->type)
     {

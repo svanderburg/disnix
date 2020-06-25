@@ -31,7 +31,7 @@ void delete_interfaces_table(GHashTable *interfaces_table)
     NixXML_delete_g_hash_table(interfaces_table, (NixXML_DeleteGHashTableValueFunc)delete_interface);
 }
 
-int check_interfaces_table(GHashTable *interfaces_table)
+NixXML_bool check_interfaces_table(GHashTable *interfaces_table)
 {
     return NixXML_check_g_hash_table(interfaces_table, (NixXML_CheckGHashTableValueFunc)check_interface);
 }

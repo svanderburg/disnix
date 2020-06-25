@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
     char *target_property = NULL;
     char *profile = NULL;
     OutputFormat format = FORMAT_SERVICES;
-    int xml = DISNIX_DEFAULT_XML;
+    NixXML_bool xml = DISNIX_DEFAULT_XML;
 
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "f:p:hv", long_options, &option_index)) != -1)

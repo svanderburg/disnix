@@ -94,9 +94,9 @@ void delete_target(Target *target)
     }
 }
 
-int check_target(const Target *target)
+NixXML_bool check_target(const Target *target)
 {
-    int status = TRUE;
+    NixXML_bool status = TRUE;
 
     /* Check properties */
     if(target->num_of_cores == 0)
@@ -131,7 +131,7 @@ int check_target(const Target *target)
     return status;
 }
 
-int compare_targets(const Target *left, const Target *right)
+NixXML_bool compare_targets(const Target *left, const Target *right)
 {
     return (compare_target_properties_tables(left->properties_table, right->properties_table)
       && compare_container_tables(left->containers_table, right->containers_table)
@@ -227,7 +227,7 @@ xmlChar **generate_activation_arguments_for_target(const Target *target, const g
         return NixXML_generate_env_vars_generic_glib(container_table);
 }
 
-int request_available_target_core(Target *target)
+NixXML_bool request_available_target_core(Target *target)
 {
     if(target->available_cores > 0)
     {

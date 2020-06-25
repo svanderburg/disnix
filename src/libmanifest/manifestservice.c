@@ -63,9 +63,9 @@ void delete_manifest_service(ManifestService *service)
     }
 }
 
-int check_manifest_service(const ManifestService *service)
+NixXML_bool check_manifest_service(const ManifestService *service)
 {
-    int status = TRUE;
+    NixXML_bool status = TRUE;
 
     if(service->name == NULL)
     {
@@ -94,7 +94,7 @@ int check_manifest_service(const ManifestService *service)
     return status;
 }
 
-int compare_manifest_services(const ManifestService *left, const ManifestService *right)
+NixXML_bool compare_manifest_services(const ManifestService *left, const ManifestService *right)
 {
     return (xmlStrcmp(left->name, right->name) == 0
       && xmlStrcmp(left->pkg, right->pkg) == 0

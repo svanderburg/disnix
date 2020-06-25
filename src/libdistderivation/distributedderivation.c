@@ -102,9 +102,9 @@ void delete_distributed_derivation(DistributedDerivation *distributed_derivation
     }
 }
 
-static int check_derivation_mapping_array_references(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table)
+static NixXML_bool check_derivation_mapping_array_references(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table)
 {
-    int status = TRUE;
+    NixXML_bool status = TRUE;
     unsigned int i;
 
     for(i = 0; i < derivation_mapping_array->len; i++)
@@ -121,9 +121,9 @@ static int check_derivation_mapping_array_references(const GPtrArray *derivation
     return status;
 }
 
-int check_distributed_derivation(const DistributedDerivation *distributed_derivation)
+NixXML_bool check_distributed_derivation(const DistributedDerivation *distributed_derivation)
 {
-    int status = TRUE;
+    NixXML_bool status = TRUE;
 
     /* Check properties */
 

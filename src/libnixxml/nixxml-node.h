@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Sander van der Burg
+ * Copyright (c) 2019-2020 Sander van der Burg
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -21,6 +21,7 @@
 
 #ifndef __NIXXML_NODE_H
 #define __NIXXML_NODE_H
+#include "nixxml-types.h"
 
 /**
  * @brief An enumeration of possible types for Nix nodes
@@ -63,7 +64,7 @@ typedef void (*NixXML_DeleteObjectFunc) (void *data);
  * @param right Pointer to a data structure
  * @return TRUE if both data structures are equal, else FALSE
  */
-typedef int (*NixXML_CompareObjectFunc) (const void *left, const void *right);
+typedef NixXML_bool (*NixXML_CompareObjectFunc) (const void *left, const void *right);
 
 #ifdef __cplusplus
 extern "C" {
@@ -88,7 +89,7 @@ void NixXML_delete_node(NixXML_Node *node, NixXML_DeleteObjectFunc delete_list, 
  * @param compare_tables Pointer to a function that compares two table-like data structures
  * @return TRUE if the object structures are equal, else FALSE
  */
-int NixXML_compare_nodes(const NixXML_Node *left, const NixXML_Node *right, NixXML_CompareObjectFunc compare_lists, NixXML_CompareObjectFunc compare_tables);
+NixXML_bool NixXML_compare_nodes(const NixXML_Node *left, const NixXML_Node *right, NixXML_CompareObjectFunc compare_lists, NixXML_CompareObjectFunc compare_tables);
 
 #ifdef __cplusplus
 }

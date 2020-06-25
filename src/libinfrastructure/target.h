@@ -21,6 +21,7 @@
 #define __DISNIX_TARGET_H
 #include <libxml/parser.h>
 #include <glib.h>
+#include <nixxml-types.h>
 
 /**
  * @brief Contains properties of a target machine.
@@ -71,7 +72,7 @@ void delete_target(Target *target);
  *
  * @param target Target struct instance
  */
-int check_target(const Target *target);
+NixXML_bool check_target(const Target *target);
 
 /**
  * Checks whether two target struct instances have the same properties
@@ -80,7 +81,7 @@ int check_target(const Target *target);
  * @param right An instance of a target struct
  * @return TRUE if they have the same properties, else FALSE
  */
-int compare_targets(const Target *left, const Target *right);
+NixXML_bool compare_targets(const Target *left, const Target *right);
 
 /**
  * Prints a Nix expression representation of a target.
@@ -139,7 +140,7 @@ xmlChar **generate_activation_arguments_for_target(const Target *target, const g
  * @param target A target struct containing properties of a target machine
  * @return TRUE if a CPU core is allocated, FALSE if none is available
  */
-int request_available_target_core(Target *target);
+NixXML_bool request_available_target_core(Target *target);
 
 /**
  * Signals the availability of an additional CPU core for deployment utilisation.

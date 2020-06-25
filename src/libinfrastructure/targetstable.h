@@ -21,6 +21,7 @@
 #define __DISNIX_TARGETSTABLE_H
 #include <libxml/parser.h>
 #include <glib.h>
+#include <nixxml-types.h>
 #include "target.h"
 
 /**
@@ -69,7 +70,7 @@ GHashTable *create_targets_table_from_xml(const char *infrastructure_xml, char *
  * @param default_client_interface Specifies the default client interface to use if none was provided by a target
  * @return GHashTable with targets
  */
-GHashTable *create_targets_table(gchar *infrastructure_expr, const int xml, char *default_target_property, char *default_client_interface);
+GHashTable *create_targets_table(gchar *infrastructure_expr, const NixXML_bool xml, char *default_target_property, char *default_client_interface);
 
 /**
  * Deletes a hash table with targets from heap memory
@@ -84,7 +85,7 @@ void delete_targets_table(GHashTable *targets_table);
  * @param targets_table GHashTable with targets
  * @return TRUE if all properties are valid, else FALSE
  */
-int check_targets_table(GHashTable *targets_table);
+NixXML_bool check_targets_table(GHashTable *targets_table);
 
 /**
  * Compares the content of two target tables.
@@ -93,7 +94,7 @@ int check_targets_table(GHashTable *targets_table);
  * @param targets_table2 GHashTable with targets
  * @return TRUE if all the content is valid, else FALSE
  */
-int compare_targets_tables(GHashTable *targets_table1, GHashTable *targets_table2);
+NixXML_bool compare_targets_tables(GHashTable *targets_table1, GHashTable *targets_table2);
 
 /**
  * Prints a Nix expression representation of a targets table.

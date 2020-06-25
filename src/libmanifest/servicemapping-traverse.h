@@ -61,7 +61,7 @@ typedef pid_t (*service_mapping_function) (ServiceMapping *mapping, ManifestServ
  * @param status Indicates whether the process terminated abnormally or not
  * @param result TRUE if the operation succeeded, else FALSE
  */
-typedef void (*complete_service_mapping_function) (ServiceMapping *mapping, ManifestService *service, Target *target, ProcReact_Status status, int result);
+typedef void (*complete_service_mapping_function) (ServiceMapping *mapping, ManifestService *service, Target *target, ProcReact_Status status, ProcReact_bool result);
 
 /**
  * Pointer to a function that traverses the collection of service mappings
@@ -135,6 +135,6 @@ ServiceStatus traverse_interdependent_mappings(GPtrArray *unified_service_mappin
  * @param complete_service_mapping Pointer to function that gets executed when an operation on a service mapping completes
  * @return TRUE if all the service mappings' states have been successfully changed, else FALSE
  */
-int traverse_service_mappings(GPtrArray *service_mapping_array, GPtrArray *unified_service_mapping_array, GHashTable *unified_services_table, GHashTable *targets_table, iterate_strategy_function iterate_strategy, service_mapping_function map_service_mapping, complete_service_mapping_function complete_service_mapping);
+ProcReact_bool traverse_service_mappings(GPtrArray *service_mapping_array, GPtrArray *unified_service_mapping_array, GHashTable *unified_services_table, GHashTable *targets_table, iterate_strategy_function iterate_strategy, service_mapping_function map_service_mapping, complete_service_mapping_function complete_service_mapping);
 
 #endif

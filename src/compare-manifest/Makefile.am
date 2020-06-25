@@ -10,7 +10,7 @@ noinst_DATA = disnix-compare-manifest.1.xml
 man1_MANS = disnix-compare-manifest.1
 
 disnix_compare_manifest_SOURCES = compare-manifest.c main.c
-disnix_compare_manifest_CFLAGS = $(GLIB2_CFLAGS) -I../libprocreact -I../libmanifest -I../libmain
+disnix_compare_manifest_CFLAGS = $(GLIB2_CFLAGS) -I../libprocreact -I../libmanifest -I../libmain -I../libnixxml
 disnix_compare_manifest_LDADD = ../libmain/libmain.la ../libmanifest/libmanifest.la
 
 EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

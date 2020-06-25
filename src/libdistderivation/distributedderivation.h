@@ -20,6 +20,7 @@
 #ifndef __DISNIX_DISTRIBUTEDDERIVATION_H
 #define __DISNIX_DISTRIBUTEDDERIVATION_H
 #include <glib.h>
+#include <nixxml-types.h>
 
 /**
  * @brief Contains all properties of a distributed derivation file that maps store derivation closures to machines
@@ -59,6 +60,6 @@ void delete_distributed_derivation(DistributedDerivation *distributed_derivation
  * @param distributed_derivation Distributed derivation to check
  * @return TRUE if the distributed derivation is valid, else FALSE
  */
-int check_distributed_derivation(const DistributedDerivation *distributed_derivation);
+NixXML_bool check_distributed_derivation(const DistributedDerivation *distributed_derivation);
 
 #endif

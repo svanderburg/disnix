@@ -31,7 +31,7 @@ void delete_containers_table(GHashTable *containers_table)
     NixXML_delete_g_hash_table(containers_table, (NixXML_DeleteGHashTableValueFunc)delete_target_properties_table);
 }
 
-int compare_container_tables(GHashTable *containers_table1, GHashTable *containers_table2)
+NixXML_bool compare_container_tables(GHashTable *containers_table1, GHashTable *containers_table2)
 {
     return NixXML_compare_g_hash_tables(containers_table1, containers_table2, (NixXML_CompareGHashTableValueFunc)compare_target_properties_tables);
 }

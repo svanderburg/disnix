@@ -48,7 +48,7 @@ typedef pid_t (*map_snapshot_item_function) (SnapshotMapping *mapping, ManifestS
  * @param status Indicates whether the process terminated abnormally or not
  * @param result TRUE if the mapping operation succeeded, else FALSE
  */
-typedef void (*complete_snapshot_item_mapping_function) (SnapshotMapping *mapping, ManifestService *service, Target *target, ProcReact_Status status, int result);
+typedef void (*complete_snapshot_item_mapping_function) (SnapshotMapping *mapping, ManifestService *service, Target *target, ProcReact_Status status, ProcReact_bool result);
 
 /**
  * Maps over each snapshot mapping, asynchronously executes a function for each
@@ -62,6 +62,6 @@ typedef void (*complete_snapshot_item_mapping_function) (SnapshotMapping *mappin
  * @param complete_snapshot_item_mapping Function that gets executed when a mapping function completes
  * @return TRUE if all mappings were successfully executed, else FALSE
  */
-int map_snapshot_items(const GPtrArray *snapshot_mapping_array, GHashTable *services_table, GHashTable *targets_table, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping);
+ProcReact_bool map_snapshot_items(const GPtrArray *snapshot_mapping_array, GHashTable *services_table, GHashTable *targets_table, map_snapshot_item_function map_snapshot_item, complete_snapshot_item_mapping_function complete_snapshot_item_mapping);
 
 #endif

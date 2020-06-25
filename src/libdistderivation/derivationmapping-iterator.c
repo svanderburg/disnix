@@ -134,7 +134,7 @@ void destroy_derivation_mapping_future_iterator(ProcReact_FutureIterator *iterat
     procreact_destroy_future_iterator(iterator);
 }
 
-int derivation_mapping_iterator_has_succeeded(const DerivationMappingIteratorData *derivation_mapping_iterator_data)
+ProcReact_bool derivation_mapping_iterator_has_succeeded(const DerivationMappingIteratorData *derivation_mapping_iterator_data)
 {
     return derivation_mapping_iterator_data->model_iterator_data.success;
 }

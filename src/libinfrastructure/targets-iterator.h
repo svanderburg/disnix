@@ -54,7 +54,7 @@ typedef ProcReact_Future (*map_target_future_function) (void *data, gchar *targe
  * @param status Indicates whether the process terminated abnormally or not
  * @param result TRUE if the operation succeeded, else FALSE
  */
-typedef void (*complete_target_mapping_pid_function) (void *data, gchar *target_name, Target *target, ProcReact_Status status, int result);
+typedef void (*complete_target_mapping_pid_function) (void *data, gchar *target_name, Target *target, ProcReact_Status status, ProcReact_bool result);
 
 /**
  * Pointer to a function that constructs a future when a process completes for a target
@@ -148,6 +148,6 @@ void destroy_target_future_iterator(ProcReact_FutureIterator *iterator);
  * @param target_iterator_data Struct with properties that facilitate iteration over targets
  * @return TRUE if it indicates success, else FALSE
  */
-int target_iterator_has_succeeded(const TargetIteratorData *target_iterator_data);
+ProcReact_bool target_iterator_has_succeeded(const TargetIteratorData *target_iterator_data);
 
 #endif

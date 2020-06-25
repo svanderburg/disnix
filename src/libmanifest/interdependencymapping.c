@@ -83,9 +83,9 @@ void delete_interdependency_mapping(InterDependencyMapping *mapping)
     }
 }
 
-int check_interdependency_mapping(const InterDependencyMapping *mapping)
+NixXML_bool check_interdependency_mapping(const InterDependencyMapping *mapping)
 {
-    int status = TRUE;
+    NixXML_bool status = TRUE;
 
     if(mapping->service == NULL)
     {

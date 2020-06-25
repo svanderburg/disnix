@@ -45,7 +45,7 @@ typedef pid_t (*map_profile_mapping_function) (void *data, gchar *target_name, x
  * @param status Indicates whether the process terminated abnormally or not
  * @param result TRUE if the operation succeeded, else FALSE
  */
-typedef void (*complete_map_profile_mapping_function) (void *data, gchar *target_name, xmlChar *profile_path, Target *target, ProcReact_Status status, int result);
+typedef void (*complete_map_profile_mapping_function) (void *data, gchar *target_name, xmlChar *profile_path, Target *target, ProcReact_Status status, ProcReact_bool result);
 
 /**
  * @brief Iterator that can be used to execute a process for each profile mapping
@@ -96,6 +96,6 @@ void destroy_profile_mapping_iterator(ProcReact_PidIterator *iterator);
  *
  * @return TRUE if all the operations of the iterator have succeeded else FALSE.
  */
-int profile_mapping_iterator_has_succeeded(const ProcReact_PidIterator *iterator);
+ProcReact_bool profile_mapping_iterator_has_succeeded(const ProcReact_PidIterator *iterator);
 
 #endif

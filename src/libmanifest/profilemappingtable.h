@@ -21,6 +21,7 @@
 #define __DISNIX_PROFILEMAPPINGTABLE_H
 #include <glib.h>
 #include <libxml/parser.h>
+#include <nixxml-types.h>
 #include <targetstable.h>
 
 /**
@@ -46,7 +47,7 @@ void delete_profile_mapping_table(GHashTable *profile_mapping_table);
  * @param profile_mapping_table GHashTable mapping targets to Nix profiles
  * @return TRUE if the profile mapping tables are valid, else FALSE
  */
-int check_profile_mapping_table(GHashTable *profile_mapping_table);
+NixXML_bool check_profile_mapping_table(GHashTable *profile_mapping_table);
 
 /**
  * Checks whether two profile mapping tables have the same content.
@@ -55,7 +56,7 @@ int check_profile_mapping_table(GHashTable *profile_mapping_table);
  * @param profile_mapping_table2 GHashTable mapping targets to Nix profiles
  * @return TRUE if the profile mapping tables are equal, else FALSE
  */
-int compare_profile_mapping_tables(GHashTable *profile_mapping_table1, GHashTable *profile_mapping_table2);
+NixXML_bool compare_profile_mapping_tables(GHashTable *profile_mapping_table1, GHashTable *profile_mapping_table2);
 
 /**
  * Prints a Nix expression representation of a profile mapping table.

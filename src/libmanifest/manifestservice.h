@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <glib.h>
 #include <libxml/parser.h>
+#include <nixxml-types.h>
 
 /**
  * @brief Captures all properties of a service that can be deployed to multiple targets
@@ -65,7 +66,7 @@ void delete_manifest_service(ManifestService *service);
  * @param service A manifest service struct instance
  * @return TRUE if the manifest service is valid, else FALSE
  */
-int check_manifest_service(const ManifestService *service);
+NixXML_bool check_manifest_service(const ManifestService *service);
 
 /**
  * Checks whether two manifest service instances are equal.
@@ -74,7 +75,7 @@ int check_manifest_service(const ManifestService *service);
  * @param right A manifest service struct instance
  * @return TRUE if the manifest services are equal, else FALSE
  */
-int compare_manifest_services(const ManifestService *left, const ManifestService *right);
+NixXML_bool compare_manifest_services(const ManifestService *left, const ManifestService *right);
 
 /**
  * Prints a Nix expression representation of a manifest service

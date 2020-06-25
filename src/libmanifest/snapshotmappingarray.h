@@ -21,6 +21,7 @@
 #define __DISNIX_SNAPSHOTMAPPINGARRAY_H
 #include <glib.h>
 #include <libxml/parser.h>
+#include <nixxml-types.h>
 #include "snapshotmapping.h"
 
 /**
@@ -48,7 +49,7 @@ void delete_snapshot_mapping_array(GPtrArray *snapshot_mapping_array);
  * @param snapshot_mapping_array A GPtrArray with snapshot mappings
  * @return TRUE when the content is valid, else FALSE
  */
-int check_snapshot_mapping_array(const GPtrArray *snapshot_mapping_array);
+NixXML_bool check_snapshot_mapping_array(const GPtrArray *snapshot_mapping_array);
 
 /**
  * Compares two snapshot mapping arrays and checks whether they have the same content
@@ -57,7 +58,7 @@ int check_snapshot_mapping_array(const GPtrArray *snapshot_mapping_array);
  * @param snapshot_mapping_array2 A GPtrArray with snapshot mappings
  * @return TRUE if the arrays have equal content, else FALSE
  */
-int compare_snapshot_mapping_arrays(const GPtrArray *snapshot_mapping_array1, const GPtrArray *snapshot_mapping_array2);
+NixXML_bool compare_snapshot_mapping_arrays(const GPtrArray *snapshot_mapping_array1, const GPtrArray *snapshot_mapping_array2);
 
 /**
  * Prints a Nix expression representation of a snapshot mapping array.

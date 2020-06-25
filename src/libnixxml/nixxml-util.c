@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Sander van der Burg
+ * Copyright (c) 2019-2020 Sander van der Burg
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -21,12 +21,12 @@
 
 #include "nixxml-util.h"
 
-int NixXML_check_value_is_not_null(const void *value)
+NixXML_bool NixXML_check_value_is_not_null(const void *value)
 {
     return (value != NULL);
 }
 
-int NixXML_compare_xml_strings(const xmlChar *left, const xmlChar *right)
+NixXML_bool NixXML_compare_xml_strings(const xmlChar *left, const xmlChar *right)
 {
     return (xmlStrcmp(left, right) == 0);
 }

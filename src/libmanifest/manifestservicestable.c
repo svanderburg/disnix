@@ -31,12 +31,12 @@ void delete_services_table(GHashTable *services_table)
     NixXML_delete_g_hash_table(services_table, (NixXML_DeleteGHashTableValueFunc)delete_manifest_service);
 }
 
-int check_services_table(GHashTable *services_table)
+NixXML_bool check_services_table(GHashTable *services_table)
 {
     return NixXML_check_g_hash_table(services_table, (NixXML_CheckGHashTableValueFunc)check_manifest_service);
 }
 
-int compare_services_tables(GHashTable *services_table1, GHashTable *services_table2)
+NixXML_bool compare_services_tables(GHashTable *services_table1, GHashTable *services_table2)
 {
     return NixXML_compare_g_hash_tables(services_table1, services_table2, (NixXML_CompareGHashTableValueFunc)compare_manifest_services);
 }

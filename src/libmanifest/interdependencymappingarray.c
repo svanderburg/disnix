@@ -32,7 +32,7 @@ void delete_interdependency_mapping_array(GPtrArray *interdependency_mapping_arr
     NixXML_delete_g_ptr_array(interdependency_mapping_array, (NixXML_DeleteGPtrArrayElementFunc)delete_interdependency_mapping);
 }
 
-int check_interdependency_mapping_array(const GPtrArray *interdependency_mapping_array)
+NixXML_bool check_interdependency_mapping_array(const GPtrArray *interdependency_mapping_array)
 {
     return NixXML_check_g_ptr_array(interdependency_mapping_array, (NixXML_CheckGPtrArrayElementFunc)check_interdependency_mapping);
 }
@@ -47,7 +47,7 @@ void print_interdependency_mapping_array_xml(FILE *file, const GPtrArray *interd
     NixXML_print_g_ptr_array_xml(file, interdependency_mapping_array, "mapping", indent_level, NULL, userdata, (NixXML_PrintXMLValueFunc)print_interdependency_mapping_xml);
 }
 
-int compare_interdependency_mapping_arrays(const GPtrArray *interdependency_mapping_array1, const GPtrArray *interdependency_mapping_array2)
+NixXML_bool compare_interdependency_mapping_arrays(const GPtrArray *interdependency_mapping_array1, const GPtrArray *interdependency_mapping_array2)
 {
     if(interdependency_mapping_array1->len == interdependency_mapping_array2->len)
     {

@@ -22,6 +22,7 @@
 
 #include <glib.h>
 #include <libxml/parser.h>
+#include <nixxml-types.h>
 
 /**
  * @brief Contains the values that constitute a key uniquely referring to a service that needs to be activated.
@@ -79,7 +80,7 @@ void delete_interdependency_mapping(InterDependencyMapping *mapping);
  * @param mapping Inter-dependency mapping instance
  * @return TRUE if the interdependency mapping is valid, else FALSE
  */
-int check_interdependency_mapping(const InterDependencyMapping *mapping);
+NixXML_bool check_interdependency_mapping(const InterDependencyMapping *mapping);
 
 /**
  * Prints a Nix expression representation of an interdependency mapping

@@ -21,6 +21,7 @@
 #define __DISNIX_INTERFACESTABLE_H
 #include <glib.h>
 #include <libxml/parser.h>
+#include <nixxml-types.h>
 #include "interface.h"
 
 /**
@@ -45,6 +46,6 @@ void delete_interfaces_table(GHashTable *interfaces_table);
  * @param interfaces_table Hash table with interfaces
  * @return TRUE if the interfaces all valid, else FALSE
  */
-int check_interfaces_table(GHashTable *interfaces_table);
+NixXML_bool check_interfaces_table(GHashTable *interfaces_table);
 
 #endif

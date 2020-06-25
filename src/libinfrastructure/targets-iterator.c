@@ -141,7 +141,7 @@ void destroy_target_future_iterator(ProcReact_FutureIterator *iterator)
     procreact_destroy_future_iterator(iterator);
 }
 
-int target_iterator_has_succeeded(const TargetIteratorData *target_iterator_data)
+ProcReact_bool target_iterator_has_succeeded(const TargetIteratorData *target_iterator_data)
 {
     return target_iterator_data->model_iterator_data.success;
 }

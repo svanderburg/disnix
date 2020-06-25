@@ -82,7 +82,7 @@ void destroy_profile_mapping_iterator(ProcReact_PidIterator *iterator)
     g_free(profile_mapping_iterator_data);
 }
 
-int profile_mapping_iterator_has_succeeded(const ProcReact_PidIterator *iterator)
+ProcReact_bool profile_mapping_iterator_has_succeeded(const ProcReact_PidIterator *iterator)
 {
     ProfileMappingIteratorData *profile_mapping_iterator_data = (ProfileMappingIteratorData*)iterator->data;
     return profile_mapping_iterator_data->model_iterator_data.success;

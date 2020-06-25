@@ -21,6 +21,7 @@
 #define __DISNIX_TARGETPROPERTIESTABLE_H
 #include <libxml/parser.h>
 #include <glib.h>
+#include <nixxml-types.h>
 
 /**
  * Parses an XML document representing a target properties table
@@ -45,7 +46,7 @@ void delete_target_properties_table(GHashTable *target_properties_table);
  * @param right A target properties table
  * @return TRUE if they are equal, else FALSE
  */
-int compare_target_properties_tables(GHashTable *left, GHashTable *right);
+NixXML_bool compare_target_properties_tables(GHashTable *left, GHashTable *right);
 
 /**
  * Prints a Nix expression representation of a target properties table.
