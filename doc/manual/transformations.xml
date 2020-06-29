@@ -180,31 +180,18 @@ $ disnix-env -A architecture.nix
 		<para>
 			Unifying models into a single deployment architecture specification is a good
 			first step in producing an executable specification, but more needs to be
-			done to fully reach that goal.
+			done to fully reach that goal. To generate an exectable deployment model, we
+			must provide reasonable default settings for unspecified system properties, propagate
+			inter-dependency parameters to the services, and build packages for
+			all required system architectures.
 		</para>
 
 		<para>
-			There are certain deployment properties that are left unspecified. For some
-			configuration properties, Disnix provides reasonable default values, such as:
-		</para>
-
-		<itemizedlist>
-			<listitem>
-				<para>
-					Each service can indicate whether they want their state to be managed by Dysnomia
-					(with the property: <varname>deployState</varname>), so that data will automatically be migrated
-					when moving the service from one machine to another. The default setting is <code>false</code>
-					and can be overridden with the <code>--deploy-state</code> parameter.
-				</para>
-				<para>
-					If a service does not specify this property, then Disnix will automatically propagate the default setting as a parameter.
-				</para>
-			</listitem>
-			<listitem>
-				<para>
-					Every target machine in the infrastructure model also has specialized
-					settings for connecting to the target machines, building packages and running
-					tasks concurrently:
+			The <varname>infrastructure</varname> section in the deployment architecture model
+			gets normalized by augmenting each target with default values --
+			every target machine in the infrastructure model has specialized
+			settings for connecting to the target machines, building packages and running
+			tasks concurrently:
 <programlisting>
 test2 = {
   properties = {
@@ -229,27 +216,80 @@ test2 = {
   };
 };
 </programlisting>
-				</para>
+		</para>
+		<para>
+			If none of these advanced settings are provided, Disnix will make the following assumptions:
+		</para>
+
+		<itemizedlist>
+			<listitem>
 				<para>
-					If none of these advanced settings are provided, Disnix will assume
-					that the every target machine has the same system architecture (<varname>system</varname>)
-					as the coordinator machine (so that the Nix package manager does not have
-					to delegate a build to a machine that has a compatible architecture), we use the Disnix
-					SSH client (<code>disnix-ssh-client</code>) interface executable (<varname>clientInterface</varname>)
-					to connect to the target machine (using the <varname>hostname</varname> property as a connection
-					string) and we only run one activity per target machine concurrently: <varname>numOfCores</varname>.
+					If no system architecture was specified (<varname>system</varname>), Disnix assumes that the target machine has
+					the same system architecture as the coordinator machine (so that the Nix package manager does not have
+					to delegate a build to a machine that has a compatible architecture)
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					By default, Disnix uses the Disnix SSH client (<code>disnix-ssh-client</code>)
+					interface executable (<varname>clientInterface</varname>)
+					to connect to the target machine.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					By default, Disnix uses the <varname>hostname</varname> property as a connection
+					string.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Normally, Disnix runs only one activity per target machine concurrently: <varname>numOfCores</varname>
+					unless this property is overridden to another value.
 				</para>
 			</listitem>
 		</itemizedlist>
 
 		<para>
-			In addition to unspecified properties (that need to be augmented with default
-			values), we also have properties that are abstract specifications. These
-			specifications need to be translated into more concrete representations:
+			The <varname>services</varname> in the deployment architecture model are normalized as follows:
 		</para>
 
 		<itemizedlist>
 			<listitem>
+				<para>
+					Each service can indicate whether they want their state to be managed by Dysnomia
+					(with the property: <varname>deployState</varname>), so that data will automatically be migrated
+					when moving the service from one machine to another. The default setting is <code>false</code>
+					and can be overridden with the <code>--deploy-state</code> parameter.
+				</para>
+				<para>
+					If a service does not specify this property, then Disnix will automatically propagate the default setting as a parameter.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					The <varname>targets</varname> attribute gets translated to a reference specification, so that we can refer
+					to the normalized variants of the services and targets through a service's inter-dependency parameters.
+					For example, the following service with an abstract targets specification:
+<programlisting>
+staff = rec {
+  name = "staff";
+  targets = [ infrastructure.test1 infrastructure.test2 ];
+  type = "mysql-database";
+};
+</programlisting>
+					gets translated into the following reference specification:
+<programlisting>
+staff = rec {
+  name = "staff";
+  targets = [
+    { target = "test1"; container = "mysql-database"; }
+    { target = "test2"; container = "mysql-database"; }
+  ];
+  type = "mysql-database";
+}
+</programlisting>
+				</para>
 				<para>
 					As explained in <xref linkend="chap-advanced-options" />, the <varname>targets</varname>
 					property -- that maps services to target machines -- does not only map services to machines, but
@@ -259,65 +299,51 @@ test2 = {
 				</para>
 				<para>
 					If no container mapping is provided, Disnix will do an auto-mapping to a container service
-					that corresponds to the service's type property.
-				</para>
-				<para>
-					The <varname>staff</varname> databases's <varname>targets</varname> property
-					gets translated into the following property:
-<programlisting>
-{system, pkgs}:
-
-rec
-{
-  services = rec {
-    staff = {
-      name = "staff";
-      ...
-
-      targets = [
-        rec {
-          selectedContainer = "mysql-database";
-
-          container = {
-            mysqlPort = 3306;
-            mysqlUsername = "root";
-            mysqlPassword = builtins.readFile ./mysqlpw;
-          };
-
-          properties = {
-            hostname = "test2.example.org";
-          };
-
-          clientInterface = "disnix-ssh-client";
-          targetProperty = "hostname";
-          numOfCores = 1;
-          system = "x86_64-linux";
-        }
-      ];
-    };
-  };
-
-  infrastructure = ...
-}
-</programlisting>
-				</para>
-				<para>
-					As may be observed, the target provides a <varname>selectedContainer</varname>
-					property to indicate to what container the service needs to be deployed.
-					The properties of all the containers that the service does not need to know
-					about are discarded.
+					that corresponds to the service's <varname>type</varname> property.
 				</para>
 			</listitem>
 			<listitem>
 				<para>
-					Another property that needs to be extended is the inter-dependency specifications
-					(<varname>dependsOn</varname> and <varname>connectsTo</varname>). Typically,
-					inter-dependency specifications are only specified on a functional level -- a service
+					Similarly, the inter-dependency specifiers (<varname>dependsOn</varname>, <varname>connectsTo</varname>,
+					<varname>activatesAfter</varname>) get translated to reference specifications as well.
+					Typically, inter-dependency specifications are only specified on a functional level -- a service
 					typically only specifies that it depends on another service disregarding the location
 					where that service may have been deployed.
 				</para>
 				<para>
-					If no target location is specified, then Disnix will assume that the service has
+					For example, the following service with the following inter-dependencies:
+<programlisting>
+StaffService = {
+  name = "StaffService";
+  dependsOn = {
+    inherit staff;
+  };
+  type = "tomcat-webapplication";
+};
+</programlisting>
+				</para>
+				<para>
+					gets translated to:
+<programlisting>
+StaffService = {
+  name = "StaffService";
+  dependsOn = {
+    staff = {
+      service = "staff";
+      targets = [ { target = "test1"; container = "mysql-database" } ];
+    };
+  };
+  type = "tomcat-webapplication";
+};
+</programlisting>
+
+				</para>
+				<para>
+					As shown in the example above, an inter-dependency specification does not only refer to the service, but also
+					to targets where the inter-dependency has been deployed to.
+				</para>
+				<para>
+					If no target location was specified, then Disnix will assume that the service has
 					an inter-dependency on all possible locations where that dependency may be
 					deployed. If an inter-dependency is redundantly deployed, then that service also
 					has an inter-dependency on all redundant replicas.
@@ -329,44 +355,12 @@ rec
 					is deployed to the same target machine, so that it will not be affected by slow network
 					connectivity.
 				</para>
-				<para>
-					The dependsOn property of the <varname>StaffService</varname> service will translate to:
-<programlisting>
-dependsOn = {
-  staff = {
-    name = "staff";
-    pkg = customPkgs.staff;
-    dependsOn = {};
-    type = "mysql-database";
-
-    targets = [
-      {
-        selectedContainer = "mysql-database";
-
-        container = {
-          mysqlPort = 3306;
-          mysqlUsername = "root";
-          mysqlPassword = "admin";
-        };
-
-        properties = {
-          hostname = "test2.example.org";
-        };
-      }
-    ];
-  };
-};
-</programlisting>
-					In the above code fragment, the inter-dependency has been augmented with a <varname>targets</varname>
-					property corresponding to the targets where that inter-dependency has been deployed to.
-				</para>
 			</listitem>
-		</itemizedlist>
-
-		<para>
-			The last ingredient to generate an executable specification is building the services from source code so that we can map
-			their build results to the target machines. To accomplish this, Disnix generates two invisible helper attributes for
-			each service:
+			<listitem>
+				<para>
+					The last ingredient to generate an executable specification is building the services from source code so that we can map
+					their build results to the target machines. To accomplish this, Disnix generates the <varname>pkgs</varname> attribute
+					that refers to the build result for each potential system architecture the service is deployed to:
 <programlisting>
 StaffService = {
   name = "StraffTracker";
@@ -378,33 +372,13 @@ StaffService = {
 
   ...
 
-  _systemsPerTarget = [ "x86_64-linux" "x86_64-darwin" ];
-  _pkgsPerSystems = {
+  pkgs = {
     "x86_64-linux" = "/nix/store/91abq...-StaffService";
     "x86_64-darwin" = "/nix/store/f1ap2...-StaffService";
   };
 };
 </programlisting>
-		</para>
 
-		<para>
-			The above code example shows the two "hidden" properties augmented to the <varname>StaffService</varname> service:
-		</para>
-
-		<itemizedlist>
-			<listitem>
-				<para>
-					The <varname>_systemsPerTarget</varname> specifies for which CPU architecture/operating systems the service
-					must be built. Normally, services are target agnostic and should always yield the same Nix store path (with
-					a build that is nearly bit-identical), but the system architecture of the target machine is an exception to
-					deviate from this property -- it is also possible to deploy the same service to different CPU architectures/operating
-					systems. In such cases the build result could be different.
-				</para>
-			</listitem>
-			<listitem>
-				<para>
-					The <varname>_pkgsPerSystem</varname> specifies for each system architecture, the Nix store path to the build
-					result. A side effect of evaluating the Nix store path is the service also gets built from source code.
 				</para>
 			</listitem>
 		</itemizedlist>
