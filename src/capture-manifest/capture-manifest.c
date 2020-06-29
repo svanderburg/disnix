@@ -44,6 +44,16 @@ static ProcReact_Future query_requisites_on_target(void *data, gchar *target_nam
     return exec_query_requisites((char*)target->client_interface, target_key, derivations, 1);
 }
 
+static gchar *take_last_element(char **result)
+{
+    guint result_length = g_strv_length(result);
+
+    if(result_length > 0)
+        return g_strdup(result[result_length - 1]);
+    else
+        return NULL;
+}
+
 static void complete_query_requisites_on_target(void *data, gchar *target_name, Target *target, ProcReact_Future *future, ProcReact_Status status)
 {
     QueryRequisitesData *query_requisites_data = (QueryRequisitesData*)data;
@@ -52,20 +62,10 @@ static void complete_query_requisites_on_target(void *data, gchar *target_name, 
         g_printerr("[target: %s]: Cannot query the requisites of the profile!\n", target_name);
     else
     {
-        ProfileManifestTarget *profile_manifest_target = (ProfileManifestTarget*)g_malloc(sizeof(ProfileManifestTarget));
         char **result = (char**)future->result;
-        gint result_length = g_strv_length(result);
-        gchar *profile;
+        gchar *profile = take_last_element(result);
+        ProfileManifestTarget *profile_manifest_target = parse_profile_manifest_target(profile, target_name);
 
-        if(result_length > 0)
-        {
-            profile = result[result_length - 1];
-            result[result_length - 1] = NULL;
-        }
-        else
-            profile = NULL;
-
-        profile_manifest_target = parse_profile_manifest_target(profile, target_name);
         g_hash_table_insert(query_requisites_data->profile_manifest_target_table, target_name, profile_manifest_target);
 
         procreact_free_string_array(future->result);
