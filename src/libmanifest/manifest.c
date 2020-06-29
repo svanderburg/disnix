@@ -349,3 +349,27 @@ Manifest *open_previous_manifest(const gchar *manifest_file, const unsigned int 
         return create_manifest(manifest_file, flags, container_filter, component_filter);
     }
 }
+
+NixXML_bool check_safe_data_migration(const Manifest *manifest_old, const Manifest *manifest_new, NixXML_bool no_migration)
+{
+    if(manifest_old == NULL || no_migration)
+        return TRUE;
+    else
+    {
+        unsigned int i;
+        NixXML_bool result = TRUE;
+
+        for(i = 0; i < manifest_old->snapshot_mapping_array->len; i++)
+        {
+            SnapshotMapping *mapping = g_ptr_array_index(manifest_old->snapshot_mapping_array, i);
+
+            if(mapping->container_provided_by_service != NULL && !g_hash_table_contains(manifest_new->services_table, mapping->container_provided_by_service))
+            {
+                g_printerr("Service: %s is mapped to container: %s, provided by service: %s, but that service no longer exists in the new configuration!\n", mapping->service, mapping->container, mapping->container_provided_by_service);
+                result = FALSE;
+            }
+        }
+
+        return result;
+    }
+}

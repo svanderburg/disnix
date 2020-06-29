@@ -37,13 +37,17 @@ static xmlChar **generate_activation_arguments(const ManifestService *container_
         return generate_activation_arguments_for_container_service(container_service, container_name);
 }
 
-MappingParameters create_mapping_parameters(const xmlChar *service, const xmlChar *container, const xmlChar *target_name, GHashTable *services_table, Target *target)
+MappingParameters create_mapping_parameters(const xmlChar *service, const xmlChar *container, const xmlChar *target_name, const xmlChar *container_provided_by_service, GHashTable *services_table, Target *target)
 {
     MappingParameters params;
     params.service = g_hash_table_lookup(services_table, (const gchar*)service);
-    params.container_service = find_container_service_dependency(services_table, params.service, container, target_name);
-    params.type = determine_type(params.service, params.container_service);
 
+    if(container_provided_by_service == NULL)
+        params.container_service = NULL;
+    else
+        params.container_service = g_hash_table_lookup(services_table, (const gchar*)container_provided_by_service);
+
+    params.type = determine_type(params.service, params.container_service);
     params.arguments = generate_activation_arguments(params.container_service, target, (const gchar*)container); /* Generate an array of key=value pairs from container properties */
     params.arguments_size = g_strv_length((gchar**)params.arguments); /* Determine length of the activation arguments array */
 

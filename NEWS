@@ -1,5 +1,7 @@
 version 0.10
 ============
+- The model transformation pipeline has been reengineered again to have better support for references. This exposes almost all properties of all inter-dependencies, and transitive inter-dependencies
+
 - Introduced the --extra-params option to propagate additional parameters to the input models
 
 - disnix-env provides the --undeploy option that can be used to conveniently undeploy an entire system

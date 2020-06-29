@@ -22,27 +22,6 @@
 #include <nixxml-ghashtable.h>
 #include <nixxml-gptrarray.h>
 
-gint compare_service_mappings(const ServiceMapping **l, const ServiceMapping **r)
-{
-    return compare_interdependency_mappings((const InterDependencyMapping **)l, (const InterDependencyMapping **)r);
-}
-
-static void *create_service_mapping(xmlNodePtr element, void *userdata)
-{
-    return g_malloc0(sizeof(ServiceMapping));
-}
-
-static void *parse_service_mapping(xmlNodePtr element, void *userdata)
-{
-    ServiceMapping *mapping = NixXML_parse_simple_attrset(element, userdata, create_service_mapping, NixXML_parse_value, insert_interdependency_mapping_attributes);
-
-    /* Set default values */
-    if(mapping->target == NULL)
-        mapping->target = xmlStrdup((xmlChar*)userdata);
-
-    return mapping;
-}
-
 GPtrArray *parse_service_mapping_array(xmlNodePtr element, void *userdata)
 {
     GPtrArray *service_mapping_array = NixXML_parse_g_ptr_array(element, "mapping", userdata, parse_service_mapping);
@@ -55,27 +34,41 @@ GPtrArray *parse_service_mapping_array(xmlNodePtr element, void *userdata)
 
 void delete_service_mapping_array(GPtrArray *service_mapping_array)
 {
-    delete_interdependency_mapping_array(service_mapping_array);
+    NixXML_delete_g_ptr_array(service_mapping_array, (NixXML_DeleteGPtrArrayElementFunc)delete_service_mapping);
 }
 
 NixXML_bool check_service_mapping_array(const GPtrArray *service_mapping_array)
 {
-    return check_interdependency_mapping_array(service_mapping_array);
+    return NixXML_check_g_ptr_array(service_mapping_array, (NixXML_CheckGPtrArrayElementFunc)check_service_mapping);
 }
 
 NixXML_bool compare_service_mapping_arrays(const GPtrArray *service_mapping_array1, const GPtrArray *service_mapping_array2)
 {
-    return compare_interdependency_mapping_arrays(service_mapping_array1, service_mapping_array2);
+    if(service_mapping_array1->len == service_mapping_array2->len)
+    {
+        unsigned int i;
+
+        for(i = 0; i < service_mapping_array1->len; i++)
+        {
+            ServiceMapping *mapping = g_ptr_array_index(service_mapping_array1, i);
+            if(find_service_mapping(service_mapping_array2, (InterDependencyMapping*)mapping) == NULL)
+                return FALSE;
+        }
+
+        return TRUE;
+    }
+    else
+        return FALSE;
 }
 
 void print_service_mapping_array_nix(FILE *file, const GPtrArray *service_mapping_array, const int indent_level, void *userdata)
 {
-    print_interdependency_mapping_array_nix(file, service_mapping_array, indent_level, userdata);
+    NixXML_print_g_ptr_array_nix(file, service_mapping_array, indent_level, userdata, (NixXML_PrintValueFunc)print_service_mapping_nix);
 }
 
 void print_service_mapping_array_xml(FILE *file, const GPtrArray *service_mapping_array, const int indent_level, const char *type_property_name, void *userdata)
 {
-    print_interdependency_mapping_array_xml(file, service_mapping_array, indent_level, type_property_name, userdata);
+    NixXML_print_g_ptr_array_xml(file, service_mapping_array, "mapping", indent_level, type_property_name, userdata, (NixXML_PrintXMLValueFunc)print_service_mapping_xml);
 }
 
 ServiceMapping *find_service_mapping(const GPtrArray *service_mapping_array, const InterDependencyMapping *key)

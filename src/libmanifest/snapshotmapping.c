@@ -64,6 +64,8 @@ static void insert_snapshot_mapping_attributes(void *table, const xmlChar *key, 
         mapping->target = value;
     else if(xmlStrcmp(key, (xmlChar*) "service") == 0)
         mapping->service = value;
+    else if(xmlStrcmp(key, (xmlChar*) "containerProvidedByService") == 0)
+        mapping->container_provided_by_service = value;
     else
         xmlFree(value);
 }
@@ -87,6 +89,7 @@ void delete_snapshot_mapping(SnapshotMapping *mapping)
         xmlFree(mapping->container);
         xmlFree(mapping->target);
         xmlFree(mapping->service);
+        xmlFree(mapping->container_provided_by_service);
         g_free(mapping);
     }
 }
@@ -127,6 +130,8 @@ static void print_snapshot_mapping_attributes_nix(FILE *file, const void *value,
     NixXML_print_attribute_nix(file, "component", mapping->component, indent_level, userdata, NixXML_print_string_nix);
     NixXML_print_attribute_nix(file, "container", mapping->container, indent_level, userdata, NixXML_print_string_nix);
     NixXML_print_attribute_nix(file, "target", mapping->target, indent_level, userdata, NixXML_print_string_nix);
+    if(mapping->container_provided_by_service != NULL)
+        NixXML_print_attribute_nix(file, "containerProvidedByService", mapping->container_provided_by_service, indent_level, userdata, NixXML_print_string_nix);
 }
 
 void print_snapshot_mapping_nix(FILE *file, const SnapshotMapping *mapping, const int indent_level, void *userdata)
@@ -142,6 +147,8 @@ static void print_snapshot_mapping_attributes_xml(FILE *file, const void *value,
     NixXML_print_simple_attribute_xml(file, "component", mapping->component, indent_level, NULL, userdata, NixXML_print_string_xml);
     NixXML_print_simple_attribute_xml(file, "container", mapping->container, indent_level, NULL, userdata, NixXML_print_string_xml);
     NixXML_print_simple_attribute_xml(file, "target", mapping->target, indent_level, NULL, userdata, NixXML_print_string_xml);
+    if(mapping->container_provided_by_service != NULL)
+        NixXML_print_simple_attribute_xml(file, "containerProvidedByService", mapping->container_provided_by_service, indent_level, NULL, userdata, NixXML_print_string_xml);
 }
 
 void print_snapshot_mapping_xml(FILE *file, const SnapshotMapping *mapping, const int indent_level, const char *type_property_name, void *userdata)

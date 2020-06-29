@@ -34,7 +34,7 @@ typedef struct
 }
 MappingParameters;
 
-MappingParameters create_mapping_parameters(const xmlChar *service, const xmlChar *container, const xmlChar *target_name, GHashTable *services_table, Target *target);
+MappingParameters create_mapping_parameters(const xmlChar *service, const xmlChar *container, const xmlChar *target_name, const xmlChar *container_provided_by_service, GHashTable *services_table, Target *target);
 
 void destroy_mapping_parameters(MappingParameters *params);
 

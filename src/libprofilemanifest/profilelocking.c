@@ -23,13 +23,15 @@ static int lock_or_unlock_services(int log_fd, ProfileManifest *profile_manifest
         pid_t pid;
         ProcReact_Status status;
         int result;
-        ManifestService *container_service;
         xmlChar *type;
 
-        if((container_service = find_container_service_dependency(profile_manifest->services_table, service, mapping->container, mapping->target)) == NULL)
+        if(mapping->container_provided_by_service == NULL)
             type = service->type;
         else
+        {
+            ManifestService *container_service = g_hash_table_lookup(profile_manifest->services_table, (const gchar*)mapping->container_provided_by_service);
             type = container_service->pkg;
+        }
 
         dprintf(log_fd, "Notifying %s on %s: of type: %s in container: %s\n", action, service->pkg, type, mapping->container);
         pid = notify_function((gchar*)type, (gchar*)mapping->container, (gchar*)service->pkg, log_fd, log_fd);

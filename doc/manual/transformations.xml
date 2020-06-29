@@ -72,7 +72,7 @@
 
 		<para>
 			The first step in transforming the input models into a single executable specification, is unifying the specifications
-			into one single declarative specification, that is called <emphasis>deployment architecture</emphasis> model.
+			into one single declarative specification, that is called a <emphasis>deployment architecture</emphasis> model.
 
 			<example xml:id="ex-deployment-architecture-model">
 				<title>Deployment architecture model for the <code>StaffTracker</code> example</title>

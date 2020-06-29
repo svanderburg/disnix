@@ -197,6 +197,7 @@ rec {
    *       targets = [
    *         { target = "target1"; container = "process"; }
    *         { target = "target2"; container = "process"; }
+   *         { target = "target2"; container = "mycontainer"; containerProvidedByService = "containerprovider"; }
    *       ];
    *       ...
    *     };
@@ -205,6 +206,7 @@ rec {
    *   [
    *     { service = "hash1..."; target = "target1"; container = "process"; }
    *     { service = "hash2..."; target = "target2"; container = "process"; }
+   *     { service = "hash3..."; target = "target2"; container = "mycontainer"; containerProvidedByService = "hash4..."; }
    *   ]
    */
   generateServiceMappings = {normalizedServices, normalizedInfrastructure}:
@@ -225,6 +227,14 @@ rec {
           service = generateHash {
             manifestService = generateManifestServiceFromServiceForArchitecture {
               inherit normalizedService normalizedServices normalizedInfrastructure;
+              inherit (normalizedTarget) system;
+            };
+          };
+        } // lib.optionalAttrs (targetReference ? containerProvidedByService) {
+          containerProvidedByService = generateHash {
+            manifestService = generateManifestServiceFromServiceForArchitecture {
+              normalizedService = getAttr targetReference.containerProvidedByService normalizedServices;
+              inherit normalizedServices normalizedInfrastructure;
               inherit (normalizedTarget) system;
             };
           };
@@ -280,6 +290,14 @@ rec {
             };
           };
           component = substring 33 (stringLength pkg) (baseNameOf pkg);
+        } // lib.optionalAttrs (targetReference ? containerProvidedByService) {
+          containerProvidedByService = generateHash {
+            manifestService = generateManifestServiceFromServiceForArchitecture {
+              normalizedService = getAttr targetReference.containerProvidedByService normalizedServices;
+              inherit normalizedServices normalizedInfrastructure;
+              inherit (normalizedTarget) system;
+            };
+          };
         }
       ) normalizedService.targets or []
     ) statefulServiceNames);

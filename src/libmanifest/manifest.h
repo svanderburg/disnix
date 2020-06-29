@@ -161,4 +161,17 @@ gchar *determine_manifest_to_open(const gchar *old_manifest, const gchar *coordi
  */
 Manifest *open_previous_manifest(const gchar *manifest_file, const unsigned int flags, const gchar *container_filter, const gchar *component_filter);
 
+/**
+ * Checks whether a deployment or upgrade also yields a safe data migration.
+ * In cases when a stateful service is managed by a container providing service,
+ * we must make sure that the container providing service is not undeployed,
+ * when snapshots of stateful services must be made.
+ *
+ * @param manifest_old Manifest of the previous deployment, or NULL in case of an initial deployment
+ * @param manifest_new Manifest of the new deployment
+ * @param no_migration Indicates whether state migration was disabled or not
+ * @return TRUE if the state migration can be done safely, else FALSE
+ */
+NixXML_bool check_safe_data_migration(const Manifest *manifest_old, const Manifest *manifest_new, NixXML_bool no_migration);
+
 #endif

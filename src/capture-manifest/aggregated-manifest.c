@@ -77,6 +77,7 @@ static void aggregate_service_mapping_array(GPtrArray *aggregated_service_mappin
         aggregated_mapping->service = mapping->service;
         aggregated_mapping->container = mapping->container;
         aggregated_mapping->target = mapping->target;
+        aggregated_mapping->container_provided_by_service = mapping->container_provided_by_service;
 
         g_ptr_array_add(aggregated_service_mapping_array, aggregated_mapping);
     }
@@ -94,6 +95,7 @@ static void aggregate_snapshot_mapping_array(GPtrArray *aggregated_snapshot_mapp
         aggregated_mapping->component = mapping->component;
         aggregated_mapping->container = mapping->container;
         aggregated_mapping->target = mapping->target;
+        aggregated_mapping->container_provided_by_service = mapping->container_provided_by_service;
 
         g_ptr_array_add(aggregated_snapshot_mapping_array, aggregated_mapping);
     }

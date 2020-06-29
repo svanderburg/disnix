@@ -82,7 +82,7 @@ ProcReact_bool map_snapshot_items(const GPtrArray *snapshot_mapping_array, GHash
                 g_print("[target: %s]: Skip state of component: %s deployed to container: %s since machine is no longer present!\n", mapping->target, mapping->component, mapping->container);
             else if(!mapping->transferred && request_available_target_core(target)) /* Check if machine has any cores available, if not wait and try again later */
             {
-                MappingParameters params = create_mapping_parameters(mapping->service, mapping->container, mapping->target, services_table, target);
+                MappingParameters params = create_mapping_parameters(mapping->service, mapping->container, mapping->target, mapping->container_provided_by_service, services_table, target);
                 pid_t pid = map_snapshot_item(mapping, params.service, target, params.type, params.arguments, params.arguments_size);
 
                 /* Add pid and mapping to the hash table */

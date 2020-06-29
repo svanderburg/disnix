@@ -32,7 +32,7 @@ static int spawn_shell(GHashTable *services_table, GHashTable *targets_table, co
     Target *target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
     gchar *target_key = find_target_key(target);
 
-    MappingParameters params = create_mapping_parameters(mapping->service, mapping->container, mapping->target, services_table, target);
+    MappingParameters params = create_mapping_parameters(mapping->service, mapping->container, mapping->target, mapping->container_provided_by_service, services_table, target);
 
     ProcReact_Status status;
     int exit_status;

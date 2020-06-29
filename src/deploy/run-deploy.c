@@ -93,6 +93,22 @@ static void print_deploy_state_fail_message(const gchar *coordinator_profile_pat
     g_printerr(" %s\n\n", new_manifest);
 }
 
+static void print_unsafe_migration_message(void)
+{
+    g_printerr(
+    "\nThe are snapshots deployed to a container that is provided by a service.\n"
+    "Undeploying the container provider service, prevents the state of the embedded\n"
+    "services from being snapshotted in the undeploy process.\n\n"
+
+    "As a resolution, first do a deployment in which all embedded stateful\n"
+    "services are undeployed, then do another deployment in which you undeploy all\n"
+    "container providers.\n\n"
+
+    "Alternatively, if you do not want to snapshot the state of the services at all,\n"
+    "then run this command again with the --no-migration parameter.\n"
+    );
+}
+
 int run_deploy(const gchar *new_manifest, gchar *old_manifest, const gchar *coordinator_profile_path, gchar *profile, const unsigned int max_concurrent_transfers, const int keep, const unsigned int flags, char *tmpdir)
 {
     Manifest *manifest = create_manifest(new_manifest, MANIFEST_ALL_FLAGS, NULL, NULL);
@@ -113,22 +129,31 @@ int run_deploy(const gchar *new_manifest, gchar *old_manifest, const gchar *coor
 
             if(previous_manifest == NULL || check_manifest(previous_manifest))
             {
-                /* Execute the deployment process */
-                status = deploy(old_manifest_file, new_manifest, manifest, previous_manifest, profile, coordinator_profile_path, max_concurrent_transfers, tmpdir, keep, flags, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
-
-                switch(status)
+                /* If we have mapped snapshots to a target and the snapshot requires a container service provider, check if it has not been undeployed */
+                if(!check_safe_data_migration(previous_manifest, manifest, flags & FLAG_NO_MIGRATION))
                 {
-                    case DEPLOY_OK:
-                        /* Display warning if state has been moved, but removed from old location */
-                        if(!(flags & FLAG_DELETE_STATE) && old_manifest_file != NULL)
-                            print_state_notification(coordinator_profile_path, profile, old_manifest_file);
-                        break;
-                    case DEPLOY_FAIL:
-                        print_deploy_fail_message();
-                        break;
-                    case DEPLOY_STATE_FAIL:
-                        print_deploy_state_fail_message(coordinator_profile_path, profile, flags, old_manifest_file, new_manifest);
-                        break;
+                    print_unsafe_migration_message();
+                    status = 1;
+                }
+                else
+                {
+                    /* Execute the deployment process */
+                    status = deploy(old_manifest_file, new_manifest, manifest, previous_manifest, profile, coordinator_profile_path, max_concurrent_transfers, tmpdir, keep, flags, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
+
+                    switch(status)
+                    {
+                        case DEPLOY_OK:
+                            /* Display warning if state has been moved, but removed from old location */
+                            if(!(flags & FLAG_DELETE_STATE) && old_manifest_file != NULL)
+                                print_state_notification(coordinator_profile_path, profile, old_manifest_file);
+                            break;
+                        case DEPLOY_FAIL:
+                            print_deploy_fail_message();
+                            break;
+                        case DEPLOY_STATE_FAIL:
+                            print_deploy_state_fail_message(coordinator_profile_path, profile, flags, old_manifest_file, new_manifest);
+                            break;
+                    }
                 }
             }
             else

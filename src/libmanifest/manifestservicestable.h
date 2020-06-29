@@ -89,16 +89,4 @@ void print_services_table_nix(FILE *file, GHashTable *services_table, const int 
  */
 void print_services_table_xml(FILE *file, GHashTable *services_table, const int indent_level, const char *type_property_name, void *userdata);
 
-/**
- * Searches for a service that provides a container dependency for a given
- * service.
- *
- * @param services_table A services table
- * @param manifest_service Service for which the container provider needs to be searched
- * @param container Name of the container where the service is distributed to
- * @param target Name of the target machine where the service is distributed to
- * @return A service that provides the container dependency or NULL if none exists
- */
-ManifestService *find_container_service_dependency(GHashTable *services_table, const ManifestService *manifest_service, const xmlChar *container, const xmlChar *target);
-
 #endif

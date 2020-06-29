@@ -24,44 +24,8 @@
 #include <libxml/parser.h>
 #include <nixxml-types.h>
 #include "manifestservice.h"
-#include "interdependencymappingarray.h"
-
-/**
- * @brief Enumeration of possible states for a service mapping.
- */
-typedef enum
-{
-    SERVICE_MAPPING_DEACTIVATED,
-    SERVICE_MAPPING_IN_PROGRESS,
-    SERVICE_MAPPING_ACTIVATED,
-    SERVICE_MAPPING_ERROR
-}
-ServiceMappingStatus;
-
-/**
- * @brief Contains all properties to map a specific service on a specific machine (by executing a specified activity).
- */
-typedef struct
-{
-    /** Hash code that uniquely defines a service */
-    xmlChar *service;
-    /** Name of the container to which the service is deployed */
-    xmlChar *container;
-    /** Name of the target machine to which the service is deployed */
-    xmlChar *target;
-    /** Indicates the status of the service mapping */
-    ServiceMappingStatus status;
-}
-ServiceMapping;
-
-/**
- * Compares two services mappings and determines their sort order.
- *
- * @param l Pointer to a service mapping instance
- * @param r Pointer to a service mapping instance
- * @return 0 if they are equal, < 0 if l comes before r, > 0 if l comes after r
- */
-gint compare_service_mappings(const ServiceMapping **l, const ServiceMapping **r);
+#include "servicemapping.h"
+#include "interdependencymapping.h"
 
 /**
  * Creates an array with service mappings from the corresponding sub section

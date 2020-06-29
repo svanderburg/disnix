@@ -45,7 +45,7 @@ static ServiceStatus attempt_to_map_service_mapping(ServiceMapping *mapping, GHa
 {
     if(request_available_target_core(target)) /* Check if machine has any cores available, if not wait and try again later */
     {
-        MappingParameters params = create_mapping_parameters(mapping->service, mapping->container, mapping->target, services_table, target);
+        MappingParameters params = create_mapping_parameters(mapping->service, mapping->container, mapping->target, mapping->container_provided_by_service, services_table, target);
         pid_t pid = map_service_mapping(mapping, params.service, target, params.type, params.arguments, params.arguments_size); /* Execute the activation operation asynchronously */
 
         /* Cleanup */

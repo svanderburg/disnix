@@ -158,7 +158,7 @@ static pid_t take_retrieve_and_clean_snapshot_on_target(void *data, gchar *targe
         {
             SnapshotMapping *mapping = g_ptr_array_index(snapshots_per_target_array, i);
 
-            MappingParameters params = create_mapping_parameters(mapping->service, mapping->container, mapping->target, retrieve_snapshots_data->services_table, target);
+            MappingParameters params = create_mapping_parameters(mapping->service, mapping->container, mapping->target, mapping->container_provided_by_service, retrieve_snapshots_data->services_table, target);
 
             if(!procreact_wait_for_boolean(take_snapshot_on_target(mapping, params.service, target, params.type, params.arguments, params.arguments_size), &status) || (status != PROCREACT_STATUS_OK)
               || !procreact_wait_for_boolean(retrieve_snapshot_mapping(mapping, target, retrieve_snapshots_data->flags), &status) || (status != PROCREACT_STATUS_OK)

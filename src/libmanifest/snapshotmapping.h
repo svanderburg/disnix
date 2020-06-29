@@ -57,6 +57,9 @@ typedef struct
     /** Hash code that uniquely defines a service */
     xmlChar *service;
 
+    /** Hash code of the service that provides the container, or NULL if it uses a container provided as part of the infrastructure */
+    xmlChar *container_provided_by_service;
+
     /** Indicates whether the snapshot has been transferred or not */
     gboolean transferred;
 }
@@ -108,7 +111,7 @@ NixXML_bool check_snapshot_mapping(const SnapshotMapping *mapping);
  * Prints a Nix expression representation of a snapshot mapping
  *
  * @param file File descriptor to write to
- * @param mapping Inter-dependency mapping instance
+ * @param mapping Snapshot mapping instance
  * @param indent_level Specifies the indent level, or -1 to disable indentation
  * @param userdata Arbitrary user data that gets propagated to all print functions
  */

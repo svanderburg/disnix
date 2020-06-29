@@ -29,7 +29,7 @@ rec {
    *   =>
    *   [ { target = "test1"; container = "process"; } ] # container corresponds to type
    */
-  normalizeServiceTargetList = {targets, type, targetAliases, defaultTargetProperty}:
+  normalizeDependencyTargetList = {targets, type, targetAliases, defaultTargetProperty}:
      map (target:
       let
         targetProperty = getTargetProperty {
@@ -55,7 +55,7 @@ rec {
    *   =>
    *   [ { target = "test1"; container = "process"; } ]
    */
-  normalizeServiceTargetAttrs = {targets, type, targetAliases, defaultTargetProperty}:
+  normalizeDependencyTargetAttrs = {targets, type, targetAliases, defaultTargetProperty}:
     map (target:
       let
         targetProperty = getTargetProperty {
@@ -76,11 +76,11 @@ rec {
    * Turns mappings to containers on target machines into reference
    * specifications consisting of the target name and container name.
    */
-  normalizeServiceTargets = {targets, type, targetAliases, defaultTargetProperty}:
-    if isList targets then normalizeServiceTargetList {
+  normalizeDependencyTargets = {targets, type, targetAliases, defaultTargetProperty}:
+    if isList targets then normalizeDependencyTargetList {
       inherit targets type targetAliases defaultTargetProperty;
     }
-    else if isAttrs targets then normalizeServiceTargetAttrs {
+    else if isAttrs targets then normalizeDependencyTargetAttrs {
       inherit targets type targetAliases defaultTargetProperty;
     }
     else throw "Unknown type for targets. It can only be a list or an attribute set";
@@ -110,7 +110,7 @@ rec {
         service = dependency.name;
       } // (if dependency ? targets then {
         # If the dependency specifies targets, then normalize and use them
-        targets = normalizeServiceTargets {
+        targets = normalizeDependencyTargets {
           inherit (dependency) targets;
           inherit targetAliases defaultTargetProperty;
           type = normalizedServices."${dependency.name}".type;
@@ -361,7 +361,7 @@ rec {
     if service ? targets
     then
       let
-        normalizedTargets = normalizeServiceTargets {
+        normalizedTargets = normalizeDependencyTargets {
           inherit (service) targets type;
           inherit targetAliases defaultTargetProperty;
         };
@@ -373,7 +373,7 @@ rec {
           containerService = getAttr containerServiceName services;
 
           firstContainerTarget = findFirstContainerTarget {
-            targetReferences = normalizeServiceTargets {
+            targetReferences = normalizeDependencyTargets {
               inherit (containerService) targets type;
               inherit targetAliases defaultTargetProperty;
             };
@@ -411,6 +411,24 @@ rec {
       };
 
   /*
+   * Turns mappings to containers on target machines into reference
+   * specifications consisting of the target name, container name, and
+   * (optionally) a containerProviderService, if applicable.
+   */
+  normalizeServiceTargets = {service, defaultTargetProperty, targetAliases, serviceContainersPerTarget}:
+    let
+      normalizedDependencyTargets = normalizeDependencyTargets {
+        inherit (service) targets type;
+        inherit targetAliases defaultTargetProperty;
+      };
+    in
+    map (normalizedDependencyTarget:
+      normalizedDependencyTarget // lib.optionalAttrs (hasAttr normalizedDependencyTarget.target serviceContainersPerTarget && hasAttr normalizedDependencyTarget.container serviceContainersPerTarget."${normalizedDependencyTarget.target}") {
+        containerProvidedByService = serviceContainersPerTarget."${normalizedDependencyTarget.target}"."${normalizedDependencyTarget.container}";
+      }
+    ) normalizedDependencyTargets;
+
+  /*
    * Normalizes the configuration of a service by:
    *
    * - Providing default properties for certain unspecified configuration options
@@ -421,6 +439,11 @@ rec {
    */
   normalizeService = {service, services, defaultDeployState, defaultTargetProperty, targetAliases, normalizedServices, normalizedInfrastructure, architectureFun, extraParams, nixpkgs, serviceContainersPerTarget}:
     let
+      normalizedServiceTargets = normalizeDependencyTargets {
+        inherit (service) targets type;
+        inherit targetAliases defaultTargetProperty;
+      };
+
       normalizedService =
         # Provide the default properties
         {
@@ -437,8 +460,7 @@ rec {
         // lib.optionalAttrs (service ? targets) {
           # Normalize targets to references
           targets = normalizeServiceTargets {
-            inherit (service) targets type;
-            inherit targetAliases defaultTargetProperty;
+            inherit service defaultTargetProperty targetAliases serviceContainersPerTarget;
           };
           # Generate package builds per unique system architecture
           pkgs = generatePkgs {
@@ -486,7 +508,7 @@ rec {
         let
           service = getAttr serviceName services;
 
-          normalizedTargets = normalizeServiceTargets {
+          normalizedTargets = normalizeDependencyTargets {
             inherit (service) targets type;
             inherit targetAliases defaultTargetProperty;
           };

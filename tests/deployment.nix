@@ -444,5 +444,16 @@ simpleTest {
       $coordinator->mustSucceed("${env} disnix-query -f xml ${manifestTests}/infrastructure-container.nix > query.xml");
       $coordinator->mustFail("xmllint --xpath \"/profileManifestTargets/target[\@name='testtarget1']/profileManifest/services/*\" query.xml");
       $coordinator->mustFail("xmllint --xpath \"/profileManifestTargets/target[\@name='testtarget2']/profileManifest/services/*\" query.xml");
+
+      # Deploy a stateful service that relies on a container provided by a service
+      $coordinator->mustSucceed("${env} disnix-env -s ${manifestTests}/services-containers-state.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-containers-state.nix");
+
+      # Undeploy the system. This should fail, because undeploying the container
+      # provider service prevents the stateful service's state from being
+      # captured.
+      $coordinator->mustFail("${env} disnix-env --undeploy -i ${manifestTests}/infrastructure.nix");
+
+      # Undeploying the system without state migration is allowed.
+      $coordinator->mustSucceed("${env} disnix-env --undeploy -i ${manifestTests}/infrastructure.nix --no-migration");
     '';
 }
