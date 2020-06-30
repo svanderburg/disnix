@@ -143,14 +143,14 @@ char **statemgmt_print_missing_snapshots_sync(gchar **component, int stderr)
         return NULL;
 }
 
-pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **snapshots, int stdout, int stderr)
+pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **resolved_snapshots, int stdout, int stderr)
 {
     pid_t pid = fork();
 
     if(pid == 0)
     {
-        unsigned int i, snapshots_size = g_strv_length(snapshots);
-        gchar **args = (gchar**)g_malloc((snapshots_size + 6) * sizeof(gchar*));
+        unsigned int i, resolved_snapshots_size = g_strv_length(resolved_snapshots);
+        gchar **args = (gchar**)g_malloc((resolved_snapshots_size + 6) * sizeof(gchar*));
 
         args[0] = "dysnomia-snapshots";
         args[1] = "--import";
@@ -159,8 +159,8 @@ pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **sna
         args[4] = "--component";
         args[5] = component;
 
-        for(i = 0; i < snapshots_size; i++)
-            args[i + 6] = snapshots[i];
+        for(i = 0; i < resolved_snapshots_size; i++)
+            args[i + 6] = resolved_snapshots[i];
 
         args[i + 6] = NULL;
 
@@ -173,10 +173,10 @@ pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **sna
     return pid;
 }
 
-ProcReact_bool statemgmt_import_snapshots_sync(gchar *container, gchar *component, gchar **snapshots, int stdout, int stderr)
+ProcReact_bool statemgmt_import_snapshots_sync(gchar *container, gchar *component, gchar **resolved_snapshots, int stdout, int stderr)
 {
     ProcReact_Status status;
-    pid_t pid = statemgmt_import_snapshots(container, component, snapshots, stdout, stderr);
+    pid_t pid = statemgmt_import_snapshots(container, component, resolved_snapshots, stdout, stderr);
     int exit_status = procreact_wait_for_boolean(pid, &status);
     return (status == PROCREACT_STATUS_OK && exit_status);
 }

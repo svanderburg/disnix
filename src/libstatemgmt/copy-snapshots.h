@@ -21,13 +21,14 @@
 #define __DISNIX_COPYSNAPSHOTS_H
 #include <glib.h>
 #include <sys/types.h>
+#include <procreact_util.h>
 
-int copy_snapshots_to_sync(gchar *interface, gchar *target, gchar *container, gchar *component, int all);
+ProcReact_bool copy_snapshots_to_sync(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all);
 
-pid_t copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar *component, int all);
+pid_t copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all);
 
-int copy_snapshots_from_sync(gchar *interface, gchar *target, gchar *container, gchar *component, int all);
+ProcReact_bool copy_snapshots_from_sync(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all);
 
-pid_t copy_snapshots_from(gchar *interface, gchar *target, gchar *container, gchar *component, int all);
+pid_t copy_snapshots_from(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all);
 
 #endif

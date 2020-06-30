@@ -408,14 +408,14 @@ char **exec_resolve_snapshots_sync(gchar *interface, gchar *target, gchar **snap
         return NULL;
 }
 
-pid_t exec_import_local_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length)
+pid_t exec_import_local_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length)
 {
     pid_t pid = fork();
 
     if(pid == 0)
     {
         unsigned int i;
-        char **args = (char**)malloc((10 + snapshots_length) * sizeof(char*));
+        char **args = (char**)malloc((10 + resolved_snapshots_length) * sizeof(char*));
         args[0] = interface;
         args[1] = "--target";
         args[2] = target;
@@ -426,8 +426,8 @@ pid_t exec_import_local_snapshots(gchar *interface, gchar *target, gchar *contai
         args[7] = "--component";
         args[8] = component;
 
-        for(i = 0; i < snapshots_length; i++)
-            args[i + 9] = snapshots[i];
+        for(i = 0; i < resolved_snapshots_length; i++)
+            args[i + 9] = resolved_snapshots[i];
 
         args[i + 9] = NULL;
 
@@ -438,22 +438,22 @@ pid_t exec_import_local_snapshots(gchar *interface, gchar *target, gchar *contai
     return pid;
 }
 
-ProcReact_bool exec_import_local_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length)
+ProcReact_bool exec_import_local_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length)
 {
     ProcReact_Status status;
-    pid_t pid = exec_import_local_snapshots(interface, target, container, component, snapshots, snapshots_length);
+    pid_t pid = exec_import_local_snapshots(interface, target, container, component, resolved_snapshots, resolved_snapshots_length);
     int exit_status = procreact_wait_for_boolean(pid, &status);
     return(status == PROCREACT_STATUS_OK && exit_status);
 }
 
-pid_t exec_import_remote_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length)
+pid_t exec_import_remote_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length)
 {
     pid_t pid = fork();
 
     if(pid == 0)
     {
         unsigned int i;
-        char **args = (char**)malloc((10 + snapshots_length) * sizeof(char*));
+        char **args = (char**)malloc((10 + resolved_snapshots_length) * sizeof(char*));
         args[0] = interface;
         args[1] = "--target";
         args[2] = target;
@@ -464,8 +464,8 @@ pid_t exec_import_remote_snapshots(gchar *interface, gchar *target, gchar *conta
         args[7] = "--component";
         args[8] = component;
 
-        for(i = 0; i < snapshots_length; i++)
-            args[i + 9] = snapshots[i];
+        for(i = 0; i < resolved_snapshots_length; i++)
+            args[i + 9] = resolved_snapshots[i];
 
         args[i + 9] = NULL;
 
@@ -476,29 +476,29 @@ pid_t exec_import_remote_snapshots(gchar *interface, gchar *target, gchar *conta
     return pid;
 }
 
-ProcReact_bool exec_import_remote_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length)
+ProcReact_bool exec_import_remote_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length)
 {
     ProcReact_Status status;
-    pid_t pid = exec_import_remote_snapshots(interface, target, container, component, snapshots, snapshots_length);
+    pid_t pid = exec_import_remote_snapshots(interface, target, container, component, resolved_snapshots, resolved_snapshots_length);
     int exit_status = procreact_wait_for_boolean(pid, &status);
     return(status == PROCREACT_STATUS_OK && exit_status);
 }
 
-ProcReact_Future exec_export_remote_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length)
+ProcReact_Future exec_export_remote_snapshots(gchar *interface, gchar *target, gchar **resolved_snapshots, unsigned int resolved_snapshots_length)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
     if(future.pid == 0)
     {
         unsigned int i;
-        char **args = (char**)malloc((5 + snapshots_length) * sizeof(char*));
+        char **args = (char**)malloc((5 + resolved_snapshots_length) * sizeof(char*));
         args[0] = interface;
         args[1] = "--target";
         args[2] = target;
         args[3] = "--export-snapshots";
 
-        for(i = 0; i < snapshots_length; i++)
-            args[i + 4] = snapshots[i];
+        for(i = 0; i < resolved_snapshots_length; i++)
+            args[i + 4] = resolved_snapshots[i];
 
         args[i + 4] = NULL;
 
@@ -510,10 +510,10 @@ ProcReact_Future exec_export_remote_snapshots(gchar *interface, gchar *target, g
     return future;
 }
 
-char **exec_export_remote_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length)
+char **exec_export_remote_snapshots_sync(gchar *interface, gchar *target, gchar **resolved_snapshots, unsigned int resolved_snapshots_length)
 {
     ProcReact_Status status;
-    ProcReact_Future future = exec_export_remote_snapshots(interface, target, snapshots, snapshots_length);
+    ProcReact_Future future = exec_export_remote_snapshots(interface, target, resolved_snapshots, resolved_snapshots_length);
     char **result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)

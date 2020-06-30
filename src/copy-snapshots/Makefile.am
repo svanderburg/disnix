@@ -10,6 +10,6 @@ man1_MANS = disnix-copy-snapshots.1
 
 disnix_copy_snapshots_SOURCES = main.c
 disnix_copy_snapshots_LDADD = ../libmain/libmain.la ../libstatemgmt/libstatemgmt.la
-disnix_copy_snapshots_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) $(LIBXSLT_CFLAGS) -I../libmain -I../libstatemgmt
+disnix_copy_snapshots_CFLAGS = $(GLIB2_CFLAGS) $(LIBXML2_CFLAGS) $(LIBXSLT_CFLAGS) -I../libmain -I../libprocreact -I../libstatemgmt
 
 EXTRA_DIST = $(man1_MANS) $(noinst_DATA)

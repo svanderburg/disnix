@@ -24,9 +24,9 @@
 #include "state-management.h"
 #include "remote-state-management.h"
 
-int copy_snapshots_to_sync(gchar *interface, gchar *target, gchar *container, gchar *component, int all)
+ProcReact_bool copy_snapshots_to_sync(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all)
 {
-    int exit_status = TRUE;
+    ProcReact_bool exit_status = TRUE;
     char **snapshots;
 
     if(all)
@@ -84,7 +84,7 @@ int copy_snapshots_to_sync(gchar *interface, gchar *target, gchar *container, gc
     return exit_status;
 }
 
-pid_t copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar *component, int all)
+pid_t copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all)
 {
     pid_t pid = fork();
 
@@ -94,9 +94,9 @@ pid_t copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar
     return pid;
 }
 
-int copy_snapshots_from_sync(gchar *interface, gchar *target, gchar *container, gchar *component, int all)
+ProcReact_bool copy_snapshots_from_sync(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all)
 {
-    int exit_status = TRUE;
+    ProcReact_bool exit_status = TRUE;
     char **snapshots;
 
     if(all)

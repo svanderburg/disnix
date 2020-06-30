@@ -171,17 +171,17 @@ ProcReact_Future exec_resolve_snapshots(gchar *interface, gchar *target, gchar *
 
 char **exec_resolve_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
 
-pid_t exec_import_local_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length);
+pid_t exec_import_local_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
 
-ProcReact_bool exec_import_local_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length);
+ProcReact_bool exec_import_local_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
 
-pid_t exec_import_remote_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length);
+pid_t exec_import_remote_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
 
-ProcReact_bool exec_import_remote_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **snapshots, unsigned int snapshots_length);
+ProcReact_bool exec_import_remote_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
 
-ProcReact_Future exec_export_remote_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
+ProcReact_Future exec_export_remote_snapshots(gchar *interface, gchar *target, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
 
-char **exec_export_remote_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
+char **exec_export_remote_snapshots_sync(gchar *interface, gchar *target, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
 
 /**
  * Invokes the true command for testing purposes.
