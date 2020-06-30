@@ -268,9 +268,9 @@ test2 = {
 			</listitem>
 			<listitem>
 				<para>
-					The <varname>targets</varname> attribute gets translated to a reference specification, so that we can refer
+					The <varname>targets</varname> attribute gets translated to a reference specification, so that we can easily refer
 					to the normalized variants of the services and targets through a service's inter-dependency parameters.
-					For example, the following service with an abstract targets specification:
+					For example, the following service with an abstract <varname>targets</varname> specification:
 <programlisting>
 staff = rec {
   name = "staff";
@@ -300,6 +300,24 @@ staff = rec {
 				<para>
 					If no container mapping is provided, Disnix will do an auto-mapping to a container service
 					that corresponds to the service's <varname>type</varname> property.
+				</para>
+				<para>
+					Container services can be provided as part of the infrastructure model, but also by services
+					as described in <xref linkend="ex-services-multiple-container-providing" />.
+					When a container is provided by a service, the reference specification also includes an attribute
+					named <varname>cotainerProvidedByService</varname> that refers to the name of the service that
+					provides the container, for example:
+<programlisting>
+staff = rec {
+  name = "staff";
+  targets = [
+    { target = "test1"; container = "mysql-database"; containerProvidedByService = "testmysqldb"; }
+    { target = "test2"; container = "mysql-database"; containerProvidedByService = "testmysqldb"; }
+  ];
+  type = "mysql-database";
+}
+</programlisting>
+
 				</para>
 			</listitem>
 			<listitem>
@@ -340,11 +358,11 @@ StaffService = {
 				</para>
 				<para>
 					As shown in the example above, an inter-dependency specification does not only refer to the service, but also
-					to targets where the inter-dependency has been deployed to.
+					to the targets where the inter-dependency has been deployed to.
 				</para>
 				<para>
 					If no target location was specified, then Disnix will assume that the service has
-					an inter-dependency on all possible locations where that dependency may be
+					an inter-dependency on all possible locations where that dependency may have been
 					deployed. If an inter-dependency is redundantly deployed, then that service also
 					has an inter-dependency on all redundant replicas.
 				</para>
@@ -354,6 +372,42 @@ StaffService = {
 					optimize a service's performance by forcing it to bind to an inter-dependency that
 					is deployed to the same target machine, so that it will not be affected by slow network
 					connectivity.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					When services are deployed to containers provided by services, then these services will
+					automatically become inter-dependencies of the container provider service. For example, if the <varname>StaffService</varname>
+					and underlying Apache Tomcat providing service (e.g. <varname>simpleAppservingTomcat</varname>) are deployed to the same machine,
+					then it automatically adds <varname>simpleAppservingTomcat</varname> as a non-accessible inter-dependency to
+					the <varname>activatesAfter</varname> parameter:
+<programlisting>
+StaffService = {
+  name = "StaffService";
+
+  targets = [
+    { container = "tomcat-webapplication"; target = "test1"; containerProvidedByService = "simpleAppservingTomcat"; }
+  ];
+
+  dependsOn = {
+    staff = {
+      service = "staff";
+      targets = [ { target = "test1"; container = "mysql-database" } ];
+    };
+  };
+
+  activatesAfter = {
+    simpleAppservingTomcat = {
+      service = "simpleAppservingTomcat";
+      targets = [
+        { target = "test1"; container = "process"; }
+      ];
+    };
+  };
+  type = "tomcat-webapplication";
+  ...
+};
+</programlisting>
 				</para>
 			</listitem>
 			<listitem>
@@ -379,6 +433,62 @@ StaffService = {
 };
 </programlisting>
 
+				</para>
+			</listitem>
+		</itemizedlist>
+
+		<para>
+			To evaluate the <varname>pkgs</varname> attributes, we must evaluate the service build functions, that in addition to intra-dependencies, also require inter-dependency
+			parameters. Inter-dependency parameters are derived from the normalized forms of the <varname>dependsOn</varname>
+			and <varname>connectsTo</varname> properties. For example, the inter-dependency parameter that refers to the <varname>staff</varname> database could
+			translate to:
+<programlisting>
+rec {
+  name = "staff";
+  type = "mysql-database";
+  ...
+  pkgs = {
+    x86_64-linux = ...
+    x86_64-darwin = ...
+  };
+  targets = [
+    {
+      properties = {
+        hostname = "test1";
+      };
+      container = {
+        mysqlUsername = "admin";
+        mysqlPassword = "secret";
+      };
+      system = "x86_64-linux";
+      ...
+    }
+  ]
+  target = builtins.head targets;
+  connectsTo = { ... };
+}
+</programlisting>
+			Basically the above attribute set exposes all normalized properties of the <varname>staff</varname> service (including the package builds
+			in <varname>pkgs</varname>), with the following properties augmented:
+		</para>
+
+		<itemizedlist>
+			<listitem>
+				<para>
+					The <varname>targets</varname> property gets "dereferenced" into a list of target attribute sets, in which you can access all the target machines' normalized general properties,
+					and the properties of the container where the service has been deployed to.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					The <varname>target</varname> property refers to the first target in the targets list, since it is very common to have services only deployed to a single target.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					The <varname>connectsTo</varname> property exposes the properties of most of the transitive inter-dependencies
+					(<varname>dependsOn</varname> and <varname>connectsTo</varname>, but not the <varname>activatesAfter</varname> property) in the
+					same format.
 				</para>
 			</listitem>
 		</itemizedlist>
@@ -537,6 +647,9 @@ StaffService = {
 					The <varname>serviceMappings</varname> attribute maps services in the <varname>services</varname>
 					attribute set, to target machines in the network stored in the <varname>infrastructure</varname>
 					attribute set and containers hosted on the target machines.
+					If a container is provided by a service, a mapping will also provide a <varname>containerProvidedByService</varname>
+					property referring to the hash code of the container provider service in the <varname>services</varname>
+					attribute set.
 				</para>
 				<para>
 					From these mappings, Disnix can derive the steps to activate and deactivate the
