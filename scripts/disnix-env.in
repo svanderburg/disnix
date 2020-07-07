@@ -122,7 +122,7 @@ Options:
       --build-on-targets          Build the services on the target machines in
                                   the network instead of managing the build by
                                   the coordinator
-      --extra-params              A string with an attribute set in the Nix
+      --extra-params=PARAMS       A string with an attribute set in the Nix
                                   expression language propagating extra
                                   parameters to the input models
       --coordinator-profile-path=PATH

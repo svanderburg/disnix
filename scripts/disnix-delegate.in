@@ -62,7 +62,7 @@ Options:
                                   services to targets
   -B, --build=build_nix           Build Nix expression that maps store
                                   derivations to target machines in the network
-      --extra-params              A string with an attribute set in the Nix
+      --extra-params=PARAMS       A string with an attribute set in the Nix
                                   expression language propagating extra
                                   parameters to input models
       --target-property=PROP      The target property of an infrastructure

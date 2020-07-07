@@ -76,7 +76,7 @@ Options:
                               interface. Defaults to: disnix-ssh-client
       --deploy-state          Indicates whether to globally deploy state
                               (disabled by default)
-      --extra-params          A string with an attribute set in the Nix
+      --extra-params=PARAMS   A string with an attribute set in the Nix
                               expression language propagating extra parameters
                               to the input models
       --no-out-link           Do not create a 'result' symlink
