@@ -18,8 +18,12 @@
  */
 
 #include "copy-snapshots.h"
+#define _XOPEN_SOURCE 500
+#define __USE_XOPEN_EXTENDED 1
+#include <ftw.h>
 #include <libgen.h>
 #include <unistd.h>
+#include <stdio.h>
 #include <procreact_types.h>
 #include "state-management.h"
 #include "remote-state-management.h"
@@ -94,6 +98,21 @@ pid_t copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar
     return pid;
 }
 
+static int unlink_cb(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
+{
+    int rv = remove(fpath);
+
+    if(rv == -1)
+        fprintf(stderr, "Cannot remove: %s\n", fpath);
+
+    return rv;
+}
+
+static ProcReact_bool remove_directory_and_contents(char *path)
+{
+    return (nftw(path, unlink_cb, 64, FTW_DEPTH | FTW_PHYS) == 0);
+}
+
 ProcReact_bool copy_snapshots_from_sync(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all)
 {
     ProcReact_bool exit_status = TRUE;
@@ -161,7 +180,11 @@ ProcReact_bool copy_snapshots_from_sync(gchar *interface, gchar *target, gchar *
 
                                     exit_status = statemgmt_import_snapshots_sync(container, component, tmp_snapshots, 1, 2);
 
-                                    rmdir(tmpdir);
+                                    if(exit_status == 0)
+                                        rmdir(tmpdir);
+                                    else
+                                        remove_directory_and_contents(tmpdir);
+
                                     g_free(tmp_snapshot);
                                 }
 
