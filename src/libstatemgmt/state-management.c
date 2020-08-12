@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-pid_t statemgmt_run_dysnomia_activity(gchar *type, gchar *activity, gchar *component, gchar *container, char **arguments, int stdout, int stderr)
+pid_t statemgmt_run_dysnomia_activity(gchar *type, gchar *activity, gchar *component, gchar *container, char **arguments, int stdout_fd, int stderr_fd)
 {
     pid_t pid = fork();
 
@@ -38,8 +38,8 @@ pid_t statemgmt_run_dysnomia_activity(gchar *type, gchar *activity, gchar *compo
             i++;
         }
 
-        dup2(stdout, 1);
-        dup2(stderr, 2);
+        dup2(stdout_fd, 1);
+        dup2(stderr_fd, 2);
         execvp(args[0], args);
         _exit(1);
     }
@@ -47,7 +47,7 @@ pid_t statemgmt_run_dysnomia_activity(gchar *type, gchar *activity, gchar *compo
     return pid;
 }
 
-ProcReact_Future statemgmt_query_all_snapshots(gchar *container, gchar *component, int stderr)
+ProcReact_Future statemgmt_query_all_snapshots(gchar *container, gchar *component, int stderr_fd)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
@@ -56,7 +56,7 @@ ProcReact_Future statemgmt_query_all_snapshots(gchar *container, gchar *componen
         char *const args[] = {"dysnomia-snapshots", "--query-all", "--container", container, "--component", component, NULL};
 
         dup2(future.fd, 1);
-        dup2(stderr, 2);
+        dup2(stderr_fd, 2);
         execvp(args[0], args);
         _exit(1);
     }
@@ -64,10 +64,10 @@ ProcReact_Future statemgmt_query_all_snapshots(gchar *container, gchar *componen
     return future;
 }
 
-char **statemgmt_query_all_snapshots_sync(gchar *container, gchar *component, int stderr)
+char **statemgmt_query_all_snapshots_sync(gchar *container, gchar *component, int stderr_fd)
 {
     ProcReact_Status status;
-    ProcReact_Future future = statemgmt_query_all_snapshots(container, component, stderr);
+    ProcReact_Future future = statemgmt_query_all_snapshots(container, component, stderr_fd);
     char **result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)
@@ -76,7 +76,7 @@ char **statemgmt_query_all_snapshots_sync(gchar *container, gchar *component, in
         return NULL;
 }
 
-ProcReact_Future statemgmt_query_latest_snapshot(gchar *container, gchar *component, int stderr)
+ProcReact_Future statemgmt_query_latest_snapshot(gchar *container, gchar *component, int stderr_fd)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
@@ -85,7 +85,7 @@ ProcReact_Future statemgmt_query_latest_snapshot(gchar *container, gchar *compon
         char *const args[] = {"dysnomia-snapshots", "--query-latest", "--container", container, "--component", component, NULL};
 
         dup2(future.fd, 1);
-        dup2(stderr, 2);
+        dup2(stderr_fd, 2);
         execvp(args[0], args);
         _exit(1);
     }
@@ -93,10 +93,10 @@ ProcReact_Future statemgmt_query_latest_snapshot(gchar *container, gchar *compon
     return future;
 }
 
-char **statemgmt_query_latest_snapshot_sync(gchar *container, gchar *component, int stderr)
+char **statemgmt_query_latest_snapshot_sync(gchar *container, gchar *component, int stderr_fd)
 {
     ProcReact_Status status;
-    ProcReact_Future future = statemgmt_query_latest_snapshot(container, component, stderr);
+    ProcReact_Future future = statemgmt_query_latest_snapshot(container, component, stderr_fd);
     char **result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)
@@ -105,7 +105,7 @@ char **statemgmt_query_latest_snapshot_sync(gchar *container, gchar *component, 
         return NULL;
 }
 
-ProcReact_Future statemgmt_print_missing_snapshots(gchar **component, int stderr)
+ProcReact_Future statemgmt_print_missing_snapshots(gchar **component, int stderr_fd)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
@@ -123,7 +123,7 @@ ProcReact_Future statemgmt_print_missing_snapshots(gchar **component, int stderr
         args[i + 2] = NULL;
 
         dup2(future.fd, 1);
-        dup2(stderr, 2);
+        dup2(stderr_fd, 2);
         execvp(args[0], args);
        _exit(1);
     }
@@ -131,10 +131,10 @@ ProcReact_Future statemgmt_print_missing_snapshots(gchar **component, int stderr
     return future;
 }
 
-char **statemgmt_print_missing_snapshots_sync(gchar **component, int stderr)
+char **statemgmt_print_missing_snapshots_sync(gchar **component, int stderr_fd)
 {
     ProcReact_Status status;
-    ProcReact_Future future = statemgmt_print_missing_snapshots(component, stderr);
+    ProcReact_Future future = statemgmt_print_missing_snapshots(component, stderr_fd);
     char **result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)
@@ -143,7 +143,7 @@ char **statemgmt_print_missing_snapshots_sync(gchar **component, int stderr)
         return NULL;
 }
 
-pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **resolved_snapshots, int stdout, int stderr)
+pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **resolved_snapshots, int stdout_fd, int stderr_fd)
 {
     pid_t pid = fork();
 
@@ -164,8 +164,8 @@ pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **res
 
         args[i + 6] = NULL;
 
-        dup2(stdout, 1);
-        dup2(stderr, 2);
+        dup2(stdout_fd, 1);
+        dup2(stderr_fd, 2);
         execvp(args[0], args);
         _exit(1);
     }
@@ -173,15 +173,15 @@ pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **res
     return pid;
 }
 
-ProcReact_bool statemgmt_import_snapshots_sync(gchar *container, gchar *component, gchar **resolved_snapshots, int stdout, int stderr)
+ProcReact_bool statemgmt_import_snapshots_sync(gchar *container, gchar *component, gchar **resolved_snapshots, int stdout_fd, int stderr_fd)
 {
     ProcReact_Status status;
-    pid_t pid = statemgmt_import_snapshots(container, component, resolved_snapshots, stdout, stderr);
+    pid_t pid = statemgmt_import_snapshots(container, component, resolved_snapshots, stdout_fd, stderr_fd);
     int exit_status = procreact_wait_for_boolean(pid, &status);
     return (status == PROCREACT_STATUS_OK && exit_status);
 }
 
-ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr)
+ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr_fd)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
@@ -199,7 +199,7 @@ ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr)
         args[i + 2] = NULL;
 
         dup2(future.fd, 1);
-        dup2(stderr, 2);
+        dup2(stderr_fd, 2);
         execvp(args[0], args);
         _exit(1);
     }
@@ -207,10 +207,10 @@ ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr)
     return future;
 }
 
-char **statemgmt_resolve_snapshots_sync(gchar **snapshots, int stderr)
+char **statemgmt_resolve_snapshots_sync(gchar **snapshots, int stderr_fd)
 {
     ProcReact_Status status;
-    ProcReact_Future future = statemgmt_resolve_snapshots(snapshots, stderr);
+    ProcReact_Future future = statemgmt_resolve_snapshots(snapshots, stderr_fd);
     char **result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)
@@ -219,7 +219,7 @@ char **statemgmt_resolve_snapshots_sync(gchar **snapshots, int stderr)
         return NULL;
 }
 
-pid_t statemgmt_clean_snapshots(gint keep, gchar *container, gchar *component, int stdout, int stderr)
+pid_t statemgmt_clean_snapshots(gint keep, gchar *container, gchar *component, int stdout_fd, int stderr_fd)
 {
     pid_t pid = fork();
 
@@ -256,8 +256,8 @@ pid_t statemgmt_clean_snapshots(gint keep, gchar *container, gchar *component, i
 
         args[count] = NULL;
 
-        dup2(stdout, 1);
-        dup2(stderr, 2);
+        dup2(stdout_fd, 1);
+        dup2(stderr_fd, 2);
         execvp(args[0], args);
         _exit(1);
     }
@@ -265,7 +265,7 @@ pid_t statemgmt_clean_snapshots(gint keep, gchar *container, gchar *component, i
     return pid;
 }
 
-gchar *statemgmt_capture_config(gchar *tmpdir, int stderr, pid_t *pid, int *temp_fd)
+gchar *statemgmt_capture_config(gchar *tmpdir, int stderr_fd, pid_t *pid, int *temp_fd)
 {
     gchar *tempfilename = g_strconcat(tmpdir, "/disnix.XXXXXX", NULL);
 
@@ -274,7 +274,7 @@ gchar *statemgmt_capture_config(gchar *tmpdir, int stderr, pid_t *pid, int *temp
 
     if(*temp_fd == -1)
     {
-        dprintf(stderr, "Error opening tempfile!\n");
+        dprintf(stderr_fd, "Error opening tempfile!\n");
         g_free(tempfilename);
         return NULL;
     }
@@ -288,7 +288,7 @@ gchar *statemgmt_capture_config(gchar *tmpdir, int stderr, pid_t *pid, int *temp
             char *const args[] = { "dysnomia-containers", "--generate-expr", NULL };
 
             dup2(*temp_fd, 1);
-            dup2(stderr, 2);
+            dup2(stderr_fd, 2);
             execvp(args[0], args);
             _exit(1);
         }
@@ -297,15 +297,15 @@ gchar *statemgmt_capture_config(gchar *tmpdir, int stderr, pid_t *pid, int *temp
     }
 }
 
-static pid_t lock_or_unlock_component(gchar *operation, gchar *type, gchar *container, gchar *component, int stdout, int stderr)
+static pid_t lock_or_unlock_component(gchar *operation, gchar *type, gchar *container, gchar *component, int stdout_fd, int stderr_fd)
 {
     pid_t pid = fork();
 
     if(pid == 0)
     {
         char *const args[] = {"dysnomia", "--type", type, "--operation", operation, "--container", container, "--component", component, "--environment", NULL};
-        dup2(stdout, 1);
-        dup2(stderr, 2);
+        dup2(stdout_fd, 1);
+        dup2(stderr_fd, 2);
         execvp(args[0], args);
         _exit(1);
     }
@@ -313,14 +313,14 @@ static pid_t lock_or_unlock_component(gchar *operation, gchar *type, gchar *cont
     return pid;
 }
 
-pid_t statemgmt_lock_component(gchar *type, gchar *container, gchar *component, int stdout, int stderr)
+pid_t statemgmt_lock_component(gchar *type, gchar *container, gchar *component, int stdout_fd, int stderr_fd)
 {
-    return lock_or_unlock_component("lock", type, container, component, stdout, stderr);
+    return lock_or_unlock_component("lock", type, container, component, stdout_fd, stderr_fd);
 }
 
-pid_t statemgmt_unlock_component(gchar *type, gchar *container, gchar *component, int stdout, int stderr)
+pid_t statemgmt_unlock_component(gchar *type, gchar *container, gchar *component, int stdout_fd, int stderr_fd)
 {
-    return lock_or_unlock_component("unlock", type, container, component, stdout, stderr);
+    return lock_or_unlock_component("unlock", type, container, component, stdout_fd, stderr_fd);
 }
 
 pid_t statemgmt_spawn_dysnomia_shell(gchar *type, gchar *component, gchar *container, char **arguments, gchar *command)

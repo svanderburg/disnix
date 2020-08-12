@@ -71,7 +71,7 @@ rec {
             else [];
         }
       ) services
-    else throw "The distribution model contains a mapping the service that is not in the services model!";
+    else throw "The distribution model contains a mapping of a service that is not in the services model!";
 
   /*
    * Takes the basic Disnix input models and wraps then into a single deployment

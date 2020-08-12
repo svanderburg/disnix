@@ -24,7 +24,7 @@
 
 ProcReact_bool copy_closure_to_sync(gchar *interface, gchar *target, gchar *tmpdir, gchar **derivation)
 {
-    int exit_status = TRUE;
+    ProcReact_bool exit_status = TRUE;
     char **requisites = pkgmgmt_query_requisites_sync(derivation, 2);
 
     if(requisites == NULL)
@@ -75,7 +75,7 @@ pid_t copy_closure_to(gchar *interface, gchar *target, gchar *tmpdir, gchar **de
 
 ProcReact_bool copy_closure_from_sync(gchar *interface, gchar *target, gchar **derivation)
 {
-    int exit_status = TRUE;
+    ProcReact_bool exit_status = TRUE;
     char **requisites = exec_query_requisites_sync(interface, target, derivation, g_strv_length(derivation));
 
     if(requisites == NULL)

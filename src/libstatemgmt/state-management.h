@@ -24,35 +24,35 @@
 #include <unistd.h>
 #include <procreact_future.h>
 
-pid_t statemgmt_run_dysnomia_activity(gchar *type, gchar *activity, gchar *component, gchar *container, char **arguments, int stdout, int stderr);
+pid_t statemgmt_run_dysnomia_activity(gchar *type, gchar *activity, gchar *component, gchar *container, char **arguments, int stdout_fd, int stderr_fd);
 
-ProcReact_Future statemgmt_query_all_snapshots(gchar *container, gchar *component, int stderr);
+ProcReact_Future statemgmt_query_all_snapshots(gchar *container, gchar *component, int stderr_fd);
 
-char **statemgmt_query_all_snapshots_sync(gchar *container, gchar *component, int stderr);
+char **statemgmt_query_all_snapshots_sync(gchar *container, gchar *component, int stderr_fd);
 
-ProcReact_Future statemgmt_query_latest_snapshot(gchar *container, gchar *component, int stderr);
+ProcReact_Future statemgmt_query_latest_snapshot(gchar *container, gchar *component, int stderr_fd);
 
-char **statemgmt_query_latest_snapshot_sync(gchar *container, gchar *component, int stderr);
+char **statemgmt_query_latest_snapshot_sync(gchar *container, gchar *component, int stderr_fd);
 
-ProcReact_Future statemgmt_print_missing_snapshots(gchar **component, int stderr);
+ProcReact_Future statemgmt_print_missing_snapshots(gchar **component, int stderr_fd);
 
-char **statemgmt_print_missing_snapshots_sync(gchar **component, int stderr);
+char **statemgmt_print_missing_snapshots_sync(gchar **component, int stderr_fd);
 
-pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **resolved_snapshots, int stdout, int stderr);
+pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **resolved_snapshots, int stdout_fd, int stderr_fd);
 
-ProcReact_bool statemgmt_import_snapshots_sync(gchar *container, gchar *component, gchar **resolved_snapshots, int stdout, int stderr);
+ProcReact_bool statemgmt_import_snapshots_sync(gchar *container, gchar *component, gchar **resolved_snapshots, int stdout_fd, int stderr_fd);
 
-ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr);
+ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr_fd);
 
-char **statemgmt_resolve_snapshots_sync(gchar **snapshots, int stderr);
+char **statemgmt_resolve_snapshots_sync(gchar **snapshots, int stderr_fd);
 
-pid_t statemgmt_clean_snapshots(gint keep, gchar *container, gchar *component, int stdout, int stderr);
+pid_t statemgmt_clean_snapshots(gint keep, gchar *container, gchar *component, int stdout_fd, int stderr_fd);
 
-gchar *statemgmt_capture_config(gchar *tmpdir, int stderr, pid_t *pid, int *temp_fd);
+gchar *statemgmt_capture_config(gchar *tmpdir, int stderr_fd, pid_t *pid, int *temp_fd);
 
-pid_t statemgmt_lock_component(gchar *type, gchar *container, gchar *component, int stdout, int stderr);
+pid_t statemgmt_lock_component(gchar *type, gchar *container, gchar *component, int stdout_fd, int stderr_fd);
 
-pid_t statemgmt_unlock_component(gchar *type, gchar *container, gchar *component, int stdout, int stderr);
+pid_t statemgmt_unlock_component(gchar *type, gchar *container, gchar *component, int stdout_fd, int stderr_fd);
 
 pid_t statemgmt_spawn_dysnomia_shell(gchar *type, gchar *component, gchar *container, char **arguments, gchar *command);
 

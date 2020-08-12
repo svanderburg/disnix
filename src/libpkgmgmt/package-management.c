@@ -35,7 +35,7 @@
 
 #define RESOLVED_PATH_MAX_SIZE 4096
 
-pid_t pkgmgmt_import_closure(const char *closure, int stdout, int stderr)
+pid_t pkgmgmt_import_closure(const char *closure, int stdout_fd, int stderr_fd)
 {
     int closure_fd = open(closure, O_RDONLY);
 
@@ -53,8 +53,8 @@ pid_t pkgmgmt_import_closure(const char *closure, int stdout, int stderr)
             char *const args[] = {NIX_STORE_CMD, "--import", NULL};
 
             dup2(closure_fd, 0);
-            dup2(stdout, 1);
-            dup2(stderr, 2);
+            dup2(stdout_fd, 1);
+            dup2(stderr_fd, 2);
             execvp(args[0], args);
             _exit(1);
         }
@@ -63,15 +63,15 @@ pid_t pkgmgmt_import_closure(const char *closure, int stdout, int stderr)
     }
 }
 
-ProcReact_bool pkgmgmt_import_closure_sync(const char *closure, int stdout, int stderr)
+ProcReact_bool pkgmgmt_import_closure_sync(const char *closure, int stdout_fd, int stderr_fd)
 {
     ProcReact_Status status;
-    pid_t pid = pkgmgmt_import_closure(closure, stdout, stderr);
+    pid_t pid = pkgmgmt_import_closure(closure, stdout_fd, stderr_fd);
     int exit_status = procreact_wait_for_boolean(pid, &status);
     return (status == PROCREACT_STATUS_OK && exit_status);
 }
 
-gchar *pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr, pid_t *pid, int *temp_fd)
+gchar *pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr_fd, pid_t *pid, int *temp_fd)
 {
     gchar *tempfilename = g_strconcat(tmpdir, "/disnix.XXXXXX", NULL);
     *temp_fd = mkstemp(tempfilename);
@@ -99,7 +99,7 @@ gchar *pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr, pid
             args[i + 2] = NULL;
 
             dup2(*temp_fd, 1);
-            dup2(stderr, 2);
+            dup2(stderr_fd, 2);
             execvp(args[0], args);
             _exit(1);
         }
@@ -108,11 +108,11 @@ gchar *pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr, pid
     }
 }
 
-gchar *pkgmgmt_export_closure_sync(gchar *tmpdir, gchar **derivation, int stderr)
+gchar *pkgmgmt_export_closure_sync(gchar *tmpdir, gchar **derivation, int stderr_fd)
 {
     pid_t pid;
     int temp_fd;
-    char *tempfile = pkgmgmt_export_closure(tmpdir, derivation, stderr, &pid, &temp_fd);
+    char *tempfile = pkgmgmt_export_closure(tmpdir, derivation, stderr_fd, &pid, &temp_fd);
     ProcReact_Status status;
     int exit_status = procreact_wait_for_boolean(pid, &status);
     close(temp_fd);
@@ -126,7 +126,7 @@ gchar *pkgmgmt_export_closure_sync(gchar *tmpdir, gchar **derivation, int stderr
     }
 }
 
-ProcReact_Future pkgmgmt_print_invalid_packages(gchar **derivation, int stderr)
+ProcReact_Future pkgmgmt_print_invalid_packages(gchar **derivation, int stderr_fd)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
@@ -145,7 +145,7 @@ ProcReact_Future pkgmgmt_print_invalid_packages(gchar **derivation, int stderr)
         args[i + 3] = NULL;
 
         dup2(future.fd, 1); /* Attach write-end to stdout */
-        dup2(stderr, 2); /* Attach logger to stderr */
+        dup2(stderr_fd, 2); /* Attach logger to stderr */
         execvp(args[0], args);
         _exit(1);
     }
@@ -153,10 +153,10 @@ ProcReact_Future pkgmgmt_print_invalid_packages(gchar **derivation, int stderr)
     return future;
 }
 
-char **pkgmgmt_print_invalid_packages_sync(gchar **derivation, int stderr)
+char **pkgmgmt_print_invalid_packages_sync(gchar **derivation, int stderr_fd)
 {
     ProcReact_Status status;
-    ProcReact_Future future = pkgmgmt_print_invalid_packages(derivation, stderr);
+    ProcReact_Future future = pkgmgmt_print_invalid_packages(derivation, stderr_fd);
     char **result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)
@@ -165,7 +165,7 @@ char **pkgmgmt_print_invalid_packages_sync(gchar **derivation, int stderr)
         return NULL;
 }
 
-ProcReact_Future pkgmgmt_realise(gchar **derivation, int stderr)
+ProcReact_Future pkgmgmt_realise(gchar **derivation, int stderr_fd)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
@@ -183,7 +183,7 @@ ProcReact_Future pkgmgmt_realise(gchar **derivation, int stderr)
         args[i + 2] = NULL;
 
         dup2(future.fd, 1); /* Attach write-end to stdout */
-        dup2(stderr, 2); /* Attach logger to stderr */
+        dup2(stderr_fd, 2); /* Attach logger to stderr */
         execvp(args[0], args);
         _exit(1);
     }
@@ -191,7 +191,7 @@ ProcReact_Future pkgmgmt_realise(gchar **derivation, int stderr)
     return future;
 }
 
-pid_t pkgmgmt_set_profile(gchar *profile, gchar *derivation, int stdout, int stderr)
+pid_t pkgmgmt_set_profile(gchar *profile, gchar *derivation, int stdout_fd, int stderr_fd)
 {
     gchar *profile_path;
     ssize_t resolved_path_size;
@@ -223,10 +223,10 @@ pid_t pkgmgmt_set_profile(gchar *profile, gchar *derivation, int stdout, int std
         if(resolved_path_size == -1 || (strlen(derivation) == resolved_path_size && strncmp(resolved_path, derivation, resolved_path_size) != 0)) /* Only configure the configurator profile if the given manifest is not identical to the previous manifest */
         {
             char *const args[] = {NIX_ENV_CMD, "-p", profile_path, "--set", derivation, NULL};
-            dup2(stdout, 1);
-            dup2(stderr, 2);
+            dup2(stdout_fd, 1);
+            dup2(stderr_fd, 2);
             execvp(args[0], args);
-            dprintf(stderr, "Error with executing nix-env\n");
+            dprintf(stderr_fd, "Error with executing nix-env\n");
             _exit(1);
         }
         else
@@ -237,7 +237,7 @@ pid_t pkgmgmt_set_profile(gchar *profile, gchar *derivation, int stdout, int std
     return pid;
 }
 
-ProcReact_Future pkgmgmt_query_requisites(gchar **derivation, int stderr)
+ProcReact_Future pkgmgmt_query_requisites(gchar **derivation, int stderr_fd)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
@@ -255,7 +255,7 @@ ProcReact_Future pkgmgmt_query_requisites(gchar **derivation, int stderr)
         args[i + 2] = NULL;
 
         dup2(future.fd, 1);
-        dup2(stderr, 2);
+        dup2(stderr_fd, 2);
         execvp(args[0], args);
         _exit(1);
     }
@@ -263,9 +263,9 @@ ProcReact_Future pkgmgmt_query_requisites(gchar **derivation, int stderr)
     return future;
 }
 
-char **pkgmgmt_query_requisites_sync(gchar **derivation, int stderr)
+char **pkgmgmt_query_requisites_sync(gchar **derivation, int stderr_fd)
 {
-    ProcReact_Future future = pkgmgmt_query_requisites(derivation, stderr);
+    ProcReact_Future future = pkgmgmt_query_requisites(derivation, stderr_fd);
     ProcReact_Status status;
     char **result = procreact_future_get(&future, &status);
 
@@ -275,14 +275,14 @@ char **pkgmgmt_query_requisites_sync(gchar **derivation, int stderr)
         return NULL;
 }
 
-pid_t pkgmgmt_collect_garbage(int delete_old, int stdout, int stderr)
+pid_t pkgmgmt_collect_garbage(int delete_old, int stdout_fd, int stderr_fd)
 {
     pid_t pid = fork();
 
     if(pid == 0)
     {
-        dup2(stdout, 1);
-        dup2(stderr, 2);
+        dup2(stdout_fd, 1);
+        dup2(stderr_fd, 2);
 
         if(delete_old)
         {
@@ -295,7 +295,7 @@ pid_t pkgmgmt_collect_garbage(int delete_old, int stdout, int stderr)
             execvp(args[0], args);
         }
 
-        dprintf(stderr, "Error with executing garbage collect process\n");
+        dprintf(stderr_fd, "Error with executing garbage collect process\n");
         _exit(1);
     }
 
