@@ -39,7 +39,7 @@ static pid_t send_snapshot_mapping(SnapshotMapping *mapping, Target *target, con
 {
     gchar *target_key = find_target_key(target);
     g_print("[target: %s]: Sending snapshots of component: %s deployed to container: %s\n", mapping->target, mapping->component, mapping->container);
-    return copy_snapshots_to((gchar*)target->client_interface, target_key, (gchar*)mapping->container, (gchar*)mapping->component, flags & FLAG_ALL);
+    return copy_snapshots_to((gchar*)target->client_interface, target_key, (gchar*)mapping->container, (gchar*)mapping->component, flags & FLAG_ALL, STDERR_FILENO);
 }
 
 pid_t send_snapshots_to_target(void *data, gchar *target_name, Target *target)

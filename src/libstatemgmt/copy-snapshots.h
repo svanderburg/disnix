@@ -23,12 +23,12 @@
 #include <sys/types.h>
 #include <procreact_util.h>
 
-ProcReact_bool copy_snapshots_to_sync(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all);
+ProcReact_bool copy_snapshots_to_sync(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all, int stderr_fd);
 
-pid_t copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all);
+pid_t copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all, int stderr_fd);
 
-ProcReact_bool copy_snapshots_from_sync(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all);
+ProcReact_bool copy_snapshots_from_sync(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all, int stdout_fd, int stderr_fd);
 
-pid_t copy_snapshots_from(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all);
+pid_t copy_snapshots_from(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all, int stdout_fd, int stderr_fd);
 
 #endif

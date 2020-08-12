@@ -31,7 +31,7 @@ static pid_t copy_derivation_mapping_to(void *data, DerivationMapping *mapping, 
     char *tmpdir = (char*)data;
     char *paths[] = { (char*)mapping->derivation, NULL };
     g_print("[target: %s]: Receiving intra-dependency closure of store derivation: %s\n", mapping->interface, mapping->derivation);
-    return copy_closure_to((char*)interface->client_interface, (char*)interface->target_address, tmpdir, paths);
+    return copy_closure_to((char*)interface->client_interface, (char*)interface->target_address, tmpdir, paths, STDERR_FILENO);
 }
 
 static void complete_copy_derivation_mapping_to(void *data, DerivationMapping *mapping, ProcReact_Status status, int result)
@@ -101,7 +101,7 @@ static pid_t copy_result_from(void *data, DerivationMapping *mapping, Interface 
 
     g_print("\n");
 
-    return copy_closure_from((char*)interface->client_interface, (char*)interface->target_address, mapping->result);
+    return copy_closure_from((char*)interface->client_interface, (char*)interface->target_address, mapping->result, STDOUT_FILENO, STDERR_FILENO);
 }
 
 static void complete_copy_result_from(void *data, DerivationMapping *mapping, ProcReact_Status status, int result)

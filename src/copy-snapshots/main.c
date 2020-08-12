@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <getopt.h>
 #include <defaultoptions.h>
 #include <copy-snapshots.h>
@@ -146,7 +147,7 @@ int main(int argc, char *argv[])
         return 1;
     }
     else if(to)
-        return !copy_snapshots_to_sync(interface, target, container, component, all);
+        return !copy_snapshots_to_sync(interface, target, container, component, all, STDERR_FILENO);
     else if(from)
-        return !copy_snapshots_from_sync(interface, target, container, component, all);
+        return !copy_snapshots_from_sync(interface, target, container, component, all, STDOUT_FILENO, STDERR_FILENO);
 }

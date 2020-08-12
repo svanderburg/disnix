@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <getopt.h>
 #include <defaultoptions.h>
 #include <copy-closure.h>
@@ -134,7 +135,7 @@ int main(int argc, char *argv[])
         return 1;
     }
     else if(to)
-        return !copy_closure_to_sync(interface, target, tmpdir, derivations);
+        return !copy_closure_to_sync(interface, target, tmpdir, derivations, STDERR_FILENO);
     else if(from)
-        return !copy_closure_from_sync(interface, target, derivations);
+        return !copy_closure_from_sync(interface, target, derivations, STDOUT_FILENO, STDERR_FILENO);
 }

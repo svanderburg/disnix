@@ -36,9 +36,9 @@ static ProcReact_bool order_snapshots_remotely(gchar *interface, gchar *target, 
     return exit_status;
 }
 
-static ProcReact_bool send_missing_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, char **missing_snapshots)
+static ProcReact_bool send_missing_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, char **missing_snapshots, int stderr_fd)
 {
-    char **resolved_snapshots = statemgmt_resolve_snapshots_sync(missing_snapshots, 2);
+    char **resolved_snapshots = statemgmt_resolve_snapshots_sync(missing_snapshots, stderr_fd);
 
     if(resolved_snapshots == NULL)
         return FALSE;
@@ -57,17 +57,17 @@ static ProcReact_bool send_missing_snapshots(gchar *interface, gchar *target, gc
     }
 }
 
-static char **query_local_snapshots(gchar *container, gchar *component, ProcReact_bool all)
+static char **query_local_snapshots(gchar *container, gchar *component, ProcReact_bool all, int stderr_fd)
 {
     if(all)
-        return statemgmt_query_all_snapshots_sync(container, component, 2);
+        return statemgmt_query_all_snapshots_sync(container, component, stderr_fd);
     else
-        return statemgmt_query_latest_snapshot_sync(container, component, 2);
+        return statemgmt_query_latest_snapshot_sync(container, component, stderr_fd);
 }
 
-ProcReact_bool copy_snapshots_to_sync(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all)
+ProcReact_bool copy_snapshots_to_sync(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all, int stderr_fd)
 {
-    char **snapshots = query_local_snapshots(container, component, all);
+    char **snapshots = query_local_snapshots(container, component, all, stderr_fd);
 
     if(snapshots == NULL)
         return FALSE;
@@ -91,7 +91,7 @@ ProcReact_bool copy_snapshots_to_sync(gchar *interface, gchar *target, gchar *co
                 if(g_strv_length(missing_snapshots) == 0) // If no snapshots need to be transferred, we still have to order them
                      exit_status = order_snapshots_remotely(interface, target, container, component, snapshot_array, snapshot_array_length);
                 else
-                     exit_status = send_missing_snapshots(interface, target, container, component, missing_snapshots);
+                     exit_status = send_missing_snapshots(interface, target, container, component, missing_snapshots, stderr_fd);
 
                 procreact_free_string_array(missing_snapshots);
             }
@@ -103,12 +103,12 @@ ProcReact_bool copy_snapshots_to_sync(gchar *interface, gchar *target, gchar *co
     }
 }
 
-pid_t copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all)
+pid_t copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all, int stderr_fd)
 {
     pid_t pid = fork();
 
     if(pid == 0)
-        _exit(!copy_snapshots_to_sync(interface, target, container, component, all));
+        _exit(!copy_snapshots_to_sync(interface, target, container, component, all, stderr_fd));
 
     return pid;
 }
@@ -128,22 +128,22 @@ static ProcReact_bool remove_directory_and_contents(char *path)
     return (nftw(path, unlink_cb, 64, FTW_DEPTH | FTW_PHYS) == 0);
 }
 
-static ProcReact_bool order_local_snapshot(gchar *container, gchar *component, char *snapshot)
+static ProcReact_bool order_local_snapshot(gchar *container, gchar *component, char *snapshot, int stdout_fd, int stderr_fd)
 {
     char *snapshot_array[] = { snapshot, NULL };
-    char **resolved_snapshots = statemgmt_resolve_snapshots_sync(snapshot_array, 2);
+    char **resolved_snapshots = statemgmt_resolve_snapshots_sync(snapshot_array, stderr_fd);
 
     if(resolved_snapshots == NULL)
         return FALSE;
     else
     {
-        ProcReact_bool exit_status = statemgmt_import_snapshots_sync(container, component, resolved_snapshots, 1, 2);
+        ProcReact_bool exit_status = statemgmt_import_snapshots_sync(container, component, resolved_snapshots, stdout_fd, stderr_fd);
         procreact_free_string_array(resolved_snapshots);
         return exit_status;
     }
 }
 
-static ProcReact_bool retrieve_missing_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, char **missing_snapshots)
+static ProcReact_bool retrieve_missing_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, char **missing_snapshots, int stdout_fd, int stderr_fd)
 {
     char **resolved_snapshots = exec_resolve_snapshots_sync(interface, target, missing_snapshots, g_strv_length(missing_snapshots));
 
@@ -171,7 +171,7 @@ static ProcReact_bool retrieve_missing_snapshots(gchar *interface, gchar *target
                     gchar *tmp_snapshot = g_strconcat(tmpdir, "/", basename(resolved_snapshots[0]), NULL);
                     char *tmp_snapshots[] = { tmp_snapshot, NULL };
 
-                    exit_status = statemgmt_import_snapshots_sync(container, component, tmp_snapshots, 1, 2);
+                    exit_status = statemgmt_import_snapshots_sync(container, component, tmp_snapshots, stdout_fd, stderr_fd);
 
                     if(exit_status == 0)
                         rmdir(tmpdir);
@@ -199,7 +199,7 @@ static char **query_remote_snapshots(gchar *interface, gchar *target, gchar *con
         return exec_query_latest_snapshot_sync(interface, target, container, component);
 }
 
-ProcReact_bool copy_snapshots_from_sync(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all)
+ProcReact_bool copy_snapshots_from_sync(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all, int stdout_fd, int stderr_fd)
 {
     char **snapshots = query_remote_snapshots(interface, target, container, component, all);
 
@@ -214,16 +214,16 @@ ProcReact_bool copy_snapshots_from_sync(gchar *interface, gchar *target, gchar *
         {
             char *snapshot = snapshots[i];
 
-            char **missing_snapshots = statemgmt_print_missing_snapshots_sync(snapshots, 2);
+            char **missing_snapshots = statemgmt_print_missing_snapshots_sync(snapshots, stderr_fd);
 
             if(missing_snapshots == NULL)
                 exit_status = FALSE;
             else
             {
                 if(g_strv_length(missing_snapshots) == 0) // If no snapshots need to be transferred, we still have to order them
-                    exit_status = order_local_snapshot(container, component, snapshot);
+                    exit_status = order_local_snapshot(container, component, snapshot, stdout_fd, stderr_fd);
                 else
-                    exit_status = retrieve_missing_snapshots(interface, target, container, component, missing_snapshots);
+                    exit_status = retrieve_missing_snapshots(interface, target, container, component, missing_snapshots, stdout_fd, stderr_fd);
 
                 procreact_free_string_array(missing_snapshots);
             }
@@ -235,12 +235,12 @@ ProcReact_bool copy_snapshots_from_sync(gchar *interface, gchar *target, gchar *
     }
 }
 
-pid_t copy_snapshots_from(gchar *interface, gchar *target, gchar *container, gchar *component, int all)
+pid_t copy_snapshots_from(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all, int stdout_fd, int stderr_fd)
 {
     pid_t pid = fork();
 
     if(pid == 0)
-        _exit(!copy_snapshots_from_sync(interface, target, container, component, all));
+        _exit(!copy_snapshots_from_sync(interface, target, container, component, all, stdout_fd, stderr_fd));
 
     return pid;
 }

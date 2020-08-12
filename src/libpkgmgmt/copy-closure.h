@@ -22,12 +22,12 @@
 #include <glib.h>
 #include <procreact_util.h>
 
-ProcReact_bool copy_closure_to_sync(gchar *interface, gchar *target, gchar *tmpdir, gchar **derivation);
+ProcReact_bool copy_closure_to_sync(gchar *interface, gchar *target, gchar *tmpdir, gchar **derivation, int stderr_fd);
 
-pid_t copy_closure_to(gchar *interface, gchar *target, gchar *tmpdir, gchar **derivation);
+pid_t copy_closure_to(gchar *interface, gchar *target, gchar *tmpdir, gchar **derivation, int stderr_fd);
 
-ProcReact_bool copy_closure_from_sync(gchar *interface, gchar *target, gchar **derivation);
+ProcReact_bool copy_closure_from_sync(gchar *interface, gchar *target, gchar **derivation, int stdout_fd, int stderr_fd);
 
-pid_t copy_closure_from(gchar *interface, gchar *target, gchar **derivation);
+pid_t copy_closure_from(gchar *interface, gchar *target, gchar **derivation, int stdout_fd, int stderr_fd);
 
 #endif

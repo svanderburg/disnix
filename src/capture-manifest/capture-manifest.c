@@ -99,7 +99,7 @@ static pid_t retrieve_profile_manifest_target(void *data, gchar *target_name, Pr
     gchar *paths[] = { profile_manifest_target->profile, NULL };
     gchar *target_key = find_target_key(target);
 
-    return copy_closure_from(interface, target_key, paths);
+    return copy_closure_from(interface, target_key, paths, STDOUT_FILENO, STDERR_FILENO);
 }
 
 static void complete_retrieve_profile_manifest_target(void *data, gchar *target_name, ProfileManifestTarget *profile_manifest_target, Target *target, ProcReact_Status status, int result)

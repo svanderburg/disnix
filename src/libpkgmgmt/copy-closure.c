@@ -22,15 +22,16 @@
 #include "package-management.h"
 #include "remote-package-management.h"
 
-ProcReact_bool copy_closure_to_sync(gchar *interface, gchar *target, gchar *tmpdir, gchar **derivation)
+ProcReact_bool copy_closure_to_sync(gchar *interface, gchar *target, gchar *tmpdir, gchar **derivation, int stderr_fd)
 {
-    ProcReact_bool exit_status = TRUE;
-    char **requisites = pkgmgmt_query_requisites_sync(derivation, 2);
+    char **requisites = pkgmgmt_query_requisites_sync(derivation, stderr_fd);
 
     if(requisites == NULL)
-        exit_status = FALSE;
+        return FALSE;
     else
     {
+        ProcReact_bool exit_status = TRUE;
+
         if(g_strv_length(requisites) > 0)
         {
             char **invalid_paths = exec_print_invalid_sync(interface, target, requisites, g_strv_length(requisites));
@@ -41,7 +42,7 @@ ProcReact_bool copy_closure_to_sync(gchar *interface, gchar *target, gchar *tmpd
             {
                 if(g_strv_length(invalid_paths) > 0)
                 {
-                    char *tempfile = pkgmgmt_export_closure_sync(tmpdir, invalid_paths, 2);
+                    char *tempfile = pkgmgmt_export_closure_sync(tmpdir, invalid_paths, stderr_fd);
 
                     if(tempfile == NULL)
                         exit_status = FALSE;
@@ -58,33 +59,34 @@ ProcReact_bool copy_closure_to_sync(gchar *interface, gchar *target, gchar *tmpd
         }
 
         procreact_free_string_array(requisites);
-    }
 
-    return exit_status;
+        return exit_status;
+    }
 }
 
-pid_t copy_closure_to(gchar *interface, gchar *target, gchar *tmpdir, gchar **derivation)
+pid_t copy_closure_to(gchar *interface, gchar *target, gchar *tmpdir, gchar **derivation, int stderr_fd)
 {
     pid_t pid = fork();
 
     if(pid == 0)
-        _exit(!copy_closure_to_sync(interface, target, tmpdir, derivation));
+        _exit(!copy_closure_to_sync(interface, target, tmpdir, derivation, stderr_fd));
 
     return pid;
 }
 
-ProcReact_bool copy_closure_from_sync(gchar *interface, gchar *target, gchar **derivation)
+ProcReact_bool copy_closure_from_sync(gchar *interface, gchar *target, gchar **derivation, int stdout_fd, int stderr_fd)
 {
-    ProcReact_bool exit_status = TRUE;
     char **requisites = exec_query_requisites_sync(interface, target, derivation, g_strv_length(derivation));
 
     if(requisites == NULL)
-        exit_status = FALSE;
+        return FALSE;
     else
     {
+        ProcReact_bool exit_status = TRUE;
+
         if(g_strv_length(requisites) > 0)
         {
-            char **invalid_paths = pkgmgmt_print_invalid_packages_sync(requisites, 2);
+            char **invalid_paths = pkgmgmt_print_invalid_packages_sync(requisites, stderr_fd);
 
             if(invalid_paths == NULL)
                 exit_status = FALSE;
@@ -98,7 +100,7 @@ ProcReact_bool copy_closure_from_sync(gchar *interface, gchar *target, gchar **d
                         exit_status = FALSE;
                     else
                     {
-                        exit_status = pkgmgmt_import_closure_sync(tempfile, 1, 2);
+                        exit_status = pkgmgmt_import_closure_sync(tempfile, stdout_fd, stderr_fd);
                         unlink(tempfile);
                         free(tempfile);
                     }
@@ -109,17 +111,17 @@ ProcReact_bool copy_closure_from_sync(gchar *interface, gchar *target, gchar **d
         }
 
         procreact_free_string_array(requisites);
-    }
 
-    return exit_status;
+        return exit_status;
+    }
 }
 
-pid_t copy_closure_from(gchar *interface, gchar *target, gchar **derivation)
+pid_t copy_closure_from(gchar *interface, gchar *target, gchar **derivation, int stdout_fd, int stderr_fd)
 {
     pid_t pid = fork();
 
     if(pid == 0)
-        _exit(!copy_closure_from_sync(interface, target, derivation));
+        _exit(!copy_closure_from_sync(interface, target, derivation, stdout_fd, stderr_fd));
 
     return pid;
 }
