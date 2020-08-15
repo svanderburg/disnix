@@ -41,7 +41,7 @@ static ProcReact_Future query_requisites_on_target(void *data, gchar *target_nam
     gchar *target_key = find_target_key(target);
     gchar *derivations[] = { query_requisites_data->profile_path, NULL };
 
-    return exec_query_requisites((char*)target->client_interface, target_key, derivations, 1);
+    return pkgmgmt_remote_query_requisites((char*)target->client_interface, target_key, derivations, 1);
 }
 
 static gchar *take_last_element(char **result)

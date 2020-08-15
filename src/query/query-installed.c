@@ -33,7 +33,7 @@ static ProcReact_Future query_installed_services_on_target(void *data, gchar *ta
 {
     QueryInstalledServicesData *query_installed_services_data = (QueryInstalledServicesData*)data;
     gchar *target_key = find_target_key(target);
-    return exec_query_installed((char*)target->client_interface, target_key, query_installed_services_data->profile);
+    return pkgmgmt_remote_query_installed((char*)target->client_interface, target_key, query_installed_services_data->profile);
 }
 
 static void complete_query_installed_services_on_target(void *data, gchar *target_name, Target *target, ProcReact_Future *future, ProcReact_Status status)

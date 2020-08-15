@@ -25,7 +25,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-pid_t exec_collect_garbage(gchar *interface, gchar *target, const gboolean delete_old)
+pid_t pkgmgmt_remote_collect_garbage(gchar *interface, gchar *target, const gboolean delete_old)
 {
     /* Declarations */
     pid_t pid;
@@ -50,7 +50,7 @@ pid_t exec_collect_garbage(gchar *interface, gchar *target, const gboolean delet
     return pid;
 }
 
-pid_t exec_set(gchar *interface, gchar *target, gchar *profile, gchar *component)
+pid_t pkgmgmt_remote_set(gchar *interface, gchar *target, gchar *profile, gchar *component)
 {
     pid_t pid = fork();
 
@@ -64,7 +64,7 @@ pid_t exec_set(gchar *interface, gchar *target, gchar *profile, gchar *component
     return pid;
 }
 
-ProcReact_Future exec_query_installed(gchar *interface, gchar *target, gchar *profile)
+ProcReact_Future pkgmgmt_remote_query_installed(gchar *interface, gchar *target, gchar *profile)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_type());
 
@@ -79,7 +79,7 @@ ProcReact_Future exec_query_installed(gchar *interface, gchar *target, gchar *pr
     return future;
 }
 
-ProcReact_Future exec_realise(gchar *interface, gchar *target, gchar *derivation)
+ProcReact_Future pkgmgmt_remote_realise(gchar *interface, gchar *target, gchar *derivation)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
@@ -94,7 +94,7 @@ ProcReact_Future exec_realise(gchar *interface, gchar *target, gchar *derivation
     return future;
 }
 
-ProcReact_Future exec_query_requisites(gchar *interface, gchar *target, gchar **derivation, unsigned int derivation_length)
+ProcReact_Future pkgmgmt_remote_query_requisites(gchar *interface, gchar *target, gchar **derivation, unsigned int derivation_length)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
@@ -120,10 +120,10 @@ ProcReact_Future exec_query_requisites(gchar *interface, gchar *target, gchar **
     return future;
 }
 
-char **exec_query_requisites_sync(gchar *interface, gchar *target, gchar **derivation, unsigned int derivation_length)
+char **pkgmgmt_remote_query_requisites_sync(gchar *interface, gchar *target, gchar **derivation, unsigned int derivation_length)
 {
     ProcReact_Status status;
-    ProcReact_Future future = exec_query_requisites(interface, target, derivation, derivation_length);
+    ProcReact_Future future = pkgmgmt_remote_query_requisites(interface, target, derivation, derivation_length);
     char **result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)
@@ -132,7 +132,7 @@ char **exec_query_requisites_sync(gchar *interface, gchar *target, gchar **deriv
         return NULL;
 }
 
-ProcReact_Future exec_print_invalid(gchar *interface, gchar *target, gchar **paths, unsigned int paths_length)
+ProcReact_Future pkgmgmt_remote_print_invalid(gchar *interface, gchar *target, gchar **paths, unsigned int paths_length)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
@@ -158,9 +158,9 @@ ProcReact_Future exec_print_invalid(gchar *interface, gchar *target, gchar **pat
     return future;
 }
 
-char **exec_print_invalid_sync(gchar *interface, gchar *target, gchar **paths, unsigned int paths_length)
+char **pkgmgmt_remote_print_invalid_sync(gchar *interface, gchar *target, gchar **paths, unsigned int paths_length)
 {
-    ProcReact_Future future = exec_print_invalid(interface, target, paths, paths_length);
+    ProcReact_Future future = pkgmgmt_remote_print_invalid(interface, target, paths, paths_length);
     ProcReact_Status status;
     char **result = procreact_future_get(&future, &status);
 
@@ -170,7 +170,7 @@ char **exec_print_invalid_sync(gchar *interface, gchar *target, gchar **paths, u
         return NULL;
 }
 
-pid_t exec_import_local_closure(gchar *interface, gchar *target, char *closure)
+pid_t pkgmgmt_import_local_closure(gchar *interface, gchar *target, char *closure)
 {
     pid_t pid = fork();
 
@@ -184,15 +184,15 @@ pid_t exec_import_local_closure(gchar *interface, gchar *target, char *closure)
     return pid;
 }
 
-ProcReact_bool exec_import_local_closure_sync(gchar *interface, gchar *target, char *closure)
+ProcReact_bool pkgmgmt_import_local_closure_sync(gchar *interface, gchar *target, char *closure)
 {
     ProcReact_Status status;
-    pid_t pid = exec_import_local_closure(interface, target, closure);
+    pid_t pid = pkgmgmt_import_local_closure(interface, target, closure);
     int exit_status = procreact_wait_for_boolean(pid, &status);
     return(status == PROCREACT_STATUS_OK && exit_status);
 }
 
-ProcReact_Future exec_export_remote_closure(gchar *interface, gchar *target, char **paths, unsigned int paths_length)
+ProcReact_Future pkgmgmt_export_remote_closure(gchar *interface, gchar *target, char **paths, unsigned int paths_length)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_type());
 
@@ -220,10 +220,10 @@ ProcReact_Future exec_export_remote_closure(gchar *interface, gchar *target, cha
     return future;
 }
 
-char *exec_export_remote_closure_sync(gchar *interface, gchar *target, char **paths, unsigned int paths_length)
+char *pkgmgmt_export_remote_closure_sync(gchar *interface, gchar *target, char **paths, unsigned int paths_length)
 {
     ProcReact_Status status;
-    ProcReact_Future future = exec_export_remote_closure(interface, target, paths, paths_length);
+    ProcReact_Future future = pkgmgmt_export_remote_closure(interface, target, paths, paths_length);
     char *result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)

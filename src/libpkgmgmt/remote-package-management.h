@@ -32,7 +32,7 @@
  * @param delete_old Indicates whether old profile generations must be removed
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_collect_garbage(gchar *interface, gchar *target, const gboolean delete_old);
+pid_t pkgmgmt_remote_collect_garbage(gchar *interface, gchar *target, const gboolean delete_old);
 
 /**
  * Invokes the set operation through a Disnix client interface
@@ -42,7 +42,7 @@ pid_t exec_collect_garbage(gchar *interface, gchar *target, const gboolean delet
  * @param profile Identifier of the distributed profile
  * @param component Component which becomes the contents of the profile
  */
-pid_t exec_set(gchar *interface, gchar *target, gchar *profile, gchar *component);
+pid_t pkgmgmt_remote_set(gchar *interface, gchar *target, gchar *profile, gchar *component);
 
 /**
  * Invokes the the query installed operation through a Disnix client interface
@@ -52,7 +52,7 @@ pid_t exec_set(gchar *interface, gchar *target, gchar *profile, gchar *component
  * @param profile Identifier of the distributed profile
  * @return Future struct of the client interface process performing the operation
  */
-ProcReact_Future exec_query_installed(gchar *interface, gchar *target, gchar *profile);
+ProcReact_Future pkgmgmt_remote_query_installed(gchar *interface, gchar *target, gchar *profile);
 
 /**
  * Invokes the realise operation through a Disnix client interface
@@ -62,7 +62,7 @@ ProcReact_Future exec_query_installed(gchar *interface, gchar *target, gchar *pr
  * @param derivation Derivation to build
  * @return Future struct of the client interface process performing the operation
  */
-ProcReact_Future exec_realise(gchar *interface, gchar *target, gchar *derivation);
+ProcReact_Future pkgmgmt_remote_realise(gchar *interface, gchar *target, gchar *derivation);
 
 /**
  * Queries the requisites of a given derivation
@@ -73,20 +73,20 @@ ProcReact_Future exec_realise(gchar *interface, gchar *target, gchar *derivation
  * @param derivation_length Length of the derivations array
  * @return Future struct of the client interface process performing the operation
  */
-ProcReact_Future exec_query_requisites(gchar *interface, gchar *target, gchar **derivation, unsigned int derivation_length);
+ProcReact_Future pkgmgmt_remote_query_requisites(gchar *interface, gchar *target, gchar **derivation, unsigned int derivation_length);
 
-char **exec_query_requisites_sync(gchar *interface, gchar *target, gchar **derivation, unsigned int derivation_length);
+char **pkgmgmt_remote_query_requisites_sync(gchar *interface, gchar *target, gchar **derivation, unsigned int derivation_length);
 
-ProcReact_Future exec_print_invalid(gchar *interface, gchar *target, gchar **paths, unsigned int paths_length);
+ProcReact_Future pkgmgmt_remote_print_invalid(gchar *interface, gchar *target, gchar **paths, unsigned int paths_length);
 
-char **exec_print_invalid_sync(gchar *interface, gchar *target, gchar **paths, unsigned int paths_length);
+char **pkgmgmt_remote_print_invalid_sync(gchar *interface, gchar *target, gchar **paths, unsigned int paths_length);
 
-pid_t exec_import_local_closure(gchar *interface, gchar *target, char *closure);
+pid_t pkgmgmt_import_local_closure(gchar *interface, gchar *target, char *closure);
 
-ProcReact_bool exec_import_local_closure_sync(gchar *interface, gchar *target, char *closure);
+ProcReact_bool pkgmgmt_import_local_closure_sync(gchar *interface, gchar *target, char *closure);
 
-ProcReact_Future exec_export_remote_closure(gchar *interface, gchar *target, char **paths, unsigned int paths_length);
+ProcReact_Future pkgmgmt_export_remote_closure(gchar *interface, gchar *target, char **paths, unsigned int paths_length);
 
-char *exec_export_remote_closure_sync(gchar *interface, gchar *target, char **paths, unsigned int paths_length);
+char *pkgmgmt_export_remote_closure_sync(gchar *interface, gchar *target, char **paths, unsigned int paths_length);
 
 #endif

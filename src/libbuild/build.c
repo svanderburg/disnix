@@ -59,7 +59,7 @@ static int distribute_derivation_mappings(const GPtrArray *derivation_mapping_ar
 static ProcReact_Future realise_derivation_mapping(void *data, DerivationMapping *mapping, Interface *interface)
 {
     g_print("[target: %s]: Realising derivation: %s\n", mapping->interface, mapping->derivation);
-    return exec_realise((char*)interface->client_interface, (char*)interface->target_address, (char*)mapping->derivation);
+    return pkgmgmt_remote_realise((char*)interface->client_interface, (char*)interface->target_address, (char*)mapping->derivation);
 }
 
 static void complete_realise_derivation_mapping(void *data, DerivationMapping *mapping, ProcReact_Future *future, ProcReact_Status status)

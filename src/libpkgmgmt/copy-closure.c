@@ -34,7 +34,7 @@ ProcReact_bool copy_closure_to_sync(gchar *interface, gchar *target, gchar *tmpd
 
         if(g_strv_length(requisites) > 0)
         {
-            char **invalid_paths = exec_print_invalid_sync(interface, target, requisites, g_strv_length(requisites));
+            char **invalid_paths = pkgmgmt_remote_print_invalid_sync(interface, target, requisites, g_strv_length(requisites));
 
             if(invalid_paths == NULL)
                 exit_status = FALSE;
@@ -48,7 +48,7 @@ ProcReact_bool copy_closure_to_sync(gchar *interface, gchar *target, gchar *tmpd
                         exit_status = FALSE;
                     else
                     {
-                        exit_status = exec_import_local_closure_sync(interface, target, tempfile);
+                        exit_status = pkgmgmt_import_local_closure_sync(interface, target, tempfile);
                         unlink(tempfile);
                         g_free(tempfile);
                     }
@@ -76,7 +76,7 @@ pid_t copy_closure_to(gchar *interface, gchar *target, gchar *tmpdir, gchar **de
 
 ProcReact_bool copy_closure_from_sync(gchar *interface, gchar *target, gchar **derivation, int stdout_fd, int stderr_fd)
 {
-    char **requisites = exec_query_requisites_sync(interface, target, derivation, g_strv_length(derivation));
+    char **requisites = pkgmgmt_remote_query_requisites_sync(interface, target, derivation, g_strv_length(derivation));
 
     if(requisites == NULL)
         return FALSE;
@@ -94,7 +94,7 @@ ProcReact_bool copy_closure_from_sync(gchar *interface, gchar *target, gchar **d
             {
                 if(g_strv_length(invalid_paths) > 0)
                 {
-                    char *tempfile = exec_export_remote_closure_sync(interface, target, invalid_paths, g_strv_length(requisites));
+                    char *tempfile = pkgmgmt_export_remote_closure_sync(interface, target, invalid_paths, g_strv_length(requisites));
 
                     if(tempfile == NULL)
                         exit_status = FALSE;

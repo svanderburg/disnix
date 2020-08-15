@@ -32,7 +32,7 @@ static pid_t collect_garbage_on_target(void *data, gchar *target_name, Target *t
     CollectGarbageData *collect_garbage_data = (CollectGarbageData*)data;
     gchar *target_key = find_target_key(target);
     g_print("[target: %s]: Running garbage collector\n", target_name);
-    return exec_collect_garbage((char*)target->client_interface, target_key, collect_garbage_data->delete_old);
+    return pkgmgmt_remote_collect_garbage((char*)target->client_interface, target_key, collect_garbage_data->delete_old);
 }
 
 static void complete_collect_garbage_on_target(void *data, gchar *target_name, Target *target, ProcReact_Status status, int result)
