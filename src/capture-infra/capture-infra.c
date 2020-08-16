@@ -26,7 +26,7 @@
 static ProcReact_Future capture_infra_on_target(void *data, gchar *target_name, Target *target)
 {
     gchar *target_key = find_target_key(target);
-    return exec_capture_config((char*)target->client_interface, target_key);
+    return statemgmt_remote_capture_config((char*)target->client_interface, target_key);
 }
 
 static void complete_capture_infra_on_target(void *data, gchar *target_name, Target *target, ProcReact_Future *future, ProcReact_Status status)

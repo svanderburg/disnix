@@ -35,7 +35,7 @@ static pid_t clean_snapshots_on_target(void *data, gchar *target_name, Target *t
     gchar *target_key = find_target_key(target);
 
     g_print("[target: %s]: Running snapshot garbage collector!\n", target_name);
-    return exec_clean_snapshots((char*)target->client_interface, target_key, clean_snapshots_data->keep, clean_snapshots_data->container, clean_snapshots_data->component);
+    return statemgmt_remote_clean_snapshots((char*)target->client_interface, target_key, clean_snapshots_data->keep, clean_snapshots_data->container, clean_snapshots_data->component);
 }
 
 static void complete_clean_snapshots_on_target(void *data, gchar *target_name, Target *target, ProcReact_Status status, int result)

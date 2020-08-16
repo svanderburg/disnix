@@ -36,7 +36,7 @@
  * @param service Service to activate
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_activate(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
+pid_t statemgmt_remote_activate(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
 
 /**
  * Invokes the deactivate operation through a Disnix client interface
@@ -50,7 +50,7 @@ pid_t exec_activate(gchar *interface, gchar *target, gchar *container, gchar *ty
  * @param service Service to deactivate
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_deactivate(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
+pid_t statemgmt_remote_deactivate(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
 
 /**
  * Invokes the lock operation through a Disnix client interface
@@ -60,7 +60,7 @@ pid_t exec_deactivate(gchar *interface, gchar *target, gchar *container, gchar *
  * @param profile Identifier of the distributed profile
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_lock(gchar *interface, gchar *target, gchar *profile);
+pid_t statemgmt_remote_lock(gchar *interface, gchar *target, gchar *profile);
 
 /**
  * Invokes the unlock operation through a Disnix client interface
@@ -70,7 +70,7 @@ pid_t exec_lock(gchar *interface, gchar *target, gchar *profile);
  * @param profile Identifier of the distributed profile
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_unlock(gchar *interface, gchar *target, gchar *profile);
+pid_t statemgmt_remote_unlock(gchar *interface, gchar *target, gchar *profile);
 
 /**
  * Invokes the snapshot operation through a Disnix client interface
@@ -84,7 +84,7 @@ pid_t exec_unlock(gchar *interface, gchar *target, gchar *profile);
  * @param service Service to activate
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_snapshot(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
+pid_t statemgmt_remote_snapshot(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
 
 /**
  * Invokes the restore operation through a Disnix client interface
@@ -98,7 +98,7 @@ pid_t exec_snapshot(gchar *interface, gchar *target, gchar *container, gchar *ty
  * @param service Service to deactivate
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_restore(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
+pid_t statemgmt_remote_restore(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
 
 /**
  * Invokes the delete state operation through a Disnix client interface
@@ -112,7 +112,7 @@ pid_t exec_restore(gchar *interface, gchar *target, gchar *container, gchar *typ
  * @param service Service to activate
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_delete_state(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
+pid_t statemgmt_remote_delete_state(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service);
 
 /**
  * Spawns a remote shell session with a Dysnomia shell.
@@ -127,7 +127,7 @@ pid_t exec_delete_state(gchar *interface, gchar *target, gchar *container, gchar
  * @param command Shell command to execute or NULL to spawn an interactive session
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_dysnomia_shell(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service, gchar *command);
+pid_t statemgmt_remote_dysnomia_shell(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service, gchar *command);
 
 /**
  * Invokes the Dysnomia snapshot garbage collect operation through a Disnix client interface
@@ -139,7 +139,7 @@ pid_t exec_dysnomia_shell(gchar *interface, gchar *target, gchar *container, gch
  * @param component Name of the component to filter on, or NULL to consult all components
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t exec_clean_snapshots(gchar *interface, gchar *target, int keep, char *container, char *component);
+pid_t statemgmt_remote_clean_snapshots(gchar *interface, gchar *target, int keep, char *container, char *component);
 
 /**
  * Captures the configuration from the Dysnomia container configuration files
@@ -149,39 +149,35 @@ pid_t exec_clean_snapshots(gchar *interface, gchar *target, int keep, char *cont
  * @param target Target Address of the remote interface
  * @return Future struct of the client interface process performing the operation
  */
-ProcReact_Future exec_capture_config(gchar *interface, gchar *target);
+ProcReact_Future statemgmt_remote_capture_config(gchar *interface, gchar *target);
 
-ProcReact_Future exec_query_all_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component);
+ProcReact_Future statemgmt_remote_query_all_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component);
 
-char **exec_query_all_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component);
+char **statemgmt_remote_query_all_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component);
 
-ProcReact_Future exec_query_latest_snapshot(gchar *interface, gchar *target, gchar *container, gchar *component);
+ProcReact_Future statemgmt_remote_query_latest_snapshot(gchar *interface, gchar *target, gchar *container, gchar *component);
 
-char **exec_query_latest_snapshot_sync(gchar *interface, gchar *target, gchar *container, gchar *component);
+char **statemgmt_remote_query_latest_snapshot_sync(gchar *interface, gchar *target, gchar *container, gchar *component);
 
-ProcReact_Future exec_print_missing_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
+ProcReact_Future statemgmt_remote_print_missing_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
 
-char **exec_print_missing_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
+char **statemgmt_remote_print_missing_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
 
-ProcReact_Future exec_print_missing_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
+ProcReact_Future statemgmt_remote_resolve_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
 
-char **exec_print_missing_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
+char **statemgmt_remote_resolve_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
 
-ProcReact_Future exec_resolve_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
+pid_t statemgmt_import_local_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
 
-char **exec_resolve_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
+ProcReact_bool statemgmt_import_local_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
 
-pid_t exec_import_local_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
+pid_t statemgmt_import_remote_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
 
-ProcReact_bool exec_import_local_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
+ProcReact_bool statemgmt_import_remote_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
 
-pid_t exec_import_remote_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
+ProcReact_Future statemgmt_export_remote_snapshots(gchar *interface, gchar *target, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
 
-ProcReact_bool exec_import_remote_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
-
-ProcReact_Future exec_export_remote_snapshots(gchar *interface, gchar *target, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
-
-char **exec_export_remote_snapshots_sync(gchar *interface, gchar *target, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
+char **statemgmt_export_remote_snapshots_sync(gchar *interface, gchar *target, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
 
 /**
  * Invokes the true command for testing purposes.

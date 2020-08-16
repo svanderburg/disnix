@@ -61,17 +61,17 @@ static pid_t exec_dysnomia_activity(gchar *operation, gchar *interface, gchar *t
     return pid;
 }
 
-pid_t exec_activate(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
+pid_t statemgmt_remote_activate(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
 {
     return exec_dysnomia_activity("--activate", interface, target, container, type, arguments, arguments_size, service);
 }
 
-pid_t exec_deactivate(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
+pid_t statemgmt_remote_deactivate(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
 {
     return exec_dysnomia_activity("--deactivate", interface, target, container, type, arguments, arguments_size, service);
 }
 
-static pid_t exec_lock_or_unlock(gchar *operation, gchar *interface, gchar *target, gchar *profile)
+static pid_t lock_or_unlock(gchar *operation, gchar *interface, gchar *target, gchar *profile)
 {
     pid_t pid = fork();
 
@@ -92,32 +92,32 @@ static pid_t exec_lock_or_unlock(gchar *operation, gchar *interface, gchar *targ
     return pid;
 }
 
-pid_t exec_lock(gchar *interface, gchar *target, gchar *profile)
+pid_t statemgmt_remote_lock(gchar *interface, gchar *target, gchar *profile)
 {
-    return exec_lock_or_unlock("--lock", interface, target, profile);
+    return lock_or_unlock("--lock", interface, target, profile);
 }
 
-pid_t exec_unlock(gchar *interface, gchar *target, gchar *profile)
+pid_t statemgmt_remote_unlock(gchar *interface, gchar *target, gchar *profile)
 {
-    return exec_lock_or_unlock("--unlock", interface, target, profile);
+    return lock_or_unlock("--unlock", interface, target, profile);
 }
 
-pid_t exec_snapshot(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
+pid_t statemgmt_remote_snapshot(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
 {
     return exec_dysnomia_activity("--snapshot", interface, target, container, type, arguments, arguments_size, service);
 }
 
-pid_t exec_restore(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
+pid_t statemgmt_remote_restore(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
 {
     return exec_dysnomia_activity("--restore", interface, target, container, type, arguments, arguments_size, service);
 }
 
-pid_t exec_delete_state(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
+pid_t statemgmt_remote_delete_state(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service)
 {
     return exec_dysnomia_activity("--delete-state", interface, target, container, type, arguments, arguments_size, service);
 }
 
-pid_t exec_dysnomia_shell(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service, gchar *command)
+pid_t statemgmt_remote_dysnomia_shell(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service, gchar *command)
 {
     pid_t pid = fork();
 
@@ -159,7 +159,7 @@ pid_t exec_dysnomia_shell(gchar *interface, gchar *target, gchar *container, gch
     return pid;
 }
 
-pid_t exec_clean_snapshots(gchar *interface, gchar *target, int keep, char *container, char *component)
+pid_t statemgmt_remote_clean_snapshots(gchar *interface, gchar *target, int keep, char *container, char *component)
 {
     pid_t pid = fork();
 
@@ -203,7 +203,7 @@ pid_t exec_clean_snapshots(gchar *interface, gchar *target, int keep, char *cont
     return pid;
 }
 
-ProcReact_Future exec_capture_config(gchar *interface, gchar *target)
+ProcReact_Future statemgmt_remote_capture_config(gchar *interface, gchar *target)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
@@ -218,7 +218,7 @@ ProcReact_Future exec_capture_config(gchar *interface, gchar *target)
     return future;
 }
 
-ProcReact_Future exec_query_all_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component)
+ProcReact_Future statemgmt_remote_query_all_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
@@ -263,10 +263,10 @@ ProcReact_Future exec_query_all_snapshots(gchar *interface, gchar *target, gchar
     return future;
 }
 
-char **exec_query_all_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component)
+char **statemgmt_remote_query_all_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component)
 {
     ProcReact_Status status;
-    ProcReact_Future future = exec_query_all_snapshots(interface, target, container, component);
+    ProcReact_Future future = statemgmt_remote_query_all_snapshots(interface, target, container, component);
     char **result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)
@@ -275,7 +275,7 @@ char **exec_query_all_snapshots_sync(gchar *interface, gchar *target, gchar *con
         return NULL;
 }
 
-ProcReact_Future exec_query_latest_snapshot(gchar *interface, gchar *target, gchar *container, gchar *component)
+ProcReact_Future statemgmt_remote_query_latest_snapshot(gchar *interface, gchar *target, gchar *container, gchar *component)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
@@ -320,10 +320,10 @@ ProcReact_Future exec_query_latest_snapshot(gchar *interface, gchar *target, gch
     return future;
 }
 
-char **exec_query_latest_snapshot_sync(gchar *interface, gchar *target, gchar *container, gchar *component)
+char **statemgmt_remote_query_latest_snapshot_sync(gchar *interface, gchar *target, gchar *container, gchar *component)
 {
     ProcReact_Status status;
-    ProcReact_Future future = exec_query_latest_snapshot(interface, target, container, component);
+    ProcReact_Future future = statemgmt_remote_query_latest_snapshot(interface, target, container, component);
     char **result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)
@@ -332,7 +332,7 @@ char **exec_query_latest_snapshot_sync(gchar *interface, gchar *target, gchar *c
         return NULL;
 }
 
-ProcReact_Future exec_print_missing_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length)
+ProcReact_Future statemgmt_remote_print_missing_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
@@ -358,10 +358,10 @@ ProcReact_Future exec_print_missing_snapshots(gchar *interface, gchar *target, g
     return future;
 }
 
-char **exec_print_missing_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length)
+char **statemgmt_remote_print_missing_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length)
 {
     ProcReact_Status status;
-    ProcReact_Future future = exec_print_missing_snapshots(interface, target, snapshots, snapshots_length);
+    ProcReact_Future future = statemgmt_remote_print_missing_snapshots(interface, target, snapshots, snapshots_length);
     char **result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)
@@ -370,7 +370,7 @@ char **exec_print_missing_snapshots_sync(gchar *interface, gchar *target, gchar 
         return NULL;
 }
 
-ProcReact_Future exec_resolve_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length)
+ProcReact_Future statemgmt_remote_resolve_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
@@ -396,10 +396,10 @@ ProcReact_Future exec_resolve_snapshots(gchar *interface, gchar *target, gchar *
     return future;
 }
 
-char **exec_resolve_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length)
+char **statemgmt_remote_resolve_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length)
 {
     ProcReact_Status status;
-    ProcReact_Future future = exec_resolve_snapshots(interface, target, snapshots, snapshots_length);
+    ProcReact_Future future = statemgmt_remote_resolve_snapshots(interface, target, snapshots, snapshots_length);
     char **result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)
@@ -408,7 +408,7 @@ char **exec_resolve_snapshots_sync(gchar *interface, gchar *target, gchar **snap
         return NULL;
 }
 
-pid_t exec_import_local_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length)
+pid_t statemgmt_import_local_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length)
 {
     pid_t pid = fork();
 
@@ -438,15 +438,15 @@ pid_t exec_import_local_snapshots(gchar *interface, gchar *target, gchar *contai
     return pid;
 }
 
-ProcReact_bool exec_import_local_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length)
+ProcReact_bool statemgmt_import_local_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length)
 {
     ProcReact_Status status;
-    pid_t pid = exec_import_local_snapshots(interface, target, container, component, resolved_snapshots, resolved_snapshots_length);
+    pid_t pid = statemgmt_import_local_snapshots(interface, target, container, component, resolved_snapshots, resolved_snapshots_length);
     int exit_status = procreact_wait_for_boolean(pid, &status);
     return(status == PROCREACT_STATUS_OK && exit_status);
 }
 
-pid_t exec_import_remote_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length)
+pid_t statemgmt_import_remote_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length)
 {
     pid_t pid = fork();
 
@@ -476,15 +476,15 @@ pid_t exec_import_remote_snapshots(gchar *interface, gchar *target, gchar *conta
     return pid;
 }
 
-ProcReact_bool exec_import_remote_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length)
+ProcReact_bool statemgmt_import_remote_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length)
 {
     ProcReact_Status status;
-    pid_t pid = exec_import_remote_snapshots(interface, target, container, component, resolved_snapshots, resolved_snapshots_length);
+    pid_t pid = statemgmt_import_remote_snapshots(interface, target, container, component, resolved_snapshots, resolved_snapshots_length);
     int exit_status = procreact_wait_for_boolean(pid, &status);
     return(status == PROCREACT_STATUS_OK && exit_status);
 }
 
-ProcReact_Future exec_export_remote_snapshots(gchar *interface, gchar *target, gchar **resolved_snapshots, unsigned int resolved_snapshots_length)
+ProcReact_Future statemgmt_export_remote_snapshots(gchar *interface, gchar *target, gchar **resolved_snapshots, unsigned int resolved_snapshots_length)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
@@ -510,10 +510,10 @@ ProcReact_Future exec_export_remote_snapshots(gchar *interface, gchar *target, g
     return future;
 }
 
-char **exec_export_remote_snapshots_sync(gchar *interface, gchar *target, gchar **resolved_snapshots, unsigned int resolved_snapshots_length)
+char **statemgmt_export_remote_snapshots_sync(gchar *interface, gchar *target, gchar **resolved_snapshots, unsigned int resolved_snapshots_length)
 {
     ProcReact_Status status;
-    ProcReact_Future future = exec_export_remote_snapshots(interface, target, resolved_snapshots, resolved_snapshots_length);
+    ProcReact_Future future = statemgmt_export_remote_snapshots(interface, target, resolved_snapshots, resolved_snapshots_length);
     char **result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)

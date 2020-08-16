@@ -103,7 +103,7 @@ static pid_t restore_snapshot_on_target(SnapshotMapping *mapping, ManifestServic
 {
     gchar *target_key = find_target_key(target);
     g_print("[target: %s]: Restoring state of service: %s\n", mapping->target, mapping->component);
-    return exec_restore((char*)target->client_interface, target_key, (char*)mapping->container, (char*)type, (char**)arguments, arguments_length, (char*)service->pkg);
+    return statemgmt_remote_restore((char*)target->client_interface, target_key, (char*)mapping->container, (char*)type, (char**)arguments, arguments_length, (char*)service->pkg);
 }
 
 static void complete_restore_snapshot_on_target(SnapshotMapping *mapping, ManifestService *service, Target *target, ProcReact_Status status, int result)
@@ -124,7 +124,7 @@ static pid_t clean_snapshot_mapping(SnapshotMapping *mapping, Target *target, in
 {
     gchar *target_key = find_target_key(target);
     g_print("[target: %s]: Cleaning snapshots of component: %s deployed to container: %s\n", mapping->target, mapping->component, mapping->container);
-    return exec_clean_snapshots((char*)target->client_interface, target_key, keep, (char*)mapping->container, (char*)mapping->component);
+    return statemgmt_remote_clean_snapshots((char*)target->client_interface, target_key, keep, (char*)mapping->container, (char*)mapping->component);
 }
 
 typedef struct
