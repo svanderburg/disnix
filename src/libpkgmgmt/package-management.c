@@ -71,7 +71,7 @@ ProcReact_bool pkgmgmt_import_closure_sync(const char *closure, int stdout_fd, i
     return (status == PROCREACT_STATUS_OK && exit_status);
 }
 
-gchar *pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr_fd, pid_t *pid, int *temp_fd)
+gchar *pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, const unsigned int derivation_length, int stderr_fd, pid_t *pid, int *temp_fd)
 {
     gchar *tempfilename = g_strconcat(tmpdir, "/disnix.XXXXXX", NULL);
     *temp_fd = mkstemp(tempfilename);
@@ -87,7 +87,7 @@ gchar *pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr_fd, 
 
         if(*pid == 0)
         {
-            unsigned int i, derivation_length = g_strv_length(derivation);
+            unsigned int i;
             gchar **args = (char**)g_malloc((3 + derivation_length) * sizeof(gchar*));
 
             args[0] = NIX_STORE_CMD;
@@ -108,11 +108,11 @@ gchar *pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr_fd, 
     }
 }
 
-gchar *pkgmgmt_export_closure_sync(gchar *tmpdir, gchar **derivation, int stderr_fd)
+gchar *pkgmgmt_export_closure_sync(gchar *tmpdir, gchar **derivation, const unsigned int derivation_length, int stderr_fd)
 {
     pid_t pid;
     int temp_fd;
-    char *tempfile = pkgmgmt_export_closure(tmpdir, derivation, stderr_fd, &pid, &temp_fd);
+    char *tempfile = pkgmgmt_export_closure(tmpdir, derivation, derivation_length, stderr_fd, &pid, &temp_fd);
     ProcReact_Status status;
     int exit_status = procreact_wait_for_boolean(pid, &status);
     close(temp_fd);
@@ -126,13 +126,13 @@ gchar *pkgmgmt_export_closure_sync(gchar *tmpdir, gchar **derivation, int stderr
     }
 }
 
-ProcReact_Future pkgmgmt_print_invalid_packages(gchar **derivation, int stderr_fd)
+ProcReact_Future pkgmgmt_print_invalid_packages(gchar **derivation, const unsigned int derivation_length, int stderr_fd)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
     if(future.pid == 0)
     {
-        unsigned int i, derivation_length = g_strv_length(derivation);
+        unsigned int i;
         gchar **args = (char**)g_malloc((4 + derivation_length) * sizeof(gchar*));
 
         args[0] = NIX_STORE_CMD;
@@ -153,10 +153,10 @@ ProcReact_Future pkgmgmt_print_invalid_packages(gchar **derivation, int stderr_f
     return future;
 }
 
-char **pkgmgmt_print_invalid_packages_sync(gchar **derivation, int stderr_fd)
+char **pkgmgmt_print_invalid_packages_sync(gchar **derivation, const unsigned int derivation_length, int stderr_fd)
 {
     ProcReact_Status status;
-    ProcReact_Future future = pkgmgmt_print_invalid_packages(derivation, stderr_fd);
+    ProcReact_Future future = pkgmgmt_print_invalid_packages(derivation, derivation_length, stderr_fd);
     char **result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)
@@ -165,19 +165,19 @@ char **pkgmgmt_print_invalid_packages_sync(gchar **derivation, int stderr_fd)
         return NULL;
 }
 
-ProcReact_Future pkgmgmt_realise(gchar **derivation, int stderr_fd)
+ProcReact_Future pkgmgmt_realise(gchar **derivation, const unsigned int derivation_length, int stderr_fd)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
     if(future.pid == 0)
     {
-        unsigned int i, derivation_size = g_strv_length(derivation);
-        gchar **args = (gchar**)g_malloc((3 + derivation_size) * sizeof(gchar*));
+        unsigned int i;
+        gchar **args = (gchar**)g_malloc((3 + derivation_length) * sizeof(gchar*));
 
         args[0] = NIX_STORE_CMD;
         args[1] = "-r";
 
-        for(i = 0; i < derivation_size; i++)
+        for(i = 0; i < derivation_length; i++)
             args[i + 2] = derivation[i];
 
         args[i + 2] = NULL;
@@ -237,19 +237,19 @@ pid_t pkgmgmt_set_profile(gchar *profile, gchar *derivation, int stdout_fd, int 
     return pid;
 }
 
-ProcReact_Future pkgmgmt_query_requisites(gchar **derivation, int stderr_fd)
+ProcReact_Future pkgmgmt_query_requisites(gchar **derivation, const unsigned int derivation_length, int stderr_fd)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
     if(future.pid == 0)
     {
-        unsigned int i, derivation_size = g_strv_length(derivation);
-        char **args = (char**)g_malloc((3 + derivation_size) * sizeof(char*));
+        unsigned int i;
+        char **args = (char**)g_malloc((3 + derivation_length) * sizeof(char*));
 
         args[0] = NIX_STORE_CMD;
         args[1] = "-qR";
 
-        for(i = 0; i < derivation_size; i++)
+        for(i = 0; i < derivation_length; i++)
             args[i + 2] = derivation[i];
 
         args[i + 2] = NULL;
@@ -263,9 +263,9 @@ ProcReact_Future pkgmgmt_query_requisites(gchar **derivation, int stderr_fd)
     return future;
 }
 
-char **pkgmgmt_query_requisites_sync(gchar **derivation, int stderr_fd)
+char **pkgmgmt_query_requisites_sync(gchar **derivation, const unsigned int derivation_length, int stderr_fd)
 {
-    ProcReact_Future future = pkgmgmt_query_requisites(derivation, stderr_fd);
+    ProcReact_Future future = pkgmgmt_query_requisites(derivation, derivation_length, stderr_fd);
     ProcReact_Status status;
     char **result = procreact_future_get(&future, &status);
 
@@ -417,7 +417,7 @@ ProcReact_bool pkgmgmt_set_coordinator_profile(const gchar *coordinator_profile_
     gchar *profile_base_dir, *profile_path;
     char resolved_path[RESOLVED_PATH_MAX_SIZE];
     ssize_t resolved_path_size;
-    int exit_status;
+    ProcReact_bool exit_status;
 
     /* Determine which profile path to use, if a coordinator profile path is given use this value otherwise the default */
     profile_base_dir = compose_coordinator_profile_basedir(coordinator_profile_path);

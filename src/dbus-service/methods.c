@@ -79,7 +79,7 @@ gboolean on_handle_export(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *i
         dprintf(log_fd, "\n");
 
         /* Execute command */
-        tempfilename = pkgmgmt_export_closure(tmpdir, (gchar**)arg_derivation, log_fd, &pid, &temp_fd);
+        tempfilename = pkgmgmt_export_closure(tmpdir, (gchar**)arg_derivation, g_strv_length((gchar**)arg_derivation), log_fd, &pid, &temp_fd);
         signal_tempfile_result(pid, tempfilename, temp_fd, object, arg_pid, log_fd);
     }
 
@@ -101,7 +101,7 @@ gboolean on_handle_print_invalid(OrgNixosDisnixDisnix *object, GDBusMethodInvoca
         dprintf(log_fd, "\n");
 
         /* Execute command */
-        signal_strv_result(pkgmgmt_print_invalid_packages((gchar**)arg_derivation, log_fd), object, arg_pid, log_fd);
+        signal_strv_result(pkgmgmt_print_invalid_packages((gchar**)arg_derivation, g_strv_length((gchar**)arg_derivation), log_fd), object, arg_pid, log_fd);
     }
 
     org_nixos_disnix_disnix_complete_print_invalid(object, invocation);
@@ -122,7 +122,7 @@ gboolean on_handle_realise(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *
         dprintf(log_fd, "\n");
 
         /* Execute command and wait and asychronously propagate its end result */
-        signal_strv_result(pkgmgmt_realise((gchar**)arg_derivation, log_fd), object, arg_pid, log_fd);
+        signal_strv_result(pkgmgmt_realise((gchar**)arg_derivation, g_strv_length((gchar**)arg_derivation), log_fd), object, arg_pid, log_fd);
     }
 
     org_nixos_disnix_disnix_complete_realise(object, invocation);
@@ -181,7 +181,7 @@ gboolean on_handle_query_requisites(OrgNixosDisnixDisnix *object, GDBusMethodInv
         dprintf(log_fd, "\n");
 
         /* Execute command */
-        signal_strv_result(pkgmgmt_query_requisites((gchar**)arg_derivation, log_fd), object, arg_pid, log_fd);
+        signal_strv_result(pkgmgmt_query_requisites((gchar**)arg_derivation, g_strv_length((gchar**)arg_derivation), log_fd), object, arg_pid, log_fd);
     }
 
     org_nixos_disnix_disnix_complete_query_requisites(object, invocation);
@@ -387,7 +387,7 @@ gboolean on_handle_print_missing_snapshots(OrgNixosDisnixDisnix *object, GDBusMe
         dprintf(log_fd, "\n");
 
         /* Execute command */
-        signal_strv_result(statemgmt_print_missing_snapshots((gchar**)arg_component, log_fd), object, arg_pid, log_fd);
+        signal_strv_result(statemgmt_print_missing_snapshots((gchar**)arg_component, g_strv_length((gchar**)arg_component), log_fd), object, arg_pid, log_fd);
     }
 
     org_nixos_disnix_disnix_complete_print_missing_snapshots(object, invocation);
@@ -408,7 +408,7 @@ gboolean on_handle_import_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInv
         dprintf(log_fd, "\n");
 
         /* Execute command */
-        signal_boolean_result(statemgmt_import_snapshots((gchar*)arg_container, (gchar*)arg_component, (gchar**)arg_snapshots, log_fd, log_fd), object, arg_pid, log_fd);
+        signal_boolean_result(statemgmt_import_snapshots((gchar*)arg_container, (gchar*)arg_component, (gchar**)arg_snapshots, g_strv_length((gchar**)arg_snapshots), log_fd, log_fd), object, arg_pid, log_fd);
     }
 
     org_nixos_disnix_disnix_complete_import_snapshots(object, invocation);
@@ -429,7 +429,7 @@ gboolean on_handle_resolve_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodIn
         dprintf(log_fd, "\n");
 
         /* Execute command */
-        signal_strv_result(statemgmt_resolve_snapshots((gchar**)arg_snapshots, log_fd), object, arg_pid, log_fd);
+        signal_strv_result(statemgmt_resolve_snapshots((gchar**)arg_snapshots, g_strv_length((gchar**)arg_snapshots), log_fd), object, arg_pid, log_fd);
     }
 
     org_nixos_disnix_disnix_complete_resolve_snapshots(object, invocation);

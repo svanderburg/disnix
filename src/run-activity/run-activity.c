@@ -131,14 +131,14 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
 
             break;
         case OP_EXPORT:
-            tempfilename = pkgmgmt_export_closure(tmpdir, derivation, 2, &pid, &temp_fd);
+            tempfilename = pkgmgmt_export_closure(tmpdir, derivation, g_strv_length(derivation), 2, &pid, &temp_fd);
             return_tempfile(pid, tempfilename, temp_fd);
             break;
         case OP_PRINT_INVALID:
-            exit_status = print_strv(pkgmgmt_print_invalid_packages(derivation, 2));
+            exit_status = print_strv(pkgmgmt_print_invalid_packages(derivation, g_strv_length(derivation), 2));
             break;
         case OP_REALISE:
-            exit_status = print_strv(pkgmgmt_realise(derivation, 2));
+            exit_status = print_strv(pkgmgmt_realise(derivation, g_strv_length(derivation), 2));
             break;
         case OP_SET:
             if(derivation[0] == NULL)
@@ -153,7 +153,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
             print_text_from_profile_manifest(LOCALSTATEDIR, (gchar*)profile, 1);
             break;
         case OP_QUERY_REQUISITES:
-            exit_status = print_strv(pkgmgmt_query_requisites(derivation, 2));
+            exit_status = print_strv(pkgmgmt_query_requisites(derivation, g_strv_length(derivation), 2));
             break;
         case OP_COLLECT_GARBAGE:
             exit_status = procreact_wait_for_exit_status(pkgmgmt_collect_garbage(flags & FLAG_DELETE_OLD, 1, 2), &status);
@@ -251,7 +251,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
             exit_status = print_strv(statemgmt_query_latest_snapshot((gchar*)container, (gchar*)component, 2));
             break;
         case OP_PRINT_MISSING_SNAPSHOTS:
-            exit_status = print_strv(statemgmt_print_missing_snapshots((gchar**)derivation, 2));
+            exit_status = print_strv(statemgmt_print_missing_snapshots((gchar**)derivation, g_strv_length(derivation), 2));
             break;
         case OP_IMPORT_SNAPSHOTS:
             if(derivation[0] == NULL)
@@ -260,7 +260,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
                 exit_status = 1;
             }
             else
-                exit_status = procreact_wait_for_exit_status(statemgmt_import_snapshots((gchar*)container, (gchar*)component, derivation, 1, 2), &status);
+                exit_status = procreact_wait_for_exit_status(statemgmt_import_snapshots((gchar*)container, (gchar*)component, derivation, g_strv_length(derivation), 1, 2), &status);
 
             break;
         case OP_RESOLVE_SNAPSHOTS:
@@ -270,7 +270,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
                 exit_status = 1;
             }
             else
-                exit_status = print_strv(statemgmt_resolve_snapshots(derivation, 2));
+                exit_status = print_strv(statemgmt_resolve_snapshots(derivation, g_strv_length(derivation), 2));
 
             break;
         case OP_CLEAN_SNAPSHOTS:

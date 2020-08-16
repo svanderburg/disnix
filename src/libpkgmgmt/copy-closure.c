@@ -24,25 +24,28 @@
 
 ProcReact_bool copy_closure_to_sync(gchar *interface, gchar *target, gchar *tmpdir, gchar **derivation, int stderr_fd)
 {
-    char **requisites = pkgmgmt_query_requisites_sync(derivation, stderr_fd);
+    char **requisites = pkgmgmt_query_requisites_sync(derivation, g_strv_length(derivation), stderr_fd);
 
     if(requisites == NULL)
         return FALSE;
     else
     {
         ProcReact_bool exit_status = TRUE;
+        unsigned int requisites_length = g_strv_length(requisites);
 
-        if(g_strv_length(requisites) > 0)
+        if(requisites_length > 0)
         {
-            char **invalid_paths = pkgmgmt_remote_print_invalid_sync(interface, target, requisites, g_strv_length(requisites));
+            char **invalid_paths = pkgmgmt_remote_print_invalid_sync(interface, target, requisites, requisites_length);
 
             if(invalid_paths == NULL)
                 exit_status = FALSE;
             else
             {
-                if(g_strv_length(invalid_paths) > 0)
+                unsigned int invalid_paths_length = g_strv_length(invalid_paths);
+
+                if(invalid_paths_length > 0)
                 {
-                    char *tempfile = pkgmgmt_export_closure_sync(tmpdir, invalid_paths, stderr_fd);
+                    char *tempfile = pkgmgmt_export_closure_sync(tmpdir, invalid_paths, invalid_paths_length, stderr_fd);
 
                     if(tempfile == NULL)
                         exit_status = FALSE;
@@ -83,18 +86,21 @@ ProcReact_bool copy_closure_from_sync(gchar *interface, gchar *target, gchar **d
     else
     {
         ProcReact_bool exit_status = TRUE;
+        unsigned int requisites_length = g_strv_length(requisites);
 
-        if(g_strv_length(requisites) > 0)
+        if(requisites_length > 0)
         {
-            char **invalid_paths = pkgmgmt_print_invalid_packages_sync(requisites, stderr_fd);
+            char **invalid_paths = pkgmgmt_print_invalid_packages_sync(requisites, requisites_length, stderr_fd);
 
             if(invalid_paths == NULL)
                 exit_status = FALSE;
             else
             {
-                if(g_strv_length(invalid_paths) > 0)
+                unsigned int invalid_paths_length = g_strv_length(invalid_paths);
+
+                if(invalid_paths_length > 0)
                 {
-                    char *tempfile = pkgmgmt_export_remote_closure_sync(interface, target, invalid_paths, g_strv_length(requisites));
+                    char *tempfile = pkgmgmt_export_remote_closure_sync(interface, target, invalid_paths, invalid_paths_length);
 
                     if(tempfile == NULL)
                         exit_status = FALSE;

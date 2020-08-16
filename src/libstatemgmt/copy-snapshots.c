@@ -28,7 +28,7 @@
 #include "state-management.h"
 #include "remote-state-management.h"
 
-static ProcReact_bool order_snapshots_remotely(gchar *interface, gchar *target, gchar *container, gchar *component, char **snapshot_array, unsigned int snapshot_array_length)
+static ProcReact_bool order_snapshots_remotely(gchar *interface, gchar *target, gchar *container, gchar *component, char **snapshot_array, const unsigned int snapshot_array_length)
 {
     char **resolved_snapshots = statemgmt_remote_resolve_snapshots_sync(interface, target, snapshot_array, snapshot_array_length);
     ProcReact_bool exit_status = statemgmt_import_remote_snapshots_sync(interface, target, container, component, resolved_snapshots, g_strv_length(resolved_snapshots));
@@ -36,20 +36,21 @@ static ProcReact_bool order_snapshots_remotely(gchar *interface, gchar *target, 
     return exit_status;
 }
 
-static ProcReact_bool send_missing_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, char **missing_snapshots, int stderr_fd)
+static ProcReact_bool send_missing_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, char **missing_snapshots, const unsigned int missing_snapshots_length, int stderr_fd)
 {
-    char **resolved_snapshots = statemgmt_resolve_snapshots_sync(missing_snapshots, stderr_fd);
+    char **resolved_snapshots = statemgmt_resolve_snapshots_sync(missing_snapshots, missing_snapshots_length, stderr_fd);
 
     if(resolved_snapshots == NULL)
         return FALSE;
     else
     {
+        const unsigned int resolved_snapshots_length = g_strv_length(resolved_snapshots);
         ProcReact_bool exit_status;
 
-        if(g_strv_length(resolved_snapshots) == 0)
+        if(resolved_snapshots_length == 0)
             exit_status = FALSE;
         else
-            exit_status = statemgmt_import_local_snapshots_sync(interface, target, container, component, resolved_snapshots, g_strv_length(resolved_snapshots));
+            exit_status = statemgmt_import_local_snapshots_sync(interface, target, container, component, resolved_snapshots, resolved_snapshots_length);
 
         procreact_free_string_array(resolved_snapshots);
 
@@ -88,10 +89,12 @@ ProcReact_bool copy_snapshots_to_sync(gchar *interface, gchar *target, gchar *co
                 exit_status = FALSE;
             else
             {
-                if(g_strv_length(missing_snapshots) == 0) // If no snapshots need to be transferred, we still have to order them
+                unsigned int missing_snapshots_length = g_strv_length(missing_snapshots);
+
+                if(missing_snapshots_length == 0) // If no snapshots need to be transferred, we still have to order them
                      exit_status = order_snapshots_remotely(interface, target, container, component, snapshot_array, snapshot_array_length);
                 else
-                     exit_status = send_missing_snapshots(interface, target, container, component, missing_snapshots, stderr_fd);
+                     exit_status = send_missing_snapshots(interface, target, container, component, missing_snapshots, missing_snapshots_length, stderr_fd);
 
                 procreact_free_string_array(missing_snapshots);
             }
@@ -131,13 +134,13 @@ static ProcReact_bool remove_directory_and_contents(char *path)
 static ProcReact_bool order_local_snapshot(gchar *container, gchar *component, char *snapshot, int stdout_fd, int stderr_fd)
 {
     char *snapshot_array[] = { snapshot, NULL };
-    char **resolved_snapshots = statemgmt_resolve_snapshots_sync(snapshot_array, stderr_fd);
+    char **resolved_snapshots = statemgmt_resolve_snapshots_sync(snapshot_array, g_strv_length(snapshot_array), stderr_fd);
 
     if(resolved_snapshots == NULL)
         return FALSE;
     else
     {
-        ProcReact_bool exit_status = statemgmt_import_snapshots_sync(container, component, resolved_snapshots, stdout_fd, stderr_fd);
+        ProcReact_bool exit_status = statemgmt_import_snapshots_sync(container, component, resolved_snapshots, g_strv_length(resolved_snapshots), stdout_fd, stderr_fd);
         procreact_free_string_array(resolved_snapshots);
         return exit_status;
     }
@@ -152,12 +155,13 @@ static ProcReact_bool retrieve_missing_snapshots(gchar *interface, gchar *target
     else
     {
         ProcReact_bool exit_status = TRUE;
+        unsigned int resolved_snapshots_length = g_strv_length(resolved_snapshots);
 
-        if(g_strv_length(resolved_snapshots) == 0)
+        if(resolved_snapshots_length == 0)
             exit_status = FALSE;
         else
         {
-            char **tmpdirs = statemgmt_export_remote_snapshots_sync(interface, target, resolved_snapshots, g_strv_length(resolved_snapshots));
+            char **tmpdirs = statemgmt_export_remote_snapshots_sync(interface, target, resolved_snapshots, resolved_snapshots_length);
 
             if(tmpdirs == NULL)
                 exit_status = FALSE;
@@ -170,8 +174,9 @@ static ProcReact_bool retrieve_missing_snapshots(gchar *interface, gchar *target
                     char *tmpdir = tmpdirs[0];
                     gchar *tmp_snapshot = g_strconcat(tmpdir, "/", basename(resolved_snapshots[0]), NULL);
                     char *tmp_snapshots[] = { tmp_snapshot, NULL };
+                    const unsigned int tmp_snapshots_length = 1; // Length of the array above
 
-                    exit_status = statemgmt_import_snapshots_sync(container, component, tmp_snapshots, stdout_fd, stderr_fd);
+                    exit_status = statemgmt_import_snapshots_sync(container, component, tmp_snapshots, tmp_snapshots_length, stdout_fd, stderr_fd);
 
                     if(exit_status == 0)
                         rmdir(tmpdir);
@@ -209,12 +214,13 @@ ProcReact_bool copy_snapshots_from_sync(gchar *interface, gchar *target, gchar *
     {
         ProcReact_bool exit_status = TRUE;
         unsigned int i;
+        unsigned int snapshots_length = g_strv_length(snapshots);
 
-        for(i = 0; i < g_strv_length(snapshots); i++) // We need to traverse the snapshots in the right order, one by one, to ensure that the generations are imported in the right order
+        for(i = 0; i < snapshots_length; i++) // We need to traverse the snapshots in the right order, one by one, to ensure that the generations are imported in the right order
         {
             char *snapshot = snapshots[i];
 
-            char **missing_snapshots = statemgmt_print_missing_snapshots_sync(snapshots, stderr_fd);
+            char **missing_snapshots = statemgmt_print_missing_snapshots_sync(snapshots, snapshots_length, stderr_fd);
 
             if(missing_snapshots == NULL)
                 exit_status = FALSE;

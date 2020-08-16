@@ -105,19 +105,19 @@ char **statemgmt_query_latest_snapshot_sync(gchar *container, gchar *component, 
         return NULL;
 }
 
-ProcReact_Future statemgmt_print_missing_snapshots(gchar **component, int stderr_fd)
+ProcReact_Future statemgmt_print_missing_snapshots(gchar **component, const unsigned int component_length, int stderr_fd)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
     if(future.pid == 0)
     {
-        unsigned int i, component_size = g_strv_length(component);
-        gchar **args = (gchar**)g_malloc((component_size + 3) * sizeof(gchar*));
+        unsigned int i;
+        gchar **args = (gchar**)g_malloc((component_length + 3) * sizeof(gchar*));
 
         args[0] = "dysnomia-snapshots";
         args[1] = "--print-missing";
 
-        for(i = 0; i < component_size; i++)
+        for(i = 0; i < component_length; i++)
             args[i + 2] = component[i];
 
         args[i + 2] = NULL;
@@ -131,10 +131,10 @@ ProcReact_Future statemgmt_print_missing_snapshots(gchar **component, int stderr
     return future;
 }
 
-char **statemgmt_print_missing_snapshots_sync(gchar **component, int stderr_fd)
+char **statemgmt_print_missing_snapshots_sync(gchar **component, const unsigned int component_length, int stderr_fd)
 {
     ProcReact_Status status;
-    ProcReact_Future future = statemgmt_print_missing_snapshots(component, stderr_fd);
+    ProcReact_Future future = statemgmt_print_missing_snapshots(component, component_length, stderr_fd);
     char **result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)
@@ -143,14 +143,14 @@ char **statemgmt_print_missing_snapshots_sync(gchar **component, int stderr_fd)
         return NULL;
 }
 
-pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **resolved_snapshots, int stdout_fd, int stderr_fd)
+pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **resolved_snapshots, const unsigned int resolved_snapshots_length, int stdout_fd, int stderr_fd)
 {
     pid_t pid = fork();
 
     if(pid == 0)
     {
-        unsigned int i, resolved_snapshots_size = g_strv_length(resolved_snapshots);
-        gchar **args = (gchar**)g_malloc((resolved_snapshots_size + 6) * sizeof(gchar*));
+        unsigned int i;
+        gchar **args = (gchar**)g_malloc((resolved_snapshots_length + 6) * sizeof(gchar*));
 
         args[0] = "dysnomia-snapshots";
         args[1] = "--import";
@@ -159,7 +159,7 @@ pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **res
         args[4] = "--component";
         args[5] = component;
 
-        for(i = 0; i < resolved_snapshots_size; i++)
+        for(i = 0; i < resolved_snapshots_length; i++)
             args[i + 6] = resolved_snapshots[i];
 
         args[i + 6] = NULL;
@@ -173,27 +173,27 @@ pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **res
     return pid;
 }
 
-ProcReact_bool statemgmt_import_snapshots_sync(gchar *container, gchar *component, gchar **resolved_snapshots, int stdout_fd, int stderr_fd)
+ProcReact_bool statemgmt_import_snapshots_sync(gchar *container, gchar *component, gchar **resolved_snapshots, const unsigned int resolved_snapshots_length, int stdout_fd, int stderr_fd)
 {
     ProcReact_Status status;
-    pid_t pid = statemgmt_import_snapshots(container, component, resolved_snapshots, stdout_fd, stderr_fd);
+    pid_t pid = statemgmt_import_snapshots(container, component, resolved_snapshots, resolved_snapshots_length, stdout_fd, stderr_fd);
     int exit_status = procreact_wait_for_boolean(pid, &status);
     return (status == PROCREACT_STATUS_OK && exit_status);
 }
 
-ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr_fd)
+ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, const unsigned int snapshots_length, int stderr_fd)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
     if(future.pid == 0)
     {
-        unsigned int i, snapshots_size = g_strv_length(snapshots);
-        gchar **args = (gchar**)g_malloc((snapshots_size + 3) * sizeof(gchar*));
+        unsigned int i;
+        gchar **args = (gchar**)g_malloc((snapshots_length + 3) * sizeof(gchar*));
 
         args[0] = "dysnomia-snapshots";
         args[1] = "--resolve";
 
-        for(i = 0; i < snapshots_size; i++)
+        for(i = 0; i < snapshots_length; i++)
             args[i + 2] = snapshots[i];
 
         args[i + 2] = NULL;
@@ -207,10 +207,10 @@ ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, int stderr_fd)
     return future;
 }
 
-char **statemgmt_resolve_snapshots_sync(gchar **snapshots, int stderr_fd)
+char **statemgmt_resolve_snapshots_sync(gchar **snapshots, const unsigned int snapshots_length, int stderr_fd)
 {
     ProcReact_Status status;
-    ProcReact_Future future = statemgmt_resolve_snapshots(snapshots, stderr_fd);
+    ProcReact_Future future = statemgmt_resolve_snapshots(snapshots, snapshots_length, stderr_fd);
     char **result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)

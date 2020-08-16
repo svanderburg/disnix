@@ -28,21 +28,21 @@ pid_t pkgmgmt_import_closure(const char *closure, int stdout_fd, int stderr_fd);
 
 ProcReact_bool pkgmgmt_import_closure_sync(const char *closure, int stdout_fd, int stderr_fd);
 
-gchar *pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, int stderr_fd, pid_t *pid, int *temp_fd);
+gchar *pkgmgmt_export_closure(gchar *tmpdir, gchar **derivation, const unsigned int derivation_length, int stderr_fd, pid_t *pid, int *temp_fd);
 
-gchar *pkgmgmt_export_closure_sync(gchar *tmpdir, gchar **derivation, int stderr_fd);
+gchar *pkgmgmt_export_closure_sync(gchar *tmpdir, gchar **derivation, const unsigned int derivation_length, int stderr_fd);
 
-ProcReact_Future pkgmgmt_print_invalid_packages(gchar **derivation, int stderr_fd);
+ProcReact_Future pkgmgmt_print_invalid_packages(gchar **derivation, const unsigned int derivation_length, int stderr_fd);
 
-char **pkgmgmt_print_invalid_packages_sync(gchar **derivation, int stderr_fd);
+char **pkgmgmt_print_invalid_packages_sync(gchar **derivation, const unsigned int derivation_length, int stderr_fd);
 
-ProcReact_Future pkgmgmt_realise(gchar **derivation, int stderr_fd);
+ProcReact_Future pkgmgmt_realise(gchar **derivation, const unsigned int derivation_length, int stderr_fd);
 
 pid_t pkgmgmt_set_profile(gchar *profile, gchar *derivation, int stdout_fd, int stderr_fd);
 
-ProcReact_Future pkgmgmt_query_requisites(gchar **derivation, int stderr_fd);
+ProcReact_Future pkgmgmt_query_requisites(gchar **derivation, const unsigned int derivation_length, int stderr_fd);
 
-char **pkgmgmt_query_requisites_sync(gchar **derivation, int stderr_fd);
+char **pkgmgmt_query_requisites_sync(gchar **derivation, const unsigned int derivation_length, int stderr_fd);
 
 pid_t pkgmgmt_collect_garbage(int delete_old, int stdout_fd, int stderr_fd);
 
