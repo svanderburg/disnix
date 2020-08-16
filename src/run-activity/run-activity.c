@@ -26,6 +26,7 @@
 #include <procreact_future.h>
 #include <package-management.h>
 #include <state-management.h>
+#include <snapshot-management.h>
 #include <profilemanifest.h>
 #include <profilelocking.h>
 

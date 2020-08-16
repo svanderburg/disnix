@@ -130,18 +130,6 @@ pid_t statemgmt_remote_delete_state(gchar *interface, gchar *target, gchar *cont
 pid_t statemgmt_remote_dysnomia_shell(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service, gchar *command);
 
 /**
- * Invokes the Dysnomia snapshot garbage collect operation through a Disnix client interface
- *
- * @param interface Path to the interface executable
- * @param target Target Address of the remote interface
- * @param keep Number of snapshot generations to keep
- * @param container Name of the container to filter on, or NULL to consult all containers
- * @param component Name of the component to filter on, or NULL to consult all components
- * @return PID of the client interface process performing the operation, or -1 in case of a failure
- */
-pid_t statemgmt_remote_clean_snapshots(gchar *interface, gchar *target, int keep, char *container, char *component);
-
-/**
  * Captures the configuration from the Dysnomia container configuration files
  * and generates a Nix expression from it.
  *
@@ -150,34 +138,6 @@ pid_t statemgmt_remote_clean_snapshots(gchar *interface, gchar *target, int keep
  * @return Future struct of the client interface process performing the operation
  */
 ProcReact_Future statemgmt_remote_capture_config(gchar *interface, gchar *target);
-
-ProcReact_Future statemgmt_remote_query_all_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component);
-
-char **statemgmt_remote_query_all_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component);
-
-ProcReact_Future statemgmt_remote_query_latest_snapshot(gchar *interface, gchar *target, gchar *container, gchar *component);
-
-char **statemgmt_remote_query_latest_snapshot_sync(gchar *interface, gchar *target, gchar *container, gchar *component);
-
-ProcReact_Future statemgmt_remote_print_missing_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
-
-char **statemgmt_remote_print_missing_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
-
-ProcReact_Future statemgmt_remote_resolve_snapshots(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
-
-char **statemgmt_remote_resolve_snapshots_sync(gchar *interface, gchar *target, gchar **snapshots, unsigned int snapshots_length);
-
-pid_t statemgmt_import_local_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
-
-ProcReact_bool statemgmt_import_local_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
-
-pid_t statemgmt_import_remote_snapshots(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
-
-ProcReact_bool statemgmt_import_remote_snapshots_sync(gchar *interface, gchar *target, gchar *container, gchar *component, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
-
-ProcReact_Future statemgmt_export_remote_snapshots(gchar *interface, gchar *target, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
-
-char **statemgmt_export_remote_snapshots_sync(gchar *interface, gchar *target, gchar **resolved_snapshots, unsigned int resolved_snapshots_length);
 
 /**
  * Invokes the true command for testing purposes.

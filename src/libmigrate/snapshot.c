@@ -20,6 +20,7 @@
 #include "snapshot.h"
 #include <sys/types.h>
 #include <remote-state-management.h>
+#include <remote-snapshot-management.h>
 #include <snapshotmapping-traverse.h>
 #include <manifestservicestable.h>
 #include <targets-iterator.h>

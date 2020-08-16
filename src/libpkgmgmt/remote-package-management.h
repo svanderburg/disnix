@@ -73,20 +73,20 @@ ProcReact_Future pkgmgmt_remote_realise(gchar *interface, gchar *target, gchar *
  * @param derivation_length Length of the derivations array
  * @return Future struct of the client interface process performing the operation
  */
-ProcReact_Future pkgmgmt_remote_query_requisites(gchar *interface, gchar *target, gchar **derivation, unsigned int derivation_length);
+ProcReact_Future pkgmgmt_remote_query_requisites(gchar *interface, gchar *target, gchar **derivation, const unsigned int derivation_length);
 
-char **pkgmgmt_remote_query_requisites_sync(gchar *interface, gchar *target, gchar **derivation, unsigned int derivation_length);
+char **pkgmgmt_remote_query_requisites_sync(gchar *interface, gchar *target, gchar **derivation, const unsigned int derivation_length);
 
-ProcReact_Future pkgmgmt_remote_print_invalid(gchar *interface, gchar *target, gchar **paths, unsigned int paths_length);
+ProcReact_Future pkgmgmt_remote_print_invalid(gchar *interface, gchar *target, gchar **paths, const unsigned int paths_length);
 
-char **pkgmgmt_remote_print_invalid_sync(gchar *interface, gchar *target, gchar **paths, unsigned int paths_length);
+char **pkgmgmt_remote_print_invalid_sync(gchar *interface, gchar *target, gchar **paths, const unsigned int paths_length);
 
 pid_t pkgmgmt_import_local_closure(gchar *interface, gchar *target, char *closure);
 
 ProcReact_bool pkgmgmt_import_local_closure_sync(gchar *interface, gchar *target, char *closure);
 
-ProcReact_Future pkgmgmt_export_remote_closure(gchar *interface, gchar *target, char **paths, unsigned int paths_length);
+ProcReact_Future pkgmgmt_export_remote_closure(gchar *interface, gchar *target, char **paths, const unsigned int paths_length);
 
-char *pkgmgmt_export_remote_closure_sync(gchar *interface, gchar *target, char **paths, unsigned int paths_length);
+char *pkgmgmt_export_remote_closure_sync(gchar *interface, gchar *target, char **paths, const unsigned int paths_length);
 
 #endif

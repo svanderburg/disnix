@@ -19,7 +19,7 @@
 
 #include "clean-snapshots.h"
 #include <targets-iterator.h>
-#include <remote-state-management.h>
+#include <remote-snapshot-management.h>
 
 typedef struct
 {

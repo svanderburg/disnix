@@ -25,8 +25,8 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <procreact_types.h>
-#include "state-management.h"
-#include "remote-state-management.h"
+#include "snapshot-management.h"
+#include "remote-snapshot-management.h"
 
 static ProcReact_bool order_snapshots_remotely(gchar *interface, gchar *target, gchar *container, gchar *component, char **snapshot_array, const unsigned int snapshot_array_length)
 {

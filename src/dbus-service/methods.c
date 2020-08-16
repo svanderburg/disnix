@@ -27,6 +27,7 @@
 #include "signaling.h"
 #include "package-management.h"
 #include "state-management.h"
+#include "snapshot-management.h"
 
 #define BUFFER_SIZE 1024
 
