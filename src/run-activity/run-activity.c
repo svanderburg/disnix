@@ -165,7 +165,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
             if(container == NULL)
                 exit_status = 1;
             else
-                exit_status = procreact_wait_for_exit_status(statemgmt_run_dysnomia_activity((gchar*)type, "activate", derivation[0], (gchar*)container, arguments, 1, 2), &status);
+                exit_status = procreact_wait_for_exit_status(statemgmt_activate((gchar*)type, derivation[0], (gchar*)container, arguments, 1, 2), &status);
             break;
         case OP_DEACTIVATE:
             container = check_dysnomia_activity_parameters(type, derivation, container, arguments);
@@ -173,7 +173,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
             if(container == NULL)
                 exit_status = 1;
             else
-                exit_status = procreact_wait_for_exit_status(statemgmt_run_dysnomia_activity((gchar*)type, "deactivate", derivation[0], (gchar*)container, arguments, 1, 2), &status);
+                exit_status = procreact_wait_for_exit_status(statemgmt_deactivate((gchar*)type, derivation[0], (gchar*)container, arguments, 1, 2), &status);
             break;
         case OP_DELETE_STATE:
             container = check_dysnomia_activity_parameters(type, derivation, container, arguments);
@@ -181,7 +181,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
             if(container == NULL)
                 exit_status = 1;
             else
-                exit_status = procreact_wait_for_exit_status(statemgmt_run_dysnomia_activity((gchar*)type, "collect-garbage", derivation[0], (gchar*)container, arguments, 1, 2), &status);
+                exit_status = procreact_wait_for_exit_status(statemgmt_collect_garbage((gchar*)type, derivation[0], (gchar*)container, arguments, 1, 2), &status);
             break;
         case OP_SNAPSHOT:
             container = check_dysnomia_activity_parameters(type, derivation, container, arguments);
@@ -189,7 +189,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
             if(container == NULL)
                 exit_status = 1;
             else
-                exit_status = procreact_wait_for_exit_status(statemgmt_run_dysnomia_activity((gchar*)type, "snapshot", derivation[0], (gchar*)container, arguments, 1, 2), &status);
+                exit_status = procreact_wait_for_exit_status(statemgmt_snapshot((gchar*)type, derivation[0], (gchar*)container, arguments, 1, 2), &status);
             break;
         case OP_RESTORE:
             container = check_dysnomia_activity_parameters(type, derivation, container, arguments);
@@ -197,7 +197,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
             if(container == NULL)
                 exit_status = 1;
             else
-                exit_status = procreact_wait_for_exit_status(statemgmt_run_dysnomia_activity((gchar*)type, "restore", derivation[0], (gchar*)container, arguments, 1, 2), &status);
+                exit_status = procreact_wait_for_exit_status(statemgmt_restore((gchar*)type, derivation[0], (gchar*)container, arguments, 1, 2), &status);
             break;
         case OP_LOCK:
             gethostname(buffer, BUFFER_SIZE);
@@ -293,7 +293,7 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
             if(container == NULL)
                 exit_status = 1;
             else
-                exit_status = procreact_wait_for_exit_status(statemgmt_spawn_dysnomia_shell((gchar*)type, derivation[0], (gchar*)container, arguments, command), &status);
+                exit_status = procreact_wait_for_exit_status(statemgmt_shell((gchar*)type, derivation[0], (gchar*)container, arguments, command), &status);
             break;
         case OP_NONE:
             g_printerr("ERROR: No operation specified!\n");

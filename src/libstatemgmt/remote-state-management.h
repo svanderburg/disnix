@@ -127,7 +127,7 @@ pid_t statemgmt_remote_delete_state(gchar *interface, gchar *target, gchar *cont
  * @param command Shell command to execute or NULL to spawn an interactive session
  * @return PID of the client interface process performing the operation, or -1 in case of a failure
  */
-pid_t statemgmt_remote_dysnomia_shell(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service, gchar *command);
+pid_t statemgmt_remote_shell(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service, gchar *command);
 
 /**
  * Captures the configuration from the Dysnomia container configuration files
@@ -140,8 +140,8 @@ pid_t statemgmt_remote_dysnomia_shell(gchar *interface, gchar *target, gchar *co
 ProcReact_Future statemgmt_remote_capture_config(gchar *interface, gchar *target);
 
 /**
- * Invokes the true command for testing purposes.
+ * Invokes a dummy command (the true command) for testing purposes.
  */
-pid_t exec_true(void);
+pid_t statemgmt_dummy_command(void);
 
 #endif

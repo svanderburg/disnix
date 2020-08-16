@@ -36,14 +36,14 @@ ProcReact_Future statemgmt_print_missing_snapshots(gchar **component, const unsi
 
 char **statemgmt_print_missing_snapshots_sync(gchar **component, const unsigned int component_length, int stderr_fd);
 
+char **statemgmt_resolve_snapshots_sync(gchar **snapshots, const unsigned int snapshots_length, int stderr_fd);
+
+pid_t statemgmt_clean_snapshots(gint keep, gchar *container, gchar *component, int stdout_fd, int stderr_fd);
+
 pid_t statemgmt_import_snapshots(gchar *container, gchar *component, gchar **resolved_snapshots, const unsigned int resolved_snapshots_length, int stdout_fd, int stderr_fd);
 
 ProcReact_bool statemgmt_import_snapshots_sync(gchar *container, gchar *component, gchar **resolved_snapshots, const unsigned int resolved_snapshots_length, int stdout_fd, int stderr_fd);
 
 ProcReact_Future statemgmt_resolve_snapshots(gchar **snapshots, const unsigned int snapshots_length, int stderr_fd);
-
-char **statemgmt_resolve_snapshots_sync(gchar **snapshots, const unsigned int snapshots_length, int stderr_fd);
-
-pid_t statemgmt_clean_snapshots(gint keep, gchar *container, gchar *component, int stdout_fd, int stderr_fd);
 
 #endif

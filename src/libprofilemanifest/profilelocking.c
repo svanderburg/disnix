@@ -49,12 +49,12 @@ static int lock_or_unlock_services(int log_fd, ProfileManifest *profile_manifest
 
 static int unlock_services(int log_fd, ProfileManifest *profile_manifest)
 {
-    return lock_or_unlock_services(log_fd, profile_manifest, "unlock", statemgmt_unlock_component);
+    return lock_or_unlock_services(log_fd, profile_manifest, "unlock", statemgmt_unlock);
 }
 
 static int lock_services(int log_fd, ProfileManifest *profile_manifest)
 {
-    return lock_or_unlock_services(log_fd, profile_manifest, "lock", statemgmt_lock_component);
+    return lock_or_unlock_services(log_fd, profile_manifest, "lock", statemgmt_lock);
 }
 
 static gchar *create_lock_filename(gchar *tmpdir, gchar *profile)

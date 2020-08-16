@@ -117,7 +117,7 @@ pid_t statemgmt_remote_delete_state(gchar *interface, gchar *target, gchar *cont
     return exec_dysnomia_activity("--delete-state", interface, target, container, type, arguments, arguments_size, service);
 }
 
-pid_t statemgmt_remote_dysnomia_shell(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service, gchar *command)
+pid_t statemgmt_remote_shell(gchar *interface, gchar *target, gchar *container, gchar *type, gchar **arguments, const unsigned int arguments_size, gchar *service, gchar *command)
 {
     pid_t pid = fork();
 
@@ -174,7 +174,7 @@ ProcReact_Future statemgmt_remote_capture_config(gchar *interface, gchar *target
     return future;
 }
 
-pid_t exec_true(void)
+pid_t statemgmt_dummy_command(void)
 {
     pid_t pid = fork();
 

@@ -213,7 +213,9 @@ gboolean on_handle_collect_garbage(OrgNixosDisnixDisnix *object, GDBusMethodInvo
 
 /* Common dysnomia invocation function */
 
-static gboolean on_handle_dysnomia_activity(gchar *activity, OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
+typedef pid_t StateActivityFunction(gchar *type, gchar *component, gchar *container, char **arguments, int stdout_fd, int stderr_fd);
+
+static gboolean on_handle_state_activity(gchar *activity, StateActivityFunction *activity_function, OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
     int log_fd = open_log_file(object, arg_pid);
 
@@ -225,7 +227,7 @@ static gboolean on_handle_dysnomia_activity(gchar *activity, OrgNixosDisnixDisni
         dprintf(log_fd, "\n");
 
         /* Execute command */
-        signal_boolean_result(statemgmt_run_dysnomia_activity((gchar*)arg_type, activity, (gchar*)arg_derivation, (gchar*)arg_container, (gchar**)arg_arguments, log_fd, log_fd), object, arg_pid, log_fd);
+        signal_boolean_result(activity_function((gchar*)arg_type, (gchar*)arg_derivation, (gchar*)arg_container, (gchar**)arg_arguments, log_fd, log_fd), object, arg_pid, log_fd);
     }
 
     org_nixos_disnix_disnix_complete_activate(object, invocation);
@@ -236,14 +238,14 @@ static gboolean on_handle_dysnomia_activity(gchar *activity, OrgNixosDisnixDisni
 
 gboolean on_handle_activate(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    return on_handle_dysnomia_activity("activate", object, invocation, arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
+    return on_handle_state_activity("activate", statemgmt_activate, object, invocation, arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
 }
 
 /* Deactivate method */
 
 gboolean on_handle_deactivate(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    return on_handle_dysnomia_activity("deactivate", object, invocation, arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
+    return on_handle_state_activity("deactivate", statemgmt_deactivate, object, invocation, arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
 }
 
 /* Lock method */
@@ -326,14 +328,14 @@ gboolean on_handle_unlock(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *i
 
 gboolean on_handle_snapshot(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    return on_handle_dysnomia_activity("snapshot", object, invocation, arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
+    return on_handle_state_activity("snapshot", statemgmt_snapshot, object, invocation, arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
 }
 
 /* Restore method */
 
 gboolean on_handle_restore(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    return on_handle_dysnomia_activity("restore", object, invocation, arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
+    return on_handle_state_activity("restore", statemgmt_restore, object, invocation, arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
 }
 
 /* Query all snapshots method */
@@ -468,7 +470,7 @@ gboolean on_handle_clean_snapshots(OrgNixosDisnixDisnix *object, GDBusMethodInvo
 
 gboolean on_handle_delete_state(OrgNixosDisnixDisnix *object, GDBusMethodInvocation *invocation, gint arg_pid, const gchar *arg_derivation, const gchar *arg_container, const gchar *arg_type, const gchar *const *arg_arguments)
 {
-    return on_handle_dysnomia_activity("collect-garbage", object, invocation, arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
+    return on_handle_state_activity("collect-garbage", statemgmt_collect_garbage, object, invocation, arg_pid, arg_derivation, arg_container, arg_type, arg_arguments);
 }
 
 /* Get logdir operation */

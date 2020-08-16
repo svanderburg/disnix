@@ -24,14 +24,22 @@
 #include <unistd.h>
 #include <procreact_future.h>
 
-pid_t statemgmt_run_dysnomia_activity(gchar *type, gchar *activity, gchar *component, gchar *container, char **arguments, int stdout_fd, int stderr_fd);
+pid_t statemgmt_activate(gchar *type, gchar *component, gchar *container, char **arguments, int stdout_fd, int stderr_fd);
+
+pid_t statemgmt_deactivate(gchar *type, gchar *component, gchar *container, char **arguments, int stdout_fd, int stderr_fd);
+
+pid_t statemgmt_snapshot(gchar *type, gchar *component, gchar *container, char **arguments, int stdout_fd, int stderr_fd);
+
+pid_t statemgmt_restore(gchar *type, gchar *component, gchar *container, char **arguments, int stdout_fd, int stderr_fd);
+
+pid_t statemgmt_collect_garbage(gchar *type, gchar *component, gchar *container, char **arguments, int stdout_fd, int stderr_fd);
+
+pid_t statemgmt_lock(gchar *type, gchar *container, gchar *component, int stdout_fd, int stderr_fd);
+
+pid_t statemgmt_unlock(gchar *type, gchar *container, gchar *component, int stdout_fd, int stderr_fd);
+
+pid_t statemgmt_shell(gchar *type, gchar *component, gchar *container, char **arguments, gchar *command);
 
 gchar *statemgmt_capture_config(gchar *tmpdir, int stderr_fd, pid_t *pid, int *temp_fd);
-
-pid_t statemgmt_lock_component(gchar *type, gchar *container, gchar *component, int stdout_fd, int stderr_fd);
-
-pid_t statemgmt_unlock_component(gchar *type, gchar *container, gchar *component, int stdout_fd, int stderr_fd);
-
-pid_t statemgmt_spawn_dysnomia_shell(gchar *type, gchar *component, gchar *container, char **arguments, gchar *command);
 
 #endif

@@ -47,7 +47,7 @@ static pid_t activate_mapping(ServiceMapping *mapping, ManifestService *service,
 static pid_t dry_run_activate_mapping(ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar *type, xmlChar **arguments, const unsigned int arguments_length)
 {
     print_activation_step("Dry-run activating", mapping, service, type, arguments, arguments_length); /* Print debug message */
-    return exec_true(); /* Execute dummy process */
+    return statemgmt_dummy_command(); /* Execute dummy process */
 }
 
 static pid_t deactivate_mapping(ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar *type, xmlChar **arguments, const unsigned int arguments_length)
@@ -60,7 +60,7 @@ static pid_t deactivate_mapping(ServiceMapping *mapping, ManifestService *servic
 static pid_t dry_run_deactivate_mapping(ServiceMapping *mapping, ManifestService *service, Target *target, xmlChar *type, xmlChar **arguments, const unsigned int arguments_length)
 {
     print_activation_step("Dry-run deactivating", mapping, service, type, arguments, arguments_length); /* Print debug message */
-    return exec_true(); /* Execute dummy process */
+    return statemgmt_dummy_command(); /* Execute dummy process */
 }
 
 static void complete_activation(ServiceMapping *mapping, ManifestService *service, Target *target, ProcReact_Status status, int result)

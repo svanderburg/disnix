@@ -39,7 +39,7 @@ static int spawn_shell(GHashTable *services_table, GHashTable *targets_table, co
 
     g_printerr("[%s]: Connecting to service: %s deployed to container: %s\n", mapping->target, service->pkg, mapping->container);
 
-    exit_status = procreact_wait_for_exit_status(statemgmt_remote_dysnomia_shell((char*)target->client_interface, target_key, (char*)mapping->container, (char*)params.type, (char**)params.arguments, params.arguments_size, (char*)params.service->pkg, command), &status);
+    exit_status = procreact_wait_for_exit_status(statemgmt_remote_shell((char*)target->client_interface, target_key, (char*)mapping->container, (char*)params.type, (char**)params.arguments, params.arguments_size, (char*)params.service->pkg, command), &status);
 
     destroy_mapping_parameters(&params);
 
