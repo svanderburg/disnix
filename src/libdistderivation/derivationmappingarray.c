@@ -30,7 +30,7 @@ void delete_derivation_mapping_array(GPtrArray *derivation_mapping_array)
     NixXML_delete_g_ptr_array(derivation_mapping_array, (NixXML_DeleteGPtrArrayElementFunc)delete_derivation_mapping);
 }
 
-int check_derivation_mapping_array(const GPtrArray *derivation_mapping_array)
+NixXML_bool check_derivation_mapping_array(const GPtrArray *derivation_mapping_array)
 {
     return NixXML_check_g_ptr_array(derivation_mapping_array, (NixXML_CheckGPtrArrayElementFunc)check_derivation_mapping);
 }

@@ -21,6 +21,7 @@
 #define __DISNIX_DERIVATIONMAPPINGARRAY_H
 #include <libxml/parser.h>
 #include <glib.h>
+#include <nixxml-types.h>
 #include "interfacestable.h"
 #include "derivationmapping.h"
 
@@ -46,6 +47,6 @@ void delete_derivation_mapping_array(GPtrArray *derivation_mapping_array);
  * @param derivation_mapping_array Derivation mapping array to delete
  * @return TRUE if the derivation mapping array is valid, else FALSE
  */
-int check_derivation_mapping_array(const GPtrArray *derivation_mapping_array);
+NixXML_bool check_derivation_mapping_array(const GPtrArray *derivation_mapping_array);
 
 #endif
