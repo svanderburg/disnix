@@ -37,10 +37,10 @@ static void complete_set_profile_mapping(void *data, gchar *target_name, xmlChar
         g_printerr("[target: %s]: Cannot set Disnix profile: %s\n", target_name, profile_path);
 }
 
-static int set_target_profiles(GHashTable *profile_mapping_table, GHashTable *targets_table, gchar *profile)
+static ProcReact_bool set_target_profiles(GHashTable *profile_mapping_table, GHashTable *targets_table, gchar *profile)
 {
     /* Iterate over the profile mappings, limiting concurrency to the desired concurrent transfers and distribute them */
-    int success;
+    ProcReact_bool success;
     ProcReact_PidIterator iterator = create_profile_mapping_iterator(profile_mapping_table, targets_table, set_profile_mapping, complete_set_profile_mapping, profile);
     procreact_fork_in_parallel_and_wait(&iterator);
     success = profile_mapping_iterator_has_succeeded(&iterator);
@@ -50,7 +50,7 @@ static int set_target_profiles(GHashTable *profile_mapping_table, GHashTable *ta
     return success;
 }
 
-int set_profiles(const Manifest *manifest, const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const unsigned int flags)
+ProcReact_bool set_profiles(const Manifest *manifest, const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const unsigned int flags)
 {
     return((flags & SET_NO_TARGET_PROFILES || set_target_profiles(manifest->profile_mapping_table, manifest->targets_table, profile)) /* First, attempt to set the target profiles */
       && (flags & SET_NO_COORDINATOR_PROFILE || pkgmgmt_set_coordinator_profile(coordinator_profile_path, manifest_file, profile))); /* Then try to set the coordinator profile */

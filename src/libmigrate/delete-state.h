@@ -20,6 +20,7 @@
 #ifndef __DISNIX_DELETE_STATE_H
 #define __DISNIX_DELETE_STATE_H
 #include <glib.h>
+#include <procreact_types.h>
 #include "manifest.h"
 
 /**
@@ -29,6 +30,6 @@
  * @param targets_table Hash table of targets belonging to the current configuration
  * @return TRUE if deleting the state completed successfully, else FALSE
  */
-int delete_obsolete_state(GPtrArray *snapshot_mapping_array, GHashTable *services_table, GHashTable *targets_table);
+ProcReact_bool delete_obsolete_state(GPtrArray *snapshot_mapping_array, GHashTable *services_table, GHashTable *targets_table);
 
 #endif

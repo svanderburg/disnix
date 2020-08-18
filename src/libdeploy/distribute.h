@@ -19,6 +19,7 @@
 
 #ifndef __DISNIX_DISTRIBUTE_H
 #define __DISNIX_DISTRIBUTE_H
+#include <procreact_types.h>
 #include <manifest.h>
 
 /**
@@ -30,6 +31,6 @@
  * @param tmpdir Directory in which the temp files should be stored
  * @return TRUE if all closures have been successfully transferred, else FALSE
  */
-int distribute(const Manifest *manifest, const unsigned int max_concurrent_transfers, char *tmpdir);
+ProcReact_bool distribute(const Manifest *manifest, const unsigned int max_concurrent_transfers, char *tmpdir);
 
 #endif

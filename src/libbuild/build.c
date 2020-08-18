@@ -40,9 +40,9 @@ static void complete_copy_derivation_mapping_to(void *data, DerivationMapping *m
         g_printerr("[target: %s]: Cannot receive intra-dependency closure of store derivation: %s\n", mapping->interface, mapping->derivation);
 }
 
-static int distribute_derivation_mappings(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table, const unsigned int max_concurrent_transfers, char *tmpdir)
+static ProcReact_bool distribute_derivation_mappings(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table, const unsigned int max_concurrent_transfers, char *tmpdir)
 {
-    int success;
+    ProcReact_bool success;
     ProcReact_PidIterator iterator = create_derivation_mapping_pid_iterator(derivation_mapping_array, interfaces_table, copy_derivation_mapping_to, complete_copy_derivation_mapping_to, tmpdir);
 
     g_print("[coordinator]: Distributing store derivation files...\n");
@@ -70,9 +70,9 @@ static void complete_realise_derivation_mapping(void *data, DerivationMapping *m
         g_printerr("[target: %s]: Realising derivation: %s has failed!\n", mapping->interface, mapping->derivation);
 }
 
-static int realise(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table)
+static ProcReact_bool realise(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table)
 {
-    int success;
+    ProcReact_bool success;
     ProcReact_FutureIterator iterator = create_derivation_mapping_future_iterator(derivation_mapping_array, interfaces_table, realise_derivation_mapping, complete_realise_derivation_mapping, NULL);
     procreact_fork_in_parallel_buffer_and_wait(&iterator);
 
@@ -110,9 +110,9 @@ static void complete_copy_result_from(void *data, DerivationMapping *mapping, Pr
         g_print("[target: %s]: Cannot send build result of store derivation to coordinator: %s\n", mapping->interface, mapping->derivation);
 }
 
-static int retrieve_results(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table, const unsigned int max_concurrent_transfers)
+static ProcReact_bool retrieve_results(const GPtrArray *derivation_mapping_array, GHashTable *interfaces_table, const unsigned int max_concurrent_transfers)
 {
-    int success;
+    ProcReact_bool success;
     ProcReact_PidIterator iterator = create_derivation_mapping_pid_iterator(derivation_mapping_array, interfaces_table, copy_result_from, complete_copy_result_from, NULL);
 
     g_print("[coordinator]: Retrieving build results...\n");
@@ -126,7 +126,7 @@ static int retrieve_results(const GPtrArray *derivation_mapping_array, GHashTabl
 
 /* Build orchestration */
 
-int build(DistributedDerivation *distributed_derivation, const unsigned int max_concurrent_transfers, char *tmpdir)
+ProcReact_bool build(DistributedDerivation *distributed_derivation, const unsigned int max_concurrent_transfers, char *tmpdir)
 {
     return (distribute_derivation_mappings(distributed_derivation->derivation_mapping_array, distributed_derivation->interfaces_table, max_concurrent_transfers, tmpdir) /* Distribute derivations to target machines */
       && realise(distributed_derivation->derivation_mapping_array, distributed_derivation->interfaces_table) /* Realise derivations on target machines */

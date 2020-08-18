@@ -38,10 +38,10 @@ static void complete_transfer_profile_mapping_to(void *data, gchar *target_name,
         g_printerr("[target: %s]: Cannot receive intra-dependency closure of profile: %s\n", target_name, profile_path);
 }
 
-int distribute(const Manifest *manifest, const unsigned int max_concurrent_transfers, char *tmpdir)
+ProcReact_bool distribute(const Manifest *manifest, const unsigned int max_concurrent_transfers, char *tmpdir)
 {
     /* Iterate over the profile mappings, limiting concurrency to the desired concurrent transfers and distribute them */
-    int success;
+    ProcReact_bool success;
     ProcReact_PidIterator iterator = create_profile_mapping_iterator(manifest->profile_mapping_table, manifest->targets_table, transfer_profile_mapping_to, complete_transfer_profile_mapping_to, tmpdir);
     procreact_fork_and_wait_in_parallel_limit(&iterator, max_concurrent_transfers);
     success = profile_mapping_iterator_has_succeeded(&iterator);

@@ -20,6 +20,7 @@
 #ifndef __DISNIX_BUILD_H
 #define __DISNIX_BUILD_H
 #include <glib.h>
+#include <procreact_types.h>
 #include <distributedderivation.h>
 
 /**
@@ -30,6 +31,6 @@
  * @param tmpdir Directory in which the temp files should be stored
  * @return TRUE if all the remote builds succeed, else FALSE
  */
-int build(DistributedDerivation *distributed_derivation, const unsigned int max_concurrent_transfers, char *tmpdir);
+ProcReact_bool build(DistributedDerivation *distributed_derivation, const unsigned int max_concurrent_transfers, char *tmpdir);
 
 #endif

@@ -41,9 +41,9 @@ static void complete_unlock_profile_mapping(void *data, gchar *target_name, xmlC
         g_printerr("[target: %s]: Cannot unlock profile: %s\n", target_name, profile_path);
 }
 
-int unlock(GHashTable *profile_mapping_table, GHashTable *targets_table, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void))
+ProcReact_bool unlock(GHashTable *profile_mapping_table, GHashTable *targets_table, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void))
 {
-    int success;
+    ProcReact_bool success;
     ProcReact_PidIterator iterator = create_profile_mapping_iterator(profile_mapping_table, targets_table, unlock_profile_mapping, complete_unlock_profile_mapping, profile);
 
     if(pre_hook != NULL) /* Execute hook before the unlock operations are executed */
@@ -88,10 +88,10 @@ static void complete_lock_profile_mapping(void *data, gchar *target_name, xmlCha
         g_hash_table_insert(lock_data->lock_table, target_name, profile_path);
 }
 
-int lock(GHashTable *profile_mapping_table, GHashTable *targets_table, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void))
+ProcReact_bool lock(GHashTable *profile_mapping_table, GHashTable *targets_table, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void))
 {
     GHashTable *lock_table = g_hash_table_new(g_str_hash, g_str_equal);
-    int success;
+    ProcReact_bool success;
     LockData data = { profile, lock_table };
     ProcReact_PidIterator iterator = create_profile_mapping_iterator(profile_mapping_table, targets_table, lock_profile_mapping, complete_lock_profile_mapping, &data);
 

@@ -21,6 +21,7 @@
 #define __DISNIX_RESTORE_H
 
 #include <glib.h>
+#include <procreact_types.h>
 #include <manifest.h>
 #include "datamigrationflags.h"
 
@@ -35,6 +36,6 @@
  * @param keep Indicates how many snapshot generations should be kept remotely while executing the depth first operation
  * @return TRUE if the restore completed successfully, else FALSE
  */
-int restore(const Manifest *manifest, const Manifest *previous_manifest, const unsigned int max_concurrent_transfers, const unsigned int flags, const unsigned int keep);
+ProcReact_bool restore(const Manifest *manifest, const Manifest *previous_manifest, const unsigned int max_concurrent_transfers, const unsigned int flags, const unsigned int keep);
 
 #endif

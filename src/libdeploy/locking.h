@@ -20,6 +20,7 @@
 #ifndef __DISNIX_LOCKING_H
 #define __DISNIX_LOCKING_H
 #include <glib.h>
+#include <procreact_types.h>
 
 /**
  * Unlocks the target machine and all services on all target machines in the
@@ -32,7 +33,7 @@
  * @param pre_hook Pointer to a function that gets executed after the critical operations are done. This function can be used to restore the handler for the SIGINT to normal. If the pointer is NULL then no function is executed.
  * @return TRUE if all the target machines have been successfully unlocked, else FALSE
  */
-int unlock(GHashTable *profile_mapping_table, GHashTable *targets_table, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void));
+ProcReact_bool unlock(GHashTable *profile_mapping_table, GHashTable *targets_table, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void));
 
 /**
  * Locks the target machine and all services on all target machines in the
@@ -45,6 +46,6 @@ int unlock(GHashTable *profile_mapping_table, GHashTable *targets_table, gchar *
  * @param pre_hook Pointer to a function that gets executed after the critical operations are done. This function can be used to restore the handler for the SIGINT to normal.
  * @return TRUE if all the target machines have been successfully locked, else FALSE
  */
-int lock(GHashTable *profile_mapping_table, GHashTable *targets_table, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void));
+ProcReact_bool lock(GHashTable *profile_mapping_table, GHashTable *targets_table, gchar *profile, void (*pre_hook) (void), void (*post_hook) (void));
 
 #endif

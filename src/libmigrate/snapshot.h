@@ -21,6 +21,7 @@
 #define __DISNIX_SNAPSHOT_H
 
 #include <glib.h>
+#include <procreact_types.h>
 #include <manifest.h>
 #include "datamigrationflags.h"
 
@@ -35,6 +36,6 @@
  * @param keep Indicates how many snapshot generations should be kept remotely while executing the depth first operation
  * @param TRUE if the snapshot completed successfully, else FALSE
  */
-int snapshot(const Manifest *manifest, const Manifest *previous_manifest, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep);
+ProcReact_bool snapshot(const Manifest *manifest, const Manifest *previous_manifest, const unsigned int max_concurrent_transfers, const unsigned int flags, const int keep);
 
 #endif

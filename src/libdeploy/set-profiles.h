@@ -24,6 +24,7 @@
 #define SET_NO_TARGET_PROFILES 0x2
 
 #include <glib.h>
+#include <procreact_types.h>
 #include <manifest.h>
 
 /**
@@ -38,6 +39,6 @@
  * @param flags Set option flags
  * @return TRUE if the profiles have been successfully set, else FALSE
  */
-int set_profiles(const Manifest *manifest, const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const unsigned int flags);
+ProcReact_bool set_profiles(const Manifest *manifest, const gchar *manifest_file, const gchar *coordinator_profile_path, char *profile, const unsigned int flags);
 
 #endif
