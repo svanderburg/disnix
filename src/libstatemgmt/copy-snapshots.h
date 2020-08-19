@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_COPYSNAPSHOTS_H
-#define __DISNIX_COPYSNAPSHOTS_H
+#ifndef __DISNIX_COPY_SNAPSHOTS_H
+#define __DISNIX_COPY_SNAPSHOTS_H
 #include <glib.h>
 #include <sys/types.h>
 #include <procreact_util.h>

@@ -22,9 +22,9 @@
 #include "package-management.h"
 #include "remote-package-management.h"
 
-ProcReact_bool copy_closure_to_sync(gchar *interface, gchar *target, gchar *tmpdir, gchar **derivation, int stderr_fd)
+ProcReact_bool copy_closure_to_sync(gchar *interface, gchar *target, gchar *tmpdir, gchar **paths, int stderr_fd)
 {
-    char **requisites = pkgmgmt_query_requisites_sync(derivation, g_strv_length(derivation), stderr_fd);
+    char **requisites = pkgmgmt_query_requisites_sync(paths, g_strv_length(paths), stderr_fd);
 
     if(requisites == NULL)
         return FALSE;
@@ -67,19 +67,19 @@ ProcReact_bool copy_closure_to_sync(gchar *interface, gchar *target, gchar *tmpd
     }
 }
 
-pid_t copy_closure_to(gchar *interface, gchar *target, gchar *tmpdir, gchar **derivation, int stderr_fd)
+pid_t copy_closure_to(gchar *interface, gchar *target, gchar *tmpdir, gchar **paths, int stderr_fd)
 {
     pid_t pid = fork();
 
     if(pid == 0)
-        _exit(!copy_closure_to_sync(interface, target, tmpdir, derivation, stderr_fd));
+        _exit(!copy_closure_to_sync(interface, target, tmpdir, paths, stderr_fd));
 
     return pid;
 }
 
-ProcReact_bool copy_closure_from_sync(gchar *interface, gchar *target, gchar **derivation, int stdout_fd, int stderr_fd)
+ProcReact_bool copy_closure_from_sync(gchar *interface, gchar *target, gchar **paths, int stdout_fd, int stderr_fd)
 {
-    char **requisites = pkgmgmt_remote_query_requisites_sync(interface, target, derivation, g_strv_length(derivation));
+    char **requisites = pkgmgmt_remote_query_requisites_sync(interface, target, paths, g_strv_length(paths));
 
     if(requisites == NULL)
         return FALSE;
@@ -122,12 +122,12 @@ ProcReact_bool copy_closure_from_sync(gchar *interface, gchar *target, gchar **d
     }
 }
 
-pid_t copy_closure_from(gchar *interface, gchar *target, gchar **derivation, int stdout_fd, int stderr_fd)
+pid_t copy_closure_from(gchar *interface, gchar *target, gchar **paths, int stdout_fd, int stderr_fd)
 {
     pid_t pid = fork();
 
     if(pid == 0)
-        _exit(!copy_closure_from_sync(interface, target, derivation, stdout_fd, stderr_fd));
+        _exit(!copy_closure_from_sync(interface, target, paths, stdout_fd, stderr_fd));
 
     return pid;
 }

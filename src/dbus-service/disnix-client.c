@@ -63,7 +63,7 @@ static void disnix_finish_signal_handler(GDBusProxy *proxy, const gint pid, gpoi
         exit(0);
 }
 
-static void disnix_success_signal_handler(GDBusProxy *proxy, const gint pid, gchar **derivation, gpointer user_data)
+static void disnix_success_signal_handler(GDBusProxy *proxy, const gint pid, gchar **paths, gpointer user_data)
 {
     gint my_pid = *((gint*)user_data);
 
@@ -71,8 +71,8 @@ static void disnix_success_signal_handler(GDBusProxy *proxy, const gint pid, gch
     {
         unsigned int i;
 
-        for(i = 0; i < g_strv_length(derivation); i++)
-            g_print("%s\n", derivation[i]);
+        for(i = 0; i < g_strv_length(paths); i++)
+            g_print("%s\n", paths[i]);
 
         exit(0);
     }
@@ -89,26 +89,26 @@ static void disnix_failure_signal_handler(GDBusProxy *proxy, const gint pid, gpo
     }
 }
 
-static void cleanup(OrgNixosDisnixDisnix *proxy, gchar **derivation, gchar **arguments)
+static void cleanup(OrgNixosDisnixDisnix *proxy, gchar **paths, gchar **arguments)
 {
     g_free(logdir);
-    g_strfreev(derivation);
+    g_strfreev(paths);
     g_strfreev(arguments);
     g_object_unref(proxy);
 }
 
-static gchar *check_dysnomia_activity_parameters(OrgNixosDisnixDisnix *proxy, gchar *type, gchar **derivation, gchar *container, gchar **arguments)
+static gchar *check_dysnomia_activity_parameters(OrgNixosDisnixDisnix *proxy, gchar *type, gchar **paths, gchar *container, gchar **arguments)
 {
     if(type == NULL)
     {
         g_printerr("ERROR: A type must be specified!\n");
-        cleanup(proxy, derivation, arguments);
+        cleanup(proxy, paths, arguments);
         return NULL;
     }
-    else if(derivation[0] == NULL)
+    else if(paths[0] == NULL)
     {
         g_printerr("ERROR: A Nix store component has to be specified!\n");
-        cleanup(proxy, derivation, arguments);
+        cleanup(proxy, paths, arguments);
         return NULL;
     }
 
@@ -118,7 +118,7 @@ static gchar *check_dysnomia_activity_parameters(OrgNixosDisnixDisnix *proxy, gc
         return container;
 }
 
-int run_disnix_client(Operation operation, gchar **derivation, const unsigned int flags, char *profile, gchar **arguments, char *type, char *container, char *component, int keep)
+int run_disnix_client(Operation operation, gchar **paths, const unsigned int flags, char *profile, gchar **arguments, char *type, char *container, char *component, int keep)
 {
     /* Proxy object representing the D-Bus service object. */
     OrgNixosDisnixDisnix *proxy;
@@ -136,7 +136,7 @@ int run_disnix_client(Operation operation, gchar **derivation, const unsigned in
     if(operation == OP_NONE)
     {
         g_printerr("No operation has been specified!\n");
-        cleanup(NULL, derivation, arguments);
+        cleanup(NULL, paths, arguments);
         return 1;
     }
 
@@ -179,7 +179,7 @@ int run_disnix_client(Operation operation, gchar **derivation, const unsigned in
     if(error != NULL)
     {
         g_printerr("ERROR: Cannot obtain log directory! Reason: %s\n", error->message);
-        cleanup(proxy, derivation, arguments);
+        cleanup(proxy, paths, arguments);
         g_error_free(error);
         return 1;
     }
@@ -190,7 +190,7 @@ int run_disnix_client(Operation operation, gchar **derivation, const unsigned in
     if(error != NULL)
     {
         g_printerr("ERROR: Cannot obtain job id! Reason: %s\n", error->message);
-        cleanup(proxy, derivation, arguments);
+        cleanup(proxy, paths, arguments);
         g_error_free(error);
         return 1;
     }
@@ -199,135 +199,135 @@ int run_disnix_client(Operation operation, gchar **derivation, const unsigned in
 
     switch(operation)
     {
-	case OP_IMPORT:
-	    if(derivation[0] == NULL)
-	    {
-		g_printerr("ERROR: A Nix store component has to be specified!\n");
-		cleanup(proxy, derivation, arguments);
-		return 1;
-	    }
-	    else
-		org_nixos_disnix_disnix_call_import_sync(proxy, pid, derivation[0], NULL, &error);
-	    break;
-	case OP_EXPORT:
-	    org_nixos_disnix_disnix_call_export_sync(proxy, pid, (const gchar**) derivation, NULL, &error);
-	    break;
-	case OP_PRINT_INVALID:
-	    org_nixos_disnix_disnix_call_print_invalid_sync(proxy, pid, (const gchar**) derivation, NULL, &error);
-	    break;
-	case OP_REALISE:
-	    org_nixos_disnix_disnix_call_realise_sync(proxy, pid, (const gchar**) derivation, NULL, &error);
-	    break;
-	case OP_SET:
-	    if(derivation[0] == NULL)
-	    {
-		g_printerr("ERROR: A Nix store component has to be specified!\n");
-		cleanup(proxy, derivation, arguments);
-		return 1;
-	    }
-	    else
-		org_nixos_disnix_disnix_call_set_sync(proxy, pid, profile, derivation[0], NULL, &error);
-	    break;
-	case OP_QUERY_INSTALLED:
-	    org_nixos_disnix_disnix_call_query_installed_sync(proxy, pid, profile, NULL, &error);
-	    break;
-	case OP_QUERY_REQUISITES:
-	    org_nixos_disnix_disnix_call_query_requisites_sync(proxy, pid, (const gchar**) derivation, NULL, &error);
-	    break;
-	case OP_COLLECT_GARBAGE:
-	    org_nixos_disnix_disnix_call_collect_garbage_sync(proxy, pid, (flags & FLAG_DELETE_OLD), NULL, &error);
-	    break;
-	case OP_ACTIVATE:
-	    container = check_dysnomia_activity_parameters(proxy, type, derivation, container, arguments);
-	    
-	    if(container != NULL)
-	        org_nixos_disnix_disnix_call_activate_sync(proxy, pid, derivation[0], container, type, (const gchar**) arguments, NULL, &error);
-	    break;
-	case OP_DEACTIVATE:
-	    container = check_dysnomia_activity_parameters(proxy, type, derivation, container, arguments);
-	    
-	    if(container != NULL)
-	        org_nixos_disnix_disnix_call_deactivate_sync(proxy, pid, derivation[0], container, type, (const gchar**) arguments, NULL, &error);
-	    break;
-	case OP_DELETE_STATE:
-	    container = check_dysnomia_activity_parameters(proxy, type, derivation, container, arguments);
-	    
-	    if(container != NULL)
-	        org_nixos_disnix_disnix_call_delete_state_sync(proxy, pid, derivation[0], container, type, (const gchar**) arguments, NULL, &error);
-	    break;
-	case OP_SNAPSHOT:
-	    container = check_dysnomia_activity_parameters(proxy, type, derivation, container, arguments);
-	    
-	    if(container != NULL)
-	        org_nixos_disnix_disnix_call_snapshot_sync(proxy, pid, derivation[0], container, type, (const gchar**) arguments, NULL, &error);
-	    break;
-	case OP_RESTORE:
-	    container = check_dysnomia_activity_parameters(proxy, type, derivation, container, arguments);
-	    
-	    if(container != NULL)
-	        org_nixos_disnix_disnix_call_restore_sync(proxy, pid, derivation[0], container, type, (const gchar**) arguments, NULL, &error);
-	    break;
-	case OP_LOCK:
-	    org_nixos_disnix_disnix_call_lock_sync(proxy, pid, profile, NULL, &error);
-	    break;
-	case OP_UNLOCK:
-	    org_nixos_disnix_disnix_call_unlock_sync(proxy, pid, profile, NULL, &error);
-	    break;
-	case OP_QUERY_ALL_SNAPSHOTS:
-	    org_nixos_disnix_disnix_call_query_all_snapshots_sync(proxy, pid, container, component, NULL, &error);
-	    break;
-	case OP_QUERY_LATEST_SNAPSHOT:
-	    org_nixos_disnix_disnix_call_query_latest_snapshot_sync(proxy, pid, container, component, NULL, &error);
-	    break;
-	case OP_PRINT_MISSING_SNAPSHOTS:
-	    org_nixos_disnix_disnix_call_print_missing_snapshots_sync(proxy, pid, (const gchar**) derivation, NULL, &error);
-	    break;
-	case OP_IMPORT_SNAPSHOTS:
-	    if(derivation[0] == NULL)
-	    {
-		g_printerr("ERROR: A Dysnomia snapshot has to be specified!\n");
-		cleanup(proxy, derivation, arguments);
-		return 1;
-	    }
-	    else
-		org_nixos_disnix_disnix_call_import_snapshots_sync(proxy, pid, container, component, (const gchar**) derivation, NULL, &error);
-	    break;
-	case OP_RESOLVE_SNAPSHOTS:
-	    if(derivation[0] == NULL)
-	    {
-		g_printerr("ERROR: A Dysnomia snapshot has to be specified!\n");
-		cleanup(proxy, derivation, arguments);
-		return 1;
-	    }
-	    else
-		org_nixos_disnix_disnix_call_resolve_snapshots_sync(proxy, pid, (const gchar**) derivation, NULL, &error);
-	    break;
-	case OP_CLEAN_SNAPSHOTS:
-	    if(container == NULL)
-	        container = "";
-	    
-	    if(component == NULL)
-	        component = "";
-	        
-	    org_nixos_disnix_disnix_call_clean_snapshots_sync(proxy, pid, keep, container, component, NULL, &error);
-	    break;
-	case OP_CAPTURE_CONFIG:
-	    org_nixos_disnix_disnix_call_capture_config_sync(proxy, pid, NULL, &error);
-	    break;
-	case OP_SHELL:
-	    g_printerr("ERROR: This operation is unsupported by this client!\n");
-	    return 1;
-	    break;
-	case OP_NONE:
-	    g_printerr("ERROR: No operation specified!\n");
-	    cleanup(proxy, derivation, arguments);
-	    return 1;
+        case OP_IMPORT:
+            if(paths[0] == NULL)
+            {
+                g_printerr("ERROR: A Nix store component has to be specified!\n");
+                cleanup(proxy, paths, arguments);
+                return 1;
+            }
+            else
+                org_nixos_disnix_disnix_call_import_sync(proxy, pid, paths[0], NULL, &error);
+            break;
+        case OP_EXPORT:
+            org_nixos_disnix_disnix_call_export_sync(proxy, pid, (const gchar**) paths, NULL, &error);
+            break;
+        case OP_PRINT_INVALID:
+            org_nixos_disnix_disnix_call_print_invalid_sync(proxy, pid, (const gchar**) paths, NULL, &error);
+            break;
+        case OP_REALISE:
+            org_nixos_disnix_disnix_call_realise_sync(proxy, pid, (const gchar**) paths, NULL, &error);
+            break;
+        case OP_SET:
+            if(paths[0] == NULL)
+            {
+                g_printerr("ERROR: A Nix store component has to be specified!\n");
+                cleanup(proxy, paths, arguments);
+                return 1;
+            }
+            else
+                org_nixos_disnix_disnix_call_set_sync(proxy, pid, profile, paths[0], NULL, &error);
+            break;
+        case OP_QUERY_INSTALLED:
+            org_nixos_disnix_disnix_call_query_installed_sync(proxy, pid, profile, NULL, &error);
+            break;
+        case OP_QUERY_REQUISITES:
+            org_nixos_disnix_disnix_call_query_requisites_sync(proxy, pid, (const gchar**) paths, NULL, &error);
+            break;
+        case OP_COLLECT_GARBAGE:
+            org_nixos_disnix_disnix_call_collect_garbage_sync(proxy, pid, (flags & FLAG_DELETE_OLD), NULL, &error);
+            break;
+        case OP_ACTIVATE:
+            container = check_dysnomia_activity_parameters(proxy, type, paths, container, arguments);
+
+            if(container != NULL)
+                org_nixos_disnix_disnix_call_activate_sync(proxy, pid, paths[0], container, type, (const gchar**) arguments, NULL, &error);
+            break;
+        case OP_DEACTIVATE:
+            container = check_dysnomia_activity_parameters(proxy, type, paths, container, arguments);
+
+            if(container != NULL)
+                org_nixos_disnix_disnix_call_deactivate_sync(proxy, pid, paths[0], container, type, (const gchar**) arguments, NULL, &error);
+            break;
+        case OP_DELETE_STATE:
+            container = check_dysnomia_activity_parameters(proxy, type, paths, container, arguments);
+
+            if(container != NULL)
+                org_nixos_disnix_disnix_call_delete_state_sync(proxy, pid, paths[0], container, type, (const gchar**) arguments, NULL, &error);
+            break;
+        case OP_SNAPSHOT:
+            container = check_dysnomia_activity_parameters(proxy, type, paths, container, arguments);
+
+            if(container != NULL)
+                org_nixos_disnix_disnix_call_snapshot_sync(proxy, pid, paths[0], container, type, (const gchar**) arguments, NULL, &error);
+            break;
+        case OP_RESTORE:
+            container = check_dysnomia_activity_parameters(proxy, type, paths, container, arguments);
+
+            if(container != NULL)
+                org_nixos_disnix_disnix_call_restore_sync(proxy, pid, paths[0], container, type, (const gchar**) arguments, NULL, &error);
+            break;
+        case OP_LOCK:
+            org_nixos_disnix_disnix_call_lock_sync(proxy, pid, profile, NULL, &error);
+            break;
+        case OP_UNLOCK:
+            org_nixos_disnix_disnix_call_unlock_sync(proxy, pid, profile, NULL, &error);
+            break;
+        case OP_QUERY_ALL_SNAPSHOTS:
+            org_nixos_disnix_disnix_call_query_all_snapshots_sync(proxy, pid, container, component, NULL, &error);
+            break;
+        case OP_QUERY_LATEST_SNAPSHOT:
+            org_nixos_disnix_disnix_call_query_latest_snapshot_sync(proxy, pid, container, component, NULL, &error);
+            break;
+        case OP_PRINT_MISSING_SNAPSHOTS:
+            org_nixos_disnix_disnix_call_print_missing_snapshots_sync(proxy, pid, (const gchar**) paths, NULL, &error);
+            break;
+        case OP_IMPORT_SNAPSHOTS:
+            if(paths[0] == NULL)
+            {
+                g_printerr("ERROR: A Dysnomia snapshot has to be specified!\n");
+                cleanup(proxy, paths, arguments);
+                return 1;
+            }
+            else
+                org_nixos_disnix_disnix_call_import_snapshots_sync(proxy, pid, container, component, (const gchar**) paths, NULL, &error);
+            break;
+        case OP_RESOLVE_SNAPSHOTS:
+            if(paths[0] == NULL)
+            {
+                g_printerr("ERROR: A Dysnomia snapshot has to be specified!\n");
+                cleanup(proxy, paths, arguments);
+                return 1;
+            }
+            else
+                org_nixos_disnix_disnix_call_resolve_snapshots_sync(proxy, pid, (const gchar**) paths, NULL, &error);
+            break;
+        case OP_CLEAN_SNAPSHOTS:
+            if(container == NULL)
+                container = "";
+
+            if(component == NULL)
+                component = "";
+
+            org_nixos_disnix_disnix_call_clean_snapshots_sync(proxy, pid, keep, container, component, NULL, &error);
+            break;
+        case OP_CAPTURE_CONFIG:
+            org_nixos_disnix_disnix_call_capture_config_sync(proxy, pid, NULL, &error);
+            break;
+        case OP_SHELL:
+            g_printerr("ERROR: This operation is unsupported by this client!\n");
+            return 1;
+            break;
+        case OP_NONE:
+            g_printerr("ERROR: No operation specified!\n");
+            cleanup(proxy, paths, arguments);
+            return 1;
     }
 
     if(error != NULL)
     {
         g_printerr("Error while executing the operation! Reason: %s\n", error->message);
-        cleanup(proxy, derivation, arguments);
+        cleanup(proxy, paths, arguments);
         g_error_free(error);
         return 1;
     }
@@ -337,7 +337,7 @@ int run_disnix_client(Operation operation, gchar **derivation, const unsigned in
     if(mainloop == NULL)
     {
         g_printerr("Cannot create main loop.\n");
-        cleanup(proxy, derivation, arguments);
+        cleanup(proxy, paths, arguments);
         return 1;
     }
 
@@ -345,7 +345,7 @@ int run_disnix_client(Operation operation, gchar **derivation, const unsigned in
     g_main_loop_run(mainloop);
 
     /* Operation is finished */
-    cleanup(proxy, derivation, arguments);
+    cleanup(proxy, paths, arguments);
 
     return 1;
 }

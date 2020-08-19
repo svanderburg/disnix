@@ -17,17 +17,47 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DISNIX_ACTIVATE_H
-#define __DISNIX_ACTIVATE_H
+#ifndef __DISNIX_COPY_CLOSURE_H
+#define __DISNIX_COPY_CLOSURE_H
 #include <glib.h>
 #include <procreact_util.h>
 
-ProcReact_bool copy_closure_to_sync(gchar *interface, gchar *target, gchar *tmpdir, gchar **derivation, int stderr_fd);
+/**
+ * Copies a closure of a collection of a Nix store paths to a remote machine.
+ *
+ * @param interface Path to the interface executable
+ * @param target Target Address of the remote interface
+ * @param tmpdir Directory in which temp files are stored
+ * @param paths An array of Nix store paths
+ * @param stderr_fd File descriptor to attach to the process' standard error
+ * @return TRUE if the operation succeeds, else FALSE
+ */
+ProcReact_bool copy_closure_to_sync(gchar *interface, gchar *target, gchar *tmpdir, gchar **paths, int stderr_fd);
 
-pid_t copy_closure_to(gchar *interface, gchar *target, gchar *tmpdir, gchar **derivation, int stderr_fd);
+/**
+ * Asynchronously copies a closure to a machine in a sub process.
+ *
+ * @see copy_closure_to_sync
+ */
+pid_t copy_closure_to(gchar *interface, gchar *target, gchar *tmpdir, gchar **paths, int stderr_fd);
 
-ProcReact_bool copy_closure_from_sync(gchar *interface, gchar *target, gchar **derivation, int stdout_fd, int stderr_fd);
+/**
+ * Copies a closure of a collection of a Nix store paths from a remote machine.
+ *
+ * @param interface Path to the interface executable
+ * @param target Target Address of the remote interface
+ * @param paths An array of Nix store paths
+ * @param stdout_fd File descriptor to attach to the process' standard output
+ * @param stderr_fd File descriptor to attach to the process' standard error
+ * @return TRUE if the operation succeeds, else FALSE
+ */
+ProcReact_bool copy_closure_from_sync(gchar *interface, gchar *target, gchar **paths, int stdout_fd, int stderr_fd);
 
-pid_t copy_closure_from(gchar *interface, gchar *target, gchar **derivation, int stdout_fd, int stderr_fd);
+/**
+ * Asynchronously copies a closure from a machine in a sub process.
+ *
+ * @see copy_closure_from_sync
+ */
+pid_t copy_closure_from(gchar *interface, gchar *target, gchar **paths, int stdout_fd, int stderr_fd);
 
 #endif

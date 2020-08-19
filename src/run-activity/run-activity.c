@@ -32,14 +32,14 @@
 
 #define BUFFER_SIZE 1024
 
-static gchar *check_dysnomia_activity_parameters(gchar *type, gchar **derivation, gchar *container, gchar **arguments)
+static gchar *check_dysnomia_activity_parameters(gchar *type, gchar **paths, gchar *container, gchar **arguments)
 {
     if(type == NULL)
     {
         g_printerr("ERROR: A type must be specified!\n");
         return NULL;
     }
-    else if(derivation[0] == NULL)
+    else if(paths[0] == NULL)
     {
         g_printerr("ERROR: A Nix store component has to be specified!\n");
         return NULL;
@@ -100,7 +100,7 @@ static int return_tempfile(pid_t pid, gchar *tempfilename, int temp_fd)
     return exit_status;
 }
 
-int run_disnix_activity(Operation operation, gchar **derivation, const unsigned int flags, char *profile, gchar **arguments, char *type, char *container, char *component, int keep, char *command)
+int run_disnix_activity(Operation operation, gchar **paths, const unsigned int flags, char *profile, gchar **arguments, char *type, char *container, char *component, int keep, char *command)
 {
     int exit_status = 0;
     ProcReact_Status status;
@@ -122,82 +122,82 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
     switch(operation)
     {
         case OP_IMPORT:
-            if(derivation[0] == NULL)
+            if(paths[0] == NULL)
             {
                 g_printerr("ERROR: A Nix store component has to be specified!\n");
                 exit_status = 1;
             }
             else
-                exit_status = procreact_wait_for_exit_status(pkgmgmt_import_closure(derivation[0], 1, 2), &status);
+                exit_status = procreact_wait_for_exit_status(pkgmgmt_import_closure(paths[0], 1, 2), &status);
 
             break;
         case OP_EXPORT:
-            tempfilename = pkgmgmt_export_closure(tmpdir, derivation, g_strv_length(derivation), 2, &pid, &temp_fd);
+            tempfilename = pkgmgmt_export_closure(tmpdir, paths, g_strv_length(paths), 2, &pid, &temp_fd);
             return_tempfile(pid, tempfilename, temp_fd);
             break;
         case OP_PRINT_INVALID:
-            exit_status = print_strv(pkgmgmt_print_invalid_packages(derivation, g_strv_length(derivation), 2));
+            exit_status = print_strv(pkgmgmt_print_invalid_packages(paths, g_strv_length(paths), 2));
             break;
         case OP_REALISE:
-            exit_status = print_strv(pkgmgmt_realise(derivation, g_strv_length(derivation), 2));
+            exit_status = print_strv(pkgmgmt_realise(paths, g_strv_length(paths), 2));
             break;
         case OP_SET:
-            if(derivation[0] == NULL)
+            if(paths[0] == NULL)
             {
                 g_printerr("ERROR: A Nix store component has to be specified!\n");
                 exit_status = 1;
             }
             else
-                exit_status = procreact_wait_for_exit_status(pkgmgmt_set_profile((gchar*)profile, derivation[0], 1, 2), &status);
+                exit_status = procreact_wait_for_exit_status(pkgmgmt_set_profile((gchar*)profile, paths[0], 1, 2), &status);
             break;
         case OP_QUERY_INSTALLED:
             print_text_from_profile_manifest(LOCALSTATEDIR, (gchar*)profile, 1);
             break;
         case OP_QUERY_REQUISITES:
-            exit_status = print_strv(pkgmgmt_query_requisites(derivation, g_strv_length(derivation), 2));
+            exit_status = print_strv(pkgmgmt_query_requisites(paths, g_strv_length(paths), 2));
             break;
         case OP_COLLECT_GARBAGE:
             exit_status = procreact_wait_for_exit_status(pkgmgmt_collect_garbage(flags & FLAG_DELETE_OLD, 1, 2), &status);
             break;
         case OP_ACTIVATE:
-            container = check_dysnomia_activity_parameters(type, derivation, container, arguments);
+            container = check_dysnomia_activity_parameters(type, paths, container, arguments);
 
             if(container == NULL)
                 exit_status = 1;
             else
-                exit_status = procreact_wait_for_exit_status(statemgmt_activate((gchar*)type, derivation[0], (gchar*)container, arguments, 1, 2), &status);
+                exit_status = procreact_wait_for_exit_status(statemgmt_activate((gchar*)type, paths[0], (gchar*)container, arguments, 1, 2), &status);
             break;
         case OP_DEACTIVATE:
-            container = check_dysnomia_activity_parameters(type, derivation, container, arguments);
+            container = check_dysnomia_activity_parameters(type, paths, container, arguments);
 
             if(container == NULL)
                 exit_status = 1;
             else
-                exit_status = procreact_wait_for_exit_status(statemgmt_deactivate((gchar*)type, derivation[0], (gchar*)container, arguments, 1, 2), &status);
+                exit_status = procreact_wait_for_exit_status(statemgmt_deactivate((gchar*)type, paths[0], (gchar*)container, arguments, 1, 2), &status);
             break;
         case OP_DELETE_STATE:
-            container = check_dysnomia_activity_parameters(type, derivation, container, arguments);
+            container = check_dysnomia_activity_parameters(type, paths, container, arguments);
 
             if(container == NULL)
                 exit_status = 1;
             else
-                exit_status = procreact_wait_for_exit_status(statemgmt_collect_garbage((gchar*)type, derivation[0], (gchar*)container, arguments, 1, 2), &status);
+                exit_status = procreact_wait_for_exit_status(statemgmt_collect_garbage((gchar*)type, paths[0], (gchar*)container, arguments, 1, 2), &status);
             break;
         case OP_SNAPSHOT:
-            container = check_dysnomia_activity_parameters(type, derivation, container, arguments);
+            container = check_dysnomia_activity_parameters(type, paths, container, arguments);
 
             if(container == NULL)
                 exit_status = 1;
             else
-                exit_status = procreact_wait_for_exit_status(statemgmt_snapshot((gchar*)type, derivation[0], (gchar*)container, arguments, 1, 2), &status);
+                exit_status = procreact_wait_for_exit_status(statemgmt_snapshot((gchar*)type, paths[0], (gchar*)container, arguments, 1, 2), &status);
             break;
         case OP_RESTORE:
-            container = check_dysnomia_activity_parameters(type, derivation, container, arguments);
+            container = check_dysnomia_activity_parameters(type, paths, container, arguments);
 
             if(container == NULL)
                 exit_status = 1;
             else
-                exit_status = procreact_wait_for_exit_status(statemgmt_restore((gchar*)type, derivation[0], (gchar*)container, arguments, 1, 2), &status);
+                exit_status = procreact_wait_for_exit_status(statemgmt_restore((gchar*)type, paths[0], (gchar*)container, arguments, 1, 2), &status);
             break;
         case OP_LOCK:
             gethostname(buffer, BUFFER_SIZE);
@@ -252,26 +252,26 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
             exit_status = print_strv(statemgmt_query_latest_snapshot((gchar*)container, (gchar*)component, 2));
             break;
         case OP_PRINT_MISSING_SNAPSHOTS:
-            exit_status = print_strv(statemgmt_print_missing_snapshots((gchar**)derivation, g_strv_length(derivation), 2));
+            exit_status = print_strv(statemgmt_print_missing_snapshots((gchar**)paths, g_strv_length(paths), 2));
             break;
         case OP_IMPORT_SNAPSHOTS:
-            if(derivation[0] == NULL)
+            if(paths[0] == NULL)
             {
                 g_printerr("ERROR: A Dysnomia snapshot has to be specified!\n");
                 exit_status = 1;
             }
             else
-                exit_status = procreact_wait_for_exit_status(statemgmt_import_snapshots((gchar*)container, (gchar*)component, derivation, g_strv_length(derivation), 1, 2), &status);
+                exit_status = procreact_wait_for_exit_status(statemgmt_import_snapshots((gchar*)container, (gchar*)component, paths, g_strv_length(paths), 1, 2), &status);
 
             break;
         case OP_RESOLVE_SNAPSHOTS:
-            if(derivation[0] == NULL)
+            if(paths[0] == NULL)
             {
                 g_printerr("ERROR: A Dysnomia snapshot has to be specified!\n");
                 exit_status = 1;
             }
             else
-                exit_status = print_strv(statemgmt_resolve_snapshots(derivation, g_strv_length(derivation), 2));
+                exit_status = print_strv(statemgmt_resolve_snapshots(paths, g_strv_length(paths), 2));
 
             break;
         case OP_CLEAN_SNAPSHOTS:
@@ -288,12 +288,12 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
             return_tempfile(pid, tempfilename, temp_fd);
             break;
         case OP_SHELL:
-            container = check_dysnomia_activity_parameters(type, derivation, container, arguments);
+            container = check_dysnomia_activity_parameters(type, paths, container, arguments);
 
             if(container == NULL)
                 exit_status = 1;
             else
-                exit_status = procreact_wait_for_exit_status(statemgmt_shell((gchar*)type, derivation[0], (gchar*)container, arguments, command), &status);
+                exit_status = procreact_wait_for_exit_status(statemgmt_shell((gchar*)type, paths[0], (gchar*)container, arguments, command), &status);
             break;
         case OP_NONE:
             g_printerr("ERROR: No operation specified!\n");
@@ -302,8 +302,8 @@ int run_disnix_activity(Operation operation, gchar **derivation, const unsigned 
     }
 
     /* Cleanup */
-    if(derivation != NULL)
-        g_strfreev(derivation);
+    if(paths != NULL)
+        g_strfreev(paths);
     if(arguments != NULL)
         g_strfreev(arguments);
 

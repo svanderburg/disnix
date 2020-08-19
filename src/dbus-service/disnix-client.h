@@ -61,7 +61,7 @@ Operation;
  * Runs the Disnix client
  *
  * @param operation Operation number to execute
- * @param derivation List of paths to Nix store components
+ * @param paths An array of paths to Nix store components
  * @param flags Option flags
  * @param profile Identifier of a distributed profile
  * @param arguments List of activation arguments in key=value format
@@ -71,6 +71,6 @@ Operation;
  * @param keep Amount of snapshot generations to keep
  * @return 0 if the operation succeeds, else a non-zero exit value
  */
-int run_disnix_client(Operation operation, gchar **derivation, const unsigned int flags, char *profile, gchar **arguments, char *type, char *container, char *component, int keep);
+int run_disnix_client(Operation operation, gchar **paths, const unsigned int flags, char *profile, gchar **arguments, char *type, char *container, char *component, int keep);
 
 #endif

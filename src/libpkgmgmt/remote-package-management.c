@@ -25,7 +25,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-pid_t pkgmgmt_remote_collect_garbage(gchar *interface, gchar *target, const gboolean delete_old)
+pid_t pkgmgmt_remote_collect_garbage(gchar *interface, gchar *target, const ProcReact_bool delete_old)
 {
     /* Declarations */
     pid_t pid;
@@ -94,21 +94,21 @@ ProcReact_Future pkgmgmt_remote_realise(gchar *interface, gchar *target, gchar *
     return future;
 }
 
-ProcReact_Future pkgmgmt_remote_query_requisites(gchar *interface, gchar *target, gchar **derivation, const unsigned int derivation_length)
+ProcReact_Future pkgmgmt_remote_query_requisites(gchar *interface, gchar *target, gchar **paths, const unsigned int paths_length)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
     if(future.pid == 0)
     {
         unsigned int i;
-        char **args = (char**)malloc((5 + derivation_length) * sizeof(char*));
+        char **args = (char**)malloc((5 + paths_length) * sizeof(char*));
         args[0] = interface;
         args[1] = "--query-requisites";
         args[2] = "--target";
         args[3] = target;
 
-        for(i = 0; i < derivation_length; i++)
-            args[i + 4] = derivation[i];
+        for(i = 0; i < paths_length; i++)
+            args[i + 4] = paths[i];
 
         args[i + 4] = NULL;
 
@@ -120,10 +120,10 @@ ProcReact_Future pkgmgmt_remote_query_requisites(gchar *interface, gchar *target
     return future;
 }
 
-char **pkgmgmt_remote_query_requisites_sync(gchar *interface, gchar *target, gchar **derivation, const unsigned int derivation_length)
+char **pkgmgmt_remote_query_requisites_sync(gchar *interface, gchar *target, gchar **paths, const unsigned int paths_length)
 {
     ProcReact_Status status;
-    ProcReact_Future future = pkgmgmt_remote_query_requisites(interface, target, derivation, derivation_length);
+    ProcReact_Future future = pkgmgmt_remote_query_requisites(interface, target, paths, paths_length);
     char **result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)

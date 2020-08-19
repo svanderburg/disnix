@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
     char *interface = NULL;
     char *target = NULL;
     char *tmpdir = NULL;
-    char **derivations;
+    char **paths;
 
     /* Parse command-line options */
     while((c = getopt_long(argc, argv, "t:hv", long_options, &option_index)) != -1)
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
         return 1;
     }
     else
-        derivations = argv + optind;
+        paths = argv + optind;
 
     /* Execute operation */
 
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
         return 1;
     }
     else if(to)
-        return !copy_closure_to_sync(interface, target, tmpdir, derivations, STDERR_FILENO);
+        return !copy_closure_to_sync(interface, target, tmpdir, paths, STDERR_FILENO);
     else if(from)
-        return !copy_closure_from_sync(interface, target, derivations, STDOUT_FILENO, STDERR_FILENO);
+        return !copy_closure_from_sync(interface, target, paths, STDOUT_FILENO, STDERR_FILENO);
 }
