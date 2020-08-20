@@ -38,10 +38,10 @@ int procreact_register_signal_handler(void)
 {
     struct sigaction sa;
     sa.sa_handler = &handle_sigchld;
-    
+
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_RESTART | SA_NOCLDSTOP;
-    
+
     return sigaction(SIGCHLD, &sa, 0);
 }
 
@@ -50,15 +50,15 @@ void procreact_complete_all_finished_processes(ProcReact_PidIterator *iterator)
     if(empty_queue)
     {
         empty_queue = FALSE;
-        
+
         if(iterator->running_processes > 0)
         {
             int wstatus, result;
             ProcReact_Status status;
             pid_t pid;
-            
+
             /* Complete all finished processes */
-        
+
             while((pid = waitpid(-1, &wstatus, WNOHANG)) > 0)
             {
                 result = iterator->retrieve(pid, wstatus, &status);

@@ -31,14 +31,14 @@ ProcReact_Future procreact_initialize_future(ProcReact_Type type)
 {
     ProcReact_Future future;
     int pipefd[2];
-    
+
     future.type = type;
     future.result = NULL;
-    
+
     if(pipe(pipefd) == 0)
     {
         future.pid = fork();
-        
+
         if(future.pid == 0)
         {
             close(pipefd[0]); /* Close read-end of pipe */
@@ -55,7 +55,7 @@ ProcReact_Future procreact_initialize_future(ProcReact_Type type)
         future.pid = -1;
         future.fd = -1;
     }
-    
+
     return future;
 }
 
@@ -69,11 +69,12 @@ void *procreact_future_get(ProcReact_Future *future, ProcReact_Status *status)
     if(future->result == NULL)
     {
         future->state = future->type.initialize();
-        
-        while(future->type.append(&future->type, future->state, future->fd) > 0);
-        
+
+        while(future->type.append(&future->type, future->state, future->fd) > 0)
+            ;
+
         future->result = future->type.finalize(future->state, future->pid, status);
-        
+
         /* Destroy the future's resources as we no longer need them */
         procreact_destroy_future(future);
     }

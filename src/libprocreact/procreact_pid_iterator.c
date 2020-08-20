@@ -65,7 +65,10 @@ ProcReact_bool procreact_wait_for_process_to_complete(ProcReact_PidIterator *ite
             iterator->running_processes--;
         }
         else
+        {
+            status = PROCREACT_STATUS_WAIT_FAIL;
             result = 1;
+        }
 
         iterator->complete(iterator->data, pid, status, result);
 
@@ -78,10 +81,12 @@ ProcReact_bool procreact_wait_for_process_to_complete(ProcReact_PidIterator *ite
 void procreact_fork_in_parallel_and_wait(ProcReact_PidIterator *iterator)
 {
     /* Fork all processes in parallel */
-    while(procreact_spawn_next_pid(iterator));
+    while(procreact_spawn_next_pid(iterator))
+        ;
 
     /* Wait for all running processes to complete */
-    while(procreact_wait_for_process_to_complete(iterator));
+    while(procreact_wait_for_process_to_complete(iterator))
+        ;
 }
 
 void procreact_fork_and_wait_in_parallel_limit(ProcReact_PidIterator *iterator, const unsigned int limit)
@@ -92,7 +97,8 @@ void procreact_fork_and_wait_in_parallel_limit(ProcReact_PidIterator *iterator, 
     while(has_running_processes || iterator->has_next(iterator->data))
     {
         /* Fork at most the 'limit' number of processes in parallel */
-        while(iterator->running_processes < limit && procreact_spawn_next_pid(iterator));
+        while(iterator->running_processes < limit && procreact_spawn_next_pid(iterator))
+            ;
 
         /* Wait for one of the processes to finish */
         has_running_processes = procreact_wait_for_process_to_complete(iterator);

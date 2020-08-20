@@ -64,7 +64,7 @@ void *procreact_type_finalize_bytes(void *state, pid_t pid, ProcReact_Status *st
 void *procreact_type_finalize_string(void *state, pid_t pid, ProcReact_Status *status)
 {
     ProcReact_BytesState *bytes_state = (ProcReact_BytesState*)procreact_type_finalize_bytes(state, pid, status);
-    
+
     if(bytes_state == NULL)
         return NULL;
     else
@@ -185,21 +185,21 @@ void *procreact_type_finalize_string_array(void *state, pid_t pid, ProcReact_Sta
     ProcReact_StringArrayState *string_array_state = (ProcReact_StringArrayState*)state;
     int success = procreact_wait_for_boolean(pid, status);
     char **result;
-    
+
     /* Ensure that the result always ends with NULL termination */
-    
+
     if(string_array_state->result[string_array_state->result_length - 1] != NULL)
         string_array_state->result = increase_tokens_array(string_array_state->result, &string_array_state->result_length);
-    
+
     if(*status != PROCREACT_STATUS_OK || !success)
     {
         procreact_free_string_array(string_array_state->result);
         string_array_state->result = NULL;
     }
-    
+
     result = string_array_state->result;
     free(string_array_state);
-    
+
     return result;
 }
 

@@ -94,10 +94,12 @@ unsigned int procreact_buffer(ProcReact_FutureIterator *iterator)
 void procreact_fork_in_parallel_buffer_and_wait(ProcReact_FutureIterator *iterator)
 {
     /* Fork processes in parallel */
-    while(procreact_spawn_next_future(iterator));
+    while(procreact_spawn_next_future(iterator))
+        ;
 
     /* Capture the output of each future breadth first until all processes have been terminated */
-    while(procreact_buffer(iterator) > 0);
+    while(procreact_buffer(iterator) > 0)
+        ;
 }
 
 void procreact_fork_buffer_and_wait_in_parallel_limit(ProcReact_FutureIterator *iterator, const unsigned int limit)
@@ -109,10 +111,12 @@ void procreact_fork_buffer_and_wait_in_parallel_limit(ProcReact_FutureIterator *
         unsigned int old_running_processes;
 
         /* Fork at most the 'limit' number of processes in parallel */
-        while(iterator->running_processes < limit && procreact_spawn_next_future(iterator));
+        while(iterator->running_processes < limit && procreact_spawn_next_future(iterator))
+            ;
 
         /* Keep capturing the output of each future breadth first, until at least one process terminates */
         old_running_processes = iterator->running_processes;
-        while(procreact_buffer(iterator) == old_running_processes);
+        while(procreact_buffer(iterator) == old_running_processes)
+            ;
     }
 }
