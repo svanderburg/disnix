@@ -78,20 +78,20 @@ char **statemgmt_query_latest_snapshot_sync(gchar *container, gchar *component, 
         return NULL;
 }
 
-ProcReact_Future statemgmt_print_missing_snapshots(gchar **component, const unsigned int component_length, int stderr_fd)
+ProcReact_Future statemgmt_print_missing_snapshots(gchar **snapshots, const unsigned int snapshots_length, int stderr_fd)
 {
     ProcReact_Future future = procreact_initialize_future(procreact_create_string_array_type('\n'));
 
     if(future.pid == 0)
     {
         unsigned int i;
-        gchar **args = (gchar**)g_malloc((component_length + 3) * sizeof(gchar*));
+        gchar **args = (gchar**)g_malloc((snapshots_length + 3) * sizeof(gchar*));
 
         args[0] = "dysnomia-snapshots";
         args[1] = "--print-missing";
 
-        for(i = 0; i < component_length; i++)
-            args[i + 2] = component[i];
+        for(i = 0; i < snapshots_length; i++)
+            args[i + 2] = snapshots[i];
 
         args[i + 2] = NULL;
 
@@ -104,10 +104,10 @@ ProcReact_Future statemgmt_print_missing_snapshots(gchar **component, const unsi
     return future;
 }
 
-char **statemgmt_print_missing_snapshots_sync(gchar **component, const unsigned int component_length, int stderr_fd)
+char **statemgmt_print_missing_snapshots_sync(gchar **snapshots, const unsigned int snapshots_length, int stderr_fd)
 {
     ProcReact_Status status;
-    ProcReact_Future future = statemgmt_print_missing_snapshots(component, component_length, stderr_fd);
+    ProcReact_Future future = statemgmt_print_missing_snapshots(snapshots, snapshots_length, stderr_fd);
     char **result = procreact_future_get(&future, &status);
 
     if(status == PROCREACT_STATUS_OK)
@@ -154,7 +154,7 @@ char **statemgmt_resolve_snapshots_sync(gchar **snapshots, const unsigned int sn
         return NULL;
 }
 
-pid_t statemgmt_clean_snapshots(gint keep, gchar *container, gchar *component, int stdout_fd, int stderr_fd)
+pid_t statemgmt_clean_snapshots(int keep, gchar *container, gchar *component, int stdout_fd, int stderr_fd)
 {
     pid_t pid = fork();
 

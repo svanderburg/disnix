@@ -141,6 +141,8 @@ ProcReact_Future statemgmt_remote_capture_config(gchar *interface, gchar *target
 
 /**
  * Invokes a dummy command (the true command) for testing purposes.
+ *
+ * @return PID of the true process or -1 in case of a failure
  */
 pid_t statemgmt_dummy_command(void);
 

@@ -23,12 +23,45 @@
 #include <sys/types.h>
 #include <procreact_util.h>
 
+/**
+ * Copies generations of snapshots to a remote machine.
+ *
+ * @param interface Path to the interface executable
+ * @param target Target Address of the remote interface
+ * @param container Name of the container to deploy the snapshots to
+ * @param component Name of the component to deploy the snapshots to
+ * @param all TRUE to copy all snapshot generations, FALSE to only copy the latest
+ * @param stderr_fd File descriptor to attach to the process' standard error
+ * @return TRUE if the operation succeeded, else FALSE
+ */
 ProcReact_bool copy_snapshots_to_sync(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all, int stderr_fd);
 
+/**
+ * Asynchronously copies snapshots to a remote machine.
+ *
+ * @see copy_snapshots_to_sync
+ */
 pid_t copy_snapshots_to(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all, int stderr_fd);
 
+/**
+ * Copies generations of snapshots from a remote machine.
+ *
+ * @param interface Path to the interface executable
+ * @param target Target Address of the remote interface
+ * @param container Name of the container to deploy the snapshots to
+ * @param component Name of the component to deploy the snapshots to
+ * @param all TRUE to copy all snapshot generations, FALSE to only copy the latest
+ * @param stdout_fd File descriptor to attach to the process' standard output
+ * @param stderr_fd File descriptor to attach to the process' standard error
+ * @return TRUE if the operation succeeded, else FALSE
+ */
 ProcReact_bool copy_snapshots_from_sync(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all, int stdout_fd, int stderr_fd);
 
+/**
+ * Asynchronously copies snapshots from a remote machine.
+ *
+ * @see copy_snapshots_from_sync
+ */
 pid_t copy_snapshots_from(gchar *interface, gchar *target, gchar *container, gchar *component, ProcReact_bool all, int stdout_fd, int stderr_fd);
 
 #endif

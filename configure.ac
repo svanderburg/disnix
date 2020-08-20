@@ -20,8 +20,6 @@ AM_PROG_CC_C_O
 PKG_PROG_PKG_CONFIG
 NEED_PROG(bash, bash)
 NEED_PROG(getopt, getopt)
-NEED_PROG(nix_store, nix-store)
-NEED_PROG(dysnomia, dysnomia)
 AC_PATH_PROG(xmllint, xmllint, false)
 AC_PATH_PROG(xsltproc, xsltproc, false)
 AC_PATH_PROG(dblatex, dblatex)

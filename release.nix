@@ -29,7 +29,7 @@ let
         inherit officialRelease;
         dontBuild = false;
 
-        buildInputs = [ pkgconfig glib libxml2 libxslt getopt nixUnstable dblatex (dblatex.tex or tetex) doxygen nukeReferences help2man doclifter dysnomia ];
+        buildInputs = [ pkgconfig glib libxml2 libxslt getopt dblatex (dblatex.tex or tetex) doxygen nukeReferences help2man doclifter dysnomia ];
 
         CFLAGS = "-Wall";
 
@@ -78,7 +78,7 @@ let
           name = "disnix";
           src = tarball;
 
-          buildInputs = [ pkgconfig glib libxml2 libxslt getopt nixUnstable dysnomia ]
+          buildInputs = [ pkgconfig glib libxml2 libxslt getopt dysnomia ]
             ++ lib.optionals (!stdenv.isLinux) [ libiconv gettext ];
 
           CFLAGS = "-Wall";

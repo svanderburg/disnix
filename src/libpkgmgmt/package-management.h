@@ -30,7 +30,7 @@
  * @param closure Path to a Nix store export dump
  * @param stdout_fd File descriptor to attach to the process' standard output
  * @param stderr_fd File descriptor to attach to the process' standard error
- * @return Process id of the process that executes the task
+ * @return Process id of the process that executes the task or -1 in case of a failure
  */
 pid_t pkgmgmt_import_closure(const char *closure, int stdout_fd, int stderr_fd);
 
@@ -97,7 +97,7 @@ ProcReact_Future pkgmgmt_realise(gchar **derivation_paths, const unsigned int de
  * @param path A Nix store path
  * @param stdout_fd File descriptor to attach to the process' standard output
  * @param stderr_fd File descriptor to attach to the process' standard error
- * @return Process id of the process that executes the task
+ * @return Process id of the process that executes the task or -1 in case of a failure
  */
 pid_t pkgmgmt_set_profile(gchar *profile, gchar *path, int stdout_fd, int stderr_fd);
 
@@ -125,7 +125,7 @@ char **pkgmgmt_query_requisites_sync(gchar **paths, const unsigned int paths_len
  * @param delete_old Whether to also remove older profile generations
  * @param stdout_fd File descriptor to attach to the process' standard output
  * @param stderr_fd File descriptor to attach to the process' standard error
- * @return Process id of the process that executes the task
+ * @return Process id of the process that executes the task or -1 in case of a failure
  */
 pid_t pkgmgmt_collect_garbage(const ProcReact_bool delete_old, int stdout_fd, int stderr_fd);
 
