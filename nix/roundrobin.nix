@@ -3,20 +3,24 @@
 let
   inherit (builtins) head tail attrNames;
 
-  /**
+  /*
    * Generates a mapping of services to machines by iterating over the available service names,
    * and mapping them to a target name.
    *
-   * Parameters:
-   * serviceNames: List of service names
-   * targetNames: List of target names onto which services are mapped
-   * allTargetNames: List of all possible target names
-   *
-   * Returns:
-   * A string with attributes mapping services to a target
+   * Example:
+   *   generateDistributionModelBody {
+   *     serviceNames = [ "service1" "service2" ];
+   *     targetNames = [ "target1" "target2" ];
+   *     allTargetNames = [ "target1" "target2" ];
+   *   }
+   *   =>
+   *   ''
+   *     service1 = [ infrastructure.test1 ];
+   *     service2 = [ infrastructure.test2 ];
+   *   ''
    */
-   
-  generateDistributionModelBody = {serviceNames, targetNames, allTargetNames}:
+
+  generateDistributionModelBody = {serviceNames, targetNames, allTargetNames ? targetNames}:
     if serviceNames == [] then ""
     else
       "  ${head serviceNames} = [ infrastructure.${head targetNames} ];\n" +
@@ -31,7 +35,7 @@ let
         inherit allTargetNames;
       });
 
-  /**
+  /*
    * Generates a distribution model from a given services model and infrastructure model by using
    * the roundrobin scheduling method.
    *
@@ -58,7 +62,6 @@ let
       ${generateDistributionModelBody {
         serviceNames = attrNames services;
         targetNames = attrNames infrastructure;
-        allTargetNames = attrNames infrastructure;
       }}}
     '';
 in
