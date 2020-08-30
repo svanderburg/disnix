@@ -332,18 +332,23 @@ fi
 
 # Operation functions
 
+determineLastProfileGenerationId()
+{
+    if [ -d "$profileDir" ] && [ "$(echo $profileDir/$profile-*-link)" != "" ] && [ "$(ls $profileDir/$profile-*-link | wc -l)" -gt 1 ]
+    then
+        generation="$(basename $(ls $profileDir/$profile-*-link | sort -V | tail -2 | head -1))"
+    else
+        echo "[coordinator]: Unable to roll back as there are no known previous deployments!" >&2
+        exit 1
+    fi
+}
+
 switchGenerations()
 {
     # If no generation link has been requested, figure out what the previous one is
     if [ "$generationId" = "" ]
     then
-        if [ -d "$profileDir" ] && [ "$(echo $profileDir/$profile-*-link)" != "" ] && [ "$(ls $profileDir/$profile-*-link | wc -l)" -gt 1 ]
-        then
-            generation="$(basename $(ls $profileDir/$profile-*-link | sort -V | tail -2 | head -1))"
-        else
-            echo "[coordinator]: Unable to roll back as there are no known previous deployments!" >&2
-            exit 1
-        fi
+        determineLastProfileGenerationId
     else
         generation="$profile-$generationId-link"
     fi
@@ -353,7 +358,7 @@ switchGenerations()
         # Retrieve the manifest of the requested profile generation
         manifest=`readlink -f $profileDir/$generation`
     else
-        echo "[coordinator]: Cannot switch profile generations, because the requested profile does not exist!" >&2
+        echo "[coordinator]: Cannot switch profile generations, because the requested profile: $profileDir/$generation does not exist!" >&2
         exit 1
     fi
 }
