@@ -91,7 +91,7 @@ while [ "$1" != "--" ]
 do
     case "$1" in
         -i|--infrastructure)
-            infrastructureFile=`readlink -f $2`
+            infrastructureFile=`@readlink@ -f $2`
             ;;
         --interface)
             interfaceArg="--interface $2"
@@ -147,7 +147,7 @@ checkTmpDir
 
 if [ -n "$1" ]
 then
-    manifestFile="$(readlink -f "$1")"
+    manifestFile="$(@readlink@ -f "$1")"
 fi
 
 # Convert the manifest, build and install it

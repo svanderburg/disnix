@@ -58,7 +58,7 @@ disnix-convert.1.xml: disnix-convert.1
 
 man1_MANS = disnix-instantiate.1 disnix-manifest.1 disnix-gendist-roundrobin.1 disnix-delegate.1 disnix-env.1 disnix-ssh-client.1 disnix-reconstruct.1 disnix-normalize-infra.1 disnix-convert.1
 
-EXTRA_DIST = disnix-instantiate.in disnix-manifest.in disnix-gendist-roundrobin.in disnix-delegate.in disnix-env.in disnix-ssh-client.in disnix-normalize-infra.in disnix-convert.in \
+EXTRA_DIST = checks.in disnix-instantiate.in disnix-manifest.in disnix-gendist-roundrobin.in disnix-delegate.in disnix-env.in disnix-ssh-client.in disnix-normalize-infra.in disnix-convert.in \
   $(pkgdata_SCRIPTS) \
   $(man1_MANS) \
   $(noinst_DATA)

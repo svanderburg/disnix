@@ -123,7 +123,7 @@ then
     echo "An infrastructure model must be provided!" >&2
     exit 1
 else
-    infrastructureFile="$(readlink -f "$1")"
+    infrastructureFile="$(@readlink@ -f "$1")"
 fi
 
 # Generate a normalized XML infrastructure file
@@ -135,7 +135,7 @@ evaluateXML()
        --argstr clientInterface $interface \
        --argstr infrastructureFile $infrastructureFile \
        $showTraceArg \
-       "$(readlink -f @datadir@/@PACKAGE@/infrastructure-xml.nix)"
+       "$(@readlink@ -f @datadir@/@PACKAGE@/infrastructure-xml.nix)"
 }
 
 if [ "$raw" = "1" ]

@@ -110,22 +110,22 @@ while [ "$1" != "--" ]
 do
     case "$1" in
         -s|--services)
-            servicesFile=`readlink -f $2`
+            servicesFile=`@readlink@ -f $2`
             ;;
         -i|--infrastructure)
-            infrastructureFile=`readlink -f $2`
+            infrastructureFile=`@readlink@ -f $2`
             ;;
         -d|--distribution)
-            distributionFile=`readlink -f $2`
+            distributionFile=`@readlink@ -f $2`
             ;;
         -P|--packages)
-            packagesFile=`readlink -f $2`
+            packagesFile=`@readlink@ -f $2`
             ;;
         -A|--architecture)
-            architectureFile=`readlink -f $2`
+            architectureFile=`@readlink@ -f $2`
             ;;
         -B|--build)
-            buildFile=`readlink -f $2`
+            buildFile=`@readlink@ -f $2`
             ;;
         --extra-params)
             extraParamsArg=("--arg" "extraParams" "$2")
@@ -196,4 +196,4 @@ nix-build --argstr targetProperty $targetProperty \
     $showTraceArg \
     $conversionArgs \
     "${extraParamsArg[@]}" \
-    "$(readlink -f @datadir@/@PACKAGE@/instantiate.nix)"
+    "$(@readlink@ -f @datadir@/@PACKAGE@/instantiate.nix)"

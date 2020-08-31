@@ -153,7 +153,7 @@ then
     echo "An infrastructure model must be provided!" >&2
     exit 1
 else
-    infrastructureFile="$(readlink -f "$1")"
+    infrastructureFile="$(@readlink@ -f "$1")"
 fi
 
 # Reconstruct the manifest, build and install it

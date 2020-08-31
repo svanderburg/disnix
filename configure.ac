@@ -26,6 +26,11 @@ AC_PATH_PROG(dblatex, dblatex)
 AC_PATH_PROG(HELP2MAN, help2man, false)
 AC_PATH_PROG(DOCLIFTER, doclifter, false)
 
+AC_PATH_PROGS(readlink, [greadlink readlink], [na])
+if test "$readlink" = na; then
+    AC_MSG_ERROR([We need a GNU compatible readlink command, i.e. greadlink or readlink needed])
+fi
+
 # Checks for glib libraries
 GLIB2_REQUIRED=2.26.0
 PKG_CHECK_MODULES(GLIB2, glib-2.0 >= $GLIB2_REQUIRED)
@@ -122,6 +127,7 @@ scripts/Makefile
 nix/Makefile
 xsl/Makefile
 maintenance/Makefile
+scripts/checks
 scripts/disnix-delegate
 scripts/disnix-env
 scripts/disnix-instantiate

@@ -217,27 +217,27 @@ generateNixBuildArgs()
 {
     case "$deploymentModel" in
         models)
-            conversionArgs="--argstr servicesFile $(readlink -f $servicesFile) --argstr infrastructureFile $(readlink -f $infrastructureFile) --argstr distributionFile $(readlink -f $distributionFile)"
+            conversionArgs="--argstr servicesFile $(@readlink@ -f $servicesFile) --argstr infrastructureFile $(@readlink@ -f $infrastructureFile) --argstr distributionFile $(@readlink@ -f $distributionFile)"
 
             if [ "$packagesFile" != "" ]
             then
-                conversionArgs="$conversionArgs --argstr packagesFile $(readlink -f $packagesFile)"
+                conversionArgs="$conversionArgs --argstr packagesFile $(@readlink@ -f $packagesFile)"
             fi
             ;;
         packages)
-            conversionArgs="--argstr packagesFile $(readlink -f $packagesFile) --argstr infrastructureFile $(readlink -f $infrastructureFile)"
+            conversionArgs="--argstr packagesFile $(@readlink@ -f $packagesFile) --argstr infrastructureFile $(@readlink@ -f $infrastructureFile)"
             ;;
         architecture)
-            conversionArgs="--argstr architectureFile $(readlink -f $architectureFile)"
+            conversionArgs="--argstr architectureFile $(@readlink@ -f $architectureFile)"
             ;;
         build)
-            conversionArgs="--argstr buildFile $(readlink -f $buildFile)"
+            conversionArgs="--argstr buildFile $(@readlink@ -f $buildFile)"
             ;;
         deployment)
-            conversionArgs="--argstr deploymentFile $(readlink -f $deploymentFile)"
+            conversionArgs="--argstr deploymentFile $(@readlink@ -f $deploymentFile)"
             ;;
         undeploy)
-            conversionArgs="--argstr infrastructureFile $(readlink -f $infrastructureFile)"
+            conversionArgs="--argstr infrastructureFile $(@readlink@ -f $infrastructureFile)"
             ;;
     esac
 }
