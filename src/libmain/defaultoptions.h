@@ -97,6 +97,8 @@ typedef enum
 }
 DisnixCommandLineOption;
 
+typedef int disnix_bool;
+
 /**
  * Checks the interface option. If NULL, it will take the value defined in the
  * DISNIX_CLIENT_INTERFACE environment variable or else it will use
@@ -131,7 +133,7 @@ char *check_profile_option(char *profile);
  *
  * @return TRUE if it has been enabled, else FALSE
  */
-int check_global_delete_state(void);
+disnix_bool check_global_delete_state(void);
 
 /**
  * Checks the tmpdir option. If NULL, it will take the value defined in the
