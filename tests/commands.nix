@@ -4,7 +4,7 @@ let
   snapshotTests = ./snapshots;
   machine = import ./machine.nix { inherit dysnomia disnix; };
 in
-with import "${nixpkgs}/nixos/lib/testing.nix" { system = builtins.currentSystem; };
+with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
 simpleTest {
   nodes = {
@@ -14,85 +14,126 @@ simpleTest {
   };
   testScript =
     let
-      env = ''NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' dysnomia=\"\$(dirname \$(readlink -f \$(type -p dysnomia)))/..\"'';
+      env = ''NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' dysnomia=\"$(dirname $(readlink -f $(type -p dysnomia)))/..\"'';
     in
     ''
-      startAll;
+      start_all()
 
       # Initialise ssh stuff by creating a key pair for communication
-      my $key=`${pkgs.openssh}/bin/ssh-keygen -t ecdsa -f key -N ""`;
+      key = subprocess.check_output(
+          '${pkgs.openssh}/bin/ssh-keygen -t ecdsa -f key -N ""',
+          shell=True,
+      )
 
-      $testtarget1->mustSucceed("mkdir -m 700 /root/.ssh");
-      $testtarget1->copyFileFromHost("key.pub", "/root/.ssh/authorized_keys");
+      testtarget1.succeed("mkdir -m 700 /root/.ssh")
+      testtarget1.copy_from_host("key.pub", "/root/.ssh/authorized_keys")
 
-      $testtarget2->mustSucceed("mkdir -m 700 /root/.ssh");
-      $testtarget2->copyFileFromHost("key.pub", "/root/.ssh/authorized_keys");
+      testtarget2.succeed("mkdir -m 700 /root/.ssh")
+      testtarget2.copy_from_host("key.pub", "/root/.ssh/authorized_keys")
 
-      $coordinator->mustSucceed("mkdir -m 700 /root/.ssh");
-      $coordinator->copyFileFromHost("key", "/root/.ssh/id_dsa");
-      $coordinator->mustSucceed("chmod 600 /root/.ssh/id_dsa");
+      coordinator.succeed("mkdir -m 700 /root/.ssh")
+      coordinator.copy_from_host("key", "/root/.ssh/id_dsa")
+      coordinator.succeed("chmod 600 /root/.ssh/id_dsa")
 
       # Create a distributed derivation file
-      my $distderivation = $coordinator->mustSucceed("${env} disnix-instantiate -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure.nix -d ${snapshotTests}/distribution-simple.nix");
+      distderivation = coordinator.succeed(
+          "${env} disnix-instantiate -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure.nix -d ${snapshotTests}/distribution-simple.nix"
+      )
 
       # Delegate the builds using the distributed derivation file
-      $coordinator->mustSucceed("${env} disnix-build $distderivation");
+      coordinator.succeed(
+          "${env} disnix-build {}".format(
+              distderivation
+          )
+      )
 
       # Checks whether the testService1 has been actually built on the
       # targets by checking the logfiles. This test should succeed.
 
-      $testtarget1->mustSucceed("cat /var/log/disnix/2 >&2");
-      $testtarget1->mustSucceed("[ \"\$(cat /var/log/disnix/2 | grep \"\\-testService1.drv\")\" != \"\" ]");
+      testtarget1.succeed('[ "$(cat /var/log/disnix/2 | grep "\\-testService1.drv")" != "" ]')
 
       # Create a manifest
-      my $manifest = $coordinator->mustSucceed("${env} disnix-manifest -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure.nix -d ${snapshotTests}/distribution-simple.nix");
+      manifest = coordinator.succeed(
+          "${env} disnix-manifest -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure.nix -d ${snapshotTests}/distribution-simple.nix"
+      )
 
       # Distribute closures to the target machines
-      $coordinator->mustSucceed("${env} disnix-distribute $manifest");
+      coordinator.succeed(
+          "${env} disnix-distribute {}".format(
+              manifest
+          )
+      )
 
       # Lock the machines
-      $coordinator->mustSucceed("${env} disnix-lock $manifest");
+      coordinator.succeed(
+          "${env} disnix-lock {}".format(
+              manifest
+          )
+      )
 
       # Try another lock. This should fail, since the machines have been locked already
-      $coordinator->mustFail("${env} disnix-lock $manifest");
+      coordinator.fail(
+          "${env} disnix-lock {}".format(
+              manifest
+          )
+      )
 
       # Activate the configuration.
-      $coordinator->mustSucceed("${env} disnix-activate $manifest");
+      coordinator.succeed(
+          "${env} disnix-activate {}".format(
+              manifest
+          )
+      )
 
       # Migrate the data from one machine to another
-      $coordinator->mustSucceed("${env} disnix-migrate $manifest");
+      coordinator.succeed(
+          "${env} disnix-migrate {}".format(
+              manifest
+          )
+      )
 
       # Set the new configuration Nix profiles on the coordinator and target machines
-      $coordinator->mustSucceed("${env} disnix-set $manifest");
+      coordinator.succeed(
+          "${env} disnix-set {}".format(
+              manifest
+          )
+      )
 
-      my $result = $coordinator->mustSucceed("ls /nix/var/nix/profiles/per-user/root/disnix-coordinator | wc -l");
+      result = coordinator.succeed(
+          "ls /nix/var/nix/profiles/per-user/root/disnix-coordinator | wc -l"
+      )
 
-      if($result == 2) {
-          print "We have only one generation symlink on the coordinator!\n";
-      } else {
-          die "We should have one generation symlink on the coordinator!";
-      }
+      if int(result) == 2:
+          print("We have only one generation symlink on the coordinator!")
+      else:
+          raise Exception("We should have one generation symlink on the coordinator!")
 
-      $result = $testtarget1->mustSucceed("ls /nix/var/nix/profiles/disnix | wc -l");
+      result = testtarget1.succeed("ls /nix/var/nix/profiles/disnix | wc -l")
 
-      if($result == 2) {
-          print "We have only one generation symlink on target1!\n";
-      } else {
-          die "We should have one generation symlink on target1!";
-      }
+      if int(result) == 2:
+          print("We have only one generation symlink on target1!")
+      else:
+          raise Exception("We should have one generation symlink on target1!")
 
-      $result = $testtarget2->mustSucceed("ls /nix/var/nix/profiles/disnix | wc -l");
+      result = testtarget2.succeed("ls /nix/var/nix/profiles/disnix | wc -l")
 
-      if($result == 2) {
-          print "We have only one generation symlink on target2!\n";
-      } else {
-          die "We should have one generation symlink on target2!";
-      }
+      if int(result) == 2:
+          print("We have only one generation symlink on target2!")
+      else:
+          raise Exception("We should have one generation symlink on target2!")
 
       # Unlock the machines
-      $coordinator->mustSucceed("${env} disnix-lock -u $manifest");
+      coordinator.succeed(
+          "${env} disnix-lock -u {}".format(
+              manifest
+          )
+      )
 
       # Try to unlock the machines again. This should fail, since the machines have been unlocked already
-      $coordinator->mustFail("${env} disnix-lock -u $manifest");
+      coordinator.fail(
+          "${env} disnix-lock -u {}".format(
+              manifest
+          )
+      )
     '';
 }
