@@ -106,7 +106,7 @@ static void print_service_label(ManifestService *service)
 
         g_hash_table_iter_init(&iter, service->provides_containers_table);
         while(g_hash_table_iter_next(&iter, &key, &value))
-            g_print(" ->\\n%s", (gchar*)key);
+            g_print(" &#8594;\\n%s", (gchar*)key);
     }
     else if(g_hash_table_size(service->provides_containers_table) > 1)
     {
@@ -114,7 +114,7 @@ static void print_service_label(ManifestService *service)
         gpointer key, value;
         int first = TRUE;
 
-        g_print("\\n -> { ");
+        g_print("\\n &#8594; { ");
 
         g_hash_table_iter_init(&iter, service->provides_containers_table);
         while(g_hash_table_iter_next(&iter, &key, &value))
