@@ -135,5 +135,23 @@ simpleTest {
               manifest
           )
       )
+
+      # Explicitly activate a new configuration using the current configuration as the basis
+
+      new_manifest = coordinator.succeed(
+          "${env} disnix-manifest -s ${snapshotTests}/services-state.nix -i ${snapshotTests}/infrastructure.nix -d ${snapshotTests}/distribution-reverse.nix"
+      )
+
+      coordinator.succeed(
+          "${env} disnix-distribute {}".format(
+              new_manifest
+          )
+      )
+
+      coordinator.succeed(
+          "${env} disnix-activate -o {manifest} {new_manifest}".format(
+              manifest=manifest[:-1], new_manifest=new_manifest
+          )
+      )
     '';
 }

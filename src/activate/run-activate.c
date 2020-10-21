@@ -40,17 +40,9 @@ int run_activate_system(const gchar *new_manifest, const gchar *old_manifest, co
             gchar *old_manifest_file = determine_manifest_to_open(old_manifest, coordinator_profile_path, profile);
             Manifest *previous_manifest = open_previous_manifest(old_manifest_file, MANIFEST_SERVICE_MAPPINGS_FLAG, NULL, NULL);
 
-            if(previous_manifest == NULL || check_manifest(previous_manifest))
-            {
-                /* Do the activation process */
-                status = activate_system(manifest, previous_manifest, flags, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
-                print_transition_status(status, old_manifest_file, new_manifest, coordinator_profile_path, profile);
-            }
-            else
-            {
-                g_printerr("[coordinator]: The previous manifest file is invalid!\n");
-                status = TRANSITION_FAILED;
-            }
+            /* Do the activation process */
+            status = activate_system(manifest, previous_manifest, flags, set_flag_on_interrupt, restore_default_behaviour_on_interrupt);
+            print_transition_status(status, old_manifest_file, new_manifest, coordinator_profile_path, profile);
 
             /* Cleanup */
             delete_manifest(previous_manifest);
