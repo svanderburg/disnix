@@ -241,7 +241,8 @@ TransitionStatus transition(Manifest *manifest, Manifest *previous_manifest, con
 
     /* Execute transition steps */
     if((status = deactivate_obsolete_mappings(deactivation_array, unified_service_mapping_array, unified_services_table, manifest->targets_table, previous_service_mapping_array, flags, activate_mapping_function, deactivate_mapping_function)) == TRANSITION_SUCCESS
-      && (status = activate_new_mappings(activation_array, unified_service_mapping_array, unified_services_table, manifest->targets_table, previous_service_mapping_array, flags, activate_mapping_function, deactivate_mapping_function)) == TRANSITION_SUCCESS);
+      && (status = activate_new_mappings(activation_array, unified_service_mapping_array, unified_services_table, manifest->targets_table, previous_service_mapping_array, flags, activate_mapping_function, deactivate_mapping_function)) == TRANSITION_SUCCESS)
+        ;
 
     /* Cleanup */
     if(previous_manifest != NULL)
