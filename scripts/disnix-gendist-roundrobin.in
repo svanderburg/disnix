@@ -38,6 +38,9 @@ Options:
   -i, --infrastructure=infrastructure_nix
                                      Infrastructure Nix expression which captures
                                      properties of machines in the network
+      --extra-params=PARAMS          A string with an attribute set in the Nix
+                                     expression language propagating extra
+                                     parameters to the input models
       --no-out-link                  Do not create a 'result' symlink
       --show-trace                   Shows a trace of the output
   -h, --help                         Shows the usage of this command to the user
@@ -58,7 +61,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o s:i:hv -l services:,infrastructure:,no-out-link,show-trace,help,version -- "$@"`
+PARAMS=`@getopt@ -n $0 -o s:i:hv -l services:,infrastructure:,extra-params:,no-out-link,show-trace,help,version -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -81,6 +84,9 @@ do
             ;;
         --no-out-link)
             noOutLink=1
+            ;;
+        --extra-params)
+            extraParamsArg=("--arg" "extraParams" "$2")
             ;;
         --show-trace)
             showTrace=1
@@ -118,5 +124,6 @@ checkShowTrace
 nix-build --argstr servicesFile "$(@readlink@ -f $servicesFile)" \
     --argstr infrastructureFile "$(@readlink@ -f $infrastructureFile)" \
     "$(@readlink@ -f @datadir@/@PACKAGE@/gendist-roundrobin.nix)" \
+    "${extraParamsArg[@]}" \
     $noOutLinkArg \
     $showTraceArg

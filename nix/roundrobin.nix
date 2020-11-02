@@ -1,7 +1,7 @@
 {pkgs}:
 
 let
-  inherit (builtins) head tail attrNames;
+  inherit (builtins) head tail attrNames intersectAttrs functionArgs;
 
   /*
    * Generates a mapping of services to machines by iterating over the available service names,
@@ -42,18 +42,21 @@ let
    * Parameters:
    * servicesFun: Services model, a function which returns an attributeset with service declarations
    * infrastructure: Infrastructure model, an attributeset capturing properties of machines in the network
+   * extraParams: Optional extra parameters propagated to the services model
    *
    * Returns:
    * A distribution model Nix expression
    */
-  generateDistributionModelRoundRobin = {servicesFun, infrastructure}:
+  generateDistributionModelRoundRobin = {servicesFun, infrastructure, extraParams}:
     let
-      services = servicesFun {
+      extraServiceParams = intersectAttrs (functionArgs servicesFun) extraParams;
+
+      services = servicesFun ({
         distribution = null;
         invDistribution = null;
         system = null;
         inherit pkgs;
-      };
+      } // extraServiceParams);
     in
     ''
       {infrastructure}:

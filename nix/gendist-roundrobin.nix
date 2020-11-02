@@ -1,5 +1,6 @@
 { servicesFile
 , infrastructureFile
+, extraParams ? {}
 , nixpkgs ? <nixpkgs>
 }:
 
@@ -18,7 +19,7 @@ pkgs.stdenv.mkDerivation {
   buildCommand = ''
     cat > $out <<EOF
     ${generateDistributionModelRoundRobin {
-      inherit servicesFun infrastructure;
+      inherit servicesFun infrastructure extraParams;
     }}
     EOF
   '';
