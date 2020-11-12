@@ -343,9 +343,10 @@ $ export PATH=/nix/var/nix/profiles/disnix/default/bin:$PATH
 </screen>
 		</para>
 		<para>
-			When using NixOS, this variable can be extended by adding the following line to <filename>/etc/nixos/configuration.nix</filename>:
+			When using NixOS, we can automatically extend the <varname>PATH</varname> environment variable
+			by adding the following line to <filename>/etc/nixos/configuration.nix</filename>:
 <screen>
-environment.variables.PATH = [ "/nix/var/nix/profiles/disnix/default/bin" ];
+disnix.enableProfilePath = true;
 </screen>
 		</para>
 	</section>
@@ -422,6 +423,13 @@ $ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix --profile
 			environment variable to:
 <screen>
 $ export PATH=/nix/var/nix/profiles/disnix/sander:$PATH
+</screen>
+		</para>
+		<para>
+			In NixOS, we can easily specify all profile names and automatically derive the global <varname>PATH</varname> environment variable:
+<screen>
+disnix.enableProfilePath = true;
+disnix.profiles = [ "default" "sander" ];
 </screen>
 		</para>
 	</section>

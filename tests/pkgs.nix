@@ -2,7 +2,10 @@
 
 let
   pkgsTests = ./pkgs;
-  machine = import ./machine.nix { inherit dysnomia disnix; };
+  machine = import ./machine.nix {
+    inherit dysnomia disnix;
+    enableProfilePath = true;
+  };
 in
 with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
@@ -51,7 +54,7 @@ simpleTest {
       testtarget1.succeed("/nix/var/nix/profiles/disnix/default/bin/curl --help")
       testtarget2.succeed("/nix/var/nix/profiles/disnix/default/bin/strace -h")
 
-      # Deploy a configuration in which a service declares an inter-dependency. This is not allowed.
+      # Deploy a configuration in which a service declares an inter-dependency on a package. This is not allowed.
       coordinator.fail(
           "${env} disnix-manifest -s ${pkgsTests}/services-invalid.nix -i ${pkgsTests}/infrastructure.nix -d ${pkgsTests}/distribution-invalid.nix"
       )

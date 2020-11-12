@@ -30,6 +30,19 @@ in
           type = types.path;
           description = "The Dysnomia package";
         };
+
+        enableProfilePath = mkOption {
+          type = types.bool;
+          default = false;
+          description = "Whether to expose Disnix profiles in the system's PATH";
+        };
+
+        profiles = mkOption {
+          type = types.listOf types.string;
+          default = [ "default" ];
+          example = [ "default" ];
+          description = "Names of the Disnix profiles to expose in the system's PATH";
+        };
       };
     };
   };
@@ -60,5 +73,6 @@ in
       };
 
     environment.systemPackages = [ cfg.package ];
+    environment.variables.PATH = lib.optionals cfg.enableProfilePath (map (profileName: "/nix/var/nix/profiles/disnix/${profileName}/bin" ) cfg.profiles);
   };
 }

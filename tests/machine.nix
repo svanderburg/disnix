@@ -1,4 +1,4 @@
-{dysnomia, disnix, enableMultiUser ? true}:
+{dysnomia, disnix, enableMultiUser ? true, enableProfilePath ? false}:
 {config, pkgs, ...}:
 
 {
@@ -10,7 +10,7 @@
   services.disnixTest = {
     enable = true;
     package = disnix;
-    inherit dysnomia enableMultiUser;
+    inherit dysnomia enableMultiUser enableProfilePath;
   };
 
   users.extraUsers = {
