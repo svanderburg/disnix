@@ -267,7 +267,7 @@ simpleAppservingTomcat = constructors.simpleAppservingTomcat {
 			<itemizedlist>
 				<listitem>
 					<simpara>
-						You still need to obtain target machines and install the required basic software package on them, such as Nix, Dysnomia and Disnix.
+						You still need to obtain target machines and install the required basic software packages on them, such as Nix, Dysnomia and Disnix.
 						This is not something Disnix can automate.
 					</simpara>
 				</listitem>
@@ -280,7 +280,7 @@ simpleAppservingTomcat = constructors.simpleAppservingTomcat {
 				<listitem>
 					<simpara>
 						Not all container providers can be deployed with Nix and Disnix. For example, one of the public Disnix examples shows how
-						to deploy web applications to Internet Information Services, and database to MS SQL server on Windows. These container services cannot be deployed
+						to deploy web applications to Internet Information Services (IIS), and database to MS SQL server on Windows. These container services cannot be deployed
 						with Nix/Disnix, but you can use Disnix to build the applications services and deploy them to these target containers.
 					</simpara>
 				</listitem>
