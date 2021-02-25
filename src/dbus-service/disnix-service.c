@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <glib-unix.h>
+#include <procreact_types.h>
 #include "disnix-dbus.h"
 #include "jobmanagement.h"
 #include "logging.h"
@@ -39,9 +40,20 @@ extern char *logdir;
 
 typedef struct
 {
+    /* Indicates whether we want to connect to the session bus or system bus */
+    ProcReact_bool session_bus;
+    /* Path where Disnix should should store logs of the activities that it executes */
+    char *log_path;
+    /* GLib mainloop that keeps the server running */
+    GMainLoop *mainloop;
+    /* ID of the bus owner */
+    guint owner_id;
+    /* File where the daemon should write general log messages */
     FILE *log_fd;
+    /* Pid file of the daemon or NULL if it the services runs in foreground mode */
+    char *pid_file;
 }
-DBusCallbackData;
+DaemonData;
 
 static void on_bus_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
@@ -93,7 +105,7 @@ static void on_name_acquired(GDBusConnection *connection, const gchar *name, gpo
 
 static void on_name_lost(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
-    DBusCallbackData *data = (DBusCallbackData*)user_data;
+    DaemonData *data = (DaemonData*)user_data;
 
     fprintf(data->log_fd, "Name lost: %s\n", name);
 
@@ -113,23 +125,6 @@ static void configure_tmp_dir(void)
         tmpdir = "/tmp";
 }
 
-typedef struct
-{
-    /* Indicates whether we want to connect to the session bus or system bus */
-    int session_bus;
-    /* Path where Disnix should should store logs of the activities that it executes */
-    char *log_path;
-    /* GLib mainloop that keeps the server running */
-    GMainLoop *mainloop;
-    /* ID of the bus owner */
-    guint owner_id;
-    /* File where the daemon should write general log messages */
-    FILE *log_fd;
-    /* Pid file of the daemon or NULL if it the services runs in foreground mode */
-    char *pid_file;
-}
-DaemonData;
-
 static gboolean handle_termination(gpointer user_data)
 {
     GMainLoop *mainloop = (GMainLoop*)user_data;
@@ -137,13 +132,9 @@ static gboolean handle_termination(gpointer user_data)
     return TRUE;
 }
 
-static int initialize_disnix_service(void *data)
+static ProcReact_bool initialize_disnix_service(void *data)
 {
     DaemonData *daemon_data = (DaemonData*)data;
-
-    /* Data to propagate to the DBus callback functions */
-    DBusCallbackData callback_data;
-    callback_data.log_fd = daemon_data->log_fd;
 
     /* Determine the temp directory */
     configure_tmp_dir();
@@ -156,35 +147,28 @@ static int initialize_disnix_service(void *data)
     if(daemon_data->mainloop == NULL)
     {
         fprintf(daemon_data->log_fd, "ERROR: Failed to create the mainloop!\n");
-        return 1;
+        return FALSE;
     }
 
     /* Figure out what the next job id number is */
     determine_next_pid(logdir);
 
     /* Connect to the system/session bus */
+    GBusType bus_type;
+
     if(daemon_data->session_bus)
-    {
-        daemon_data->owner_id = g_bus_own_name(G_BUS_TYPE_SESSION,
-            "org.nixos.disnix.Disnix",
-            G_BUS_NAME_OWNER_FLAGS_NONE,
-            on_bus_acquired,
-            on_name_acquired,
-            on_name_lost,
-            &callback_data,
-            NULL);
-    }
+        bus_type = G_BUS_TYPE_SESSION;
     else
-    {
-        daemon_data->owner_id = g_bus_own_name(G_BUS_TYPE_SYSTEM,
-            "org.nixos.disnix.Disnix",
-            G_BUS_NAME_OWNER_FLAGS_NONE,
-            on_bus_acquired,
-            on_name_acquired,
-            on_name_lost,
-            &callback_data,
-            NULL);
-    }
+        bus_type = G_BUS_TYPE_SYSTEM;
+
+    daemon_data->owner_id = g_bus_own_name(bus_type,
+        "org.nixos.disnix.Disnix",
+        G_BUS_NAME_OWNER_FLAGS_NONE,
+        on_bus_acquired,
+        on_name_acquired,
+        on_name_lost,
+        daemon_data,
+        NULL);
 
     if(daemon_data->pid_file != NULL)
     {
@@ -208,7 +192,7 @@ static int start_disnix_service(void *data)
     g_bus_unown_name(daemon_data->owner_id);
 
     if(daemon_data->pid_file == NULL)
-        return 1; /* The main loop should not be stopped in foreground mode, but if it does return the exit failure status */
+        return 1; /* The main loop should not be stopped in foreground mode, but if it does, then return the exit failure status */
     else
     {
         unlink(daemon_data->pid_file);
@@ -218,14 +202,17 @@ static int start_disnix_service(void *data)
 
 int start_disnix_service_foreground(int session_bus, char *log_path)
 {
-    DaemonData data;
-    data.session_bus = session_bus;
-    data.log_path = log_path;
-    data.log_fd = stderr;
-    data.pid_file = NULL;
+    int exit_status;
+    DaemonData *data = (DaemonData*)g_malloc(sizeof(DaemonData)); /* We must allocate the daemon data on the heap -> it is required by callback functions invoked from a thread */
+    data->session_bus = session_bus;
+    data->log_path = log_path;
+    data->log_fd = stderr;
+    data->pid_file = NULL;
 
-    initialize_disnix_service(&data);
-    return start_disnix_service(&data);
+    exit_status = !(initialize_disnix_service(data) && (start_disnix_service(data) == 0));
+
+    g_free(data);
+    return exit_status;
 }
 
 int start_disnix_service_daemon(int session_bus, char *log_path, char *pid_file, char *log_file)
@@ -239,17 +226,16 @@ int start_disnix_service_daemon(int session_bus, char *log_path, char *pid_file,
     }
     else
     {
-        DaemonData data;
+        DaemonData *data = (DaemonData*)g_malloc(sizeof(DaemonData)); /* We must allocate the daemon data on the heap -> it is required by callback functions invoked from a thread */
+        data->session_bus = session_bus;
+        data->log_path = log_path;
+        data->log_fd = log_fd;
+        data->pid_file = pid_file;
 
-        data.session_bus = session_bus;
-        data.log_path = log_path;
-        data.log_fd = log_fd;
-        data.pid_file = pid_file;
-
-        DaemonStatus status = daemonize(pid_file, &data, initialize_disnix_service, start_disnix_service);
-
+        DaemonStatus status = daemonize(pid_file, data, initialize_disnix_service, start_disnix_service);
         print_daemon_status(status, stderr);
 
+        g_free(data);
         fclose(log_fd);
         return status;
     }

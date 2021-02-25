@@ -21,6 +21,7 @@
 
 #include "nixxml-print-nix.h"
 #include <string.h>
+#include "nixxml-types.h"
 
 #define TRUE 1
 #define FALSE 0
@@ -66,7 +67,7 @@ void NixXML_print_path_nix(FILE *file, const void *value, const int indent_level
 {
     const char *string_value = (const char*)value;
     unsigned int i = 0;
-    int has_spaces = FALSE;
+    NixXML_bool has_spaces = FALSE;
 
     /* Check if the path contains whitespaces */
 
