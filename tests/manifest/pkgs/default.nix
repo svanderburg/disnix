@@ -10,15 +10,15 @@ rec {
   };
 
   testService2 = import ./testService2.nix {
-    inherit (pkgs) stdenv;
+    inherit (pkgs) stdenv lib;
   };
 
   testService2B = import ./testService2B.nix {
-    inherit (pkgs) stdenv;
+    inherit (pkgs) stdenv lib;
   };
 
   testService3 = import ./testService3.nix {
-    inherit (pkgs) stdenv;
+    inherit (pkgs) stdenv lib;
   };
 
   process = import ./process.nix {
@@ -30,11 +30,11 @@ rec {
   };
 
   cyclicTestService1 = import ./cyclicTestService1.nix {
-    inherit (pkgs) stdenv;
+    inherit (pkgs) stdenv lib;
   };
 
   cyclicTestService2 = import ./cyclicTestService2.nix {
-    inherit (pkgs) stdenv;
+    inherit (pkgs) stdenv lib;
   };
 
   afterProcess = import ./after-process.nix {

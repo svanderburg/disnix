@@ -31,7 +31,7 @@
 			<example xml:id="ex-package-expr">
 				<title>An example package expression and service expression with no inter-dependencies</title>
 <programlisting>
-{ stdenv, fetchurl, pkgconfig, glib, gpm, file, e2fsprogs
+{ stdenv, lib, fetchurl, pkgconfig, glib, gpm, file, e2fsprogs
 , libX11, libICE, perl, zip, unzip, gettext, slang
 }:
 
@@ -50,7 +50,7 @@ stdenv.mkDerivation {
     description = "File Manager and User Shell for the GNU Project";
     homepage = http://www.midnight-commander.org;
     license = "GPLv2+";
-    maintainers = [ stdenv.lib.maintainers.sander ];
+    maintainers = [ lib.maintainers.sander ];
   };
 }  
 </programlisting>
