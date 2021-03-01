@@ -31,13 +31,21 @@
 			<para>
 				We can add the required Disnix utilities to the system environment by adding the
 				following line to <filename>/etc/nixos/configuration.nix</filename>:
-				
 <screen>
 environment.systemPackages = [ pkgs.dysnomia pkgs.disnix ];
 </screen>
 			</para>
 			<para>
-				and rebuilding the NixOS configuration:
+				When it desired to connect to a target machine as an unprivileged user (as opposed to the root user),
+				we need to use the Disnix D-Bus service to carry out deployment operations on behalf of the user.
+				The following environment variable must be set to let a client interface (such as <command>disnix-ssh-client</command>)
+				use the Disnix D-Bus client remotely:
+<screen>
+environment.variables.DISNIX_REMOTE_CLIENT = "disnix-client";
+</screen>
+			</para>
+			<para>
+				We can deploy our NixOS configuration, with all Disnix settings, as follows:
 			
 <screen>
 $ nixos-rebuild switch
@@ -48,7 +56,7 @@ $ nixos-rebuild switch
 		<section>
 			<title>Configuration of a target machine</title>
 			<para>
-				A NixOS-based target machine requires a number of addtional aspects to be configured.
+				A NixOS-based target machine requires a number of additional aspects to be configured.
 			</para>
 			<para>
 				First, we must enable the core Disnix service that exposes remote deployment operations
@@ -192,7 +200,6 @@ $ ./configure --help
 				<para>
 					After unpacking or checking out the Disnix sources, it can be
 					compiled by executing the following commands:
-
 <screen>
 $ ./configure <replaceable>options...</replaceable>
 $ make
@@ -203,7 +210,6 @@ $ make install
 				<para>
 					When building from the Git repository, these should be
 					preceded by the command:
-
 <screen>
 $ ./bootstrap
 </screen>
@@ -229,7 +235,6 @@ $ ./bootstrap
 				<link xlink:href="http://nixos.org/nixpkgs">Nixpkgs</link> collection has
 				Disnix (as well as some of its extensions) packaged.
 				It can be deployed by running the following command-line instruction:
-
 <screen>
 $ nix-env -i disnix
 </screen>
@@ -240,7 +245,10 @@ $ nix-env -i disnix
 			<title>Configuring the D-Bus service</title>
 			
 			<para>
-				By default, Disnix works in multi-user mode requiring the presence of the Disnix service.
+				Optionally, Disnix can work in multi-user mode requiring the presence of the Disnix service that
+				carries out deployment operations on behalf of a user.
+			</para>
+			<para>
 				The Disnix service is a <link xlink:href="http://www.freedesktop.org/wiki/Software/dbus">D-Bus</link>
 				service operating on the system bus.
 				As a dependency, it requires D-Bus to be running on the same system, which is
@@ -263,30 +271,9 @@ $ nix-env -i disnix
 $ cp /usr/local/etc/dbus-1/system.d/disnix.conf /etc/dbus-1/system.d
 </screen>
 			</para>
-			
-			<para>
-				If a single user Nix installation has been performed (which is typically the case on non-NixOS
-				systems), you may want to change
-				the root user permission into the user that owns Nix. For example, we may want to change this line:
-			</para>
-				
-<screen>
-&lt;policy user="root"&gt;
-</screen>
-			<para>
-				into:
-			</para>
-<screen>
-&lt;policy user="sander"&gt;
-</screen>
-			<para>
-				to grant the user: <code>sander</code>, that owns a single user Nix installation, the permissions to own
-				the Disnix service as well.
-			</para>
-
 			<para>
 				Disnix can also work in single-user mode, in which only the super user can carry out deployment operations.
-				Installation of the Disnix D-Bus service can be skipped if this suffices.
+				Installation of the Disnix D-Bus service can be skipped if this limitation suffices.
 			</para>
 		</section>
 		
@@ -294,7 +281,8 @@ $ cp /usr/local/etc/dbus-1/system.d/disnix.conf /etc/dbus-1/system.d
 			<title>Starting the Disnix service on startup</title>
 			
 			<para>
-				Another important installation concern is to start the Disnix D-Bus service automatically on startup.
+				When it is desired to use a multi-user installation, another important installation concern is to
+				start the Disnix D-Bus service automatically on startup.
 				The following sub sections describe how to accomplish this for several kinds of service managers.
 			</para>
 
@@ -431,41 +419,22 @@ $ editrights -u sander -a SeServiceLogonRight
 			  
 			</section>
 		</section>
-		
-		<section>
-			<title>Setting the log directory permissions</title>
-			
-			<para>
-				The Disnix service writes log entries for each operation that it executes. If a single user Nix installation
-				has been performed, you probably want to grant the user that owns the installation the rights to own
-				the log directory as well:
-			</para>
-		  
-<screen>
-$ mkdir -p /var/log/disnix
-$ chown sander:users /var/log/disnix
-</screen>
-			<para>
-				In single user mode, there is logging infastructure. As a result, this step can be skipped.
-			</para>
-		</section>
-		
+
 		<section>
 			<title>Configuring the SSH protocol wrapper</title>
 			
 			<para>
-				Disnix also needs to be remotely connectible. In order to connect through SSH, you must install an SSH server, such as
+				Disnix also needs to be remotely connectible. In order to connect through SSH (which is the most
+				common option), you must install an SSH server, such as
 				<link xlink:href="http://www.openssh.org">OpenSSH</link>.
 				Consult your system distribution's package manager for more information.
 			</para>
 			<para>
 				On Cygwin, we can configure SSH by running the following command-line instruction:
 			</para>
-				
 <screen>
 $ ssh-host-config
 </screen>
-				
 			<para>
 				After configuring the services, you probably need to activate them for the fist time,
 				which can be done by the Windows service manager (Control Panel -> System and Security
@@ -610,14 +579,16 @@ $ usermod -a -G disnix someuser
 	</section>
 
 	<section>
-		<title>Forcing a client to work in single-user mode</title>
+		<title>Enabling a client to work in multi-user mode</title>
 
 		<para>
-			When it is desired to use a single-user installation, the client must be instructed not to use the D-Bus service.
-			This can be done by setting the following environment variable:
-
+			When it is desired to use a multi-user installation, a client interface (such as <command>disnix-ssh-client</command>)
+			must be instructed to use the D-Bus client to connect to
+			the Disnix service that carries out deployment users on behalf of the user.
+			Setting the following environment variable on the coordinator (or any other machine
+			that needs to remotely execute deployment operations) typically suffices:
 <screen>
-$ export DISNIX_REMOTE_CLIENT=disnix-run-activity
+$ export DISNIX_REMOTE_CLIENT=disnix-client
 </screen>
 		</para>
 	</section>

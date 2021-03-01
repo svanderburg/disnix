@@ -39,7 +39,7 @@ In most cases this command is not used directly, but is used by specifying the
 --interface option for a Disnix command-line utility (such as \`disnix-env') or
 by setting the \`DISNIX_CLIENT_INTERFACE' environment variable. By using one of
 those properties, the Disnix tools will use the given interface instead of the
-standard \`disnix-client' which only provides loopback access.
+standard \`disnix-run-activity' which only provides local access.
 
 Options:
 
@@ -143,7 +143,8 @@ Environment:
   SSH_OPTS                   Additional properties which are passed to the ssh
                              command
   DISNIX_REMOTE_CLIENT       Name of the remote executable to run to execute a
-                             deployment activity (defaults to: disnix-client)
+                             deployment activity (defaults to:
+                             disnix-run-activity)
   DISNIX_PROFILE             Sets the name of the profile that stores the
                              manifest on the coordinator machine and the
                              deployed services per machine on each target
@@ -363,11 +364,7 @@ then
     SSH_USER="$SSH_USER@"
 fi
 
-if [ "$DISNIX_REMOTE_CLIENT" = "" ]
-then
-    DISNIX_REMOTE_CLIENT="disnix-client"
-fi
-
+checkRemoteClient
 checkTmpDir
 
 # Execute selected operation
@@ -391,7 +388,7 @@ case "$operation" in
     export)
         checkLocalOrRemoteFile
 
-        closure=`ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-client --export $@`
+        closure=`ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname $DISNIX_REMOTE_CLIENT --export $@`
 
         # A remote file must be downloaded afterwards
         if [ "$remotefile" = "1" ]

@@ -55,7 +55,7 @@ in
     services.dbus.packages = [ cfg.package ];
     services.openssh.enable = true;
 
-    services.disnixTest.package = mkDefault (import ./release.nix {}).build."${builtins.currentSystem}";
+    services.disnixTest.package = mkDefault (import ./release.nix {}).build."${pkgs.stdenv.system}";
 
     systemd.services.disnix = mkIf cfg.enableMultiUser
       { description = "Disnix server";
@@ -74,5 +74,6 @@ in
 
     environment.systemPackages = [ cfg.package ];
     environment.variables.PATH = lib.optionals cfg.enableProfilePath (map (profileName: "/nix/var/nix/profiles/disnix/${profileName}/bin" ) cfg.profiles);
+    environment.variables.DISNIX_REMOTE_CLIENT = lib.optionalString (cfg.enableMultiUser) "disnix-client";
   };
 }

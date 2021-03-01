@@ -1,5 +1,7 @@
 version 0.10
 ============
+- By default, the disnix-ssh-client will work in single-user mode. The DISNIX_REMOTE_CLIENT environment variable can be set to disnix-client to enable multi-user mode.
+
 - We have added two new NixOS module options to automatically add Disnix installed packages to the global PATH
 
 - The model transformation pipeline has been reengineered again to have better support for references. This exposes almost all properties of all inter-dependencies, and transitive inter-dependencies

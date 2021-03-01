@@ -48,7 +48,7 @@ checkTargetProperty()
         then
             targetProperty=$DISNIX_TARGET_PROPERTY
         else
-            targetProperty="hostname";
+            targetProperty="hostname"
         fi
     fi
 }
@@ -65,7 +65,7 @@ checkProfile()
         then
             profile=default
         else
-            profile=$DISNIX_PROFILE
+            profile="$DISNIX_PROFILE"
         fi
     fi
 }
@@ -286,4 +286,15 @@ checkTmpDir()
     fi
 
     mkdir -p "$TMPDIR"
+}
+
+# Checks whether a remote client has been configured. If it is not set, it
+# defaults to the disnix-run-activity client
+
+checkRemoteClient()
+{
+    if [ "$DISNIX_REMOTE_CLIENT" = "" ]
+    then
+        DISNIX_REMOTE_CLIENT="disnix-run-activity"
+    fi
 }
