@@ -94,7 +94,8 @@ static void cleanup(OrgNixosDisnixDisnix *proxy, gchar **paths, gchar **argument
     g_free(logdir);
     g_strfreev(paths);
     g_strfreev(arguments);
-    g_object_unref(proxy);
+    if(proxy != NULL)
+        g_object_unref(proxy);
 }
 
 static gchar *check_dysnomia_activity_parameters(OrgNixosDisnixDisnix *proxy, gchar *type, gchar **paths, gchar *container, gchar **arguments)
@@ -142,20 +143,19 @@ int run_disnix_client(Operation operation, gchar **paths, const unsigned int fla
 
     /* Connect to the session/system bus */
 
+    GBusType bus_type;
+
     if(flags & FLAG_SESSION_BUS)
-        proxy = org_nixos_disnix_disnix_proxy_new_for_bus_sync(G_BUS_TYPE_SESSION,
-            G_DBUS_PROXY_FLAGS_NONE,
-            "org.nixos.disnix.Disnix",
-            "/org/nixos/disnix/Disnix",
-            NULL,
-            &error);
+        bus_type = G_BUS_TYPE_SESSION;
     else
-        proxy = org_nixos_disnix_disnix_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
-            G_DBUS_PROXY_FLAGS_NONE,
-            "org.nixos.disnix.Disnix",
-            "/org/nixos/disnix/Disnix",
-            NULL,
-            &error);
+        bus_type = G_BUS_TYPE_SYSTEM;
+
+    proxy = org_nixos_disnix_disnix_proxy_new_for_bus_sync(bus_type,
+        G_DBUS_PROXY_FLAGS_NONE,
+        "org.nixos.disnix.Disnix",
+        "/org/nixos/disnix/Disnix",
+        NULL,
+        &error);
 
     if(error != NULL)
     {
@@ -316,6 +316,7 @@ int run_disnix_client(Operation operation, gchar **paths, const unsigned int fla
             break;
         case OP_SHELL:
             g_printerr("ERROR: This operation is unsupported by this client!\n");
+            cleanup(proxy, paths, arguments);
             return 1;
             break;
         case OP_NONE:
