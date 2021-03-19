@@ -422,7 +422,7 @@ $ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix --profile
 			The user: <code>sander</code> can access its own set of packages by setting the <envar>PATH</envar>
 			environment variable to:
 <screen>
-$ export PATH=/nix/var/nix/profiles/disnix/sander:$PATH
+$ export PATH=/nix/var/nix/profiles/disnix/sander/bin:$PATH
 </screen>
 		</para>
 		<para>

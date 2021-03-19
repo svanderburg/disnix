@@ -22,6 +22,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <pwd.h>
 #include <nixxml-parse.h>
 #include <nixxml-print-nix.h>
 #include <nixxml-print-xml.h>
@@ -139,10 +140,22 @@ ProfileManifest *create_profile_manifest_from_file(const gchar *profile_manifest
     return profile_manifest;
 }
 
+static gchar *determine_profile_dir(gchar *localstatedir)
+{
+    if(getuid() == 0)
+        return g_strconcat(localstatedir, "/nix/profiles/disnix", NULL);
+    else
+    {
+        char *username = (getpwuid(geteuid()))->pw_name;
+        return g_strconcat(localstatedir, "/nix/profiles/per-user/", username, "/disnix", NULL);
+    }
+}
+
 ProfileManifest *create_profile_manifest_from_current_deployment(gchar *localstatedir, gchar *profile, gchar *default_target)
 {
     ProfileManifest *profile_manifest;
-    gchar *profile_manifest_file = g_strconcat(localstatedir, "/nix/profiles/disnix/", profile, "/profilemanifest.xml", NULL);
+    gchar *profile_dir = determine_profile_dir(localstatedir);
+    gchar *profile_manifest_file = g_strconcat(profile_dir, "/", profile, "/profilemanifest.xml", NULL);
 
     if(access(profile_manifest_file, F_OK) == -1)
     {
@@ -160,6 +173,7 @@ ProfileManifest *create_profile_manifest_from_current_deployment(gchar *localsta
         profile_manifest = create_profile_manifest_from_file(profile_manifest_file, default_target);
 
     g_free(profile_manifest_file);
+    g_free(profile_dir);
     return profile_manifest;
 }
 

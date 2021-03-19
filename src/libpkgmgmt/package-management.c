@@ -191,15 +191,27 @@ ProcReact_Future pkgmgmt_realise(gchar **derivation_paths, const unsigned int de
     return future;
 }
 
+static gchar *determine_profile_dir(void)
+{
+    if(getuid() == 0)
+        return g_strdup(LOCALSTATEDIR "/nix/profiles/disnix");
+    else
+    {
+        char *username = (getpwuid(geteuid()))->pw_name;
+        return g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix", NULL);
+    }
+}
+
 pid_t pkgmgmt_set_profile(gchar *profile, gchar *path, int stdout_fd, int stderr_fd)
 {
     gchar *profile_path;
     ssize_t resolved_path_size;
     char resolved_path[BUFFER_SIZE];
     pid_t pid;
+    gchar *profile_dir = determine_profile_dir();
 
-    mkdir(LOCALSTATEDIR "/nix/profiles/disnix", 0755);
-    profile_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", profile, NULL);
+    mkdir(profile_dir, 0755);
+    profile_path = g_strconcat(profile_dir, "/", profile, NULL);
 
     /* Resolve the manifest file to which the disnix profile points */
     resolved_path_size = readlink(profile_path, resolved_path, BUFFER_SIZE);
@@ -210,7 +222,7 @@ pid_t pkgmgmt_set_profile(gchar *profile, gchar *path, int stdout_fd, int stderr
 
         resolved_path[resolved_path_size] = '\0';
 
-        generation_path = g_strconcat(LOCALSTATEDIR "/nix/profiles/disnix/", resolved_path, NULL);
+        generation_path = g_strconcat(profile_dir, "/", resolved_path, NULL);
         resolved_path_size = readlink(generation_path, resolved_path, BUFFER_SIZE);
 
         g_free(generation_path);
@@ -234,6 +246,7 @@ pid_t pkgmgmt_set_profile(gchar *profile, gchar *path, int stdout_fd, int stderr
     }
 
     g_free(profile_path);
+    g_free(profile_dir);
     return pid;
 }
 
