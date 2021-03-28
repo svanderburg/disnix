@@ -1,6 +1,6 @@
 /*
  * Disnix - A Nix-based distributed service deployment tool
- * Copyright (C) 2008-2020  Sander van der Burg
+ * Copyright (C) 2008-2021  Sander van der Burg
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -49,61 +49,61 @@ GHashTable *generate_edges_table(const GPtrArray *service_mapping_array, GHashTa
 
     for(i = 0; i < service_mapping_array->len; i++)
     {
-	/* Retrieve the current mapping from the array */
-	ServiceMapping *mapping = g_ptr_array_index(service_mapping_array, i);
-	ManifestService *service = g_hash_table_lookup(services_table, mapping->service);
+        /* Retrieve the current mapping from the array */
+        ServiceMapping *mapping = g_ptr_array_index(service_mapping_array, i);
+        ManifestService *service = g_hash_table_lookup(services_table, mapping->service);
 
-	/* Retrieve the target property */
-	Target *target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
-	gchar *target_key = find_target_key(target);
-	
-	/* Generate an edge table key, which consist of Nix store component:targetProperty */
-	gchar *mapping_key = compose_mapping_key(mapping, target_key);
-	
-	/* Retrieve the dependency array of the mapping from the edges table */
-	GPtrArray *dependency_array = g_hash_table_lookup(edges_table, mapping_key);
-	
-	/* If the dependency array does not exists, create one and add it to the table */
-	if(dependency_array == NULL)
-	{
-	    unsigned int j;
-	    GPtrArray *inter_dependencies;
+        /* Retrieve the target property */
+        Target *target = g_hash_table_lookup(targets_table, (gchar*)mapping->target);
+        gchar *target_key = find_target_key(target);
+
+        /* Generate an edge table key, which consist of Nix store component:targetProperty */
+        gchar *mapping_key = compose_mapping_key(mapping, target_key);
+
+        /* Retrieve the dependency array of the mapping from the edges table */
+        GPtrArray *dependency_array = g_hash_table_lookup(edges_table, mapping_key);
+
+        /* If the dependency array does not exists, create one and add it to the table */
+        if(dependency_array == NULL)
+        {
+            unsigned int j;
+            GPtrArray *inter_dependencies;
 
             if(ordering)
-	        inter_dependencies = service->depends_on;
-	    else
-	        inter_dependencies = service->connects_to;
+                inter_dependencies = service->depends_on;
+            else
+                inter_dependencies = service->connects_to;
 
-	    /* Create new dependency array */
-	    dependency_array = g_ptr_array_new();
-	    
-	    /* Create a list of mapping values for each dependency */
-	    for(j = 0; j < inter_dependencies->len; j++)
-	    {
-		ServiceMapping *actual_mapping;
-		gchar *mapping_value, *target_key;
-		Target *target;
-		
-		/* Retrieve current dependency from the array */
-		InterDependencyMapping *dependency = g_ptr_array_index(inter_dependencies, j);
-		
-		/* Find the activation mapping in the activation array */
-		actual_mapping = find_service_mapping(service_mapping_array, dependency);
-		
-		/* Get the target interface */
-		target = g_hash_table_lookup(targets_table, (gchar*)actual_mapping->target);
-		target_key = find_target_key(target);
-		
-		/* Generate mapping value from the service key and target property */
-		mapping_value = compose_mapping_key(actual_mapping, target_key);
-		
-		/* Add mapping value to the dependency array */
-		g_ptr_array_add(dependency_array, mapping_value);
-	    }
-	    
-	    /* Associate the dependency array to the given mapping */
-	    g_hash_table_insert(edges_table, mapping_key, dependency_array);
-	}
+            /* Create new dependency array */
+            dependency_array = g_ptr_array_new();
+
+            /* Create a list of mapping values for each dependency */
+            for(j = 0; j < inter_dependencies->len; j++)
+            {
+                ServiceMapping *actual_mapping;
+                gchar *mapping_value, *target_key;
+                Target *target;
+
+                /* Retrieve current dependency from the array */
+                InterDependencyMapping *dependency = g_ptr_array_index(inter_dependencies, j);
+
+                /* Find the activation mapping in the activation array */
+                actual_mapping = find_service_mapping(service_mapping_array, dependency);
+
+                /* Get the target interface */
+                target = g_hash_table_lookup(targets_table, (gchar*)actual_mapping->target);
+                target_key = find_target_key(target);
+
+                /* Generate mapping value from the service key and target property */
+                mapping_value = compose_mapping_key(actual_mapping, target_key);
+
+                /* Add mapping value to the dependency array */
+                g_ptr_array_add(dependency_array, mapping_value);
+            }
+
+            /* Associate the dependency array to the given mapping */
+            g_hash_table_insert(edges_table, mapping_key, dependency_array);
+        }
     }
 
     /* Return the generated egdes table */
