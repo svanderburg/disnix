@@ -23,7 +23,6 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <glib-unix.h>
-#include <procreact_types.h>
 #include "disnix-dbus.h"
 #include "jobmanagement.h"
 #include "logging.h"
@@ -200,7 +199,7 @@ static int start_disnix_service(void *data)
     }
 }
 
-int start_disnix_service_foreground(int session_bus, char *log_path)
+int start_disnix_service_foreground(ProcReact_bool session_bus, char *log_path)
 {
     int exit_status;
     DaemonData *data = (DaemonData*)g_malloc(sizeof(DaemonData)); /* We must allocate the daemon data on the heap -> it is required by callback functions invoked from a thread */
@@ -215,7 +214,7 @@ int start_disnix_service_foreground(int session_bus, char *log_path)
     return exit_status;
 }
 
-int start_disnix_service_daemon(int session_bus, char *log_path, char *pid_file, char *log_file)
+int start_disnix_service_daemon(ProcReact_bool session_bus, char *log_path, char *pid_file, char *log_file)
 {
     FILE *log_fd = fopen(log_file, "a");
 

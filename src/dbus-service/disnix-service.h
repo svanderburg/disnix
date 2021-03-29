@@ -19,6 +19,7 @@
 
 #ifndef __DISNIX_SERVICE_H
 #define __DISNIX_SERVICE_H
+#include <procreact_types.h>
 
 /**
  * Starts the Disnix D-Bus service in the foreground
@@ -26,7 +27,7 @@
  * @param session_bus Indicates whether the daemon should be registered on the session bus or system bus
  * @param log_path Directory in which log files are stored
  */
-int start_disnix_service_foreground(int session_bus, char *log_path);
+int start_disnix_service_foreground(ProcReact_bool session_bus, char *log_path);
 
 /**
  * Daemonizes first and starts the Disnix D-Bus service in the background
@@ -36,6 +37,6 @@ int start_disnix_service_foreground(int session_bus, char *log_path);
  * @param pid_file Path to the PID file that stores the PID of the daemon process
  * @param log_file Path to the log file storing general daemon messages
  */
-int start_disnix_service_daemon(int session_bus, char *log_path, char *pid_file, char *log_file);
+int start_disnix_service_daemon(ProcReact_bool session_bus, char *log_path, char *pid_file, char *log_file);
 
 #endif

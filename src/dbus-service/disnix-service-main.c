@@ -67,24 +67,36 @@ static void print_version(const char *command)
     , command);
 }
 
+typedef enum
+{
+    DISNIX_SERVICE_OPTION_DAEMON = 'D',
+    DISNIX_SERVICE_OPTION_SESSION_BUS = 256,
+    DISNIX_SERVICE_OPTION_LOG_DIR = 257,
+    DISNIX_SERVICE_OPTION_PID_FILE = 258,
+    DISNIX_SERVICE_OPTION_LOG_FILE = 259,
+    DISNIX_SERVICE_OPTION_HELP = 'h',
+    DISNIX_SERVICE_OPTION_VERSION = 'v'
+}
+DisnixServiceCommandLineOption;
+
 int main(int argc, char *argv[])
 {
     /* Declarations */
     int c, option_index = 0;
     struct option long_options[] =
     {
-        {"daemon", no_argument, 0, 'D'},
-        {"session-bus", no_argument, 0, 's'},
-        {"log-dir", required_argument, 0, 'l'},
-        {"pid-file", required_argument, 0, 'p'},
-        {"log-file", required_argument, 0, 'L'},
-        {"help", no_argument, 0, 'h'},
-        {"version", no_argument, 0, 'v'},
+        {"daemon", no_argument, 0, DISNIX_SERVICE_OPTION_DAEMON},
+        {"session-bus", no_argument, 0, DISNIX_SERVICE_OPTION_SESSION_BUS},
+        {"log-dir", required_argument, 0, DISNIX_SERVICE_OPTION_LOG_DIR},
+        {"pid-file", required_argument, 0, DISNIX_SERVICE_OPTION_PID_FILE},
+        {"log-file", required_argument, 0, DISNIX_SERVICE_OPTION_LOG_FILE},
+        {"help", no_argument, 0, DISNIX_SERVICE_OPTION_HELP},
+        {"version", no_argument, 0, DISNIX_SERVICE_OPTION_VERSION},
         {0, 0, 0, 0}
     };
 
-    int session_bus = FALSE;
-    int daemon = FALSE;
+    ProcReact_bool session_bus = FALSE;
+    ProcReact_bool daemon = FALSE;
     char *logdir = "/var/log/disnix";
     char *pid_file = "/var/run/disnix-service.pid";
     char *log_file = "/var/log/disnix.log";
@@ -94,30 +106,30 @@ int main(int argc, char *argv[])
     {
         switch(c)
         {
-            case 'D':
+            case DISNIX_SERVICE_OPTION_DAEMON:
                 daemon = TRUE;
                 break;
-            case 's':
+            case DISNIX_SERVICE_OPTION_SESSION_BUS:
                 session_bus = TRUE;
                 break;
-            case 'l':
+            case DISNIX_SERVICE_OPTION_LOG_DIR:
                 logdir = optarg;
                 break;
-            case 'p':
+            case DISNIX_SERVICE_OPTION_PID_FILE:
                 pid_file = optarg;
                 break;
-            case 'L':
+            case DISNIX_SERVICE_OPTION_LOG_FILE:
                 log_file = optarg;
                 break;
-            case 'h':
+            case DISNIX_SERVICE_OPTION_HELP:
                 print_usage(argv[0]);
+                return 0;
+            case DISNIX_SERVICE_OPTION_VERSION:
+                print_version(argv[0]);
                 return 0;
             case '?':
                 print_usage(argv[0]);
                 return 1;
-            case 'v':
-                print_version(argv[0]);
-                return 0;
         }
     }
 

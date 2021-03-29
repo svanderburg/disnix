@@ -137,49 +137,94 @@ static void print_usage(const char *command)
     );
 }
 
+typedef enum
+{
+    /* Operations */
+    DISNIX_CLIENT_OPTION_IMPORT = 256,
+    DISNIX_CLIENT_OPTION_EXPORT = 257,
+    DISNIX_CLIENT_OPTION_PRINT_INVALID = 258,
+    DISNIX_CLIENT_OPTION_REALISE = 'r',
+    DISNIX_CLIENT_OPTION_SET = 259,
+    DISNIX_CLIENT_OPTION_QUERY_INSTALLED = 'q',
+    DISNIX_CLIENT_OPTION_QUERY_REQUISITES = 260,
+    DISNIX_CLIENT_OPTION_COLLECT_GARBAGE = 261,
+    DISNIX_CLIENT_OPTION_ACTIVATE = 262,
+    DISNIX_CLIENT_OPTION_DEACTIVATE = 263,
+    DISNIX_CLIENT_OPTION_DELETE_STATE = 264,
+    DISNIX_CLIENT_OPTION_LOCK = 265,
+    DISNIX_CLIENT_OPTION_UNLOCK = 266,
+    DISNIX_CLIENT_OPTION_SNAPSHOT = 267,
+    DISNIX_CLIENT_OPTION_RESTORE = 268,
+    DISNIX_CLIENT_OPTION_QUERY_ALL_SNAPSHOTS = 269,
+    DISNIX_CLIENT_OPTION_QUERY_LATEST_SNAPSHOT = 270,
+    DISNIX_CLIENT_OPTION_PRINT_MISSING_SNAPSHOTS = 271,
+    DISNIX_CLIENT_OPTION_IMPORT_SNAPSHOTS = 272,
+    DISNIX_CLIENT_OPTION_RESOLVE_SNAPSHOTS = 273,
+    DISNIX_CLIENT_OPTION_CLEAN_SNAPSHOTS = 274,
+    DISNIX_CLIENT_OPTION_CAPTURE_CONFIG = 275,
+    DISNIX_CLIENT_OPTION_SHELL = 276,
+    DISNIX_CLIENT_OPTION_HELP = 'h',
+    DISNIX_CLIENT_OPTION_VERSION = 'v',
+
+    /* Options */
+    DISNIX_CLIENT_OPTION_TARGET = 't',
+    DISNIX_CLIENT_OPTION_LOCALFILE = 277,
+    DISNIX_CLIENT_OPTION_REMOTEFILE = 278,
+    DISNIX_CLIENT_OPTION_PROFILE = 'p',
+    DISNIX_CLIENT_OPTION_DELETE_OLD = 'd',
+    DISNIX_CLIENT_OPTION_TYPE = 279,
+    DISNIX_CLIENT_OPTION_ARGUMENTS = 280,
+    DISNIX_CLIENT_OPTION_CONTAINER = 'C',
+    DISNIX_CLIENT_OPTION_COMPONENT = 'c',
+    DISNIX_CLIENT_OPTION_KEEP = 281,
+    DISNIX_CLIENT_OPTION_COMMAND = 282,
+    DISNIX_CLIENT_OPTION_SESSION_BUS = 283
+}
+DisnixClientCommandLineOption;
+
 int main(int argc, char *argv[])
 {
     /* Declarations */
     int c, option_index = 0;
     struct option long_options[] =
     {
-        {"import", no_argument, 0, 'I'},
-        {"export", no_argument, 0, 'E'},
-        {"print-invalid", no_argument, 0, 'P'},
-        {"realise", no_argument, 0, 'r'},
-        {"set", no_argument, 0, 'S'},
-        {"query-installed", no_argument, 0, 'q'},
-        {"query-requisites", no_argument, 0, 'Q'},
-        {"collect-garbage", no_argument, 0, 'W'},
-        {"activate", no_argument, 0, 'A'},
-        {"deactivate", no_argument, 0, 'D'},
-        {"delete-state", no_argument, 0, 'F'},
-        {"lock", no_argument, 0, 'L'},
-        {"unlock", no_argument, 0, 'U'},
-        {"snapshot", no_argument, 0, 'f'},
-        {"restore", no_argument, 0, 'g'},
-        {"query-all-snapshots", no_argument, 0, 'B'},
-        {"query-latest-snapshot", no_argument, 0, 's'},
-        {"print-missing-snapshots", no_argument, 0, 'M'},
-        {"import-snapshots", no_argument, 0, 'Y'},
-        {"resolve-snapshots", no_argument, 0, 'Z'},
-        {"clean-snapshots", no_argument, 0, 'e'},
-        {"capture-config", no_argument, 0, '1'},
-        {"shell", no_argument, 0, '2'},
-        {"target", required_argument, 0, 't'},
-        {"localfile", no_argument, 0, 'l'},
-        {"remotefile", no_argument, 0, 'R'},
-        {"profile", required_argument, 0, 'p'},
-        {"delete-old", no_argument, 0, 'd'},
-        {"type", required_argument, 0, 'T'},
-        {"arguments", required_argument, 0, 'a'},
-        {"container", required_argument, 0, 'C'},
-        {"component", required_argument, 0, 'c'},
-        {"session-bus", no_argument, 0, 'b'},
-        {"keep", required_argument, 0, 'z'},
-        {"command", required_argument, 0, '3'},
-        {"help", no_argument, 0, 'h'},
-        {"version", no_argument, 0, 'v'},
+        {"import", no_argument, 0, DISNIX_CLIENT_OPTION_IMPORT},
+        {"export", no_argument, 0, DISNIX_CLIENT_OPTION_EXPORT},
+        {"print-invalid", no_argument, 0, DISNIX_CLIENT_OPTION_PRINT_INVALID},
+        {"realise", no_argument, 0, DISNIX_CLIENT_OPTION_REALISE},
+        {"set", no_argument, 0, DISNIX_CLIENT_OPTION_SET},
+        {"query-installed", no_argument, 0, DISNIX_CLIENT_OPTION_QUERY_INSTALLED},
+        {"query-requisites", no_argument, 0, DISNIX_CLIENT_OPTION_QUERY_REQUISITES},
+        {"collect-garbage", no_argument, 0, DISNIX_CLIENT_OPTION_COLLECT_GARBAGE},
+        {"activate", no_argument, 0, DISNIX_CLIENT_OPTION_ACTIVATE},
+        {"deactivate", no_argument, 0, DISNIX_CLIENT_OPTION_DEACTIVATE},
+        {"delete-state", no_argument, 0, DISNIX_CLIENT_OPTION_DELETE_STATE},
+        {"lock", no_argument, 0, DISNIX_CLIENT_OPTION_LOCK},
+        {"unlock", no_argument, 0, DISNIX_CLIENT_OPTION_UNLOCK},
+        {"snapshot", no_argument, 0, DISNIX_CLIENT_OPTION_SNAPSHOT},
+        {"restore", no_argument, 0, DISNIX_CLIENT_OPTION_RESTORE},
+        {"query-all-snapshots", no_argument, 0, DISNIX_CLIENT_OPTION_QUERY_ALL_SNAPSHOTS},
+        {"query-latest-snapshot", no_argument, 0, DISNIX_CLIENT_OPTION_QUERY_LATEST_SNAPSHOT},
+        {"print-missing-snapshots", no_argument, 0, DISNIX_CLIENT_OPTION_PRINT_MISSING_SNAPSHOTS},
+        {"import-snapshots", no_argument, 0, DISNIX_CLIENT_OPTION_IMPORT_SNAPSHOTS},
+        {"resolve-snapshots", no_argument, 0, DISNIX_CLIENT_OPTION_RESOLVE_SNAPSHOTS},
+        {"clean-snapshots", no_argument, 0, DISNIX_CLIENT_OPTION_CLEAN_SNAPSHOTS},
+        {"capture-config", no_argument, 0, DISNIX_CLIENT_OPTION_CAPTURE_CONFIG},
+        {"shell", no_argument, 0, DISNIX_CLIENT_OPTION_SHELL},
+        {"target", required_argument, 0, DISNIX_CLIENT_OPTION_TARGET},
+        {"localfile", no_argument, 0, DISNIX_CLIENT_OPTION_LOCALFILE},
+        {"remotefile", no_argument, 0, DISNIX_CLIENT_OPTION_REMOTEFILE},
+        {"profile", required_argument, 0, DISNIX_CLIENT_OPTION_PROFILE},
+        {"delete-old", no_argument, 0, DISNIX_CLIENT_OPTION_DELETE_OLD},
+        {"type", required_argument, 0, DISNIX_CLIENT_OPTION_TYPE},
+        {"arguments", required_argument, 0, DISNIX_CLIENT_OPTION_ARGUMENTS},
+        {"container", required_argument, 0, DISNIX_CLIENT_OPTION_CONTAINER},
+        {"component", required_argument, 0, DISNIX_CLIENT_OPTION_COMPONENT},
+        {"keep", required_argument, 0, DISNIX_CLIENT_OPTION_KEEP},
+        {"command", required_argument, 0, DISNIX_CLIENT_OPTION_COMMAND},
+        {"session-bus", no_argument, 0, DISNIX_CLIENT_OPTION_SESSION_BUS},
+        {"help", no_argument, 0, DISNIX_CLIENT_OPTION_HELP},
+        {"version", no_argument, 0, DISNIX_CLIENT_OPTION_VERSION},
         {0, 0, 0, 0}
     };
 
@@ -195,116 +240,116 @@ int main(int argc, char *argv[])
     {
         switch(c)
         {
-            case 'I':
+            case DISNIX_CLIENT_OPTION_IMPORT:
                 operation = OP_IMPORT;
                 break;
-            case 'E':
+            case DISNIX_CLIENT_OPTION_EXPORT:
                 operation = OP_EXPORT;
                 break;
-            case 'P':
+            case DISNIX_CLIENT_OPTION_PRINT_INVALID:
                 operation = OP_PRINT_INVALID;
                 break;
-            case 'r':
+            case DISNIX_CLIENT_OPTION_REALISE:
                 operation = OP_REALISE;
                 break;
-            case 'S':
+            case DISNIX_CLIENT_OPTION_SET:
                 operation = OP_SET;
                 break;
-            case 'q':
+            case DISNIX_CLIENT_OPTION_QUERY_INSTALLED:
                 operation = OP_QUERY_INSTALLED;
                 break;
-            case 'Q':
+            case DISNIX_CLIENT_OPTION_QUERY_REQUISITES:
                 operation = OP_QUERY_REQUISITES;
                 break;
-            case 'W':
+            case DISNIX_CLIENT_OPTION_COLLECT_GARBAGE:
                 operation = OP_COLLECT_GARBAGE;
                 break;
-            case 'A':
+            case DISNIX_CLIENT_OPTION_ACTIVATE:
                 operation = OP_ACTIVATE;
                 break;
-            case 'D':
+            case DISNIX_CLIENT_OPTION_DEACTIVATE:
                 operation = OP_DEACTIVATE;
                 break;
-            case 'F':
+            case DISNIX_CLIENT_OPTION_DELETE_STATE:
                 operation = OP_DELETE_STATE;
                 break;
-            case 'L':
+            case DISNIX_CLIENT_OPTION_LOCK:
                 operation = OP_LOCK;
                 break;
-            case 'U':
+            case DISNIX_CLIENT_OPTION_UNLOCK:
                 operation = OP_UNLOCK;
                 break;
-            case 'f':
+            case DISNIX_CLIENT_OPTION_SNAPSHOT:
                 operation = OP_SNAPSHOT;
                 break;
-            case 'g':
+            case DISNIX_CLIENT_OPTION_RESTORE:
                 operation = OP_RESTORE;
                 break;
-            case 'B':
+            case DISNIX_CLIENT_OPTION_QUERY_ALL_SNAPSHOTS:
                 operation = OP_QUERY_ALL_SNAPSHOTS;
                 break;
-            case 's':
+            case DISNIX_CLIENT_OPTION_QUERY_LATEST_SNAPSHOT:
                 operation = OP_QUERY_LATEST_SNAPSHOT;
                 break;
-            case 'M':
+            case DISNIX_CLIENT_OPTION_PRINT_MISSING_SNAPSHOTS:
                 operation = OP_PRINT_MISSING_SNAPSHOTS;
                 break;
-            case 'Y':
+            case DISNIX_CLIENT_OPTION_IMPORT_SNAPSHOTS:
                 operation = OP_IMPORT_SNAPSHOTS;
                 break;
-            case 'Z':
+            case DISNIX_CLIENT_OPTION_RESOLVE_SNAPSHOTS:
                 operation = OP_RESOLVE_SNAPSHOTS;
                 break;
-            case 'e':
+            case DISNIX_CLIENT_OPTION_CLEAN_SNAPSHOTS:
                 operation = OP_CLEAN_SNAPSHOTS;
                 break;
-            case '1':
+            case DISNIX_CLIENT_OPTION_CAPTURE_CONFIG:
                 operation = OP_CAPTURE_CONFIG;
                 break;
-            case '2':
+            case DISNIX_CLIENT_OPTION_SHELL:
                 operation = OP_SHELL;
                 break;
-            case 't':
+            case DISNIX_CLIENT_OPTION_TARGET:
                 break;
-            case 'l':
+            case DISNIX_CLIENT_OPTION_LOCALFILE:
                 break;
-            case 'R':
+            case DISNIX_CLIENT_OPTION_REMOTEFILE:
                 break;
-            case 'p':
+            case DISNIX_CLIENT_OPTION_PROFILE:
                 profile = optarg;
                 break;
-            case 'd':
+            case DISNIX_CLIENT_OPTION_DELETE_OLD:
                 flags |= FLAG_DELETE_OLD;
                 break;
-            case 'T':
+            case DISNIX_CLIENT_OPTION_TYPE:
                 type = optarg;
                 break;
-            case 'a':
+            case DISNIX_CLIENT_OPTION_ARGUMENTS:
                 arguments = (gchar**)g_realloc(arguments, (arguments_size + 1) * sizeof(gchar*));
                 arguments[arguments_size] = g_strdup(optarg);
                 arguments_size++;
                 break;
-            case 'C':
+            case DISNIX_CLIENT_OPTION_CONTAINER:
                 container = optarg;
                 break;
-            case 'c':
+            case DISNIX_CLIENT_OPTION_COMPONENT:
                 component = optarg;
                 break;
-            case 'b':
-                flags |= FLAG_SESSION_BUS;
-                break;
-            case 'z':
+            case DISNIX_CLIENT_OPTION_KEEP:
                 keep = atoi(optarg);
                 break;
-            case 'h':
+            case DISNIX_CLIENT_OPTION_SESSION_BUS:
+                flags |= FLAG_SESSION_BUS;
+                break;
+            case DISNIX_CLIENT_OPTION_HELP:
                 print_usage(argv[0]);
+                return 0;
+            case DISNIX_CLIENT_OPTION_VERSION:
+                print_version(argv[0]);
                 return 0;
             case '?':
                 print_usage(argv[0]);
                 return 1;
-            case 'v':
-                print_version(argv[0]);
-                return 0;
         }
     }
 
