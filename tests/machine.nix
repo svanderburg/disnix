@@ -19,6 +19,7 @@
       group = "users";
       shell = "/bin/sh";
       description = "Unprivileged user for the disnix-service";
+      isNormalUser = true;
     };
 
     privileged = {
@@ -27,6 +28,7 @@
       shell = "/bin/sh";
       extraGroups = [ "disnix" ];
       description = "Privileged user for the disnix-service";
+      isNormalUser = true;
     };
   };
 

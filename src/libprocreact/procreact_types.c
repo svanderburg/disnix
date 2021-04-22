@@ -49,7 +49,7 @@ ssize_t procreact_type_append_bytes(ProcReact_Type *type, void *state, int fd)
 void *procreact_type_finalize_bytes(void *state, pid_t pid, ProcReact_Status *status)
 {
     ProcReact_BytesState *bytes_state = (ProcReact_BytesState*)state;
-    int success = procreact_wait_for_boolean(pid, status);
+    ProcReact_bool success = procreact_wait_for_boolean(pid, status);
 
     if(*status == PROCREACT_STATUS_OK && success)
         return bytes_state;
@@ -183,7 +183,7 @@ ssize_t procreact_type_append_strings_to_array(ProcReact_Type *type, void *state
 void *procreact_type_finalize_string_array(void *state, pid_t pid, ProcReact_Status *status)
 {
     ProcReact_StringArrayState *string_array_state = (ProcReact_StringArrayState*)state;
-    int success = procreact_wait_for_boolean(pid, status);
+    ProcReact_bool success = procreact_wait_for_boolean(pid, status);
     char **result;
 
     /* Ensure that the result always ends with NULL termination */
