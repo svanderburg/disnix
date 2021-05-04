@@ -42,9 +42,18 @@ Installation
 Disnix is a typical autotools based package which can be compiled and installed
 by running the following commands in a shell session:
 
-    $ ./configure
-    $ make
-    $ make install
+```bash
+$ ./configure
+$ make
+$ make install
+```
+
+When building from the Git repository, you should run the bootstrap script
+first:
+
+```bash
+$ ./bootstrap
+```
 
 For more information about using the autotools setup or for customizing the
 configuration, take a look at the `./INSTALL` file.
@@ -67,7 +76,9 @@ Nixpkgs, the `NIX_PATH` environment variable must be refer to the location where
 Nixpkgs is stored. This can be done by running the following command-line
 instruction:
 
-    $ export NIX_PATH="nixpkgs=/path/to/nixpkgs"
+```bash
+$ export NIX_PATH="nixpkgs=/path/to/nixpkgs"
+```
 
 On NixOS, this environment variable has already been configured.
 
@@ -84,8 +95,10 @@ automatically built from source code (including all its intra-dependencies),
 distributed to the target machines and activated in the right order. In case of a
 failure a rollback is performed:
 
-    $ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
- 
+```bash
+$ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
+```
+
 See the tutorials on the webpage for more information on deploying a
 service-oriented system with Disnix.
 
