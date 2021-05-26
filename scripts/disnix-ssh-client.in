@@ -23,8 +23,10 @@ set -o pipefail
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-Usage: $0 --target hostname[:port] operation [OPTION] [paths]
+Usage: $me --target hostname[:port] operation [OPTION] [paths]
 
 The command \`disnix-ssh-client' provides remote access to a \`disnix-service'
 instance running on a machine in the network by using a SSH connection. This
@@ -159,8 +161,10 @@ EOF
 
 showVersion()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+$me (@PACKAGE_NAME@ @PACKAGE_VERSION@)
 
 Copyright (C) 2008-2021 Sander van der Burg
 EOF

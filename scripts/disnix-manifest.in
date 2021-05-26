@@ -23,12 +23,14 @@ set -o pipefail
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-Usage: $0 -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
-  or: $0 -P packages_nix -i infrastructure_nix [OPTION]
-  or: $0 --undeploy -i infrastructure_nix [OPTION]
-  or: $0 -A architecture_nix [OPTION]
-  or: $0 -D deployment_nix [OPTION]
+Usage: $me -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
+  or: $me -P packages_nix -i infrastructure_nix [OPTION]
+  or: $me --undeploy -i infrastructure_nix [OPTION]
+  or: $me -A architecture_nix [OPTION]
+  or: $me -D deployment_nix [OPTION]
 
 The command \`disnix-manifest' generates a manifest file from a service,
 infrastructure and distribution Nix expression, which can be used for the
@@ -99,8 +101,10 @@ EOF
 
 showVersion()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+$me (@PACKAGE_NAME@ @PACKAGE_VERSION@)
 
 Copyright (C) 2008-2021 Sander van der Burg
 EOF

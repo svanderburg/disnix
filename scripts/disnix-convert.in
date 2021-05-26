@@ -24,8 +24,10 @@ shopt -s nullglob
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-Usage: $0 [OPTION] -i infrastructure_expr [MANIFEST]
+Usage: $me [OPTION] -i infrastructure_expr [MANIFEST]
 
 The command \`disnix-convert' converts a deployment done with older versions
 of Disnix still using the V1 schema to V2.
@@ -66,8 +68,10 @@ EOF
 
 showVersion()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+$me (@PACKAGE_NAME@ @PACKAGE_VERSION@)
 
 Copyright (C) 2008-2021 Sander van der Burg
 EOF

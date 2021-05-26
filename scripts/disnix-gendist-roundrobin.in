@@ -23,8 +23,10 @@ set -o pipefail
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-Usage: $0 -s services_nix -i infrastructure_nix [OPTION]
+Usage: $me -s services_nix -i infrastructure_nix [OPTION]
 
 The command \`disnix-gendist-roundrobin' generates a distribution expression
 from a given services and infrastructure expression. It uses the round robin
@@ -52,8 +54,10 @@ EOF
 
 showVersion()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+$me (@PACKAGE_NAME@ @PACKAGE_VERSION@)
 
 Copyright (C) 2008-2021 Sander van der Burg
 EOF

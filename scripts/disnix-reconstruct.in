@@ -24,8 +24,10 @@ shopt -s nullglob
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-Usage: $0 [OPTION] infrastructure_expr
+Usage: $me [OPTION] infrastructure_expr
 
 The command \`disnix-reconstruct' reconstructs the deployment manifest of the
 coodinator by consulting the manifests of the target profiles, retrieving their
@@ -69,8 +71,10 @@ EOF
 
 showVersion()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+$me (@PACKAGE_NAME@ @PACKAGE_VERSION@)
 
 Copyright (C) 2008-2021 Sander van der Burg
 EOF

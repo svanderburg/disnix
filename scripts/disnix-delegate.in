@@ -24,9 +24,11 @@ shopt -s nullglob
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-Usage: $0 -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
-  or: $0 -A architecture_nix [OPTION]
+Usage: $me -s services_nix -i infrastructure_nix -d distribution_nix [OPTION]
+  or: $me -A architecture_nix [OPTION]
 
 The command \`disnix-delegate' is used to instantiate all derivations of the
 services deployed machines in the network and to delegate their build operations
@@ -92,8 +94,10 @@ EOF
 
 showVersion()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-$0 (@PACKAGE_NAME@ @PACKAGE_VERSION@)
+$me (@PACKAGE_NAME@ @PACKAGE_VERSION@)
 
 Copyright (C) 2008-2021 Sander van der Burg
 EOF
