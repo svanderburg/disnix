@@ -17,6 +17,8 @@ simpleTest {
       env = ''DYSNOMIA_STATEDIR=/root/dysnomia SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' NIX_PATH='nixpkgs=${nixpkgs}' dysnomia=\"$(dirname $(readlink -f $(type -p dysnomia)))/..\"'';
     in
     ''
+      import subprocess
+
       start_all()
 
       # Initialise ssh stuff by creating a key pair for communication

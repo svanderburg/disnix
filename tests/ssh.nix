@@ -16,6 +16,8 @@ simpleTest {
       env = "NIX_PATH='nixpkgs=${nixpkgs}' SSH_OPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' DISNIX_REMOTE_CLIENT=${disnixRemoteClient}";
     in
     ''
+      import subprocess
+
       start_all()
 
       manifest = client.succeed(
