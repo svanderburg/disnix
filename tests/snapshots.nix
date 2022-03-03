@@ -92,7 +92,9 @@ simpleTest {
       # should not, so it should return only one snapshot.
 
       result = client.succeed(
-          "${env} disnix-ssh-client --target server --print-missing-snapshots --container wrapper --component ${wrapper} $lastSnapshot wrapper/wrapper/foo | wc -l"
+          "${env} disnix-ssh-client --target server --print-missing-snapshots --container wrapper --component ${wrapper} {} wrapper/wrapper/foo | wc -l".format(
+              lastSnapshot
+          )
       )
 
       if int(result) == 1:

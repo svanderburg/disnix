@@ -105,7 +105,7 @@ simpleTest {
       result = client.succeed(
           "${env} disnix-ssh-client --target server --export --localfile ${pkgs.bash}"
       )
-      server.succeed("[ -e $result ]")
+      server.succeed("[ -e {} ]".format(result))
 
       # Import test. Creates a closure of the target2Profile on the
       # client. Then it imports the closure into the Nix store of the
