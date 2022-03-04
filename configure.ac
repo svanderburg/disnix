@@ -137,6 +137,7 @@ scripts/disnix-reconstruct
 scripts/disnix-ssh-client
 scripts/disnix-normalize-infra
 scripts/disnix-convert
+scripts/disnix-tmpfile
 doc/Makefile
 doc/manual/Makefile
 init.d/Makefile

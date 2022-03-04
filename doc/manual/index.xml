@@ -93,6 +93,7 @@
       <xi:include href="../../scripts/disnix-normalize-infra.1.xml" />
       <xi:include href="../../src/run-activity/disnix-run-activity.1.xml" />
       <xi:include href="../../scripts/disnix-convert.1.xml" />
+      <xi:include href="../../scripts/disnix-tmpfile.1.xml" />
     </section>
   </appendix>
 </book>

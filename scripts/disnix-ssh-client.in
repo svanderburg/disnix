@@ -380,7 +380,7 @@ case "$operation" in
         # A localfile must first be transferred
         if [ "$localfile" != "" ]
         then
-            remoteClosure=`ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname mktemp -p $TMPDIR`
+            remoteClosure=`ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-tmpfile`
             scp -P $targetPort $SSH_OPTS "$@" $SSH_USER$targetHostname:$remoteClosure
         else
             remoteClosure="$@"
@@ -477,7 +477,7 @@ case "$operation" in
         # A localfile must first be transferred
         if [ "$localfile" = "1" ]
         then
-            tempdir=`ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname mktemp -d -p $TMPDIR`
+            tempdir=`ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname disnix-tmpfile --directory`
             scp -r -P $targetPort $SSH_OPTS $@ $targetHostname:$tempdir > /dev/null
             remoteSnapshots=`ssh -p $targetPort $SSH_OPTS $SSH_USER$targetHostname echo $tempdir/*`
         else
