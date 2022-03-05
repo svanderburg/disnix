@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2020 Sander van der Burg
+ * Copyright (c) 2016-2022 Sander van der Burg
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -19,9 +19,23 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file
+ * @brief ProcReact utility module
+ * @defgroup Util
+ * @{
+ */
+
 #ifndef __PROCREACT_UTIL_H
 #define __PROCREACT_UTIL_H
 
+/**
+ * Typedef for a boolean to improve code readability
+ */
 typedef int ProcReact_bool;
 
 #endif
+
+/**
+ * @}
+ */

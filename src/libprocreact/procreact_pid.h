@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2020 Sander van der Burg
+ * Copyright (c) 2016-2022 Sander van der Burg
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -19,6 +19,13 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file
+ * @brief PID management module
+ * @defgroup PID
+ * @{
+ */
+
 #ifndef __PROCREACT_PID_H
 #define __PROCREACT_PID_H
 #include <unistd.h>
@@ -29,9 +36,13 @@
  */
 typedef enum
 {
+    /** The process was invoked successfully */
     PROCREACT_STATUS_OK,
+    /** The fork() system call failed */
     PROCREACT_STATUS_FORK_FAIL,
+    /** The wait() system call failed */
     PROCREACT_STATUS_WAIT_FAIL,
+    /** The process was terminated abnormally */
     PROCREACT_STATUS_ABNORMAL_TERMINATION
 }
 ProcReact_Status;
@@ -98,3 +109,7 @@ int procreact_wait_for_boolean(pid_t pid, ProcReact_Status *status);
 #endif
 
 #endif
+
+/**
+ * @}
+ */

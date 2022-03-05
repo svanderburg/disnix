@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2020 Sander van der Burg
+ * Copyright (c) 2016-2022 Sander van der Burg
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
