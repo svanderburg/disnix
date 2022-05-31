@@ -31,10 +31,10 @@ let
         CFLAGS = "-Wall";
 
         # Add documentation in the tarball
-        configureFlags = ''
-          --with-docbook-rng=${docbook5}/xml/rng/docbook
-          --with-docbook-xsl=${docbook5_xsl}/xml/xsl/docbook
-        '';
+        configureFlags = [
+          "--with-docbook-rng=${docbook5}/xml/rng/docbook"
+          "--with-docbook-xsl=${docbook_xsl_ns}/xml/xsl/docbook"
+        ];
 
         preConfigure = ''
           # TeX needs a writable font cache.
