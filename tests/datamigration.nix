@@ -7,6 +7,8 @@ in
 with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
 simpleTest {
+  name = "datamigration";
+
   nodes = {
     coordinator = machine;
     testtarget1 = machine;

@@ -7,6 +7,8 @@ in
 with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
 simpleTest {
+  name = "install";
+
   nodes = {
     client = machine;
     server = machine;
@@ -84,10 +86,10 @@ simpleTest {
       manifest = client.succeed(
           "${env} disnix-manifest -s ${manifestTests}/services-complete.nix -i ${manifestTests}/infrastructure.nix -d ${manifestTests}/distribution-loadbalancing.nix"
       )
-      closure = client.succeed("nix-store -qR {}".format(manifest)).split("\n")
+      closureList = client.succeed("nix-store -qR {}".format(manifest)).split("\n")
 
-      target1Profile = [c for c in closure if "-testtarget1" in c][0]
-      target2Profile = [c for c in closure if "-testtarget2" in c][0]
+      target1Profile = [c for c in closureList if "-testtarget1" in c][0]
+      target2Profile = [c for c in closureList if "-testtarget2" in c][0]
 
       target1ProfileClosure = client.succeed("nix-store -qR {}".format(target1Profile))
       target2ProfileClosure = client.succeed("nix-store -qR {}".format(target2Profile))
@@ -206,8 +208,8 @@ simpleTest {
       # testService3 and then we copy the closure of testService3 from
       # the client to the server. This test should succeed.
 
-      closure = client.succeed("nix-store -qR {}".format(manifest)).split("\n")
-      testService3 = [c for c in closure if "-testService3" in c][0]
+      closureList = client.succeed("nix-store -qR {}".format(manifest)).split("\n")
+      testService3 = [c for c in closureList if "-testService3" in c][0]
 
       server.fail("nix-store --check-validity {}".format(testService3))
       client.succeed(

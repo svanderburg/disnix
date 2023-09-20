@@ -5,7 +5,7 @@
   imports = [ ../disnix-module.nix ];
 
   virtualisation.writableStore = true;
-  virtualisation.additionalPaths = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ pkgs.libxml2.all ++ pkgs.libxslt.all;
+  virtualisation.additionalPaths = [ pkgs.stdenv pkgs.stdenvNoCC ] ++ pkgs.coreutils.all ++ pkgs.libxml2.all ++ pkgs.libxslt.all;
 
   services.disnixTest = {
     enable = true;
