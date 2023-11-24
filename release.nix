@@ -26,7 +26,7 @@ let
         inherit officialRelease;
         dontBuild = false;
 
-        buildInputs = [ pkgconfig glib libxml2 libxslt getopt dblatex (dblatex.tex or tetex) doxygen nukeReferences help2man doclifter dysnomia ];
+        buildInputs = [ pkg-config glib libxml2 libxslt getopt dblatex (dblatex.tex or tetex) doxygen nukeReferences help2man doclifter dysnomia ];
 
         CFLAGS = "-Wall";
 
@@ -75,7 +75,7 @@ let
           name = "disnix";
           src = tarball;
 
-          buildInputs = [ pkgconfig glib libxml2 libxslt getopt dysnomia ]
+          buildInputs = [ pkg-config glib libxml2 libxslt getopt dysnomia ]
             ++ lib.optionals (!stdenv.isLinux) [ libiconv gettext ];
 
           CFLAGS = "-Wall";

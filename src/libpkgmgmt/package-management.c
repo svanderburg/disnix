@@ -210,7 +210,12 @@ pid_t pkgmgmt_set_profile(gchar *profile, gchar *path, int stdout_fd, int stderr
     pid_t pid;
     gchar *profile_dir = determine_profile_dir();
 
-    mkdir(profile_dir, 0755);
+    if(mkdir(profile_dir, 0755) == -1 && errno != EEXIST)
+    {
+        g_printerr("Cannot create directory: %s\n", profile_dir);
+        return -1;
+    }
+
     profile_path = g_strconcat(profile_dir, "/", profile, NULL);
 
     /* Resolve the manifest file to which the disnix profile points */
@@ -351,13 +356,37 @@ static pid_t execute_set_coordinator_profile(gchar *profile_path, gchar *manifes
     return pid;
 }
 
-static gchar *compose_coordinator_profile_basedir(const gchar *coordinator_profile_path)
+static gchar *create_user_profile_dir(void)
 {
     /* Get current username */
     char *username = (getpwuid(geteuid()))->pw_name;
+    char *user_profile_dir = g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, NULL);
 
+    if(mkdir(user_profile_dir, 0755) == -1 && errno != EEXIST)
+    {
+        g_printerr("Cannot create directory: %s\n", user_profile_dir);
+        g_free(user_profile_dir);
+        return NULL;
+    }
+    else
+        return user_profile_dir;
+}
+
+static gchar *compose_coordinator_profile_basedir(const gchar *coordinator_profile_path)
+{
     if(coordinator_profile_path == NULL)
-        return g_strconcat(LOCALSTATEDIR "/nix/profiles/per-user/", username, "/disnix-coordinator", NULL);
+    {
+        gchar *user_profile_dir = create_user_profile_dir();
+
+        if(user_profile_dir == NULL)
+            return NULL;
+        else
+        {
+            gchar *result = g_strconcat(user_profile_dir, "/disnix-coordinator", NULL);
+            g_free(user_profile_dir);
+            return result;
+        }
+    }
     else
         return g_strdup(coordinator_profile_path);
 }
@@ -412,6 +441,9 @@ ProcReact_bool pkgmgmt_set_coordinator_profile(const gchar *coordinator_profile_
 
     /* Determine which profile path to use, if a coordinator profile path is given use this value otherwise the default */
     profile_base_dir = compose_coordinator_profile_basedir(coordinator_profile_path);
+
+    if(profile_base_dir == NULL)
+        return FALSE;
 
     /* Create the profile directory */
     if(mkdir(profile_base_dir, 0755) == -1 && errno != EEXIST)

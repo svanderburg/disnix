@@ -643,12 +643,19 @@ simpleTest {
       coordinator.succeed(
           "${env} disnix-query -f xml ${manifestTests}/infrastructure-container.nix > query.xml"
       )
-      coordinator.fail(
+      result = coordinator.succeed(
           "xmllint --xpath \"/profileManifestTargets/target[@name='testtarget1']/profileManifest/services/*\" query.xml"
       )
-      coordinator.fail(
+
+      if result != "":
+          raise Exception("The result should be empty!")
+
+      result = coordinator.succeed(
           "xmllint --xpath \"/profileManifestTargets/target[@name='testtarget2']/profileManifest/services/*\" query.xml"
       )
+
+      if result != "":
+          raise Exception("The result should be empty!")
 
       # Deploy a stateful service that relies on a container provided by a service
       coordinator.succeed(
